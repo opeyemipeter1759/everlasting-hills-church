@@ -47,8 +47,14 @@ export default function Footer() {
         </svg>
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-48 sm:pt-56 pb-10">
-        {/* giving moved to `GivingSection` component (rendered before Footer) */}
+      <div className="relative  max-w-6xl mx-auto px-5 sm:px-8 pt-32 pb-10">
+        <div className="absolute left-1/2 top-0 z-20 w-full max-w-6xl -translate-x-1/2 -translate-y-1/2 px-4 sm:px-0 overflow-visible">
+          <div className="relative overflow-hidden rounded-[36px] border border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_30px_90px_rgba(0,0,0,0.25)] px-6 py-7 sm:px-8 sm:py-8">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(231,116,119,0.18),transparent_40%)]" />
+            <div className="pointer-events-none absolute -bottom-10 right-8 h-32 w-32 rounded-full bg-church-accent/15 blur-2xl" />
+            <div className="pointer-events-none absolute top-8 left-8 h-24 w-24 rounded-full border border-white/10 bg-white/5" />
+          </div>
+        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
           {/* Brand block */}

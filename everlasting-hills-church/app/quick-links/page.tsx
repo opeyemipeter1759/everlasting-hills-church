@@ -25,7 +25,7 @@ const INVOLVEMENT_CARDS = [
     title: "Prayer Request", 
     description: "Submit your petitions and let our intercessors stand with you.",
     icon: <MessageSquare className="w-6 h-6" />, 
-    href: "#form-prayer",
+    href: "/prayer-request",
     size: "large",
     color: "bg-church-maroon/20"
   },
@@ -143,7 +143,7 @@ export default function GetInvolvedPage() {
             title="Prayer Request" 
             desc="Let us stand with you in faith."
             icon={<MessageSquare className="w-8 h-8" />}
-            href="#prayer"
+            href="/prayer-request"
             className="md:col-span-2 md:row-span-2 bg-church-maroon/20 border-church-maroon/40"
             featured
           />
