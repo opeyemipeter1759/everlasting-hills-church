@@ -7,6 +7,7 @@ import ServiceSection from "@/components/ServiceSection";
 import SermonsSection from "@/components/SermonsSection";
 import CommunitySection from "@/components/CommunitySection";
 import ContactSection from "@/components/ContactSection";
+import GivingSection from "@/components/GivingSection";
 import Footer from "@/components/Footer";
 
 
@@ -41,6 +42,7 @@ export default function HomePage() {
       <SermonsSection />
       <CommunitySection />
       <ContactSection />
+      <GivingSection />
       <Footer />
     </main>
   );
