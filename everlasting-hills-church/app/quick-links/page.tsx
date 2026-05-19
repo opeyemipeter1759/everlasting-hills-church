@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Link from "next/link";
 
 import {
@@ -24,7 +25,7 @@ const INVOLVEMENT_CARDS = [
     title: "Prayer Request", 
     description: "Submit your petitions and let our intercessors stand with you.",
     icon: <MessageSquare className="w-6 h-6" />, 
-    href: "#form-prayer",
+    href: "/prayer-request",
     size: "large",
     color: "bg-church-maroon/20"
   },
@@ -81,6 +82,7 @@ const INVOLVEMENT_CARDS = [
 export default function GetInvolvedPage() {
   return (
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon selection:text-white pb-32 relative overflow-x-hidden">
+      <Navbar/>
       {/* Cinematic Background with Fade Gradients */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img 
@@ -141,7 +143,7 @@ export default function GetInvolvedPage() {
             title="Prayer Request" 
             desc="Let us stand with you in faith."
             icon={<MessageSquare className="w-8 h-8" />}
-            href="#prayer"
+            href="/prayer-request"
             className="md:col-span-2 md:row-span-2 bg-church-maroon/20 border-church-maroon/40"
             featured
           />
@@ -160,7 +162,7 @@ export default function GetInvolvedPage() {
             title="New Here?" 
             desc="Start your journey."
             icon={<Star className="w-6 h-6" />}
-            href="#new"
+            href="/first-timer"
             className="md:col-span-2 md:row-span-1 bg-church-accent/10 border-church-accent/20"
           />
 
@@ -206,7 +208,7 @@ export default function GetInvolvedPage() {
           </motion.a>
 
           <motion.a 
-            href="#testimony"
+            href="/testimony"
             whileHover={{ scale: 0.99, backgroundColor: "rgba(255,255,255,0.08)" }}
             className="md:col-span-3 h-20 glass-card bg-white/5 flex items-center justify-between px-8 group cursor-pointer"
           >
@@ -234,6 +236,7 @@ export default function GetInvolvedPage() {
           </motion.button>
         </div>
       </div>
+      <Footer/>
     </main>
   );
 }
