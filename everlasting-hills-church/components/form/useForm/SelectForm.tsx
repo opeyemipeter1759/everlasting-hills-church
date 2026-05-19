@@ -17,19 +17,18 @@ type SelectFormProps<T extends FieldValues = FieldValues> = {
   placeholder?: string;
 };
 
-const SelectForm = memo(
-  <T extends FieldValues>({
-    label,
-    name,
-    register,
-    error,
-    options = [],
-    required = false,
-    disabled = false,
-    placeholder,
-  }: SelectFormProps<T>) => {
-    const selectId = `select-${name}`;
-    const errorId = `${selectId}-error`;
+const SelectForm = <T extends FieldValues>({
+  label,
+  name,
+  register,
+  error,
+  options = [],
+  required = false,
+  disabled = false,
+  placeholder,
+}: SelectFormProps<T>) => {
+  const selectId = `select-${name}`;
+  const errorId = `${selectId}-error`;
 
     return (
       <div>
@@ -114,7 +113,6 @@ const SelectForm = memo(
       </div>
     );
   }
-);
 
 SelectForm.displayName = "SelectForm";
 

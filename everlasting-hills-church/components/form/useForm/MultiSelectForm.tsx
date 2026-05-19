@@ -31,23 +31,22 @@ type MultiSelectFormProps<T extends FieldValues = FieldValues> = {
   showSelectAll?: boolean;
 };
 
-const MultiSelectForm = memo(
-  <T extends FieldValues>({
-    label,
-    name,
-    options = [],
-    register,
-    setValue,
-    error,
-    placeholder = "Select options",
-    required = false,
-    disabled = false,
-    searchable = true,
-    maxHeight = "16rem",
-    expandParent = false,
-    defaultValue = [],
-    showSelectAll = true,
-  }: MultiSelectFormProps<T>) => {
+const MultiSelectForm = <T extends FieldValues>({
+  label,
+  name,
+  options = [],
+  register,
+  setValue,
+  error,
+  placeholder = "Select options",
+  required = false,
+  disabled = false,
+  searchable = true,
+  maxHeight = "16rem",
+  expandParent = false,
+  defaultValue = [],
+  showSelectAll = true,
+}: MultiSelectFormProps<T>) => {
     const [selectedValues, setSelectedValues] = useState<string[]>(defaultValue);
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -276,7 +275,6 @@ const MultiSelectForm = memo(
       </div>
     );
   }
-);
 
 MultiSelectForm.displayName = "MultiSelectForm";
 export default MultiSelectForm;

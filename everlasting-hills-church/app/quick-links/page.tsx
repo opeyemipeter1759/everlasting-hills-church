@@ -162,7 +162,7 @@ export default function GetInvolvedPage() {
             title="New Here?" 
             desc="Start your journey."
             icon={<Star className="w-6 h-6" />}
-            href="#new"
+            href="/first-timer"
             className="md:col-span-2 md:row-span-1 bg-church-accent/10 border-church-accent/20"
           />
 
@@ -208,7 +208,7 @@ export default function GetInvolvedPage() {
           </motion.a>
 
           <motion.a 
-            href="#testimony"
+            href="/testimony"
             whileHover={{ scale: 0.99, backgroundColor: "rgba(255,255,255,0.08)" }}
             className="md:col-span-3 h-20 glass-card bg-white/5 flex items-center justify-between px-8 group cursor-pointer"
           >

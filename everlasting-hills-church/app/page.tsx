@@ -42,7 +42,6 @@ export default function HomePage() {
       <SermonsSection />
       <CommunitySection />
       {/* <ContactSection /> */}
-      <ContactSection />
       <GivingSection />
       <Footer />
     </main>

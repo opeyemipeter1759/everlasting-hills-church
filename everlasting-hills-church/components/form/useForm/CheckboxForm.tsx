@@ -8,13 +8,12 @@ type CheckboxFormProps<T extends FieldValues = FieldValues> = {
   error?: string;
 };
 
-const CheckboxForm = memo(
-  <T extends FieldValues>({
-    label,
-    name,
-    register,
-    error,
-  }: CheckboxFormProps<T>) => {
+const CheckboxForm = <T extends FieldValues>({
+  label,
+  name,
+  register,
+  error,
+}: CheckboxFormProps<T>) => {
     return (
       <div className="flex items-center mb-4">
         <input
@@ -39,7 +38,6 @@ const CheckboxForm = memo(
       </div>
     );
   }
-);
 
 CheckboxForm.displayName = "CheckboxForm";
 

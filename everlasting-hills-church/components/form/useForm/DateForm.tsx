@@ -10,16 +10,15 @@ type DateFormProps<T extends FieldValues = FieldValues> = {
   disabled?: boolean;
 };
 
-const DateForm = memo(
-  <T extends FieldValues>({
-    label,
-    name,
-    register,
-    error,
-    required = false,
-    disabled = false,
-  }: DateFormProps<T>) => {
-    return (
+const DateForm = <T extends FieldValues>({
+  label,
+  name,
+  register,
+  error,
+  required = false,
+  disabled = false,
+}: DateFormProps<T>) => {
+  return (
       <div className="mb-4">
         {label && (
           <label
@@ -58,7 +57,6 @@ const DateForm = memo(
       </div>
     );
   }
-);
 
 DateForm.displayName = "DateForm";
 

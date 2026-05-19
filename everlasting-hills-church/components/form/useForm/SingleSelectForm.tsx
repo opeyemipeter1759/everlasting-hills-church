@@ -22,23 +22,22 @@ type SingleSelectFormProps<T extends FieldValues = FieldValues> = {
   defaultValue?: string;
 };
 
-const SingleSelectForm = memo(
-  <T extends FieldValues>({
-    label,
-    name,
-    options = [],
-    register,
-    setValue,
-    error,
-    placeholder = "Select an option",
-    required = false,
-    disabled = false,
-    searchable = true,
-    maxHeight = "16rem",
-    expandParent = false,
-    defaultValue = "",
-  }: SingleSelectFormProps<T>) => {
-    const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
+const SingleSelectForm= <T extends FieldValues>({
+  label,
+  name,
+  options = [],
+  register,
+  setValue,
+  error,
+  placeholder = "Select an option",
+  required = false,
+  disabled = false,
+  searchable = true,
+  maxHeight = "16rem",
+  expandParent = false,
+  defaultValue = "",
+}: SingleSelectFormProps<T>) => {
+  const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [dropdownHeight, setDropdownHeight] = useState(0);
@@ -255,7 +254,6 @@ const SingleSelectForm = memo(
       </div>
     );
   }
-);
 
 SingleSelectForm.displayName = "SingleSelectForm";
 export default SingleSelectForm;
