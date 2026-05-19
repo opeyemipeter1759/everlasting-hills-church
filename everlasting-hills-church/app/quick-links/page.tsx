@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import Link from "next/link";
 
 import {
@@ -81,6 +82,7 @@ const INVOLVEMENT_CARDS = [
 export default function GetInvolvedPage() {
   return (
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon selection:text-white pb-32 relative overflow-x-hidden">
+      <Navbar/>
       {/* Cinematic Background with Fade Gradients */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <img 
@@ -234,6 +236,7 @@ export default function GetInvolvedPage() {
           </motion.button>
         </div>
       </div>
+      <Footer/>
     </main>
   );
 }

@@ -40,7 +40,7 @@ export default function HomePage() {
       <ServiceSection />
       <SermonsSection />
       <CommunitySection />
-      <ContactSection />
+      {/* <ContactSection /> */}
       <Footer />
     </main>
   );
