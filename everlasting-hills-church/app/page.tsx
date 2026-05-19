@@ -9,6 +9,7 @@ import CommunitySection from "@/components/CommunitySection";
 import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 
+
 /**
  * Everlasting Hills Church — Main Page
  *
@@ -28,9 +29,11 @@ import Footer from "@/components/Footer";
  */
 export default function HomePage() {
   return (
-    <main>
+    <main className="min-h-screen flex flex-col bg-church-dark">
       <Navbar />
+       <main className="flex-1 flex flex-col">
       <HeroSection />
+       </main>
       <AboutSection />
       <CultureSection />
       <ScriptureSection />

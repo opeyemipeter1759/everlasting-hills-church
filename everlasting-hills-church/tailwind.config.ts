@@ -21,6 +21,13 @@ const config: Config = {
           rose: "#E7CDD3",
           black: "#111111",
         },
+        church: {
+          maroon: "#87102C",
+          dark: "#0a0a0a",
+          card: "#1a0a0e",
+          accent: "#FFB3C1",
+          warm: "#FFE8ED",
+        },
       },
       fontFamily: {
         sans: ["var(--font-instrument-sans)", "sans-serif"],

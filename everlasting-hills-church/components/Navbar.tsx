@@ -11,7 +11,7 @@ const navLinks = [
   { label: "Sermons", href: "#sermons" },
   { label: "Services", href: "#services" },
   { label: "Community", href: "#community" },
-  { label: "Contact", href: "#contact" },
+  { label: "Forms", href: "/quick-links" },
 ];
 
 export default function Navbar() {

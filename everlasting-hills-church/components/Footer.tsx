@@ -31,7 +31,7 @@ const footerLinks = [
 export default function Footer() {
   return (
     <footer
-      className="relative overflow-hidden"
+      className="relative overflow-visible"
       style={{
         background:
           "linear-gradient(160deg, #1a0208 0%, #2a0410 40%, #3d0916 100%)",
@@ -47,7 +47,92 @@ export default function Footer() {
         </svg>
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-16 pb-10">
+      <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-32 pb-10">
+        <div className="absolute left-1/2 top-0 z-20 w-full max-w-6xl -translate-x-1/2 -translate-y-1/2 px-4 sm:px-0 overflow-visible">
+          <div className="relative overflow-hidden rounded-[36px] border border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_30px_90px_rgba(0,0,0,0.25)] px-6 py-7 sm:px-8 sm:py-8">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(231,116,119,0.18),transparent_40%)]" />
+            <div className="pointer-events-none absolute -bottom-10 right-8 h-32 w-32 rounded-full bg-church-accent/15 blur-2xl" />
+            <div className="pointer-events-none absolute top-8 left-8 h-24 w-24 rounded-full border border-white/10 bg-white/5" />
+
+            <div className="relative grid gap-6 lg:grid-cols-[1.7fr_1fr] items-start">
+              <div className="space-y-5">
+                <div className="inline-flex items-center rounded-full border border-white/10 bg-white/10 px-4 py-2 text-[11px] uppercase tracking-[0.35em] text-white/60 shadow-inner shadow-black/20">
+                  Support our mission
+                </div>
+                <div>
+                  <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight">
+                    Give with purpose, hope, and quiet confidence.
+                  </h2>
+                  <p className="mt-4 max-w-xl text-white/65 leading-relaxed">
+                    Your gift helps fuel pastoral care, outreach, and the next
+                    season of building at Everlasting Hills Church. Every gift
+                    counts toward impact in our city.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    { label: "Secure giving", value: "Fast + encrypted" },
+                    { label: "Flexible options", value: "Online or in person" },
+                    { label: "Community-led", value: "Every gift matters" },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-3xl border border-white/10 bg-[#12050a]/90 p-4">
+                      <p className="text-white/40 text-[11px] uppercase tracking-[0.35em] mb-1">
+                        {item.label}
+                      </p>
+                      <p className="text-white text-sm font-semibold">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[28px] border border-white/10 bg-[#12050a]/95 p-6 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]">
+                <p className="text-white/50 text-xs uppercase tracking-[0.25em] font-semibold mb-5">
+                  Ready to give?
+                </p>
+                <div className="space-y-5">
+                  {[
+                    {
+                      title: "Give online",
+                      description: "Fast checkout that supports recurring or one-time gifts.",
+                    },
+                    {
+                      title: "Weekend offering",
+                      description: "Bring your gift to service and bless the church family.",
+                    },
+                    {
+                      title: "Designated project",
+                      description: "Choose building, outreach, or local care support.",
+                    },
+                  ].map((item) => (
+                    <div key={item.title} className="rounded-3xl border border-white/5 bg-white/5 p-4">
+                      <p className="text-white font-semibold">{item.title}</p>
+                      <p className="mt-2 text-white/55 text-sm leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                  <a
+                    href="#"
+                    className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-church-dark shadow-lg shadow-church-accent/10 transition hover:bg-white/95"
+                  >
+                    Give Now
+                  </a>
+                  <a
+                    href="#"
+                    className="inline-flex items-center justify-center rounded-full border border-church-accent bg-church-accent/10 px-6 py-3 text-sm font-semibold text-church-accent transition hover:bg-church-accent/20"
+                  >
+                    Building Project
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
           {/* Brand block */}
           <div className="lg:col-span-1">

@@ -1,19 +1,19 @@
-@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-instrument-sans: "Instrument Sans", sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-serif: "Playfair Display", serif;
 
-  --burgundy: #87102c;
-  --burgundy-dark: #6e0c24;
-  --burgundy-light: #a01535;
-  --pink: #ffe8ed;
-  --blush: #fff4f6;
-  --rose: #e7cdd3;
-  --black: #111111;
+  --color-church-maroon: #87102C;
+  --color-church-dark: #0a0a0a;
+  --color-church-card: #1a0a0e;
+  --color-church-accent: #FFB3C1;
+  --color-church-warm: #FFE8ED;
 }
 
 * {
@@ -27,48 +27,25 @@ html {
 }
 
 body {
-  font-family: var(--font-instrument-sans), sans-serif;
-  background-color: #0a0a0a;
+  @apply antialiased text-white bg-church-dark;
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background-color: var(--color-church-maroon);
   color: white;
 }
 
-@layer components {
-  .glass-card {
-    @apply rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl;
-  }
+.bg-grid-white {
+  background-image: radial-gradient(
+    circle at 2px 2px,
+    rgba(255,255,255,0.03) 1px,
+    transparent 0
+  );
 
-  .bg-grid-white {
-    background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
-    background-size: 40px 40px;
-  }
+  background-size: 40px 40px;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .grain-overlay {
-    position: relative;
-  }
-
-  .grain-overlay::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 1;
-  }
-}
-
-.will-animate {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-:focus-visible {
-  outline: 2px solid var(--burgundy);
-  outline-offset: 3px;
-  border-radius: 4px;
+.glass-card {
+  @apply rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl;
 }
