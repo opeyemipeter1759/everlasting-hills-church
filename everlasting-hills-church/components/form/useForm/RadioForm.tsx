@@ -82,6 +82,7 @@ const RadioForm = <T extends FieldValues>({
               >
                 <input
                   type="radio"
+                  value={String(option.value)}
                   {...register(name, validation)}
                   disabled={isDisabled}
                   className="sr-only peer"

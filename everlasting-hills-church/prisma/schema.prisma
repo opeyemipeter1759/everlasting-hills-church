@@ -1,12 +1,16 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgvector(map: "vector"), pg_trgm, pgcrypto]
 }
+
+// ── Enums ─────────────────────────────────────────────────────────────────────
 
 enum Role {
   SUPER_ADMIN
@@ -17,41 +21,66 @@ enum Role {
   VISITOR
 }
 
+// ── Core ──────────────────────────────────────────────────────────────────────
+
 model Tenant {
-  id            String         @id @default(cuid())
-  name          String
-  slug          String         @unique
-  createdAt     DateTime       @default(now())
-  members       Member[]
-  visitors      Visitor[]
-  services      Service[]
-  sermons       Sermon[]
-  givingRecords GivingRecord[]
+  id                String               @id @default(cuid())
+  name              String
+  slug              String               @unique
+  createdAt         DateTime             @default(now())
+  members           Member[]
+  visitors          Visitor[]
+  units             Unit[]
+  services          Service[]
+  sermons           Sermon[]
+  givingRecords     GivingRecord[]
+  prayerRequests    PrayerRequest[]
+  formSubmissions   FormSubmission[]
+  contactMessages   ContactMessage[]
+  attendanceRecords AttendanceRecord[]
+  roleAssignments   RoleAssignment[]
+  webhookLogs       PaystackWebhookLog[]
 }
 
 model Profile {
-  id        String   @id @default(cuid())
-  userId    String   @unique // Supabase auth.users.id
-  role      Role     @default(MEMBER)
-  tenantId  String
-  createdAt DateTime @default(now())
-  member    Member?
+  id              String           @id @default(cuid())
+  userId          String           @unique // Supabase auth.users.id
+  role            Role             @default(MEMBER)
+  tenantId        String
+  createdAt       DateTime         @default(now())
+  member          Member?
+  roleAssignments RoleAssignment[]
 }
 
+model RoleAssignment {
+  id        String   @id @default(cuid())
+  tenantId  String
+  profileId String
+  role      Role
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  profile   Profile  @relation(fields: [profileId], references: [id])
+
+  @@unique([tenantId, profileId, role])
+}
+
+// ── People ────────────────────────────────────────────────────────────────────
+
 model Member {
-  id          String             @id @default(cuid())
-  tenantId    String
-  profileId   String             @unique
-  firstName   String
-  lastName    String
-  email       String?
-  phone       String?
-  dateOfBirth DateTime?
-  address     String?
-  joinedAt    DateTime           @default(now())
-  profile     Profile            @relation(fields: [profileId], references: [id])
-  tenant      Tenant             @relation(fields: [tenantId], references: [id])
-  attendance  AttendanceRecord[]
+  id              String             @id @default(cuid())
+  tenantId        String
+  profileId       String             @unique
+  firstName       String
+  lastName        String
+  email           String?
+  phone           String?
+  dateOfBirth     DateTime?
+  address         String?
+  joinedAt        DateTime           @default(now())
+  tenant          Tenant             @relation(fields: [tenantId], references: [id])
+  profile         Profile            @relation(fields: [profileId], references: [id])
+  attendance      AttendanceRecord[]
+  unitMemberships UnitMember[]
 }
 
 model Visitor {
@@ -77,6 +106,33 @@ model Visitor {
   tenant             Tenant   @relation(fields: [tenantId], references: [id])
 }
 
+// ── Units (departments/ministries) ────────────────────────────────────────────
+
+model Unit {
+  id          String       @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  members     UnitMember[]
+}
+
+model UnitMember {
+  id       String   @id @default(cuid())
+  tenantId String
+  unitId   String
+  memberId String
+  isLead   Boolean  @default(false)
+  joinedAt DateTime @default(now())
+  unit     Unit     @relation(fields: [unitId], references: [id])
+  member   Member   @relation(fields: [memberId], references: [id])
+
+  @@unique([unitId, memberId])
+}
+
+// ── Services & Attendance ─────────────────────────────────────────────────────
+
 model Service {
   id          String             @id @default(cuid())
   tenantId    String
@@ -89,14 +145,18 @@ model Service {
 
 model AttendanceRecord {
   id        String  @id @default(cuid())
+  tenantId  String
   memberId  String
   serviceId String
   present   Boolean @default(true)
+  tenant    Tenant  @relation(fields: [tenantId], references: [id])
   member    Member  @relation(fields: [memberId], references: [id])
   service   Service @relation(fields: [serviceId], references: [id])
 
   @@unique([memberId, serviceId])
 }
+
+// ── Forms & Submissions ───────────────────────────────────────────────────────
 
 model FormSubmission {
   id          String   @id @default(cuid())
@@ -104,15 +164,32 @@ model FormSubmission {
   type        String   // "prayer" | "testimony" | "question"
   data        Json
   submittedAt DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model PrayerRequest {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String?
+  email       String?
+  phone       String?
+  request     String
+  isAnonymous Boolean  @default(false)
+  submittedAt DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 model ContactMessage {
-  id      String   @id @default(cuid())
-  name    String
-  email   String
-  message String
-  sentAt  DateTime @default(now())
+  id       String   @id @default(cuid())
+  tenantId String
+  name     String
+  email    String
+  message  String
+  sentAt   DateTime @default(now())
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
 }
+
+// ── Content ───────────────────────────────────────────────────────────────────
 
 model Sermon {
   id           String    @id @default(cuid())
@@ -128,6 +205,8 @@ model Sermon {
   createdAt    DateTime  @default(now())
   tenant       Tenant    @relation(fields: [tenantId], references: [id])
 }
+
+// ── Giving ────────────────────────────────────────────────────────────────────
 
 model GivingRecord {
   id             String    @id @default(cuid())
@@ -146,8 +225,10 @@ model GivingRecord {
 
 model PaystackWebhookLog {
   id          String   @id @default(cuid())
+  tenantId    String
   event       String
   reference   String
   payload     Json
   processedAt DateTime @default(now())
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
 }

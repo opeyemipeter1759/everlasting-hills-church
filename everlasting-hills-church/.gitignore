@@ -1,4 +1,22 @@
+# dependencies
 /node_modules
 node_modules
+
+# Next.js build output
 /.next
+/out
+
+# Environment variables — NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# IDE
 .vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma generated
+prisma/migrations/dev.db

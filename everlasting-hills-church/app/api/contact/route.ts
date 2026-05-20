@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 import { sendContactEmail } from "@/lib/email";
 
+const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
@@ -33,15 +35,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await sendContactEmail({
+    const trimmed = {
       name: name.trim(),
       email: email.trim(),
       message: message.trim(),
-    });
+    };
+
+    await Promise.all([
+      db.contactMessage.create({
+        data: { tenantId: TENANT_ID, ...trimmed },
+      }),
+      sendContactEmail(trimmed),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[api/contact] Error sending email:", error);
+    console.error("[api/contact] Error:", error);
     return NextResponse.json(
       { error: "Failed to send message. Please try again." },
       { status: 500 }
