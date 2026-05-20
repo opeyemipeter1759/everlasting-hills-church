@@ -1,0 +1,153 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  PASTOR
+  ADMIN
+  UNIT_LEAD
+  MEMBER
+  VISITOR
+}
+
+model Tenant {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique
+  createdAt     DateTime       @default(now())
+  members       Member[]
+  visitors      Visitor[]
+  services      Service[]
+  sermons       Sermon[]
+  givingRecords GivingRecord[]
+}
+
+model Profile {
+  id        String   @id @default(cuid())
+  userId    String   @unique // Supabase auth.users.id
+  role      Role     @default(MEMBER)
+  tenantId  String
+  createdAt DateTime @default(now())
+  member    Member?
+}
+
+model Member {
+  id          String             @id @default(cuid())
+  tenantId    String
+  profileId   String             @unique
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  dateOfBirth DateTime?
+  address     String?
+  joinedAt    DateTime           @default(now())
+  profile     Profile            @relation(fields: [profileId], references: [id])
+  tenant      Tenant             @relation(fields: [tenantId], references: [id])
+  attendance  AttendanceRecord[]
+}
+
+model Visitor {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  firstName          String
+  lastName           String
+  email              String?
+  phone              String?
+  dateOfBirth        String?
+  address            String?
+  occupation         String?
+  gender             String?
+  howDidYouLearn     String?
+  invitedBy          String?
+  locatedInIbadan    Boolean?
+  membershipInterest String?
+  bornAgain          String?
+  serviceExperience  String?
+  prayerPoint        String?
+  whatsappInterest   Boolean?
+  submittedAt        DateTime @default(now())
+  tenant             Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+model Service {
+  id          String             @id @default(cuid())
+  tenantId    String
+  name        String
+  scheduledAt DateTime
+  createdAt   DateTime           @default(now())
+  tenant      Tenant             @relation(fields: [tenantId], references: [id])
+  attendance  AttendanceRecord[]
+}
+
+model AttendanceRecord {
+  id        String  @id @default(cuid())
+  memberId  String
+  serviceId String
+  present   Boolean @default(true)
+  member    Member  @relation(fields: [memberId], references: [id])
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  @@unique([memberId, serviceId])
+}
+
+model FormSubmission {
+  id          String   @id @default(cuid())
+  tenantId    String
+  type        String   // "prayer" | "testimony" | "question"
+  data        Json
+  submittedAt DateTime @default(now())
+}
+
+model ContactMessage {
+  id      String   @id @default(cuid())
+  name    String
+  email   String
+  message String
+  sentAt  DateTime @default(now())
+}
+
+model Sermon {
+  id           String    @id @default(cuid())
+  tenantId     String
+  title        String
+  speaker      String
+  date         DateTime
+  audioUrl     String?
+  videoUrl     String?
+  thumbnailUrl String?
+  description  String?
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+model GivingRecord {
+  id             String    @id @default(cuid())
+  tenantId       String
+  reference      String    @unique
+  amount         Int       // in kobo
+  currency       String    @default("NGN")
+  donorName      String?
+  donorEmail     String?
+  category       String?
+  paystackStatus String
+  verifiedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  tenant         Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+model PaystackWebhookLog {
+  id          String   @id @default(cuid())
+  event       String
+  reference   String
+  payload     Json
+  processedAt DateTime @default(now())
+}

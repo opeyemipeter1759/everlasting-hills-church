@@ -42,6 +42,8 @@ export default function ContactSection() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -49,12 +51,32 @@ export default function ContactSection() {
     setFormState((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  // ── Replace this with your actual form submission logic (e.g. Formspree, Resend, etc.) ──
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formState);
-    setSubmitted(true);
-    setFormState({ name: "", email: "", message: "" });
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formState),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+
+      setSubmitted(true);
+      setFormState({ name: "", email: "", message: "" });
+    } catch {
+      setError("Could not send your message. Check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -183,12 +205,19 @@ export default function ContactSection() {
                   />
                 </div>
 
+                {error && (
+                  <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                    {error}
+                  </p>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/25 hover:-translate-y-0.5"
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2.5 px-6 py-4 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/25 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
                 >
-                  <Send size={15} />
-                  Send Message
+                  <Send size={15} className={isLoading ? "animate-pulse" : ""} />
+                  {isLoading ? "Sending…" : "Send Message"}
                 </button>
               </form>
             )}

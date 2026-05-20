@@ -11,7 +11,7 @@ import {
   UseFormWatch,
 } from "react-hook-form";
 
-type FormValues = {
+export type FormValues = {
   first_name: string;
   last_name: string;
   phone_number: string;
@@ -30,40 +30,31 @@ type FormValues = {
   whatsapp_interest: boolean;
 };
 
-type StepProps = {
+export type StepProps = {
   register: UseFormRegister<FormValues>;
   errors: FieldErrors<FormValues>;
 };
 
-type Step2Props = StepProps & {
+export type Step2Props = StepProps & {
   watch: UseFormWatch<FormValues>;
   setValue: UseFormSetValue<FormValues>;
 };
 
-/**
- * Step 1
- */
-export const Step1PersonalInfo = ({
-  register,
-  errors,
-}: StepProps): JSX.Element => {
+export function Step1PersonalInfo({ register, errors }: StepProps) {
   return (
     <div className="space-y-5">
       <div className="mb-6">
-        <h1 className="text-[#24244e] dark:text-white text-xl md:text-2xl font-bold mb-3">
+        <h1 className="text-[#24244e] text-xl md:text-2xl font-bold mb-3">
           We are glad to have you.
         </h1>
-
-        <div className="space-y-3 text-gray-700 dark:text-gray-300">
+        <div className="space-y-3 text-gray-700">
           <p className="leading-relaxed">
-            Welcome Home! <br />
-            Here at <strong>Glory Centre Community Church, Ibadan,</strong> we
-            are focused on propagating and normalizing Kingdom Culture.
+            Welcome Home!{" "}
+            <br />
+            Here at <strong>Everlasting Hills Church, Ibadan,</strong> we are
+            focused on propagating and normalizing Kingdom Culture.
           </p>
-
-          <p className="leading-relaxed">
-            Kindly fill in your information below.
-          </p>
+          <p className="leading-relaxed">Kindly fill in your information below.</p>
         </div>
       </div>
 
@@ -75,7 +66,6 @@ export const Step1PersonalInfo = ({
           error={errors.first_name?.message}
           required
         />
-
         <InputForm
           label="Last Name"
           name="last_name"
@@ -115,17 +105,14 @@ export const Step1PersonalInfo = ({
       />
     </div>
   );
-};
+}
 
-/**
- * Step 2
- */
-export const Step2FriendFamilyLocation = ({
+export function Step2FriendFamilyLocation({
   watch,
   register,
   errors,
   setValue,
-}: Step2Props): JSX.Element => {
+}: Step2Props) {
   const howDidYouLearn = watch("how_did_you_learn");
 
   return (
@@ -161,15 +148,9 @@ export const Step2FriendFamilyLocation = ({
       )}
     </div>
   );
-};
+}
 
-/**
- * Step 3
- */
-export const Step3Interest = ({
-  register,
-  errors,
-}: StepProps): JSX.Element => {
+export function Step3Interest({ register, errors }: StepProps) {
   return (
     <div className="space-y-5">
       <RadioForm
@@ -199,15 +180,9 @@ export const Step3Interest = ({
       />
     </div>
   );
-};
+}
 
-/**
- * Step 4
- */
-export const Step4Details = ({
-  register,
-  errors,
-}: StepProps): JSX.Element => {
+export function Step4Details({ register, errors }: StepProps) {
   return (
     <div className="space-y-5">
       <InputForm
@@ -217,7 +192,6 @@ export const Step4Details = ({
         error={errors.address?.message}
         required
       />
-
       <InputForm
         label="Date of Birth"
         name="date_of_birth"
@@ -225,7 +199,6 @@ export const Step4Details = ({
         error={errors.date_of_birth?.message}
         required
       />
-
       <InputForm
         label="Occupation"
         name="occupation"
@@ -233,7 +206,6 @@ export const Step4Details = ({
         error={errors.occupation?.message}
         required
       />
-
       <RadioForm
         label="Born again?"
         name="born_again"
@@ -248,15 +220,9 @@ export const Step4Details = ({
       />
     </div>
   );
-};
+}
 
-/**
- * Step 5
- */
-export const Step5Experience = ({
-  register,
-  errors,
-}: StepProps): JSX.Element => {
+export function Step5Experience({ register, errors }: StepProps) {
   return (
     <div className="space-y-5">
       <TextAreaForm
@@ -266,14 +232,12 @@ export const Step5Experience = ({
         error={errors.service_experience?.message}
         required
       />
-
       <TextAreaForm
         label="Prayer point"
         name="prayer_point"
         register={register}
         error={errors.prayer_point?.message}
       />
-
       <RadioForm
         label="WhatsApp community?"
         name="whatsapp_interest"
@@ -288,4 +252,4 @@ export const Step5Experience = ({
       />
     </div>
   );
-};
+}

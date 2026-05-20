@@ -3,7 +3,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// import Image from "next/image";
 import { 
   ArrowLeft, 
   Copy, 
