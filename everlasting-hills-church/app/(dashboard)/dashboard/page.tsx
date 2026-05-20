@@ -1,5 +1,10 @@
 import { getCurrentUser } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  getTodayAttendanceWithMembers,
+  getAllServicesWithCounts,
+  countTodayCheckIns,
+} from "@/services/attendance.service";
 import DashboardClient from "@/components/dashboard/DashboardClient";
 import type {
   VisitorRow,
@@ -8,6 +13,8 @@ import type {
   TestimonyRow,
   MemberRow,
   DashboardStats,
+  ServiceRow,
+  TodayAttendance,
 } from "@/components/dashboard/DashboardClient";
 
 const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
@@ -60,15 +67,21 @@ async function fetchAll() {
       .limit(100),
   ]);
 
+  const [todayCheckIns, todayAttendance, allServices] = await Promise.all([
+    countTodayCheckIns(),
+    getTodayAttendanceWithMembers(),
+    getAllServicesWithCounts(),
+  ]);
+
   const stats: DashboardStats = {
     visitors: visitorsCount ?? 0,
     prayers: prayersCount ?? 0,
     contacts: contactsCount ?? 0,
     testimonies: testimoniesCount ?? 0,
     members: membersCount ?? 0,
+    todayCheckIns,
   };
 
-  // Build set of member emails for marking already-converted visitors
   const memberEmails: string[] = (members ?? [])
     .map((m: any) => m.email)
     .filter((e: unknown): e is string => typeof e === "string" && e.length > 0);
@@ -81,6 +94,8 @@ async function fetchAll() {
     testimonies: (testimonies ?? []) as TestimonyRow[],
     members: (members ?? []) as MemberRow[],
     memberEmails,
+    todayAttendance: todayAttendance as TodayAttendance | null,
+    allServices: allServices as ServiceRow[],
   };
 }
 
@@ -97,6 +112,8 @@ export default async function DashboardPage() {
       testimonies={data.testimonies}
       members={data.members}
       memberEmails={data.memberEmails}
+      todayAttendance={data.todayAttendance}
+      allServices={data.allServices}
     />
   );
 }

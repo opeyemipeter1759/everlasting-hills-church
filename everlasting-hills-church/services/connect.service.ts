@@ -30,7 +30,6 @@ export async function submitFirstTimer(data: FirstTimerData) {
         locatedInIbadan: data.located_in_ibadan ?? null,
         membershipInterest: data.membership_interest ?? null,
         address: data.address ?? null,
-        dateOfBirth: data.date_of_birth ?? null,
         occupation: data.occupation ?? null,
         bornAgain: data.born_again ?? null,
         serviceExperience: data.service_experience ?? null,
@@ -142,7 +141,7 @@ function buildAdminText(d: FirstTimerData) {
     d.gender ? `Gender: ${d.gender}` : null,
     d.occupation ? `Occupation: ${d.occupation}` : null,
     d.address ? `Address: ${d.address}` : null,
-    d.date_of_birth ? `Date of birth: ${d.date_of_birth}` : null,
+    d.birth_month && d.birth_day ? `Date of birth: ${d.birth_day} ${d.birth_month}` : null,
     d.how_did_you_learn
       ? `How did they hear about us: ${d.how_did_you_learn}`
       : null,

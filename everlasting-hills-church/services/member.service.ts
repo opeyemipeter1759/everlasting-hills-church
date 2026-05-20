@@ -26,6 +26,7 @@ export async function convertVisitorToMember(visitorId: string) {
     email: visitor.email,
     password: visitor.phone,
     email_confirm: true,
+    user_metadata: { needs_password_change: true },
   });
   if (authError) throw new Error(`Could not create auth account: ${authError.message}`);
 
