@@ -29,19 +29,19 @@ export async function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
-  // Unauthenticated → protect dashboard
-  if (!user && pathname.startsWith("/dashboard")) {
+  // Unauthenticated → protect dashboard and member portal
+  if (!user && (pathname.startsWith("/dashboard") || pathname.startsWith("/me"))) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // Authenticated → skip auth pages
+  // Authenticated → skip auth pages (redirect to member portal; /me will bounce admins to /dashboard)
   if (user && (pathname === "/login" || pathname === "/register")) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/me", req.url));
   }
 
   return response;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/login", "/register"],
+  matcher: ["/dashboard/:path*", "/me", "/me/:path*", "/login", "/register"],
 };

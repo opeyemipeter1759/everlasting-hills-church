@@ -117,8 +117,8 @@ const RadioSelectFormComponent = <T extends FieldValues,>({
                 transition-all duration-200
                 ${
                   isSelected
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 shadow-md"
-                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                    ? "border-church-maroon bg-brand-blush dark:bg-burgundy/10 shadow-md"
+                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-burgundy-light/50 dark:hover:border-burgundy/50 hover:bg-brand-blush dark:hover:bg-burgundy/5"
                 }
               `}
             >
@@ -136,7 +136,7 @@ const RadioSelectFormComponent = <T extends FieldValues,>({
                   w-5 h-5 rounded-full border-2 transition-all duration-200
                   ${
                     isSelected
-                      ? "border-blue-500 bg-blue-500 shadow-md"
+                      ? "border-church-maroon bg-church-maroon shadow-md"
                       : "border-gray-300 dark:border-gray-600"
                   }
                 `} />
@@ -148,7 +148,7 @@ const RadioSelectFormComponent = <T extends FieldValues,>({
               <div className="flex-1 pt-0.5">
                 <div className={`text-sm font-semibold transition-colors ${
                   isSelected
-                    ? "text-blue-600 dark:text-blue-400"
+                    ? "text-church-maroon dark:text-burgundy-light"
                     : "text-gray-800 dark:text-gray-200"
                 }`}>
                   {option.name}
@@ -169,8 +169,8 @@ const RadioSelectFormComponent = <T extends FieldValues,>({
             transition-all duration-200
             ${
               isOtherSelected
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 shadow-md"
-                : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                ? "border-church-maroon bg-brand-blush dark:bg-burgundy/10 shadow-md"
+                : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-burgundy-light/50 dark:hover:border-burgundy/50 hover:bg-brand-blush dark:hover:bg-burgundy/5"
             }
           `}>
             <input
@@ -186,7 +186,7 @@ const RadioSelectFormComponent = <T extends FieldValues,>({
                 w-5 h-5 rounded-full border-2 transition-all duration-200
                 ${
                   isOtherSelected
-                    ? "border-blue-500 bg-blue-500 shadow-md"
+                    ? "border-church-maroon bg-church-maroon shadow-md"
                     : "border-gray-300 dark:border-gray-600"
                 }
               `} />
@@ -198,7 +198,7 @@ const RadioSelectFormComponent = <T extends FieldValues,>({
             <div className="flex-1 pt-0.5">
               <div className={`text-sm font-semibold transition-colors ${
                 isOtherSelected
-                  ? "text-blue-600 dark:text-blue-400"
+                  ? "text-church-maroon dark:text-burgundy-light"
                   : "text-gray-800 dark:text-gray-200"
               }`}>
                 {otherLabel}
@@ -222,7 +222,7 @@ const RadioSelectFormComponent = <T extends FieldValues,>({
               placeholder:text-gray-400 dark:placeholder:text-gray-500
               transition-all duration-200
               focus:outline-none focus:ring-2 focus:ring-offset-0
-              border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200/50 dark:focus:ring-blue-900/50
+              border-gray-200 dark:border-gray-700 focus:border-burgundy focus:ring-burgundy/20 dark:focus:ring-burgundy/30
             `}
           />
         </div>

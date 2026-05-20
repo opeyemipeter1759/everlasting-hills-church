@@ -1,5 +1,6 @@
 import { db } from "@/lib/db/prisma";
 import { getResendClient } from "@/lib/email/resend";
+import type { Prisma } from "@prisma/client";
 import type {
   FirstTimerData,
   PrayerRequestData,
@@ -23,6 +24,7 @@ export async function submitFirstTimer(data: FirstTimerData) {
         phone: data.phone_number.trim(),
         email: data.email ? data.email.trim() : null,
         gender: data.gender ?? null,
+        attendanceType: data.attendance_type ?? null,
         howDidYouLearn: data.how_did_you_learn ?? null,
         invitedBy: data.invited_by ?? null,
         locatedInIbadan: data.located_in_ibadan ?? null,
@@ -40,7 +42,7 @@ export async function submitFirstTimer(data: FirstTimerData) {
       data: {
         tenantId: TENANT_ID,
         type: "first_timer",
-        data: data as Record<string, unknown>,
+        data: data as unknown as Prisma.InputJsonValue,
       },
     }),
   ]);
@@ -127,7 +129,7 @@ export async function submitTestimony(data: TestimonyData) {
     data: {
       tenantId: TENANT_ID,
       type: "testimony",
-      data: data as Record<string, unknown>,
+      data: data as unknown as Prisma.InputJsonValue,
     },
   });
 }

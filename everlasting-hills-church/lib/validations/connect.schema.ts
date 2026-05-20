@@ -4,8 +4,9 @@ export const firstTimerSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   phone_number: z.string().min(1, "Phone number is required"),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("Please enter a valid email address").min(1, "Email is required"),
   gender: z.string().optional(),
+  attendance_type: z.string().optional(), // "In-Person" | "Online"
   how_did_you_learn: z.string().optional(),
   invited_by: z.string().optional(),
   located_in_ibadan: z.boolean().optional(),

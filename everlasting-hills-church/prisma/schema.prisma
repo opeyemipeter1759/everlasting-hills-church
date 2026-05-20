@@ -92,6 +92,7 @@ model Visitor {
   address            String?
   occupation         String?
   gender             String?
+  attendanceType     String?  // "In-Person" | "Online"
   howDidYouLearn     String?
   invitedBy          String?
   locatedInIbadan    Boolean?

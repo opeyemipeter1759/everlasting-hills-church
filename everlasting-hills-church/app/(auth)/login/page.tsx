@@ -29,7 +29,7 @@ export default function LoginPage() {
       setServerError(error.message);
       return;
     }
-    router.push("/dashboard");
+    router.push("/me");
     router.refresh();
   };
 
@@ -37,7 +37,9 @@ export default function LoginPage() {
     <div className="py-12">
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
-        <p className="text-white/50 text-sm">Sign in to your account</p>
+        <p className="text-white/50 text-sm">
+          First time logging in? Use your phone number as your password.
+        </p>
       </div>
 
       <form
@@ -90,11 +92,8 @@ export default function LoginPage() {
           {isSubmitting ? "Signing in…" : "Sign in"}
         </button>
 
-        <p className="text-center text-sm text-gray-500">
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className="text-church-maroon font-semibold hover:underline">
-            Register
-          </Link>
+        <p className="text-center text-sm text-gray-400">
+          Accounts are created by the church admin after your first visit.
         </p>
       </form>
     </div>

@@ -1,9 +1,5 @@
 "use client";
 
-import RadioSelectForm from "@/components/form/useForm/RadioSelectForm";
-import TextAreaForm from "@/components/form/TextAreaForm";
-import InputForm from "@/components/form/useForm/InputForm";
-import RadioForm from "@/components/form/useForm/RadioForm";
 import {
   FieldErrors,
   UseFormRegister,
@@ -15,19 +11,21 @@ export type FormValues = {
   first_name: string;
   last_name: string;
   phone_number: string;
-  email?: string;
+  email: string;
   gender: string;
+  attendance_type: string; // "In-Person" | "Online"
   how_did_you_learn: string;
   invited_by?: string;
-  located_in_ibadan: boolean;
-  membership_interest: string;
+  located_in_ibadan: string; // "true" | "false" — only for In-Person
+  membership_interest: string; // "Yes" | "Maybe" | "No"
+  areas_of_interest?: string[]; // multi-select, optional
   address: string;
   date_of_birth: string;
   occupation: string;
   born_again: string;
   service_experience: string;
   prayer_point?: string;
-  whatsapp_interest: boolean;
+  whatsapp_interest: string; // "true" | "false"
 };
 
 export type StepProps = {
@@ -40,306 +38,608 @@ export type Step2Props = StepProps & {
   setValue: UseFormSetValue<FormValues>;
 };
 
+export type Step3Props = StepProps & {
+  isOnline: boolean;
+  firstName: string;
+};
+
+// ── Class helpers (no wrapper components → ref reaches native DOM) ────────────
+
+function ic(hasError?: boolean) {
+  return (
+    "w-full px-4 py-3 rounded-xl border text-sm text-gray-900 bg-white " +
+    "placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all duration-150 " +
+    "[color-scheme:light] " +
+    (hasError
+      ? "border-red-400 focus:border-red-500 focus:ring-red-200/50"
+      : "border-gray-200 focus:border-church-maroon focus:ring-church-maroon/20")
+  );
+}
+
+function tc(hasError?: boolean) {
+  return (
+    "w-full px-4 py-3 rounded-xl border text-sm text-gray-900 bg-white resize-none " +
+    "placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all duration-150 " +
+    (hasError
+      ? "border-red-400 focus:border-red-500 focus:ring-red-200/50"
+      : "border-gray-200 focus:border-church-maroon focus:ring-church-maroon/20")
+  );
+}
+
+// ── Small shared pieces ───────────────────────────────────────────────────────
+
+function Label({
+  htmlFor,
+  required,
+  children,
+}: {
+  htmlFor: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700 mb-1.5">
+      {children}
+      {required && (
+        <span className="text-red-500 ml-0.5" aria-hidden="true">
+          *
+        </span>
+      )}
+    </label>
+  );
+}
+
+function GroupLabel({
+  required,
+  children,
+}: {
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <p className="block text-sm font-medium text-gray-700 mb-2">
+      {children}
+      {required && (
+        <span className="text-red-500 ml-0.5" aria-hidden="true">
+          *
+        </span>
+      )}
+    </p>
+  );
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1.5" role="alert">
+      <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fillRule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+          clipRule="evenodd"
+        />
+      </svg>
+      {message}
+    </p>
+  );
+}
+
+function StepHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
+    <div className="pb-6 mb-6 border-b border-gray-100">
+      <h2 className="text-2xl font-bold text-gray-900 mb-1">{title}</h2>
+      {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+    </div>
+  );
+}
+
+// Radio card: has-[:checked] for card highlight, native input for ref safety
+function RadioCard({
+  value,
+  label,
+  description,
+  fieldName,
+  register: reg,
+  validation,
+  hasError,
+}: {
+  value: string;
+  label: string;
+  description?: string;
+  fieldName: keyof FormValues;
+  register: UseFormRegister<FormValues>;
+  validation?: object;
+  hasError?: boolean;
+}) {
+  return (
+    <label
+      className={
+        "relative flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer select-none " +
+        "transition-all duration-150 " +
+        "has-[:checked]:border-church-maroon has-[:checked]:bg-[#FFF4F6] " +
+        "hover:border-gray-300 " +
+        (hasError ? "border-red-300 bg-red-50/30" : "border-gray-200 bg-white")
+      }
+    >
+      <input
+        type="radio"
+        value={value}
+        className="w-4 h-4 accent-church-maroon flex-shrink-0 cursor-pointer"
+        {...reg(fieldName as any, validation)}
+      />
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-gray-800 leading-snug">{label}</p>
+        {description && (
+          <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
+        )}
+      </div>
+    </label>
+  );
+}
+
+// ── Step 1 — Personal Info ────────────────────────────────────────────────────
+
 export function Step1PersonalInfo({ register, errors }: StepProps) {
   return (
-    <div className="space-y-6">
-      <div className="mb-8 pb-6 border-b border-gray-200">
-        <h2 className="text-[#24244e] text-2xl sm:text-3xl font-bold mb-4">
-          Welcome Home! 👋
-        </h2>
-        <div className="space-y-3 text-gray-700">
-          <p className="leading-relaxed text-base">
-            We're thrilled to have you join us at{" "}
-            <span className="font-bold text-church-maroon">
-              Everlasting Hills Church, Ibadan
-            </span>
-            . We're focused on propagating and normalizing Kingdom Culture.
-          </p>
-          <p className="leading-relaxed text-sm text-gray-600">
-            Let's start by getting to know you better.
-          </p>
+    <div className="space-y-5">
+      <StepHeader
+        title="Welcome Home! 👋"
+        subtitle="We're thrilled to have you at Everlasting Hills Church. Tell us a bit about yourself."
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="first_name" required>First Name</Label>
+          <input
+            id="first_name"
+            type="text"
+            placeholder="e.g. John"
+            className={ic(!!errors.first_name)}
+            {...register("first_name", {
+              required: "First name is required",
+              minLength: { value: 2, message: "At least 2 characters" },
+            })}
+          />
+          <FieldError message={errors.first_name?.message} />
+        </div>
+
+        <div>
+          <Label htmlFor="last_name" required>Last Name</Label>
+          <input
+            id="last_name"
+            type="text"
+            placeholder="e.g. Adebowale"
+            className={ic(!!errors.last_name)}
+            {...register("last_name", {
+              required: "Last name is required",
+              minLength: { value: 2, message: "At least 2 characters" },
+            })}
+          />
+          <FieldError message={errors.last_name?.message} />
         </div>
       </div>
 
-      <div className="space-y-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <InputForm
-            label="First Name"
-            name="first_name"
-            register={register}
-            error={errors.first_name?.message}
-            placeholder="Enter your first name"
-            required
-            validationRules={{
-              minLength: { value: 2, message: "First name must be at least 2 characters" },
-            }}
-          />
-          <InputForm
-            label="Last Name"
-            name="last_name"
-            register={register}
-            error={errors.last_name?.message}
-            placeholder="Enter your last name"
-            required
-            validationRules={{
-              minLength: { value: 2, message: "Last name must be at least 2 characters" },
-            }}
-          />
-        </div>
-
-        <InputForm
-          label="Phone Number"
-          name="phone_number"
+      <div>
+        <Label htmlFor="phone_number" required>Phone Number</Label>
+        <input
+          id="phone_number"
           type="tel"
-          register={register}
-          error={errors.phone_number?.message}
-          placeholder="+234 800 000 0000"
-          required
-          validationRules={{
+          placeholder="e.g. 08012345678"
+          className={ic(!!errors.phone_number)}
+          {...register("phone_number", {
+            required: "Phone number is required",
+            minLength: { value: 7, message: "At least 7 digits" },
             pattern: {
               value: /^[\d\s\-\+\(\)]+$/,
               message: "Please enter a valid phone number",
             },
-            minLength: { value: 7, message: "Phone number must be at least 7 digits" },
-          }}
+          })}
         />
+        <FieldError message={errors.phone_number?.message} />
+      </div>
 
-        <InputForm
-          label="Email Address (Optional)"
-          name="email"
+      <div>
+        <Label htmlFor="email" required>Email Address</Label>
+        <input
+          id="email"
           type="email"
-          register={register}
-          error={errors.email?.message}
           placeholder="you@example.com"
+          className={ic(!!errors.email)}
+          {...register("email", {
+            required: "Email address is required",
+            pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: "Please enter a valid email address",
+            },
+          })}
         />
+        <FieldError message={errors.email?.message} />
+      </div>
 
-        <div>
-          <RadioForm
-            label="Gender"
-            name="gender"
+      <div>
+        <GroupLabel required>How are you joining us today?</GroupLabel>
+        <div className="grid grid-cols-2 gap-3">
+          <RadioCard
+            value="In-Person"
+            label="In-Person"
+            description="I'm physically at church"
+            fieldName="attendance_type"
             register={register}
-            error={errors.gender?.message}
-            required
-            layout="grid"
-            options={[
-              { label: "Male", value: "Male" },
-              { label: "Female", value: "Female" },
-            ]}
+            validation={{ required: "Please select how you're attending" }}
+            hasError={!!errors.attendance_type}
+          />
+          <RadioCard
+            value="Online"
+            label="Online / Livestream"
+            description="I'm streaming the service"
+            fieldName="attendance_type"
+            register={register}
+            validation={{ required: "Please select how you're attending" }}
+            hasError={!!errors.attendance_type}
           />
         </div>
+        <FieldError message={errors.attendance_type?.message} />
+      </div>
+
+      <div>
+        <GroupLabel required>Gender</GroupLabel>
+        <div className="grid grid-cols-2 gap-3">
+          {(["Male", "Female"] as const).map((g) => (
+            <RadioCard
+              key={g}
+              value={g}
+              label={g}
+              fieldName="gender"
+              register={register}
+              validation={{ required: "Please select your gender" }}
+              hasError={!!errors.gender}
+            />
+          ))}
+        </div>
+        <FieldError message={errors.gender?.message} />
       </div>
     </div>
   );
 }
 
-export function Step2FriendFamilyLocation({
-  watch,
-  register,
-  errors,
-  setValue,
-}: Step2Props) {
+// ── Step 2 — How You Found Us ─────────────────────────────────────────────────
+
+const HOW_OPTIONS = [
+  { id: "Social Media", label: "Social Media", description: "Instagram, Facebook, Twitter…" },
+  { id: "Friend/Family", label: "Friend or Family", description: "Someone personally invited me" },
+  { id: "Google Search", label: "Google Search", description: "Found us online" },
+  { id: "Website", label: "Church Website", description: "Visited everlastinghills.org" },
+  { id: "Flyer", label: "Flyer / Poster", description: "Physical or digital flyer" },
+  { id: "Other", label: "Other", description: "Another way" },
+];
+
+export function Step2FriendFamilyLocation({ register, errors, watch }: Step2Props) {
   const howDidYouLearn = watch("how_did_you_learn");
+  const isFriendFamily = howDidYouLearn === "Friend/Family";
 
   return (
-    <div className="space-y-6">
-      <div className="mb-8 pb-6 border-b border-gray-200">
-        <h2 className="text-[#24244e] text-2xl sm:text-3xl font-bold mb-3">
-          How Did You Find Us? 🔍
-        </h2>
-        <p className="text-gray-600 text-sm">
-          Help us understand how you came across Everlasting Hills Church.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <StepHeader
+        title="How Did You Find Us? 🔍"
+        subtitle="Help us understand how you came across Everlasting Hills Church."
+      />
 
       <div>
-        <RadioSelectForm
-          label="How did you learn about us?"
-          name="how_did_you_learn"
-          register={register as any}
-          setValue={setValue}
-          watch={watch}
-          error={errors.how_did_you_learn?.message}
-          required
-          options={[
-            { id: "Social Media", name: "Social Media", description: "Found us online" },
-            { id: "Friend/Family", name: "Friend/Family", description: "Invited by someone" },
-            { id: "Google Search", name: "Google Search", description: "Search engine" },
-            { id: "Website", name: "Church Website", description: "Website visit" },
-            { id: "Flyer", name: "Flyer/Poster", description: "Offline invite" },
-          ]}
-          enableOther
-          otherLabel="Other"
-          otherPlaceholder="Please specify"
-        />
+        <GroupLabel required>How did you learn about us?</GroupLabel>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {HOW_OPTIONS.map((opt) => (
+            <RadioCard
+              key={opt.id}
+              value={opt.id}
+              label={opt.label}
+              description={opt.description}
+              fieldName="how_did_you_learn"
+              register={register}
+              validation={{ required: "Please let us know how you found us" }}
+              hasError={!!errors.how_did_you_learn}
+            />
+          ))}
+        </div>
+        <FieldError message={errors.how_did_you_learn?.message} />
       </div>
 
-      {howDidYouLearn === "Friend/Family" && (
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <InputForm
-            label="Who invited you?"
-            name="invited_by"
-            register={register}
-            error={errors.invited_by?.message}
+      {isFriendFamily && (
+        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
+          <Label htmlFor="invited_by" required>Who invited you?</Label>
+          <input
+            id="invited_by"
+            type="text"
             placeholder="Enter their name"
-            required
+            className={ic(!!errors.invited_by)}
+            {...register("invited_by", {
+              required: "Please tell us who invited you",
+              minLength: { value: 2, message: "At least 2 characters" },
+            })}
           />
+          <FieldError message={errors.invited_by?.message} />
         </div>
       )}
     </div>
   );
 }
 
-export function Step3Interest({ register, errors }: StepProps) {
+// ── Step 3 — Interest ─────────────────────────────────────────────────────────
+
+export function Step3Interest({ register, errors, isOnline, firstName }: Step3Props) {
+  const name = firstName?.trim() || "Friend";
+
   return (
     <div className="space-y-6">
-      <div className="mb-8 pb-6 border-b border-gray-200">
-        <h2 className="text-[#24244e] text-2xl sm:text-3xl font-bold mb-3">
-          Your Interest 💭
-        </h2>
-        <p className="text-gray-600 text-sm">
-          Tell us a bit more about your situation and interests.
-        </p>
-      </div>
+      <StepHeader
+        title="Your Interest 💭"
+        subtitle="Tell us a bit more about your situation and church interest."
+      />
 
-      <div className="space-y-5">
-        <RadioForm
-          label="Do you reside in Ibadan?"
-          name="located_in_ibadan"
-          register={register}
-          error={errors.located_in_ibadan?.message}
-          required
-          layout="grid"
-          options={[
-            { value: true, label: "Yes, I'm local" },
-            { value: false, label: "No, I'm visiting" },
-          ]}
-        />
+      {/* Personalised online welcome */}
+      {isOnline && (
+        <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl">
+          <p className="text-base font-semibold text-blue-900 mb-1">
+            Welcome to Everlasting Hills, {name}! 🙌
+          </p>
+          <p className="text-sm text-blue-700 leading-relaxed">
+            Wherever you're watching from, you're part of this family.
+            We're glad you found us. Pull up a seat — this is your church too.
+          </p>
+        </div>
+      )}
 
-        <RadioForm
-          label="Are you interested in church membership?"
-          name="membership_interest"
-          register={register}
-          error={errors.membership_interest?.message}
-          required
-          layout="grid"
-          options={[
-            { label: "Yes", value: "Yes" },
-            { label: "Maybe", value: "Maybe" },
-            { label: "No", value: "No" },
-          ]}
-        />
+      {/* Only for in-person attendees */}
+      {!isOnline && (
+        <div>
+          <GroupLabel required>Do you reside in Ibadan?</GroupLabel>
+          <div className="grid grid-cols-2 gap-3">
+            <RadioCard
+              value="true"
+              label="Yes, I'm local"
+              fieldName="located_in_ibadan"
+              register={register}
+              validation={{ required: "Please answer this question" }}
+              hasError={!!errors.located_in_ibadan}
+            />
+            <RadioCard
+              value="false"
+              label="No, I'm visiting"
+              fieldName="located_in_ibadan"
+              register={register}
+              validation={{ required: "Please answer this question" }}
+              hasError={!!errors.located_in_ibadan}
+            />
+          </div>
+          <FieldError message={errors.located_in_ibadan?.message} />
+        </div>
+      )}
+
+      <div>
+        <GroupLabel required>
+          Would you like to attend another Sunday service with us?
+        </GroupLabel>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { value: "Yes", label: "Yes!", description: "I'd love to come back" },
+            { value: "Maybe", label: "Maybe", description: "I'm still deciding" },
+            { value: "No", label: "Not for now", description: "Thanks for having me" },
+          ].map((opt) => (
+            <RadioCard
+              key={opt.value}
+              value={opt.value}
+              label={opt.label}
+              description={opt.description}
+              fieldName="membership_interest"
+              register={register}
+              validation={{ required: "Please make a selection" }}
+              hasError={!!errors.membership_interest}
+            />
+          ))}
+        </div>
+        <FieldError message={errors.membership_interest?.message} />
       </div>
     </div>
   );
 }
 
-export function Step4Details({ register, errors }: StepProps) {
+// ── Step 4 — Connect & Explore ────────────────────────────────────────────────
+
+const EXPLORE_OPTIONS = [
+  { value: "Bible Study", label: "📖 Bible Study", description: "Deepen your understanding of the Word" },
+  { value: "Small Groups", label: "👥 Small Groups", description: "Connect in a closer community setting" },
+  { value: "Prayer Ministry", label: "🙏 Prayer Ministry", description: "Join us for corporate prayer" },
+  { value: "Worship Team", label: "🎵 Worship & Music", description: "Serve through music and worship" },
+  { value: "Children Ministry", label: "👶 Children's Ministry", description: "For families with young children" },
+  { value: "Youth Ministry", label: "🧑 Youth Ministry", description: "For teenagers and young adults" },
+  { value: "Outreach", label: "🌍 Outreach & Evangelism", description: "Spread the Gospel in the community" },
+  { value: "Volunteering", label: "🤲 Serving / Volunteering", description: "Support the church's functions" },
+];
+
+export function Step4Explore({ register, errors }: StepProps) {
   return (
-    <div className="space-y-6">
-      <div className="mb-8 pb-6 border-b border-gray-200">
-        <h2 className="text-[#24244e] text-2xl sm:text-3xl font-bold mb-3">
-          Tell Us More 📋
-        </h2>
-        <p className="text-gray-600 text-sm">
-          Help us understand your background and spiritual journey.
-        </p>
+    <div className="space-y-5">
+      <StepHeader
+        title="Connect & Explore 🌱"
+        subtitle="What areas of Everlasting Hills would you like to explore? Select all that interest you."
+      />
+
+      <div>
+        <GroupLabel>What would you like to get involved in?</GroupLabel>
+        <p className="text-xs text-gray-400 mb-3">Select all that apply — no pressure, just let us know!</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {EXPLORE_OPTIONS.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-start gap-3 p-3.5 rounded-xl border-2 border-gray-200 bg-white cursor-pointer select-none transition-all duration-150 has-[:checked]:border-church-maroon has-[:checked]:bg-[#FFF4F6] hover:border-gray-300"
+            >
+              <input
+                type="checkbox"
+                value={opt.value}
+                className="mt-0.5 w-4 h-4 accent-church-maroon flex-shrink-0 cursor-pointer"
+                {...register("areas_of_interest")}
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-800 leading-snug">{opt.label}</p>
+                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{opt.description}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 5 — Details ──────────────────────────────────────────────────────────
+
+export function Step5Details({ register, errors }: StepProps) {
+  return (
+    <div className="space-y-5">
+      <StepHeader
+        title="Tell Us More 📋"
+        subtitle="Help us understand your background and spiritual journey."
+      />
+
+      <div>
+        <Label htmlFor="address" required>Home Address</Label>
+        <input
+          id="address"
+          type="text"
+          placeholder="e.g. No. 5 Bodija, Ibadan"
+          className={ic(!!errors.address)}
+          {...register("address", { required: "Address is required" })}
+        />
+        <FieldError message={errors.address?.message} />
       </div>
 
-      <div className="space-y-5">
-        <InputForm
-          label="Home Address"
-          name="address"
-          register={register}
-          error={errors.address?.message}
-          placeholder="Enter your address"
-          required
-        />
-        
-        <InputForm
-          label="Date of Birth"
-          name="date_of_birth"
+      <div>
+        <Label htmlFor="date_of_birth" required>Date of Birth</Label>
+        <input
+          id="date_of_birth"
           type="date"
-          register={register}
-          error={errors.date_of_birth?.message}
-          required
+          className={ic(!!errors.date_of_birth)}
+          {...register("date_of_birth", { required: "Date of birth is required" })}
         />
-        
-        <InputForm
-          label="Occupation"
-          name="occupation"
-          register={register}
-          error={errors.occupation?.message}
-          placeholder="What do you do?"
-          required
+        <FieldError message={errors.date_of_birth?.message} />
+      </div>
+
+      <div>
+        <Label htmlFor="occupation" required>Occupation</Label>
+        <input
+          id="occupation"
+          type="text"
+          placeholder="e.g. Software Engineer, Student, Teacher…"
+          className={ic(!!errors.occupation)}
+          {...register("occupation", { required: "Occupation is required" })}
         />
-        
-        <RadioForm
-          label="Are you born again?"
-          name="born_again"
-          register={register as any}
-          error={errors.born_again?.message}
-          required
-          layout="grid"
-          options={[
-            { label: "Yes", value: "Yes" },
-            { label: "No", value: "No" },
-            { label: "Not sure", value: "I'm not sure" },
-          ]}
-        />
+        <FieldError message={errors.occupation?.message} />
+      </div>
+
+      <div>
+        <GroupLabel required>Are you born again?</GroupLabel>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { value: "Yes", label: "Yes" },
+            { value: "No", label: "No" },
+            { value: "I'm not sure", label: "Not sure" },
+          ].map((opt) => (
+            <RadioCard
+              key={opt.value}
+              value={opt.value}
+              label={opt.label}
+              fieldName="born_again"
+              register={register}
+              validation={{ required: "Please make a selection" }}
+              hasError={!!errors.born_again}
+            />
+          ))}
+        </div>
+        <FieldError message={errors.born_again?.message} />
       </div>
     </div>
   );
 }
 
-export function Step5Experience({ register, errors }: StepProps) {
+// ── Step 6 — Experience ───────────────────────────────────────────────────────
+
+export function Step6Experience({ register, errors }: StepProps) {
   return (
-    <div className="space-y-6">
-      <div className="mb-8 pb-6 border-b border-gray-200">
-        <h2 className="text-[#24244e] text-2xl sm:text-3xl font-bold mb-3">
-          Final Steps 🙏
-        </h2>
-        <p className="text-gray-600 text-sm">
-          Share your spiritual journey and let us know how we can support you.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <StepHeader
+        title="Your Experience 🙏"
+        subtitle="Tell us about today's service and how we can support you going forward."
+      />
 
-      <div className="space-y-5">
-        <TextAreaForm
-          label="Tell us about your church/service experience"
-          name="service_experience"
-          register={register}
-          error={errors.service_experience?.message}
+      <div>
+        <Label htmlFor="service_experience" required>
+          How was today's service for you?
+        </Label>
+        <textarea
+          id="service_experience"
           rows={4}
-          placeholder="Share your background and experience with church services..."
-          required
+          placeholder="Tell us about your experience at today's service — what stood out to you, how it made you feel, what you're taking away from it…"
+          className={tc(!!errors.service_experience)}
+          {...register("service_experience", {
+            required: "Please share your experience",
+            minLength: {
+              value: 5,
+              message: "Please share a bit more (at least 5 characters)",
+            },
+          })}
         />
-        
-        <TextAreaForm
-          label="Prayer Requests (Optional)"
-          name="prayer_point"
-          register={register}
-          error={errors.prayer_point?.message}
-          rows={3}
-          placeholder="Is there anything specific you'd like us to pray about?"
-        />
-        
-        <RadioForm
-          label="Would you like to join our WhatsApp community?"
-          name="whatsapp_interest"
-          register={register}
-          error={errors.whatsapp_interest?.message}
-          required
-          layout="grid"
-          options={[
-            { label: "Yes, add me", value: true },
-            { label: "No, thank you", value: false },
-          ]}
-        />
+        <FieldError message={errors.service_experience?.message} />
       </div>
 
-      <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-xl">
-        <p className="text-sm text-green-800">
-          ✓ You're almost done! Review your information and submit to complete your registration.
+      <div>
+        <Label htmlFor="prayer_point">
+          Prayer Request{" "}
+          <span className="text-gray-400 font-normal">(optional)</span>
+        </Label>
+        <textarea
+          id="prayer_point"
+          rows={3}
+          placeholder="Is there anything specific you'd like us to pray about for you?"
+          className={tc(!!errors.prayer_point)}
+          {...register("prayer_point")}
+        />
+        <FieldError message={errors.prayer_point?.message} />
+      </div>
+
+      <div>
+        <GroupLabel required>
+          Would you like to join our WhatsApp community?
+        </GroupLabel>
+        <div className="grid grid-cols-2 gap-3">
+          <RadioCard
+            value="true"
+            label="Yes, add me"
+            fieldName="whatsapp_interest"
+            register={register}
+            validation={{ required: "Please make a selection" }}
+            hasError={!!errors.whatsapp_interest}
+          />
+          <RadioCard
+            value="false"
+            label="No, thank you"
+            fieldName="whatsapp_interest"
+            register={register}
+            validation={{ required: "Please make a selection" }}
+            hasError={!!errors.whatsapp_interest}
+          />
+        </div>
+        <FieldError message={errors.whatsapp_interest?.message} />
+      </div>
+
+      <div className="p-4 bg-[#F0FDF4] border border-green-200 rounded-xl">
+        <p className="text-sm text-green-800 flex items-center gap-2">
+          <svg className="w-4 h-4 text-green-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clipRule="evenodd"
+            />
+          </svg>
+          Almost done! Review your answers then hit Submit below.
         </p>
       </div>
     </div>

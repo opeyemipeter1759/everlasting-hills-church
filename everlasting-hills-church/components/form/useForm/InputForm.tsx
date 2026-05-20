@@ -67,7 +67,7 @@ function InputFormComponent<T extends FieldValues>({
             ${
               error
                 ? "border-red-500 focus:border-red-600 focus:ring-red-200/50 dark:focus:ring-red-900/50"
-                : "border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200/50 dark:focus:ring-blue-900/50"
+                : "border-gray-200 dark:border-gray-700 focus:border-burgundy focus:ring-burgundy/20 dark:focus:ring-burgundy/30"
             }
             ${disabled ? "opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-900" : ""}
             ${type === "password" ? "pr-11" : ""}

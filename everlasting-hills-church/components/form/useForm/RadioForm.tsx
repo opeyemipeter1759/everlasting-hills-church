@@ -75,7 +75,7 @@ const RadioForm = <T extends FieldValues>({
                   ${
                     isDisabled
                       ? "opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-700"
-                      : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 active:scale-98"
+                      : "border-gray-200 dark:border-gray-700 hover:border-burgundy-light/50 dark:hover:border-burgundy/50 hover:bg-brand-blush dark:hover:bg-burgundy/10 active:scale-98"
                   }
                 `}
               >
@@ -91,13 +91,13 @@ const RadioForm = <T extends FieldValues>({
 
                 {/* radio UI */}
                 <div className="relative mt-1 flex-shrink-0">
-                  <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600 peer-checked:border-blue-500 peer-checked:bg-blue-500 peer-checked:shadow-md transition-all duration-200" />
+                  <div className="w-5 h-5 rounded-full border-2 border-gray-300 dark:border-gray-600 peer-checked:border-church-maroon peer-checked:bg-church-maroon peer-checked:shadow-md transition-all duration-200" />
                   {/* Inner dot for checked state */}
                   <div className="absolute inset-0 rounded-full bg-white dark:bg-white opacity-0 peer-checked:opacity-100 transition-opacity duration-200 m-1" />
                 </div>
 
                 <div className="flex-1 pt-0.5">
-                  <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 peer-checked:text-blue-600 dark:peer-checked:text-blue-400 transition-colors">
+                  <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 peer-checked:text-church-maroon dark:peer-checked:text-burgundy-light transition-colors">
                     {option.label}
                   </div>
 
