@@ -7,8 +7,8 @@ import {
   Step1PersonalInfo,
   Step2FriendFamilyLocation,
   Step3Interest,
-  Step4Details,
-  Step5Experience,
+  Step5Details,
+  Step6Experience,
 } from "./_steps";
 
 const STEP_LABELS = [
@@ -24,7 +24,7 @@ const STEP_FIELDS: (keyof FormValues)[][] = [
   ["first_name", "last_name", "phone_number", "email", "attendance_type", "gender"],
   ["how_did_you_learn", "invited_by"],
   ["located_in_ibadan", "membership_interest"],
-  ["address", "date_of_birth", "occupation", "born_again"],
+  ["address", "birth_month", "birth_day", "occupation", "born_again"],
   ["service_experience", "whatsapp_interest"],
 ];
 
@@ -44,10 +44,30 @@ export default function FirstTimerPage() {
   } = useForm<FormValues>({ mode: "onBlur" });
 
   const isOnline = watch("attendance_type") === "Online";
+  const firstName = watch("first_name") ?? "";
+  const lastName = watch("last_name") ?? "";
+  const membershipInterest = watch("membership_interest");
+
+  // Step 3 (Details) is skipped when user answers "No" to attending another service
+  const INTEREST_STEP = 2;
+  const EXPERIENCE_STEP = 4;
 
   const goNext = async () => {
     const valid = await trigger(STEP_FIELDS[currentStep]);
-    if (valid) setCurrentStep((s) => Math.min(s + 1, STEP_LABELS.length - 1));
+    if (!valid) return;
+    if (currentStep === INTEREST_STEP && membershipInterest === "No") {
+      setCurrentStep(EXPERIENCE_STEP);
+    } else {
+      setCurrentStep((s) => Math.min(s + 1, STEP_LABELS.length - 1));
+    }
+  };
+
+  const goBack = () => {
+    if (currentStep === EXPERIENCE_STEP && membershipInterest === "No") {
+      setCurrentStep(INTEREST_STEP);
+    } else {
+      setCurrentStep((s) => s - 1);
+    }
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -105,9 +125,9 @@ export default function FirstTimerPage() {
       watch={watch}
       setValue={setValue}
     />,
-    <Step3Interest key="s3" register={register} errors={errors} isOnline={isOnline} />,
-    <Step4Details key="s4" register={register} errors={errors} />,
-    <Step5Experience key="s5" register={register} errors={errors} />,
+    <Step3Interest key="s3" register={register} errors={errors} isOnline={isOnline} firstName={firstName} lastName={lastName} />,
+    <Step5Details key="s4" register={register} errors={errors} />,
+    <Step6Experience key="s5" register={register} errors={errors} />,
   ];
 
   const progress = Math.round(((currentStep + 1) / STEP_LABELS.length) * 100);
@@ -190,7 +210,7 @@ export default function FirstTimerPage() {
             {currentStep > 0 && (
               <button
                 type="button"
-                onClick={() => setCurrentStep((s) => s - 1)}
+                onClick={goBack}
                 className="flex-1 py-3.5 rounded-xl border-2 border-white/20 text-white text-sm font-semibold
                   hover:bg-white/10 hover:border-white/40 transition-all duration-200 active:scale-95"
               >

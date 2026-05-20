@@ -18,9 +18,9 @@ export type FormValues = {
   invited_by?: string;
   located_in_ibadan: string; // "true" | "false" — only for In-Person
   membership_interest: string; // "Yes" | "Maybe" | "No"
-  areas_of_interest?: string[]; // multi-select, optional
   address: string;
-  date_of_birth: string;
+  birth_month: string;
+  birth_day: string;
   occupation: string;
   born_again: string;
   service_experience: string;
@@ -41,6 +41,7 @@ export type Step2Props = StepProps & {
 export type Step3Props = StepProps & {
   isOnline: boolean;
   firstName: string;
+  lastName: string;
 };
 
 // ── Class helpers (no wrapper components → ref reaches native DOM) ────────────
@@ -365,8 +366,8 @@ export function Step2FriendFamilyLocation({ register, errors, watch }: Step2Prop
 
 // ── Step 3 — Interest ─────────────────────────────────────────────────────────
 
-export function Step3Interest({ register, errors, isOnline, firstName }: Step3Props) {
-  const name = firstName?.trim() || "Friend";
+export function Step3Interest({ register, errors, isOnline, firstName, lastName }: Step3Props) {
+  const fullName = [firstName, lastName].map((s) => s?.trim()).filter(Boolean).join(" ") || "Friend";
 
   return (
     <div className="space-y-6">
@@ -378,12 +379,13 @@ export function Step3Interest({ register, errors, isOnline, firstName }: Step3Pr
       {/* Personalised online welcome */}
       {isOnline && (
         <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl">
-          <p className="text-base font-semibold text-blue-900 mb-1">
-            Welcome to Everlasting Hills, {name}! 🙌
+          <p className="text-base font-semibold text-blue-900 mb-2 flex items-center gap-2">
+            <span className="text-xl">🫂</span>
+            Welcome to Everlasting Hills, {fullName}!
           </p>
           <p className="text-sm text-blue-700 leading-relaxed">
             Wherever you're watching from, you're part of this family.
-            We're glad you found us. Pull up a seat — this is your church too.
+            We're glad you found us. Pull up a seat, this is your church too.
           </p>
         </div>
       )}
@@ -395,7 +397,7 @@ export function Step3Interest({ register, errors, isOnline, firstName }: Step3Pr
           <div className="grid grid-cols-2 gap-3">
             <RadioCard
               value="true"
-              label="Yes, I'm local"
+              label="Yes, I do"
               fieldName="located_in_ibadan"
               register={register}
               validation={{ required: "Please answer this question" }}
@@ -416,7 +418,7 @@ export function Step3Interest({ register, errors, isOnline, firstName }: Step3Pr
 
       <div>
         <GroupLabel required>
-          Would you like to attend another Sunday service with us?
+          Would you like to attend another service with us?
         </GroupLabel>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
@@ -442,55 +444,7 @@ export function Step3Interest({ register, errors, isOnline, firstName }: Step3Pr
   );
 }
 
-// ── Step 4 — Connect & Explore ────────────────────────────────────────────────
-
-const EXPLORE_OPTIONS = [
-  { value: "Bible Study", label: "📖 Bible Study", description: "Deepen your understanding of the Word" },
-  { value: "Small Groups", label: "👥 Small Groups", description: "Connect in a closer community setting" },
-  { value: "Prayer Ministry", label: "🙏 Prayer Ministry", description: "Join us for corporate prayer" },
-  { value: "Worship Team", label: "🎵 Worship & Music", description: "Serve through music and worship" },
-  { value: "Children Ministry", label: "👶 Children's Ministry", description: "For families with young children" },
-  { value: "Youth Ministry", label: "🧑 Youth Ministry", description: "For teenagers and young adults" },
-  { value: "Outreach", label: "🌍 Outreach & Evangelism", description: "Spread the Gospel in the community" },
-  { value: "Volunteering", label: "🤲 Serving / Volunteering", description: "Support the church's functions" },
-];
-
-export function Step4Explore({ register, errors }: StepProps) {
-  return (
-    <div className="space-y-5">
-      <StepHeader
-        title="Connect & Explore 🌱"
-        subtitle="What areas of Everlasting Hills would you like to explore? Select all that interest you."
-      />
-
-      <div>
-        <GroupLabel>What would you like to get involved in?</GroupLabel>
-        <p className="text-xs text-gray-400 mb-3">Select all that apply — no pressure, just let us know!</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {EXPLORE_OPTIONS.map((opt) => (
-            <label
-              key={opt.value}
-              className="flex items-start gap-3 p-3.5 rounded-xl border-2 border-gray-200 bg-white cursor-pointer select-none transition-all duration-150 has-[:checked]:border-church-maroon has-[:checked]:bg-[#FFF4F6] hover:border-gray-300"
-            >
-              <input
-                type="checkbox"
-                value={opt.value}
-                className="mt-0.5 w-4 h-4 accent-church-maroon flex-shrink-0 cursor-pointer"
-                {...register("areas_of_interest")}
-              />
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-800 leading-snug">{opt.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{opt.description}</p>
-              </div>
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Step 5 — Details ──────────────────────────────────────────────────────────
+// ── Step 4 — Details ─────────────────────────────────────────────────────────
 
 export function Step5Details({ register, errors }: StepProps) {
   return (
@@ -513,14 +467,32 @@ export function Step5Details({ register, errors }: StepProps) {
       </div>
 
       <div>
-        <Label htmlFor="date_of_birth" required>Date of Birth</Label>
-        <input
-          id="date_of_birth"
-          type="date"
-          className={ic(!!errors.date_of_birth)}
-          {...register("date_of_birth", { required: "Date of birth is required" })}
-        />
-        <FieldError message={errors.date_of_birth?.message} />
+        <GroupLabel required>Date of Birth</GroupLabel>
+        <div className="grid grid-cols-2 gap-3">
+          <select
+            id="birth_month"
+            className={ic(!!errors.birth_month)}
+            defaultValue=""
+            {...register("birth_month", { required: "Month is required" })}
+          >
+            <option value="" disabled>Month</option>
+            {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+          <select
+            id="birth_day"
+            className={ic(!!errors.birth_day)}
+            defaultValue=""
+            {...register("birth_day", { required: "Day is required" })}
+          >
+            <option value="" disabled>Day</option>
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+              <option key={d} value={String(d)}>{d}</option>
+            ))}
+          </select>
+        </div>
+        <FieldError message={errors.birth_month?.message ?? errors.birth_day?.message} />
       </div>
 
       <div>
