@@ -31,10 +31,10 @@ export default function PrayerForm() {
   const onSubmit = async (data: FormValues) => {
     setServerError("");
     try {
-      const res = await fetch("/api/prayer-request", {
+      const res = await fetch("/api/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ type: "PRAYER_REQUEST", ...data }),
       });
       if (!res.ok) {
         const json = await res.json();

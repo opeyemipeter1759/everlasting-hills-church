@@ -1,44 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { NextRequest } from "next/server";
+import { rateLimit } from "@/lib/api/rate-limit";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { AppError } from "@/lib/api/errors";
+import { prayerRequestSchema } from "@/lib/validations/connect.schema";
+import { submitPrayerRequest } from "@/services/connect.service";
 
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
+function getIP(req: NextRequest) {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
 
 export async function POST(req: NextRequest) {
+  const ip = getIP(req);
+  const ua = req.headers.get("user-agent") ?? "unknown";
+
   try {
+    rateLimit(`connect:${ip}`, { limit: 5, windowMs: 60_000 });
+
     const body = await req.json();
-    const { request, name, email, phone, is_anonymous } = body;
-
-    if (!request || typeof request !== "string" || !request.trim()) {
-      return NextResponse.json(
-        { error: "Prayer request text is required." },
-        { status: 400 }
-      );
+    const result = prayerRequestSchema.safeParse(body);
+    if (!result.success) {
+      return apiError(result.error.issues[0].message, 400);
     }
 
-    if (request.length > 3000) {
-      return NextResponse.json(
-        { error: "Prayer request is too long." },
-        { status: 400 }
-      );
+    console.info(`[api/prayer-request] ip=${ip} ua="${ua}"`);
+    await submitPrayerRequest(result.data);
+    return apiSuccess(undefined, 201);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return apiError(err.message, err.statusCode);
     }
-
-    await db.prayerRequest.create({
-      data: {
-        tenantId: TENANT_ID,
-        request: request.trim(),
-        name: name ? String(name).trim() : null,
-        email: email ? String(email).trim() : null,
-        phone: phone ? String(phone).trim() : null,
-        isAnonymous: is_anonymous === true || is_anonymous === "true",
-      },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[api/prayer-request]", error);
-    return NextResponse.json(
-      { error: "Failed to save. Please try again." },
-      { status: 500 }
-    );
+    console.error("[api/prayer-request] error:", err);
+    return apiError("Failed to save. Please try again.", 500);
   }
 }

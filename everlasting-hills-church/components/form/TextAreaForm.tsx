@@ -32,19 +32,19 @@ const TextAreaForm = memo(
 
     return (
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-2">
           {label && (
             <label
               htmlFor={textareaId}
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="block text-sm font-semibold text-gray-700 dark:text-gray-200"
             >
               {label}
-              {required && <span className="text-red-500 ml-1">*</span>}
+              {required && <span className="text-red-500 ml-0.5">*</span>}
             </label>
           )}
 
           {showCharCount && maxLength && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
               0 / {maxLength}
             </span>
           )}
@@ -70,28 +70,31 @@ const TextAreaForm = memo(
               : undefined,
           })}
           className={`
-            w-full text-sm rounded-lg px-3 py-3
+            w-full text-sm font-medium rounded-xl px-4 py-3
             bg-white dark:bg-gray-800
             text-gray-900 dark:text-gray-100
-            border ${
-              error
-                ? "border-red-500 dark:border-red-400"
-                : "border-gray-300 dark:border-gray-600"
-            }
             placeholder:text-gray-400 dark:placeholder:text-gray-500
-            focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600
-            disabled:bg-gray-100 dark:disabled:bg-gray-900 disabled:cursor-not-allowed disabled:text-gray-500 dark:disabled:text-gray-500
-            resize-y
-            transition-colors duration-200
+            border-2 transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-offset-0
+            ${
+              error
+                ? "border-red-500 dark:border-red-400 focus:border-red-600 focus:ring-red-200/50 dark:focus:ring-red-900/50"
+                : "border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200/50 dark:focus:ring-blue-900/50"
+            }
+            disabled:bg-gray-100 dark:disabled:bg-gray-900 disabled:cursor-not-allowed disabled:text-gray-500 dark:disabled:text-gray-500 disabled:opacity-60
+            resize-none
           `}
         />
 
         {error && (
           <p
             id={errorId}
-            className="text-red-500 dark:text-red-400 text-xs mt-1"
+            className="text-red-600 dark:text-red-400 text-sm mt-2 flex items-center gap-1"
             role="alert"
           >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18.101 12.93l-.9-1.572A6.986 6.986 0 0018 10a7 7 0 10-14 0c0 .113.011.226.027.338l-.9 1.572A.75.75 0 003.75 15h12.5a.75.75 0 00.851-.07zM12 13a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+            </svg>
             {error}
           </p>
         )}

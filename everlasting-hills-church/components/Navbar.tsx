@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
+import Link from "next/link";
 
 // ── Update nav links to match your section IDs ──
 const navLinks = [
@@ -11,7 +12,7 @@ const navLinks = [
   { label: "Sermons", href: "#sermons" },
   { label: "Services", href: "#services" },
   { label: "Community", href: "#community" },
-  { label: "Forms", href: "/quick-links" },
+  { label: "Connect", href: "/connect" },
 ];
 
 export default function Navbar() {
@@ -85,6 +86,14 @@ export default function Navbar() {
 
             {/* CTA + Mobile Toggle */}
             <div className="flex items-center gap-3">
+              <Link
+                href="/login"
+                className={`hidden md:inline-flex items-center text-sm font-medium transition-colors duration-200 hover:text-burgundy ${
+                  scrolled ? "text-[#333]" : "text-white/80"
+                }`}
+              >
+                Login
+              </Link>
               <a
                 href="#services"
                 className="hidden md:inline-flex items-center px-5 py-2.5 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/20 hover:-translate-y-0.5"
@@ -131,13 +140,22 @@ export default function Navbar() {
                   {link.label}
                 </motion.a>
               ))}
-              <a
-                href="#services"
-                onClick={() => setMenuOpen(false)}
-                className="mt-4 flex items-center justify-center px-5 py-3 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
-              >
-                Join Us This Sunday
-              </a>
+              <div className="flex gap-3 mt-4">
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-full border border-[#87102C] text-[#87102C] text-sm font-semibold hover:bg-[#87102C]/5 transition-colors"
+                >
+                  Login
+                </Link>
+                <a
+                  href="#services"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
+                >
+                  Join Us Sunday
+                </a>
+              </div>
             </nav>
           </motion.div>
         )}

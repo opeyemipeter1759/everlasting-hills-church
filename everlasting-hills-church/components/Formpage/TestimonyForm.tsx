@@ -26,10 +26,10 @@ export default function TestimonyForm() {
   const onSubmit = async (data: FormValues) => {
     setServerError("");
     try {
-      const res = await fetch("/api/testimony", {
+      const res = await fetch("/api/connect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ type: "TESTIMONY", ...data }),
       });
       if (!res.ok) {
         const json = await res.json();
@@ -99,18 +99,20 @@ export default function TestimonyForm() {
           required
         />
 
-        <div>
-          <label className="block mb-2 text-sm font-medium text-gray-800 dark:text-gray-200">
+        <fieldset>
+          <legend className="block mb-2 text-sm font-medium text-gray-800 dark:text-gray-200">
             Do you want to share your testimony physically?{" "}
-            <span className="text-red-500">*</span>
-          </label>
-          <div className="flex gap-6">
+            <span className="text-red-500" aria-hidden="true">*</span>
+          </legend>
+          <div className="flex gap-6" role="radiogroup">
             {["Yes", "No"].map((value) => (
               <label
                 key={value}
+                htmlFor={`share_physically_${value}`}
                 className="flex items-center gap-2 text-gray-700 dark:text-gray-300 cursor-pointer"
               >
                 <input
+                  id={`share_physically_${value}`}
                   type="radio"
                   value={value}
                   {...register("share_physically")}
@@ -120,7 +122,7 @@ export default function TestimonyForm() {
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
 
         {serverError && (
           <p className="text-red-500 text-sm">{serverError}</p>

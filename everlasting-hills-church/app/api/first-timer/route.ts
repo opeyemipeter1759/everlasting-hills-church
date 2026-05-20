@@ -1,67 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { NextRequest } from "next/server";
+import { rateLimit } from "@/lib/api/rate-limit";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { AppError } from "@/lib/api/errors";
+import { firstTimerSchema } from "@/lib/validations/connect.schema";
+import { submitFirstTimer } from "@/services/connect.service";
 
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
+function getIP(req: NextRequest) {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
 
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const {
-      first_name,
-      last_name,
-      phone_number,
-      email,
-      gender,
-      how_did_you_learn,
-      invited_by,
-      located_in_ibadan,
-      membership_interest,
-      address,
-      date_of_birth,
-      occupation,
-      born_again,
-      service_experience,
-      prayer_point,
-      whatsapp_interest,
-    } = body;
+  const ip = getIP(req);
+  const ua = req.headers.get("user-agent") ?? "unknown";
 
-    if (!first_name || !last_name || !phone_number) {
-      return NextResponse.json(
-        { error: "First name, last name, and phone number are required." },
-        { status: 400 }
-      );
+  try {
+    rateLimit(`connect:${ip}`, { limit: 5, windowMs: 60_000 });
+
+    const body = await req.json();
+    const result = firstTimerSchema.safeParse(body);
+    if (!result.success) {
+      return apiError(result.error.issues[0].message, 400);
     }
 
-    await db.visitor.create({
-      data: {
-        tenantId: TENANT_ID,
-        firstName: String(first_name).trim(),
-        lastName: String(last_name).trim(),
-        phone: String(phone_number).trim(),
-        email: email ? String(email).trim() : null,
-        gender: gender ?? null,
-        howDidYouLearn: how_did_you_learn ?? null,
-        invitedBy: invited_by ?? null,
-        locatedInIbadan:
-          located_in_ibadan === true || located_in_ibadan === "true",
-        membershipInterest: membership_interest ?? null,
-        address: address ?? null,
-        dateOfBirth: date_of_birth ?? null,
-        occupation: occupation ?? null,
-        bornAgain: born_again ?? null,
-        serviceExperience: service_experience ?? null,
-        prayerPoint: prayer_point ?? null,
-        whatsappInterest:
-          whatsapp_interest === true || whatsapp_interest === "true",
-      },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[api/first-timer]", error);
-    return NextResponse.json(
-      { error: "Failed to save. Please try again." },
-      { status: 500 }
-    );
+    console.info(`[api/first-timer] ip=${ip} ua="${ua}"`);
+    await submitFirstTimer(result.data);
+    return apiSuccess(undefined, 201);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return apiError(err.message, err.statusCode);
+    }
+    console.error("[api/first-timer] error:", err);
+    return apiError("Failed to save. Please try again.", 500);
   }
 }

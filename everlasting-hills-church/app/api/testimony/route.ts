@@ -1,46 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { NextRequest } from "next/server";
+import { rateLimit } from "@/lib/api/rate-limit";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { AppError } from "@/lib/api/errors";
+import { testimonySchema } from "@/lib/validations/connect.schema";
+import { submitTestimony } from "@/services/connect.service";
 
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
+function getIP(req: NextRequest) {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
 
 export async function POST(req: NextRequest) {
+  const ip = getIP(req);
+  const ua = req.headers.get("user-agent") ?? "unknown";
+
   try {
+    rateLimit(`connect:${ip}`, { limit: 5, windowMs: 60_000 });
+
     const body = await req.json();
-    const { name, phone_number, content, share_physically } = body;
-
-    if (!content || typeof content !== "string" || !content.trim()) {
-      return NextResponse.json(
-        { error: "Testimony content is required." },
-        { status: 400 }
-      );
+    const result = testimonySchema.safeParse(body);
+    if (!result.success) {
+      return apiError(result.error.issues[0].message, 400);
     }
 
-    if (content.length > 5000) {
-      return NextResponse.json(
-        { error: "Testimony is too long." },
-        { status: 400 }
-      );
+    console.info(`[api/testimony] ip=${ip} ua="${ua}"`);
+    await submitTestimony(result.data);
+    return apiSuccess(undefined, 201);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return apiError(err.message, err.statusCode);
     }
-
-    await db.formSubmission.create({
-      data: {
-        tenantId: TENANT_ID,
-        type: "testimony",
-        data: {
-          name: name ? String(name).trim() : null,
-          phone_number: phone_number ? String(phone_number).trim() : null,
-          content: content.trim(),
-          share_physically: share_physically ?? null,
-        },
-      },
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[api/testimony]", error);
-    return NextResponse.json(
-      { error: "Failed to save. Please try again." },
-      { status: 500 }
-    );
+    console.error("[api/testimony] error:", err);
+    return apiError("Failed to save. Please try again.", 500);
   }
 }

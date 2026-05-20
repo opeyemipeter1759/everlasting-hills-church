@@ -18,8 +18,8 @@ export default function HomePage() {
       <ServiceSection />
       <SermonsSection />
       <CommunitySection />
-      {/* <ContactSection /> */}
       <GivingSection />
+      <ContactSection />
     </main>
   );
 }

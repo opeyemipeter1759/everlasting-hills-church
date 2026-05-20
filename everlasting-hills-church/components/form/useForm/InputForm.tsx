@@ -2,7 +2,7 @@
 
 import { EyeCloseIcon, EyeIcon } from "@/components/icons";
 import { memo, useState } from "react";
-import { UseFormRegister, FieldValues, Path } from "react-hook-form";
+import { UseFormRegister, FieldValues, Path, RegisterOptions } from "react-hook-form";
 
 type InputFormProps<T extends FieldValues> = {
   label?: string;
@@ -13,6 +13,7 @@ type InputFormProps<T extends FieldValues> = {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
+  validationRules?: RegisterOptions<T, Path<T>>;
 };
 
 function InputFormComponent<T extends FieldValues>({
@@ -24,17 +25,23 @@ function InputFormComponent<T extends FieldValues>({
   placeholder,
   required = false,
   disabled = false,
+  validationRules = {},
 }: InputFormProps<T>) {
   const [showPassword, setShowPassword] = useState(false);
 
   const inputType = type === "password" && showPassword ? "text" : type;
+
+  const rules = {
+    required: required ? `${label || "This field"} is required` : false,
+    ...validationRules,
+  };
 
   return (
     <div className="w-full">
       {label && (
         <label
           htmlFor={String(name)}
-          className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-200"
+          className="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200"
         >
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
@@ -45,24 +52,24 @@ function InputFormComponent<T extends FieldValues>({
         <input
           id={String(name)}
           type={inputType}
-          {...register(name, {
-            required: required ? `${label || "This field"} is required` : false,
-          })}
+          {...register(name, rules)}
           readOnly={disabled}
           disabled={disabled}
           aria-invalid={error ? "true" : "false"}
           aria-describedby={error ? `${String(name)}-error` : undefined}
           className={`
-            w-full text-sm rounded-lg px-4 py-2.5
+            w-full text-sm font-medium rounded-xl px-4 py-3
             bg-white dark:bg-gray-800
             text-gray-900 dark:text-gray-100
-            border focus:outline-none focus:ring-1
+            placeholder:text-gray-400 dark:placeholder:text-gray-500
+            border-2 transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-offset-0
             ${
               error
-                ? "border-red-500 focus:ring-red-200"
-                : "border-gray-300 focus:ring-blue-200"
+                ? "border-red-500 focus:border-red-600 focus:ring-red-200/50 dark:focus:ring-red-900/50"
+                : "border-gray-200 dark:border-gray-700 focus:border-blue-500 focus:ring-blue-200/50 dark:focus:ring-blue-900/50"
             }
-            ${disabled ? "opacity-60 cursor-not-allowed" : ""}
+            ${disabled ? "opacity-60 cursor-not-allowed bg-gray-100 dark:bg-gray-900" : ""}
             ${type === "password" ? "pr-11" : ""}
           `}
           placeholder={placeholder}
@@ -72,7 +79,7 @@ function InputFormComponent<T extends FieldValues>({
           <button
             type="button"
             onClick={() => setShowPassword((p) => !p)}
-            className="absolute right-2 top-1/2 -translate-y-1/2"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
           >
             {showPassword ? <EyeIcon /> : <EyeCloseIcon />}
           </button>
@@ -82,8 +89,11 @@ function InputFormComponent<T extends FieldValues>({
       {error && (
         <p
           id={`${String(name)}-error`}
-          className="mt-1 text-xs text-red-500"
+          className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-1"
         >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M18.101 12.93l-.9-1.572A6.986 6.986 0 0018 10a7 7 0 10-14 0c0 .113.011.226.027.338l-.9 1.572A.75.75 0 003.75 15h12.5a.75.75 0 00.851-.07zM12 13a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />
+          </svg>
           {error}
         </p>
       )}

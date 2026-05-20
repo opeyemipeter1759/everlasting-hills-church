@@ -1,59 +1,40 @@
-import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
-import { sendContactEmail } from "@/lib/email";
+import { NextRequest } from "next/server";
+import { rateLimit } from "@/lib/api/rate-limit";
+import { apiSuccess, apiError } from "@/lib/api/response";
+import { AppError } from "@/lib/api/errors";
+import { contactSchema } from "@/lib/validations/contact.schema";
+import { submitContactMessage } from "@/services/contact.service";
 
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function getIP(req: NextRequest) {
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
 
 export async function POST(req: NextRequest) {
+  const ip = getIP(req);
+  const ua = req.headers.get("user-agent") ?? "unknown";
+
   try {
+    rateLimit(`contact:${ip}`, { limit: 5, windowMs: 60_000 });
+
     const body = await req.json();
-    const { name, email, message } = body;
-
-    if (
-      typeof name !== "string" ||
-      typeof email !== "string" ||
-      typeof message !== "string" ||
-      !name.trim() ||
-      !email.trim() ||
-      !message.trim()
-    ) {
-      return NextResponse.json(
-        { error: "All fields are required." },
-        { status: 400 }
-      );
+    const result = contactSchema.safeParse(body);
+    if (!result.success) {
+      return apiError(result.error.issues[0].message, 400);
     }
 
-    if (name.length > 100 || email.length > 200 || message.length > 2000) {
-      return NextResponse.json({ error: "Input too long." }, { status: 400 });
+    console.info(`[api/contact] ip=${ip} ua="${ua}" name="${result.data.name}"`);
+
+    await submitContactMessage(result.data);
+    return apiSuccess(undefined, 201);
+  } catch (err) {
+    if (err instanceof AppError) {
+      return apiError(err.message, err.statusCode);
     }
-
-    if (!EMAIL_REGEX.test(email)) {
-      return NextResponse.json(
-        { error: "Invalid email address." },
-        { status: 400 }
-      );
-    }
-
-    const trimmed = {
-      name: name.trim(),
-      email: email.trim(),
-      message: message.trim(),
-    };
-
-    await Promise.all([
-      db.contactMessage.create({
-        data: { tenantId: TENANT_ID, ...trimmed },
-      }),
-      sendContactEmail(trimmed),
-    ]);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("[api/contact] Error:", error);
-    return NextResponse.json(
-      { error: "Failed to send message. Please try again." },
-      { status: 500 }
-    );
+    console.error("[api/contact] error:", err);
+    return apiError("Failed to send message. Please try again.", 500);
   }
 }

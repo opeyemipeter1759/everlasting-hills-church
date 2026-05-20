@@ -27,7 +27,7 @@ export default function RegisterPage() {
   const onSubmit = async ({ email, password }: FormValues) => {
     setServerError("");
     const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -36,6 +36,11 @@ export default function RegisterPage() {
     });
     if (error) {
       setServerError(error.message);
+      return;
+    }
+    if (data.session) {
+      router.push("/dashboard");
+      router.refresh();
       return;
     }
     setSuccess(true);
