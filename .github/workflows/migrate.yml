@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths:
       - 'everlasting-hills-church/prisma/schema.prisma'
+  workflow_dispatch:
 
 jobs:
   migrate:
