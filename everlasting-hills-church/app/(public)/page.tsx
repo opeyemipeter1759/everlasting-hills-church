@@ -1,16 +1,16 @@
-import HeroSection from "@/components/HeroSection";
-import AboutSection from "@/components/AboutSection";
-import CultureSection from "@/components/CultureSection";
-import ScriptureSection from "@/components/ScriptureSection";
-import ServiceSection from "@/components/ServiceSection";
-import SermonsSection from "@/components/SermonsSection";
-import CommunitySection from "@/components/CommunitySection";
-import ContactSection from "@/components/ContactSection";
-import GivingSection from "@/components/GivingSection";
+import AboutSection from "@/components/home/AboutSection";
+import CultureSection from "@/components/home/CultureSection";
+import ScriptureSection from "@/components/home/ScriptureSection";
+import ServiceSection from "@/components/home/ServiceSection";
+import CommunitySection from "@/components/home/CommunitySection";
+import ContactSection from "@/components/home/ContactSection";
+import GivingSection from "@/components/home/GivingSection";
+import HeroSection from "@/components/home/HeroSection";
+import SermonsSection from "@/components/home/SermonsSection";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col bg-church-dark">
+    <main className="min-h-screen flex overflow-x-hidden flex-col bg-church-dark">
       <HeroSection />
       <AboutSection />
       <CultureSection />

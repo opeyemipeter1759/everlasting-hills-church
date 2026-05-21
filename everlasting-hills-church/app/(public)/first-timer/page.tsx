@@ -100,8 +100,16 @@ export default function FirstTimerPage() {
 
   if (submitted) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-church-dark to-[#0f0f1e] flex items-center justify-center px-5">
-        <div className="text-center max-w-md">
+      <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden flex items-center justify-center px-5">
+        {/* Cinematic Ambient Background */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/90 to-church-dark" />
+          <div className="absolute inset-0 bg-gradient-to-b from-church-dark via-transparent to-church-dark/80" />
+          <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-church-maroon/20 blur-[130px] rounded-full" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-church-accent/10 blur-[120px] rounded-full" />
+          <div className="absolute inset-0 bg-grid-white opacity-20 pointer-events-none" />
+        </div>
+        <div className="text-center max-w-md relative z-10">
           <div className="w-16 h-16 rounded-full bg-[#FFE8ED] flex items-center justify-center mx-auto mb-6">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#87102C" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
@@ -133,11 +141,18 @@ export default function FirstTimerPage() {
   const progress = Math.round(((currentStep + 1) / STEP_LABELS.length) * 100);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-church-dark to-[#0f0f1e] py-12 px-4 sm:px-5">
-      <div className="max-w-2xl mx-auto">
-
+    <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden py-12 px-4 sm:px-5">
+      {/* Cinematic Ambient Background */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/90 to-church-dark" />
+        <div className="absolute inset-0 bg-gradient-to-b from-church-dark via-transparent to-church-dark/80" />
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-church-maroon/20 blur-[130px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-church-accent/10 blur-[120px] rounded-full" />
+        <div className="absolute inset-0 bg-grid-white opacity-20 pointer-events-none" />
+      </div>
+      <div className="max-w-2xl mx-auto relative z-10">
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-8 text-center mt-20">
           <h1 className="text-white text-3xl sm:text-4xl font-bold mb-2">
             Welcome to Everlasting Hills
           </h1>

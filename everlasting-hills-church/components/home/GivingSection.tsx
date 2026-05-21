@@ -2,7 +2,7 @@
 
 export default function GivingSection() {
   return (
-    <section aria-labelledby="giving-heading" className="max-w-6xl mx-auto px-5 sm:px-8 mb-16">
+    <section aria-labelledby="giving-heading" className="max-w-[1400px] mx-auto px-5 sm:px-8 mb-16">
       <div className="relative">
         <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/7 backdrop-blur-sm shadow-lg px-6 py-8 sm:px-8 sm:py-10">
           <div className="relative grid gap-6 md:grid-cols-2 items-start">
