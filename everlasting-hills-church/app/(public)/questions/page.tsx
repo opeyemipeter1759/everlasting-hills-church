@@ -1,4 +1,4 @@
-import TestimonyForm from "@/components/Formpage/TestimonyForm";
+import QuestionForm from "@/components/Formpage/QuestionForm";
 
 export default function TestimonyPage() {
   return (
@@ -20,7 +20,7 @@ export default function TestimonyPage() {
 
       {/* Centered Form Container */}
       <div className="w-full max-w-4xl mx-auto relative z-10 flex items-center justify-center min-h-[80vh]">
-        <TestimonyForm />
+        <QuestionForm />
       </div>
     </main>
   );

@@ -10,13 +10,6 @@ type QuestionFormValues = {
   message: string;
 };
 
-const inputClass = (hasError: boolean) =>
-  `w-full text-sm font-medium rounded-xl px-4 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 ${
-    hasError
-      ? "border-red-500 dark:border-red-400 focus:border-red-600 focus:ring-red-200/50"
-      : "border-gray-200 dark:border-gray-700 focus:border-burgundy focus:ring-burgundy/20"
-  }`;
-
 export default function QuestionForm() {
   const {
     register,
@@ -31,20 +24,36 @@ export default function QuestionForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
       throw new Error(json.error ?? "Failed to send. Please try again.");
     }
+
     reset();
   };
 
   if (isSubmitSuccessful) {
     return (
-      <div className="space-y-5 mt-5 text-gray-800 dark:text-gray-100">
-        <h3 className="text-[24px] font-bold text-[#24244e] dark:text-gray-100">
-          Thank you!
-        </h3>
-        <p className="text-sm text-gray-700 dark:text-gray-300">
+      <div className="space-y-5 mt-5 flex flex-col items-center justify-center py-12 text-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-church-maroon/10 flex items-center justify-center">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#87102C"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+
+        <h3 className="text-xl font-bold text-white">Message received</h3>
+
+        <p className="text-white/60 max-w-sm leading-relaxed">
           Your question has been received. We will get back to you soon.
         </p>
       </div>
@@ -52,71 +61,98 @@ export default function QuestionForm() {
   }
 
   return (
-    <div className="space-y-5 mt-5 text-gray-800 dark:text-gray-100">
-      <h3 className="text-[24px] font-bold text-[#24244e] dark:text-gray-100">
-        Dear Friend
-      </h3>
+    <div className="space-y-5 mt-10 text-gray-800 dark:text-gray-100">
+      
+      {/* HEADER (same style as Prayer/Testimony) */}
+      <div className="mb-8 text-center mt-20">
+        <h1 className="text-white text-3xl sm:text-4xl font-bold mb-2">
+          Ask a Question
+        </h1>
 
-      <p className="text-sm mt-2 text-gray-700 dark:text-gray-300">
-        Feel free to ask as many questions as you have — Bible questions, life
-        questions, or anything you haven’t gotten answers to. Just ask them all.
-      </p>
+        <p className="text-white/70 text-sm">
+          Feel free to ask Bible questions, life questions, or anything you need clarity on.
+          We are here to help you grow.
+        </p>
+      </div>
 
+      {/* FORM CARD */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 shadow-sm space-y-4"
+        className="bg-white text-black border border-gray-200 dark:border-gray-700 rounded-lg p-5 shadow-sm space-y-5"
       >
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-            Your name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="John Doe"
-            className={inputClass(!!errors.name)}
-            {...register("name", { required: "Name is required" })}
-          />
-          {errors.name && (
-            <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.name.message}</p>
-          )}
+        {/* NAME + EMAIL */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-black mb-2">
+              Name <span className="text-red-500">*</span>
+            </label>
+
+            <input
+              type="text"
+              placeholder="John Doe"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
+              {...register("name", { required: "Name is required" })}
+            />
+
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.name.message}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-black mb-2">
+              Email <span className="text-red-500">*</span>
+            </label>
+
+            <input
+              type="email"
+              placeholder="you@example.com"
+              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^\S+@\S+\.\S+$/,
+                  message: "Invalid email address",
+                },
+              })}
+            />
+
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.email.message}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
-            Email address <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            placeholder="you@example.com"
-            className={inputClass(!!errors.email)}
-            {...register("email", {
-              required: "Email is required",
-              pattern: { value: /^\S+@\S+\.\S+$/, message: "Invalid email address" },
-            })}
-          />
-          {errors.email && (
-            <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.email.message}</p>
-          )}
-        </div>
+      <div>
+  <label className="block text-sm font-semibold text-black mb-2">
+    What would you like to ask? <span className="text-red-500">*</span>
+  </label>
 
-        <TextAreaForm
-          label="What are your questions?"
-          name="message"
-          register={register}
-          rows={6}
-          required
-          placeholder="Type your questions here..."
-          error={errors.message?.message}
-        />
+  <textarea
+    rows={6}
+    placeholder="Type your question here..."
+    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none resize-none"
+    {...register("message", { required: "Message is required" })}
+  />
 
-        <Button
-          className="mt-2 w-full md:w-auto"
+  {errors.message && (
+    <p className="text-red-500 text-sm mt-1">
+      {errors.message.message}
+    </p>
+  )}
+</div>
+        {/* BUTTON (same as Prayer/Testimony system) */}
+        <button
           type="submit"
-          variant="primary"
           disabled={isSubmitting}
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-church-maroon to-burgundy-light text-white font-semibold text-sm hover:from-burgundy-dark hover:to-church-maroon transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg"
         >
-          {isSubmitting ? "Sending..." : "Submit"}
-        </Button>
+          {isSubmitting ? "Sending…" : "Submit Question"}
+        </button>
       </form>
     </div>
   );
