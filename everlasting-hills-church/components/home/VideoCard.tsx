@@ -1,93 +1,108 @@
 "use client";
 
 import type { YouTubeVideo, VideoCategory } from "@/types";
+import { motion } from "framer-motion";
+import { Eye, Play, Share2, ThumbsUp, MessageCircle } from "lucide-react";
 
 interface VideoCardProps {
   video: YouTubeVideo;
+  onOpen: (video: YouTubeVideo) => void;
 }
 
 const BADGE_COLORS: Record<VideoCategory, string> = {
-  Sunday: "bg-[#C8821A] text-white",
-  Tuesday: "bg-[#1A3A6A] text-white",
-  Shorts: "bg-[#B01A1A] text-white",
-  Other: "bg-[#2A3A2A] text-[#8AB08A]",
+  Sunday: "bg-[#87102C] text-white",
+  Saturday: "bg-[#FFB3C1] text-[#3b0714]",
+  Shorts: "bg-[#5d091f] text-[#FFE8ED]",
+  Other: "bg-[#2a1216] text-[#FFB3C1]/80",
 };
 
-export default function VideoCard({ video }: VideoCardProps) {
+function StatPill({ icon: Icon, value }: { icon: typeof Play; value: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-white/72">
+      <Icon className="h-3.5 w-3.5 text-[#FFB3C1]" />
+      {value}
+    </span>
+  );
+}
+
+export default function VideoCard({ video, onOpen }: VideoCardProps) {
   const badgeClass = BADGE_COLORS[video.category] ?? BADGE_COLORS.Other;
 
   return (
-    <a
-      href={video.watchUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group block rounded-xl overflow-hidden bg-[#0D1117] hover:bg-[#131920] transition-colors duration-200 cursor-pointer"
+    <motion.button
+      type="button"
+      onClick={() => onOpen(video)}
+      whileHover={{ y: -6, scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      className="group w-full overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,rgba(255,255,255,0.015)_100%)] text-left shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition-all duration-300 hover:border-white/18 hover:shadow-[0_30px_80px_rgba(0,0,0,0.4)]"
     >
-      {/* Thumbnail */}
-      <div className="relative aspect-video overflow-hidden rounded-xl bg-[#1A2030]">
+      <div className="relative aspect-[16/10] overflow-hidden bg-[#14070b]">
         {video.thumbnail ? (
           <img
             src={video.thumbnail}
             alt={video.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-[#1A2030] to-[#0D1117]">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <path d="M4 32L20 8L36 32H4Z" fill="white" opacity="0.08" />
-              <path d="M11 32L20 16L29 32H11Z" fill="white" opacity="0.15" />
-              <path d="M16 32L20 22L24 32H16Z" fill="white" opacity="0.3" />
-            </svg>
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#271015] via-[#14070b] to-[#0a0a0a]">
+            <div className="rounded-full border border-white/10 bg-white/5 p-5">
+              <Play className="h-8 w-8 text-[#FFB3C1]" />
+            </div>
           </div>
         )}
 
-        {/* Category badge */}
-        <div className="absolute top-2.5 left-2.5">
-          <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wide ${badgeClass}`}>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/25 to-transparent" />
+        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+          <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${badgeClass}`}>
             {video.category}
           </span>
+          {video.duration ? (
+            <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/80 backdrop-blur-sm">
+              {video.duration}
+            </span>
+          ) : null}
         </div>
 
-        {/* Duration badge */}
-        {video.duration && (
-          <div className="absolute bottom-2.5 right-2.5 px-2 py-0.5 rounded bg-black/60 backdrop-blur-sm">
-            <span className="text-white/80 text-[10px] font-medium">{video.duration}</span>
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-white/15 bg-white/10 shadow-[0_16px_40px_rgba(0,0,0,0.35)] backdrop-blur-sm">
+            <Play className="h-6 w-6 fill-white text-white" />
           </div>
-        )}
+        </div>
 
-        {/* Play overlay on hover */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20">
-          <div className="w-12 h-12 rounded-full bg-[#1A90FF]/80 backdrop-blur-sm flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="white">
-              <path d="M5 3.5l10 5.5-10 5.5V3.5z" />
-            </svg>
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <div className="flex items-center gap-2 text-[11px] font-medium text-white/70">
+            <span className="inline-flex h-2 w-2 rounded-full bg-[#FFB3C1]" />
+            Tap to open player
           </div>
         </div>
       </div>
 
-      {/* Card metadata */}
-      <div className="pt-3 pb-1 px-0.5">
-        <h3 className="text-[#D0DCE8] text-sm font-semibold leading-snug mb-1.5 line-clamp-2 group-hover:text-white transition-colors">
+      <div className="space-y-3 p-4 pt-4">
+        <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-white transition-colors group-hover:text-[#FFE8ED]">
           {video.title}
         </h3>
-        <div className="flex items-center justify-between">
-          <p className="text-[#5A7090] text-xs">
-            {video.channelTitle} · {video.formattedDate}
-          </p>
-          <span className="text-[#1A90FF] text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-            Watch
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path
-                d="M2 5h6M5.5 2.5L8 5l-2.5 2.5"
-                stroke="currentColor"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+
+        <p className="text-xs leading-relaxed text-white/60 line-clamp-2">
+          {video.channelTitle} · {video.formattedDate}
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          <StatPill icon={Eye} value={video.viewCount} />
+          <StatPill icon={ThumbsUp} value={video.likeCount} />
+          <StatPill icon={MessageCircle} value={video.commentCount} />
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#FFB3C1]">
+            <Play className="h-3.5 w-3.5 fill-current" />
+            Open player
+          </span>
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/55 transition-colors group-hover:text-white/80">
+            <Share2 className="h-3.5 w-3.5" />
+            Share
           </span>
         </div>
       </div>
-    </a>
+    </motion.button>
   );
 }

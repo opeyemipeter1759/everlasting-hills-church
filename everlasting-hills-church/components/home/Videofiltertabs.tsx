@@ -32,10 +32,11 @@ const TAB_ICONS: Record<TabLabel, ReactNode> = {
       />
     </svg>
   ),
-  Tuesday: (
+  Saturday: (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <rect x="1" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+      <rect x="1" y="2.5" width="12" height="10" rx="1.75" stroke="currentColor" strokeWidth="1.2" />
       <path d="M4 1v3M10 1v3M1 6h12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M4.6 9.2l1.1-2.2 1.1 2.2 2.4.3-1.8 1.6.5 2.3-2.2-1.2-2.2 1.2.5-2.3-1.8-1.6 2.4-.3z" fill="currentColor" opacity="0.9" />
     </svg>
   ),
   Shorts: (
@@ -56,7 +57,7 @@ export default function VideoFilterTabs({
   const tabs: TabLabel[] = ["All", ...categories];
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="inline-flex flex-wrap items-center gap-2 rounded-[28px] border border-white/10 bg-white/5 p-2 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
       {tabs.map((tab) => {
         const isActive = active === tab;
         const count = tab === "All" ? counts.total : (counts[tab] ?? 0);
@@ -66,20 +67,20 @@ export default function VideoFilterTabs({
             key={tab}
             onClick={() => onChange(tab)}
             className={[
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-200",
+              "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-all duration-200",
               isActive
-                ? "bg-[#1A90FF] border-[#1A90FF] text-white"
-                : "bg-transparent border-[#2A2F3A] text-[#8A9BB0] hover:border-[#3A4550] hover:text-[#B0BEC8]",
+                ? "bg-gradient-to-r from-church-maroon to-[#5d091f] border-transparent text-white shadow-[0_12px_30px_rgba(135,16,44,0.35)]"
+                : "bg-white/0 border-white/10 text-white/60 hover:border-white/20 hover:text-white/85 hover:bg-white/5",
             ].join(" ")}
           >
-            <span className={isActive ? "text-white" : "text-[#8A9BB0]"}>
+            <span className={isActive ? "text-white" : "text-[#FFB3C1]"}>
               {TAB_ICONS[tab] ?? null}
             </span>
             {tab}
             <span
               className={[
-                "text-xs px-1.5 py-0.5 rounded-full font-semibold",
-                isActive ? "bg-white/20 text-white" : "bg-[#1E2530] text-[#6A7A8F]",
+                "text-[11px] px-2 py-0.5 rounded-full font-bold tracking-wide",
+                isActive ? "bg-white/15 text-white" : "bg-[#250B11] text-[#FFB3C1]/80",
               ].join(" ")}
             >
               {count}

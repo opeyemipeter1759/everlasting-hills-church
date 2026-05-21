@@ -3,7 +3,7 @@
 // API response shapes here.
 export {};
 
-export type VideoCategory = "Sunday" | "Tuesday" | "Shorts" | "Other";
+export type VideoCategory = "Sunday" | "Saturday" | "Shorts" | "Other";
 
 export interface YouTubeVideo {
   id: string;
@@ -15,7 +15,13 @@ export interface YouTubeVideo {
   duration: string;
   category: VideoCategory;
   watchUrl: string;
+  embedUrl: string;
+  shareUrl: string;
+  channelUrl: string;
   channelTitle: string;
+  viewCount: string;
+  likeCount: string;
+  commentCount: string;
 }
 
 export interface CategoryCounts {

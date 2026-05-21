@@ -2,12 +2,16 @@
 
 export default function VideoCardSkeleton() {
   return (
-    <div className="rounded-xl overflow-hidden animate-pulse">
-      <div className="aspect-video bg-[#1A2030] rounded-xl" />
-      <div className="pt-3 space-y-2 px-0.5">
-        <div className="h-3.5 bg-[#1A2030] rounded w-full" />
-        <div className="h-3.5 bg-[#1A2030] rounded w-3/4" />
-        <div className="h-3 bg-[#141C28] rounded w-1/2 mt-1" />
+    <div className="overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-4 shadow-[0_24px_60px_rgba(0,0,0,0.22)] animate-pulse">
+      <div className="aspect-[16/10] rounded-[22px] bg-gradient-to-br from-[#2a1015] via-[#17080c] to-[#0d0d0d]" />
+      <div className="space-y-3 pt-4">
+        <div className="h-4 w-5/6 rounded-full bg-white/8" />
+        <div className="h-3 w-2/3 rounded-full bg-white/8" />
+        <div className="flex gap-2 pt-1">
+          <div className="h-7 w-14 rounded-full bg-white/8" />
+          <div className="h-7 w-14 rounded-full bg-white/8" />
+          <div className="h-7 w-14 rounded-full bg-white/8" />
+        </div>
       </div>
     </div>
   );

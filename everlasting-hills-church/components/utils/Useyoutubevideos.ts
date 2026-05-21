@@ -20,10 +20,24 @@ const CHANNEL_ID = process.env.NEXT_PUBLIC_YOUTUBE_CHANNEL_ID;
 function detectCategory(video: YouTubeAPIVideo): VideoCategory {
   const text = `${video.snippet.title} ${video.snippet.description}`.toLowerCase();
   if (text.includes("short")) return "Shorts";
-  if (text.includes("tuesday") || text.includes("bible study") || text.includes("word feast"))
-    return "Tuesday";
+  if (
+    text.includes("saturday") ||
+    text.includes("youth") ||
+    text.includes("worship night") ||
+    text.includes("prayer meeting")
+  )
+    return "Saturday";
   if (text.includes("sunday") || text.includes("service")) return "Sunday";
   return "Other";
+}
+
+function formatCompactNumber(value: string): string {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return value;
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(number);
 }
 
 /** Returns a formatted date string: "3 May 2026" */
@@ -113,7 +127,13 @@ export function useYouTubeVideos(maxResults = 12): UseYouTubeVideosReturn {
           duration: formatDuration(video.contentDetails.duration),
           category: detectCategory(video),
           watchUrl: `https://www.youtube.com/watch?v=${video.id}`,
+          embedUrl: `https://www.youtube.com/embed/${video.id}`,
+          shareUrl: `https://www.youtube.com/watch?v=${video.id}`,
+          channelUrl: `https://www.youtube.com/channel/${CHANNEL_ID}?sub_confirmation=1`,
           channelTitle: video.snippet.channelTitle,
+          viewCount: formatCompactNumber(video.statistics.viewCount),
+          likeCount: formatCompactNumber(video.statistics.likeCount),
+          commentCount: formatCompactNumber(video.statistics.commentCount),
         }));
 
         setVideos(enriched);
