@@ -1,12 +1,15 @@
 "use client";
 
+import React from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LogoutButton({
   className,
+  children,
 }: {
   className?: string;
+  children?: React.ReactNode;
 }) {
   const router = useRouter();
 
@@ -22,7 +25,7 @@ export default function LogoutButton({
       onClick={handleLogout}
       className={className ?? "text-sm text-white/50 hover:text-white transition-colors"}
     >
-      Sign out
+      {children ?? "Sign out"}
     </button>
   );
 }
