@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Menu, Bell } from "lucide-react";
 import type { SessionUser } from "./DashboardShell";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 const PATH_TITLES: Record<string, string> = {
   "/dashboard":                 "Dashboard",
@@ -47,24 +48,25 @@ export default function TopBar({ user: _user, onMenuClick }: Props) {
   const title = getTitle(pathname);
 
   return (
-    <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 flex items-center gap-4 px-4 sm:px-6 flex-shrink-0">
+    <header className="sticky top-0 z-30 h-16 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-white/8 flex items-center gap-4 px-4 sm:px-6 flex-shrink-0 transition-colors">
       {/* Mobile hamburger */}
       <button
         onClick={onMenuClick}
-        className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+        className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-gray-500 dark:text-gray-400"
         aria-label="Open navigation"
       >
         <Menu size={20} />
       </button>
 
       {/* Page title */}
-      <h1 className="flex-1 text-base sm:text-[17px] font-bold text-gray-900 truncate">
+      <h1 className="flex-1 text-base sm:text-[17px] font-bold text-gray-900 dark:text-white truncate">
         {title}
       </h1>
 
       {/* Right actions */}
+      <ThemeToggle />
       <button
-        className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+        className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors text-gray-500 dark:text-gray-400"
         aria-label="Notifications"
       >
         <Bell size={18} />

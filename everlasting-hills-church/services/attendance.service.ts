@@ -105,6 +105,26 @@ export async function getAllServicesWithCounts() {
   });
 }
 
+export async function getNextService() {
+  return db.service.findFirst({
+    where: { tenantId: TENANT_ID, scheduledAt: { gt: new Date() } },
+    orderBy: { scheduledAt: "asc" },
+  });
+}
+
+export async function countTotalServices() {
+  return db.service.count({ where: { tenantId: TENANT_ID } });
+}
+
+export async function getRecentServicesStats(limit = 4) {
+  return db.service.findMany({
+    where: { tenantId: TENANT_ID },
+    orderBy: { scheduledAt: "desc" },
+    take: limit,
+    include: { _count: { select: { attendance: { where: { present: true } } } } },
+  });
+}
+
 export async function countTodayCheckIns() {
   const service = await getTodayService();
   if (!service) return 0;
