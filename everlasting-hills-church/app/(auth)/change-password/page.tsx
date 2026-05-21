@@ -40,25 +40,24 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-church-dark to-[#0f0f1e] flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo / Church name */}
-        <div className="text-center mb-8">
-          <p className="text-white/40 text-xs uppercase tracking-widest mb-2">
-            Everlasting Hills Church
-          </p>
-          <h1 className="text-white text-2xl font-bold mb-3">Set Your Password</h1>
-          <p className="text-white/50 text-sm leading-relaxed max-w-sm mx-auto">
-            Your account was set up with your phone number as a temporary password.
-            Choose a secure password to protect your account.
-          </p>
-        </div>
+    <div className="w-full max-w-md mx-auto relative z-10">
+      {/* Logo / Church name */}
+      <div className="text-center mb-8">
+        <p className="text-white/40 text-xs uppercase tracking-widest mb-2">
+          Everlasting Hills Church
+        </p>
+        <h1 className="text-white text-2xl font-bold mb-3">Set Your Password</h1>
+        <p className="text-white/50 text-sm leading-relaxed max-w-sm mx-auto">
+          Your account was set up with your phone number as a temporary password.
+          Choose a secure password to protect your account.
+        </p>
+      </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-3xl p-8 shadow-2xl space-y-5"
-        >
-          <div>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-3xl p-8 shadow-2xl space-y-5"
+      >
+        <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               New Password
             </label>
@@ -109,8 +108,7 @@ export default function ChangePasswordPage() {
               "Set Password & Continue →"
             )}
           </button>
-        </form>
-      </div>
-    </main>
+      </form>
+    </div>
   );
 }

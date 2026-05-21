@@ -14,21 +14,21 @@ type Account = {
 };
 
 const LOCAL_ACCOUNTS: Account[] = [
-  { id: "a1", bank: "Fidelity", label: "Offering / Tithe", number: "5540041633", currency: "NGN" },
-  { id: "a2", bank: "Fidelity", label: "Building", number: "5080211796", currency: "NGN" },
-  { id: "a3", bank: "Fidelity", label: "Rent", number: "5080212023", currency: "NGN" },
-  { id: "a4", bank: "Fidelity", label: "Global", number: "5540041633", currency: "NGN" },
+  { id: "a1", bank: "Fidelity", label: "Offering / Tithe", number: "12345678", currency: "NGN" },
+  { id: "a2", bank: "Fidelity", label: "Building", number: "12345678", currency: "NGN" },
+  { id: "a3", bank: "Fidelity", label: "Rent", number: "12345678", currency: "NGN" },
+  { id: "a4", bank: "Fidelity", label: "Global", number: "12345678", currency: "NGN" },
 ];
 
 const OTHER_ACCOUNTS: Account[] = [
-  { id: "o1", bank: "Access Bank", label: "Building account", number: "1911506050", currency: "NGN" },
-  { id: "o2", bank: "Access Bank", label: "Seed church", number: "1911603344", currency: "NGN" },
-  { id: "o3", bank: "Stanbic IBTC", label: "Building account", number: "0072805827", currency: "NGN" },
-  { id: "o4", bank: "Moniepoint", label: "Microfinance Bank", number: "4664390779", currency: "NGN" },
+  { id: "o1", bank: "Access Bank", label: "Building account", number: "12345678", currency: "NGN" },
+  { id: "o2", bank: "Access Bank", label: "Seed church", number: "12345678", currency: "NGN" },
+  { id: "o3", bank: "Stanbic IBTC", label: "Building account", number: "12345678", currency: "NGN" },
+  { id: "o4", bank: "Moniepoint", label: "Microfinance Bank", number: "12345678", currency: "NGN" },
 ];
 
 const DOMICILIARY: Account[] = [
-  { id: "d1", bank: "Fidelity", label: "Domiciliary (USD)", number: "5080211796", currency: "USD" },
+  { id: "d1", bank: "Fidelity", label: "Domiciliary (USD)", number: "12345678", currency: "USD" },
 ];
 
 export default function GivingAccounts() {
