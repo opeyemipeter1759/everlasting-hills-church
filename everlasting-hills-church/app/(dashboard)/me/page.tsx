@@ -8,6 +8,7 @@ import {
   countTotalServices,
   getRecentServicesStats,
 } from "@/services/attendance.service";
+import { getLast6Months } from "@/services/analytics.service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAdmin } from "@/lib/auth/rbac";
 import MemberShell from "@/components/dashboard/member/MemberShell";
@@ -57,6 +58,11 @@ export default async function MePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  // First-time login: new member accounts have this flag set until they choose a password
+  if (user.user_metadata?.needs_password_change) {
+    redirect("/change-password");
+  }
+
   const [profileWithMember, attendanceRecords, todayService, nextService, totalServices, recentServices] =
     await Promise.all([
       getMemberWithProfile(user.id),
@@ -64,7 +70,7 @@ export default async function MePage() {
       getTodayService(),
       getNextService(),
       countTotalServices(),
-      getRecentServicesStats(4),
+      getRecentServicesStats(24),
     ]);
 
   // Admins go to the admin dashboard
@@ -129,6 +135,17 @@ export default async function MePage() {
     totalAttended: s._count.attendance,
   }));
 
+  // Monthly attendance (last 6 months)
+  const months = getLast6Months();
+  const attendedServiceIds = new Set(attendanceRecords.map((r) => r.serviceId));
+  const monthlyAttendance = months.map((m) => {
+    const monthServices = recentServices.filter((s) => {
+      return s.scheduledAt >= m.start && s.scheduledAt < m.end;
+    });
+    const attended = monthServices.filter((s) => attendedServiceIds.has(s.id)).length;
+    return { label: m.label, attended, total: monthServices.length };
+  });
+
   return (
     <MemberShell
       memberDisplayId={memberDisplayId}
@@ -155,6 +172,7 @@ export default async function MePage() {
         }
         prayerCount={prayerCount}
         recentServices={recentServiceStats}
+        monthlyAttendance={monthlyAttendance}
       />
     </MemberShell>
   );

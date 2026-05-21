@@ -13,6 +13,10 @@ export default async function DashboardAreaLayout({
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
+  if (user.user_metadata?.needs_password_change) {
+    redirect("/change-password");
+  }
+
   const profile = await db.profile.findUnique({
     where: { userId: user.id },
     include: { member: true },

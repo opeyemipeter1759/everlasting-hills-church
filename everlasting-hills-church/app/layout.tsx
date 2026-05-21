@@ -33,7 +33,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased bg-white dark:bg-[#111111] transition-colors">{children}</body>
     </html>
   );
 }
