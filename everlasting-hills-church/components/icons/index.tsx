@@ -225,7 +225,7 @@ export const EyeIcon = ({
         width={width}
         height={height}
         viewBox="0 0 20 20"
-        fill="none"
+        fill="currentColor"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
@@ -250,7 +250,7 @@ export const EyeCloseIcon = ({
         width={width}
         height={height}
         viewBox="0 0 20 20"
-        fill="none"
+        fill="currentColor"
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
