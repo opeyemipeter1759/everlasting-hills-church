@@ -23,7 +23,7 @@ export default function DashboardShell({ user, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#111111] transition-colors">
       <Sidebar
         user={user}
         mobileOpen={sidebarOpen}
