@@ -22,15 +22,15 @@ export default function CommunitySection() {
               </h2>
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
-              <p className="text-[#555] text-base sm:text-lg leading-relaxed mb-4">
+              <p className="text-[#555] text-base  leading-relaxed mb-4">
                 {/* ── Paragraph 1 — edit freely ── */}
                 Community at Everlasting Hills is not a program. It is a way of
-                life. We are people who genuinely do life together — in worship,
+                life. We are people who genuinely do life together  in worship,
                 in prayer, in celebration, and in the hard seasons.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.3}>
-              <p className="text-[#555] text-base sm:text-lg leading-relaxed mb-8">
+              <p className="text-[#555] text-base  leading-relaxed mb-8">
                 {/* ── Paragraph 2 — edit freely ── */}
                 Whether you are taking your very first step of faith or you have
                 walked with God for decades, there is a place for you here.
@@ -42,7 +42,7 @@ export default function CommunitySection() {
                 {/* ── Primary CTA — update link when form/page is ready ── */}
                 <a
                   href="#contact"
-                  className="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/25 hover:-translate-y-0.5"
+                  className="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-lg bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/25 hover:-translate-y-0.5"
                 >
                   <Users size={15} />
                   I&rsquo;m New Here
@@ -54,7 +54,7 @@ export default function CommunitySection() {
                 {/* ── Secondary CTA — update link to your community groups page ── */}
                 <a
                   href="#contact"
-                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full border border-[#E7CDD3] text-[#87102C] text-sm font-semibold hover:bg-white transition-colors"
+                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-lg border border-[#E7CDD3] text-[#87102C] text-sm font-semibold hover:bg-white transition-colors"
                 >
                   <Heart size={15} />
                   Join a Community
