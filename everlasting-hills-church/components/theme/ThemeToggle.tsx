@@ -1,29 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
 
 export default function ThemeToggle({ className }: { className?: string }) {
-  const [dark, setDark] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
+    const saved = localStorage.getItem("ehc-theme");
+    // Trust localStorage first; fall back to whatever FOUC script set
+    const dark = saved === "dark" || (!saved && document.documentElement.classList.contains("dark"));
+    setIsDark(dark);
+    // Ensure html class is in sync with saved preference
+    document.documentElement.classList[dark ? "add" : "remove"]("dark");
+    setMounted(true);
   }, []);
 
   const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    try { localStorage.setItem("ehc-theme", next ? "dark" : "light"); } catch {}
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList[next ? "add" : "remove"]("dark");
+    localStorage.setItem("ehc-theme", next ? "dark" : "light");
   };
+
+  // Render a same-size invisible placeholder until client is ready
+  // to avoid layout shift and hydration mismatch
+  if (!mounted) {
+    return <div className="w-9 h-9 flex-shrink-0" aria-hidden />;
+  }
 
   return (
     <button
+      type="button"
       onClick={toggle}
-      aria-label="Toggle dark mode"
-      className={className ?? "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 transition-colors"}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className={
+        className ??
+        "w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 dark:text-gray-400 transition-colors"
+      }
     >
-      {dark ? <Sun size={17} /> : <Moon size={17} />}
+      {isDark ? <Sun size={17} /> : <Moon size={17} />}
     </button>
   );
 }

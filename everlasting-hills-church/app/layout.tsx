@@ -63,7 +63,7 @@ export default function RootLayout({
           href="/favicon/android-chrome-512x512.png"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased bg-white dark:bg-[#111111] transition-colors">{children}</body>
     </html>
   );
 }

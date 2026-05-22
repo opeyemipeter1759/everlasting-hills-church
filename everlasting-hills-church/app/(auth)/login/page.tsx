@@ -36,28 +36,19 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden py-12 px-4 sm:px-5 flex items-center justify-center">
-      {/* Cinematic Ambient Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/90 to-church-dark" />
-        <div className="absolute inset-0 bg-gradient-to-b from-church-dark via-transparent to-church-dark/80" />
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-church-maroon/20 blur-[130px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-church-accent/10 blur-[120px] rounded-full" />
-        <div className="absolute inset-0 bg-grid-white opacity-20 pointer-events-none" />
+    <div className="w-full max-w-md mx-auto relative z-10">
+      <div className="mb-8 text-center">
+        <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
+        <p className="text-white text-sm">
+          First time logging in? Use your phone number as your password.
+        </p>
       </div>
-      <div className="w-full max-w-md relative z-10">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-white mb-1">Welcome back</h1>
-          <p className="text-white/50 text-sm">
-            First time logging in? Use your phone number as your password.
-          </p>
-        </div>
 
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl space-y-5"
-        >
-          <div>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white rounded-2xl p-6 sm:p-8 shadow-xl space-y-5"
+      >
+        <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Email address
             </label>
@@ -117,8 +108,7 @@ export default function LoginPage() {
           <p className="text-center text-sm text-gray-400">
             Accounts are created by the church admin after your first visit.
           </p>
-        </form>
-      </div>
-    </main>
+      </form>
+    </div>
   );
 }

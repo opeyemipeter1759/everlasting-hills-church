@@ -142,13 +142,17 @@ export default function FirstTimerPage() {
 
   return (
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden py-12 px-4 sm:px-5">
-      {/* Cinematic Ambient Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/90 to-church-dark" />
-        <div className="absolute inset-0 bg-gradient-to-b from-church-dark via-transparent to-church-dark/80" />
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-church-maroon/20 blur-[130px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-church-accent/10 blur-[120px] rounded-full" />
-        <div className="absolute inset-0 bg-grid-white opacity-20 pointer-events-none" />
+      {/* Cinematic Background with Fade Gradients (copied from Connect page) */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img 
+          src="/images/church_congregation_3_1779193624434.png" 
+          alt="Everlasting Hills Community" 
+          className="w-full h-full object-cover opacity-40 scale-105"
+        />
+        {/* The Fade-In/Out Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/40 to-church-dark" />
+        <div className="absolute inset-0 bg-gradient-to-b from-church-dark/80 via-transparent to-church-dark/80" />
+        <div className="absolute inset-0 bg-church-dark/20 backdrop-brightness-[0.8]" />
       </div>
       <div className="max-w-2xl mx-auto relative z-10">
         {/* Header */}

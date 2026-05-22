@@ -1,12 +1,7 @@
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { BarChart3 } from "lucide-react";
+import { fetchAdminAnalytics } from "@/services/analytics.service";
+import AnalyticsOverview from "@/components/dashboard/admin/AnalyticsOverview";
 
-export default function AnalyticsPage() {
-  return (
-    <ComingSoon
-      title="Analytics"
-      description="Growth trends, retention rates, engagement scores, and giving analytics."
-      icon={BarChart3}
-    />
-  );
+export default async function AnalyticsPage() {
+  const data = await fetchAdminAnalytics();
+  return <AnalyticsOverview data={data} />;
 }
