@@ -143,14 +143,14 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMenuOpen(false)}
-                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-full border border-[#87102C] text-[#87102C] text-sm font-semibold hover:bg-[#87102C]/5 transition-colors"
+                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl border border-[#87102C] text-[#87102C] text-sm font-semibold hover:bg-[#87102C]/5 transition-colors"
                 >
                   Login
                 </Link>
                 <a
                   href="#services"
                   onClick={() => setMenuOpen(false)}
-                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
+                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
                 >
                   Join Us Sunday
                 </a>
