@@ -3,9 +3,29 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ScrollReveal from "./ScrollReveal";
+import EhcSlider, { EhcImage } from "../ui/EHCSlider";
 
 const MAROON = "#87102C";
 const INTERVAL = 5500;
+
+const images: EhcImage[] = [
+  {
+    name: "Mountain lake",
+    src: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&q=80&auto=format&fit=crop",
+  },
+  {
+    name: "Forest light",
+    src: "https://images.unsplash.com/photo-1500534623283-312aade485b7?w=1200&q=80&auto=format&fit=crop",
+  },
+  {
+    name: "Green hills",
+    src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&q=80&auto=format&fit=crop",
+  },
+  {
+    name: "Mountain road",
+    src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80&auto=format&fit=crop",
+  },
+];
 
 const photos = [
   { src: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=1200&q=80", location: "Akobo · Ibadan", pillar: 1 },
@@ -22,7 +42,9 @@ export default function AboutSection() {
         <div className="grid md:grid-cols-2 gap-14 md:gap-20 items-center">
           {/* ── Left: animated gallery carousel ── */}
           <ScrollReveal direction="left">
-            <GalleryCarousel />
+          <EhcSlider images={images} word="EHC" />
+
+            
           </ScrollReveal>
           <div>
             <ScrollReveal delay={0.1}>

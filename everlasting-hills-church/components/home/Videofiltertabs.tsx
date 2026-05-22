@@ -55,7 +55,6 @@ export default function VideoFilterTabs({
   onChange,
 }: VideoFilterTabsProps) {
   const tabs: TabLabel[] = ["All", ...categories];
-
   return (
     <div className="inline-flex flex-wrap items-center gap-2 rounded-[28px] border border-white/10 bg-white/5 p-2 backdrop-blur-xl shadow-[0_18px_50px_rgba(0,0,0,0.18)]">
       {tabs.map((tab) => {

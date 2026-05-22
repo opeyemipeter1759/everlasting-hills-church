@@ -3,6 +3,7 @@
 import ScrollReveal from "./ScrollReveal";
 import { ArrowRight } from "lucide-react";
 import VideoFilterTabs from "./Videofiltertabs";
+import VideoSearchInput from "./VideoSearchInput";
 import type { CategoryCounts, VideoCategory, YouTubeVideo } from "@/types";
 import { useYouTubeVideos } from "../utils/Useyoutubevideos";
 import { useMemo, useState } from "react";
@@ -14,13 +15,14 @@ type TabLabel = "All" | VideoCategory;
 const INITIAL_FETCH = 12;
 const PAGE_SIZE = 4;
  
-const CATEGORY_TABS: VideoCategory[] = ["Sunday", "Saturday"];
+const CATEGORY_TABS: VideoCategory[] = ["Sunday", "Saturday", "Other"];
  
 export default function SermonsSection() {
   const { videos, loading, error } = useYouTubeVideos(INITIAL_FETCH);
   const [activeTab, setActiveTab] = useState<TabLabel>("All");
   const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [search, setSearch] = useState<string>("");
  
   // Build per-category counts for the tab badges
   const counts = useMemo<CategoryCounts>(() => {
@@ -32,13 +34,12 @@ export default function SermonsSection() {
   }, [videos]);
  
   // Filter by active tab
-  const filtered = useMemo(
-    () =>
-      activeTab === "All"
-        ? videos
-        : videos.filter((v) => v.category === activeTab),
-    [videos, activeTab]
-  );
+  const filtered = useMemo(() => {
+    const byTab = activeTab === "All" ? videos : videos.filter((v) => v.category === activeTab);
+    if (!search) return byTab;
+    const q = search.trim().toLowerCase();
+    return byTab.filter((v) => v.title.toLowerCase().includes(q));
+  }, [videos, activeTab, search]);
  
   // Paginate
   const visible = filtered.slice(0, visibleCount);
@@ -94,13 +95,15 @@ export default function SermonsSection() {
         </div>
 
         {!loading && !error && (
-          <div className="mb-8">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <VideoFilterTabs
               categories={CATEGORY_TABS}
               counts={counts}
               active={activeTab}
               onChange={handleTabChange}
             />
+
+            <VideoSearchInput value={search} onChange={setSearch} />
           </div>
         )}
  
