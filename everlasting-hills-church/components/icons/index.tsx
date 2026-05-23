@@ -2762,3 +2762,16 @@ export const BuildingIcon = ({
     <path d="M8 14h.01" />
   </svg>
 );
+
+export const ChurchIcon = ()=>{
+  return(
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80" viewBox="0 0 1948 634" fill="none">
+<rect width="1948" height="634" fill="url(#pattern0_3321_6)"/>
+<defs>
+<pattern id="pattern0_3321_6" patternContentUnits="objectBoundingBox" width="1" height="1">
+</pattern>
+</defs>
+</svg>
+
+  )
+}

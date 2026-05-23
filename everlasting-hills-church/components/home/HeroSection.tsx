@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 
@@ -15,16 +15,30 @@ const IMAGES = [
 ];
 
 export default function HeroSection() {
+  const rootRef = useRef<HTMLElement | null>(null);
+
   return (
-    <section 
-      id="hero" 
+    <section
+      id="hero"
+      ref={rootRef}
+      onMouseMove={(e) => {
+        const el = rootRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const x = (e.clientX - (rect.left + rect.width / 2)) / rect.width;
+        const y = (e.clientY - (rect.top + rect.height / 2)) / rect.height;
+        el.style.setProperty("--mx", String(x));
+        el.style.setProperty("--my", String(y));
+      }}
       className="relative flex-1  flex flex-col  h-[100vh] justify-center overflow-hidden pt-24 lg:pt-28"
     >
       {/* Background Gradients & Grid */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[60%] bg-church-maroon opacity-20 blur-[120px] rounded-full group-hover:opacity-30 transition-opacity duration-1000"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[50%] bg-[#4a0819] opacity-30 blur-[100px] rounded-full group-hover:opacity-40 transition-opacity duration-1000"></div>
-        <div className="absolute inset-0 bg-grid-white"></div>
+        <div className="absolute inset-0 bg-grid-white" />
+          {/* background particles (very obvious) - placed above grid but behind content (content is z-10) */}
+          <ParticleCanvas density={2} speed={2} className="opacity-50 filter saturate-100 z-0 pointer-events-none" />
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto  w-full px-6 lg:px-12 py-12 lg:py-0">
@@ -49,9 +63,14 @@ export default function HeroSection() {
               className="text-[48px] sm:text-[64px] lg:text-[84px] leading-[0.95] font-bold font-display tracking-tight mb-5"
             >
               The warmth of home <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-church-accent to-church-maroon font-serif italic font-normal">
+              <motion.span
+                className="text-transparent bg-clip-text bg-gradient-to-r from-church-accent to-church-maroon font-serif italic font-normal"
+                animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                style={{ backgroundSize: "200% 100%" }}
+              >
                 before you arrive.
-              </span>
+              </motion.span>
             </motion.h1>
 
             <motion.p
@@ -98,7 +117,16 @@ export default function HeroSection() {
               
               {/* Photo Fan Integration - Scaled and Positioned */}
               <div className="absolute  inset-0 z-10 flex items-center justify-center scale-[1] lg:scale-[1] translate-y-[-10%] sm:translate-y-0">
-                <PhotoFan images={IMAGES} />
+                <ParticleCanvas />
+                <div
+                  className="relative z-10 w-full h-full flex items-center justify-center"
+                  style={{
+                    transform: "translate3d(calc(var(--mx, 0) * 18px), calc(var(--my, 0) * 8px), 0)",
+                    transition: "transform 0.08s linear",
+                  }}
+                >
+                  <PhotoFan images={IMAGES} />
+                </div>
               </div>
 
               {/* Decorative Graphics (Design Elements from HTML) */}
@@ -195,6 +223,97 @@ function PhotoFan({ images }: { images: string[] }) {
       })}
     </div>
   );
+}
+
+function ParticleCanvas({
+  density = 1,
+  speed = 1,
+  className = "",
+}: {
+  density?: number;
+  speed?: number;
+  className?: string;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const c = canvas as HTMLCanvasElement;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const context = ctx as CanvasRenderingContext2D;
+
+    let particles: Array<{ x: number; y: number; r: number; vx: number; vy: number; a: number }> = [];
+    const DPR = window.devicePixelRatio || 1;
+
+    function resize() {
+      c.width = Math.max(300, c.clientWidth) * DPR;
+      c.height = Math.max(300, c.clientHeight) * DPR;
+      context.scale(DPR, DPR);
+    }
+
+    function init() {
+      particles = [];
+      const divisor = Math.max(2000, 8000 / Math.max(0.1, density));
+      const count = Math.round((c.clientWidth * c.clientHeight) / divisor);
+      for (let i = 0; i < Math.max(8, count); i++) {
+        particles.push({
+          x: Math.random() * c.clientWidth,
+          y: Math.random() * c.clientHeight,
+          r: 0.5 + Math.random() * (1.8 * Math.max(0.5, density)),
+          vx: (Math.random() - 0.5) * 0.15 * Math.max(0.25, speed),
+          vy: (-0.02 - Math.random() * 0.18) * Math.max(0.35, speed),
+          a: 0.04 + Math.random() * 0.12 * Math.max(0.5, density),
+        });
+      }
+    }
+
+    let raf = 0;
+
+    function draw() {
+      if (!context) return;
+      context.clearRect(0, 0, c.width, c.height);
+      context.save();
+      context.globalCompositeOperation = "lighter";
+      for (const p of particles) {
+        context.beginPath();
+        context.fillStyle = `rgba(255,255,255,${p.a})`;
+        context.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        context.fill();
+      }
+      context.restore();
+    }
+
+    function step() {
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y < -10) p.y = c.clientHeight + 10;
+        if (p.x < -10) p.x = c.clientWidth + 10;
+        if (p.x > c.clientWidth + 10) p.x = -10;
+      }
+      draw();
+      raf = requestAnimationFrame(step);
+    }
+
+    resize();
+    init();
+    raf = requestAnimationFrame(step);
+
+    const onResize = () => {
+      resize();
+      init();
+    };
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className={"absolute inset-0 w-full h-full z-0 pointer-events-none " + className} />;
 }
 
 

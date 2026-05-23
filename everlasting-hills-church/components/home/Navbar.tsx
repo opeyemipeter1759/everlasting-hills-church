@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
-// ── Update nav links to match your section IDs ──
 const navLinks = [
   { label: "About", href: "/#about" },
   { label: "Our Culture", href: "/#culture" },
@@ -25,7 +25,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close menu on resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) setMenuOpen(false);
@@ -50,18 +49,22 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <a href="/" className="flex items-center gap-2.5 group">
-              <MountainLogo scrolled={scrolled} />
+            {scrolled ? (
+                          <Image src="/logoblack.png" alt="Everlasting Hills Church Logo" width={62} height={62} className="flex-shrink-0" />
+            ) : (
+              <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={52} height={52} className="flex-shrink-0" />
+            )}
               <div className="flex flex-col leading-none">
                 <span
-                  className={`font-bold text-sm tracking-wide transition-colors duration-300 ${
+                  className={`font-bold  tracking-wide transition-colors duration-300 ${
                     scrolled ? "text-[#111111]" : "text-white"
                   }`}
                 >
                   Everlasting Hills
                 </span>
                 <span
-                  className={`text-[10px] tracking-[0.15em] uppercase font-medium transition-colors duration-300 ${
-                    scrolled ? "text-burgundy" : "text-white/70"
+                  className={`text-sm tracking-[0.15em] uppercase font-medium transition-colors duration-300 ${
+                    scrolled ? "text-burgundy font-semibold" : "text-white/70"
                   }`}
                 >
                   Church
@@ -83,8 +86,6 @@ export default function Navbar() {
                 </a>
               ))}
             </nav>
-
-            {/* CTA + Mobile Toggle */}
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
@@ -115,8 +116,6 @@ export default function Navbar() {
           </div>
         </div>
       </motion.header>
-
-      {/* Mobile menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
@@ -144,14 +143,14 @@ export default function Navbar() {
                 <Link
                   href="/login"
                   onClick={() => setMenuOpen(false)}
-                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-full border border-[#87102C] text-[#87102C] text-sm font-semibold hover:bg-[#87102C]/5 transition-colors"
+                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl border border-[#87102C] text-[#87102C] text-sm font-semibold hover:bg-[#87102C]/5 transition-colors"
                 >
                   Login
                 </Link>
                 <a
                   href="#services"
                   onClick={() => setMenuOpen(false)}
-                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-full bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
+                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
                 >
                   Join Us Sunday
                 </a>
@@ -164,7 +163,6 @@ export default function Navbar() {
   );
 }
 
-// Small inline mountain logo mark
 function MountainLogo({ scrolled }: { scrolled: boolean }) {
   const fill = scrolled ? "#87102C" : "white";
   return (
