@@ -10,6 +10,15 @@ datasource db {
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
+enum AlertType {
+  ABSENCE
+  AT_RISK
+  BIRTHDAY
+  ANNIVERSARY
+  INACTIVE
+  MILESTONE
+}
+
 enum Role {
   SUPER_ADMIN
   PASTOR
@@ -17,6 +26,19 @@ enum Role {
   UNIT_LEAD
   MEMBER
   VISITOR
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  TRANSFERRED
+  DECEASED
+}
+
+enum SermonStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
 }
 
 // ── Core ──────────────────────────────────────────────────────────────────────
@@ -38,6 +60,17 @@ model Tenant {
   attendanceRecords AttendanceRecord[]
   roleAssignments   RoleAssignment[]
   webhookLogs       PaystackWebhookLog[]
+  pastorNotes         PastorNote[]
+  followUpTasks       FollowUpTask[]
+  emailSubscribers    EmailSubscriber[]
+  sermonReactions     SermonReaction[]
+  sermonBookmarks     SermonBookmark[]
+  sermonNotes         SermonNote[]
+  listenProgress      ListenProgress[]
+  discussionQuestions DiscussionQuestion[]
+  discussionResponses DiscussionResponse[]
+  engagementScores    EngagementScore[]
+  pastoralAlerts      PastoralAlert[]
 }
 
 model Profile {
@@ -75,10 +108,24 @@ model Member {
   dateOfBirth     DateTime?
   address         String?
   joinedAt        DateTime           @default(now())
+  // Phase 2 fields
+  status          MemberStatus       @default(ACTIVE)
+  photoUrl        String?
+  bio             String?
   tenant          Tenant             @relation(fields: [tenantId], references: [id])
   profile         Profile            @relation(fields: [profileId], references: [id])
   attendance      AttendanceRecord[]
-  unitMemberships UnitMember[]
+  unitMemberships     UnitMember[]
+  pastorNotes         PastorNote[]
+  followUpTasks       FollowUpTask[]
+  sermonReactions     SermonReaction[]
+  sermonBookmarks     SermonBookmark[]
+  sermonNotes         SermonNote[]
+  listenProgress      ListenProgress[]
+  discussionResponses DiscussionResponse[]
+  notifyNewSermons    Boolean              @default(true)
+  engagementScore     EngagementScore?
+  pastoralAlerts      PastoralAlert[]
 }
 
 model Visitor {
@@ -155,6 +202,31 @@ model AttendanceRecord {
   @@unique([memberId, serviceId])
 }
 
+// ── Pastoral Tools ────────────────────────────────────────────────────────────
+
+model PastorNote {
+  id        String   @id @default(cuid())
+  tenantId  String
+  memberId  String
+  content   String
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  member    Member   @relation(fields: [memberId], references: [id])
+}
+
+model FollowUpTask {
+  id          String    @id @default(cuid())
+  tenantId    String
+  memberId    String
+  title       String
+  dueDate     DateTime?
+  done        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  member      Member    @relation(fields: [memberId], references: [id])
+}
+
 // ── Forms & Submissions ───────────────────────────────────────────────────────
 
 model FormSubmission {
@@ -191,18 +263,36 @@ model ContactMessage {
 // ── Content ───────────────────────────────────────────────────────────────────
 
 model Sermon {
-  id           String    @id @default(cuid())
-  tenantId     String
-  title        String
-  speaker      String
-  date         DateTime
-  audioUrl     String?
-  videoUrl     String?
-  thumbnailUrl String?
-  description  String?
-  publishedAt  DateTime?
-  createdAt    DateTime  @default(now())
-  tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  id            String        @id @default(cuid())
+  tenantId      String
+  title         String
+  slug          String        @unique
+  speaker       String
+  date          DateTime
+  audioUrl      String?
+  audioKey      String?
+  audioDuration Int?
+  videoUrl      String?
+  thumbnailUrl  String?
+  description   String?
+  transcript    String?
+  scriptureRef  String?
+  series        String?
+  seriesSlug    String?
+  tags          String[]
+  status        SermonStatus  @default(DRAFT)
+  isFeatured    Boolean       @default(false)
+  playCount     Int           @default(0)
+  scheduledFor  DateTime?
+  publishedAt   DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  tenant        Tenant        @relation(fields: [tenantId], references: [id])
+  reactions     SermonReaction[]
+  bookmarks     SermonBookmark[]
+  notes         SermonNote[]
+  progress      ListenProgress[]
+  discussion    DiscussionQuestion[]
 }
 
 // ── Giving ────────────────────────────────────────────────────────────────────
@@ -221,6 +311,132 @@ model GivingRecord {
   createdAt      DateTime  @default(now())
   tenant         Tenant    @relation(fields: [tenantId], references: [id])
 }
+
+// ── Sermon Engagement ─────────────────────────────────────────────────────────
+
+model SermonReaction {
+  id        String   @id @default(cuid())
+  tenantId  String
+  sermonId  String
+  memberId  String
+  type      String
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  sermon    Sermon   @relation(fields: [sermonId], references: [id])
+  member    Member   @relation(fields: [memberId], references: [id])
+
+  @@unique([sermonId, memberId])
+}
+
+model SermonBookmark {
+  id        String   @id @default(cuid())
+  tenantId  String
+  sermonId  String
+  memberId  String
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  sermon    Sermon   @relation(fields: [sermonId], references: [id])
+  member    Member   @relation(fields: [memberId], references: [id])
+
+  @@unique([sermonId, memberId])
+}
+
+model SermonNote {
+  id        String   @id @default(cuid())
+  tenantId  String
+  sermonId  String
+  memberId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  sermon    Sermon   @relation(fields: [sermonId], references: [id])
+  member    Member   @relation(fields: [memberId], references: [id])
+
+  @@unique([sermonId, memberId])
+}
+
+model ListenProgress {
+  id          String   @id @default(cuid())
+  tenantId    String
+  sermonId    String
+  memberId    String
+  positionSec Int      @default(0)
+  completed   Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  sermon      Sermon   @relation(fields: [sermonId], references: [id])
+  member      Member   @relation(fields: [memberId], references: [id])
+
+  @@unique([sermonId, memberId])
+}
+
+model EmailSubscriber {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String
+  subscribedAt DateTime @default(now())
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, email])
+}
+
+model DiscussionQuestion {
+  id        String               @id @default(cuid())
+  tenantId  String
+  sermonId  String
+  question  String
+  order     Int                  @default(0)
+  createdAt DateTime             @default(now())
+  tenant    Tenant               @relation(fields: [tenantId], references: [id])
+  sermon    Sermon               @relation(fields: [sermonId], references: [id])
+  responses DiscussionResponse[]
+}
+
+model DiscussionResponse {
+  id         String             @id @default(cuid())
+  tenantId   String
+  questionId String
+  memberId   String
+  content    String
+  createdAt  DateTime           @default(now())
+  tenant     Tenant             @relation(fields: [tenantId], references: [id])
+  question   DiscussionQuestion @relation(fields: [questionId], references: [id])
+  member     Member             @relation(fields: [memberId], references: [id])
+
+  @@unique([questionId, memberId])
+}
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+
+model EngagementScore {
+  id              String   @id @default(cuid())
+  tenantId        String
+  memberId        String   @unique
+  score           Int      @default(0)
+  attendanceScore Int      @default(0)
+  sermonScore     Int      @default(0)
+  givingScore     Int      @default(0)
+  communityScore  Int      @default(0)
+  computedAt      DateTime @default(now())
+  tenant          Tenant   @relation(fields: [tenantId], references: [id])
+  member          Member   @relation(fields: [memberId], references: [id])
+}
+
+model PastoralAlert {
+  id         String    @id @default(cuid())
+  tenantId   String
+  memberId   String
+  type       AlertType
+  message    String
+  isRead     Boolean   @default(false)
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  member     Member    @relation(fields: [memberId], references: [id])
+}
+
+// ── Giving ────────────────────────────────────────────────────────────────────
 
 model PaystackWebhookLog {
   id          String   @id @default(cuid())

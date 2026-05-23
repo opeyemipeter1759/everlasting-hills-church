@@ -2,7 +2,7 @@ import { cache } from "react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const getCurrentUser = cache(async () => {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -10,7 +10,7 @@ export const getCurrentUser = cache(async () => {
 });
 
 export const getSession = cache(async () => {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createServerSupabaseClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();

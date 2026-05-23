@@ -25,12 +25,6 @@ export default async function DashboardAreaLayout({
   if (!profile) redirect("/login");
   if (profile.role === Role.VISITOR) redirect("/");
 
-  // Members and unit leads use the /me member portal for now.
-  // Step 2 will build the member dashboard view here.
-  if (profile.role === Role.MEMBER || profile.role === Role.UNIT_LEAD) {
-    redirect("/me");
-  }
-
   const sessionUser: SessionUser = {
     id: user.id,
     email: user.email ?? "",

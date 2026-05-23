@@ -1,0 +1,50 @@
+import { notFound } from "next/navigation";
+import { getSermonById } from "@/services/sermon.service";
+import SermonForm from "@/components/dashboard/admin/SermonForm";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { SermonStatus } from "@prisma/client";
+
+export default async function EditSermonPage({ params }: { params: { id: string } }) {
+  const sermon = await getSermonById(params.id);
+  if (!sermon) notFound();
+
+  return (
+    <div className="space-y-5 max-w-3xl">
+      <div>
+        <Link href="/dashboard/sermons"
+          className="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors mb-4">
+          <ArrowLeft size={12} /> Back to Sermons
+        </Link>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Edit Sermon</h1>
+      </div>
+      <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-2xl p-6">
+        <SermonForm
+          initial={{
+            id: sermon.id,
+            title: sermon.title,
+            speaker: sermon.speaker,
+            date: sermon.date.toISOString().split("T")[0],
+            description: sermon.description ?? "",
+            transcript: sermon.transcript ?? "",
+            scriptureRef: sermon.scriptureRef ?? "",
+            series: sermon.series ?? "",
+            tags: sermon.tags.join(", "),
+            audioUrl: sermon.audioUrl ?? "",
+            audioKey: sermon.audioKey ?? "",
+            audioDuration: sermon.audioDuration ?? null,
+            videoUrl: sermon.videoUrl ?? "",
+            status: sermon.status as "DRAFT" | "PUBLISHED" | "SCHEDULED",
+            scheduledFor: sermon.scheduledFor ? sermon.scheduledFor.toISOString().slice(0, 16) : "",
+            isFeatured: sermon.isFeatured,
+          }}
+          discussionQuestions={sermon.discussion.map((q) => ({
+            id: q.id,
+            question: q.question,
+            order: q.order,
+          }))}
+        />
+      </div>
+    </div>
+  );
+}

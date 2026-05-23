@@ -66,6 +66,27 @@ export async function checkIn(userId: string) {
   return { alreadyCheckedIn: false as const, service };
 }
 
+export async function checkInByServiceId(userId: string, serviceId: string) {
+  const profile = await db.profile.findUnique({ where: { userId } });
+  if (!profile) throw new Error("Profile not found");
+
+  const member = await db.member.findUnique({ where: { profileId: profile.id } });
+  if (!member) throw new Error("Member record not found");
+
+  const service = await db.service.findUnique({ where: { id: serviceId } });
+  if (!service) throw new Error("Service not found");
+
+  const existing = await db.attendanceRecord.findUnique({
+    where: { memberId_serviceId: { memberId: member.id, serviceId: service.id } },
+  });
+  if (existing) return { alreadyCheckedIn: true as const, service };
+
+  await db.attendanceRecord.create({
+    data: { tenantId: TENANT_ID, memberId: member.id, serviceId: service.id, present: true },
+  });
+  return { alreadyCheckedIn: false as const, service };
+}
+
 export async function getMemberAttendance(userId: string) {
   const profile = await db.profile.findUnique({ where: { userId } });
   if (!profile) return [];

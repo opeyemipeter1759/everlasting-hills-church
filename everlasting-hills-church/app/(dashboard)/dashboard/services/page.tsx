@@ -1,12 +1,19 @@
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { Calendar } from "lucide-react";
+import { getAllServicesWithCounts } from "@/services/attendance.service";
+import { signServiceId } from "@/lib/qr/sign";
+import ServicesView from "@/components/dashboard/admin/ServicesView";
 
-export default function ServicesPage() {
-  return (
-    <ComingSoon
-      title="Services"
-      description="Create and manage church services. Open check-in, track attendance counts, and view service history."
-      icon={Calendar}
-    />
-  );
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+export default async function ServicesPage() {
+  const services = await getAllServicesWithCounts();
+
+  const serialised = services.map((s) => ({
+    id: s.id,
+    name: s.name,
+    scheduledAt: s.scheduledAt.toISOString(),
+    attendanceCount: s._count.attendance,
+    qrUrl: `${APP_URL}/api/attendance/qr-checkin?serviceId=${s.id}&sig=${signServiceId(s.id)}`,
+  }));
+
+  return <ServicesView services={serialised} />;
 }

@@ -13,6 +13,8 @@
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1051.0",
+    "@aws-sdk/s3-request-presigner": "^3.1051.0",
     "@prisma/client": "^6.19.3",
     "@react-email/components": "^1.0.12",
     "@supabase/ssr": "^0.10.3",
@@ -30,6 +32,7 @@
     "react-email": "^6.1.5",
     "react-hook-form": "^7.76.0",
     "resend": "^6.12.3",
+    "slugify": "^1.6.9",
     "zod": "^4.4.3"
   },
   "devDependencies": {

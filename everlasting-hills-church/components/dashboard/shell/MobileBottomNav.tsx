@@ -12,6 +12,7 @@ import {
   BookOpen,
   BarChart3,
   MessageSquare,
+  Network,
 } from "lucide-react";
 import { hasMinRole } from "./role-utils";
 import type { UserRole } from "./role-utils";
@@ -26,15 +27,17 @@ type BottomTab = {
 };
 
 const BOTTOM_TABS: BottomTab[] = [
-  { label: "Home",       href: "/dashboard",               icon: LayoutDashboard, minRole: "MEMBER" },
-  { label: "Profile",    href: "/dashboard/profile",       icon: User,            minRole: "MEMBER",  maxRole: "ADMIN" },
-  { label: "Attendance", href: "/dashboard/attendance",    icon: CheckCircle,     minRole: "MEMBER",  maxRole: "ADMIN" },
-  { label: "Prayer",     href: "/dashboard/prayer-requests",icon: Heart,          minRole: "MEMBER",  maxRole: "ADMIN" },
-  { label: "Testimony",  href: "/dashboard/testimonies",   icon: MessageSquare,   minRole: "MEMBER",  maxRole: "ADMIN" },
-  { label: "Members",    href: "/dashboard/members",       icon: Users,           minRole: "ADMIN" },
-  { label: "1st Timers", href: "/dashboard/first-timers",  icon: UserPlus,        minRole: "ADMIN",   maxRole: "PASTOR" },
-  { label: "Sermons",    href: "/dashboard/sermons",       icon: BookOpen,        minRole: "PASTOR" },
-  { label: "Analytics",  href: "/dashboard/analytics",     icon: BarChart3,       minRole: "PASTOR" },
+  { label: "Home",       href: "/dashboard",                         icon: LayoutDashboard, minRole: "MEMBER" },
+  { label: "Profile",    href: "/dashboard/profile",                 icon: User,            minRole: "MEMBER",    maxRole: "ADMIN" },
+  { label: "Attendance", href: "/dashboard/attendance",              icon: CheckCircle,     minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
+  { label: "Prayer",     href: "/dashboard/prayer-requests",         icon: Heart,           minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
+  { label: "Testimony",  href: "/dashboard/testimonies",             icon: MessageSquare,   minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
+  { label: "Depts",      href: "/dashboard/analytics/departments",   icon: Network,         minRole: "UNIT_LEAD", maxRole: "ADMIN" },
+  { label: "Prayer",     href: "/dashboard/prayer-requests",         icon: Heart,           minRole: "UNIT_LEAD", maxRole: "ADMIN" },
+  { label: "Members",    href: "/dashboard/members",                 icon: Users,           minRole: "ADMIN" },
+  { label: "1st Timers", href: "/dashboard/first-timers",            icon: UserPlus,        minRole: "ADMIN",     maxRole: "PASTOR" },
+  { label: "Sermons",    href: "/dashboard/sermons",                 icon: BookOpen,        minRole: "PASTOR" },
+  { label: "Analytics",  href: "/dashboard/analytics/attendance",    icon: BarChart3,       minRole: "PASTOR" },
 ];
 
 export default function MobileBottomNav({ user }: { user: SessionUser }) {

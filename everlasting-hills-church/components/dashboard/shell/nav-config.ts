@@ -19,6 +19,11 @@ import {
   PhoneForwarded,
   Settings,
   Shield,
+  Mail,
+  TrendingUp,
+  Bell,
+  FileText,
+  Activity,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -70,12 +75,26 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    section: "Analytics",
+    items: [
+      { label: "Attendance",    href: "/dashboard/analytics/attendance",    icon: ClipboardList, minRole: "ADMIN" },
+      { label: "Growth",        href: "/dashboard/analytics/growth",        icon: TrendingUp,    minRole: "ADMIN" },
+      { label: "First Timers",  href: "/dashboard/analytics/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
+      { label: "Departments",   href: "/dashboard/analytics/departments",   icon: Network,       minRole: "UNIT_LEAD" },
+      { label: "Engagement",    href: "/dashboard/analytics/engagement",    icon: Activity,      minRole: "PASTOR" },
+      { label: "Giving",        href: "/dashboard/analytics/giving",        icon: DollarSign,    minRole: "PASTOR" },
+    ],
+  },
+  {
     section: "Pastoral",
     items: [
-      { label: "Sermons",    href: "/dashboard/sermons",    icon: BookOpen,       minRole: "PASTOR" },
-      { label: "Giving",     href: "/dashboard/giving",     icon: DollarSign,     minRole: "PASTOR" },
-      { label: "Analytics",  href: "/dashboard/analytics",  icon: BarChart3,      minRole: "PASTOR" },
-      { label: "Follow-ups", href: "/dashboard/follow-ups", icon: PhoneForwarded, minRole: "PASTOR" },
+      { label: "Sermons",           href: "/dashboard/sermons",            icon: BookOpen,       minRole: "PASTOR" },
+      { label: "Sermon Analytics",  href: "/dashboard/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
+      { label: "Subscribers",       href: "/dashboard/subscribers",        icon: Mail,           minRole: "PASTOR" },
+      { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },
+      { label: "Follow-ups",        href: "/dashboard/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
+      { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
+      { label: "Reports",           href: "/dashboard/reports",            icon: FileText,       minRole: "PASTOR" },
     ],
   },
   {

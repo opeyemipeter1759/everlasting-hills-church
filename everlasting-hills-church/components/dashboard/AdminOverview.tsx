@@ -6,6 +6,7 @@ import {
   Users, UserPlus, CheckCircle, Heart,
   ArrowUpRight, Search, ChevronRight,
   Mail, Phone, MapPin, Briefcase, Wifi, WifiOff,
+  Cake, AlertTriangle,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -42,12 +43,29 @@ export interface AdminStats {
   prayers: number;
 }
 
+export interface BirthdayEntry {
+  id: string;
+  firstName: string;
+  lastName: string;
+  daysUntil: number;
+  photoUrl: string | null;
+}
+
+export interface AbsentEntry {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+}
+
 export interface AdminOverviewProps {
   userName: string | null;
   stats: AdminStats;
   recentVisitors: VisitorRow[];
   recentMembers: MemberRow[];
   memberEmails: string[];
+  birthdayFeed: BirthdayEntry[];
+  absentMembers: AbsentEntry[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -339,6 +357,8 @@ export default function AdminOverview({
   recentVisitors,
   recentMembers,
   memberEmails,
+  birthdayFeed,
+  absentMembers,
 }: AdminOverviewProps) {
   const [convertedEmails, setConvertedEmails] = useState(() => new Set(memberEmails));
   const [ftSearch, setFtSearch] = useState("");
@@ -437,6 +457,100 @@ export default function AdminOverview({
           </Link>
         ))}
       </div>
+
+      {/* ── Birthday + Absence alert ──────────────────────────────────────── */}
+      {(birthdayFeed.length > 0 || absentMembers.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          {/* Birthdays this week */}
+          <div className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden transition-colors">
+            <div className="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-white/8">
+              <div className="w-7 h-7 rounded-lg bg-pink-50 dark:bg-pink-500/15 flex items-center justify-center flex-shrink-0">
+                <Cake size={14} className="text-pink-600 dark:text-pink-400" />
+              </div>
+              <h3 className="text-xs font-black uppercase tracking-wide text-gray-700 dark:text-gray-300">Birthdays This Week</h3>
+              <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-pink-50 dark:bg-pink-500/15 text-pink-600 dark:text-pink-400">
+                {birthdayFeed.length}
+              </span>
+            </div>
+            {birthdayFeed.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-400 dark:text-gray-500 text-center">No upcoming birthdays</p>
+            ) : (
+              <ul className="divide-y divide-gray-100 dark:divide-white/8">
+                {birthdayFeed.map((b) => (
+                  <li key={b.id} className="flex items-center gap-3 px-5 py-3">
+                    {b.photoUrl ? (
+                      <img src={b.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${avatarColor(`${b.firstName} ${b.lastName}`)}`}>
+                        {b.firstName[0]}{b.lastName[0]}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
+                        {b.firstName} {b.lastName}
+                      </p>
+                    </div>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                      b.daysUntil === 0
+                        ? "bg-pink-100 dark:bg-pink-500/20 text-pink-700 dark:text-pink-400"
+                        : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400"
+                    }`}>
+                      {b.daysUntil === 0 ? "Today!" : `In ${b.daysUntil}d`}
+                    </span>
+                    <Link
+                      href={`/dashboard/members/${b.id}`}
+                      className="text-gray-300 dark:text-gray-600 hover:text-[#87102C] dark:hover:text-[#e8768a] transition-colors flex-shrink-0"
+                    >
+                      <ChevronRight size={14} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Absent 3+ Sundays */}
+          <div className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden transition-colors">
+            <div className="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-white/8">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="text-xs font-black uppercase tracking-wide text-gray-700 dark:text-gray-300">Absent 3+ Sundays</h3>
+              <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                {absentMembers.length}
+              </span>
+            </div>
+            {absentMembers.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-400 dark:text-gray-500 text-center">All members attended recently</p>
+            ) : (
+              <ul className="divide-y divide-gray-100 dark:divide-white/8 max-h-60 overflow-y-auto">
+                {absentMembers.map((a) => (
+                  <li key={a.id} className="flex items-center gap-3 px-5 py-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${avatarColor(`${a.firstName} ${a.lastName}`)}`}>
+                      {a.firstName[0]}{a.lastName[0]}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
+                        {a.firstName} {a.lastName}
+                      </p>
+                      {a.email && (
+                        <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{a.email}</p>
+                      )}
+                    </div>
+                    <Link
+                      href={`/dashboard/members/${a.id}`}
+                      className="text-gray-300 dark:text-gray-600 hover:text-[#87102C] dark:hover:text-[#e8768a] transition-colors flex-shrink-0"
+                    >
+                      <ChevronRight size={14} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── First Timers ────────────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/10 overflow-hidden transition-colors">

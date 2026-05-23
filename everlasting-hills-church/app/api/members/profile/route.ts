@@ -9,6 +9,8 @@ const patchSchema = z.object({
   phone: z.string().min(1).optional(),
   address: z.string().optional(),
   dateOfBirth: z.string().optional(),
+  bio: z.string().max(500).optional(),
+  photoUrl: z.string().url().optional().or(z.literal("")),
 });
 
 export async function PATCH(req: NextRequest) {

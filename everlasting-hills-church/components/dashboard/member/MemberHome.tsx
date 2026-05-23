@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Circle, Zap, Heart, Clock, Calendar, CheckCircle2,
   BookOpen, Sparkles, Bell, ChevronRight, TrendingUp,
+  User, Camera, Headphones, Bookmark, Play,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -16,6 +18,8 @@ export interface MemberHomeProps {
     phone: string | null;
     address: string | null;
     dateOfBirth: string | null;
+    bio: string | null;
+    photoUrl: string | null;
   } | null;
   userEmail: string;
   memberDisplayId: string;
@@ -29,6 +33,10 @@ export interface MemberHomeProps {
   prayerCount: number;
   recentServices: Array<{ name: string; scheduledAt: string; totalAttended: number }>;
   monthlyAttendance: Array<{ label: string; attended: number; total: number }>;
+  birthdayDaysUntil: number | null;
+  sermonStreak: number;
+  bookmarks: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; audioUrl: string | null }>;
+  listenHistory: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; positionSec: number; completed: boolean; audioDuration: number | null }>;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -357,6 +365,159 @@ function ActivityFeed({ services, prayerCount }: {
   );
 }
 
+// ── Profile Edit Card ─────────────────────────────────────────────────────────
+
+function ProfileEditCard({ member, initials }: {
+  member: NonNullable<MemberHomeProps["member"]>;
+  initials: string;
+}) {
+  const [photo, setPhoto] = useState(member.photoUrl ?? "");
+  const [bio, setBio] = useState(member.bio ?? "");
+  const [phone, setPhone] = useState(member.phone ?? "");
+  const [address, setAddress] = useState(member.address ?? "");
+  const [dob, setDob] = useState(member.dateOfBirth ?? "");
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/members/avatar", { method: "POST", body: fd });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(json.error ?? "Upload failed"); return; }
+      setPhoto(json.data.photoUrl);
+    } catch { setError("Upload failed. Please try again."); }
+    finally { setUploading(false); }
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    setSaved(false);
+    try {
+      const res = await fetch("/api/members/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bio, phone, address, dateOfBirth: dob || undefined }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) { setError(json.error ?? "Save failed"); return; }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch { setError("Network error. Please try again."); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden transition-colors">
+      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100 dark:border-white/8">
+        <div className="w-7 h-7 rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center">
+          <User size={14} className="text-[#87102C]" />
+        </div>
+        <h3 className="text-xs font-black uppercase tracking-wide text-gray-700 dark:text-gray-300">My Profile</h3>
+      </div>
+
+      <form onSubmit={handleSave} className="p-5 space-y-5">
+        {/* Avatar */}
+        <div className="flex items-center gap-4">
+          <label className="relative cursor-pointer group flex-shrink-0">
+            {photo ? (
+              <img src={photo} alt="Avatar" className="w-16 h-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-white/10" />
+            ) : (
+              <div className="w-16 h-16 rounded-full bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center text-xl font-bold text-[#87102C] dark:text-[#e8768a] ring-2 ring-gray-200 dark:ring-white/10">
+                {initials}
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              {uploading ? (
+                <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Camera size={16} className="text-white" />
+              )}
+            </div>
+            <input type="file" accept="image/*" className="sr-only" onChange={handlePhotoChange} disabled={uploading} />
+          </label>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">{member.firstName} {member.lastName}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{member.email}</p>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">Click avatar to upload photo · Max 2 MB</p>
+          </div>
+        </div>
+
+        {/* Bio */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">About Me</label>
+          <textarea
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={3}
+            maxLength={500}
+            placeholder="Share a little about yourself…"
+            className="w-full text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600"
+          />
+          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5 text-right">{bio.length}/500</p>
+        </div>
+
+        {/* Phone + DOB */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Phone Number</label>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+234 800 000 0000"
+              className="w-full text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Date of Birth</label>
+            <input
+              type="date"
+              value={dob}
+              onChange={(e) => setDob(e.target.value)}
+              className="w-full text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40 transition-all"
+            />
+          </div>
+        </div>
+
+        {/* Address */}
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Address</label>
+          <input
+            type="text"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Your home address"
+            className="w-full text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-600"
+          />
+        </div>
+
+        {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
+
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={saving}
+            className="text-sm font-semibold px-4 py-2 rounded-lg bg-[#87102C] text-white hover:bg-[#6E0C24] disabled:opacity-50 transition-all"
+          >
+            {saving ? "Saving…" : "Save Changes"}
+          </button>
+          {saved && <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Saved!</p>}
+        </div>
+      </form>
+    </div>
+  );
+}
+
 // ── Monthly Attendance Chart ──────────────────────────────────────────────────
 
 function MonthlyAttendanceChart({ data }: { data: MemberHomeProps["monthlyAttendance"] }) {
@@ -429,6 +590,10 @@ export default function MemberHome({
   prayerCount,
   recentServices,
   monthlyAttendance,
+  birthdayDaysUntil,
+  sermonStreak,
+  bookmarks,
+  listenHistory,
 }: MemberHomeProps) {
   const displayName = member
     ? `${member.firstName} ${member.lastName}`
@@ -437,9 +602,49 @@ export default function MemberHome({
   const firstName = member?.firstName ?? displayName.split(" ")[0];
   const standing = standingLabel(attendanceRate);
   const streak = streakLabel(streakWeeks);
+  const initials = member
+    ? `${member.firstName[0]}${member.lastName[0]}`.toUpperCase()
+    : (userEmail[0] ?? "M").toUpperCase();
+
+  const [qrBanner, setQrBanner] = useState<{ type: "success" | "already" | "error" | "invalid"; service?: string } | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const qr = params.get("qr");
+    if (!qr) return;
+    const service = params.get("service") ?? undefined;
+    if (qr === "success" || qr === "already" || qr === "error" || qr === "invalid") {
+      setQrBanner({ type: qr, service });
+    }
+    // Clean URL without reload
+    const clean = window.location.pathname;
+    window.history.replaceState({}, "", clean);
+  }, []);
 
   return (
     <div className="space-y-5 max-w-6xl">
+
+      {/* ── QR Check-in Result ───────────────────────────────────────────── */}
+      {qrBanner && (
+        <div className={`flex items-center gap-3 px-5 py-3.5 rounded-xl border text-sm font-medium transition-colors ${
+          qrBanner.type === "success"
+            ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+            : qrBanner.type === "already"
+            ? "bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-500/20 text-sky-700 dark:text-sky-400"
+            : "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400"
+        }`}>
+          <span className="text-lg flex-shrink-0">
+            {qrBanner.type === "success" ? "✅" : qrBanner.type === "already" ? "ℹ️" : "❌"}
+          </span>
+          <span className="flex-1">
+            {qrBanner.type === "success"
+              ? `Checked in to ${qrBanner.service ?? "service"} successfully!`
+              : qrBanner.type === "already"
+              ? `You already checked in to ${qrBanner.service ?? "this service"}.`
+              : "QR check-in failed. Please try again or contact the admin."}
+          </span>
+          <button type="button" onClick={() => setQrBanner(null)} className="flex-shrink-0 opacity-60 hover:opacity-100 transition-opacity">✕</button>
+        </div>
+      )}
 
       {/* ── Welcome Banner ──────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl px-5 py-4 flex items-center justify-between gap-4 transition-colors">
@@ -461,6 +666,25 @@ export default function MemberHome({
           System fully operational
         </div>
       </div>
+
+      {/* ── Birthday Banner ─────────────────────────────────────────────── */}
+      {birthdayDaysUntil !== null && (
+        <div className="relative overflow-hidden bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-500/10 dark:to-rose-500/10 border border-pink-200 dark:border-pink-500/20 rounded-xl px-5 py-4 flex items-center gap-4 transition-colors">
+          <span className="text-3xl flex-shrink-0">{birthdayDaysUntil === 0 ? "🎂" : "🎉"}</span>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-pink-700 dark:text-pink-300">
+              {birthdayDaysUntil === 0
+                ? `Happy Birthday, ${firstName}! 🎊`
+                : `Your birthday is ${birthdayDaysUntil === 1 ? "tomorrow" : `in ${birthdayDaysUntil} days`}!`}
+            </p>
+            <p className="text-xs text-pink-500 dark:text-pink-400 mt-0.5">
+              {birthdayDaysUntil === 0
+                ? "The Everlasting Hills Church family celebrates you today."
+                : "Wishing you a wonderful celebration ahead from the EHC family."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Stat Cards ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -561,6 +785,117 @@ export default function MemberHome({
           </p>
           <MonthlyAttendanceChart data={monthlyAttendance} />
         </SectionCard>
+      )}
+
+      {/* ── Sermon Streak + Bookmarks + History ───────────────────────── */}
+      {(sermonStreak > 0 || bookmarks.length > 0 || listenHistory.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+          {/* Sermon streak + bookmarks */}
+          <SectionCard
+            title="My Sermon Library"
+            iconEl={<Bookmark size={14} />}
+            action={
+              <Link href="/sermons" className="text-xs text-[#87102C] dark:text-[#e8768a] font-medium flex items-center gap-1 hover:underline">
+                Browse <ChevronRight size={12} />
+              </Link>
+            }
+          >
+            {sermonStreak > 0 && (
+              <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20">
+                <span className="text-2xl">🔥</span>
+                <div>
+                  <p className="text-sm font-bold text-amber-700 dark:text-amber-400">
+                    {sermonStreak}-week listening streak!
+                  </p>
+                  <p className="text-xs text-amber-600 dark:text-amber-500">Keep it going — listen to a new sermon this week.</p>
+                </div>
+              </div>
+            )}
+            {bookmarks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <Bookmark size={22} className="text-gray-200 dark:text-gray-700 mb-2" />
+                <p className="text-sm text-gray-400 dark:text-gray-500">No saved sermons yet</p>
+                <Link href="/sermons" className="text-xs text-[#87102C] dark:text-[#e8768a] mt-1 hover:underline">Browse the archive</Link>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {bookmarks.slice(0, 5).map((b) => (
+                  <Link key={b.slug} href={`/sermons/${b.slug}`}
+                    className="flex gap-3 hover:bg-gray-50 dark:hover:bg-white/[0.03] rounded-lg p-1.5 -mx-1.5 transition-colors group">
+                    {b.thumbnailUrl ? (
+                      <img src={b.thumbnailUrl} alt={b.title} className="w-12 aspect-video rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-12 aspect-video rounded bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center flex-shrink-0">
+                        <BookOpen size={12} className="text-[#87102C]/40" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 group-hover:text-[#87102C] dark:group-hover:text-[#e8768a] transition-colors line-clamp-1">{b.title}</p>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500">{b.speaker} · {new Date(b.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </SectionCard>
+
+          {/* Listen history */}
+          <SectionCard
+            title="Continue Listening"
+            iconEl={<Headphones size={14} />}
+            action={
+              <Link href="/sermons" className="text-xs text-[#87102C] dark:text-[#e8768a] font-medium flex items-center gap-1 hover:underline">
+                All sermons <ChevronRight size={12} />
+              </Link>
+            }
+          >
+            {listenHistory.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center">
+                <Headphones size={22} className="text-gray-200 dark:text-gray-700 mb-2" />
+                <p className="text-sm text-gray-400 dark:text-gray-500">No listening history yet</p>
+                <Link href="/sermons" className="text-xs text-[#87102C] dark:text-[#e8768a] mt-1 hover:underline">Start listening</Link>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {listenHistory.slice(0, 5).map((p) => {
+                  const pct = p.audioDuration && p.audioDuration > 0
+                    ? Math.min(100, Math.round((p.positionSec / p.audioDuration) * 100))
+                    : null;
+                  return (
+                    <Link key={p.slug} href={`/sermons/${p.slug}`}
+                      className="flex gap-3 hover:bg-gray-50 dark:hover:bg-white/[0.03] rounded-lg p-1.5 -mx-1.5 transition-colors group">
+                      {p.thumbnailUrl ? (
+                        <img src={p.thumbnailUrl} alt={p.title} className="w-12 aspect-video rounded object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="w-12 aspect-video rounded bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center flex-shrink-0">
+                          <Play size={12} className="text-[#87102C]/40" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 group-hover:text-[#87102C] dark:group-hover:text-[#e8768a] transition-colors line-clamp-1">{p.title}</p>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500">{p.speaker} · {new Date(p.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</p>
+                        {pct !== null && !p.completed && (
+                          <div className="mt-1 h-1 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+                            <div className="h-full rounded-full bg-[#87102C]" style={{ width: `${pct}%` }} />
+                          </div>
+                        )}
+                        {p.completed && (
+                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Completed</span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </SectionCard>
+        </div>
+      )}
+
+      {/* ── Profile Edit ─────────────────────────────────────────────────── */}
+      {member && (
+        <ProfileEditCard member={member} initials={initials} />
       )}
 
     </div>

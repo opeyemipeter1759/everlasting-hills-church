@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/birthdays",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/absence",
+      "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/sermons",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}

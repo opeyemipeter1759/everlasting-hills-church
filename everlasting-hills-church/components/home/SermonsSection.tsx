@@ -85,7 +85,7 @@ export default function SermonsSection() {
           </div>
           <ScrollReveal delay={0.2} direction="right">
             <a
-              href="#"
+              href="/sermons"
               className="flex items-center gap-2 text-[#FFB3C1] text-sm font-semibold hover:gap-3 transition-all whitespace-nowrap"
             >
               View all sermons <ArrowRight size={15} />
