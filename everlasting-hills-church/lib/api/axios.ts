@@ -1,42 +1,52 @@
-// src/lib/api/axios.ts
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
-import { clearAuthTokens, getAccessToken } from "./authTokens";
+import {
+  ACCESS_TOKEN_COOKIE,
+  clearFrontendSession,
+  getAccessTokenFromCookie,
+} from "../auth/frontend-session";
 
+/**
+ * Single axios instance for all backend (NestJS) calls.
+ *
+ * BASE_URL must point to the NestJS API (e.g. https://api.everlastinghills.org).
+ * Default of "/api" preserves dev-server proxy behavior if configured.
+ */
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "/api";
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-// Request interceptor — attach auth token
+/**
+ * Attach the Supabase JWT from the unified session cookie on every request.
+ * The cookie name is the single source of truth — same one middleware reads.
+ */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = getAccessToken();
+    const token = getAccessTokenFromCookie();
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
+
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      clearAuthTokens();
-      if (window.location.pathname !== "/login") {
+      clearFrontendSession();
+      if (typeof window !== "undefined" && window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
     }
     return Promise.reject(normalizeError(error));
-  }
+  },
 );
 
-// Shape errors into a predictable structure
 export interface ApiError {
   message: string;
   status?: number;
@@ -45,9 +55,10 @@ export interface ApiError {
 
 function normalizeError(error: AxiosError): ApiError {
   if (error.response) {
-    const data = error.response.data as { message?: string } | undefined;
+    const data = error.response.data as { message?: string | string[] } | undefined;
+    const msg = Array.isArray(data?.message) ? data!.message.join("; ") : data?.message;
     return {
-      message: data?.message ?? error.message,
+      message: msg ?? error.message,
       status: error.response.status,
       data: error.response.data,
     };
@@ -57,3 +68,6 @@ function normalizeError(error: AxiosError): ApiError {
   }
   return { message: error.message };
 }
+
+// Re-export the cookie name for any consumer that needs to clear/inspect it.
+export { ACCESS_TOKEN_COOKIE };

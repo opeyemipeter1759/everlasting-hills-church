@@ -1,43 +1,108 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { validateEnv } from './config/env.validation';
+import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
 import { AuthModule } from './auth/auth.module';
 import { FormsModule } from './forms/forms.module';
 import { SermonsModule } from './sermons/sermons.module';
+import type { Env } from './config/env.validation';
 
 async function bootstrap() {
-  validateEnv(process.env);
-  const app = await NestFactory.create(AppModule);
-  const config = new DocumentBuilder()
+  const app = await NestFactory.create(AppModule, {
+    /**
+     * Don't auto-abort on uncaught shutdown errors — let Nest's lifecycle hooks run
+     * so PrismaService can disconnect cleanly.
+     */
+    abortOnError: false,
+  });
+
+  const config = app.get<ConfigService<Env, true>>(ConfigService);
+  const logger = new Logger('Bootstrap');
+
+  /**
+   * HTTP security headers (CSP, HSTS, X-Frame-Options, etc.).
+   * Defaults are sensible; tighten if we add inline scripts or specific CSP needs.
+   */
+  app.use(helmet());
+
+  /**
+   * CORS lockdown.
+   *
+   * Why explicit list (not wildcard): credentials: true with origin: '*' is rejected by browsers.
+   * In dev we allow common local origins; in prod we require FRONTEND_URL to be set explicitly.
+   */
+  const nodeEnv = config.get('NODE_ENV', { infer: true });
+  const frontendUrl = config.get('FRONTEND_URL', { infer: true });
+  const allowedOrigins =
+    nodeEnv === 'production'
+      ? frontendUrl
+        ? [frontendUrl]
+        : (() => {
+            throw new Error('FRONTEND_URL must be set in production');
+          })()
+      : [
+          frontendUrl,
+          'http://localhost:3000',
+          'http://localhost:3001',
+        ].filter(Boolean) as string[];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
+  /**
+   * Global validation. Together these three options give us:
+   *   whitelist:             strip any field not declared on the DTO (defense in depth)
+   *   forbidNonWhitelisted:  reject requests with unknown fields rather than silently stripping
+   *   transform:             coerce primitives ('5' → 5, 'true' → true) using class-transformer
+   */
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    }),
+  );
+
+  /**
+   * Swagger. Restricting include[] to known modules avoids scanning dynamically created
+   * internal modules that lack route metadata.
+   */
+  const swagger = new DocumentBuilder()
     .setTitle('church-api')
-    .setDescription('API documentation for EHC')
-    .setVersion('0.0.1')
+    .setDescription('API documentation for Everlasting Hills Church')
+    .setVersion('0.1.0')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'access-token',
     )
     .build();
 
-  // Limit scanning to the application's root module to avoid scanning
-  // dynamically created internal modules that may lack route metadata.
   try {
-    const document = SwaggerModule.createDocument(app, config, {
+    const document = SwaggerModule.createDocument(app, swagger, {
       include: [AppModule, AuthModule, FormsModule, SermonsModule],
     });
     SwaggerModule.setup('docs', app, document);
+  } catch (err) {
+    logger.warn(`Swagger setup failed; continuing without docs: ${(err as Error).message}`);
   }
-  catch (err) {
-    // Don't let swagger setup crash the application; log and continue.
-    console.warn('Swagger setup failed, continuing without docs:', err  );
-  }
-  app.enableCors({
-    origin: process.env.FRONTEND_URL ?? '*',
-    credentials: true,
-  });
-  const port = Number(process.env.PORT) || 4000;
+
+  /**
+   * Graceful shutdown so Prisma + supabase clients drain on SIGINT/SIGTERM.
+   * Without this, deploys can drop in-flight requests.
+   */
+  app.enableShutdownHooks();
+
+  const port = config.get('PORT', { infer: true });
   await app.listen(port);
-  console.log(`church-api running on http://localhost:${port}`);
+  logger.log(`church-api running on http://localhost:${port}`);
+  logger.log(`Swagger docs at http://localhost:${port}/docs`);
 }
 
 void bootstrap();

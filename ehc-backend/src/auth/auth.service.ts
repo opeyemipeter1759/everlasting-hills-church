@@ -1,28 +1,31 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { createClient } from '@supabase/supabase-js';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
+import type { TypedConfigService } from '../config/env.config';
 
 @Injectable()
 export class AuthService {
-  private supabaseUrl: string;
-  private supabaseAnonKey: string;
+  private readonly logger = new Logger(AuthService.name);
+  private readonly supabaseUrl: string;
+  private readonly supabaseAnonKey: string;
+  /** Reused for password auth and session ops where we don't need user-scoped headers. */
+  private readonly anonClient: SupabaseClient;
 
-  constructor(private prisma: PrismaService) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!url || !key) {
-      throw new Error(
-        'Missing SUPABASE_URL or SUPABASE_ANON_KEY environment variables',
-      );
-    }
-    this.supabaseUrl = url;
-    this.supabaseAnonKey = key;
+  constructor(
+    private readonly prisma: PrismaService,
+    config: TypedConfigService,
+  ) {
+    this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
+    this.supabaseAnonKey = config.get('SUPABASE_ANON_KEY', { infer: true });
+    this.anonClient = createClient(this.supabaseUrl, this.supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
   }
 
-  private createSupabaseClient() {
-    return createClient(this.supabaseUrl, this.supabaseAnonKey);
-  }
-
+  /**
+   * Look up the application role for an authenticated Supabase user.
+   * Returns null if the user has signed up but has no Profile yet.
+   */
   private async getMemberRole(email: string): Promise<string | null> {
     const member = await this.prisma.member.findFirst({
       where: { email },
@@ -32,49 +35,27 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    if (!email || !password) {
-      throw new UnauthorizedException('Email and password are required');
+    const { data, error } = await this.anonClient.auth.signInWithPassword({ email, password });
+
+    if (error || !data.user || !data.session) {
+      this.logger.warn(`Login failed for ${email}: ${error?.message ?? 'no session'}`);
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    try {
-      const supabase = this.createSupabaseClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    const userEmail = String(data.user.email ?? '');
+    const role = userEmail ? await this.getMemberRole(userEmail) : null;
 
-      if (error) {
-        console.error('Supabase auth error:', error.message);
-        throw new UnauthorizedException('Invalid email or password');
-      }
-
-      if (!data.user || !data.session) {
-        throw new UnauthorizedException('Authentication failed');
-      }
-
-      const userEmail = String(data.user.email ?? '');
-      const role = userEmail ? await this.getMemberRole(userEmail) : null;
-
-      return {
-        access_token: data.session.access_token,
-        user: {
-          id: data.user.id,
-          email: data.user.email,
-          role,
-        },
-        session: {
-          access_token: data.session.access_token,
-          expires_in: data.session.expires_in,
-          token_type: data.session.token_type,
-        },
-      };
-    } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-      console.error('Login error:', error);
-      throw new UnauthorizedException('Authentication failed');
-    }
+    return {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_in: data.session.expires_in,
+      token_type: data.session.token_type,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        role,
+      },
+    };
   }
 
   async logout(authorization?: string) {
@@ -86,33 +67,21 @@ export class AuthService {
       throw new UnauthorizedException('Access token is required');
     }
 
-    try {
-      const supabase = createClient(this.supabaseUrl, this.supabaseAnonKey, {
-        global: {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      });
+    /**
+     * Per-request client scoped to the user's token. We can't reuse anonClient because
+     * signOut() needs the user's session context to invalidate it server-side at Supabase.
+     */
+    const scoped = createClient(this.supabaseUrl, this.supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
 
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        console.error('Supabase sign out error:', error.message);
-        throw new UnauthorizedException('Logout failed');
-      }
-
-      return {
-        success: true,
-        message: 'Logged out successfully',
-      };
-    } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
-
-      console.error('Logout error:', error);
+    const { error } = await scoped.auth.signOut();
+    if (error) {
+      this.logger.warn(`Logout failed: ${error.message}`);
       throw new UnauthorizedException('Logout failed');
     }
+
+    return { success: true, message: 'Logged out successfully' };
   }
 }
