@@ -3,13 +3,26 @@
 import { useState } from "react";
 import { EyeIcon, EyeCloseIcon } from "@/components/icons";
 import { useForm } from "react-hook-form";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
+import {
+  createFrontendAccessToken,
+  normalizeRole,
+  setFrontendSession,
+} from "@/lib/auth/frontend-session";
+import { auth } from "@/lib/api";
 
 type FormValues = {
   email: string;
   password: string;
+};
+
+type LoginResponse = {
+  role?: string;
+  user?: { role?: string };
+  profile?: { role?: string };
+  access_token?: string;
+  accessToken?: string;
+  token?: string;
 };
 
 export default function LoginPage() {
@@ -25,14 +38,24 @@ export default function LoginPage() {
 
   const onSubmit = async ({ email, password }: FormValues) => {
     setServerError("");
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setServerError(error.message);
-      return;
+    try {
+      const response = (await auth.login({ email, password })) as LoginResponse;
+      const accessRole =
+        normalizeRole(response.role ?? response.user?.role ?? response.profile?.role) ?? "MEMBER";
+      const accessToken =
+        response.access_token ?? response.accessToken ?? response.token ??
+        createFrontendAccessToken(email, accessRole);
+      setFrontendSession({ email, role: accessRole, accessToken });
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      const message =
+        error && typeof error === "object" && "message" in error
+          ? String(error.message)
+          : "An error occurred during login";
+      setServerError(message);
     }
-    router.push("/me");
-    router.refresh();
   };
 
   return (

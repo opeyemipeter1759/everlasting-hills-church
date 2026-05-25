@@ -2,8 +2,8 @@
 
 import { useRef } from "react";
 import { MapPin, Clock, Navigation, X, Car, PersonStanding, Train } from "lucide-react";
-import { CHURCH, type RouteInfo, type TravelMode } from "../config/config";
-import { buildMapSrc, openGoogleMapsNav } from "../utils/UseDirection";
+import { CHURCH, type RouteInfo, type TravelMode } from "../../config/config";
+import { buildMapSrc, openGoogleMapsNav } from "../../utils/UseDirection";
 
 
 interface DirectionsModalProps {

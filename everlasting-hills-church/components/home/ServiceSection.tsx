@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getNextService, isLiveNow, isServiceDay } from "../utils/ServiceUtils";
-import { useDirections } from "../utils/UseDirection";
+import { getNextService, isLiveNow, isServiceDay } from "../../utils/ServiceUtils";
+import { useDirections } from "../../utils/UseDirection";
 import ServiceHero from "./ServiceHero";
 import ServiceCards from "./ServiceCard";
 import DirectionsModal from "./DirectionModal";

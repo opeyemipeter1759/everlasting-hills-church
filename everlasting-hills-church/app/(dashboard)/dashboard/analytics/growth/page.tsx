@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+/* import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { db } from "@/lib/db/prisma";
 import { hasMinRole } from "@/components/dashboard/shell/role-utils";
@@ -45,4 +45,13 @@ export default async function GrowthAnalyticsPage() {
       />
     </div>
   );
+}
+ */
+
+import React from 'react'
+
+export default function page() {
+  return (
+    <div>page</div>
+  )
 }

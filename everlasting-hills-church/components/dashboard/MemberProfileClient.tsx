@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase";
 import LogoutButton from "@/components/auth/LogoutButton";
 import {
   Heart, BookOpen, Sparkles, CheckCircle2, Calendar,
@@ -217,13 +216,8 @@ export default function MemberProfileClient({
     if (newPwd !== confirmPwd) { setPwdError("Passwords do not match"); return; }
     setPwdLoading(true);
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.updateUser({ password: newPwd });
-      if (error) { setPwdError(error.message); return; }
-      setPwdSuccess(true);
-      setChangingPwd(false);
-      setNewPwd("");
-      setConfirmPwd("");
+      setPwdError("Password changes are not available in the current frontend-only setup.");
+      return;
     } finally {
       setPwdLoading(false);
     }

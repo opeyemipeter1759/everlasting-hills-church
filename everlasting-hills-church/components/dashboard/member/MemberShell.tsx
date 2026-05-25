@@ -7,7 +7,7 @@ import {
   LayoutDashboard, User, CalendarCheck, BookOpen, Sparkles,
   Menu, X, Search, Bell, Settings,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { clearFrontendSession } from "@/lib/auth/frontend-session";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -42,8 +42,7 @@ function MemberSidebar({ memberDisplayId: _id, displayName, initials, email: _em
   const router = useRouter();
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    clearFrontendSession();
     router.push("/login");
     router.refresh();
   };

@@ -1,7 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import Button from "@/components/ui/Button";
+import Button from "@/ui/Button";
 import TextAreaForm from "@/components/form/TextAreaForm";
 
 type QuestionFormValues = {

@@ -4,9 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Everlasting Hills Church — Raising Men Who Flourish Beyond Limits",
   description:
-    "A Word-centered, Spirit-filled, and community-focused church in Ibadan, Nigeria. Rooted in Genesis 49:22–26.",
-  // Update these with real values when deploying
-  openGraph: {
+    "A Word-centered, Spirit-filled, and community-focused church in Ibadan, Nigeria. Rooted in Genesis 49:22–26.",  openGraph: {
     title: "Everlasting Hills Church",
     description: "Raising men who flourish beyond limits",
     siteName: "Everlasting Hills Church",

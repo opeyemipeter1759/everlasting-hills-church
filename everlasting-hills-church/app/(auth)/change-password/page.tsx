@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
@@ -24,16 +23,8 @@ export default function ChangePasswordPage() {
     }
     setLoading(true);
     try {
-      const supabase = createClient();
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-        data: { needs_password_change: false },
-      });
-      if (updateError) {
-        setError(updateError.message);
-        return;
-      }
-      router.push("/me");
+      setError("Password changes are not available in the current frontend-only setup.");
+      return;
     } finally {
       setLoading(false);
     }

@@ -80,7 +80,6 @@ export default function FirstTimerPage() {
         body: JSON.stringify({
           type: "FIRST_TIMER",
           ...data,
-          // Transform string radio values to booleans for the API
           located_in_ibadan: data.located_in_ibadan === "true",
           whatsapp_interest: data.whatsapp_interest === "true",
         }),

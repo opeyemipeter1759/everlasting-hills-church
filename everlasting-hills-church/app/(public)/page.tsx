@@ -8,14 +8,14 @@ import GivingSection from "@/components/home/GivingSection";
 import HeroSection from "@/components/home/HeroSection";
 import SermonsSection from "@/components/home/SermonsSection";
 import LatestSermonsWidget from "@/components/home/LatestSermonsWidget";
-import { getFeaturedSermon, getLatestSermons } from "@/services/sermon.service";
+//import { getFeaturedSermon, getLatestSermons } from "@/services/sermon.service";
 
 export default async function HomePage() {
-  const [featuredRaw, latestRaw] = await Promise.all([
+/*   const [featuredRaw, latestRaw] = await Promise.all([
     getFeaturedSermon(),
     getLatestSermons(3),
-  ]);
-
+  ]) */;
+/* 
   const featured = featuredRaw
     ? {
         id: featuredRaw.id,
@@ -44,7 +44,7 @@ export default async function HomePage() {
     videoUrl: s.videoUrl,
     thumbnailUrl: s.thumbnailUrl,
     playCount: s.playCount,
-  }));
+  })); */
 
   return (
     <main className="min-h-screen flex overflow-x-hidden flex-col bg-church-dark">
@@ -54,8 +54,8 @@ export default async function HomePage() {
       <ScriptureSection />
       <ServiceSection />
       <SermonsSection />
-      <LatestSermonsWidget featured={featured} latest={latest} />
-      <CommunitySection />
+{/*      // <LatestSermonsWidget featured={featured} latest={latest} />
+ */}      <CommunitySection />
       <GivingSection />
       <ContactSection />
     </main>

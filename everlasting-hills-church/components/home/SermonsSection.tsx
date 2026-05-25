@@ -5,9 +5,9 @@ import { ArrowRight } from "lucide-react";
 import VideoFilterTabs from "./Videofiltertabs";
 import VideoSearchInput from "./VideoSearchInput";
 import type { CategoryCounts, VideoCategory, YouTubeVideo } from "@/types";
-import { useYouTubeVideos } from "../utils/Useyoutubevideos";
+import { useYouTubeVideos } from "../../utils/Useyoutubevideos";
 import { useMemo, useState } from "react";
-import VideoCardSkeleton from "../ui/skelenton/VideoCardSkeleton";
+import VideoCardSkeleton from "../../ui/skelenton/VideoCardSkeleton";
 import VideoCard from "./VideoCard";
 import VideoPlayerModal from "./VideoPlayerModal";
 

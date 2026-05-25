@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ScrollReveal from "./ScrollReveal";
-import EhcSlider, { EhcImage } from "../ui/EHCSlider";
+import EhcSlider, { EhcImage } from "../../ui/EHCSlider";
 
 const MAROON = "#87102C";
 const INTERVAL = 5500;

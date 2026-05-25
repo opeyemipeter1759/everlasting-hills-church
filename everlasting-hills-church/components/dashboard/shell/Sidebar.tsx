@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { X, LogOut } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { clearFrontendSession } from "@/lib/auth/frontend-session";
 import { hasMinRole, ROLE_LABELS, ROLE_BADGE_CLASS } from "./role-utils";
 import { NAV_GROUPS } from "./nav-config";
 import type { SessionUser } from "./DashboardShell";
@@ -33,8 +33,7 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
   const router = useRouter();
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    clearFrontendSession();
     router.push("/login");
     router.refresh();
   };

@@ -2,7 +2,7 @@
 
 import { Navigation, Youtube } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
-import { CHURCH } from "../config/config";
+import { CHURCH } from "../../config/config";
 
 interface ServiceHeroProps {
   headingText: string;

@@ -1,4 +1,21 @@
-import { redirect } from "next/navigation";
+import React from 'react'
+
+export default function page() {
+  return (
+    <div>page</div>
+  )
+}
+
+
+
+
+
+
+
+
+
+
+/* import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -384,3 +401,4 @@ export default async function DashboardPage() {
     />
   );
 }
+ */

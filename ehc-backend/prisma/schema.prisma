@@ -1,0 +1,449 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model AttendanceRecord {
+  id        String  @id
+  memberId  String
+  serviceId String
+  present   Boolean @default(true)
+  tenantId  String
+  Member    Member  @relation(fields: [memberId], references: [id])
+  Service   Service @relation(fields: [serviceId], references: [id])
+  Tenant    Tenant  @relation(fields: [tenantId], references: [id])
+
+  @@unique([memberId, serviceId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ContactMessage {
+  id       String   @id
+  name     String
+  email    String
+  message  String
+  sentAt   DateTime @default(now())
+  tenantId String
+  Tenant   Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model DiscussionQuestion {
+  id                 String               @id
+  tenantId           String
+  sermonId           String
+  question           String
+  order              Int                  @default(0)
+  createdAt          DateTime             @default(now())
+  Sermon             Sermon               @relation(fields: [sermonId], references: [id])
+  Tenant             Tenant               @relation(fields: [tenantId], references: [id])
+  DiscussionResponse DiscussionResponse[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model DiscussionResponse {
+  id                 String             @id
+  tenantId           String
+  questionId         String
+  memberId           String
+  content            String
+  createdAt          DateTime           @default(now())
+  Member             Member             @relation(fields: [memberId], references: [id])
+  DiscussionQuestion DiscussionQuestion @relation(fields: [questionId], references: [id])
+  Tenant             Tenant             @relation(fields: [tenantId], references: [id])
+
+  @@unique([questionId, memberId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model EmailSubscriber {
+  id           String   @id
+  tenantId     String
+  email        String
+  subscribedAt DateTime @default(now())
+  Tenant       Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, email])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model EngagementScore {
+  id              String   @id
+  tenantId        String
+  memberId        String   @unique
+  score           Int      @default(0)
+  attendanceScore Int      @default(0)
+  sermonScore     Int      @default(0)
+  givingScore     Int      @default(0)
+  communityScore  Int      @default(0)
+  computedAt      DateTime @default(now())
+  Member          Member   @relation(fields: [memberId], references: [id])
+  Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model FollowUpTask {
+  id          String    @id
+  tenantId    String
+  memberId    String
+  title       String
+  dueDate     DateTime?
+  done        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  Member      Member    @relation(fields: [memberId], references: [id])
+  Tenant      Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model FormSubmission {
+  id          String   @id
+  tenantId    String
+  type        String
+  data        Json
+  submittedAt DateTime @default(now())
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model GivingRecord {
+  id             String    @id
+  tenantId       String
+  reference      String    @unique
+  amount         Int
+  currency       String    @default("NGN")
+  donorName      String?
+  donorEmail     String?
+  category       String?
+  paystackStatus String
+  verifiedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  Tenant         Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ListenProgress {
+  id          String   @id
+  tenantId    String
+  sermonId    String
+  memberId    String
+  positionSec Int      @default(0)
+  completed   Boolean  @default(false)
+  updatedAt   DateTime
+  Member      Member   @relation(fields: [memberId], references: [id])
+  Sermon      Sermon   @relation(fields: [sermonId], references: [id])
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([sermonId, memberId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Member {
+  id                 String               @id
+  tenantId           String
+  profileId          String               @unique
+  firstName          String
+  lastName           String
+  email              String?
+  phone              String?
+  dateOfBirth        DateTime?
+  address            String?
+  joinedAt           DateTime             @default(now())
+  bio                String?
+  photoUrl           String?
+  status             MemberStatus         @default(ACTIVE)
+  notifyNewSermons   Boolean              @default(true)
+  AttendanceRecord   AttendanceRecord[]
+  DiscussionResponse DiscussionResponse[]
+  EngagementScore    EngagementScore?
+  FollowUpTask       FollowUpTask[]
+  ListenProgress     ListenProgress[]
+  Profile            Profile              @relation(fields: [profileId], references: [id])
+  Tenant             Tenant               @relation(fields: [tenantId], references: [id])
+  PastorNote         PastorNote[]
+  PastoralAlert      PastoralAlert[]
+  SermonBookmark     SermonBookmark[]
+  SermonNote         SermonNote[]
+  SermonReaction     SermonReaction[]
+  UnitMember         UnitMember[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model PastorNote {
+  id        String   @id
+  tenantId  String
+  memberId  String
+  content   String
+  createdAt DateTime @default(now())
+  Member    Member   @relation(fields: [memberId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model PastoralAlert {
+  id         String    @id
+  tenantId   String
+  memberId   String
+  type       AlertType
+  message    String
+  isRead     Boolean   @default(false)
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  Member     Member    @relation(fields: [memberId], references: [id])
+  Tenant     Tenant    @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model PaystackWebhookLog {
+  id          String   @id
+  event       String
+  reference   String
+  payload     Json
+  processedAt DateTime @default(now())
+  tenantId    String
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model PrayerRequest {
+  id          String   @id
+  tenantId    String
+  name        String?
+  email       String?
+  phone       String?
+  request     String
+  isAnonymous Boolean  @default(false)
+  submittedAt DateTime @default(now())
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Profile {
+  id             String           @id
+  userId         String           @unique
+  role           Role             @default(MEMBER)
+  tenantId       String
+  createdAt      DateTime         @default(now())
+  Member         Member?
+  RoleAssignment RoleAssignment[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model RoleAssignment {
+  id        String   @id
+  tenantId  String
+  profileId String
+  role      Role
+  createdAt DateTime @default(now())
+  Profile   Profile  @relation(fields: [profileId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, profileId, role])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Sermon {
+  id                 String               @id
+  tenantId           String
+  title              String
+  speaker            String
+  date               DateTime
+  audioUrl           String?
+  videoUrl           String?
+  thumbnailUrl       String?
+  description        String?
+  publishedAt        DateTime?
+  createdAt          DateTime             @default(now())
+  audioDuration      Int?
+  audioKey           String?
+  isFeatured         Boolean              @default(false)
+  playCount          Int                  @default(0)
+  scheduledFor       DateTime?
+  scriptureRef       String?
+  series             String?
+  seriesSlug         String?
+  slug               String               @unique
+  status             SermonStatus         @default(DRAFT)
+  tags               String[]
+  transcript         String?
+  updatedAt          DateTime
+  DiscussionQuestion DiscussionQuestion[]
+  ListenProgress     ListenProgress[]
+  Tenant             Tenant               @relation(fields: [tenantId], references: [id])
+  SermonBookmark     SermonBookmark[]
+  SermonNote         SermonNote[]
+  SermonReaction     SermonReaction[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model SermonBookmark {
+  id        String   @id
+  tenantId  String
+  sermonId  String
+  memberId  String
+  createdAt DateTime @default(now())
+  Member    Member   @relation(fields: [memberId], references: [id])
+  Sermon    Sermon   @relation(fields: [sermonId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([sermonId, memberId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model SermonNote {
+  id        String   @id
+  tenantId  String
+  sermonId  String
+  memberId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Member    Member   @relation(fields: [memberId], references: [id])
+  Sermon    Sermon   @relation(fields: [sermonId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([sermonId, memberId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model SermonReaction {
+  id        String   @id
+  tenantId  String
+  sermonId  String
+  memberId  String
+  type      String
+  createdAt DateTime @default(now())
+  Member    Member   @relation(fields: [memberId], references: [id])
+  Sermon    Sermon   @relation(fields: [sermonId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([sermonId, memberId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Service {
+  id               String             @id
+  tenantId         String
+  name             String
+  scheduledAt      DateTime
+  createdAt        DateTime           @default(now())
+  AttendanceRecord AttendanceRecord[]
+  Tenant           Tenant             @relation(fields: [tenantId], references: [id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Tenant {
+  id                 String               @id
+  name               String
+  slug               String               @unique
+  createdAt          DateTime             @default(now())
+  AttendanceRecord   AttendanceRecord[]
+  ContactMessage     ContactMessage[]
+  DiscussionQuestion DiscussionQuestion[]
+  DiscussionResponse DiscussionResponse[]
+  EmailSubscriber    EmailSubscriber[]
+  EngagementScore    EngagementScore[]
+  FollowUpTask       FollowUpTask[]
+  FormSubmission     FormSubmission[]
+  GivingRecord       GivingRecord[]
+  ListenProgress     ListenProgress[]
+  Member             Member[]
+  PastorNote         PastorNote[]
+  PastoralAlert      PastoralAlert[]
+  PaystackWebhookLog PaystackWebhookLog[]
+  PrayerRequest      PrayerRequest[]
+  RoleAssignment     RoleAssignment[]
+  Sermon             Sermon[]
+  SermonBookmark     SermonBookmark[]
+  SermonNote         SermonNote[]
+  SermonReaction     SermonReaction[]
+  Service            Service[]
+  Unit               Unit[]
+  Visitor            Visitor[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Unit {
+  id          String       @id
+  tenantId    String
+  name        String
+  description String?
+  createdAt   DateTime     @default(now())
+  Tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  UnitMember  UnitMember[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model UnitMember {
+  id       String   @id
+  tenantId String
+  unitId   String
+  memberId String
+  isLead   Boolean  @default(false)
+  joinedAt DateTime @default(now())
+  Member   Member   @relation(fields: [memberId], references: [id])
+  Unit     Unit     @relation(fields: [unitId], references: [id])
+
+  @@unique([unitId, memberId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Visitor {
+  id                 String   @id
+  tenantId           String
+  firstName          String
+  lastName           String
+  email              String?
+  phone              String?
+  dateOfBirth        String?
+  address            String?
+  occupation         String?
+  gender             String?
+  howDidYouLearn     String?
+  invitedBy          String?
+  locatedInIbadan    Boolean?
+  membershipInterest String?
+  bornAgain          String?
+  serviceExperience  String?
+  prayerPoint        String?
+  whatsappInterest   Boolean?
+  submittedAt        DateTime @default(now())
+  attendanceType     String?
+  Tenant             Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+enum AlertType {
+  ABSENCE
+  AT_RISK
+  BIRTHDAY
+  ANNIVERSARY
+  INACTIVE
+  MILESTONE
+}
+
+enum MemberStatus {
+  ACTIVE
+  INACTIVE
+  TRANSFERRED
+  DECEASED
+}
+
+enum Role {
+  SUPER_ADMIN
+  PASTOR
+  ADMIN
+  UNIT_LEAD
+  MEMBER
+  VISITOR
+}
+
+enum SermonStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+}
