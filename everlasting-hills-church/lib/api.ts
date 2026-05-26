@@ -52,6 +52,14 @@ export type LoginResponse = {
   [key: string]: unknown;
 };
 
+export type CurrentUser = {
+  id: string;
+  email: string;
+  role: string;
+  fullName: string;
+  picture: string;
+};
+
 export const auth = {
   login: async (payload: LoginPayload) => {
     const response = await api.post<LoginResponse>("/auth/login", payload);
@@ -63,4 +71,14 @@ export const auth = {
 
     return response;
   },
+  me: () => api.get<CurrentUser>("/auth/me"),
 };
+
+export function useAuthMe() {
+  return useQuery({
+    queryKey: queryKeys.auth.me(),
+    queryFn: auth.me,
+  });
+}
+
+export const useCurrentUser = useAuthMe;

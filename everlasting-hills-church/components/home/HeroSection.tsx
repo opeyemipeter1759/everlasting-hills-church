@@ -37,8 +37,9 @@ export default function HeroSection() {
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[60%] bg-church-maroon opacity-20 blur-[120px] rounded-full group-hover:opacity-30 transition-opacity duration-1000"></div>
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[50%] bg-[#4a0819] opacity-30 blur-[100px] rounded-full group-hover:opacity-40 transition-opacity duration-1000"></div>
         <div className="absolute inset-0 bg-grid-white" />
-          {/* background particles (very obvious) - placed above grid but behind content (content is z-10) */}
+          {/* background particles (very obvious) - placed above grid but behind content (content is z-10) 
           <ParticleCanvas density={2} speed={2} className="opacity-50 filter saturate-100 z-0 pointer-events-none" />
+          */}
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto  w-full px-6 lg:px-12 py-12 lg:py-0">
@@ -60,7 +61,7 @@ export default function HeroSection() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}
-              className="text-[48px] sm:text-[64px] lg:text-[84px] leading-[0.95] font-bold font-display tracking-tight mb-5"
+              className="text-[48px] sm:text-[64px] text-white lg:text-[84px] leading-[0.95] font-bold font-display tracking-tight mb-5"
             >
               The warmth of home <br/>
               <motion.span
@@ -147,7 +148,7 @@ export default function HeroSection() {
                       <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-church-accent">
                         <Play className="w-5 h-5 fill-church-accent" />
                       </div>
-                      <span className="font-bold tracking-tight text-sm">Join the Rhythm</span>
+                      <span className="font-bold text-white tracking-tight text-sm">Join the Rhythm</span>
                     </div>
                     <p className="text-xs text-white/50 leading-relaxed uppercase tracking-wider font-semibold">
                       Experience the pulse of praise.

@@ -73,7 +73,7 @@ export default function Navbar() {
             </a>
 
             {/* Desktop nav */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => (
                 <a
                   key={link.href}
@@ -89,7 +89,7 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                className={`hidden md:inline-flex px-5 py-2.5 rounded-xl border hover:bg-[#87102C] border-white/20  items-center text-sm font-medium transition-colors duration-200 hover:text-white hover:border-none ${
+                className={`hidden lg:inline-flex px-5 py-2.5 rounded-xl border hover:bg-[#87102C] border-white/20  items-center text-sm font-medium transition-colors duration-200 hover:text-white hover:border-none ${
                   scrolled ? "text-[#333]" : "text-white/80"
                 }`}
               >
@@ -97,13 +97,13 @@ export default function Navbar() {
               </Link>
               <a
                 href="#services"
-                className="hidden md:inline-flex items-center px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/20 hover:-translate-y-0.5"
+                className="hidden lg:inline-flex items-center px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/20 hover:-translate-y-0.5"
               >
                 Join Us Sunday
               </a>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className={`md:hidden p-2 rounded-lg transition-colors ${
+                className={`lg:hidden p-2 rounded-lg transition-colors ${
                   scrolled
                     ? "text-[#111] hover:bg-brand-blush"
                     : "text-white hover:bg-white/10"
@@ -123,7 +123,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="fixed top-16 inset-x-0 z-40 bg-white border-b border-brand-rose shadow-xl md:hidden"
+            className="fixed top-16 inset-x-0 z-40 bg-white border-b border-brand-rose shadow-xl lg:hidden"
           >
             <nav className="flex flex-col py-4 px-5">
               {navLinks.map((link, i) => (

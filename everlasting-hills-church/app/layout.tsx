@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { QueryProvider } from "@/lib/api/QueryProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
+
+
 
 export default function RootLayout({
   children,
@@ -61,7 +64,9 @@ export default function RootLayout({
           href="/favicon/android-chrome-512x512.png"
         />
       </head>
-      <body className="antialiased bg-white dark:bg-[#111111] transition-colors">{children}</body>
+      <body className="antialiased bg-white dark:bg-[#111111] transition-colors">
+        <QueryProvider>{children}</QueryProvider>
+      </body>
     </html>
   );
 }

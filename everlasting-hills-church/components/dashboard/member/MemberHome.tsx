@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  Circle, Zap, Heart, Clock, Calendar, CheckCircle2,
+  Zap, Heart, Clock, Calendar, CheckCircle2,
   BookOpen, Sparkles, Bell, ChevronRight, TrendingUp,
   User, Camera, Headphones, Bookmark, Play,
 } from "lucide-react";
+import { dummyMemberHome } from "./DummyData";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -38,6 +39,10 @@ export interface MemberHomeProps {
   bookmarks: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; audioUrl: string | null }>;
   listenHistory: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; positionSec: number; completed: boolean; audioDuration: number | null }>;
 }
+
+// All props optional: when omitted, the component falls back to bundled dummy
+// data so it renders standalone for preview. Pass real props in production.
+type MemberHomePropsOptional = Partial<MemberHomeProps>;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -576,25 +581,28 @@ function MonthlyAttendanceChart({ data }: { data: MemberHomeProps["monthlyAttend
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function MemberHome({
-  member,
-  userEmail,
-  memberDisplayId,
-  attendanceRate,
-  attendanceCount: _count,
-  streakWeeks,
-  lastServiceDate,
-  nextService,
-  hasCheckedInToday,
-  todayService,
-  prayerCount,
-  recentServices,
-  monthlyAttendance,
-  birthdayDaysUntil,
-  sermonStreak,
-  bookmarks,
-  listenHistory,
-}: MemberHomeProps) {
+export default function MemberHome(props: MemberHomePropsOptional) {
+  // Fall back to dummy data for any prop not supplied, so the page renders
+  // fully whether wired to the server or run standalone for preview.
+  const {
+    member = dummyMemberHome.member,
+    userEmail = dummyMemberHome.userEmail,
+    memberDisplayId = dummyMemberHome.memberDisplayId,
+    attendanceRate = dummyMemberHome.attendanceRate,
+    streakWeeks = dummyMemberHome.streakWeeks,
+    lastServiceDate = dummyMemberHome.lastServiceDate,
+    nextService = dummyMemberHome.nextService,
+    hasCheckedInToday = dummyMemberHome.hasCheckedInToday,
+    todayService = dummyMemberHome.todayService,
+    prayerCount = dummyMemberHome.prayerCount,
+    recentServices = dummyMemberHome.recentServices,
+    monthlyAttendance = dummyMemberHome.monthlyAttendance,
+    birthdayDaysUntil = dummyMemberHome.birthdayDaysUntil,
+    sermonStreak = dummyMemberHome.sermonStreak,
+    bookmarks = dummyMemberHome.bookmarks,
+    listenHistory = dummyMemberHome.listenHistory,
+  } = props;
+
   const displayName = member
     ? `${member.firstName} ${member.lastName}`
     : userEmail;

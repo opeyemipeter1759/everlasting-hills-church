@@ -16,6 +16,8 @@ const ROLE_LEVELS: Record<UserRole, number> = {
 export const ACCESS_TOKEN_COOKIE = "ehc_access_token";
 export const ROLE_COOKIE = "ehc_role";
 export const EMAIL_COOKIE = "ehc_user_email";
+export const FULL_NAME_COOKIE = "ehc_user_full_name";
+export const PICTURE_COOKIE = "ehc_user_picture";
 export const LOGGED_IN_COOKIE = "ehc_logged_in";
 
 export const ROLE_OPTIONS = [
@@ -129,18 +131,48 @@ function setCookie(name: string, value: string, maxAgeSeconds: number) {
   document.cookie = parts.join("; ");
 }
 
-export function setFrontendSession(params: { email: string; role: string; accessToken: string }) {
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const prefix = `${name}=`;
+  const entry = document.cookie
+    .split("; ")
+    .find((cookie) => cookie.startsWith(prefix));
+
+  return entry ? decodeURIComponent(entry.slice(prefix.length)) : null;
+}
+
+export function getFrontendSessionUser() {
+  return {
+    role: getCookie(ROLE_COOKIE),
+    email: getCookie(EMAIL_COOKIE),
+    fullName: getCookie(FULL_NAME_COOKIE),
+    picture: getCookie(PICTURE_COOKIE),
+  };
+}
+
+export function setFrontendSession(params: { email: string; role: string; accessToken: string; fullName?: string; picture?: string }) {
   const maxAge = 60 * 60 * 24 * 7;
 
   setCookie(LOGGED_IN_COOKIE, "true", maxAge);
   setCookie(EMAIL_COOKIE, params.email, maxAge);
   setCookie(ROLE_COOKIE, params.role, maxAge);
   setCookie(ACCESS_TOKEN_COOKIE, params.accessToken, maxAge);
+  if (params.fullName) {
+    setCookie(FULL_NAME_COOKIE, params.fullName, maxAge);
+  }
+  if (params.picture) {
+    setCookie(PICTURE_COOKIE, params.picture, maxAge);
+  }
 }
 
 export function clearFrontendSession() {
   document.cookie = `${LOGGED_IN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
   document.cookie = `${EMAIL_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${FULL_NAME_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${PICTURE_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
   document.cookie = `${ROLE_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
   document.cookie = `${ACCESS_TOKEN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
 }

@@ -18,8 +18,10 @@ type FormValues = {
 
 type LoginResponse = {
   role?: string;
-  user?: { role?: string };
-  profile?: { role?: string };
+  fullName?: string;
+  picture?: string;
+  user?: { role?: string; fullName?: string; picture?: string };
+  profile?: { role?: string; fullName?: string; picture?: string };
   access_token?: string;
   accessToken?: string;
   token?: string;
@@ -45,7 +47,9 @@ export default function LoginPage() {
       const accessToken =
         response.access_token ?? response.accessToken ?? response.token ??
         createFrontendAccessToken(email, accessRole);
-      setFrontendSession({ email, role: accessRole, accessToken });
+      const fullName = response.fullName ?? response.user?.fullName ?? response.profile?.fullName;
+      const picture = response.picture ?? response.user?.picture ?? response.profile?.picture;
+      setFrontendSession({ email, role: accessRole, accessToken, fullName, picture });
 
       router.push("/dashboard");
       router.refresh();

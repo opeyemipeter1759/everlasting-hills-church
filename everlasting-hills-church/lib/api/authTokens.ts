@@ -1,3 +1,5 @@
+import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/frontend-session";
+
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
@@ -44,7 +46,7 @@ export function getAccessToken() {
     return null;
   }
 
-  return getCookie(ACCESS_TOKEN_KEY);
+  return getCookie(ACCESS_TOKEN_KEY) ?? getCookie(ACCESS_TOKEN_COOKIE);
 }
 
 export function setAuthTokens(tokens: { accessToken?: string | null; refreshToken?: string | null }) {
@@ -54,6 +56,7 @@ export function setAuthTokens(tokens: { accessToken?: string | null; refreshToke
 
   if (tokens.accessToken) {
     setCookie(ACCESS_TOKEN_KEY, tokens.accessToken, 60 * 60 * 24 * 7);
+    setCookie(ACCESS_TOKEN_COOKIE, tokens.accessToken, 60 * 60 * 24 * 7);
   }
 
   if (tokens.refreshToken) {
@@ -67,5 +70,6 @@ export function clearAuthTokens() {
   }
 
   removeCookie(ACCESS_TOKEN_KEY);
+  removeCookie(ACCESS_TOKEN_COOKIE);
   removeCookie(REFRESH_TOKEN_KEY);
 }

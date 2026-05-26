@@ -44,7 +44,7 @@ export type NavGroup = {
 
 export const NAV_GROUPS: NavGroup[] = [
   {
-    section: null,
+    section: "Member",
     items: [
       { label: "Home",            href: "/dashboard",                  icon: LayoutDashboard, minRole: "MEMBER" },
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },

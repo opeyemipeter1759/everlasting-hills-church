@@ -1,4 +1,5 @@
-import { QueryProvider } from "@/lib/api/QueryProvider";
+import { SidebarProvider } from "@/context/SidebarContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 export default function DashboardGroupLayout({
   children,
@@ -6,9 +7,8 @@ export default function DashboardGroupLayout({
   children: React.ReactNode;
 }) {
   return (
-    <QueryProvider>
-      <h3>Yes</h3>
-      {children}
-    </QueryProvider>
+    <ThemeProvider>
+      <SidebarProvider>{children}</SidebarProvider>
+    </ThemeProvider>
   );
 }
