@@ -1,9 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseInterceptors, UploadedFile, BadRequestException, UnauthorizedException, ServiceUnavailableException, InternalServerErrorException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
   ApiCreatedResponse,
+  ApiConsumes,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -19,6 +22,7 @@ import { UpdateSermonDto } from './dto/update-sermon.dto';
 import { SubscribeEmailDto } from './dto/subscribe-email.dto';
 import { NoteDto, ProgressDto, ReactionDto } from './dto/sermon-interaction.dto';
 import { SermonsService } from './sermons.service';
+import { AuthService } from '../auth/auth.service';
 
 /**
  * Sermon endpoints, organized by audience:
@@ -33,7 +37,10 @@ import { SermonsService } from './sermons.service';
 @ApiTags('sermons')
 @Controller('sermons')
 export class SermonsController {
-  constructor(private readonly sermonsService: SermonsService) {}
+  constructor(
+    private readonly sermonsService: SermonsService,
+    private readonly authService: AuthService,
+  ) {}
 
   // ────────────────────────────────────────────────────────────────────────────
   // Admin (sermon CMS) — PASTOR+
@@ -281,5 +288,83 @@ export class SermonsController {
   @ApiOperation({ summary: 'My weekly sermon streak' })
   getMySermonStreak(@CurrentUser() user: AuthUser) {
     return this.sermonsService.getSermonStreak(user.userId);
+  }
+
+  @Post('upload-audio')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Upload sermon audio', description: 'Uploads an audio file to R2 and returns a public URL.' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'Audio file to upload',
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({ description: 'Audio uploaded successfully' })
+  async uploadAudio(@Req() request: { headers?: { authorization?: string } }, @UploadedFile() file: any) {
+    const authorization = request.headers?.authorization;
+    await this.authService.getProfile(authorization);
+
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    const maxBytes = 100 * 1024 * 1024; // 100 MB
+    if (file.size > maxBytes) {
+      throw new BadRequestException('File must be under 100 MB');
+    }
+
+    const allowed = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg', 'audio/aac'];
+    if (!allowed.includes(file.mimetype)) {
+      throw new BadRequestException('Unsupported audio format');
+    }
+
+    if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+      throw new ServiceUnavailableException('R2 storage is not configured. Add R2_* env vars.');
+    }
+
+    const ext = (file.originalname || '').split('.').pop() ?? 'mp3';
+    const key = `sermons/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    try {
+      // Dynamically require AWS S3 client to avoid static compile-time dependency issues
+      // This will attempt to use the AWS SDK v3 to PUT the object into R2-compatible S3 endpoint.
+      // If the package is not installed, this will throw and we catch below.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+
+      const endpoint = process.env.R2_ENDPOINT ?? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+      const bucket = process.env.R2_BUCKET ?? process.env.R2_BUCKET_NAME ?? process.env.R2_ACCOUNT_ID;
+
+      const client = new S3Client({
+        endpoint,
+        region: 'auto',
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID,
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+        },
+      });
+
+      await client.send(new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      }));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      throw new InternalServerErrorException(`Upload to R2 failed: ${msg}`);
+    }
+
+    const publicUrl = (process.env.R2_PUBLIC_URL ?? '').replace(/\/$/, '');
+    const audioUrl = publicUrl ? `${publicUrl}/${key}` : key;
+    return { data: { audioUrl, audioKey: key } };
   }
 }

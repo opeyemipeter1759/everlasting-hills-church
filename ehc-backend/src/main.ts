@@ -5,10 +5,13 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AuthModule } from './auth/auth.module';
+import { AttendanceModule } from './attendance/attendance.module';
 import { FormsModule } from './forms/forms.module';
 import { SermonsModule } from './sermons/sermons.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { MembersModule } from './members/members.module';
 import type { Env } from './config/env.validation';
 
 async function bootstrap() {
@@ -97,8 +100,9 @@ async function bootstrap() {
 
   try {
     const document = SwaggerModule.createDocument(app, swagger, {
-      include: [AppModule, AuthModule, FormsModule, SermonsModule],
+      include: [AppModule, AuthModule, AttendanceModule, FormsModule, SermonsModule, AnalyticsModule, MembersModule],
     });
+    // include MembersModule by referencing via AppModule's imports at runtime
     SwaggerModule.setup('docs', app, document);
   } catch (err) {
     logger.warn(`Swagger setup failed; continuing without docs: ${(err as Error).message}`);

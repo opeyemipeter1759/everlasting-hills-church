@@ -5,12 +5,6 @@ import {
   getAccessTokenFromCookie,
 } from "../auth/frontend-session";
 
-/**
- * Single axios instance for all backend (NestJS) calls.
- *
- * BASE_URL must point to the NestJS API (e.g. https://api.everlastinghills.org).
- * Default of "/api" preserves dev-server proxy behavior if configured.
- */
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "/api";
 
 export const apiClient: AxiosInstance = axios.create({

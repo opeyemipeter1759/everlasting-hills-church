@@ -9,7 +9,6 @@ export const queryClient = new QueryClient({
       gcTime: 5 * 60 * 1000, // 5 min — cache garbage collection
       retry: (failureCount, error) => {
         const status = (error as ApiError)?.status;
-        // Don't retry client errors (4xx); retry transient errors up to 2x
         if (status && status >= 400 && status < 500) return false;
         return failureCount < 2;
       },

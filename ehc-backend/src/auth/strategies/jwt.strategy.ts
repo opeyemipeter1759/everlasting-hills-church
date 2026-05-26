@@ -37,6 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   constructor(
     config: ConfigService<Env, true>,
+    config: ConfigService,
     private readonly prisma: PrismaService,
   ) {
     const supabaseUrl = config.get('SUPABASE_URL', { infer: true });
@@ -54,6 +55,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       // Supabase signs with ES256 (ECC P-256) on the new keyset.
       // HS256 retained as fallback for tokens issued before rotation (they'll expire soon).
       algorithms: ['ES256', 'HS256'],
+      secretOrKey: String(config.get('SUPABASE_JWT_SECRET')),
+      // Supabase signs with HS256 by default
+      algorithms: ['HS256'],
+      // Supabase JWTs use "authenticated" as the audience
       audience: 'authenticated',
       issuer: `${supabaseUrl}/auth/v1`,
     });

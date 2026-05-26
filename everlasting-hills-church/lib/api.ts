@@ -59,7 +59,6 @@ export const auth = {
   },
 };
 
-// ── Example data hooks (kept for reference; users/* endpoints are not implemented yet) ─
 
 export interface User {
   id: string;
@@ -90,4 +89,6 @@ export function useCreateUser() {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
     },
   });
+
 }
+

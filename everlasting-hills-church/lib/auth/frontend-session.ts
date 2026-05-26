@@ -33,6 +33,8 @@ const ROLE_LEVELS: Record<UserRole, number> = {
 export const ACCESS_TOKEN_COOKIE = "ehc_access_token";
 export const ROLE_COOKIE = "ehc_role";
 export const EMAIL_COOKIE = "ehc_user_email";
+export const FULL_NAME_COOKIE = "ehc_user_full_name";
+export const PICTURE_COOKIE = "ehc_user_picture";
 export const LOGGED_IN_COOKIE = "ehc_logged_in";
 
 export const ROLE_OPTIONS = [

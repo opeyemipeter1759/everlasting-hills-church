@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -18,33 +18,14 @@ import { Public } from './decorators/public.decorator';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  /**
-   * @Public — login is the entry point; obviously cannot require auth.
-   * @Throttle — tighter than the global limit to slow credential-stuffing attacks.
-   *             5 attempts per minute per IP. Tune based on real abuse signal.
-   */
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'User Login',
-    description: 'Authenticate user with email and password to receive a Supabase JWT.',
-  })
+  @ApiOperation({ summary: 'User Login', description: 'Authenticate user with email and password' })
   @ApiBody({ type: LoginDto })
-  @ApiOkResponse({
-    description: 'User logged in successfully',
-    schema: {
-      example: {
-        access_token: 'eyJhbGciOi...',
-        refresh_token: 'eyJhbGciOi...',
-        expires_in: 3600,
-        token_type: 'bearer',
-        user: { id: 'user-uuid', email: 'user@example.com', role: 'MEMBER' },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({ description: 'Invalid email or password' })
+  @ApiOkResponse({ description: 'User logged in', schema: { example: { access_token: 'tok', user: { id: 'user-1', email: 'user@example.com', role: 'MEMBER' }, session: { access_token: 'tok', expires_in: 3600 } } } })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async login(@Body() body: LoginDto) {
     return this.authService.login(body.email, body.password);
@@ -53,16 +34,19 @@ export class AuthController {
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('access-token')
-  @ApiOperation({
-    summary: 'User Logout',
-    description: 'Invalidate the current user session using the bearer access token.',
-  })
-  @ApiOkResponse({
-    description: 'User logged out successfully',
-    schema: { example: { success: true, message: 'Logged out successfully' } },
-  })
-  @ApiUnauthorizedResponse({ description: 'Access token missing, invalid, or logout failed' })
-  async logout(@Headers('authorization') authorization?: string) {
-    return this.authService.logout(authorization);
+  @ApiOperation({ summary: 'User Logout', description: 'Invalidate the current user session' })
+  @ApiOkResponse({ description: 'User logged out', schema: { example: { success: true, message: 'Logged out successfully' } } })
+  @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
+  async logout(@Req() request: { headers?: { authorization?: string } }) {
+    return this.authService.logout(request.headers?.authorization);
+  }
+
+  @Get('me')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiOkResponse({ description: 'Current user profile', schema: { example: { id: 'user-1', email: 'user@example.com', role: 'MEMBER', fullName: 'Jane Doe' } } })
+  @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
+  async me(@Req() request: { headers?: { authorization?: string } }) {
+    return this.authService.getProfile(request.headers?.authorization);
   }
 }

@@ -15,6 +15,11 @@ export const envSchema = z.object({
   // Tenant IDs in this project use a custom prefixed format (e.g. "ehc_9a893a..."), not UUIDs.
   // The Prisma Tenant model accepts any non-empty string @id.
   DEFAULT_TENANT_ID: z.string().min(8, 'DEFAULT_TENANT_ID must be at least 8 chars'),
+  SUPABASE_ANON_KEY: z.string().min(1).optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
+  SUPABASE_JWT_SECRET: z.string().min(32, 'SUPABASE_JWT_SECRET must be at least 32 chars'),
+
+  DEFAULT_TENANT_ID: z.string().min(1),
 
   RESEND_API_KEY: z.string().min(1).optional(),
   RESEND_FROM: z.string().email().optional(),
@@ -37,5 +42,10 @@ export function validateEnv(config: Record<string, unknown>): Env {
       .join('\n');
     throw new Error(`Invalid environment variables:\n${issues}`);
   }
-  return parsed.data;
+  const data = parsed.data as unknown as Record<string, unknown>;
+  // If SUPABASE_ANON_KEY is not provided but NEXT_PUBLIC_SUPABASE_ANON_KEY exists (from .env), use it.
+  if (!data.SUPABASE_ANON_KEY && data.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    (data.SUPABASE_ANON_KEY as string) = String(data.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  }
+  return data as Env;
 }
