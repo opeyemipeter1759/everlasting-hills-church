@@ -1,4 +1,4 @@
-import { Body, Controller, Headers, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
   ApiTags,
@@ -42,6 +42,8 @@ export class AuthController {
           id: 'user-123',
           email: 'user@example.com',
           role: 'member',
+          fullName: 'Jane Doe',
+          picture: 'https://example.com/avatar.jpg',
         },
         session: {
           access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
@@ -60,6 +62,8 @@ export class AuthController {
             id: { type: 'string', description: 'User ID' },
             email: { type: 'string', description: 'User email' },
             role: { type: 'string', description: 'User role' },
+            fullName: { type: 'string', description: 'User full name' },
+            picture: { type: 'string', description: 'User avatar/picture URL' },
           },
         },
         session: {
@@ -120,7 +124,38 @@ export class AuthController {
       },
     },
   })
-  async logout(@Headers('authorization') authorization?: string) {
-    return this.authService.logout(authorization);
+  async logout(@Req() request: { headers?: { authorization?: string } }) {
+    return this.authService.logout(request.headers?.authorization);
+  }
+
+  @Get('me')
+  @ApiOperation({
+    summary: 'Get current user profile',
+    description: 'Returns the profile of the currently authenticated user',
+  })
+  @ApiBearerAuth('access-token')
+  @ApiOkResponse({
+    description: 'Current user profile',
+    schema: {
+      example: {
+        id: 'user-123',
+        email: 'user@example.com',
+        role: 'member',
+        fullName: 'Jane Doe',
+        picture: 'https://example.com/avatar.jpg',
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Access token is missing or invalid',
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Access token is required',
+      },
+    },
+  })
+  async me(@Req() request: { headers?: { authorization?: string } }) {
+    return this.authService.getProfile(request.headers?.authorization);
   }
 }

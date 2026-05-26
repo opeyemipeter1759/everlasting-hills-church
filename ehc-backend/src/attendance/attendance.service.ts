@@ -1,0 +1,388 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { PrismaService } from '../prisma/prisma.service';
+
+const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
+const WAT_OFFSET_MS = 60 * 60 * 1000;
+
+function getTodayBounds() {
+  const now = new Date();
+  const localNow = new Date(now.getTime() + WAT_OFFSET_MS);
+  const midnightWAT = Date.UTC(
+    localNow.getUTCFullYear(),
+    localNow.getUTCMonth(),
+    localNow.getUTCDate(),
+  );
+  const startUtc = new Date(midnightWAT - WAT_OFFSET_MS);
+  const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
+  return { startUtc, endUtc };
+}
+
+@Injectable()
+export class AttendanceService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  private async getMemberByUserId(userId: string) {
+    const profile = await this.prisma.profile.findUnique({ where: { userId } });
+    if (!profile) {
+      return null;
+    }
+
+    return this.prisma.member.findUnique({ where: { profileId: profile.id } });
+  }
+
+  private async getTodayService() {
+    const { startUtc, endUtc } = getTodayBounds();
+    return this.prisma.service.findFirst({
+      where: {
+        tenantId: TENANT_ID,
+        scheduledAt: {
+          gte: startUtc,
+          lt: endUtc,
+        },
+      },
+    });
+  }
+
+  private async findOrCreateTodayService() {
+    const existing = await this.getTodayService();
+    if (existing) {
+      return existing;
+    }
+
+    const { startUtc } = getTodayBounds();
+    const label = new Date(startUtc.getTime() + WAT_OFFSET_MS).toLocaleDateString('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    return this.prisma.service.create({
+      data: {
+        id: randomUUID(),
+        tenantId: TENANT_ID,
+        name: `Sunday Service — ${label}`,
+        scheduledAt: startUtc,
+      },
+    });
+  }
+
+  async checkIn(userId: string) {
+    const member = await this.getMemberByUserId(userId);
+    if (!member) {
+      throw new NotFoundException('Member record not found');
+    }
+
+    const service = await this.findOrCreateTodayService();
+
+    const existing = await this.prisma.attendanceRecord.findUnique({
+      where: {
+        memberId_serviceId: {
+          memberId: member.id,
+          serviceId: service.id,
+        },
+      },
+    });
+
+    if (existing) {
+      return { alreadyCheckedIn: true as const, service };
+    }
+
+    await this.prisma.attendanceRecord.create({
+      data: {
+        id: randomUUID(),
+        tenantId: TENANT_ID,
+        memberId: member.id,
+        serviceId: service.id,
+        present: true,
+      },
+    });
+
+    return { alreadyCheckedIn: false as const, service };
+  }
+
+  async checkInByServiceId(userId: string, serviceId: string) {
+    const member = await this.getMemberByUserId(userId);
+    if (!member) {
+      throw new NotFoundException('Member record not found');
+    }
+
+    const service = await this.prisma.service.findFirst({
+      where: { id: serviceId, tenantId: TENANT_ID },
+    });
+    if (!service) {
+      throw new NotFoundException('Service not found');
+    }
+
+    const existing = await this.prisma.attendanceRecord.findUnique({
+      where: {
+        memberId_serviceId: {
+          memberId: member.id,
+          serviceId: service.id,
+        },
+      },
+    });
+
+    if (existing) {
+      return { alreadyCheckedIn: true as const, service };
+    }
+
+    await this.prisma.attendanceRecord.create({
+      data: {
+        id: randomUUID(),
+        tenantId: TENANT_ID,
+        memberId: member.id,
+        serviceId: service.id,
+        present: true,
+      },
+    });
+
+    return { alreadyCheckedIn: false as const, service };
+  }
+
+  async getMemberAttendance(userId: string) {
+    const member = await this.getMemberByUserId(userId);
+    if (!member) {
+      return [];
+    }
+
+    return this.prisma.attendanceRecord.findMany({
+      where: {
+        memberId: member.id,
+        tenantId: TENANT_ID,
+      },
+      include: {
+        Service: true,
+      },
+      orderBy: {
+        Service: {
+          scheduledAt: 'desc',
+        },
+      },
+    });
+  }
+
+  async getTodayAttendanceWithMembers() {
+    const service = await this.getTodayService();
+    if (!service) {
+      return null;
+    }
+
+    const records = await this.prisma.attendanceRecord.findMany({
+      where: {
+        serviceId: service.id,
+        tenantId: TENANT_ID,
+        present: true,
+      },
+      include: {
+        Member: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+          },
+        },
+      },
+      orderBy: { id: 'asc' },
+    });
+
+    return { service, records };
+  }
+
+  async getAllServicesWithCounts() {
+    return this.prisma.service.findMany({
+      where: { tenantId: TENANT_ID },
+      orderBy: { scheduledAt: 'desc' },
+      include: {
+        _count: {
+          select: {
+            AttendanceRecord: {
+              where: { present: true },
+            },
+          },
+        },
+      },
+      take: 50,
+    });
+  }
+
+  async getNextService() {
+    return this.prisma.service.findFirst({
+      where: {
+        tenantId: TENANT_ID,
+        scheduledAt: { gt: new Date() },
+      },
+      orderBy: { scheduledAt: 'asc' },
+    });
+  }
+
+  async countTotalServices() {
+    return this.prisma.service.count({ where: { tenantId: TENANT_ID } });
+  }
+
+  async getRecentServicesStats(limit = 4) {
+    return this.prisma.service.findMany({
+      where: { tenantId: TENANT_ID },
+      orderBy: { scheduledAt: 'desc' },
+      take: limit,
+      include: {
+        _count: {
+          select: {
+            AttendanceRecord: {
+              where: { present: true },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async countTodayCheckIns() {
+    const service = await this.getTodayService();
+    if (!service) {
+      return 0;
+    }
+
+    return this.prisma.attendanceRecord.count({
+      where: {
+        serviceId: service.id,
+        tenantId: TENANT_ID,
+        present: true,
+      },
+    });
+  }
+
+  async getAttendanceTrend(limit = 16) {
+    const services = await this.prisma.service.findMany({
+      where: { tenantId: TENANT_ID },
+      orderBy: { scheduledAt: 'desc' },
+      take: limit,
+      include: {
+        _count: {
+          select: {
+            AttendanceRecord: {
+              where: { present: true },
+            },
+          },
+        },
+      },
+    });
+
+    return [...services].reverse().map((service) => ({
+      id: service.id,
+      name: service.name,
+      date: service.scheduledAt.toISOString(),
+      label: service.scheduledAt.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+      }),
+      count: service._count.AttendanceRecord,
+    }));
+  }
+
+  async getAttendanceByDayOfWeek() {
+    const services = await this.prisma.service.findMany({
+      where: { tenantId: TENANT_ID },
+      include: {
+        _count: {
+          select: {
+            AttendanceRecord: {
+              where: { present: true },
+            },
+          },
+        },
+      },
+    });
+
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const totals = new Array(7).fill(0);
+    const counts = new Array(7).fill(0);
+
+    services.forEach((service) => {
+      const dayOfWeek = new Date(service.scheduledAt).getDay();
+      totals[dayOfWeek] += service._count.AttendanceRecord;
+      counts[dayOfWeek] += 1;
+    });
+
+    return days.map((label, index) => ({
+      label,
+      avg: counts[index] > 0 ? Math.round(totals[index] / counts[index]) : 0,
+      total: totals[index],
+    }));
+  }
+
+  async getTopAttendees(limit = 10) {
+    const records = await this.prisma.attendanceRecord.groupBy({
+      by: ['memberId'],
+      where: { tenantId: TENANT_ID, present: true },
+      _count: { _all: true },
+      orderBy: { _count: { memberId: 'desc' } },
+      take: limit,
+    });
+
+    const memberIds = records.map((record) => record.memberId);
+    const members = await this.prisma.member.findMany({
+      where: { id: { in: memberIds } },
+      select: { id: true, firstName: true, lastName: true, photoUrl: true },
+    });
+
+    const memberMap = Object.fromEntries(members.map((member) => [member.id, member]));
+
+    return records.map((record) => {
+      const member = memberMap[record.memberId];
+      return {
+        memberId: record.memberId,
+        name: member ? `${member.firstName} ${member.lastName}` : 'Unknown',
+        photoUrl: member?.photoUrl ?? null,
+        count: record._count._all,
+      };
+    });
+  }
+
+  async getAttendanceSummary() {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const [totalServices, totalCheckins, thisMonthCheckins, lastMonthCheckins, totalMembers] =
+      await Promise.all([
+        this.prisma.service.count({ where: { tenantId: TENANT_ID } }),
+        this.prisma.attendanceRecord.count({ where: { tenantId: TENANT_ID, present: true } }),
+        this.prisma.attendanceRecord.count({
+          where: {
+            tenantId: TENANT_ID,
+            present: true,
+            Service: { scheduledAt: { gte: monthStart } },
+          },
+        }),
+        this.prisma.attendanceRecord.count({
+          where: {
+            tenantId: TENANT_ID,
+            present: true,
+            Service: { scheduledAt: { gte: lastMonthStart, lt: monthStart } },
+          },
+        }),
+        this.prisma.member.count({ where: { tenantId: TENANT_ID, status: 'ACTIVE' } }),
+      ]);
+
+    const avgAttendance = totalServices > 0 ? Math.round(totalCheckins / totalServices) : 0;
+    const momChange =
+      lastMonthCheckins === 0
+        ? 0
+        : Math.round(((thisMonthCheckins - lastMonthCheckins) / lastMonthCheckins) * 100);
+
+    return {
+      totalServices,
+      totalCheckins,
+      thisMonthCheckins,
+      lastMonthCheckins,
+      avgAttendance,
+      momChange,
+      totalMembers,
+      attendanceRate: totalMembers > 0 ? Math.round((avgAttendance / totalMembers) * 100) : 0,
+    };
+  }
+}

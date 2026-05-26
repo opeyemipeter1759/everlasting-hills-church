@@ -4,7 +4,10 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { FormsModule } from './forms/forms.module';
+import { AttendanceModule } from './attendance/attendance.module';
 import { SermonsModule } from './sermons/sermons.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { MembersModule } from './members/members.module';
 
 @Module({
   imports: [
@@ -13,7 +16,10 @@ import { SermonsModule } from './sermons/sermons.module';
     PrismaModule,
     AuthModule,
     FormsModule,
+    AttendanceModule,
     SermonsModule,
+    AnalyticsModule,
+    MembersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

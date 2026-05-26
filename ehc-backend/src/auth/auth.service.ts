@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { createClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -23,12 +24,39 @@ export class AuthService {
     return createClient(this.supabaseUrl, this.supabaseAnonKey);
   }
 
+  private async getMemberByEmail(email: string): Promise<{
+    role: string | null;
+    firstName: string | null;
+    lastName: string | null;
+  }> {
+    let member;
+    try {
+      member = await this.prisma.member.findFirst({
+        where: { email },
+        select: {
+          firstName: true,
+          lastName: true,
+          Profile: { select: { role: true } },
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientInitializationError || error instanceof Prisma.PrismaClientKnownRequestError || error instanceof Prisma.PrismaClientRustPanicError) {
+        console.warn('[auth] member lookup skipped because database is unavailable:', (error as Error).message);
+        return { role: null, firstName: null, lastName: null };
+      }
+      throw error;
+    }
+
+    return {
+      role: member?.Profile?.role ?? null,
+      firstName: member?.firstName ?? null,
+      lastName: member?.lastName ?? null,
+    };
+  }
+
   private async getMemberRole(email: string): Promise<string | null> {
-    const member = await this.prisma.member.findFirst({
-      where: { email },
-      select: { Profile: { select: { role: true } } },
-    });
-    return member?.Profile?.role ?? null;
+    const info = await this.getMemberByEmail(email);
+    return info.role;
   }
 
   async login(email: string, password: string) {
@@ -53,7 +81,17 @@ export class AuthService {
       }
 
       const userEmail = String(data.user.email ?? '');
-      const role = userEmail ? await this.getMemberRole(userEmail) : null;
+      const memberInfo = userEmail ? await this.getMemberByEmail(userEmail) : null;
+      const role = memberInfo?.role ?? null;
+      const fullName = memberInfo
+        ? `${memberInfo.firstName ?? ''} ${memberInfo.lastName ?? ''}`.trim() || null
+        : null;
+      const picture =
+        (data.user.user_metadata &&
+          (data.user.user_metadata.avatar_url || data.user.user_metadata.picture)) ||
+        (data.user as any).avatar_url ||
+        (data.user as any).picture ||
+        null;
 
       return {
         access_token: data.session.access_token,
@@ -61,6 +99,8 @@ export class AuthService {
           id: data.user.id,
           email: data.user.email,
           role,
+          fullName,
+          picture,
         },
         session: {
           access_token: data.session.access_token,
@@ -113,6 +153,67 @@ export class AuthService {
 
       console.error('Logout error:', error);
       throw new UnauthorizedException('Logout failed');
+    }
+  }
+
+  async getProfile(authorization?: string) {
+    const accessToken = authorization?.startsWith('Bearer ')
+      ? authorization.slice(7).trim()
+      : '';
+
+    if (!accessToken) {
+      throw new UnauthorizedException('Access token is required');
+    }
+
+    try {
+      const supabase = createClient(this.supabaseUrl, this.supabaseAnonKey, {
+        global: {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      });
+
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error) {
+        console.error('Supabase getUser error:', error.message);
+        throw new UnauthorizedException('Invalid access token');
+      }
+
+      const user = data?.user;
+      if (!user) {
+        throw new UnauthorizedException('User not found');
+      }
+
+      const userEmail = String(user.email ?? '');
+      const memberInfo = userEmail ? await this.getMemberByEmail(userEmail) : null;
+      const role = memberInfo?.role ?? null;
+      const fullName = memberInfo
+        ? `${memberInfo.firstName ?? ''} ${memberInfo.lastName ?? ''}`.trim() || null
+        : null;
+
+      const picture =
+        (user.user_metadata &&
+          (user.user_metadata.avatar_url || user.user_metadata.picture)) ||
+        // some providers put it directly on the user object
+        (user as any).avatar_url ||
+        (user as any).picture ||
+        null;
+
+      return {
+        id: user.id,
+        email: user.email,
+        role,
+        fullName,
+        picture,
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      console.error('Get profile error:', error);
+      throw new UnauthorizedException('Could not fetch user profile');
     }
   }
 }

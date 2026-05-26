@@ -3,8 +3,11 @@ import { AppModule } from './app.module';
 import { validateEnv } from './config/env.validation';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AuthModule } from './auth/auth.module';
+import { AttendanceModule } from './attendance/attendance.module';
 import { FormsModule } from './forms/forms.module';
 import { SermonsModule } from './sermons/sermons.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { MembersModule } from './members/members.module';
 
 async function bootstrap() {
   validateEnv(process.env);
@@ -23,8 +26,9 @@ async function bootstrap() {
   // dynamically created internal modules that may lack route metadata.
   try {
     const document = SwaggerModule.createDocument(app, config, {
-      include: [AppModule, AuthModule, FormsModule, SermonsModule],
+      include: [AppModule, AuthModule, AttendanceModule, FormsModule, SermonsModule, AnalyticsModule, MembersModule],
     });
+    // include MembersModule by referencing via AppModule's imports at runtime
     SwaggerModule.setup('docs', app, document);
   }
   catch (err) {
