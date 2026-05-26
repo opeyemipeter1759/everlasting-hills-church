@@ -96,7 +96,9 @@ export default function SermonList({ sermons: initial }: { sermons: Sermon[] }) 
                       {s.title}
                     </p>
                     {s.isFeatured && (
-                      <Star size={12} className="text-amber-500 flex-shrink-0" fill="currentColor" title="Featured" />
+                      <span title="Featured" className="inline-flex">
+                        <Star size={12} className="text-amber-500 flex-shrink-0" fill="currentColor" aria-label="Featured" />
+                      </span>
                     )}
                   </div>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">

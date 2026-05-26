@@ -7,6 +7,8 @@ import { AppModule } from './app.module';
 import { AuthModule } from './auth/auth.module';
 import { FormsModule } from './forms/forms.module';
 import { SermonsModule } from './sermons/sermons.module';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import type { Env } from './config/env.validation';
 
 async function bootstrap() {
@@ -69,6 +71,15 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
+
+  /**
+   * Order matters:
+   *   - Filter catches everything thrown, including from interceptors → registered first
+   *   - Interceptor wraps every successful response in { data, meta }
+   * Together they give us a stable contract: success ⇒ { data, meta }, failure ⇒ { error }
+   */
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalInterceptors(new ResponseEnvelopeInterceptor());
 
   /**
    * Swagger. Restricting include[] to known modules avoids scanning dynamically created

@@ -1,7 +1,8 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
-import type { TypedConfigService } from '../config/env.config';
+import type { Env } from '../config/env.validation';
 
 @Injectable()
 export class AuthService {
@@ -13,7 +14,7 @@ export class AuthService {
 
   constructor(
     private readonly prisma: PrismaService,
-    config: TypedConfigService,
+    config: ConfigService<Env, true>,
   ) {
     this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
     this.supabaseAnonKey = config.get('SUPABASE_ANON_KEY', { infer: true });
@@ -24,14 +25,20 @@ export class AuthService {
 
   /**
    * Look up the application role for an authenticated Supabase user.
-   * Returns null if the user has signed up but has no Profile yet.
+   *
+   * Lookup by Profile.userId (the Supabase auth user UUID), matching JwtStrategy.
+   * Email-based lookup (the old approach) was fragile — admins/pastors who aren't Members
+   * had no email match, and email changes broke the link. userId is the stable identifier.
+   *
+   * Returns null only when the Supabase user has no Profile row at all (genuine new-signup
+   * before admin assigns role).
    */
-  private async getMemberRole(email: string): Promise<string | null> {
-    const member = await this.prisma.member.findFirst({
-      where: { email },
-      select: { Profile: { select: { role: true } } },
+  private async getRoleByUserId(userId: string): Promise<string | null> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { role: true },
     });
-    return member?.Profile?.role ?? null;
+    return profile?.role ?? null;
   }
 
   async login(email: string, password: string) {
@@ -42,8 +49,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const userEmail = String(data.user.email ?? '');
-    const role = userEmail ? await this.getMemberRole(userEmail) : null;
+    const role = await this.getRoleByUserId(data.user.id);
 
     return {
       access_token: data.session.access_token,
