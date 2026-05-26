@@ -1,33 +1,18 @@
-import { getAllMembers, getUpcomingBirthdays, getAbsentMembers } from "@/services/member.service";
-import MemberDirectory from "@/components/dashboard/admin/MemberDirectory";
+import { Users } from "lucide-react";
+import ComingSoon from "@/components/dashboard/shell/ComingSoon";
 
-export default async function MembersPage() {
-  const [members, birthdays, absent] = await Promise.all([
-    getAllMembers(),
-    getUpcomingBirthdays(7),
-    getAbsentMembers(3),
-  ]);
+export const metadata = { title: "Members — Dashboard" };
 
-  const serialised = members.map((m) => ({
-    id: m.id,
-    firstName: m.firstName,
-    lastName: m.lastName,
-    email: m.email,
-    phone: m.phone,
-    status: m.status,
-    photoUrl: m.photoUrl,
-    joinedAt: m.joinedAt.toISOString(),
-    dateOfBirth: m.dateOfBirth ? m.dateOfBirth.toISOString() : null,
-    attendanceCount: m._count.attendance,
-  }));
-
-  const absentIds = new Set(absent.map((a) => a.id));
-
+/**
+ * Placeholder until the NestJS Members module ships (tracked as Week 3).
+ * Page route stays intact so navigation/breadcrumbs keep working.
+ */
+export default function MembersPage() {
   return (
-    <MemberDirectory
-      members={serialised}
-      birthdayIds={birthdays.map((b) => b.id)}
-      absentIds={Array.from(absentIds)}
+    <ComingSoon
+      title="Member directory"
+      description="The members module is being rebuilt against the new NestJS backend. Listing, search, and member detail will return shortly."
+      icon={Users}
     />
   );
 }

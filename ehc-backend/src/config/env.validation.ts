@@ -8,6 +8,13 @@ export const envSchema = z.object({
   DIRECT_URL: z.string().url(),
 
   SUPABASE_URL: z.string().url(),
+  SUPABASE_ANON_KEY: z.string().min(1),
+  // No SUPABASE_JWT_SECRET — project uses asymmetric ES256 keys. Public key fetched from
+  // <SUPABASE_URL>/auth/v1/.well-known/jwks.json by JwtStrategy.
+
+  // Tenant IDs in this project use a custom prefixed format (e.g. "ehc_9a893a..."), not UUIDs.
+  // The Prisma Tenant model accepts any non-empty string @id.
+  DEFAULT_TENANT_ID: z.string().min(8, 'DEFAULT_TENANT_ID must be at least 8 chars'),
   SUPABASE_ANON_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
   SUPABASE_JWT_SECRET: z.string().min(32, 'SUPABASE_JWT_SECRET must be at least 32 chars'),

@@ -2,8 +2,7 @@ import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
-import type { Env } from '../config/env.validation';
+import type { TypedConfigService } from '../config/env.config';
 
 @Injectable()
 export class AuthService {
@@ -12,28 +11,27 @@ export class AuthService {
   private readonly supabaseAnonKey: string;
   private readonly anonClient: SupabaseClient;
 
-  constructor(private readonly prisma: PrismaService, private readonly config: ConfigService<Env, true>) {
-    this.supabaseUrl = this.config.get('SUPABASE_URL', { infer: true });
-    this.supabaseAnonKey = this.config.get('SUPABASE_ANON_KEY', { infer: true });
-    this.anonClient = createClient(this.supabaseUrl, this.supabaseAnonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  constructor(
+    private readonly prisma: PrismaService,
+    config: TypedConfigService,
+  ) {
+    this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
+    this.supabaseAnonKey = config.get('SUPABASE_ANON_KEY', { infer: true });
+    this.anonClient = createClient(this.supabaseUrl, this.supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
   }
 
-  private async getMemberByEmail(email: string) {
-    try {
-      const member = await this.prisma.member.findFirst({ where: { email }, select: { firstName: true, lastName: true, Profile: { select: { role: true } } } });
-      return { role: member?.Profile?.role ?? null, firstName: member?.firstName ?? null, lastName: member?.lastName ?? null };
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientInitializationError || error instanceof Prisma.PrismaClientKnownRequestError || error instanceof Prisma.PrismaClientRustPanicError) {
-        this.logger.warn('[auth] member lookup skipped because database is unavailable: ' + (error as Error).message);
-        return { role: null, firstName: null, lastName: null };
-      }
-      throw error;
-    }
-  }
-
-  private async getMemberRole(email: string) {
-    const info = await this.getMemberByEmail(email);
-    return info.role;
+  /**
+   * Look up the application role for an authenticated Supabase user.
+   * Returns null if the user has signed up but has no Profile yet.
+   */
+  private async getMemberRole(email: string): Promise<string | null> {
+    const member = await this.prisma.member.findFirst({
+      where: { email },
+      select: { Profile: { select: { role: true } } },
+    });
+    return member?.Profile?.role ?? null;
   }
 
   async login(email: string, password: string) {
@@ -44,10 +42,7 @@ export class AuthService {
     }
 
     const userEmail = String(data.user.email ?? '');
-    const memberInfo = userEmail ? await this.getMemberByEmail(userEmail) : null;
-    const role = memberInfo?.role ?? null;
-    const fullName = memberInfo ? `${memberInfo.firstName ?? ''} ${memberInfo.lastName ?? ''}`.trim() || null : null;
-    const picture = (data.user.user_metadata && (data.user.user_metadata.avatar_url || data.user.user_metadata.picture)) || (data.user as any).avatar_url || (data.user as any).picture || null;
+    const role = userEmail ? await this.getMemberRole(userEmail) : null;
 
     return {
       access_token: data.session.access_token,

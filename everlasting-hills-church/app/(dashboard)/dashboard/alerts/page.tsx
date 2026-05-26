@@ -1,33 +1,14 @@
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth/session";
-import { db } from "@/lib/db/prisma";
-import { hasMinRole } from "@/components/dashboard/shell/role-utils";
-import { getPastoralAlerts, getAlertCounts } from "@/services/pastoral-alerts.service";
-import AlertList from "@/components/dashboard/analytics/AlertList";
+import { Bell } from "lucide-react";
+import ComingSoon from "@/components/dashboard/shell/ComingSoon";
 
-export const metadata = { title: "Pastoral Alerts" };
+export const metadata = { title: "Pastoral alerts — Dashboard" };
 
-export default async function PastoralAlertsPage() {
-  const user = await getCurrentUser();
-  if (!user) redirect("/login");
-
-  const profile = await db.profile.findUnique({ where: { userId: user.id } });
-  if (!profile || !hasMinRole(profile.role, "PASTOR")) redirect("/dashboard");
-
-  const [alerts, counts] = await Promise.all([
-    getPastoralAlerts(false),
-    getAlertCounts(),
-  ]);
-
+export default function AlertsPage() {
   return (
-    <div className="space-y-6 max-w-6xl">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Pastoral Alerts</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-          Absence alerts, birthdays, inactive members, and at-risk flags
-        </p>
-      </div>
-      <AlertList alerts={alerts} counts={counts} />
-    </div>
+    <ComingSoon
+      title="Pastoral alerts"
+      description="Absence, birthday, anniversary, and at-risk alerts return once the Pastoral Alerts module ships."
+      icon={Bell}
+    />
   );
 }

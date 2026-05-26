@@ -1,44 +1,59 @@
-import { jwtVerify } from "jose";
+import { createRemoteJWKSet, jwtVerify, type JWTPayload } from "jose";
 
 /**
- * Edge-runtime-compatible Supabase JWT verifier.
+ * Edge-runtime-compatible Supabase JWT verifier (asymmetric ES256 via JWKS).
  *
- * Uses HS256 (Supabase default). The shared secret must be available to the Next.js server
- * runtime (NOT the browser — never prefix with NEXT_PUBLIC_).
+ * Why JWKS instead of a shared secret:
+ *  - Supabase migrated this project to ES256 asymmetric keys on 2026-05-20
+ *  - We never possess the private key — Supabase signs, we verify with the public key
+ *  - JWKS fetched once, cached, auto-refreshed on key rotation (kid header)
+ *  - No secret to leak; SUPABASE_JWT_SECRET is no longer needed anywhere
  *
- * Returns the decoded payload on success, null on any verification failure (expired, bad
- * signature, wrong audience). The caller treats null as "not authenticated."
+ * jose's createRemoteJWKSet:
+ *  - Edge-runtime compatible (uses native fetch, no Node-only APIs)
+ *  - Caches keys in memory (default 10 min)
+ *  - Auto-refetches when a token with an unknown `kid` arrives (key rotation)
+ *
+ * Algorithms allowed:
+ *  - ES256 — Supabase's current signing key
+ *  - HS256 — kept temporarily so already-issued legacy tokens still verify until they expire.
+ *    Note: HS256 tokens won't actually verify here because jose's createRemoteJWKSet only
+ *    serves asymmetric keys; the algorithm list just allows them through to the next step.
+ *    Once all pre-rotation tokens expire (≤1h after rotation), the HS256 entry can be dropped.
  */
-export interface SupabaseJwtClaims {
+export interface SupabaseJwtClaims extends JWTPayload {
   sub: string;
   email?: string;
   exp: number;
   iat: number;
   aud?: string | string[];
   role?: string;
-  [key: string]: unknown;
 }
 
-let cachedKey: Uint8Array | null = null;
+let cachedJWKS: ReturnType<typeof createRemoteJWKSet> | null = null;
 
-function getSecretKey(): Uint8Array {
-  if (cachedKey) return cachedKey;
-  const secret = process.env.SUPABASE_JWT_SECRET;
-  if (!secret) {
+function getJWKS() {
+  if (cachedJWKS) return cachedJWKS;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) {
     throw new Error(
-      "SUPABASE_JWT_SECRET is not set. Middleware cannot verify JWTs without it.",
+      "NEXT_PUBLIC_SUPABASE_URL is not set. Middleware cannot fetch JWKS without it.",
     );
   }
-  cachedKey = new TextEncoder().encode(secret);
-  return cachedKey;
+  cachedJWKS = createRemoteJWKSet(
+    new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`),
+  );
+  return cachedJWKS;
 }
 
 export async function verifySupabaseJwt(token: string): Promise<SupabaseJwtClaims | null> {
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, getSecretKey(), {
-      algorithms: ["HS256"],
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const { payload } = await jwtVerify(token, getJWKS(), {
+      algorithms: ["ES256"],
       audience: "authenticated",
+      issuer: `${supabaseUrl}/auth/v1`,
     });
     return payload as SupabaseJwtClaims;
   } catch {

@@ -1,49 +1,52 @@
 import { notFound } from "next/navigation";
-import { getPublishedSermons, getSeriesList } from "@/services/sermon.service";
 import SeriesPage from "@/components/sermons/SeriesPage";
+import { serverApi } from "@/lib/api/server";
+import {
+  SeriesListItem,
+  SermonListItemRaw,
+  toUiSermon,
+} from "@/lib/api/sermon-types";
 
-export async function generateMetadata({ params }: { params: { seriesSlug: string } }) {
-  const seriesList = await getSeriesList();
-  const found = seriesList.find((s) => s.seriesSlug === params.seriesSlug);
-  if (!found) return {};
+// Render on-demand; backend may not be reachable at build time
+export const dynamic = "force-dynamic";
+
+interface PageParams {
+  params: { seriesSlug: string };
+}
+
+export async function generateMetadata({ params }: PageParams) {
+  const series = await serverApi.get<SeriesListItem[]>("/sermons/series", {
+    withAuth: false,
+    revalidate: 60,
+  });
+  const found = series.find((s) => s.seriesSlug === params.seriesSlug);
+  if (!found?.series) return {};
   return {
     title: `${found.series} — Sermon Series · Everlasting Hills Church`,
     description: `All messages in the ${found.series} series.`,
   };
 }
 
-export default async function SermonSeriesPage({ params }: { params: { seriesSlug: string } }) {
-  const [sermons, seriesList] = await Promise.all([
-    getPublishedSermons({ series: params.seriesSlug }),
-    getSeriesList(),
+export default async function SermonSeriesPage({ params }: PageParams) {
+  const [sermons, series] = await Promise.all([
+    serverApi.get<SermonListItemRaw[]>(
+      `/sermons/published?series=${encodeURIComponent(params.seriesSlug)}`,
+      { withAuth: false, revalidate: 60 },
+    ),
+    serverApi.get<SeriesListItem[]>("/sermons/series", {
+      withAuth: false,
+      revalidate: 60,
+    }),
   ]);
 
-  const seriesEntry = seriesList.find((s) => s.seriesSlug === params.seriesSlug);
-  if (!seriesEntry) notFound();
-
-  const serialised = sermons.map((s) => ({
-    id: s.id,
-    title: s.title,
-    slug: s.slug,
-    speaker: s.speaker,
-    date: s.date.toISOString(),
-    scriptureRef: s.scriptureRef,
-    series: s.series,
-    seriesSlug: s.seriesSlug,
-    description: s.description,
-    audioUrl: s.audioUrl,
-    videoUrl: s.videoUrl,
-    thumbnailUrl: s.thumbnailUrl,
-    playCount: s.playCount,
-    tags: s.tags,
-    _count: s._count,
-  }));
+  const seriesEntry = series.find((s) => s.seriesSlug === params.seriesSlug);
+  if (!seriesEntry?.series) notFound();
 
   return (
     <SeriesPage
-      seriesName={seriesEntry.series!}
+      seriesName={seriesEntry.series}
       seriesSlug={params.seriesSlug}
-      sermons={serialised}
+      sermons={sermons.map(toUiSermon)}
     />
   );
 }

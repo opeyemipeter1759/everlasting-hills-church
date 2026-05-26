@@ -1,19 +1,14 @@
-import { getAllServicesWithCounts } from "@/services/attendance.service";
-import { signServiceId } from "@/lib/qr/sign";
-import ServicesView from "@/components/dashboard/admin/ServicesView";
+import { CalendarDays } from "lucide-react";
+import ComingSoon from "@/components/dashboard/shell/ComingSoon";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+export const metadata = { title: "Services — Dashboard" };
 
-export default async function ServicesPage() {
-  const services = await getAllServicesWithCounts();
-
-  const serialised = services.map((s) => ({
-    id: s.id,
-    name: s.name,
-    scheduledAt: s.scheduledAt.toISOString(),
-    attendanceCount: s._count.attendance,
-    qrUrl: `${APP_URL}/api/attendance/qr-checkin?serviceId=${s.id}&sig=${signServiceId(s.id)}`,
-  }));
-
-  return <ServicesView services={serialised} />;
+export default function ServicesPage() {
+  return (
+    <ComingSoon
+      title="Services"
+      description="Service scheduling, attendance check-ins, and QR codes return once the Services module ships."
+      icon={CalendarDays}
+    />
+  );
 }

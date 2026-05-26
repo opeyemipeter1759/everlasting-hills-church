@@ -1,8 +1,10 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { passportJwtSecret } from 'jwks-rsa';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ConfigService } from '@nestjs/config';
+import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../types/auth-user';
 
 interface SupabaseJwtPayload {
@@ -11,44 +13,59 @@ interface SupabaseJwtPayload {
   aud?: string | string[];
   exp?: number;
   iat?: number;
-  role?: string; // Supabase puts "authenticated" here, NOT our app role
+  role?: string; // Supabase puts "authenticated" here — not our app role
   [key: string]: unknown;
 }
 
 /**
- * Verifies Supabase-issued JWTs locally using SUPABASE_JWT_SECRET.
+ * Verifies Supabase-issued JWTs using JWKS (asymmetric ES256).
  *
- * Why local verification (not Supabase API call):
- *  - 0 network hops per request — adding a Supabase round-trip would add ~100-300ms to every API call
- *  - the HS256 signature is sufficient proof of authenticity; the secret is shared between Supabase and us
+ * Why JWKS / asymmetric instead of a shared HS256 secret:
+ *  - Supabase migrated this project to ES256 (ECC P-256) signing on 2026-05-20
+ *  - We never possess the private key — Supabase signs, we only verify with the public key
+ *  - JWKS is fetched once from a well-known URL, cached, and auto-refreshed when Supabase
+ *    rotates keys (the JWT carries a `kid` header that points at the right public key)
+ *  - Zero secret synchronization between services
  *
- * Why we look up the Profile here:
- *  - Supabase's JWT carries `role: "authenticated"` (a Supabase concept), not our app role hierarchy
- *  - Looking up Profile.role makes RolesGuard's check trivial (already resolved)
- *  - Cost: 1 indexed query per request. Acceptable; cache in Week 2 if it becomes hot.
+ * Cost: one HTTP GET on cold start (~50ms once). Cached thereafter; refresh on unknown kid.
+ *
+ * Profile lookup still happens on every request to resolve app role. Cacheable in Week 3+.
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly logger = new Logger(JwtStrategy.name);
 
   constructor(
+    config: ConfigService<Env, true>,
     config: ConfigService,
     private readonly prisma: PrismaService,
   ) {
+    const supabaseUrl = config.get('SUPABASE_URL', { infer: true });
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
+      // Resolves the signing public key per-token via Supabase's JWKS endpoint.
+      // jwks-rsa handles caching, rate limiting, and rotation transparently.
+      secretOrKeyProvider: passportJwtSecret({
+        cache: true,
+        rateLimit: true,
+        jwksRequestsPerMinute: 10,
+        jwksUri: `${supabaseUrl}/auth/v1/.well-known/jwks.json`,
+      }),
+      // Supabase signs with ES256 (ECC P-256) on the new keyset.
+      // HS256 retained as fallback for tokens issued before rotation (they'll expire soon).
+      algorithms: ['ES256', 'HS256'],
       secretOrKey: String(config.get('SUPABASE_JWT_SECRET')),
       // Supabase signs with HS256 by default
       algorithms: ['HS256'],
       // Supabase JWTs use "authenticated" as the audience
       audience: 'authenticated',
+      issuer: `${supabaseUrl}/auth/v1`,
     });
   }
 
   /**
-   * Passport calls this AFTER signature + expiry + audience checks pass.
-   * Whatever we return is attached to req.user.
+   * Passport calls this AFTER signature + expiry + audience + issuer pass.
    */
   async validate(payload: SupabaseJwtPayload): Promise<AuthUser> {
     if (!payload?.sub) {
@@ -57,7 +74,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const email = String(payload.email ?? '');
 
-    // Single query: profile + linked member, by Supabase user id
     const profile = await this.prisma.profile.findUnique({
       where: { userId: payload.sub },
       select: {

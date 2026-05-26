@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import {
   ACCESS_TOKEN_COOKIE,
   clearFrontendSession,
@@ -14,8 +14,17 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 /**
+ * Backend response envelope shape (matches ResponseEnvelopeInterceptor).
+ * Errors use a different shape (see AllExceptionsFilter) and are not wrapped here —
+ * the response interceptor's error handler converts them.
+ */
+interface ServerEnvelope<T> {
+  data: T;
+  meta?: Record<string, unknown>;
+}
+
+/**
  * Attach the Supabase JWT from the unified session cookie on every request.
- * The cookie name is the single source of truth — same one middleware reads.
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -28,8 +37,23 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+/**
+ * Unwrap successful envelope: response.data = { data, meta } → response.data = T
+ *
+ * Why unwrap here (not in callers):
+ *  - Hundreds of call sites would otherwise need `.then(r => r.data.data)`.
+ *  - The envelope is an infrastructure concern — callers shouldn't care it exists.
+ *  - If a backend route ever returns an un-enveloped response, we tolerate that by
+ *    falling back to the raw body.
+ */
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response: AxiosResponse<ServerEnvelope<unknown> | unknown>) => {
+    const body = response.data as ServerEnvelope<unknown> | unknown;
+    if (body && typeof body === "object" && "data" in (body as object)) {
+      response.data = (body as ServerEnvelope<unknown>).data;
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
       clearFrontendSession();
@@ -44,17 +68,27 @@ apiClient.interceptors.response.use(
 export interface ApiError {
   message: string;
   status?: number;
-  data?: unknown;
+  code?: string;
+  requestId?: string;
+  details?: unknown;
 }
 
+/**
+ * Convert AllExceptionsFilter's envelope into a flat ApiError the UI can render directly.
+ * Also tolerates legacy / non-enveloped error responses (network errors, unknown servers).
+ */
 function normalizeError(error: AxiosError): ApiError {
   if (error.response) {
-    const data = error.response.data as { message?: string | string[] } | undefined;
-    const msg = Array.isArray(data?.message) ? data!.message.join("; ") : data?.message;
+    const body = error.response.data as
+      | { error?: { message?: string; code?: string; requestId?: string; details?: unknown } }
+      | undefined;
+    const enveloped = body?.error;
     return {
-      message: msg ?? error.message,
+      message: enveloped?.message ?? error.message,
       status: error.response.status,
-      data: error.response.data,
+      code: enveloped?.code,
+      requestId: enveloped?.requestId,
+      details: enveloped?.details,
     };
   }
   if (error.request) {
@@ -63,5 +97,4 @@ function normalizeError(error: AxiosError): ApiError {
   return { message: error.message };
 }
 
-// Re-export the cookie name for any consumer that needs to clear/inspect it.
 export { ACCESS_TOKEN_COOKIE };
