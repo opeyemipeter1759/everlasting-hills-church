@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerGuard, ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -8,11 +11,24 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { SermonsModule } from './sermons/sermons.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
+import { validateEnv } from './config/env.validation';
+import type { Env } from './config/env.validation';
 
 @Module({
   imports: [
-    // ConfigModule.forRoot was removed from here to avoid a TypeScript
-    // resolution issue; environment validation is performed in `main.ts`.
+    ConfigModule.forRoot({ isGlobal: true, cache: true, validate: (raw) => validateEnv(raw) }),
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): ThrottlerModuleOptions => ({
+        throttlers: [
+          {
+            ttl: Number(config.get('THROTTLE_TTL_MS')) || 60,
+            limit: Number(config.get('THROTTLE_LIMIT')) || 100,
+          },
+        ],
+      }),
+    }),
+
     PrismaModule,
     AuthModule,
     FormsModule,
@@ -22,6 +38,9 @@ import { MembersModule } from './members/members.module';
     MembersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

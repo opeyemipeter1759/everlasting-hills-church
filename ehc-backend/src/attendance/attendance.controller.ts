@@ -16,8 +16,8 @@ import {
   ApiUnauthorizedResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { AuthService } from '../auth/auth.service';
 import { AttendanceService } from './attendance.service';
+import { AuthService } from '../auth/auth.service';
 
 const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'PASTOR', 'ADMIN']);
 

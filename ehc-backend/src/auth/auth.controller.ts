@@ -1,160 +1,51 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { Body, Controller, Get, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import {
-  ApiTags,
+  ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiBody,
   ApiOkResponse,
-  ApiUnauthorizedResponse,
-  ApiBadRequestResponse,
   ApiOperation,
-  ApiBearerAuth,
+  ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { LoginDto } from '../dto';
+import { Throttle } from '@nestjs/throttler';
+import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { Public } from './decorators/public.decorator';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
-  @ApiOperation({
-    summary: 'User Login',
-    description: 'Authenticate user with email and password to receive JWT access token',
-  })
-  @ApiBody({
-    type: LoginDto,
-    description: 'User credentials',
-    examples: {
-      example1: {
-        value: {
-          email: 'user@example.com',
-          password: 'password123',
-        },
-      },
-    },
-  })
-  @ApiOkResponse({
-    description: 'User logged in successfully',
-    schema: {
-      example: {
-        access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-        user: {
-          id: 'user-123',
-          email: 'user@example.com',
-          role: 'member',
-          fullName: 'Jane Doe',
-          picture: 'https://example.com/avatar.jpg',
-        },
-        session: {
-          access_token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-          expires_in: 3600,
-          token_type: 'Bearer',
-        },
-      },
-      properties: {
-        access_token: {
-          type: 'string',
-          description: 'JWT access token for authenticated requests',
-        },
-        user: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', description: 'User ID' },
-            email: { type: 'string', description: 'User email' },
-            role: { type: 'string', description: 'User role' },
-            fullName: { type: 'string', description: 'User full name' },
-            picture: { type: 'string', description: 'User avatar/picture URL' },
-          },
-        },
-        session: {
-          type: 'object',
-          properties: {
-            access_token: { type: 'string' },
-            expires_in: { type: 'number', description: 'Token expiration in seconds' },
-            token_type: { type: 'string' },
-          },
-        },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Invalid email or password',
-    schema: {
-      example: {
-        statusCode: 401,
-        message: 'Invalid email or password',
-      },
-    },
-  })
-  @ApiBadRequestResponse({
-    description: 'Email and password are required',
-    schema: {
-      example: {
-        statusCode: 400,
-        message: 'Email and password are required',
-      },
-    },
-  })
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'User Login', description: 'Authenticate user with email and password' })
+  @ApiBody({ type: LoginDto })
+  @ApiOkResponse({ description: 'User logged in', schema: { example: { access_token: 'tok', user: { id: 'user-1', email: 'user@example.com', role: 'MEMBER' }, session: { access_token: 'tok', expires_in: 3600 } } } })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
   async login(@Body() body: LoginDto) {
-    const { email, password } = body || {};
-    return this.authService.login(email ?? '', password ?? '');
+    return this.authService.login(body.email, body.password);
   }
 
   @Post('logout')
-  @ApiOperation({
-    summary: 'User Logout',
-    description: 'Invalidate the current user session using the bearer access token.',
-  })
+  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('access-token')
-  @ApiOkResponse({
-    description: 'User logged out successfully',
-    schema: {
-      example: {
-        success: true,
-        message: 'Logged out successfully',
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Access token is missing, invalid, or logout failed',
-    schema: {
-      example: {
-        statusCode: 401,
-        message: 'Access token is required',
-      },
-    },
-  })
+  @ApiOperation({ summary: 'User Logout', description: 'Invalidate the current user session' })
+  @ApiOkResponse({ description: 'User logged out', schema: { example: { success: true, message: 'Logged out successfully' } } })
+  @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
   async logout(@Req() request: { headers?: { authorization?: string } }) {
     return this.authService.logout(request.headers?.authorization);
   }
 
   @Get('me')
-  @ApiOperation({
-    summary: 'Get current user profile',
-    description: 'Returns the profile of the currently authenticated user',
-  })
   @ApiBearerAuth('access-token')
-  @ApiOkResponse({
-    description: 'Current user profile',
-    schema: {
-      example: {
-        id: 'user-123',
-        email: 'user@example.com',
-        role: 'member',
-        fullName: 'Jane Doe',
-        picture: 'https://example.com/avatar.jpg',
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Access token is missing or invalid',
-    schema: {
-      example: {
-        statusCode: 401,
-        message: 'Access token is required',
-      },
-    },
-  })
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiOkResponse({ description: 'Current user profile', schema: { example: { id: 'user-1', email: 'user@example.com', role: 'MEMBER', fullName: 'Jane Doe' } } })
+  @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
   async me(@Req() request: { headers?: { authorization?: string } }) {
     return this.authService.getProfile(request.headers?.authorization);
   }

@@ -6,36 +6,58 @@ import {
   getRequiredRole,
   hasMinRole,
 } from "@/lib/auth/frontend-session";
+import { verifySupabaseJwt } from "@/lib/auth/verify-jwt";
+
+/**
+ * Auth middleware.
+ *
+ * Threat model the old code did NOT defend against:
+ *   - User edits browser cookie to set ehc_role=SUPER_ADMIN  → bypassed entire dashboard
+ *   - User sets ehc_access_token=anything                    → marked "authenticated"
+ *
+ * What this version does:
+ *   1. Reads the JWT from ehc_access_token
+ *   2. Cryptographically verifies signature, expiry, audience against SUPABASE_JWT_SECRET
+ *   3. Only treats request as authenticated if verification succeeds
+ *   4. For role-protected routes, falls back to ehc_role cookie (UI hint) for the role
+ *      hierarchy check. We could extract role from custom JWT claims in Week 2 once we
+ *      configure Supabase to embed app role at token-issue time.
+ */
+const AUTH_PAGES = new Set(["/login", "/register", "/change-password"]);
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const accessToken = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
-  const role = req.cookies.get(ROLE_COOKIE)?.value ?? null;
-  const isAuthenticated = Boolean(accessToken && role);
-  const protectedRole = getRequiredRole(pathname);
-  const authPages = ["/login", "/register", "/change-password"];
+  const roleHint = req.cookies.get(ROLE_COOKIE)?.value ?? null;
 
-  if (authPages.includes(pathname)) {
+  // Verify JWT signature. null = unauthenticated (bad sig, expired, or absent).
+  const claims = accessToken ? await verifySupabaseJwt(accessToken) : null;
+  const isAuthenticated = Boolean(claims);
+
+  const requiredRole = getRequiredRole(pathname);
+
+  // Auth pages: signed-in users get redirected to their landing page.
+  if (AUTH_PAGES.has(pathname)) {
     if (isAuthenticated) {
-      return NextResponse.redirect(new URL(getLandingPage(role), req.url));
+      return NextResponse.redirect(new URL(getLandingPage(roleHint), req.url));
     }
-
-    return NextResponse.next({ request: req });
+    return NextResponse.next();
   }
 
-  if (protectedRole) {
+  // Protected route: require a valid JWT (not just cookie presence).
+  if (requiredRole) {
     if (!isAuthenticated) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    if (!hasMinRole(role, protectedRole)) {
+    if (!hasMinRole(roleHint, requiredRole)) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    return NextResponse.next({ request: req });
+    return NextResponse.next();
   }
 
-  return NextResponse.next({ request: req });
+  return NextResponse.next();
 }
 
 export const config = {

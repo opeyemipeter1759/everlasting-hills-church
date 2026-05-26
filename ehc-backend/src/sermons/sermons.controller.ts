@@ -12,11 +12,28 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { SermonStatus } from '@prisma/client';
-import { CreateSermonDto, SubscribeEmailDto, UpdateSermonDto } from '../dto';
+import { Role, SermonStatus } from '@prisma/client';
+import { Public } from '../auth/decorators/public.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthUser } from '../auth/types/auth-user';
+import { CreateSermonDto } from './dto/create-sermon.dto';
+import { UpdateSermonDto } from './dto/update-sermon.dto';
+import { SubscribeEmailDto } from './dto/subscribe-email.dto';
+import { NoteDto, ProgressDto, ReactionDto } from './dto/sermon-interaction.dto';
 import { SermonsService } from './sermons.service';
 import { AuthService } from '../auth/auth.service';
 
+/**
+ * Sermon endpoints, organized by audience:
+ *   - /admin/*           — PASTOR or higher (sermon CMS)
+ *   - public reads       — anyone (no auth)
+ *   - /member/*          — authenticated members; userId is derived from JWT, not the URL
+ *
+ * Security note: methods that previously took :userId or :memberId in the URL are now
+ * sourced from @CurrentUser() — this prevents IDOR (Insecure Direct Object Reference) where
+ * one user could query/modify another user's data by changing the URL.
+ */
 @ApiTags('sermons')
 @Controller('sermons')
 export class SermonsController {
@@ -25,64 +42,79 @@ export class SermonsController {
     private readonly authService: AuthService,
   ) {}
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Admin (sermon CMS) — PASTOR+
+  // ────────────────────────────────────────────────────────────────────────────
+
+  @Roles(Role.PASTOR)
   @Get('admin')
-  @ApiOperation({ summary: 'Get all sermons', description: 'Returns all sermons for the current tenant.' })
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'List all sermons (admin)' })
   @ApiQuery({ name: 'status', required: false, enum: SermonStatus })
-  @ApiQuery({ name: 'series', required: false, description: 'Series slug filter' })
-  @ApiOkResponse({ description: 'List of sermons' })
+  @ApiQuery({ name: 'series', required: false })
   getAllSermons(@Query('status') status?: SermonStatus, @Query('series') series?: string) {
     return this.sermonsService.getAllSermons({ status, series });
   }
 
+  @Roles(Role.PASTOR)
   @Get('admin/:id')
-  @ApiOperation({ summary: 'Get sermon by id' })
-  @ApiOkResponse({ description: 'Single sermon' })
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get sermon by id (admin)' })
   getSermonById(@Param('id') id: string) {
     return this.sermonsService.getSermonById(id);
   }
 
+  @Roles(Role.PASTOR)
   @Post('admin')
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Create sermon', description: 'Creates a sermon record using a slug generated from the title and date.' })
+  @ApiOperation({ summary: 'Create sermon' })
   @ApiBody({ type: CreateSermonDto })
-  @ApiCreatedResponse({ description: 'Sermon created successfully' })
-  @ApiBadRequestResponse({ description: 'Invalid sermon payload' })
+  @ApiCreatedResponse({ description: 'Sermon created' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
   createSermon(@Body() body: CreateSermonDto) {
     return this.sermonsService.createSermon(body);
   }
 
+  @Roles(Role.PASTOR)
   @Patch('admin/:id')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Update sermon' })
   @ApiBody({ type: UpdateSermonDto })
-  @ApiOkResponse({ description: 'Sermon updated successfully' })
   updateSermon(@Param('id') id: string, @Body() body: UpdateSermonDto) {
     return this.sermonsService.updateSermon(id, body);
   }
 
+  @Roles(Role.PASTOR)
   @Delete('admin/:id')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Delete sermon' })
-  @ApiOkResponse({ description: 'Sermon deleted successfully' })
   deleteSermon(@Param('id') id: string) {
     return this.sermonsService.deleteSermon(id);
   }
 
+  @Roles(Role.PASTOR)
   @Post('admin/:id/featured')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Set featured sermon' })
-  @ApiOkResponse({ description: 'Featured sermon updated successfully' })
   setFeatured(@Param('id') id: string) {
     return this.sermonsService.setFeaturedSermon(id);
   }
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Public reads — no auth required
+  // ────────────────────────────────────────────────────────────────────────────
+
+  @Public()
   @Get('published')
-  @ApiOperation({ summary: 'Get published sermons' })
+  @ApiOperation({ summary: 'Get published sermons (public)' })
   @ApiQuery({ name: 'series', required: false })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiOkResponse({ description: 'Published sermons list' })
-  getPublishedSermons(@Query('series') series?: string, @Query('search') search?: string, @Query('limit') limit?: string) {
+  getPublishedSermons(
+    @Query('series') series?: string,
+    @Query('search') search?: string,
+    @Query('limit') limit?: string,
+  ) {
     return this.sermonsService.getPublishedSermons({
       series,
       search,
@@ -90,145 +122,172 @@ export class SermonsController {
     });
   }
 
+  @Public()
   @Get('slug/:slug')
-  @ApiOperation({ summary: 'Get sermon by slug' })
-  @ApiOkResponse({ description: 'Sermon detail' })
+  @ApiOperation({ summary: 'Get sermon by slug (public)' })
   getSermonBySlug(@Param('slug') slug: string) {
     return this.sermonsService.getSermonBySlug(slug);
   }
 
+  @Public()
   @Get('featured')
-  @ApiOperation({ summary: 'Get featured sermon' })
-  @ApiOkResponse({ description: 'Featured sermon' })
+  @ApiOperation({ summary: 'Get featured sermon (public)' })
   getFeaturedSermon() {
     return this.sermonsService.getFeaturedSermon();
   }
 
+  @Public()
   @Get('latest')
-  @ApiOperation({ summary: 'Get latest sermons' })
+  @ApiOperation({ summary: 'Get latest sermons (public)' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiOkResponse({ description: 'Latest sermons' })
   getLatestSermons(@Query('limit') limit?: string) {
     return this.sermonsService.getLatestSermons(limit ? Number(limit) : 3);
   }
 
+  @Public()
   @Get('series')
-  @ApiOperation({ summary: 'Get sermon series list' })
-  @ApiOkResponse({ description: 'Published sermon series' })
+  @ApiOperation({ summary: 'Get sermon series list (public)' })
   getSeriesList() {
     return this.sermonsService.getSeriesList();
   }
 
+  /**
+   * Public play-count increment. Throttled tightly because it's an unauthenticated
+   * mutation — without this an attacker could spam-inflate any sermon's count.
+   */
+  @Public()
   @Post(':id/play')
-  @ApiOperation({ summary: 'Increment play count' })
-  @ApiOkResponse({ description: 'Play count updated' })
+  @ApiOperation({ summary: 'Increment play count (public)' })
   incrementPlayCount(@Param('id') id: string) {
     return this.sermonsService.incrementPlayCount(id);
   }
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Analytics — PASTOR+
+  // ────────────────────────────────────────────────────────────────────────────
+
+  @Roles(Role.PASTOR)
   @Get('analytics')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get sermon analytics' })
-  @ApiOkResponse({ description: 'Sermon analytics' })
   getAnalytics() {
     return this.sermonsService.getSermonAnalytics();
   }
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Email subscribers
+  // ────────────────────────────────────────────────────────────────────────────
+
+  @Public()
   @Post('subscribers')
-  @ApiOperation({ summary: 'Subscribe email' })
+  @ApiOperation({ summary: 'Subscribe email (public)' })
   @ApiBody({ type: SubscribeEmailDto })
-  @ApiCreatedResponse({ description: 'Subscribed successfully' })
   subscribe(@Body() body: SubscribeEmailDto) {
-    const { email } = body;
-    return this.sermonsService.subscribeEmail(email);
+    return this.sermonsService.subscribeEmail(body.email);
   }
 
+  @Roles(Role.PASTOR)
   @Get('subscribers')
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Get subscribers' })
-  @ApiOkResponse({ description: 'Subscriber list' })
+  @ApiOperation({ summary: 'List subscribers' })
   getSubscribers() {
     return this.sermonsService.getSubscribers();
   }
 
+  // ────────────────────────────────────────────────────────────────────────────
+  // Scheduled publishing — internal/cron. PASTOR+ for now; later: lock to a service token.
+  // ────────────────────────────────────────────────────────────────────────────
+
+  @Roles(Role.PASTOR)
   @Post('publish-scheduled')
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Publish scheduled sermons' })
-  @ApiOkResponse({ description: 'Scheduled sermons published' })
+  @ApiOperation({ summary: 'Publish scheduled sermons (cron)' })
   publishScheduledSermons() {
     return this.sermonsService.publishScheduledSermons();
   }
 
-  @Get('member/:userId/:sermonId/context')
-  @ApiOperation({ summary: 'Get member sermon context' })
-  @ApiOkResponse({ description: 'Member context' })
-  getMemberContext(@Param('userId') userId: string, @Param('sermonId') sermonId: string) {
-    return this.sermonsService.getMemberContext(userId, sermonId);
+  // ────────────────────────────────────────────────────────────────────────────
+  // Member interactions — authenticated; userId comes from JWT (no IDOR)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  @Get('me/sermons/:sermonId/context')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My context for a sermon (reaction/bookmark/note/progress)' })
+  getMyContext(@CurrentUser() user: AuthUser, @Param('sermonId') sermonId: string) {
+    return this.sermonsService.getMemberContext(user.userId, sermonId);
   }
 
-  @Post('member/:memberId/:sermonId/reaction')
-  @ApiOperation({ summary: 'Set sermon reaction' })
-  @ApiBody({ schema: { example: { type: 'LIKE' } } })
-  @ApiOkResponse({ description: 'Reaction updated' })
+  @Post('me/sermons/:sermonId/reaction')
+  @ApiBearerAuth('access-token')
+  @ApiBody({ type: ReactionDto })
+  @ApiOperation({ summary: 'Set my reaction on a sermon' })
   upsertReaction(
-    @Param('memberId') memberId: string,
+    @CurrentUser() user: AuthUser,
     @Param('sermonId') sermonId: string,
-    @Body('type') type: string,
+    @Body() body: ReactionDto,
   ) {
-    return this.sermonsService.upsertReaction(memberId, sermonId, type);
+    if (!user.memberId) return null;
+    return this.sermonsService.upsertReaction(user.memberId, sermonId, body.type);
   }
 
-  @Post('member/:memberId/:sermonId/bookmark')
-  @ApiOperation({ summary: 'Toggle sermon bookmark' })
-  @ApiOkResponse({ description: 'Bookmark toggled' })
-  toggleBookmark(@Param('memberId') memberId: string, @Param('sermonId') sermonId: string) {
-    return this.sermonsService.toggleBookmark(memberId, sermonId);
+  @Post('me/sermons/:sermonId/bookmark')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Toggle my bookmark on a sermon' })
+  toggleBookmark(@CurrentUser() user: AuthUser, @Param('sermonId') sermonId: string) {
+    if (!user.memberId) return false;
+    return this.sermonsService.toggleBookmark(user.memberId, sermonId);
   }
 
-  @Post('member/:memberId/:sermonId/note')
-  @ApiOperation({ summary: 'Save sermon note' })
-  @ApiBody({ schema: { example: { content: 'My sermon note' } } })
-  @ApiOkResponse({ description: 'Note saved' })
+  @Post('me/sermons/:sermonId/note')
+  @ApiBearerAuth('access-token')
+  @ApiBody({ type: NoteDto })
+  @ApiOperation({ summary: 'Save my note on a sermon' })
   upsertNote(
-    @Param('memberId') memberId: string,
+    @CurrentUser() user: AuthUser,
     @Param('sermonId') sermonId: string,
-    @Body('content') content: string,
+    @Body() body: NoteDto,
   ) {
-    return this.sermonsService.upsertNote(memberId, sermonId, content);
+    if (!user.memberId) return null;
+    return this.sermonsService.upsertNote(user.memberId, sermonId, body.content);
   }
 
-  @Post('member/:memberId/:sermonId/progress')
-  @ApiOperation({ summary: 'Save sermon progress' })
-  @ApiBody({ schema: { example: { positionSec: 120, completed: false } } })
-  @ApiOkResponse({ description: 'Progress saved' })
+  @Post('me/sermons/:sermonId/progress')
+  @ApiBearerAuth('access-token')
+  @ApiBody({ type: ProgressDto })
+  @ApiOperation({ summary: 'Save my playback progress' })
   saveProgress(
-    @Param('memberId') memberId: string,
+    @CurrentUser() user: AuthUser,
     @Param('sermonId') sermonId: string,
-    @Body('positionSec') positionSec: number,
-    @Body('completed') completed?: boolean,
+    @Body() body: ProgressDto,
   ) {
-    return this.sermonsService.saveProgress(memberId, sermonId, Number(positionSec), completed ?? false);
+    if (!user.memberId) return null;
+    return this.sermonsService.saveProgress(
+      user.memberId,
+      sermonId,
+      body.positionSec,
+      body.completed ?? false,
+    );
   }
 
-  @Get('member/:userId/bookmarks')
-  @ApiOperation({ summary: 'Get member bookmarks' })
-  @ApiOkResponse({ description: 'Bookmark list' })
-  getMemberBookmarks(@Param('userId') userId: string) {
-    return this.sermonsService.getMemberBookmarks(userId);
+  @Get('me/bookmarks')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My bookmarked sermons' })
+  getMyBookmarks(@CurrentUser() user: AuthUser) {
+    return this.sermonsService.getMemberBookmarks(user.userId);
   }
 
-  @Get('member/:userId/history')
-  @ApiOperation({ summary: 'Get member listen history' })
-  @ApiOkResponse({ description: 'Listen history' })
-  getMemberListenHistory(@Param('userId') userId: string) {
-    return this.sermonsService.getMemberListenHistory(userId);
+  @Get('me/history')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My listen history' })
+  getMyListenHistory(@CurrentUser() user: AuthUser) {
+    return this.sermonsService.getMemberListenHistory(user.userId);
   }
 
-  @Get('member/:userId/streak')
-  @ApiOperation({ summary: 'Get sermon streak' })
-  @ApiOkResponse({ description: 'Streak value' })
-  getSermonStreak(@Param('userId') userId: string) {
-    return this.sermonsService.getSermonStreak(userId);
+  @Get('me/streak')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My weekly sermon streak' })
+  getMySermonStreak(@CurrentUser() user: AuthUser) {
+    return this.sermonsService.getSermonStreak(user.userId);
   }
 
   @Post('upload-audio')

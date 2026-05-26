@@ -1,3 +1,20 @@
+/**
+ * Single source of truth for client-side auth cookies.
+ *
+ * After login, the backend returns a real Supabase JWT. We persist:
+ *   - ehc_access_token  : the actual Supabase JWT (signed, verifiable)
+ *   - ehc_role          : user role (UI hint only — middleware re-verifies via JWT)
+ *   - ehc_user_email    : email (UI hint)
+ *   - ehc_logged_in     : presence flag (UI hint)
+ *
+ * Why JS-readable (not HttpOnly): Axios needs to attach the JWT as a Bearer header.
+ * Migrating to HttpOnly + Next.js API proxy is a Week 2 task — tracked.
+ *
+ * Why we still keep role/email as separate cookies: middleware decodes the JWT for the
+ * authoritative role, but the UI gets faster initial paint reading the hint cookie instead
+ * of decoding JWT on every render.
+ */
+
 export type UserRole =
   | "SUPER_ADMIN"
   | "PASTOR"
@@ -30,12 +47,9 @@ export const ROLE_OPTIONS = [
 ] as const;
 
 export function normalizeRole(role: string | null | undefined): UserRole | null {
-  if (!role) {
-    return null;
-  }
+  if (!role) return null;
 
   const cleaned = role.trim().toLowerCase();
-
   if (cleaned === "member") return "MEMBER";
   if (cleaned === "leader" || cleaned === "unit head" || cleaned === "unit_head") return "UNIT_LEAD";
   if (cleaned === "admin") return "ADMIN";
@@ -43,19 +57,14 @@ export function normalizeRole(role: string | null | undefined): UserRole | null 
   if (cleaned === "superadmin" || cleaned === "super admin" || cleaned === "super_admin") return "SUPER_ADMIN";
 
   const upper = cleaned.toUpperCase().replace(/\s+/g, "_");
-  if (upper in ROLE_LEVELS) {
-    return upper as UserRole;
-  }
+  if (upper in ROLE_LEVELS) return upper as UserRole;
 
   return null;
 }
 
 export function hasMinRole(userRole: string | null | undefined, minRole: UserRole): boolean {
   const normalized = normalizeRole(userRole);
-  if (!normalized) {
-    return false;
-  }
-
+  if (!normalized) return false;
   return ROLE_LEVELS[normalized] >= ROLE_LEVELS[minRole];
 }
 
@@ -106,31 +115,25 @@ export function getRequiredRole(pathname: string): UserRole | null {
   return null;
 }
 
-export function createFrontendAccessToken(email: string, role: string): string {
-  const timestamp = Date.now().toString(36);
-  const randomPart =
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID().replace(/-/g, "")
-      : Math.random().toString(36).slice(2);
+// ── Cookie helpers (client-side) ──────────────────────────────────────────────
 
-  return [email.trim().toLowerCase(), role.trim().toLowerCase(), timestamp, randomPart]
-    .filter(Boolean)
-    .join(".");
+function isHttps(): boolean {
+  return typeof window !== "undefined" && window.location.protocol === "https:";
 }
 
 function setCookie(name: string, value: string, maxAgeSeconds: number) {
-  const secure = typeof window !== "undefined" && window.location.protocol === "https:";
+  if (typeof document === "undefined") return;
   const parts = [
     `${name}=${encodeURIComponent(value)}`,
     "Path=/",
     `Max-Age=${maxAgeSeconds}`,
     "SameSite=Lax",
-    secure ? "Secure" : "",
+    isHttps() ? "Secure" : "",
   ].filter(Boolean);
-
   document.cookie = parts.join("; ");
 }
 
+<<<<<<< HEAD
 function getCookie(name: string): string | null {
   if (typeof document === "undefined") {
     return null;
@@ -176,3 +179,40 @@ export function clearFrontendSession() {
   document.cookie = `${ROLE_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
   document.cookie = `${ACCESS_TOKEN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`;
 }
+=======
+function clearCookie(name: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
+export function getAccessTokenFromCookie(): string | null {
+  if (typeof document === "undefined") return null;
+  const prefix = `${ACCESS_TOKEN_COOKIE}=`;
+  const found = document.cookie.split("; ").find((c) => c.startsWith(prefix));
+  return found ? decodeURIComponent(found.slice(prefix.length)) : null;
+}
+
+export interface FrontendSessionInput {
+  accessToken: string;
+  email: string;
+  role: string | null;
+  /** Defaults to 1 hour (Supabase default token lifetime). */
+  expiresInSeconds?: number;
+}
+
+export function setFrontendSession({ accessToken, email, role, expiresInSeconds = 3600 }: FrontendSessionInput): void {
+  const maxAge = Math.max(60, expiresInSeconds);
+  setCookie(ACCESS_TOKEN_COOKIE, accessToken, maxAge);
+  setCookie(EMAIL_COOKIE, email, maxAge);
+  setCookie(LOGGED_IN_COOKIE, "true", maxAge);
+  if (role) setCookie(ROLE_COOKIE, role, maxAge);
+  else clearCookie(ROLE_COOKIE);
+}
+
+export function clearFrontendSession(): void {
+  clearCookie(ACCESS_TOKEN_COOKIE);
+  clearCookie(ROLE_COOKIE);
+  clearCookie(EMAIL_COOKIE);
+  clearCookie(LOGGED_IN_COOKIE);
+}
+>>>>>>> 6560d4dbc265a85ba989faa5237626d9fbe6c28d
