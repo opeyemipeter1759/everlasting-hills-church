@@ -59,7 +59,6 @@ export const auth = {
   },
 };
 
-// ── Example data hooks (kept for reference; users/* endpoints are not implemented yet) ─
 
 export interface User {
   id: string;
@@ -90,52 +89,6 @@ export function useCreateUser() {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() });
     },
   });
+
 }
 
-export type LoginPayload = {
-  email: string;
-  password: string;
-};
-
-export type LoginResponse = {
-  access_token?: string;
-  accessToken?: string;
-  refresh_token?: string;
-  refreshToken?: string;
-  token?: string;
-  role?: string;
-  user?: { role?: string };
-  profile?: { role?: string };
-  [key: string]: unknown;
-};
-
-export type CurrentUser = {
-  id: string;
-  email: string;
-  role: string;
-  fullName: string;
-  picture: string;
-};
-
-export const auth = {
-  login: async (payload: LoginPayload) => {
-    const response = await api.post<LoginResponse>("/auth/login", payload);
-
-    setAuthTokens({
-      accessToken: response.access_token ?? response.accessToken ?? response.token,
-      refreshToken: response.refresh_token ?? response.refreshToken,
-    });
-
-    return response;
-  },
-  me: () => api.get<CurrentUser>("/auth/me"),
-};
-
-export function useAuthMe() {
-  return useQuery({
-    queryKey: queryKeys.auth.me(),
-    queryFn: auth.me,
-  });
-}
-
-export const useCurrentUser = useAuthMe;

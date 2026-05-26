@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from "ax
 import {
   ACCESS_TOKEN_COOKIE,
   clearFrontendSession,
+  getAccessTokenFromCookie,
 } from "../auth/frontend-session";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "/api";
