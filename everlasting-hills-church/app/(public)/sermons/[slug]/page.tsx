@@ -43,7 +43,7 @@ async function fetchMemberContextIfSignedIn(
   if (!hasToken) return null;
   try {
     return await serverApi.get<MemberSermonContext>(
-      `/sermons/me/sermons/${sermonId}/context`,
+      `/sermons/me/${sermonId}/context`,
       { cache: "no-store" },
     );
   } catch (err) {

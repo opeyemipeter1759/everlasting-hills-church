@@ -177,13 +177,40 @@ export class SermonsService {
     });
   }
 
+  /**
+   * Tenant-scoped delete. Returns count so the controller can throw 404 when the id wasn't
+   * in this tenant — defends against cross-tenant deletion if an attacker knows another
+   * tenant's sermon UUID.
+   */
   async deleteSermon(id: string) {
-    return this.prisma.sermon.delete({ where: { id } });
+    const result = await this.prisma.sermon.deleteMany({ where: { id, tenantId: TENANT_ID } });
+    if (result.count === 0) {
+      throw new NotFoundException('Sermon not found');
+    }
+    return { id, deleted: true };
   }
 
+  /**
+   * Tenant-scoped featured update. First confirms the target sermon belongs to this tenant
+   * BEFORE clearing other featured flags — otherwise an attacker could wipe a victim
+   * tenant's featured flag by knowing nothing more than any of their sermon ids.
+   */
   async setFeaturedSermon(id: string) {
-    await this.prisma.sermon.updateMany({ where: { tenantId: TENANT_ID }, data: { isFeatured: false } });
-    return this.prisma.sermon.update({ where: { id }, data: { isFeatured: true, updatedAt: new Date() } });
+    const target = await this.prisma.sermon.findFirst({
+      where: { id, tenantId: TENANT_ID },
+      select: { id: true },
+    });
+    if (!target) {
+      throw new NotFoundException('Sermon not found');
+    }
+    await this.prisma.sermon.updateMany({
+      where: { tenantId: TENANT_ID, isFeatured: true },
+      data: { isFeatured: false },
+    });
+    return this.prisma.sermon.update({
+      where: { id },
+      data: { isFeatured: true, updatedAt: new Date() },
+    });
   }
 
   async getPublishedSermons(opts?: { series?: string; search?: string; limit?: number }) {

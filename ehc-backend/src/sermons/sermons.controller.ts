@@ -210,14 +210,14 @@ export class SermonsController {
   // Member interactions — authenticated; userId comes from JWT (no IDOR)
   // ────────────────────────────────────────────────────────────────────────────
 
-  @Get('me/sermons/:sermonId/context')
+  @Get('me/:sermonId/context')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'My context for a sermon (reaction/bookmark/note/progress)' })
   getMyContext(@CurrentUser() user: AuthUser, @Param('sermonId') sermonId: string) {
     return this.sermonsService.getMemberContext(user.userId, sermonId);
   }
 
-  @Post('me/sermons/:sermonId/reaction')
+  @Post('me/:sermonId/reaction')
   @ApiBearerAuth('access-token')
   @ApiBody({ type: ReactionDto })
   @ApiOperation({ summary: 'Set my reaction on a sermon' })
@@ -230,7 +230,7 @@ export class SermonsController {
     return this.sermonsService.upsertReaction(user.memberId, sermonId, body.type);
   }
 
-  @Post('me/sermons/:sermonId/bookmark')
+  @Post('me/:sermonId/bookmark')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Toggle my bookmark on a sermon' })
   toggleBookmark(@CurrentUser() user: AuthUser, @Param('sermonId') sermonId: string) {
@@ -238,7 +238,7 @@ export class SermonsController {
     return this.sermonsService.toggleBookmark(user.memberId, sermonId);
   }
 
-  @Post('me/sermons/:sermonId/note')
+  @Post('me/:sermonId/note')
   @ApiBearerAuth('access-token')
   @ApiBody({ type: NoteDto })
   @ApiOperation({ summary: 'Save my note on a sermon' })
@@ -251,7 +251,7 @@ export class SermonsController {
     return this.sermonsService.upsertNote(user.memberId, sermonId, body.content);
   }
 
-  @Post('me/sermons/:sermonId/progress')
+  @Post('me/:sermonId/progress')
   @ApiBearerAuth('access-token')
   @ApiBody({ type: ProgressDto })
   @ApiOperation({ summary: 'Save my playback progress' })
