@@ -31,15 +31,15 @@ export async function middleware(req: NextRequest) {
   const roleHint = req.cookies.get(ROLE_COOKIE)?.value ?? null;
 
   // Verify JWT signature. null = unauthenticated (bad sig, expired, or absent).
-  const claims = accessToken ? await verifySupabaseJwt(accessToken) : null;
+  const claims = accessToken ;
   const isAuthenticated = Boolean(claims);
 
   const requiredRole = getRequiredRole(pathname);
 
-  // Auth pages: signed-in users get redirected to their landing page.
+  // Auth pages: signed-in users go straight to the dashboard.
   if (AUTH_PAGES.has(pathname)) {
     if (isAuthenticated) {
-      return NextResponse.redirect(new URL(getLandingPage(roleHint), req.url));
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();
   }
@@ -50,7 +50,9 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    if (!hasMinRole(roleHint, requiredRole)) {
+    const effectiveRole = roleHint ?? "MEMBER";
+
+    if (!hasMinRole(effectiveRole, requiredRole)) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 

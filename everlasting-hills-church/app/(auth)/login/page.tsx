@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
 import { EyeIcon, EyeCloseIcon } from "@/components/icons";
 import { auth } from "@/lib/api";
 
@@ -11,19 +10,6 @@ type FormValues = {
   password: string;
 };
 
-<<<<<<< HEAD
-type LoginResponse = {
-  role?: string;
-  fullName?: string;
-  picture?: string;
-  user?: { role?: string; fullName?: string; picture?: string };
-  profile?: { role?: string; fullName?: string; picture?: string };
-  access_token?: string;
-  accessToken?: string;
-  token?: string;
-};
-
-=======
 /**
  * Login screen.
  *
@@ -31,9 +17,7 @@ type LoginResponse = {
  * it persists the real Supabase JWT and role hints into a single cookie set.
  * The page is responsible only for capturing input and routing on success.
  */
->>>>>>> 6560d4dbc265a85ba989faa5237626d9fbe6c28d
 export default function LoginPage() {
-  const router = useRouter();
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -46,22 +30,8 @@ export default function LoginPage() {
   const onSubmit = async ({ email, password }: FormValues) => {
     setServerError("");
     try {
-<<<<<<< HEAD
-      const response = (await auth.login({ email, password })) as LoginResponse;
-      const accessRole =
-        normalizeRole(response.role ?? response.user?.role ?? response.profile?.role) ?? "MEMBER";
-      const accessToken =
-        response.access_token ?? response.accessToken ?? response.token ??
-        createFrontendAccessToken(email, accessRole);
-      const fullName = response.fullName ?? response.user?.fullName ?? response.profile?.fullName;
-      const picture = response.picture ?? response.user?.picture ?? response.profile?.picture;
-      setFrontendSession({ email, role: accessRole, accessToken, fullName, picture });
-
-=======
       await auth.login({ email, password });
->>>>>>> 6560d4dbc265a85ba989faa5237626d9fbe6c28d
-      router.push("/dashboard");
-      router.refresh();
+      window.location.assign("/dashboard");
     } catch (error) {
       const message =
         error && typeof error === "object" && "message" in error
