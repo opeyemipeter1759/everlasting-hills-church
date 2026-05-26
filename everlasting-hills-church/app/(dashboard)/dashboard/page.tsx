@@ -25,11 +25,12 @@ export const metadata = { title: "Dashboard — Everlasting Hills Church" };
  */
 export default function DashboardPage() {
   return (
+    <div>
     <ComingSoon
       title="Dashboard overview"
       description="Your personalized dashboard is being rebuilt against the new NestJS backend. Sermon management and the public sermon library are live — use the sidebar to navigate."
       icon={LayoutDashboard}
-    <div>
+      />
       <MemberHome/>
     </div>
   )
@@ -430,3 +431,4 @@ export default async function DashboardPage() {
     />
   );
 }
+/

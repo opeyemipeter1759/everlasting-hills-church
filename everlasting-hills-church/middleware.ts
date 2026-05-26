@@ -42,10 +42,14 @@ export async function middleware(req: NextRequest) {
   const claims = accessToken ;
   const isAuthenticated = Boolean(claims);
 
-  // Auth pages: signed-in users go straight to the dashboard.
+  // Auth pages: signed-in users get redirected to their landing page.
   if (AUTH_PAGES.has(pathname)) {
     if (isAuthenticated) {
-      return NextResponse.redirect(new URL(getLandingPage(roleHint), req.url));
+      const landing = getLandingPage(roleHint);
+      // Don't redirect to where we already are — would loop on /login itself if landing == /login.
+      if (landing !== pathname) {
+        return NextResponse.redirect(new URL(landing, req.url));
+      }
     }
     return NextResponse.next();
   }
@@ -57,11 +61,20 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-    if (!hasMinRole(roleHint, requiredRole)) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
+  // Authenticated but no role at all (orphan Supabase account with no Profile).
+  // /me is always reachable for any signed-in user and never re-redirects, so it's the safe sink.
+  if (!normalizeRole(roleHint)) {
+    if (pathname === ROLELESS_LANDING) return NextResponse.next();
+    return NextResponse.redirect(new URL(ROLELESS_LANDING, req.url));
+  }
 
-    return NextResponse.next();
+  // Insufficient role for this path.
+  if (!hasMinRole(roleHint, requiredRole)) {
+    // Loop guard: if the safe-fallback is the current path, just let through.
+    // (Page itself can render a "you don't have access" view.)
+    const fallback = "/dashboard";
+    if (pathname === fallback) return NextResponse.next();
+    return NextResponse.redirect(new URL(fallback, req.url));
   }
 
   return NextResponse.next();
