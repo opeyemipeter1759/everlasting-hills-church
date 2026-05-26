@@ -7,8 +7,7 @@ import Image from 'next/image';
 import { ChevronRight } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
-/* import { getFrontendSessionUser, normalizeRole } from '@/lib/auth/frontend-session';
- */
+import { getFrontendSessionUser, normalizeRole } from '@/lib/auth/frontend-session';
 type NavItem = {
   name: string;
   icon?: React.ReactNode;

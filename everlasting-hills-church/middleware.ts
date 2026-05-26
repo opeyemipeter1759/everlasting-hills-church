@@ -39,7 +39,7 @@ export async function middleware(req: NextRequest) {
   const roleHint = req.cookies.get(ROLE_COOKIE)?.value ?? null;
 
   // Verify JWT signature. null = unauthenticated (bad sig, expired, or absent).
-  const claims = accessToken ;
+  const claims = accessToken ? await verifySupabaseJwt(accessToken) : null;
   const isAuthenticated = Boolean(claims);
 
   // Auth pages: signed-in users get redirected to their landing page.

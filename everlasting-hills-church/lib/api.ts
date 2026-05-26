@@ -21,6 +21,8 @@ export interface LoginResponse {
     id: string;
     email: string;
     role: UserRole | string | null;
+    fullName: string | null;
+    picture: string | null;
   };
 }
 
@@ -44,6 +46,8 @@ export const auth = {
       accessToken: response.access_token,
       email: response.user.email,
       role: response.user.role ?? null,
+      fullName: response.user.fullName,
+      picture: response.user.picture,
       expiresInSeconds: response.expires_in,
     });
 

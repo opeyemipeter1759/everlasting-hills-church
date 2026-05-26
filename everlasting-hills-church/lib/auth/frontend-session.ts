@@ -149,22 +149,74 @@ export interface FrontendSessionInput {
   accessToken: string;
   email: string;
   role: string | null;
+  /** Display name pulled from the Member profile at login time. UI hint only. */
+  fullName?: string | null;
+  /** Avatar URL pulled from the Member profile at login time. UI hint only. */
+  picture?: string | null;
   /** Defaults to 1 hour (Supabase default token lifetime). */
   expiresInSeconds?: number;
 }
 
-export function setFrontendSession({ accessToken, email, role, expiresInSeconds = 3600 }: FrontendSessionInput): void {
+export function setFrontendSession({
+  accessToken,
+  email,
+  role,
+  fullName,
+  picture,
+  expiresInSeconds = 3600,
+}: FrontendSessionInput): void {
   const maxAge = Math.max(60, expiresInSeconds);
   setCookie(ACCESS_TOKEN_COOKIE, accessToken, maxAge);
   setCookie(EMAIL_COOKIE, email, maxAge);
   setCookie(LOGGED_IN_COOKIE, "true", maxAge);
+
   if (role) setCookie(ROLE_COOKIE, role, maxAge);
   else clearCookie(ROLE_COOKIE);
+
+  if (fullName) setCookie(FULL_NAME_COOKIE, fullName, maxAge);
+  else clearCookie(FULL_NAME_COOKIE);
+
+  if (picture) setCookie(PICTURE_COOKIE, picture, maxAge);
+  else clearCookie(PICTURE_COOKIE);
 }
 
 export function clearFrontendSession(): void {
   clearCookie(ACCESS_TOKEN_COOKIE);
   clearCookie(ROLE_COOKIE);
   clearCookie(EMAIL_COOKIE);
+  clearCookie(FULL_NAME_COOKIE);
+  clearCookie(PICTURE_COOKIE);
   clearCookie(LOGGED_IN_COOKIE);
+}
+
+/**
+ * Snapshot of the logged-in user assembled from the client-side cookies.
+ *
+ * Used by UI components (e.g. the sidebar) that need to show the user's name/avatar/role
+ * without making a backend call. The role IS still authoritative-checked server-side by
+ * middleware and the NestJS guards — this is purely a UI-state read.
+ */
+export interface FrontendSessionUser {
+  email: string | null;
+  role: UserRole | null;
+  fullName: string | null;
+  picture: string | null;
+  isLoggedIn: boolean;
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const prefix = `${name}=`;
+  const found = document.cookie.split("; ").find((c) => c.startsWith(prefix));
+  return found ? decodeURIComponent(found.slice(prefix.length)) : null;
+}
+
+export function getFrontendSessionUser(): FrontendSessionUser {
+  return {
+    email: readCookie(EMAIL_COOKIE),
+    role: normalizeRole(readCookie(ROLE_COOKIE)),
+    fullName: readCookie(FULL_NAME_COOKIE),
+    picture: readCookie(PICTURE_COOKIE),
+    isLoggedIn: readCookie(LOGGED_IN_COOKIE) === "true",
+  };
 }
