@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseInterceptors, UploadedFile, BadRequestException, UnauthorizedException, ServiceUnavailableException, InternalServerErrorException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseInterceptors, UploadedFile, BadRequestException, ServiceUnavailableException, InternalServerErrorException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import {
@@ -22,7 +22,6 @@ import { UpdateSermonDto } from './dto/update-sermon.dto';
 import { SubscribeEmailDto } from './dto/subscribe-email.dto';
 import { NoteDto, ProgressDto, ReactionDto } from './dto/sermon-interaction.dto';
 import { SermonsService } from './sermons.service';
-import { AuthService } from '../auth/auth.service';
 
 /**
  * Sermon endpoints, organized by audience:
@@ -37,10 +36,7 @@ import { AuthService } from '../auth/auth.service';
 @ApiTags('sermons')
 @Controller('sermons')
 export class SermonsController {
-  constructor(
-    private readonly sermonsService: SermonsService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly sermonsService: SermonsService) {}
 
   // ────────────────────────────────────────────────────────────────────────────
   // Admin (sermon CMS) — PASTOR+
@@ -291,6 +287,7 @@ export class SermonsController {
   }
 
   @Post('upload-audio')
+  @Roles(Role.PASTOR)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Upload sermon audio', description: 'Uploads an audio file to R2 and returns a public URL.' })
@@ -308,10 +305,9 @@ export class SermonsController {
     },
   })
   @ApiCreatedResponse({ description: 'Audio uploaded successfully' })
-  async uploadAudio(@Req() request: { headers?: { authorization?: string } }, @UploadedFile() file: any) {
-    const authorization = request.headers?.authorization;
-    await this.authService.getProfile(authorization);
-
+  async uploadAudio(
+    @UploadedFile() file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
+  ) {
     if (!file) {
       throw new BadRequestException('No file provided');
     }

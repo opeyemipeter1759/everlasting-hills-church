@@ -10,6 +10,14 @@
  * Pages do the mapping inline until then.
  */
 
+/**
+ * Single source of truth for sermon status literals.
+ * Mirrors `SermonStatus` from @prisma/client — declared as a const tuple here so the
+ * frontend doesn't need to import Prisma's client (it doesn't run Prisma).
+ */
+export const SERMON_STATUSES = ['DRAFT', 'PUBLISHED', 'SCHEDULED'] as const;
+export type SermonStatus = (typeof SERMON_STATUSES)[number];
+
 export interface SermonCountRaw {
   SermonReaction: number;
   SermonBookmark: number;
@@ -35,7 +43,7 @@ export interface SermonListItemRaw {
   thumbnailUrl: string | null;
   playCount: number;
   tags: string[];
-  status: "DRAFT" | "PUBLISHED" | "SCHEDULED";
+  status: SermonStatus;
   _count: SermonCountRaw;
 }
 

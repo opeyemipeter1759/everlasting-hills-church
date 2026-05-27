@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
 import { getFrontendSessionUser, normalizeRole } from '@/lib/auth/frontend-session';
@@ -52,7 +52,20 @@ function NavIcon({ active, icon }: { active: boolean; icon: React.ReactNode }) {
 }
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleSidebar, toggleMobileSidebar } = useSidebar();
+
+  /**
+   * Single toggle handler used by both the in-sidebar button and (mirroring) the header
+   * button in AppHeader. On large screens it expands/collapses the rail; on small screens
+   * it closes the slide-over drawer. Matches the breakpoint used in AppHeader for consistency.
+   */
+  const handleToggle = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      toggleMobileSidebar();
+    } else {
+      toggleSidebar();
+    }
+  };
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const currentUser = getFrontendSessionUser();
@@ -194,10 +207,10 @@ const AppSidebar: React.FC = () => {
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="flex py-4 h-[90px] shrink-0 items-center border-b border-gray-200 px-4 dark:border-gray-800">
+      <div className="flex py-4 h-[90px] shrink-0 items-center justify-between gap-2 border-b border-gray-200 px-4 dark:border-gray-800">
         <Link
           href="/"
-          className={`flex min-w-0 items-center gap-3 ${showLabels ? '' : 'justify-center w-full'}`}
+          className={`flex min-w-0 items-center gap-3 ${showLabels ? '' : 'justify-center'}`}
         >
           <span className="flex shrink-0 items-center justify-center ">
             <Image
@@ -219,7 +232,49 @@ const AppSidebar: React.FC = () => {
             </div>
           )}
         </Link>
+
+        {/*
+          Sidebar toggle.
+          - Desktop (>=1024): collapses the rail to icons only / expands back
+          - Mobile  (<1024):  closes the slide-over drawer
+          - Hidden when sidebar is in icon-only state on desktop so the collapsed rail stays
+            visually clean (the AppHeader hamburger handles re-expanding from there).
+        */}
+        {showLabels && (
+          <button
+            type="button"
+            onClick={handleToggle}
+            aria-label={isMobileOpen ? 'Close sidebar' : 'Collapse sidebar'}
+            title={isMobileOpen ? 'Close' : 'Collapse'}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+              text-gray-400 hover:bg-gray-100 hover:text-gray-700
+              dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200
+              transition-colors duration-150"
+          >
+            {isMobileOpen ? <X size={18} strokeWidth={2} /> : <PanelLeftClose size={18} strokeWidth={1.9} />}
+          </button>
+        )}
       </div>
+
+      {/*
+        Collapsed-state expand affordance — small "open" handle attached to the right
+        edge so users always have a way to re-expand without leaving the sidebar.
+        Only visible on desktop when the rail is in icon-only mode.
+      */}
+      {!showLabels && !isMobileOpen && (
+        <button
+          type="button"
+          onClick={handleToggle}
+          aria-label="Expand sidebar"
+          title="Expand"
+          className="hidden lg:flex absolute top-7 -right-3 h-7 w-7 items-center justify-center
+            rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+            text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 shadow-sm
+            transition-colors duration-150 z-10"
+        >
+          <PanelLeftOpen size={14} strokeWidth={2} />
+        </button>
+      )}
 
       {/* ── Nav ── */}
       <div className="sidebar-scroll flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">

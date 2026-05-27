@@ -2,6 +2,7 @@ import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger as PinoLogger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AuthModule } from './auth/auth.module';
@@ -17,11 +18,18 @@ import type { Env } from './config/env.validation';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     /**
-     * Don't auto-abort on uncaught shutdown errors — let Nest's lifecycle hooks run
-     * so PrismaService can disconnect cleanly.
+     * bufferLogs: hold log records until pino is wired so we don't lose bootstrap output
+     * to the default console logger.
+     * abortOnError: don't auto-abort on uncaught shutdown errors — let Nest's lifecycle
+     * hooks run so PrismaService can disconnect cleanly.
      */
     abortOnError: false,
+    bufferLogs: true,
   });
+
+  // Swap the default Nest logger for pino. Now every `new Logger('ctx')` and every HTTP
+  // request emits structured JSON (or pretty-printed in dev).
+  app.useLogger(app.get(PinoLogger));
 
   const config = app.get<ConfigService<Env, true>>(ConfigService);
   const logger = new Logger('Bootstrap');

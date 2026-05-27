@@ -10,15 +10,18 @@ import { z } from 'zod';
  *
  * NEXT_PUBLIC_SUPABASE_ANON_KEY is accepted as a fallback so the same .env file can serve
  * both frontend (which prefixes vars with NEXT_PUBLIC_) and backend.
+ *
+ * Uses Zod v4's top-level format helpers (z.url(), z.email()) — the chained .url()/.email()
+ * on z.string() is deprecated in v4.
  */
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
 
-  DATABASE_URL: z.string().url(),
-  DIRECT_URL: z.string().url(),
+  DATABASE_URL: z.url(),
+  DIRECT_URL: z.url(),
 
-  SUPABASE_URL: z.string().url(),
+  SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1).optional(),
 
@@ -26,11 +29,11 @@ export const envSchema = z.object({
   DEFAULT_TENANT_ID: z.string().min(8, 'DEFAULT_TENANT_ID must be at least 8 chars'),
 
   RESEND_API_KEY: z.string().min(1).optional(),
-  RESEND_FROM: z.string().email().optional(),
-  RESEND_ADMIN_EMAIL: z.string().email().optional(),
-  CONTACT_EMAIL: z.string().email().optional(),
+  RESEND_FROM: z.email().optional(),
+  RESEND_ADMIN_EMAIL: z.email().optional(),
+  CONTACT_EMAIL: z.email().optional(),
 
-  FRONTEND_URL: z.string().url().optional(),
+  FRONTEND_URL: z.url().optional(),
 
   THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(100),

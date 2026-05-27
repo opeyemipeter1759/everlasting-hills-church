@@ -152,6 +152,15 @@ async function loadMemberDashboard(me: MeResponse) {
     if (diff >= 0 && diff <= 7) birthdayDaysUntil = diff;
   }
 
+  /**
+   * Pass explicit zero/null/empty values for sections whose backend (Attendance, Services,
+   * Prayer-count-by-member) isn't wired yet. This activates MemberHome's "No records yet"
+   * empty-state branches instead of falling through to its bundled dummy data — honest UI
+   * over misleading-but-pretty placeholder numbers.
+   *
+   * When the Attendance + Services modules ship richer endpoints, swap the zeros for real
+   * calls; the prop shape doesn't need to change.
+   */
   return (
     <MemberHome
       member={
@@ -170,25 +179,55 @@ async function loadMemberDashboard(me: MeResponse) {
       }
       userEmail={me.member?.email ?? ""}
       memberDisplayId={getMemberDisplayId(me.member?.id)}
+      // Real
       sermonStreak={sermonStreak}
       bookmarks={bookmarks}
       listenHistory={listenHistory}
       birthdayDaysUntil={birthdayDaysUntil}
+      // Honest empty/zero values until Attendance + Services modules ship richer endpoints
+      attendanceRate={0}
+      attendanceCount={0}
+      streakWeeks={0}
+      lastServiceDate={null}
+      nextService={null}
+      hasCheckedInToday={false}
+      todayService={null}
+      prayerCount={0}
+      recentServices={[]}
+      monthlyAttendance={[]}
     />
   );
 }
 
-async function loadAdminDashboard(me: MeResponse) {
-  // Parallel fetches across the analytics + members + attendance modules.
-  const [analytics, attendanceStats, members, birthdaysRaw, absentRaw] = await Promise.all([
-    safeGet<AdminAnalytics>("/admin/analytics"),
-    safeGet<AttendanceStats>("/attendance/stats"),
-    safeGet<MemberRowApi[]>("/members?status=ACTIVE"),
-    safeGet<BirthdayRowApi[]>("/members/birthdays/upcoming?daysAhead=7"),
-    safeGet<AbsentRowApi[]>("/members/absent?missedSundays=3"),
-  ]);
+interface VisitorRowApi {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  gender: string | null;
+  attendanceType: string | null;
+  membershipInterest: string | null;
+  howDidYouLearn: string | null;
+  locatedInIbadan: boolean | null;
+  bornAgain: string | null;
+  occupation: string | null;
+  submittedAt: string;
+}
 
-  // Convert ISO strings to Date objects to match the component's prop contract.
+async function loadAdminDashboard(me: MeResponse) {
+  // Parallel fetches across analytics + members + attendance + visitors.
+  const [analytics, attendanceStats, members, birthdaysRaw, absentRaw, visitors] =
+    await Promise.all([
+      safeGet<AdminAnalytics>("/admin/analytics"),
+      safeGet<AttendanceStats>("/attendance/stats"),
+      safeGet<MemberRowApi[]>("/members?status=ACTIVE"),
+      safeGet<BirthdayRowApi[]>("/members/birthdays/upcoming?daysAhead=7"),
+      safeGet<AbsentRowApi[]>("/members/absent?missedSundays=3"),
+      safeGet<VisitorRowApi[]>("/visitors?limit=10"),
+    ]);
+
+  // Convert ISO strings to Date objects to match the AdminOverview prop contract.
   const recentMembers = (members ?? []).slice(0, 10).map((m) => ({
     id: m.id,
     firstName: m.firstName,
@@ -198,8 +237,22 @@ async function loadAdminDashboard(me: MeResponse) {
     joinedAt: new Date(m.joinedAt),
   }));
 
-  // TODO: recentVisitors — no /visitors endpoint exists yet on NestJS. Empty for now.
-  // Week 3 follow-up: add GET /visitors to the forms or a new visitors module.
+  const recentVisitors = (visitors ?? []).map((v) => ({
+    id: v.id,
+    firstName: v.firstName,
+    lastName: v.lastName,
+    email: v.email,
+    phone: v.phone,
+    gender: v.gender,
+    attendanceType: v.attendanceType,
+    membershipInterest: v.membershipInterest,
+    howDidYouLearn: v.howDidYouLearn,
+    locatedInIbadan: v.locatedInIbadan,
+    bornAgain: v.bornAgain,
+    occupation: v.occupation,
+    submittedAt: new Date(v.submittedAt),
+  }));
+
   return (
     <AdminOverview
       userName={me.member?.firstName ?? null}
@@ -209,7 +262,7 @@ async function loadAdminDashboard(me: MeResponse) {
         todayCheckIns: attendanceStats?.todayCheckIns ?? 0,
         prayers: analytics?.totalPrayers ?? 0,
       }}
-      recentVisitors={[]}
+      recentVisitors={recentVisitors}
       recentMembers={recentMembers}
       memberEmails={recentMembers.map((m) => m.email).filter((e): e is string => !!e)}
       birthdayFeed={birthdaysRaw ?? []}
@@ -228,6 +281,13 @@ interface UnitMemberApi {
   total: number;
   rate: number;
 }
+interface MyUnit {
+  id: string;
+  name: string;
+  description: string | null;
+  totalMembers: number;
+  isLead: boolean;
+}
 interface UnitStatsApi {
   id: string;
   name: string;
@@ -239,32 +299,34 @@ interface UnitStatsApi {
 }
 
 async function loadUnitLeadDashboard(me: MeResponse) {
-  // The backend's /admin/units returns ALL units. We don't yet have a "my unit" endpoint
-  // that filters by lead userId — pragmatically: pull the first unit where leadName matches
-  // the current user's name. Robust unit-membership lookup is a Week 3 follow-up.
-  const [units, nextService] = await Promise.all([
-    safeGet<UnitStatsApi[]>("/admin/units"),
+  // Identity-based lookup via /units/me — joins Profile → Member → UnitMember(isLead=true).
+  // Robust to name changes and works even when two leads share a name.
+  const [myUnit, nextService] = await Promise.all([
+    safeGet<MyUnit | null>("/units/me"),
     safeGet<{ name: string; scheduledAt: string }>("/attendance/services/next"),
   ]);
 
-  const fullName = me.member ? `${me.member.firstName} ${me.member.lastName}`.trim() : "";
-  const myUnit = units?.find((u) => u.leadName === fullName) ?? units?.[0] ?? null;
-
   if (!myUnit) {
-    // UNIT_LEAD without a unit assigned — fall back to MemberHome so they still see content.
+    // UNIT_LEAD without an assignment — fall back to MemberHome so they still see content.
     return loadMemberDashboard(me);
   }
 
-  const unitMembers = await safeGet<UnitMemberApi[]>(`/admin/units/${myUnit.id}/attendance?months=3`);
+  // Pull this unit's rich stats + member attendance from the analytics module
+  const [unitStats, unitMembers] = await Promise.all([
+    safeGet<UnitStatsApi[]>(`/admin/units?unitId=${myUnit.id}`),
+    safeGet<UnitMemberApi[]>(`/admin/units/${myUnit.id}/attendance?months=3`),
+  ]);
+
+  const stats = unitStats?.[0];
   const atRisk = (unitMembers ?? []).filter((m) => m.rate < 40 && m.status === "ACTIVE").length;
 
   return (
     <UnitLeadHome
       firstName={me.member?.firstName ?? null}
       unitName={myUnit.name}
-      totalMembers={myUnit.totalMembers}
-      activeMembers={myUnit.activeMembers}
-      attendanceRate={myUnit.attendanceRate}
+      totalMembers={stats?.totalMembers ?? myUnit.totalMembers}
+      activeMembers={stats?.activeMembers ?? 0}
+      attendanceRate={stats?.attendanceRate ?? 0}
       membersNeedingAttention={atRisk}
       unitMembers={unitMembers ?? []}
       nextService={nextService}
