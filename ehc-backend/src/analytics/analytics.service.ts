@@ -1,13 +1,20 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { fetchAdminAnalytics, AdminAnalyticsData } from './admin-analytics';
-
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
+import type { Env } from '../config/env.validation';
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly tenantId: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
 
   async getAdminAnalytics(): Promise<AdminAnalyticsData> {
     return fetchAdminAnalytics();
@@ -15,7 +22,7 @@ export class AnalyticsService {
 
   async getDepartmentStats(unitId?: string) {
     const units = await this.prisma.unit.findMany({
-      where: unitId ? { id: unitId, tenantId: TENANT_ID } : { tenantId: TENANT_ID },
+      where: unitId ? { id: unitId, tenantId: this.tenantId } : { tenantId: this.tenantId },
       include: {
         UnitMember: {
           include: { Member: { select: { id: true, firstName: true, lastName: true, status: true } } },
@@ -33,7 +40,7 @@ export class AnalyticsService {
 
         const recentAttendees = await this.prisma.attendanceRecord.findMany({
           where: {
-            tenantId: TENANT_ID,
+            tenantId: this.tenantId,
             memberId: { in: memberIds },
             present: true,
             Service: { scheduledAt: { gte: thirtyDaysAgo } },
@@ -64,17 +71,17 @@ export class AnalyticsService {
 
     const [unitMembers, totalServices] = await Promise.all([
       this.prisma.unitMember.findMany({
-        where: { tenantId: TENANT_ID, unitId },
+        where: { tenantId: this.tenantId, unitId },
         include: { Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true, status: true } } },
       }),
-      this.prisma.service.count({ where: { tenantId: TENANT_ID, scheduledAt: { gte: windowStart } } }),
+      this.prisma.service.count({ where: { tenantId: this.tenantId, scheduledAt: { gte: windowStart } } }),
     ]);
 
     const result = await Promise.all(
       unitMembers.map(async (um: any) => {
         const attended = await this.prisma.attendanceRecord.count({
           where: {
-            tenantId: TENANT_ID,
+            tenantId: this.tenantId,
             memberId: um.memberId,
             present: true,
             Service: { scheduledAt: { gte: windowStart } },
@@ -105,19 +112,19 @@ export class AnalyticsService {
       onlineCount,
       inPersonCount,
     ] = await Promise.all([
-      this.prisma.visitor.count({ where: { tenantId: TENANT_ID } }),
-      this.prisma.visitor.count({ where: { tenantId: TENANT_ID, membershipInterest: 'Yes' } }),
-      this.prisma.visitor.findMany({ where: { tenantId: TENANT_ID, membershipInterest: 'Yes', email: { not: null } }, select: { email: true } }),
-      this.prisma.visitor.count({ where: { tenantId: TENANT_ID, membershipInterest: 'No' } }),
-      this.prisma.visitor.count({ where: { tenantId: TENANT_ID, attendanceType: { contains: 'online', mode: 'insensitive' } } }),
-      this.prisma.visitor.count({ where: { tenantId: TENANT_ID, attendanceType: { contains: 'person', mode: 'insensitive' } } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, membershipInterest: 'Yes' } }),
+      this.prisma.visitor.findMany({ where: { tenantId: this.tenantId, membershipInterest: 'Yes', email: { not: null } }, select: { email: true } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, membershipInterest: 'No' } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, attendanceType: { contains: 'online', mode: 'insensitive' } } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, attendanceType: { contains: 'person', mode: 'insensitive' } } }),
     ]);
 
     const interestedEmails = convertedEmails.map((v: any) => v.email).filter(Boolean) as string[];
 
     let convertedCount = 0;
     if (interestedEmails.length > 0) {
-      convertedCount = await this.prisma.member.count({ where: { tenantId: TENANT_ID, email: { in: interestedEmails } } });
+      convertedCount = await this.prisma.member.count({ where: { tenantId: this.tenantId, email: { in: interestedEmails } } });
     }
 
     const conversionRate = interestedCount > 0 ? Math.round((convertedCount / interestedCount) * 100) : 0;
@@ -137,7 +144,7 @@ export class AnalyticsService {
   }
 
   async getFirstTimerSources() {
-    const visitors = await this.prisma.visitor.findMany({ where: { tenantId: TENANT_ID }, select: { howDidYouLearn: true } });
+    const visitors = await this.prisma.visitor.findMany({ where: { tenantId: this.tenantId }, select: { howDidYouLearn: true } });
     const sourceMap: Record<string, number> = {};
     visitors.forEach((v: any) => {
       const key = v.howDidYouLearn?.trim() || 'Not specified';
@@ -156,7 +163,7 @@ export class AnalyticsService {
     for (let i = months - 1; i >= 0; i--) {
       const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      const count = await this.prisma.visitor.count({ where: { tenantId: TENANT_ID, submittedAt: { gte: start, lt: end } } });
+      const count = await this.prisma.visitor.count({ where: { tenantId: this.tenantId, submittedAt: { gte: start, lt: end } } });
       result.push({ label: start.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }), count });
     }
     return result;
@@ -170,7 +177,7 @@ export class AnalyticsService {
       const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
       const agg = await this.prisma.givingRecord.aggregate({
-        where: { tenantId: TENANT_ID, paystackStatus: 'success', createdAt: { gte: start, lt: end } },
+        where: { tenantId: this.tenantId, paystackStatus: 'success', createdAt: { gte: start, lt: end } },
         _sum: { amount: true },
         _count: { _all: true },
       });
@@ -186,7 +193,7 @@ export class AnalyticsService {
   async getGivingByCategory() {
     const records = await this.prisma.givingRecord.groupBy({
       by: ['category'],
-      where: { tenantId: TENANT_ID, paystackStatus: 'success' },
+      where: { tenantId: this.tenantId, paystackStatus: 'success' },
       _sum: { amount: true },
       _count: { _all: true },
       orderBy: { _sum: { amount: 'desc' } },
@@ -205,12 +212,12 @@ export class AnalyticsService {
     const yearStart = new Date(now.getFullYear(), 0, 1);
 
     const [totalAll, thisMonth, lastMonth, thisYear, uniqueEmails, anonymous] = await Promise.all([
-      this.prisma.givingRecord.aggregate({ where: { tenantId: TENANT_ID, paystackStatus: 'success' }, _sum: { amount: true }, _count: { _all: true } }),
-      this.prisma.givingRecord.aggregate({ where: { tenantId: TENANT_ID, paystackStatus: 'success', createdAt: { gte: monthStart } }, _sum: { amount: true } }),
-      this.prisma.givingRecord.aggregate({ where: { tenantId: TENANT_ID, paystackStatus: 'success', createdAt: { gte: lastMonthStart, lt: monthStart } }, _sum: { amount: true } }),
-      this.prisma.givingRecord.aggregate({ where: { tenantId: TENANT_ID, paystackStatus: 'success', createdAt: { gte: yearStart } }, _sum: { amount: true } }),
-      this.prisma.givingRecord.findMany({ where: { tenantId: TENANT_ID, paystackStatus: 'success', donorEmail: { not: null } }, select: { donorEmail: true }, distinct: ['donorEmail'] }),
-      this.prisma.givingRecord.count({ where: { tenantId: TENANT_ID, paystackStatus: 'success', donorEmail: null } }),
+      this.prisma.givingRecord.aggregate({ where: { tenantId: this.tenantId, paystackStatus: 'success' }, _sum: { amount: true }, _count: { _all: true } }),
+      this.prisma.givingRecord.aggregate({ where: { tenantId: this.tenantId, paystackStatus: 'success', createdAt: { gte: monthStart } }, _sum: { amount: true } }),
+      this.prisma.givingRecord.aggregate({ where: { tenantId: this.tenantId, paystackStatus: 'success', createdAt: { gte: lastMonthStart, lt: monthStart } }, _sum: { amount: true } }),
+      this.prisma.givingRecord.aggregate({ where: { tenantId: this.tenantId, paystackStatus: 'success', createdAt: { gte: yearStart } }, _sum: { amount: true } }),
+      this.prisma.givingRecord.findMany({ where: { tenantId: this.tenantId, paystackStatus: 'success', donorEmail: { not: null } }, select: { donorEmail: true }, distinct: ['donorEmail'] }),
+      this.prisma.givingRecord.count({ where: { tenantId: this.tenantId, paystackStatus: 'success', donorEmail: null } }),
     ]);
 
     const totalNaira = Math.round((totalAll._sum.amount ?? 0) / 100);
@@ -237,7 +244,7 @@ export class AnalyticsService {
   async getTopDonors(limit = 10) {
     const records = await this.prisma.givingRecord.groupBy({
       by: ['donorEmail', 'donorName'],
-      where: { tenantId: TENANT_ID, paystackStatus: 'success', donorEmail: { not: null } },
+      where: { tenantId: this.tenantId, paystackStatus: 'success', donorEmail: { not: null } },
       _sum: { amount: true },
       _count: { _all: true },
       orderBy: { _sum: { amount: 'desc' } },
@@ -250,8 +257,8 @@ export class AnalyticsService {
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
     const [totalServices, attended, memberData] = await Promise.all([
-      this.prisma.service.count({ where: { tenantId: TENANT_ID, scheduledAt: { gte: ninetyDaysAgo } } }),
-      this.prisma.attendanceRecord.count({ where: { tenantId: TENANT_ID, memberId, present: true, Service: { scheduledAt: { gte: ninetyDaysAgo } } } }),
+      this.prisma.service.count({ where: { tenantId: this.tenantId, scheduledAt: { gte: ninetyDaysAgo } } }),
+      this.prisma.attendanceRecord.count({ where: { tenantId: this.tenantId, memberId, present: true, Service: { scheduledAt: { gte: ninetyDaysAgo } } } }),
       this.prisma.member.findUnique({ where: { id: memberId }, select: { email: true } }),
     ]);
 
@@ -259,20 +266,20 @@ export class AnalyticsService {
     const attendanceScore = Math.round(Math.min(attendancePct * 40, 40));
 
     const [sermonPlays, bookmarks, reactions, notes] = await Promise.all([
-      this.prisma.listenProgress.count({ where: { tenantId: TENANT_ID, memberId, positionSec: { gt: 0 }, updatedAt: { gte: ninetyDaysAgo } } }),
-      this.prisma.sermonBookmark.count({ where: { tenantId: TENANT_ID, memberId, createdAt: { gte: ninetyDaysAgo } } }),
-      this.prisma.sermonReaction.count({ where: { tenantId: TENANT_ID, memberId, createdAt: { gte: ninetyDaysAgo } } }),
-      this.prisma.sermonNote.count({ where: { tenantId: TENANT_ID, memberId, createdAt: { gte: ninetyDaysAgo } } }),
+      this.prisma.listenProgress.count({ where: { tenantId: this.tenantId, memberId, positionSec: { gt: 0 }, updatedAt: { gte: ninetyDaysAgo } } }),
+      this.prisma.sermonBookmark.count({ where: { tenantId: this.tenantId, memberId, createdAt: { gte: ninetyDaysAgo } } }),
+      this.prisma.sermonReaction.count({ where: { tenantId: this.tenantId, memberId, createdAt: { gte: ninetyDaysAgo } } }),
+      this.prisma.sermonNote.count({ where: { tenantId: this.tenantId, memberId, createdAt: { gte: ninetyDaysAgo } } }),
     ]);
     const sermonScore = Math.min(sermonPlays * 3 + bookmarks * 5 + reactions * 2 + notes * 4, 30);
 
     let givingCount = 0;
     if (memberData?.email) {
-      givingCount = await this.prisma.givingRecord.count({ where: { tenantId: TENANT_ID, paystackStatus: 'success', donorEmail: memberData.email, createdAt: { gte: ninetyDaysAgo } } });
+      givingCount = await this.prisma.givingRecord.count({ where: { tenantId: this.tenantId, paystackStatus: 'success', donorEmail: memberData.email, createdAt: { gte: ninetyDaysAgo } } });
     }
     const givingScore = Math.min(givingCount * 5, 20);
 
-    const responses = await this.prisma.discussionResponse.count({ where: { tenantId: TENANT_ID, memberId, createdAt: { gte: ninetyDaysAgo } } });
+    const responses = await this.prisma.discussionResponse.count({ where: { tenantId: this.tenantId, memberId, createdAt: { gte: ninetyDaysAgo } } });
     const communityScore = Math.min(responses * 5, 10);
 
     const score = attendanceScore + sermonScore + givingScore + communityScore;
@@ -280,35 +287,35 @@ export class AnalyticsService {
   }
 
   async refreshEngagementScores() {
-    const members = await this.prisma.member.findMany({ where: { tenantId: TENANT_ID, status: 'ACTIVE' }, select: { id: true } });
+    const members = await this.prisma.member.findMany({ where: { tenantId: this.tenantId, status: 'ACTIVE' }, select: { id: true } });
 
     const results = await Promise.all(members.map((m: any) => this.computeForMember(m.id)));
 
     await Promise.all(results.map((r) => this.prisma.engagementScore.upsert({
       where: { memberId: r.memberId },
       update: { score: r.score, attendanceScore: r.attendanceScore, sermonScore: r.sermonScore, givingScore: r.givingScore, communityScore: r.communityScore, computedAt: new Date() },
-      create: { id: randomUUID(), tenantId: TENANT_ID, memberId: r.memberId, score: r.score, attendanceScore: r.attendanceScore, sermonScore: r.sermonScore, givingScore: r.givingScore, communityScore: r.communityScore },
+      create: { id: randomUUID(), tenantId: this.tenantId, memberId: r.memberId, score: r.score, attendanceScore: r.attendanceScore, sermonScore: r.sermonScore, givingScore: r.givingScore, communityScore: r.communityScore },
     })));
 
     return results;
   }
 
   async getEngagementLeaderboard(limit = 25) {
-    const scores = await this.prisma.engagementScore.findMany({ where: { tenantId: TENANT_ID }, orderBy: { score: 'desc' }, take: limit, include: { Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true } } } });
+    const scores = await this.prisma.engagementScore.findMany({ where: { tenantId: this.tenantId }, orderBy: { score: 'desc' }, take: limit, include: { Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true } } } });
     return scores.map((s: any) => ({ memberId: s.memberId, name: `${s.Member.firstName} ${s.Member.lastName}`, photoUrl: s.Member.photoUrl, score: s.score, attendanceScore: s.attendanceScore, sermonScore: s.sermonScore, givingScore: s.givingScore, communityScore: s.communityScore, computedAt: s.computedAt?.toISOString() }));
   }
 
   async getAtRiskMembers() {
-    const scores = await this.prisma.engagementScore.findMany({ where: { tenantId: TENANT_ID, score: { lt: 30 } }, orderBy: { score: 'asc' }, include: { Member: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true } } } });
+    const scores = await this.prisma.engagementScore.findMany({ where: { tenantId: this.tenantId, score: { lt: 30 } }, orderBy: { score: 'asc' }, include: { Member: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true } } } });
     return scores.map((s: any) => ({ memberId: s.memberId, name: `${s.Member.firstName} ${s.Member.lastName}`, email: s.Member.email, phone: s.Member.phone, photoUrl: s.Member.photoUrl, score: s.score }));
   }
 
   async getEngagementDistribution() {
     const [high, medHigh, med, low] = await Promise.all([
-      this.prisma.engagementScore.count({ where: { tenantId: TENANT_ID, score: { gte: 70 } } }),
-      this.prisma.engagementScore.count({ where: { tenantId: TENANT_ID, score: { gte: 50, lt: 70 } } }),
-      this.prisma.engagementScore.count({ where: { tenantId: TENANT_ID, score: { gte: 30, lt: 50 } } }),
-      this.prisma.engagementScore.count({ where: { tenantId: TENANT_ID, score: { lt: 30 } } }),
+      this.prisma.engagementScore.count({ where: { tenantId: this.tenantId, score: { gte: 70 } } }),
+      this.prisma.engagementScore.count({ where: { tenantId: this.tenantId, score: { gte: 50, lt: 70 } } }),
+      this.prisma.engagementScore.count({ where: { tenantId: this.tenantId, score: { gte: 30, lt: 50 } } }),
+      this.prisma.engagementScore.count({ where: { tenantId: this.tenantId, score: { lt: 30 } } }),
     ]);
     return [
       { label: 'Highly Engaged', range: '70–100', value: high, color: 'bg-green-500' },
@@ -320,9 +327,9 @@ export class AnalyticsService {
 
   async getEngagementSummary() {
     const [total, scored, avgResult] = await Promise.all([
-      this.prisma.member.count({ where: { tenantId: TENANT_ID, status: 'ACTIVE' } }),
-      this.prisma.engagementScore.count({ where: { tenantId: TENANT_ID } }),
-      this.prisma.engagementScore.aggregate({ where: { tenantId: TENANT_ID }, _avg: { score: true } }),
+      this.prisma.member.count({ where: { tenantId: this.tenantId, status: 'ACTIVE' } }),
+      this.prisma.engagementScore.count({ where: { tenantId: this.tenantId } }),
+      this.prisma.engagementScore.aggregate({ where: { tenantId: this.tenantId }, _avg: { score: true } }),
     ]);
     return { totalMembers: total, scoredMembers: scored, avgScore: Math.round(avgResult._avg.score ?? 0), unscored: total - scored };
   }
