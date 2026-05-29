@@ -7,45 +7,21 @@ import ContactSection from "@/components/home/ContactSection";
 import GivingSection from "@/components/home/GivingSection";
 import HeroSection from "@/components/home/HeroSection";
 import SermonsSection from "@/components/home/SermonsSection";
-import LatestSermonsWidget from "@/components/home/LatestSermonsWidget";
-//import { getFeaturedSermon, getLatestSermons } from "@/services/sermon.service";
+import AttendanceSection from "@/components/home/AttendanceSection";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
 
-export default async function HomePage() {
-/*   const [featuredRaw, latestRaw] = await Promise.all([
-    getFeaturedSermon(),
-    getLatestSermons(3),
-  ]) */;
-/* 
-  const featured = featuredRaw
-    ? {
-        id: featuredRaw.id,
-        title: featuredRaw.title,
-        slug: featuredRaw.slug,
-        speaker: featuredRaw.speaker,
-        date: featuredRaw.date.toISOString(),
-        scriptureRef: featuredRaw.scriptureRef,
-        series: featuredRaw.series,
-        audioUrl: featuredRaw.audioUrl,
-        videoUrl: featuredRaw.videoUrl,
-        thumbnailUrl: featuredRaw.thumbnailUrl,
-        playCount: featuredRaw.playCount,
-      }
-    : null;
+export const metadata = {
+  title: "Everlasting Hills Church — Ibadan",
+  description: "A church family in Ibadan, Nigeria. Join us Sunday for service.",
+};
 
-  const latest = latestRaw.map((s) => ({
-    id: s.id,
-    title: s.title,
-    slug: s.slug,
-    speaker: s.speaker,
-    date: s.date.toISOString(),
-    scriptureRef: s.scriptureRef,
-    series: s.series,
-    audioUrl: s.audioUrl,
-    videoUrl: s.videoUrl,
-    thumbnailUrl: s.thumbnailUrl,
-    playCount: s.playCount,
-  })); */
-
+// Section order chosen for narrative flow:
+//   Hero → About/Culture/Scripture (who we are)
+//   Service (when/where)
+//   Sermons (what we preach) + Attendance (engagement CTA)
+//   Testimonials (social proof)
+//   Community + Giving + Contact (calls to action)
+export default function HomePage() {
   return (
     <main className="min-h-screen flex overflow-x-hidden flex-col bg-church-dark">
       <HeroSection />
@@ -54,8 +30,9 @@ export default async function HomePage() {
       <ScriptureSection />
       <ServiceSection />
       <SermonsSection />
-{/*      // <LatestSermonsWidget featured={featured} latest={latest} />
- */}      <CommunitySection />
+      <AttendanceSection />
+      <TestimonialsSection />
+      <CommunitySection />
       <GivingSection />
       <ContactSection />
     </main>

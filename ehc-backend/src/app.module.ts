@@ -15,6 +15,7 @@ import { MembersModule } from './members/members.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { UnitsModule } from './units/units.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { TestimonialsModule } from './testimonials/testimonials.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 
@@ -86,6 +87,7 @@ import type { Env } from './config/env.validation';
     VisitorsModule,
     UnitsModule,
     NotificationsModule,
+    TestimonialsModule,
   ],
   controllers: [AppController],
   providers: [

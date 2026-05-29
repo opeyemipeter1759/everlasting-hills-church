@@ -82,6 +82,7 @@ export function getRequiredRole(pathname: string): UserRole | null {
     pathname.startsWith("/dashboard/reports") ||
     pathname.startsWith("/dashboard/giving") ||
     pathname.startsWith("/dashboard/sermons") ||
+    pathname.startsWith("/dashboard/testimonials") ||
     pathname.startsWith("/dashboard/analytics/engagement") ||
     pathname.startsWith("/dashboard/analytics/giving")
   ) {
