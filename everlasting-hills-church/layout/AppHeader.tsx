@@ -1,10 +1,10 @@
 'use client';
 import { useSidebar } from '@/context/SidebarContext';
 import { useTheme } from '@/context/ThemeContext';
-import UserDropdown from '@/components/header/UserDropdown';
 import { Menu, Sun, Moon, X, Bell } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import React, { useMemo } from 'react';
+import SessionActionMenu from '@/components/auth/SessionActionMenu';
 
 function usePageTitle() {
   const pathname = usePathname();
@@ -46,7 +46,7 @@ const AppHeader: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-[90px] py-3 w-full shrink-0 items-center gap-4
+    <header className="sticky top-0 z-30 flex  py-2 w-full shrink-0 items-center gap-4
       border-b border-gray-200/80 justify-between  backdrop-blur-sm px-2
       dark:border-gray-800 dark:bg-gray-900/95
       shadow-[0_1px_3px_rgba(0,0,0,0.04)]
@@ -110,9 +110,12 @@ const AppHeader: React.FC = () => {
 
         {/* divider */}
 
-        {/* quick actions / user */}
-{/*         <UserDropdown />
- */}      </div>
+        <SessionActionMenu
+          loggedOutMode="login-only"
+          triggerClassName="inline-flex items-center gap-2  px-3 py-2   "
+          menuClassName="w-[200px]"
+        />
+      </div>
     </header>
   );
 };

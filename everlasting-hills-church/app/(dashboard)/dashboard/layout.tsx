@@ -21,13 +21,16 @@ export default function DashboardLayout({
     }
   }, [pathname]);
 
-  const sidebarWidth = isExpanded || isHovered ? 'lg:ml-[240px]' : 'lg:ml-[72px]';
+  const sidebarWidth = isExpanded || isHovered ? 'lg:ml-[250px]' : 'lg:ml-[72px]';
 
   return (
     <HeaderProvider>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
-        <AppSidebar />
+        <div className='w-full bg-red-400 '>
 
+        
+        <AppSidebar />
+</div>
         {isMobileOpen && (
           <div
             className="fixed top-[90px] inset-x-0 bottom-0 z-40 bg-black/50 lg:hidden"

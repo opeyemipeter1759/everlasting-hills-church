@@ -31,6 +31,18 @@
 $ npm install
 ```
 
+## Environment
+
+Set `SUPABASE_ANON_KEY` for the NestJS server explicitly. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is optional and is only for client-side use in other apps.
+
+Required values at startup:
+
+- `DATABASE_URL`
+- `DIRECT_URL`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `DEFAULT_TENANT_ID`
+
 ## Compile and run the project
 
 ```bash

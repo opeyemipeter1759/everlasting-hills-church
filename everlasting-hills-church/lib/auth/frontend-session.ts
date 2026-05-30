@@ -37,6 +37,14 @@ export const FULL_NAME_COOKIE = "ehc_user_full_name";
 export const PICTURE_COOKIE = "ehc_user_picture";
 export const LOGGED_IN_COOKIE = "ehc_logged_in";
 
+export interface FrontendSessionUser {
+  email: string | null;
+  role: string | null;
+  fullName: string | null;
+  picture: string | null;
+  loggedIn: boolean;
+}
+
 export const ROLE_OPTIONS = [
   { label: "Member", value: "member" },
   { label: "Leader", value: "leader" },
@@ -149,22 +157,65 @@ export interface FrontendSessionInput {
   accessToken: string;
   email: string;
   role: string | null;
+  fullName?: string | null;
+  picture?: string | null;
   /** Defaults to 1 hour (Supabase default token lifetime). */
   expiresInSeconds?: number;
 }
 
-export function setFrontendSession({ accessToken, email, role, expiresInSeconds = 3600 }: FrontendSessionInput): void {
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+
+  const prefix = `${name}=`;
+  const found = document.cookie.split("; ").find((cookie) => cookie.startsWith(prefix));
+  return found ? decodeURIComponent(found.slice(prefix.length)) : null;
+}
+
+export function getFrontendSessionUser(): FrontendSessionUser | null {
+  const email = readCookie(EMAIL_COOKIE);
+  const role = readCookie(ROLE_COOKIE);
+  const fullName = readCookie(FULL_NAME_COOKIE);
+  const picture = readCookie(PICTURE_COOKIE);
+  const loggedIn = readCookie(LOGGED_IN_COOKIE) === "true";
+
+  if (!loggedIn && !email && !role && !fullName && !picture) {
+    return null;
+  }
+
+  return {
+    email,
+    role,
+    fullName,
+    picture,
+    loggedIn,
+  };
+}
+
+export function setFrontendSession({
+  accessToken,
+  email,
+  role,
+  fullName,
+  picture,
+  expiresInSeconds = 3600,
+}: FrontendSessionInput): void {
   const maxAge = Math.max(60, expiresInSeconds);
   setCookie(ACCESS_TOKEN_COOKIE, accessToken, maxAge);
   setCookie(EMAIL_COOKIE, email, maxAge);
   setCookie(LOGGED_IN_COOKIE, "true", maxAge);
   if (role) setCookie(ROLE_COOKIE, role, maxAge);
   else clearCookie(ROLE_COOKIE);
+  if (fullName) setCookie(FULL_NAME_COOKIE, fullName, maxAge);
+  else clearCookie(FULL_NAME_COOKIE);
+  if (picture) setCookie(PICTURE_COOKIE, picture, maxAge);
+  else clearCookie(PICTURE_COOKIE);
 }
 
 export function clearFrontendSession(): void {
   clearCookie(ACCESS_TOKEN_COOKIE);
   clearCookie(ROLE_COOKIE);
   clearCookie(EMAIL_COOKIE);
+  clearCookie(FULL_NAME_COOKIE);
+  clearCookie(PICTURE_COOKIE);
   clearCookie(LOGGED_IN_COOKIE);
 }

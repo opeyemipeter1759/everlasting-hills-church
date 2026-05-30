@@ -8,5 +8,6 @@ export { FirstTimerDto } from '../forms/dto/first-timer.dto';
 export { PrayerRequestDto } from '../forms/dto/prayer-request.dto';
 export { TestimonyDto } from '../forms/dto/testimony.dto';
 export { CreateSermonDto } from '../sermons/dto/create-sermon.dto';
+export { SermonEpisodeInputDto } from '../sermons/dto/sermon-episode.dto';
 export { UpdateSermonDto } from '../sermons/dto/update-sermon.dto';
 export { SubscribeEmailDto } from '../sermons/dto/subscribe-email.dto';

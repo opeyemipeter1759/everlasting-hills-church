@@ -253,6 +253,7 @@ model Sermon {
   title              String
   speaker            String
   date               DateTime
+  type               SermonType           @default(SINGLE)
   audioUrl           String?
   videoUrl           String?
   thumbnailUrl       String?
@@ -275,9 +276,25 @@ model Sermon {
   DiscussionQuestion DiscussionQuestion[]
   ListenProgress     ListenProgress[]
   Tenant             Tenant               @relation(fields: [tenantId], references: [id])
+  Episodes           SermonEpisode[]
   SermonBookmark     SermonBookmark[]
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model SermonEpisode {
+  id        String   @id
+  tenantId  String
+  sermonId  String
+  title     String
+  url       String
+  duration  Int
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  Sermon    Sermon   @relation(fields: [sermonId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -359,6 +376,7 @@ model Tenant {
   PrayerRequest      PrayerRequest[]
   RoleAssignment     RoleAssignment[]
   Sermon             Sermon[]
+  SermonEpisode      SermonEpisode[]
   SermonBookmark     SermonBookmark[]
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
@@ -440,6 +458,11 @@ enum Role {
   UNIT_LEAD
   MEMBER
   VISITOR
+}
+
+enum SermonType {
+  SINGLE
+  SERIES
 }
 
 enum SermonStatus {

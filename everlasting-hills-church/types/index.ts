@@ -1,3 +1,5 @@
+import { UserRole } from "@/config/config";
+
 export type VideoCategory = "Sunday" | "Saturday" | "Shorts" | "Other";
 
 export interface YouTubeVideo {
@@ -82,4 +84,123 @@ export interface YouTubePlaylistResponse {
 
 export interface YouTubeVideosResponse {
   items: YouTubeAPIVideo[];
+}
+
+export interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  user: {
+    id: string;
+    email: string;
+    role: UserRole | string | null;
+    fullName?: string | null;
+    picture?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+  };
+}
+
+export interface LoginPayload {
+  email: string;
+  password: string;
+}
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface LatestSermon {
+  id: string;
+  tenantId: string;
+  title: string;
+  speaker: string;
+  date: string;
+  type?: SermonType;
+  audioUrl: string | null;
+  videoUrl: string | null;
+  thumbnailUrl: string | null;
+  description: string | null;
+  publishedAt: string;
+  createdAt: string;
+  audioDuration: number | null;
+  audioKey: string | null;
+  isFeatured: boolean;
+  playCount: number;
+  scheduledFor: string | null;
+  scriptureRef: string | null;
+  series: string | null;
+  seriesSlug: string | null;
+  slug: string;
+  status: string;
+  tags: string[];
+  transcript: string | null;
+  updatedAt: string;
+  episodes?: SermonEpisodeInput[];
+}
+
+export interface LatestSermonsResponse {
+  data: LatestSermon[];
+  meta: {
+    timestamp: string;
+  };
+}
+
+export interface SermonAdminOverviewData {
+  totalSermons: number;
+  totalSeries: number;
+  totalSingle: number;
+  totalDrafted: number;
+  totalPublished: number;
+}
+
+export interface StatCardProps {
+  label: string;
+  value: number | undefined;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+  glowFrom: string;
+  glowTo: string;
+  accentBar: string;
+  description: string;
+  loading: boolean;
+}
+
+export interface SermonEpisodeInput {
+  id?: string;
+  title: string;
+  url: string;
+  videoUrl?: string;
+  duration?: number;
+  order: number;
+}
+
+export type SermonType = 'SINGLE' | 'SERIES';
+export type SermonStatus = 'DRAFT' | 'PUBLISHED' | 'SCHEDULED';
+
+export type UpdateSermonPayload = Partial<CreateSermonPayload>;
+
+export interface CreateSermonPayload {
+  title: string;
+  speaker: string;
+  date: string;
+  type: SermonType;
+  url?: string;
+  duration?: number;
+  episodes?: SermonEpisodeInput[];
+  description?: string;
+  transcript?: string;
+  scriptureRef?: string;
+  series?: string;
+  tags?: string[];
+  audioUrl?: string;
+  audioKey?: string;
+  audioDuration?: number;
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  status: SermonStatus;
+  scheduledFor?: string;
 }

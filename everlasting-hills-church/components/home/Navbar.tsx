@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import SessionActionMenu from "@/components/auth/SessionActionMenu";
 
 const navLinks = [
   { label: "About", href: "/#about" },
@@ -87,20 +88,18 @@ export default function Navbar() {
               ))}
             </nav>
             <div className="flex items-center gap-3">
-              <Link
-                href="/login"
-                className={`hidden lg:inline-flex px-5 py-2.5 rounded-xl border hover:bg-[#87102C] border-white/20  items-center text-sm font-medium transition-colors duration-200 hover:text-white hover:border-none ${
-                  scrolled ? "text-[#333]" : "text-white/80"
-                }`}
-              >
-                Login
-              </Link>
-              <a
-                href="#services"
-                className="hidden lg:inline-flex items-center px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/20 hover:-translate-y-0.5"
-              >
-                Join Us Sunday
-              </a>
+              <div className="hidden lg:block">
+                <SessionActionMenu
+                  loggedOutMode="both"
+                  joinHref="#services"
+                  triggerClassName={`inline-flex h-9 items-center gap-2  px-3 py-2  ${
+                    scrolled
+                      ? "  text-burgundy "
+                      : "  text-white"
+                  }`}
+                  menuClassName="w-full"
+                />
+              </div>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className={`lg:hidden p-2 rounded-lg transition-colors ${
@@ -139,21 +138,15 @@ export default function Navbar() {
                   {link.label}
                 </motion.a>
               ))}
-              <div className="flex gap-3 mt-4">
-                <Link
-                  href="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl border border-[#87102C] text-[#87102C] text-sm font-semibold hover:bg-[#87102C]/5 transition-colors"
-                >
-                  Login
-                </Link>
-                <a
-                  href="#services"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex-1 flex items-center justify-center px-5 py-3 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors"
-                >
-                  Join Us Sunday
-                </a>
+              <div className="mt-4">
+                <SessionActionMenu
+                  className="w-full"
+                  loggedOutMode="both"
+                  joinHref="#services"
+                  triggerClassName=" gap-2  flex w-full px-3 py-2.5 "
+                  menuClassName="left-0 top-0 p-0 right-0 w-full"
+                  onNavigate={() => setMenuOpen(false)}
+                />
               </div>
             </nav>
           </motion.div>

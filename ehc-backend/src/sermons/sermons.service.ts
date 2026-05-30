@@ -1,10 +1,85 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, SermonStatus } from '@prisma/client';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { SermonStatus, SermonType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import slugify from 'slugify';
 import { PrismaService } from '../prisma/prisma.service';
 
 const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
+
+type SermonEpisodeLike = {
+  id: string;
+  title: string;
+  url: string;
+  duration: number;
+  order: number;
+};
+
+type SermonEpisodeInputLike = {
+  id?: string;
+  title: string;
+  url: string;
+  duration: number;
+  order?: number;
+};
+
+type SermonLike = {
+  id: string;
+  type?: SermonType;
+  audioUrl?: string | null;
+  videoUrl?: string | null;
+  audioDuration?: number | null;
+  series?: string | null;
+  seriesSlug?: string | null;
+  Episodes?: SermonEpisodeLike[];
+  [key: string]: unknown;
+};
+
+const SERMON_COUNTS_INCLUDE = {
+  _count: { select: { SermonReaction: true, SermonBookmark: true } },
+} as const;
+
+const SERMON_EPISODES_INCLUDE = {
+  Episodes: { orderBy: { order: 'asc' } },
+} as const;
+
+function serializeEpisode(episode: SermonEpisodeLike) {
+  return {
+    id: episode.id,
+    title: episode.title,
+    url: episode.url,
+    duration: episode.duration,
+    order: episode.order,
+  };
+}
+
+function serializeSermon(sermon: SermonLike) {
+  const { Episodes, ...rest } = sermon;
+  const episodes = (Episodes ?? []).map(serializeEpisode);
+  const isSeries = sermon.type === SermonType.SERIES || Boolean(sermon.series) || Boolean(sermon.seriesSlug) || episodes.length > 0;
+
+  return {
+    ...rest,
+    url: isSeries ? null : sermon.audioUrl ?? sermon.videoUrl ?? null,
+    duration: isSeries ? null : sermon.audioDuration ?? null,
+    episodes: isSeries ? episodes : [],
+  };
+}
+
+function resolveSeriesType(data: { type?: SermonType; episodes?: SermonEpisodeInputLike[] }) {
+  return data.type ?? (data.episodes?.length ? SermonType.SERIES : SermonType.SINGLE);
+}
+
+function resolveSingleUrl(data: {
+  url?: string;
+  audioUrl?: string;
+  videoUrl?: string;
+}) {
+  return data.url ?? data.audioUrl ?? data.videoUrl ?? undefined;
+}
+
+function resolveSingleDuration(data: { duration?: number; audioDuration?: number }) {
+  return data.duration ?? data.audioDuration ?? undefined;
+}
 
 function makeSlug(title: string, date: string | Date): string {
   const sermonDate = new Date(date);
@@ -26,7 +101,7 @@ export class SermonsService {
   }
 
   async getAllSermons(opts?: { status?: SermonStatus; series?: string }) {
-    return this.prisma.sermon.findMany({
+    const sermons = await this.prisma.sermon.findMany({
       where: {
         tenantId: TENANT_ID,
         ...(opts?.status && { status: opts.status }),
@@ -34,9 +109,12 @@ export class SermonsService {
       },
       orderBy: { date: 'desc' },
       include: {
-        _count: { select: { SermonReaction: true, SermonBookmark: true } },
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
       },
     });
+
+    return sermons.map(serializeSermon);
   }
 
   async getSermonById(id: string) {
@@ -59,7 +137,8 @@ export class SermonsService {
             },
           },
         },
-        _count: { select: { SermonReaction: true, SermonBookmark: true } },
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
       },
     });
 
@@ -67,13 +146,17 @@ export class SermonsService {
       throw new NotFoundException('Sermon not found');
     }
 
-    return sermon;
+    return serializeSermon(sermon);
   }
 
   async createSermon(data: {
     title: string;
     speaker: string;
     date: string;
+    type?: SermonType;
+    url?: string;
+    duration?: number;
+    episodes?: SermonEpisodeInputLike[];
     description?: string;
     transcript?: string;
     scriptureRef?: string;
@@ -87,8 +170,24 @@ export class SermonsService {
     status?: SermonStatus;
     scheduledFor?: string;
   }) {
+    const sermonType = resolveSeriesType(data);
+    const singleUrl = resolveSingleUrl(data);
+    const singleDuration = resolveSingleDuration(data);
+
+    if (data.episodes && data.episodes.length === 0) {
+      throw new BadRequestException('Series sermons require at least one episode.');
+    }
+
+    if (sermonType === SermonType.SERIES && !data.episodes?.length) {
+      throw new BadRequestException('Series sermons require at least one episode.');
+    }
+
+    if (sermonType === SermonType.SINGLE && data.episodes?.length) {
+      throw new BadRequestException('Single sermons cannot include episodes.');
+    }
+
     const slug = makeSlug(data.title, data.date);
-    return this.prisma.sermon.create({
+    const sermon = await this.prisma.sermon.create({
       data: {
         id: randomUUID(),
         tenantId: TENANT_ID,
@@ -96,23 +195,44 @@ export class SermonsService {
         slug,
         speaker: data.speaker,
         date: new Date(data.date),
+        type: sermonType,
         description: data.description ?? null,
         transcript: data.transcript ?? null,
         scriptureRef: data.scriptureRef ?? null,
         series: data.series ?? null,
         seriesSlug: data.series ? slugify(data.series, { lower: true, strict: true }) : null,
         tags: data.tags ?? [],
-        audioUrl: data.audioUrl ?? null,
+        audioUrl: sermonType === SermonType.SINGLE ? singleUrl ?? null : null,
         audioKey: data.audioKey ?? null,
-        audioDuration: data.audioDuration ?? null,
-        videoUrl: data.videoUrl ?? null,
+        audioDuration: sermonType === SermonType.SINGLE ? singleDuration ?? null : null,
+        videoUrl: sermonType === SermonType.SINGLE ? data.videoUrl ?? null : null,
         thumbnailUrl: data.thumbnailUrl ?? null,
         status: data.status ?? SermonStatus.DRAFT,
         scheduledFor: data.scheduledFor ? new Date(data.scheduledFor) : null,
         publishedAt: data.status === SermonStatus.PUBLISHED ? new Date() : null,
         updatedAt: new Date(),
+        Episodes:
+          sermonType === SermonType.SERIES && data.episodes
+            ? {
+                create: data.episodes.map((episode, index) => ({
+                  id: episode.id ?? randomUUID(),
+                  tenantId: TENANT_ID,
+                  title: episode.title,
+                  url: episode.url,
+                  duration: episode.duration,
+                  order: episode.order ?? index,
+                  updatedAt: new Date(),
+                })),
+              }
+            : undefined,
+      },
+      include: {
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
       },
     });
+
+    return serializeSermon(sermon);
   }
 
   async updateSermon(
@@ -121,6 +241,10 @@ export class SermonsService {
       title: string;
       speaker: string;
       date: string;
+      type: SermonType;
+      url: string;
+      duration: number;
+      episodes: SermonEpisodeInputLike[];
       description: string;
       transcript: string;
       scriptureRef: string;
@@ -141,10 +265,26 @@ export class SermonsService {
       throw new NotFoundException('Sermon not found');
     }
 
+    const sermonType = data.type ?? (data.episodes?.length ? SermonType.SERIES : current.type);
+    const singleUrl = resolveSingleUrl(data);
+    const singleDuration = resolveSingleDuration(data);
+
+    if (data.episodes && data.episodes.length === 0) {
+      throw new BadRequestException('Series sermons require at least one episode.');
+    }
+
+    if (sermonType === SermonType.SERIES && data.episodes && data.episodes.length === 0) {
+      throw new BadRequestException('Series sermons require at least one episode.');
+    }
+
+    if (sermonType === SermonType.SINGLE && data.episodes?.length) {
+      throw new BadRequestException('Single sermons cannot include episodes.');
+    }
+
     const nowPublishing =
       data.status === SermonStatus.PUBLISHED && current.status !== SermonStatus.PUBLISHED;
 
-    return this.prisma.sermon.update({
+    const sermon = await this.prisma.sermon.update({
       where: { id },
       data: {
         ...(data.title && {
@@ -153,6 +293,7 @@ export class SermonsService {
         }),
         ...(data.speaker && { speaker: data.speaker }),
         ...(data.date && { date: new Date(data.date) }),
+        ...(data.type && { type: data.type }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.transcript !== undefined && { transcript: data.transcript }),
         ...(data.scriptureRef !== undefined && { scriptureRef: data.scriptureRef }),
@@ -161,10 +302,11 @@ export class SermonsService {
           seriesSlug: data.series ? slugify(data.series, { lower: true, strict: true }) : null,
         }),
         ...(data.tags && { tags: data.tags }),
-        ...(data.audioUrl !== undefined && { audioUrl: data.audioUrl }),
-        ...(data.audioKey !== undefined && { audioKey: data.audioKey }),
-        ...(data.audioDuration !== undefined && { audioDuration: data.audioDuration }),
-        ...(data.videoUrl !== undefined && { videoUrl: data.videoUrl }),
+        ...(sermonType === SermonType.SINGLE && singleUrl !== undefined && { audioUrl: singleUrl }),
+        ...(sermonType === SermonType.SINGLE && data.audioKey !== undefined && { audioKey: data.audioKey }),
+        ...(sermonType === SermonType.SINGLE && singleDuration !== undefined && { audioDuration: singleDuration }),
+        ...(sermonType === SermonType.SINGLE && data.videoUrl !== undefined && { videoUrl: data.videoUrl }),
+        ...(sermonType === SermonType.SERIES && { audioUrl: null, audioDuration: null, videoUrl: null }),
         ...(data.thumbnailUrl !== undefined && { thumbnailUrl: data.thumbnailUrl }),
         ...(data.status && { status: data.status }),
         ...(data.isFeatured !== undefined && { isFeatured: data.isFeatured }),
@@ -174,7 +316,41 @@ export class SermonsService {
         ...(nowPublishing && { publishedAt: new Date() }),
         updatedAt: new Date(),
       },
+      include: {
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
+      },
     });
+
+    const hasEpisodeChanges = sermonType === SermonType.SERIES && !!data.episodes;
+    const isConvertingToSingle = sermonType === SermonType.SINGLE && current.type === SermonType.SERIES;
+
+    if (hasEpisodeChanges) {
+      const episodeInputs = data.episodes ?? [];
+
+      await this.prisma.sermonEpisode.deleteMany({ where: { sermonId: id, tenantId: TENANT_ID } });
+      await this.prisma.sermonEpisode.createMany({
+        data: episodeInputs.map((episode, index) => ({
+          id: episode.id ?? randomUUID(),
+          tenantId: TENANT_ID,
+          sermonId: id,
+          title: episode.title,
+          url: episode.url,
+          duration: episode.duration,
+          order: episode.order ?? index,
+          updatedAt: new Date(),
+        })),
+      });
+
+      return this.getSermonById(id);
+    }
+
+    if (isConvertingToSingle) {
+      await this.prisma.sermonEpisode.deleteMany({ where: { sermonId: id, tenantId: TENANT_ID } });
+      return this.getSermonById(id);
+    }
+
+    return serializeSermon(sermon);
   }
 
   async deleteSermon(id: string) {
@@ -183,11 +359,19 @@ export class SermonsService {
 
   async setFeaturedSermon(id: string) {
     await this.prisma.sermon.updateMany({ where: { tenantId: TENANT_ID }, data: { isFeatured: false } });
-    return this.prisma.sermon.update({ where: { id }, data: { isFeatured: true, updatedAt: new Date() } });
+    const sermon = await this.prisma.sermon.update({
+      where: { id },
+      data: { isFeatured: true, updatedAt: new Date() },
+      include: {
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
+      },
+    });
+    return serializeSermon(sermon);
   }
 
   async getPublishedSermons(opts?: { series?: string; search?: string; limit?: number }) {
-    return this.prisma.sermon.findMany({
+    const sermons = await this.prisma.sermon.findMany({
       where: {
         tenantId: TENANT_ID,
         status: SermonStatus.PUBLISHED,
@@ -205,9 +389,12 @@ export class SermonsService {
       orderBy: { date: 'desc' },
       take: opts?.limit,
       include: {
-        _count: { select: { SermonReaction: true, SermonBookmark: true } },
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
       },
     });
+
+    return sermons.map(serializeSermon);
   }
 
   async getSermonBySlug(slug: string) {
@@ -230,7 +417,8 @@ export class SermonsService {
             },
           },
         },
-        _count: { select: { SermonReaction: true, SermonBookmark: true } },
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
       },
     });
 
@@ -238,31 +426,86 @@ export class SermonsService {
       throw new NotFoundException('Sermon not found');
     }
 
-    return sermon;
+    return serializeSermon(sermon);
   }
 
   async getFeaturedSermon() {
-    return this.prisma.sermon.findFirst({
+    const sermon = await this.prisma.sermon.findFirst({
       where: { tenantId: TENANT_ID, status: SermonStatus.PUBLISHED, isFeatured: true },
+      include: {
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
+      },
     });
+
+    return sermon ? serializeSermon(sermon) : null;
   }
 
   async getLatestSermons(limit = 3) {
-    return this.prisma.sermon.findMany({
+    const sermons = await this.prisma.sermon.findMany({
       where: { tenantId: TENANT_ID, status: SermonStatus.PUBLISHED },
       orderBy: { date: 'desc' },
       take: limit,
+      include: {
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
+      },
     });
+
+    return sermons.map(serializeSermon);
   }
 
   async getSeriesList() {
     const sermons = await this.prisma.sermon.findMany({
-      where: { tenantId: TENANT_ID, status: SermonStatus.PUBLISHED, series: { not: null } },
-      select: { series: true, seriesSlug: true, date: true },
-      distinct: ['seriesSlug'],
+      where: {
+        tenantId: TENANT_ID,
+        status: SermonStatus.PUBLISHED,
+        OR: [{ type: SermonType.SERIES }, { series: { not: null } }],
+      },
       orderBy: { date: 'desc' },
+      include: {
+        ...SERMON_EPISODES_INCLUDE,
+        ...SERMON_COUNTS_INCLUDE,
+      },
     });
-    return sermons.filter((s) => s.series && s.seriesSlug);
+
+    return sermons.map(serializeSermon);
+  }
+
+  async getEpisodeBySermonId(sermonId: string, episodeId: string) {
+    const sermon = await this.prisma.sermon.findFirst({
+      where: { id: sermonId, tenantId: TENANT_ID },
+      include: { Episodes: { orderBy: { order: 'asc' } } },
+    });
+
+    if (!sermon) {
+      throw new NotFoundException('Sermon not found');
+    }
+
+    const episode = sermon.Episodes.find((item) => item.id === episodeId);
+    if (!episode) {
+      throw new NotFoundException('Episode not found');
+    }
+
+    return serializeEpisode(episode);
+  }
+
+  async getEpisodeBySlug(slug: string, episodeId: string) {
+    const sermon = await this.prisma.sermon.findFirst({
+      where: { slug, tenantId: TENANT_ID },
+      include: { Episodes: { orderBy: { order: 'asc' } } },
+    });
+
+    if (!sermon) {
+      throw new NotFoundException('Sermon not found');
+    }
+
+    const episode = sermon.Episodes.find((item) => item.id === episodeId);
+    if (!episode) {
+      throw new NotFoundException('Episode not found');
+    }
+
+    return serializeEpisode(episode);
   }
 
   async incrementPlayCount(id: string) {
@@ -296,6 +539,30 @@ export class SermonsService {
     ]);
 
     return { sermons, totalSubscribers, totalReactions, totalBookmarks, totalListens };
+  }
+
+  async getAdminSermonOverview() {
+    const [
+      totalSermons,
+      totalSeries,
+      totalSingle,
+      totalDrafted,
+      totalPublished,
+    ] = await this.prisma.$transaction([
+      this.prisma.sermon.count({ where: { tenantId: TENANT_ID } }),
+      this.prisma.sermon.count({ where: { tenantId: TENANT_ID, type: SermonType.SERIES } }),
+      this.prisma.sermon.count({ where: { tenantId: TENANT_ID, type: SermonType.SINGLE } }),
+      this.prisma.sermon.count({ where: { tenantId: TENANT_ID, status: SermonStatus.DRAFT } }),
+      this.prisma.sermon.count({ where: { tenantId: TENANT_ID, status: SermonStatus.PUBLISHED } }),
+    ]);
+
+    return {
+      totalSermons,
+      totalSeries,
+      totalSingle,
+      totalDrafted,
+      totalPublished,
+    };
   }
 
   async subscribeEmail(email: string) {

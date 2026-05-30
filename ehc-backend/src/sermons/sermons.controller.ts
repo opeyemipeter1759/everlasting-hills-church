@@ -57,11 +57,27 @@ export class SermonsController {
   }
 
   @Roles(Role.PASTOR)
+  @Get('admin/overview')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get sermon overview totals (admin)' })
+  getAdminOverview() {
+    return this.sermonsService.getAdminSermonOverview();
+  }
+
+  @Roles(Role.PASTOR)
   @Get('admin/:id')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get sermon by id (admin)' })
   getSermonById(@Param('id') id: string) {
     return this.sermonsService.getSermonById(id);
+  }
+
+  @Roles(Role.PASTOR)
+  @Get('admin/:id/episodes/:episodeId')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get sermon episode by sermon id (admin)' })
+  getEpisodeBySermonId(@Param('id') id: string, @Param('episodeId') episodeId: string) {
+    return this.sermonsService.getEpisodeBySermonId(id, episodeId);
   }
 
   @Roles(Role.PASTOR)
@@ -127,6 +143,13 @@ export class SermonsController {
   @ApiOperation({ summary: 'Get sermon by slug (public)' })
   getSermonBySlug(@Param('slug') slug: string) {
     return this.sermonsService.getSermonBySlug(slug);
+  }
+
+  @Public()
+  @Get('slug/:slug/episodes/:episodeId')
+  @ApiOperation({ summary: 'Get sermon episode by sermon slug (public)' })
+  getEpisodeBySlug(@Param('slug') slug: string, @Param('episodeId') episodeId: string) {
+    return this.sermonsService.getEpisodeBySlug(slug, episodeId);
   }
 
   @Public()

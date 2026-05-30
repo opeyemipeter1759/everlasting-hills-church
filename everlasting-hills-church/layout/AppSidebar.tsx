@@ -7,8 +7,8 @@ import Image from 'next/image';
 import { ChevronRight } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
-/* import { getFrontendSessionUser, normalizeRole } from '@/lib/auth/frontend-session';
- */
+ import { getFrontendSessionUser, normalizeRole } from '@/lib/auth/frontend-session';
+ 
 type NavItem = {
   name: string;
   icon?: React.ReactNode;
@@ -38,12 +38,18 @@ function buildActiveMatcher(pathname: string | null) {
   };
 }
 
+function truncateText(s: string | null | undefined, max = 28) {
+  if (!s) return '';
+  if (s.length <= max) return s;
+  return s.slice(0, max - 1) + '…';
+}
+
 function NavIcon({ active, icon }: { active: boolean; icon: React.ReactNode }) {
   return (
     <span
       className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-lg transition-colors duration-150 ${
         active
-          ? 'bg-burgundy/[0.12] text-white dark:bg-burgundy/20 dark:text-red-300'
+          ? 'bg-burgundy/[0.12] text-red-600 dark:bg-burgundy/20 dark:text-red-300'
           : 'text-gray-500 group-hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-500 dark:group-hover:bg-gray-700/60 dark:group-hover:text-gray-200'
       }`}
     >
@@ -57,7 +63,6 @@ const AppSidebar: React.FC = () => {
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const currentUser = getFrontendSessionUser();
-
   const showLabels = isExpanded || isMobileOpen || isHovered;
   const isActive = buildActiveMatcher(pathname);
   const userRole = normalizeRole(currentUser?.role);
@@ -102,7 +107,7 @@ const AppSidebar: React.FC = () => {
                 title={!showLabels ? item.name : undefined}
                 className={`group relative w-full flex items-center gap-3 rounded-xl px-2.5 py-1.5 transition-colors duration-150 ${
                   childActive
-                    ? 'bg-burgundy/10 text-burgundy dark:bg-burgundy/15 dark:text-red-300 font-medium shadow-sm'
+                    ? 'text-red-600 dark:text-red-300 font-medium shadow-sm'
                     : 'text-gray-700 hover:bg-gray-100/70 dark:text-gray-300 dark:hover:bg-gray-800/60'
                 }`}
               >
@@ -130,15 +135,15 @@ const AppSidebar: React.FC = () => {
                         <Link
                           href={child.path}
                           aria-current={cActive ? 'page' : undefined}
-                          className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[11.5px] font-medium font-sans transition-colors duration-150 ${
+                          className={`flex items-center gap-2.5  px-2.5 py-1.5 text-[11.5px] font-medium font-sans transition-colors duration-150 ${
                               cActive
-                                ? 'bg-burgundy/8 text-burgundy dark:bg-burgundy/12 dark:text-red-300 font-medium'
+                              ? 'text-red-600 dark:text-red-300 font-medium'
                                 : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100/70 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800/50'
                             }`}
                         >
                           <span
                             className={`h-1.5 w-1.5 shrink-0 rounded-full transition-colors ${
-                              cActive ? 'bg-burgundy dark:bg-red-400' : 'bg-gray-300 dark:bg-gray-600'
+                              cActive ? 'bg-burgundy dark:bg-red-400' : ' dark:bg-gray-600'
                             }`}
                           />
                           {child.name}
@@ -161,13 +166,11 @@ const AppSidebar: React.FC = () => {
               title={!showLabels ? item.name : undefined}
               className={`group relative flex items-center gap-1 rounded px-2.5 py-1.5 transition-colors duration-150 ${
                 active
-                  ? 'bg-red-400 text-white dark:bg-burgundy/15 dark:text-red-300 font-medium shadow-sm'
+                  ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-300 font-medium shadow-sm'
                   : 'text-gray-700 hover:bg-gray-100/70 dark:text-gray-300 dark:hover:bg-gray-800/60'
               }`}
             >
-              {active && (
-                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-burgundy dark:bg-red-400" />
-              )}
+          
               <NavIcon active={active} icon={item.icon} />
               {showLabels && (
                 <span className="flex-1 truncate text-[12px] font-medium font-sans leading-tight">
@@ -183,69 +186,33 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed top-0 ${showLabels ? 'w-[440px] min-w-[440px]' : 'w-[72px] min-w-[72px]'} bottom-0 left-0 z-50 flex flex-col font-sans text-[13px]
-         dark:bg-gray-900 bg-white
-        border border-gray-200/80 dark:border-gray-800
-        ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0`}
+      className={`fixed top-0 no-scrollbar bottom-0 left-0 z-50 flex max-w-[250px] flex-col border border-gray-200 bg-white font-sans text-[13px] dark:border-gray-800 dark:bg-gray-900 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       style={{ fontFamily: "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial", fontSize: '13px' }}
-      
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="navigation"
       aria-label="Main navigation"
     >
-      <div className="flex py-4 h-[90px] shrink-0 items-center border-b border-gray-200 px-4 dark:border-gray-800">
-        <Link
-          href="/"
-          className={`flex min-w-0 items-center gap-3 ${showLabels ? '' : 'justify-center w-full'}`}
-        >
-          <span className="flex shrink-0 items-center justify-center ">
-            <Image
-              src="/logoblack.png"
-              alt="Everlasting Hills"
-              width={44}
-              height={44}
-              className="object-contain brightness-0 invert"
-            />
+      <div className="flex shrink-0 items-center justify-center border-b border-gray-200 px-2 py-4 dark:border-gray-800">
+        <Link href="/" className="flex w-full items-center justify-center">
+          <span className="flex shrink-0 items-center justify-center">
+            <Image src="/logoblack.png" alt="Everlasting Hills" width={28} height={28} className="object-contain brightness-0 invert" />
           </span>
-          {showLabels && (
-            <div className="min-w-0 leading-tight">
-              <p className="truncate text-[13px] font-bold font-sans text-gray-900 dark:text-white tracking-tight">
-                Everlasting Hills
-              </p>
-              <p className="truncate text-[10px] font-medium font-sans text-gray-400 dark:text-gray-500 tracking-wide">
-                Church Portal
-              </p>
-            </div>
-          )}
         </Link>
       </div>
 
-      {/* ── Nav ── */}
-      <div className="sidebar-scroll flex-1 overflow-y-auto overflow-x-hidden px-3 py-4">
+      <div className="flex-1 no-scrollbar overflow-y-auto overflow-x-hidden px-1 py-4">
         <nav className="space-y-6">
           {visibleGroups.map((group) => (
             <div key={group.section ?? 'root'}>
-              {group.section && showLabels && (
-                <p className="mb-2 px-2.5 text-[9px] font-bold font-sans uppercase tracking-[0.12em] text-gray-400/90 dark:text-gray-500/80">
-                  {group.section}
-                </p>
-              )}
-              {group.section && !showLabels && (
-                <div className="mx-2 my-3 h-px bg-gray-100 dark:bg-gray-800" />
-              )}
+              {group.section && <div className="mx-3 my-3 h-px bg-gray-100 dark:bg-gray-800" />}
 
               {renderItems(
                 group.items.map((it) => ({
                   name: it.label,
                   path: it.href,
-                  icon: it.icon
-                    ? React.createElement(it.icon, { size: 17, strokeWidth: 1.9 })
-                    : null,
-                  children: (it as { children?: { label: string; href: string }[] }).children?.map(
-                    (c) => ({ name: c.label, path: c.href })
-                  ),
+                  icon: it.icon ? React.createElement(it.icon, { size: 17, strokeWidth: 1.9, className: 'text-current' }) : null,
+                  children: (it as { children?: { label: string; href: string }[] }).children?.map((c) => ({ name: c.label, path: c.href })),
                 }))
               )}
             </div>
@@ -253,48 +220,86 @@ const AppSidebar: React.FC = () => {
         </nav>
       </div>
 
-      {/* ── Footer: logged-in user ── */}
-      <div className="shrink-0 max-w-[300px] border-t border-gray-100 p-3 dark:border-gray-800">
+      <div className="shrink-0 border-t border-gray-100 p-2 dark:border-gray-800">
         <Link
           href="/dashboard/profile"
-          title={!showLabels ? `${currentUser?.fullName ?? currentUser?.email ?? 'Loading...'} · ${userRole ? ROLE_LABELS[userRole] : 'Loading...'}` : undefined}
-          className={`flex items-center gap-3 rounded-xl transition-colors duration-150 ${
-            showLabels
-              ? 'bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200/60 hover:bg-gray-100 dark:bg-gray-800/60 dark:ring-gray-700/50 dark:hover:bg-gray-800'
-              : 'justify-center py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800/60'
-          }`}
+          title={`${currentUser?.fullName ?? currentUser?.email ?? 'Loading...'} · ${userRole ? ROLE_LABELS[userRole] : 'Loading...'}`}
+          className="flex items-center justify-center rounded-xl py-1.5 transition-colors duration-150 hover:bg-gray-100 dark:hover:bg-gray-800/60"
         >
-          <span className="relative max-w-[100px] flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-burgundy/10 dark:bg-burgundy/20">
+          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-burgundy/10 dark:bg-burgundy/20">
             {currentUser?.picture ? (
-              <img
-                src={currentUser.picture}
-                alt={currentUser.fullName ?? currentUser.email ?? 'User avatar'}
-                className="h-full w-full object-cover"
-              />
+              <img src={currentUser.picture} alt={currentUser.fullName ?? currentUser.email ?? 'User avatar'} className="h-full w-full object-cover" />
             ) : (
-              <span className="text-[12px] font-bold font-sans text-burgundy dark:text-red-300">
-                {getInitials(currentUser?.fullName, currentUser?.email)}
-              </span>
+              <span className="text-[12px] font-bold font-sans text-burgundy dark:text-red-300">{getInitials(currentUser?.fullName, currentUser?.email)}</span>
             )}
             <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-gray-900" />
           </span>
-          {showLabels && (
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[12px] font-bold font-sans text-gray-800 dark:text-gray-100 leading-tight">
-                {currentUser?.fullName ?? '-'}
-              </p>
-              <p className="truncate text-[10px] font-medium font-sans text-gray-400 dark:text-gray-500 mt-0.5">
-                {currentUser?.email ?? '-'}
-              </p>
-              {userRole && (
-                <p className="truncate text-[9px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 mt-0.5">
-                  {ROLE_LABELS[userRole]}
-                </p>
-              )}
-            </div>
-          )}
         </Link>
       </div>
+
+      {showLabels ? (
+        <div className="absolute left-[50px] top-0 h-full max-w-[250px] border-r border-l-0 border-gray-200/80 bg-white shadow-[8px_0_30px_rgba(0,0,0,0.08)] dark:border-gray-800 dark:bg-gray-900 dark:shadow-[8px_0_30px_rgba(0,0,0,0.35)] lg:block">
+          <div className="flex h-full flex-col">
+            <div className="flex shrink-0 items-center gap-3 border-b border-gray-200 px-4 py-4 dark:border-gray-800">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-burgundy/10 dark:bg-burgundy/20">
+                <Image src="/logoblack.png" alt="Everlasting Hills" width={24} height={24} className="object-contain brightness-0 invert" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-[14px] font-bold text-gray-900 dark:text-white">Everlasting Hills</p>
+                <p className="truncate text-[10px] font-medium uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">Church Portal</p>
+              </div>
+            </div>
+
+            <div className="flex-1 no-scrollbar overflow-y-auto px-3 py-4">
+              <nav className="space-y-6">
+                {visibleGroups.map((group) => (
+                  <div key={`${group.section ?? 'root'}-labels`}>
+                    {group.section && (
+                      <p className="mb-2 px-2.5 text-[9px] font-bold uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
+                        {group.section}
+                      </p>
+                    )}
+                    {renderItems(
+                      group.items.map((it) => ({
+                        name: it.label,
+                        path: it.href,
+                        icon: it.icon ? React.createElement(it.icon, { size: 17, strokeWidth: 1.9, className: 'text-current' }) : null,
+                        children: (it as { children?: { label: string; href: string }[] }).children?.map((c) => ({ name: c.label, path: c.href })),
+                      }))
+                    )}
+                  </div>
+                ))}
+              </nav>
+            </div>
+
+            <div className="shrink-0 border-t border-gray-100 p-3 dark:border-gray-800">
+              <Link
+                href="/dashboard/profile"
+                className="flex items-center gap-3 rounded-2xl bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200/60 transition-colors hover:bg-gray-100 dark:bg-gray-800/60 dark:ring-gray-700/50 dark:hover:bg-gray-800"
+              >
+                <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-burgundy/10 dark:bg-burgundy/20">
+                  {currentUser?.picture ? (
+                    <img src={currentUser.picture} alt={currentUser.fullName ?? currentUser.email ?? 'User avatar'} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-[12px] font-bold text-burgundy dark:text-red-300">{getInitials(currentUser?.fullName, currentUser?.email)}</span>
+                  )}
+                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500 dark:border-gray-900" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[12px] font-bold leading-tight text-gray-800 dark:text-gray-100">{currentUser?.fullName ?? '-'}</p>
+                  <p
+                    className="truncate text-[10px] font-medium text-gray-400 dark:text-gray-500"
+                    title={currentUser?.email ?? undefined}
+                  >
+                    {truncateText(currentUser?.email) || '-'}
+                  </p>
+                  {userRole && <p className="mt-0.5 truncate text-[9px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">{ROLE_LABELS[userRole]}</p>}
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </aside>
   );
 };

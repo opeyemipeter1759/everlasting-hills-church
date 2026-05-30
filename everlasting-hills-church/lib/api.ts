@@ -4,39 +4,12 @@ import { queryKeys } from "@/lib/api/queryKeys";
 import {
   clearFrontendSession,
   setFrontendSession,
-  type UserRole,
 } from "@/lib/auth/frontend-session";
+import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload } from "@/types";
 
-/**
- * Strict backend contract. The NestJS /auth/login response shape is known and locked.
- * If the backend changes shape, this type forces us to update — no more fishing-expedition
- * optional fields swallowing breakage.
- */
-export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
-  user: {
-    id: string;
-    email: string;
-    role: UserRole | string | null;
-  };
-}
 
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
 
 export const auth = {
-  /**
-   * Login flow:
-   *   1. Backend validates credentials with Supabase and returns the real JWT
-   *   2. We persist the JWT + role + email in one unified cookie system
-   *   3. Subsequent axios requests attach the JWT automatically
-   *   4. Middleware will verify the JWT signature on next navigation
-   */
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>("/auth/login", payload);
 
@@ -44,6 +17,10 @@ export const auth = {
       accessToken: response.access_token,
       email: response.user.email,
       role: response.user.role ?? null,
+      fullName:
+        response.user.fullName ??
+        ([response.user.firstName, response.user.lastName].filter(Boolean).join(" ") || null),
+      picture: response.user.picture ?? null,
       expiresInSeconds: response.expires_in,
     });
 
@@ -60,11 +37,7 @@ export const auth = {
 };
 
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-}
+
 
 export function useUsers(filters: object = {}) {
   return useQuery({
@@ -90,5 +63,56 @@ export function useCreateUser() {
     },
   });
 
+}
+
+export function useLatestSermons() {
+  return useQuery({
+    queryKey: ["sermons", "latest"],
+    queryFn: () => api.get<LatestSermon[]>("/sermons/latest"),
+  });
+}
+
+export function useSermons(filters: { q?: string; tag?: string; page?: number; pageSize?: number } = {}) {
+  return useQuery({
+    queryKey: ["sermons", "list", filters],
+    queryFn: () => api.get<LatestSermon[]>('/sermons', filters),
+  });
+}
+
+export function useSermonAdminOverview() {
+  return useQuery({
+    queryKey: ["sermons", "admin", "overview"],
+    queryFn: () => api.get<SermonAdminOverviewData>("/sermons/admin/overview"),
+  });
+}
+
+export function useSermon(id?: string) {
+  return useQuery({
+    queryKey: ["sermons", "admin", "detail", id],
+    queryFn: () => api.get<LatestSermon>(`/sermons/admin/${id}`),
+    enabled: !!id,
+  });
+}
+
+export function useCreateSermon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateSermonPayload) =>
+      api.post<LatestSermon>("/sermons/admin", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sermons"] });
+    },
+  });
+}
+
+export function useUpdateSermon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateSermonPayload }) =>
+      api.patch<LatestSermon>(`/sermons/admin/${id}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sermons"] });
+    },
+  });
 }
 

@@ -1,17 +1,6 @@
 import { cookies } from "next/headers";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/frontend-session";
 
-/**
- * Server-side HTTP client for Next.js Server Components and route handlers.
- *
- * Why a separate helper from `apiClient` (axios):
- *  - Server Components run on the Node side, with no `document.cookie`. Axios in this codebase
- *    reads cookies via JS — it would silently send unauthenticated requests from SSR.
- *  - This helper uses `next/headers` cookies() which is the official server-side accessor.
- *  - Returns the unwrapped envelope `data` so callers don't see infrastructure shape.
- *
- * Throws ApiError on non-2xx — Server Components will surface this to error.tsx boundaries.
- */
 export interface ApiError {
   message: string;
   status: number;
