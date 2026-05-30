@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Req, UseInterceptors, UploadedFile, BadRequestException, UnauthorizedException, ServiceUnavailableException, InternalServerErrorException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseInterceptors, UploadedFile, BadRequestException, ServiceUnavailableException, InternalServerErrorException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import {
@@ -22,7 +22,6 @@ import { UpdateSermonDto } from './dto/update-sermon.dto';
 import { SubscribeEmailDto } from './dto/subscribe-email.dto';
 import { NoteDto, ProgressDto, ReactionDto } from './dto/sermon-interaction.dto';
 import { SermonsService } from './sermons.service';
-import { AuthService } from '../auth/auth.service';
 
 /**
  * Sermon endpoints, organized by audience:
@@ -37,10 +36,7 @@ import { AuthService } from '../auth/auth.service';
 @ApiTags('sermons')
 @Controller('sermons')
 export class SermonsController {
-  constructor(
-    private readonly sermonsService: SermonsService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly sermonsService: SermonsService) {}
 
   // ────────────────────────────────────────────────────────────────────────────
   // Admin (sermon CMS) — PASTOR+
@@ -233,14 +229,14 @@ export class SermonsController {
   // Member interactions — authenticated; userId comes from JWT (no IDOR)
   // ────────────────────────────────────────────────────────────────────────────
 
-  @Get('me/sermons/:sermonId/context')
+  @Get('me/:sermonId/context')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'My context for a sermon (reaction/bookmark/note/progress)' })
   getMyContext(@CurrentUser() user: AuthUser, @Param('sermonId') sermonId: string) {
     return this.sermonsService.getMemberContext(user.userId, sermonId);
   }
 
-  @Post('me/sermons/:sermonId/reaction')
+  @Post('me/:sermonId/reaction')
   @ApiBearerAuth('access-token')
   @ApiBody({ type: ReactionDto })
   @ApiOperation({ summary: 'Set my reaction on a sermon' })
@@ -253,7 +249,7 @@ export class SermonsController {
     return this.sermonsService.upsertReaction(user.memberId, sermonId, body.type);
   }
 
-  @Post('me/sermons/:sermonId/bookmark')
+  @Post('me/:sermonId/bookmark')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Toggle my bookmark on a sermon' })
   toggleBookmark(@CurrentUser() user: AuthUser, @Param('sermonId') sermonId: string) {
@@ -261,7 +257,7 @@ export class SermonsController {
     return this.sermonsService.toggleBookmark(user.memberId, sermonId);
   }
 
-  @Post('me/sermons/:sermonId/note')
+  @Post('me/:sermonId/note')
   @ApiBearerAuth('access-token')
   @ApiBody({ type: NoteDto })
   @ApiOperation({ summary: 'Save my note on a sermon' })
@@ -274,7 +270,7 @@ export class SermonsController {
     return this.sermonsService.upsertNote(user.memberId, sermonId, body.content);
   }
 
-  @Post('me/sermons/:sermonId/progress')
+  @Post('me/:sermonId/progress')
   @ApiBearerAuth('access-token')
   @ApiBody({ type: ProgressDto })
   @ApiOperation({ summary: 'Save my playback progress' })
@@ -314,6 +310,7 @@ export class SermonsController {
   }
 
   @Post('upload-audio')
+  @Roles(Role.PASTOR)
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Upload sermon audio', description: 'Uploads an audio file to R2 and returns a public URL.' })
@@ -331,10 +328,9 @@ export class SermonsController {
     },
   })
   @ApiCreatedResponse({ description: 'Audio uploaded successfully' })
-  async uploadAudio(@Req() request: { headers?: { authorization?: string } }, @UploadedFile() file: any) {
-    const authorization = request.headers?.authorization;
-    await this.authService.getProfile(authorization);
-
+  async uploadAudio(
+    @UploadedFile() file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
+  ) {
     if (!file) {
       throw new BadRequestException('No file provided');
     }

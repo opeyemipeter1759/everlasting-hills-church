@@ -1,22 +1,31 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { createClient } from '@supabase/supabase-js';
+import type { Env } from '../config/env.validation';
 
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
 const FROM = process.env.RESEND_FROM ?? 'onboarding@resend.dev';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
 function createAdminClient() {
-  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
   if (!url || !key) throw new Error('Missing Supabase admin credentials');
   return createClient(url, key);
 }
 
 @Injectable()
 export class MembersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(MembersService.name);
+  private readonly tenantId: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
 
   async convertVisitorToMember(visitorId: string) {
     const visitor = await this.prisma.visitor.findUnique({ where: { id: visitorId } });
@@ -24,7 +33,7 @@ export class MembersService {
     if (!visitor.email) throw new Error('Visitor has no email — email is required to create an account');
     if (!visitor.phone) throw new Error('Visitor has no phone number — phone is used as the initial password');
 
-    const existing = await this.prisma.member.findFirst({ where: { tenantId: TENANT_ID, email: visitor.email } });
+    const existing = await this.prisma.member.findFirst({ where: { tenantId: this.tenantId, email: visitor.email } });
     if (existing) throw new Error('A member account already exists for this email address');
 
     const supabase = createAdminClient();
@@ -38,14 +47,14 @@ export class MembersService {
 
     const userId = authData.user.id;
 
-    const profile = await this.prisma.profile.create({ data: { userId, tenantId: TENANT_ID, role: 'MEMBER' } as any });
+    const profile = await this.prisma.profile.create({ data: { userId, tenantId: this.tenantId, role: 'MEMBER' } as any });
 
-    await this.prisma.roleAssignment.create({ data: { tenantId: TENANT_ID, profileId: profile.id, role: 'MEMBER' } as any });
+    await this.prisma.roleAssignment.create({ data: { tenantId: this.tenantId, profileId: profile.id, role: 'MEMBER' } as any });
 
     const member = await this.prisma.member.create({
       data: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         profileId: profile.id,
         firstName: visitor.firstName,
         lastName: visitor.lastName,
@@ -89,7 +98,7 @@ export class MembersService {
           `,
         });
       } catch (err) {
-        console.error('[members.service] welcome email failed:', err);
+        this.logger.error(`Welcome email failed: ${(err as Error).message ?? err}`);
       }
     }
 
@@ -97,7 +106,7 @@ export class MembersService {
   }
 
   async getAllMembers(opts?: { search?: string; status?: string }) {
-    const where: any = { tenantId: TENANT_ID };
+    const where: any = { tenantId: this.tenantId };
     if (opts?.status) where.status = opts.status;
     if (opts?.search) {
       where.OR = [
@@ -133,7 +142,7 @@ export class MembersService {
 
   async getUpcomingBirthdays(daysAhead = 7) {
     const members = await this.prisma.member.findMany({
-      where: { tenantId: TENANT_ID, dateOfBirth: { not: null } },
+      where: { tenantId: this.tenantId, dateOfBirth: { not: null } },
       select: { id: true, firstName: true, lastName: true, email: true, dateOfBirth: true, photoUrl: true },
     });
 
@@ -163,7 +172,7 @@ export class MembersService {
 
   async getAbsentMembers(missedSundays = 3) {
     const sundays = await this.prisma.service.findMany({
-      where: { tenantId: TENANT_ID },
+      where: { tenantId: this.tenantId },
       orderBy: { scheduledAt: 'desc' },
       take: missedSundays,
     });
@@ -173,7 +182,7 @@ export class MembersService {
     const oldestSunday = sundays[sundays.length - 1].scheduledAt;
 
     const allActive = await this.prisma.member.findMany({
-      where: { tenantId: TENANT_ID, status: 'ACTIVE', joinedAt: { lte: oldestSunday } },
+      where: { tenantId: this.tenantId, status: 'ACTIVE', joinedAt: { lte: oldestSunday } },
       select: {
         id: true,
         firstName: true,
@@ -191,7 +200,7 @@ export class MembersService {
   }
 
   async addPastorNote(memberId: string, content: string) {
-    return this.prisma.pastorNote.create({ data: { id: randomUUID(), tenantId: TENANT_ID, memberId, content } });
+    return this.prisma.pastorNote.create({ data: { id: randomUUID(), tenantId: this.tenantId, memberId, content } });
   }
 
   async deletePastorNote(noteId: string) {
@@ -200,7 +209,7 @@ export class MembersService {
 
   async addFollowUpTask(memberId: string, title: string, dueDate?: string) {
     return this.prisma.followUpTask.create({
-      data: { id: randomUUID(), tenantId: TENANT_ID, memberId, title, dueDate: dueDate ? new Date(dueDate) : null },
+      data: { id: randomUUID(), tenantId: this.tenantId, memberId, title, dueDate: dueDate ? new Date(dueDate) : null },
     });
   }
 

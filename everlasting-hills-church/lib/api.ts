@@ -5,8 +5,27 @@ import {
   clearFrontendSession,
   setFrontendSession,
 } from "@/lib/auth/frontend-session";
-import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload } from "@/types";
+import { LoginPayload, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload } from "@/types";
+import type { UserRole } from "@/config/config";
 
+/**
+ * Strict backend contract. The NestJS /auth/login response shape is known and locked.
+ * If the backend changes shape, this type forces us to update — no more fishing-expedition
+ * optional fields swallowing breakage.
+ */
+export interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  user: {
+    id: string;
+    email: string;
+    role: UserRole | string | null;
+    fullName: string | null;
+    picture: string | null;
+  };
+}
 
 
 export const auth = {
@@ -17,10 +36,8 @@ export const auth = {
       accessToken: response.access_token,
       email: response.user.email,
       role: response.user.role ?? null,
-      fullName:
-        response.user.fullName ??
-        ([response.user.firstName, response.user.lastName].filter(Boolean).join(" ") || null),
-      picture: response.user.picture ?? null,
+      fullName: response.user.fullName,
+      picture: response.user.picture,
       expiresInSeconds: response.expires_in,
     });
 

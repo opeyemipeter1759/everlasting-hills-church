@@ -6,16 +6,23 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
+interface UserProfileSummary {
+  role: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  photoUrl: string | null;
+}
 
 @Injectable()
 export class AuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthService.name);
   private readonly supabaseUrl: string;
   private readonly supabaseAnonKey: string;
-  private readonly supabaseServiceRoleKey: string;
-  private readonly defaultSuperAdminEmail?: string;
-  private readonly defaultSuperAdminPassword?: string;
+  private readonly supabaseServiceRoleKey: string | undefined;
+  private readonly defaultSuperAdminEmail: string | undefined;
+  private readonly defaultSuperAdminPassword: string | undefined;
+  private readonly tenantId: string;
+  /** Reused for password auth and session ops where we don't need user-scoped headers. */
   private readonly anonClient: SupabaseClient;
 
   constructor(
@@ -24,9 +31,10 @@ export class AuthService implements OnModuleInit {
   ) {
     this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
     this.supabaseAnonKey = config.get('SUPABASE_ANON_KEY', { infer: true });
-    this.supabaseServiceRoleKey = config.get('SUPABASE_SERVICE_ROLE_KEY', { infer: true });
-    this.defaultSuperAdminEmail = config.get('DEFAULT_SUPER_ADMIN_EMAIL', { infer: true });
-    this.defaultSuperAdminPassword = config.get('DEFAULT_SUPER_ADMIN_PASSWORD', { infer: true });
+    this.supabaseServiceRoleKey = config.get('SUPABASE_SERVICE_ROLE_KEY', { infer: true }) as string | undefined;
+    this.defaultSuperAdminEmail = config.get('DEFAULT_SUPER_ADMIN_EMAIL', { infer: true }) as string | undefined;
+    this.defaultSuperAdminPassword = config.get('DEFAULT_SUPER_ADMIN_PASSWORD', { infer: true }) as string | undefined;
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
     this.anonClient = createClient(this.supabaseUrl, this.supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
@@ -98,11 +106,11 @@ export class AuthService implements OnModuleInit {
       create: {
         id: randomUUID(),
         userId,
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         role: Role.SUPER_ADMIN,
       },
       update: {
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         role: Role.SUPER_ADMIN,
       },
     });
@@ -111,7 +119,7 @@ export class AuthService implements OnModuleInit {
       where: { profileId: profile.id },
       create: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         profileId: profile.id,
         firstName: 'Super',
         lastName: 'Admin',
@@ -119,7 +127,7 @@ export class AuthService implements OnModuleInit {
         phone: null,
       },
       update: {
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         firstName: 'Super',
         lastName: 'Admin',
         email,
@@ -130,15 +138,25 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Look up the application role for an authenticated Supabase user.
-   * Returns null if the user has signed up but has no Profile yet.
+   * Resolve the application's view of a Supabase auth user.
+   *
+   * Lookup by Profile.userId (the Supabase auth UUID) — same path JwtStrategy uses.
+   * Returns null fields when the user has signed up but no Profile/Member row exists yet.
    */
-  private async getMemberRole(email: string): Promise<string | null> {
-    const member = await this.prisma.member.findFirst({
-      where: { email },
-      select: { Profile: { select: { role: true } } },
+  private async getProfileSummary(userId: string): Promise<UserProfileSummary> {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        role: true,
+        Member: { select: { firstName: true, lastName: true, photoUrl: true } },
+      },
     });
-    return member?.Profile?.role ?? null;
+    return {
+      role: profile?.role ?? null,
+      firstName: profile?.Member?.firstName ?? null,
+      lastName: profile?.Member?.lastName ?? null,
+      photoUrl: profile?.Member?.photoUrl ?? null,
+    };
   }
 
   private async getMemberByEmail(email: string) {
@@ -169,29 +187,64 @@ export class AuthService implements OnModuleInit {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const userEmail = String(data.user.email ?? '');
-    const memberInfo = userEmail ? await this.getMemberByEmail(userEmail) : null;
-    const role = memberInfo?.Profile?.role ?? null;
-    const metadata = (data.user.user_metadata ?? {}) as Record<string, unknown>;
-    const fullName = (
-      this.formatFullName(memberInfo?.firstName, memberInfo?.lastName) ??
-      String(metadata.full_name ?? metadata.name ?? '').trim()
-    ) || null;
-    const picture = (
-      memberInfo?.photoUrl ??
-      String(metadata.avatar_url ?? metadata.picture ?? '').trim()
-    ) || null;
+    const summary = await this.getProfileSummary(data.user.id);
+    const fullName =
+      summary.firstName || summary.lastName
+        ? `${summary.firstName ?? ''} ${summary.lastName ?? ''}`.trim()
+        : null;
 
     return {
       access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_in: data.session.expires_in,
+      token_type: data.session.token_type,
       user: {
         id: data.user.id,
         email: data.user.email,
-        role,
+        role: summary.role,
         fullName,
-        picture,
+        picture: summary.photoUrl,
       },
-      //session: { access_token: data.session.access_token, expires_in: data.session.expires_in, token_type: data.session.token_type },
+    };
+  }
+
+  /**
+   * @deprecated Use @CurrentUser() in controllers instead.
+   *
+   * Legacy helper for controllers that take the raw Authorization header and want
+   * "who is this caller". Validates the JWT against Supabase, then loads the Profile.
+   *
+   * Cost: one Supabase network call + one DB query per request. Migrate callers to
+   * @UseGuards(JwtAuthGuard) + @CurrentUser to eliminate the network hop.
+   */
+  async getProfile(authorization?: string) {
+    const accessToken = authorization?.startsWith('Bearer ')
+      ? authorization.slice(7).trim()
+      : '';
+    if (!accessToken) throw new UnauthorizedException('Access token is required');
+
+    const supabase = createClient(this.supabaseUrl, this.supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data?.user) {
+      this.logger.warn(`Supabase getUser failed: ${error?.message ?? 'no user'}`);
+      throw new UnauthorizedException('Invalid access token');
+    }
+
+    const summary = await this.getProfileSummary(data.user.id);
+    const fullName =
+      summary.firstName || summary.lastName
+        ? `${summary.firstName ?? ''} ${summary.lastName ?? ''}`.trim()
+        : null;
+
+    return {
+      id: data.user.id,
+      email: data.user.email,
+      role: summary.role,
+      fullName,
+      picture: summary.photoUrl,
     };
   }
 
@@ -199,13 +252,15 @@ export class AuthService implements OnModuleInit {
     const accessToken = authorization?.startsWith('Bearer ')
       ? authorization.slice(7).trim()
       : '';
-    if (!accessToken)
+    if (!accessToken) {
       throw new UnauthorizedException('Access token is required');
+    }
 
     const scoped = createClient(this.supabaseUrl, this.supabaseAnonKey, {
       global: { headers: { Authorization: `Bearer ${accessToken}` } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
+
     const { error } = await scoped.auth.signOut();
     if (error) {
       this.logger.warn(`Logout failed: ${error.message}`);
@@ -214,45 +269,56 @@ export class AuthService implements OnModuleInit {
     return { success: true, message: 'Logged out successfully' };
   }
 
-  async getProfile(authorization?: string) {
-    const accessToken = authorization?.startsWith('Bearer ')
-      ? authorization.slice(7).trim()
-      : '';
-    if (!accessToken)
-      throw new UnauthorizedException('Access token is required');
-
-    const supabase = createClient(this.supabaseUrl, this.supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
+  /**
+   * Returns the currently-authenticated user's identity + their Member profile.
+   * The userId is sourced from the JWT (already verified by JwtAuthGuard).
+   *
+   * Used by /auth/me on the controller — the dashboard's single point of truth for
+   * "who am I and what does my profile look like".
+   */
+  async getMe(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        role: true,
+        tenantId: true,
+        Member: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            address: true,
+            dateOfBirth: true,
+            bio: true,
+            photoUrl: true,
+            joinedAt: true,
+          },
+        },
+      },
     });
-    const { data, error } = await supabase.auth.getUser();
-    if (error) {
-      this.logger.warn('Supabase getUser error: ' + error.message);
-      throw new UnauthorizedException('Invalid access token');
+
+    if (!profile) {
+      // Authenticated Supabase user with no Profile row yet — orphan account.
+      // Return enough for the UI to render a "complete your profile" state.
+      return { profileId: null, role: null, tenantId: null, member: null };
     }
-    const user = data?.user;
-    if (!user) throw new UnauthorizedException('User not found');
 
-    const userEmail = String(user.email ?? '');
-    const memberInfo = userEmail
-      ? await this.getMemberByEmail(userEmail)
-      : null;
-    const role = memberInfo?.Profile?.role ?? null;
-    const fullName = this.formatFullName(
-      memberInfo?.firstName,
-      memberInfo?.lastName,
-    );
-    const metadata = (user.user_metadata ?? {}) as Record<string, unknown>;
-    const fallbackPicture =
-      String(
-        metadata.avatar_url ??
-          metadata.picture ??
-          (user as any).avatar_url ??
-          (user as any).picture ??
-          '',
-      ).trim() || null;
-    const picture = memberInfo?.photoUrl ?? fallbackPicture;
-
-    return { id: user.id, email: user.email, role, fullName, picture };
+    return {
+      profileId: profile.id,
+      role: profile.role,
+      tenantId: profile.tenantId,
+      member: profile.Member
+        ? {
+            ...profile.Member,
+            dateOfBirth: profile.Member.dateOfBirth
+              ? profile.Member.dateOfBirth.toISOString()
+              : null,
+            joinedAt: profile.Member.joinedAt.toISOString(),
+          }
+        : null,
+    };
   }
 }

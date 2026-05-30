@@ -3,8 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Runtime connection — Supabase pgbouncer pool (port 6543), shared and tight pool.
+  url       = env("DATABASE_URL")
+  // Schema engine connection — direct Postgres (port 5432). pgbouncer's transaction-mode
+  // pool reuses connections with stale prepared statements which makes `prisma db push`
+  // and migrations fail with "prepared statement s1 already exists". directUrl bypasses
+  // pgbouncer for those operations only.
+  directUrl = env("DIRECT_URL")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -381,6 +387,7 @@ model Tenant {
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
   Service            Service[]
+  Testimonial        Testimonial[]
   Unit               Unit[]
   Visitor            Visitor[]
 }
@@ -433,6 +440,26 @@ model Visitor {
   submittedAt        DateTime @default(now())
   attendanceType     String?
   Tenant             Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// Featured "My Everlasting Hills Experience" stories shown on the public homepage slider.
+/// Admin/PASTOR curates these — distinct from raw form-submission testimonies (which go
+/// through FormSubmission with type='testimony' and are awaiting moderation).
+model Testimonial {
+  id             String   @id
+  tenantId       String
+  authorName     String
+  authorRole     String?
+  authorPhotoUrl String?
+  content        String
+  published      Boolean  @default(false)
+  publishedAt    DateTime?
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+  Tenant         Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, published, order])
 }
 
 enum AlertType {

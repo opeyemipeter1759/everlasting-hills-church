@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import type { Env } from '../config/env.validation';
 
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
 const WAT_OFFSET_MS = 60 * 60 * 1000;
 
 function getTodayBounds() {
@@ -20,7 +21,14 @@ function getTodayBounds() {
 
 @Injectable()
 export class AttendanceService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly tenantId: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
 
   private async getMemberByUserId(userId: string) {
     const profile = await this.prisma.profile.findUnique({ where: { userId } });
@@ -35,7 +43,7 @@ export class AttendanceService {
     const { startUtc, endUtc } = getTodayBounds();
     return this.prisma.service.findFirst({
       where: {
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         scheduledAt: {
           gte: startUtc,
           lt: endUtc,
@@ -61,7 +69,7 @@ export class AttendanceService {
     return this.prisma.service.create({
       data: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         name: `Sunday Service — ${label}`,
         scheduledAt: startUtc,
       },
@@ -92,7 +100,7 @@ export class AttendanceService {
     await this.prisma.attendanceRecord.create({
       data: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         memberId: member.id,
         serviceId: service.id,
         present: true,
@@ -109,7 +117,7 @@ export class AttendanceService {
     }
 
     const service = await this.prisma.service.findFirst({
-      where: { id: serviceId, tenantId: TENANT_ID },
+      where: { id: serviceId, tenantId: this.tenantId },
     });
     if (!service) {
       throw new NotFoundException('Service not found');
@@ -131,7 +139,7 @@ export class AttendanceService {
     await this.prisma.attendanceRecord.create({
       data: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         memberId: member.id,
         serviceId: service.id,
         present: true,
@@ -150,7 +158,7 @@ export class AttendanceService {
     return this.prisma.attendanceRecord.findMany({
       where: {
         memberId: member.id,
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
       },
       include: {
         Service: true,
@@ -172,7 +180,7 @@ export class AttendanceService {
     const records = await this.prisma.attendanceRecord.findMany({
       where: {
         serviceId: service.id,
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         present: true,
       },
       include: {
@@ -194,7 +202,7 @@ export class AttendanceService {
 
   async getAllServicesWithCounts() {
     return this.prisma.service.findMany({
-      where: { tenantId: TENANT_ID },
+      where: { tenantId: this.tenantId },
       orderBy: { scheduledAt: 'desc' },
       include: {
         _count: {
@@ -212,7 +220,7 @@ export class AttendanceService {
   async getNextService() {
     return this.prisma.service.findFirst({
       where: {
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         scheduledAt: { gt: new Date() },
       },
       orderBy: { scheduledAt: 'asc' },
@@ -220,12 +228,12 @@ export class AttendanceService {
   }
 
   async countTotalServices() {
-    return this.prisma.service.count({ where: { tenantId: TENANT_ID } });
+    return this.prisma.service.count({ where: { tenantId: this.tenantId } });
   }
 
   async getRecentServicesStats(limit = 4) {
     return this.prisma.service.findMany({
-      where: { tenantId: TENANT_ID },
+      where: { tenantId: this.tenantId },
       orderBy: { scheduledAt: 'desc' },
       take: limit,
       include: {
@@ -249,7 +257,7 @@ export class AttendanceService {
     return this.prisma.attendanceRecord.count({
       where: {
         serviceId: service.id,
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         present: true,
       },
     });
@@ -257,7 +265,7 @@ export class AttendanceService {
 
   async getAttendanceTrend(limit = 16) {
     const services = await this.prisma.service.findMany({
-      where: { tenantId: TENANT_ID },
+      where: { tenantId: this.tenantId },
       orderBy: { scheduledAt: 'desc' },
       take: limit,
       include: {
@@ -285,7 +293,7 @@ export class AttendanceService {
 
   async getAttendanceByDayOfWeek() {
     const services = await this.prisma.service.findMany({
-      where: { tenantId: TENANT_ID },
+      where: { tenantId: this.tenantId },
       include: {
         _count: {
           select: {
@@ -317,7 +325,7 @@ export class AttendanceService {
   async getTopAttendees(limit = 10) {
     const records = await this.prisma.attendanceRecord.groupBy({
       by: ['memberId'],
-      where: { tenantId: TENANT_ID, present: true },
+      where: { tenantId: this.tenantId, present: true },
       _count: { _all: true },
       orderBy: { _count: { memberId: 'desc' } },
       take: limit,
@@ -349,23 +357,23 @@ export class AttendanceService {
 
     const [totalServices, totalCheckins, thisMonthCheckins, lastMonthCheckins, totalMembers] =
       await Promise.all([
-        this.prisma.service.count({ where: { tenantId: TENANT_ID } }),
-        this.prisma.attendanceRecord.count({ where: { tenantId: TENANT_ID, present: true } }),
+        this.prisma.service.count({ where: { tenantId: this.tenantId } }),
+        this.prisma.attendanceRecord.count({ where: { tenantId: this.tenantId, present: true } }),
         this.prisma.attendanceRecord.count({
           where: {
-            tenantId: TENANT_ID,
+            tenantId: this.tenantId,
             present: true,
             Service: { scheduledAt: { gte: monthStart } },
           },
         }),
         this.prisma.attendanceRecord.count({
           where: {
-            tenantId: TENANT_ID,
+            tenantId: this.tenantId,
             present: true,
             Service: { scheduledAt: { gte: lastMonthStart, lt: monthStart } },
           },
         }),
-        this.prisma.member.count({ where: { tenantId: TENANT_ID, status: 'ACTIVE' } }),
+        this.prisma.member.count({ where: { tenantId: this.tenantId, status: 'ACTIVE' } }),
       ]);
 
     const avgAttendance = totalServices > 0 ? Math.round(totalCheckins / totalServices) : 0;

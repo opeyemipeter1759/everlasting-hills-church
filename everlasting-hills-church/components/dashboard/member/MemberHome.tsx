@@ -7,7 +7,9 @@ import {
   BookOpen, Sparkles, Bell, ChevronRight, TrendingUp,
   User, Camera, Headphones, Bookmark, Play,
 } from "lucide-react";
-import { dummyMemberHome } from "./DummyData";
+// Dummy fallback removed — empty/zero defaults below activate the component's intrinsic
+// empty-state branches instead of showing misleading fake data.
+// (The DummyData export still exists for Storybook-style previews if needed.)
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -582,25 +584,31 @@ function MonthlyAttendanceChart({ data }: { data: MemberHomeProps["monthlyAttend
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function MemberHome(props: MemberHomePropsOptional) {
-  // Fall back to dummy data for any prop not supplied, so the page renders
-  // fully whether wired to the server or run standalone for preview.
+  /**
+   * Defaults are intentionally empty/zero, NOT dummy data. When a section's backend isn't
+   * wired yet, the prop is undefined → falls back to these zeros → the component's intrinsic
+   * empty-state branches render ("No records yet", "No upcoming service", etc.). Honest UI.
+   *
+   * Callers should pass real values; pages know what's wired and what's not.
+   */
   const {
-    member = dummyMemberHome.member,
-    userEmail = dummyMemberHome.userEmail,
-    memberDisplayId = dummyMemberHome.memberDisplayId,
-    attendanceRate = dummyMemberHome.attendanceRate,
-    streakWeeks = dummyMemberHome.streakWeeks,
-    lastServiceDate = dummyMemberHome.lastServiceDate,
-    nextService = dummyMemberHome.nextService,
-    hasCheckedInToday = dummyMemberHome.hasCheckedInToday,
-    todayService = dummyMemberHome.todayService,
-    prayerCount = dummyMemberHome.prayerCount,
-    recentServices = dummyMemberHome.recentServices,
-    monthlyAttendance = dummyMemberHome.monthlyAttendance,
-    birthdayDaysUntil = dummyMemberHome.birthdayDaysUntil,
-    sermonStreak = dummyMemberHome.sermonStreak,
-    bookmarks = dummyMemberHome.bookmarks,
-    listenHistory = dummyMemberHome.listenHistory,
+    member = null,
+    userEmail = "",
+    memberDisplayId = "EHC-NEW",
+    attendanceRate = 0,
+    attendanceCount = 0,
+    streakWeeks = 0,
+    lastServiceDate = null,
+    nextService = null,
+    hasCheckedInToday = false,
+    todayService = null,
+    prayerCount = 0,
+    recentServices = [],
+    monthlyAttendance = [],
+    birthdayDaysUntil = null,
+    sermonStreak = 0,
+    bookmarks = [],
+    listenHistory = [],
   } = props;
 
   const displayName = member

@@ -167,6 +167,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Sermons",           href: "/dashboard/sermons",            icon: BookOpen,       minRole: "PASTOR" },
       { label: "Sermon Analytics",  href: "/dashboard/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
       { label: "Subscribers",       href: "/dashboard/subscribers",        icon: Mail,           minRole: "PASTOR" },
+      { label: "Testimonials",      href: "/dashboard/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
       { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },
       { label: "Follow-ups",        href: "/dashboard/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },

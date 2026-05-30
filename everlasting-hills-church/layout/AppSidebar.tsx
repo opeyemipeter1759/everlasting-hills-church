@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
  import { getFrontendSessionUser, normalizeRole } from '@/lib/auth/frontend-session';
@@ -59,7 +59,20 @@ function NavIcon({ active, icon }: { active: boolean; icon: React.ReactNode }) {
 }
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleSidebar, toggleMobileSidebar } = useSidebar();
+
+  /**
+   * Single toggle handler used by both the in-sidebar button and (mirroring) the header
+   * button in AppHeader. On large screens it expands/collapses the rail; on small screens
+   * it closes the slide-over drawer. Matches the breakpoint used in AppHeader for consistency.
+   */
+  const handleToggle = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      toggleMobileSidebar();
+    } else {
+      toggleSidebar();
+    }
+  };
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const currentUser = getFrontendSessionUser();
@@ -199,6 +212,28 @@ const AppSidebar: React.FC = () => {
             <Image src="/logoblack.png" alt="Everlasting Hills" width={28} height={28} className="object-contain brightness-0 invert" />
           </span>
         </Link>
+
+        {/*
+          Sidebar toggle.
+          - Desktop (>=1024): collapses the rail to icons only / expands back
+          - Mobile  (<1024):  closes the slide-over drawer
+          - Hidden when sidebar is in icon-only state on desktop so the collapsed rail stays
+            visually clean (the AppHeader hamburger handles re-expanding from there).
+        */}
+        {showLabels && (
+          <button
+            type="button"
+            onClick={handleToggle}
+            aria-label={isMobileOpen ? 'Close sidebar' : 'Collapse sidebar'}
+            title={isMobileOpen ? 'Close' : 'Collapse'}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg
+              text-gray-400 hover:bg-gray-100 hover:text-gray-700
+              dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200
+              transition-colors duration-150"
+          >
+            {isMobileOpen ? <X size={18} strokeWidth={2} /> : <PanelLeftClose size={18} strokeWidth={1.9} />}
+          </button>
+        )}
       </div>
 
       <div className="flex-1 no-scrollbar overflow-y-auto overflow-x-hidden px-1 py-4">

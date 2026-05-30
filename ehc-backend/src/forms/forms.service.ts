@@ -1,51 +1,72 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
-import { Resend } from 'resend';
 import { PrismaService } from '../prisma/prisma.service';
-import { FirstTimerDto, PrayerRequestDto, TestimonyDto } from '../dto';
+import { FirstTimerDto } from './dto/first-timer.dto';
+import { PrayerRequestDto } from './dto/prayer-request.dto';
+import { TestimonyDto } from './dto/testimony.dto';
+import {
+  NotificationEvents,
+  type SendEmailPayload,
+} from '../notifications/notification-events';
+import type { Env } from '../config/env.validation';
 
+/**
+ * Public form intake. Writes the record synchronously (so the user gets immediate confirmation)
+ * and fires email events asynchronously via EventEmitter2 (so the response isn't held up
+ * by Resend's latency or failures).
+ *
+ * Previously: form submissions blocked on `await Promise.allSettled(resend.emails.send(...))`,
+ * adding ~500ms–2s to every form POST. Now: <100ms.
+ */
 @Injectable()
 export class FormsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly tenantId: string;
+  private readonly adminEmail: string;
 
-  private getResendClient() {
-    const apiKey = process.env.RESEND_API_KEY;
-
-    if (!apiKey) {
-      throw new Error('Missing RESEND_API_KEY environment variable');
-    }
-
-    return new Resend(apiKey);
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: EventEmitter2,
+    config: ConfigService<Env, true>,
+  ) {
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    this.adminEmail =
+      config.get('RESEND_ADMIN_EMAIL', { infer: true }) ??
+      config.get('CONTACT_EMAIL', { infer: true }) ??
+      'hello@everlastinghills.org';
   }
 
-  private buildAdminText(data: FirstTimerDto) {
+  // ── Email payload builders ──────────────────────────────────────────────────
+
+  private buildFirstTimerAdminText(d: FirstTimerDto): string {
     return [
       'New first timer registration received.',
       '',
-      `Name: ${data.first_name} ${data.last_name}`,
-      `Phone: ${data.phone_number}`,
-      `Email: ${data.email ?? 'N/A'}`,
-      `Attendance: ${data.attendance_type ?? 'N/A'}`,
-      `How they learned about us: ${data.how_did_you_learn ?? 'N/A'}`,
-      `Invited by: ${data.invited_by ?? 'N/A'}`,
-      `Located in Ibadan: ${data.located_in_ibadan ?? 'N/A'}`,
-      `Membership interest: ${data.membership_interest ?? 'N/A'}`,
-      `Address: ${data.address ?? 'N/A'}`,
-      `Occupation: ${data.occupation ?? 'N/A'}`,
-      `Born again: ${data.born_again ?? 'N/A'}`,
-      `Service experience: ${data.service_experience ?? 'N/A'}`,
-      `Prayer point: ${data.prayer_point ?? 'N/A'}`,
-      `WhatsApp interest: ${data.whatsapp_interest ?? 'N/A'}`,
-      `Birth day: ${data.birth_day ?? 'N/A'}`,
-      `Birth month: ${data.birth_month ?? 'N/A'}`,
-      `Type: ${data.type ?? 'N/A'}`,
+      `Name: ${d.first_name} ${d.last_name}`,
+      `Phone: ${d.phone_number}`,
+      `Email: ${d.email ?? 'N/A'}`,
+      `Attendance: ${d.attendance_type ?? 'N/A'}`,
+      `How they learned about us: ${d.how_did_you_learn ?? 'N/A'}`,
+      `Invited by: ${d.invited_by ?? 'N/A'}`,
+      `Located in Ibadan: ${d.located_in_ibadan ?? 'N/A'}`,
+      `Membership interest: ${d.membership_interest ?? 'N/A'}`,
+      `Address: ${d.address ?? 'N/A'}`,
+      `Occupation: ${d.occupation ?? 'N/A'}`,
+      `Born again: ${d.born_again ?? 'N/A'}`,
+      `Service experience: ${d.service_experience ?? 'N/A'}`,
+      `Prayer point: ${d.prayer_point ?? 'N/A'}`,
+      `WhatsApp interest: ${d.whatsapp_interest ?? 'N/A'}`,
+      `Birth day: ${d.birth_day ?? 'N/A'}`,
+      `Birth month: ${d.birth_month ?? 'N/A'}`,
+      `Type: ${d.type ?? 'N/A'}`,
     ].join('\n');
   }
 
-  private buildVisitorText(data: FirstTimerDto) {
+  private buildFirstTimerVisitorText(d: FirstTimerDto): string {
     return [
-      `Dear ${data.first_name},`,
+      `Dear ${d.first_name},`,
       '',
       'Thank you for registering with Everlasting Hills Church.',
       'We have received your information and our team will be in touch soon.',
@@ -55,22 +76,20 @@ export class FormsService {
     ].join('\n');
   }
 
-  private buildPrayerRequestAdminText(data: PrayerRequestDto) {
-    const displayName = data.is_anonymous ? 'Anonymous' : (data.name?.trim() || 'Anonymous');
-
+  private buildPrayerAdminText(d: PrayerRequestDto): string {
+    const displayName = d.is_anonymous ? 'Anonymous' : d.name?.trim() || 'Anonymous';
     return [
       `Name: ${displayName}`,
-      `Email: ${data.email ?? '—'}`,
-      `Phone: ${data.phone ?? '—'}`,
+      `Email: ${d.email ?? '—'}`,
+      `Phone: ${d.phone ?? '—'}`,
       '',
       'Request:',
-      data.request,
+      d.request,
     ].join('\n');
   }
 
-  private buildPrayerRequestVisitorText(data: PrayerRequestDto) {
-    const displayName = data.is_anonymous ? 'Anonymous' : (data.name?.trim() || 'Anonymous');
-
+  private buildPrayerVisitorText(d: PrayerRequestDto): string {
+    const displayName = d.is_anonymous ? 'Anonymous' : d.name?.trim() || 'Anonymous';
     return [
       `Dear ${displayName},`,
       '',
@@ -82,22 +101,22 @@ export class FormsService {
     ].join('\n');
   }
 
-  private buildTestimonyAdminText(data: TestimonyDto) {
+  private buildTestimonyAdminText(d: TestimonyDto): string {
     return [
-      `Name: ${data.name?.trim() || 'Anonymous'}`,
-      `Email: ${data.email ?? '—'}`,
-      `Phone: ${data.phone ?? '—'}`,
+      `Name: ${d.name?.trim() || 'Anonymous'}`,
+      `Email: ${d.email ?? '—'}`,
+      `Phone: ${d.phone ?? '—'}`,
       '',
-      `Title: ${data.title ?? 'N/A'}`,
+      `Title: ${d.title ?? 'N/A'}`,
       '',
       'Testimony:',
-      data.testimony ?? 'N/A',
+      d.testimony ?? 'N/A',
     ].join('\n');
   }
 
-  private buildTestimonyVisitorText(data: TestimonyDto) {
+  private buildTestimonyVisitorText(d: TestimonyDto): string {
     return [
-      `Dear ${data.name?.trim() || 'Beloved'},`,
+      `Dear ${d.name?.trim() || 'Beloved'},`,
       '',
       'Thank you for sharing your testimony with Everlasting Hills Church.',
       'We celebrate what God has done in your life.',
@@ -107,33 +126,35 @@ export class FormsService {
     ].join('\n');
   }
 
+  /**
+   * Fire-and-forget email dispatch. Never awaits — failures are logged by
+   * NotificationsService.handleSendEmail. Returns synchronously.
+   */
+  private dispatchEmail(payload: SendEmailPayload) {
+    this.events.emit(NotificationEvents.SendEmail, payload);
+  }
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
   async submitFirstTimer(data: FirstTimerDto) {
-    const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
     const normalizedEmail = data.email?.trim();
     const normalizedPhone = data.phone_number.trim();
 
     if (normalizedEmail) {
-      const existingEmail = await this.prisma.visitor.findFirst({
-        where: {
-          email: normalizedEmail,
-          tenantId: TENANT_ID,
-        },
+      const existing = await this.prisma.visitor.findFirst({
+        where: { email: normalizedEmail, tenantId: this.tenantId },
       });
-      if (existingEmail) {
+      if (existing) {
         throw new BadRequestException(
           `A visitor with email "${normalizedEmail}" already exists`,
         );
       }
     }
-
     if (normalizedPhone) {
-      const existingPhone = await this.prisma.visitor.findFirst({
-        where: {
-          phone: normalizedPhone,
-          tenantId: TENANT_ID,
-        },
+      const existing = await this.prisma.visitor.findFirst({
+        where: { phone: normalizedPhone, tenantId: this.tenantId },
       });
-      if (existingPhone) {
+      if (existing) {
         throw new BadRequestException(
           `A visitor with phone number "${normalizedPhone}" already exists`,
         );
@@ -144,7 +165,7 @@ export class FormsService {
       this.prisma.visitor.create({
         data: {
           id: randomUUID(),
-          tenantId: TENANT_ID,
+          tenantId: this.tenantId,
           firstName: data.first_name.trim(),
           lastName: data.last_name.trim(),
           phone: normalizedPhone,
@@ -166,49 +187,28 @@ export class FormsService {
       this.prisma.formSubmission.create({
         data: {
           id: randomUUID(),
-          tenantId: TENANT_ID,
+          tenantId: this.tenantId,
           type: 'first_timer',
           data: data as unknown as Prisma.InputJsonValue,
         },
       }),
     ]);
 
-    const FROM = process.env.RESEND_FROM ?? 'onboarding@resend.dev';
-    const ADMIN_EMAIL =
-      process.env.RESEND_ADMIN_EMAIL ??
-      process.env.CONTACT_EMAIL ??
-      'hello@everlastinghills.org';
-
-    const resend = this.getResendClient();
-    const emailJobs: Promise<unknown>[] = [
-      resend.emails.send({
-        from: `Everlasting Hills <${FROM}>`,
-        to: ADMIN_EMAIL,
-        subject: `New First Timer: ${data.first_name} ${data.last_name}`,
-        text: this.buildAdminText(data),
-      }),
-    ];
-
-    if (normalizedEmail) {
-      emailJobs.push(
-        resend.emails.send({
-          from: `Everlasting Hills <${FROM}>`,
-          to: normalizedEmail,
-          subject: 'Welcome to Everlasting Hills Church!',
-          text: this.buildVisitorText(data),
-        }),
-      );
-    }
-
-    const results = await Promise.allSettled(emailJobs);
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        console.error(
-          `[forms.service] first-timer email[${index}] failed:`,
-          result.reason,
-        );
-      }
+    // Fire-and-forget — does not block response
+    this.dispatchEmail({
+      to: this.adminEmail,
+      subject: `New First Timer: ${data.first_name} ${data.last_name}`,
+      text: this.buildFirstTimerAdminText(data),
+      tag: 'first-timer-admin',
     });
+    if (normalizedEmail) {
+      this.dispatchEmail({
+        to: normalizedEmail,
+        subject: 'Welcome to Everlasting Hills Church!',
+        text: this.buildFirstTimerVisitorText(data),
+        tag: 'first-timer-visitor',
+      });
+    }
 
     return {
       success: true,
@@ -218,15 +218,14 @@ export class FormsService {
   }
 
   async submitPrayerRequest(data: PrayerRequestDto) {
-    const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
     const normalizedEmail = data.email?.trim();
     const normalizedPhone = data.phone?.trim();
-    const displayName = data.is_anonymous ? 'Anonymous' : (data.name?.trim() || 'Anonymous');
+    const displayName = data.is_anonymous ? 'Anonymous' : data.name?.trim() || 'Anonymous';
 
     const record = await this.prisma.prayerRequest.create({
       data: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         request: data.request.trim(),
         name: data.name ? data.name.trim() : null,
         email: normalizedEmail ?? null,
@@ -235,42 +234,20 @@ export class FormsService {
       },
     });
 
-    const FROM = process.env.RESEND_FROM ?? 'onboarding@resend.dev';
-    const ADMIN_EMAIL =
-      process.env.RESEND_ADMIN_EMAIL ??
-      process.env.CONTACT_EMAIL ??
-      'hello@everlastinghills.org';
-
-    const resend = this.getResendClient();
-    const emailJobs: Promise<unknown>[] = [
-      resend.emails.send({
-        from: `Everlasting Hills <${FROM}>`,
-        to: ADMIN_EMAIL,
-        subject: `New Prayer Request from ${displayName}`,
-        text: this.buildPrayerRequestAdminText(data),
-      }),
-    ];
-
-    if (normalizedEmail) {
-      emailJobs.push(
-        resend.emails.send({
-          from: `Everlasting Hills <${FROM}>`,
-          to: normalizedEmail,
-          subject: 'We received your prayer request',
-          text: this.buildPrayerRequestVisitorText(data),
-        }),
-      );
-    }
-
-    const results = await Promise.allSettled(emailJobs);
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        console.error(
-          `[forms.service] prayer-request email[${index}] failed:`,
-          result.reason,
-        );
-      }
+    this.dispatchEmail({
+      to: this.adminEmail,
+      subject: `New Prayer Request from ${displayName}`,
+      text: this.buildPrayerAdminText(data),
+      tag: 'prayer-admin',
     });
+    if (normalizedEmail) {
+      this.dispatchEmail({
+        to: normalizedEmail,
+        subject: 'We received your prayer request',
+        text: this.buildPrayerVisitorText(data),
+        tag: 'prayer-visitor',
+      });
+    }
 
     return {
       success: true,
@@ -280,55 +257,32 @@ export class FormsService {
   }
 
   async submitTestimony(data: TestimonyDto) {
-    const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
     const normalizedEmail = data.email?.trim();
     const normalizedName = data.name?.trim();
 
     const record = await this.prisma.formSubmission.create({
       data: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         type: 'testimony',
         data: data as unknown as Prisma.InputJsonValue,
       },
     });
 
-    const FROM = process.env.RESEND_FROM ?? 'onboarding@resend.dev';
-    const ADMIN_EMAIL =
-      process.env.RESEND_ADMIN_EMAIL ??
-      process.env.CONTACT_EMAIL ??
-      'hello@everlastinghills.org';
-
-    const resend = this.getResendClient();
-    const emailJobs: Promise<unknown>[] = [
-      resend.emails.send({
-        from: `Everlasting Hills <${FROM}>`,
-        to: ADMIN_EMAIL,
-        subject: `New Testimony${normalizedName ? ` from ${normalizedName}` : ''}`,
-        text: this.buildTestimonyAdminText(data),
-      }),
-    ];
-
-    if (normalizedEmail) {
-      emailJobs.push(
-        resend.emails.send({
-          from: `Everlasting Hills <${FROM}>`,
-          to: normalizedEmail,
-          subject: 'Thank you for your testimony',
-          text: this.buildTestimonyVisitorText(data),
-        }),
-      );
-    }
-
-    const results = await Promise.allSettled(emailJobs);
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        console.error(
-          `[forms.service] testimony email[${index}] failed:`,
-          result.reason,
-        );
-      }
+    this.dispatchEmail({
+      to: this.adminEmail,
+      subject: `New Testimony${normalizedName ? ` from ${normalizedName}` : ''}`,
+      text: this.buildTestimonyAdminText(data),
+      tag: 'testimony-admin',
     });
+    if (normalizedEmail) {
+      this.dispatchEmail({
+        to: normalizedEmail,
+        subject: 'Thank you for your testimony',
+        text: this.buildTestimonyVisitorText(data),
+        tag: 'testimony-visitor',
+      });
+    }
 
     return {
       success: true,

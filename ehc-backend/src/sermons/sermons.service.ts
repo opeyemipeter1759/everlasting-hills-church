@@ -1,10 +1,10 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { SermonStatus, SermonType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import slugify from 'slugify';
 import { PrismaService } from '../prisma/prisma.service';
-
-const TENANT_ID = process.env.DEFAULT_TENANT_ID!;
+import type { Env } from '../config/env.validation';
 
 type SermonEpisodeLike = {
   id: string;
@@ -30,6 +30,7 @@ type SermonLike = {
   audioDuration?: number | null;
   series?: string | null;
   seriesSlug?: string | null;
+  isFeatured?: boolean;
   Episodes?: SermonEpisodeLike[];
   [key: string]: unknown;
 };
@@ -89,7 +90,14 @@ function makeSlug(title: string, date: string | Date): string {
 
 @Injectable()
 export class SermonsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly tenantId: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
 
   private async getMemberByUserId(userId: string) {
     const profile = await this.prisma.profile.findUnique({ where: { userId } });
@@ -103,7 +111,7 @@ export class SermonsService {
   async getAllSermons(opts?: { status?: SermonStatus; series?: string }) {
     const sermons = await this.prisma.sermon.findMany({
       where: {
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         ...(opts?.status && { status: opts.status }),
         ...(opts?.series && { seriesSlug: opts.series }),
       },
@@ -119,7 +127,7 @@ export class SermonsService {
 
   async getSermonById(id: string) {
     const sermon = await this.prisma.sermon.findFirst({
-      where: { id, tenantId: TENANT_ID },
+      where: { id, tenantId: this.tenantId },
       include: {
         DiscussionQuestion: {
           orderBy: { order: 'asc' },
@@ -190,7 +198,7 @@ export class SermonsService {
     const sermon = await this.prisma.sermon.create({
       data: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         title: data.title,
         slug,
         speaker: data.speaker,
@@ -216,7 +224,7 @@ export class SermonsService {
             ? {
                 create: data.episodes.map((episode, index) => ({
                   id: episode.id ?? randomUUID(),
-                  tenantId: TENANT_ID,
+                  tenantId: this.tenantId,
                   title: episode.title,
                   url: episode.url,
                   duration: episode.duration,
@@ -260,7 +268,7 @@ export class SermonsService {
       isFeatured: boolean;
     }>,
   ) {
-    const current = await this.prisma.sermon.findFirst({ where: { id, tenantId: TENANT_ID } });
+    const current = await this.prisma.sermon.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!current) {
       throw new NotFoundException('Sermon not found');
     }
@@ -328,11 +336,11 @@ export class SermonsService {
     if (hasEpisodeChanges) {
       const episodeInputs = data.episodes ?? [];
 
-      await this.prisma.sermonEpisode.deleteMany({ where: { sermonId: id, tenantId: TENANT_ID } });
+      await this.prisma.sermonEpisode.deleteMany({ where: { sermonId: id, tenantId: this.tenantId } });
       await this.prisma.sermonEpisode.createMany({
         data: episodeInputs.map((episode, index) => ({
           id: episode.id ?? randomUUID(),
-          tenantId: TENANT_ID,
+          tenantId: this.tenantId,
           sermonId: id,
           title: episode.title,
           url: episode.url,
@@ -346,19 +354,43 @@ export class SermonsService {
     }
 
     if (isConvertingToSingle) {
-      await this.prisma.sermonEpisode.deleteMany({ where: { sermonId: id, tenantId: TENANT_ID } });
+      await this.prisma.sermonEpisode.deleteMany({ where: { sermonId: id, tenantId: this.tenantId } });
       return this.getSermonById(id);
     }
 
     return serializeSermon(sermon);
   }
 
+  /**
+   * Tenant-scoped delete. Returns count so the controller can throw 404 when the id wasn't
+   * in this tenant — defends against cross-tenant deletion if an attacker knows another
+   * tenant's sermon UUID.
+   */
   async deleteSermon(id: string) {
-    return this.prisma.sermon.delete({ where: { id } });
+    const result = await this.prisma.sermon.deleteMany({ where: { id, tenantId: this.tenantId } });
+    if (result.count === 0) {
+      throw new NotFoundException('Sermon not found');
+    }
+    return { id, deleted: true };
   }
 
+  /**
+   * Tenant-scoped featured update. First confirms the target sermon belongs to this tenant
+   * BEFORE clearing other featured flags — otherwise an attacker could wipe a victim
+   * tenant's featured flag by knowing nothing more than any of their sermon ids.
+   */
   async setFeaturedSermon(id: string) {
-    await this.prisma.sermon.updateMany({ where: { tenantId: TENANT_ID }, data: { isFeatured: false } });
+    const target = await this.prisma.sermon.findFirst({
+      where: { id, tenantId: this.tenantId },
+      select: { id: true },
+    });
+    if (!target) {
+      throw new NotFoundException('Sermon not found');
+    }
+    await this.prisma.sermon.updateMany({
+      where: { tenantId: this.tenantId, isFeatured: true },
+      data: { isFeatured: false },
+    });
     const sermon = await this.prisma.sermon.update({
       where: { id },
       data: { isFeatured: true, updatedAt: new Date() },
@@ -373,7 +405,7 @@ export class SermonsService {
   async getPublishedSermons(opts?: { series?: string; search?: string; limit?: number }) {
     const sermons = await this.prisma.sermon.findMany({
       where: {
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         status: SermonStatus.PUBLISHED,
         ...(opts?.series && { seriesSlug: opts.series }),
         ...(opts?.search && {
@@ -399,7 +431,7 @@ export class SermonsService {
 
   async getSermonBySlug(slug: string) {
     const sermon = await this.prisma.sermon.findFirst({
-      where: { slug, tenantId: TENANT_ID },
+      where: { slug, tenantId: this.tenantId },
       include: {
         DiscussionQuestion: {
           orderBy: { order: 'asc' },
@@ -431,7 +463,7 @@ export class SermonsService {
 
   async getFeaturedSermon() {
     const sermon = await this.prisma.sermon.findFirst({
-      where: { tenantId: TENANT_ID, status: SermonStatus.PUBLISHED, isFeatured: true },
+      where: { tenantId: this.tenantId, status: SermonStatus.PUBLISHED, isFeatured: true },
       include: {
         ...SERMON_EPISODES_INCLUDE,
         ...SERMON_COUNTS_INCLUDE,
@@ -443,7 +475,7 @@ export class SermonsService {
 
   async getLatestSermons(limit = 3) {
     const sermons = await this.prisma.sermon.findMany({
-      where: { tenantId: TENANT_ID, status: SermonStatus.PUBLISHED },
+      where: { tenantId: this.tenantId, status: SermonStatus.PUBLISHED },
       orderBy: { date: 'desc' },
       take: limit,
       include: {
@@ -457,11 +489,7 @@ export class SermonsService {
 
   async getSeriesList() {
     const sermons = await this.prisma.sermon.findMany({
-      where: {
-        tenantId: TENANT_ID,
-        status: SermonStatus.PUBLISHED,
-        OR: [{ type: SermonType.SERIES }, { series: { not: null } }],
-      },
+      where: { tenantId: this.tenantId, status: SermonStatus.PUBLISHED, series: { not: null } },
       orderBy: { date: 'desc' },
       include: {
         ...SERMON_EPISODES_INCLUDE,
@@ -474,7 +502,7 @@ export class SermonsService {
 
   async getEpisodeBySermonId(sermonId: string, episodeId: string) {
     const sermon = await this.prisma.sermon.findFirst({
-      where: { id: sermonId, tenantId: TENANT_ID },
+      where: { id: sermonId, tenantId: this.tenantId },
       include: { Episodes: { orderBy: { order: 'asc' } } },
     });
 
@@ -492,7 +520,7 @@ export class SermonsService {
 
   async getEpisodeBySlug(slug: string, episodeId: string) {
     const sermon = await this.prisma.sermon.findFirst({
-      where: { slug, tenantId: TENANT_ID },
+      where: { slug, tenantId: this.tenantId },
       include: { Episodes: { orderBy: { order: 'asc' } } },
     });
 
@@ -518,7 +546,7 @@ export class SermonsService {
   async getSermonAnalytics() {
     const [sermons, totalSubscribers, totalReactions, totalBookmarks, totalListens] = await Promise.all([
       this.prisma.sermon.findMany({
-        where: { tenantId: TENANT_ID, status: SermonStatus.PUBLISHED },
+        where: { tenantId: this.tenantId, status: SermonStatus.PUBLISHED },
         orderBy: { playCount: 'desc' },
         take: 10,
         select: {
@@ -532,10 +560,10 @@ export class SermonsService {
           _count: { select: { SermonReaction: true, SermonBookmark: true } },
         },
       }),
-      this.prisma.emailSubscriber.count({ where: { tenantId: TENANT_ID } }),
-      this.prisma.sermonReaction.count({ where: { tenantId: TENANT_ID } }),
-      this.prisma.sermonBookmark.count({ where: { tenantId: TENANT_ID } }),
-      this.prisma.listenProgress.count({ where: { tenantId: TENANT_ID, positionSec: { gt: 0 } } }),
+      this.prisma.emailSubscriber.count({ where: { tenantId: this.tenantId } }),
+      this.prisma.sermonReaction.count({ where: { tenantId: this.tenantId } }),
+      this.prisma.sermonBookmark.count({ where: { tenantId: this.tenantId } }),
+      this.prisma.listenProgress.count({ where: { tenantId: this.tenantId, positionSec: { gt: 0 } } }),
     ]);
 
     return { sermons, totalSubscribers, totalReactions, totalBookmarks, totalListens };
@@ -549,11 +577,11 @@ export class SermonsService {
       totalDrafted,
       totalPublished,
     ] = await this.prisma.$transaction([
-      this.prisma.sermon.count({ where: { tenantId: TENANT_ID } }),
-      this.prisma.sermon.count({ where: { tenantId: TENANT_ID, type: SermonType.SERIES } }),
-      this.prisma.sermon.count({ where: { tenantId: TENANT_ID, type: SermonType.SINGLE } }),
-      this.prisma.sermon.count({ where: { tenantId: TENANT_ID, status: SermonStatus.DRAFT } }),
-      this.prisma.sermon.count({ where: { tenantId: TENANT_ID, status: SermonStatus.PUBLISHED } }),
+      this.prisma.sermon.count({ where: { tenantId: this.tenantId } }),
+      this.prisma.sermon.count({ where: { tenantId: this.tenantId, type: SermonType.SERIES } }),
+      this.prisma.sermon.count({ where: { tenantId: this.tenantId, type: SermonType.SINGLE } }),
+      this.prisma.sermon.count({ where: { tenantId: this.tenantId, status: SermonStatus.DRAFT } }),
+      this.prisma.sermon.count({ where: { tenantId: this.tenantId, status: SermonStatus.PUBLISHED } }),
     ]);
 
     return {
@@ -567,15 +595,15 @@ export class SermonsService {
 
   async subscribeEmail(email: string) {
     return this.prisma.emailSubscriber.upsert({
-      where: { tenantId_email: { tenantId: TENANT_ID, email } },
-      create: { id: randomUUID(), tenantId: TENANT_ID, email },
+      where: { tenantId_email: { tenantId: this.tenantId, email } },
+      create: { id: randomUUID(), tenantId: this.tenantId, email },
       update: {},
     });
   }
 
   async getSubscribers() {
     return this.prisma.emailSubscriber.findMany({
-      where: { tenantId: TENANT_ID },
+      where: { tenantId: this.tenantId },
       orderBy: { subscribedAt: 'desc' },
     });
   }
@@ -583,7 +611,7 @@ export class SermonsService {
   async publishScheduledSermons() {
     return this.prisma.sermon.updateMany({
       where: {
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         status: SermonStatus.SCHEDULED,
         scheduledFor: { lte: new Date() },
       },
@@ -619,7 +647,7 @@ export class SermonsService {
 
     return this.prisma.sermonReaction.upsert({
       where: { sermonId_memberId: { sermonId, memberId } },
-      create: { id: randomUUID(), tenantId: TENANT_ID, sermonId, memberId, type },
+      create: { id: randomUUID(), tenantId: this.tenantId, sermonId, memberId, type },
       update: { type },
     });
   }
@@ -634,14 +662,14 @@ export class SermonsService {
       return false;
     }
 
-    await this.prisma.sermonBookmark.create({ data: { id: randomUUID(), tenantId: TENANT_ID, sermonId, memberId } });
+    await this.prisma.sermonBookmark.create({ data: { id: randomUUID(), tenantId: this.tenantId, sermonId, memberId } });
     return true;
   }
 
   async upsertNote(memberId: string, sermonId: string, content: string) {
     return this.prisma.sermonNote.upsert({
       where: { sermonId_memberId: { sermonId, memberId } },
-      create: { id: randomUUID(), tenantId: TENANT_ID, sermonId, memberId, content, updatedAt: new Date() },
+      create: { id: randomUUID(), tenantId: this.tenantId, sermonId, memberId, content, updatedAt: new Date() },
       update: { content, updatedAt: new Date() },
     });
   }
@@ -651,7 +679,7 @@ export class SermonsService {
       where: { sermonId_memberId: { sermonId, memberId } },
       create: {
         id: randomUUID(),
-        tenantId: TENANT_ID,
+        tenantId: this.tenantId,
         sermonId,
         memberId,
         positionSec,

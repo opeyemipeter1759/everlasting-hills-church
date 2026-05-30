@@ -12,6 +12,8 @@ import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Public } from './decorators/public.decorator';
+import { CurrentUser } from './decorators/current-user.decorator';
+import type { AuthUser } from './types/auth-user';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -24,7 +26,24 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'User Login', description: 'Authenticate user with email and password' })
   @ApiBody({ type: LoginDto })
-  @ApiOkResponse({ description: 'User logged in', schema: { example: { access_token: 'tok', user: { id: 'user-1', email: 'user@example.com', role: 'MEMBER' }, session: { access_token: 'tok', expires_in: 3600 } } } })
+  @ApiOkResponse({
+    description: 'User logged in',
+    schema: {
+      example: {
+        access_token: 'eyJhbGciOi...',
+        refresh_token: 'eyJhbGciOi...',
+        expires_in: 3600,
+        token_type: 'bearer',
+        user: {
+          id: 'user-uuid',
+          email: 'user@example.com',
+          role: 'MEMBER',
+          fullName: 'Jane Doe',
+          picture: null,
+        },
+      },
+    },
+  })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async login(@Body() body: LoginDto) {
@@ -35,18 +54,51 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'User Logout', description: 'Invalidate the current user session' })
-  @ApiOkResponse({ description: 'User logged out', schema: { example: { success: true, message: 'Logged out successfully' } } })
+  @ApiOkResponse({
+    description: 'User logged out',
+    schema: { example: { success: true, message: 'Logged out successfully' } },
+  })
   @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
   async logout(@Req() request: { headers?: { authorization?: string } }) {
     return this.authService.logout(request.headers?.authorization);
   }
 
+  /**
+   * Returns the current user's identity + their Member profile (if linked).
+   *
+   * Why @CurrentUser instead of reading the header again: the JwtAuthGuard already verified
+   * the JWT signature and looked up the Profile. Re-doing both work here would mean two
+   * DB queries per request. The @CurrentUser decorator just reads what's already on req.user.
+   *
+   * The frontend dashboard calls this as its single source of truth for "who am I".
+   */
   @Get('me')
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Get current user profile' })
-  @ApiOkResponse({ description: 'Current user profile', schema: { example: { id: 'user-1', email: 'user@example.com', role: 'MEMBER', fullName: 'Jane Doe' } } })
+  @ApiOperation({ summary: 'Get current user dashboard payload' })
+  @ApiOkResponse({
+    description: 'Current user profile + member data',
+    schema: {
+      example: {
+        profileId: 'profile-uuid',
+        role: 'MEMBER',
+        tenantId: 'ehc_...',
+        member: {
+          id: 'member-uuid',
+          firstName: 'Jane',
+          lastName: 'Doe',
+          email: 'jane@example.com',
+          phone: '+234...',
+          address: 'Ibadan',
+          dateOfBirth: '1990-01-01T00:00:00.000Z',
+          bio: null,
+          photoUrl: null,
+          joinedAt: '2026-01-01T00:00:00.000Z',
+        },
+      },
+    },
+  })
   @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
-  async me(@Req() request: { headers?: { authorization?: string } }) {
-    return this.authService.getProfile(request.headers?.authorization);
+  async me(@CurrentUser() user: AuthUser) {
+    return this.authService.getMe(user.userId);
   }
 }

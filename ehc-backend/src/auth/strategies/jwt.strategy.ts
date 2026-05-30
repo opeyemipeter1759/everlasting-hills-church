@@ -20,31 +20,25 @@ interface SupabaseJwtPayload {
 /**
  * Verifies Supabase-issued JWTs using JWKS (asymmetric ES256).
  *
- * Why JWKS / asymmetric instead of a shared HS256 secret:
- *  - Supabase migrated this project to ES256 (ECC P-256) signing on 2026-05-20
- *  - We never possess the private key — Supabase signs, we only verify with the public key
- *  - JWKS is fetched once from a well-known URL, cached, and auto-refreshed when Supabase
- *    rotates keys (the JWT carries a `kid` header that points at the right public key)
- *  - Zero secret synchronization between services
+ * This project's Supabase instance was migrated to ES256 (ECC P-256) on 2026-05-20.
+ * We never possess the private key — Supabase signs, we only verify with the public key
+ * fetched from <SUPABASE_URL>/auth/v1/.well-known/jwks.json. jwks-rsa caches the keyset and
+ * auto-refreshes when Supabase rotates (kid header points at the right public key).
  *
- * Cost: one HTTP GET on cold start (~50ms once). Cached thereafter; refresh on unknown kid.
- *
- * Profile lookup still happens on every request to resolve app role. Cacheable in Week 3+.
+ * Cost: one HTTP GET on cold start (~50ms once), cached thereafter.
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly logger = new Logger(JwtStrategy.name);
 
   constructor(
-    config: ConfigService,
+    config: ConfigService<Env, true>,
     private readonly prisma: PrismaService,
   ) {
     const supabaseUrl = config.get('SUPABASE_URL', { infer: true });
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      // Resolves the signing public key per-token via Supabase's JWKS endpoint.
-      // jwks-rsa handles caching, rate limiting, and rotation transparently.
       secretOrKeyProvider: passportJwtSecret({
         cache: true,
         rateLimit: true,
@@ -52,7 +46,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         jwksUri: `${supabaseUrl}/auth/v1/.well-known/jwks.json`,
       }),
       algorithms: ['ES256'],
-      // Supabase JWTs use "authenticated" as the audience
       audience: 'authenticated',
       issuer: `${supabaseUrl}/auth/v1`,
     });
@@ -60,6 +53,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   /**
    * Passport calls this AFTER signature + expiry + audience + issuer pass.
+   * Whatever we return is attached to req.user.
    */
   async validate(payload: SupabaseJwtPayload): Promise<AuthUser> {
     if (!payload?.sub) {
@@ -68,6 +62,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const email = String(payload.email ?? '');
 
+    // Single query: profile + linked member, by Supabase user id.
     const profile = await this.prisma.profile.findUnique({
       where: { userId: payload.sub },
       select: {
