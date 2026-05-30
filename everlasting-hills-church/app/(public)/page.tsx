@@ -4,7 +4,6 @@ import ScriptureSection from "@/components/home/ScriptureSection";
 import ServiceSection from "@/components/home/ServiceSection";
 import CommunitySection from "@/components/home/CommunitySection";
 import ContactSection from "@/components/home/ContactSection";
-import GivingSection from "@/components/home/GivingSection";
 import HeroSection from "@/components/home/HeroSection";
 import SermonsSection from "@/components/home/SermonsSection";
 import AttendanceSection from "@/components/home/AttendanceSection";
@@ -15,12 +14,16 @@ export const metadata = {
   description: "A church family in Ibadan, Nigeria. Join us Sunday for service.",
 };
 
-// Section order chosen for narrative flow:
-//   Hero → About/Culture/Scripture (who we are)
-//   Service (when/where)
-//   Sermons (what we preach) + Attendance (engagement CTA)
-//   Testimonials (social proof)
-//   Community + Giving + Contact (calls to action)
+/**
+ * Public homepage.
+ *
+ * Section order (top → bottom):
+ *   Hero → About → Culture → Scripture → Services → Sermons → Attendance →
+ *   Testimonials → Community → Contact
+ *
+ * The bottom slab (Directions → Giving → Footer) lives in the public layout
+ * (see app/(public)/layout.tsx → PageFooter) so every public page surfaces it.
+ */
 export default function HomePage() {
   return (
     <main className="min-h-screen flex overflow-x-hidden flex-col bg-church-dark">
@@ -33,7 +36,6 @@ export default function HomePage() {
       <AttendanceSection />
       <TestimonialsSection />
       <CommunitySection />
-      <GivingSection />
       <ContactSection />
     </main>
   );
