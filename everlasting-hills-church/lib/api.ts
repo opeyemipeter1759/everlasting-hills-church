@@ -86,6 +86,9 @@ export function useLatestSermons() {
   return useQuery({
     queryKey: ["sermons", "latest"],
     queryFn: () => api.get<LatestSermon[]>("/sermons/latest"),
+    // Axios needs an absolute base URL; skip the query on the server where
+    // NEXT_PUBLIC_API_BASE_URL may not be set and relative URLs fail in Node.
+    enabled: typeof window !== "undefined",
   });
 }
 
@@ -93,6 +96,7 @@ export function useSermons(filters: { q?: string; tag?: string; page?: number; p
   return useQuery({
     queryKey: ["sermons", "list", filters],
     queryFn: () => api.get<LatestSermon[]>('/sermons', filters),
+    enabled: typeof window !== "undefined",
   });
 }
 

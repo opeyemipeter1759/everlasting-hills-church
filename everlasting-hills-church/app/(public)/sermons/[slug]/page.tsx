@@ -31,8 +31,9 @@ async function fetchSermon(slug: string): Promise<SermonDetailRaw | null> {
       revalidate: 60,
     });
   } catch (err) {
-    if ((err as ApiError).status === 404) return null;
-    throw err;
+    // Treat any failure (404, 5xx, network error) as "not found" so visitors
+    // see a clean 404 instead of an unhandled server exception.
+    return null;
   }
 }
 
@@ -46,11 +47,9 @@ async function fetchMemberContextIfSignedIn(
       `/sermons/me/${sermonId}/context`,
       { cache: "no-store" },
     );
-  } catch (err) {
-    // 401/403 = visitor isn't actually signed in despite cookie; treat as guest
-    const status = (err as ApiError).status;
-    if (status === 401 || status === 403) return null;
-    throw err;
+  } catch {
+    // Any error (401, 403, network failure) → treat as unauthenticated guest.
+    return null;
   }
 }
 
