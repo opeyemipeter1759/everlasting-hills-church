@@ -2,11 +2,19 @@
 
 import { useState, useEffect } from "react";
 import { getNextService, isLiveNow, isServiceDay } from "../../utils/ServiceUtils";
-import { useDirections } from "../../utils/UseDirection";
 import ServiceHero from "./ServiceHero";
 import ServiceCards from "./ServiceCard";
-import DirectionsModal from "./DirectionModal";
 
+/**
+ * Service schedule section.
+ *
+ * Used to also embed "Get directions" — that's been split out into
+ * DirectionsSection (which now lives in the global PageFooter slab so it appears
+ * on every public + auth page, not just the homepage).
+ *
+ * ServiceHero still accepts onGetDirections as a prop; we pass an anchor scroll
+ * to #directions so the hero CTA still works.
+ */
 export default function ServiceSection() {
   const [now, setNow] = useState<Date>(new Date());
 
@@ -16,13 +24,16 @@ export default function ServiceSection() {
     return () => clearInterval(tick);
   }, []);
 
-  const nextService    = getNextService(now);
-  const live           = isLiveNow(now);
-  const isSundayToday  = isServiceDay(now, "sunday");
-  const isWedToday     = isServiceDay(now, "wednesday");
-  const headingText    = `Join us this ${nextService.label}`;
+  const nextService = getNextService(now);
+  const live = isLiveNow(now);
+  const isSundayToday = isServiceDay(now, "sunday");
+  const isWedToday = isServiceDay(now, "wednesday");
+  const headingText = `Join us this ${nextService.label}`;
 
-  const directions = useDirections();
+  function scrollToDirections() {
+    const el = document.getElementById("directions");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <section id="services" className="py-24 md:py-32 bg-[#FFF4F6]">
@@ -31,7 +42,7 @@ export default function ServiceSection() {
           <ServiceHero
             headingText={headingText}
             isLive={live}
-            onGetDirections={directions.handleGetDirections}
+            onGetDirections={scrollToDirections}
           />
           <ServiceCards
             isSundayToday={isSundayToday}
@@ -40,18 +51,6 @@ export default function ServiceSection() {
           />
         </div>
       </div>
-
-      {directions.showMap && (
-        <DirectionsModal
-          travelMode={directions.travelMode}
-          userLocation={directions.userLocation}
-          locationError={directions.locationError}
-          routeInfo={directions.routeInfo}
-          loadingRoute={directions.loadingRoute}
-          onClose={() => directions.setShowMap(false)}
-          onModeChange={directions.handleModeChange}
-        />
-      )}
     </section>
   );
 }
