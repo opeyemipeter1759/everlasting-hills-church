@@ -300,14 +300,13 @@ export class AuthService implements OnModuleInit {
     if (!accessToken) throw new UnauthorizedException('Access token is required');
 
     // Step 1: verify the token and resolve the user id.
-    const scoped = createClient(this.supabaseUrl, this.supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-    const { data: userData, error: userError } = await scoped.auth.getUser();
+    // auth.getUser() WITHOUT a jwt argument reads from the internal session store, which is
+    // always empty here (persistSession: false + no setSession call) → "Auth session missing!".
+    // Passing the token as the argument validates it server-side without needing a local session.
+    const { data: userData, error: userError } = await this.anonClient.auth.getUser(accessToken);
     if (userError || !userData?.user) {
       this.logger.warn(
-        `Password change rejected — invalid session: ${userError?.message ?? 'no user'}`,
+        `Password change rejected — invalid token: ${userError?.message ?? 'no user'}`,
       );
       throw new UnauthorizedException('Your session is no longer valid. Please sign in again.');
     }
