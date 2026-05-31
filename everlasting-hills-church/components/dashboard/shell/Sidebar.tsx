@@ -55,39 +55,43 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
   return (
     <aside
       className={[
-        "fixed inset-y-0 left-0 z-50 w-64 bg-[#111111] flex flex-col",
+        "fixed inset-y-0 left-0 z-50 w-64 flex flex-col",
         "transition-transform duration-300 ease-in-out",
         mobileOpen ? "translate-x-0" : "-translate-x-full",
         "md:translate-x-0",
       ].join(" ")}
+      style={{
+        background:
+          "linear-gradient(180deg, #0d0810 0%, #130c10 45%, #1a0c14 100%)",
+      }}
       aria-label="Main navigation"
     >
-      {/* ── Logo ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 px-4 h-16 border-b border-white/[0.06] flex-shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-[#87102C] flex items-center justify-center flex-shrink-0">
+      {/* ── Logo ──────────────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-3 px-4 h-16 border-b border-white/[0.07] flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-[#87102C] flex items-center justify-center flex-shrink-0 shadow-[0_2px_8px_rgba(135,16,44,0.5)]">
           <span className="text-white font-black text-[10px] tracking-tight">EHC</span>
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-white font-semibold text-sm leading-tight truncate">
             Everlasting Hills
           </p>
-          <p className="text-white/25 text-[10px] leading-tight">Church Platform</p>
+          <p className="text-white/30 text-[10px] leading-tight">Church Platform</p>
         </div>
         <button
           onClick={onMobileClose}
-          className="md:hidden p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white/60 transition-colors flex-shrink-0"
+          className="md:hidden p-1.5 rounded-lg hover:bg-white/[0.07] text-white/30 hover:text-white/70 transition-colors flex-shrink-0"
           aria-label="Close navigation"
         >
           <X size={16} />
         </button>
       </div>
 
-      {/* ── Nav items ────────────────────────────────────────────────────── */}
-      <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-5 scrollbar-thin">
+      {/* ── Nav items ──────────────────────────────────────────────────────── */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-thin">
         {visibleGroups.map((group) => (
           <div key={group.section ?? "__personal"}>
             {group.section && (
-              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/20 px-3 mb-1.5">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/25 px-3 mb-2">
                 {group.section}
               </p>
             )}
@@ -101,16 +105,18 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
                     href={item.href}
                     onClick={onMobileClose}
                     className={[
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium",
+                      "flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium",
                       "transition-all duration-150",
                       active
-                        ? "bg-[#87102C] text-white"
-                        : "text-white/50 hover:text-white hover:bg-white/[0.06]",
+                        ? "bg-[#87102C]/90 text-white shadow-[0_2px_8px_rgba(135,16,44,0.45)]"
+                        : "text-white/50 hover:text-white hover:bg-white/[0.07]",
                     ].join(" ")}
                   >
                     <Icon
                       size={15}
-                      className={`flex-shrink-0 ${active ? "text-white" : "text-white/35"}`}
+                      className={`flex-shrink-0 transition-colors ${
+                        active ? "text-white" : "text-white/35"
+                      }`}
                     />
                     <span className="truncate">{item.label}</span>
                   </Link>
@@ -121,10 +127,11 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
         ))}
       </nav>
 
-      {/* ── User section ─────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 p-3 border-t border-white/[0.06]">
-        <div className="flex items-center gap-3 px-2 py-2 rounded-lg mb-2">
-          <div className="w-8 h-8 rounded-full bg-[#87102C] flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">
+      {/* ── User section ───────────────────────────────────────────────────── */}
+      <div className="flex-shrink-0 p-3 border-t border-white/[0.07]">
+        {/* Subtle divider glow */}
+        <div className="flex items-center gap-3 px-2 py-2.5 rounded-xl mb-2 hover:bg-white/[0.05] transition-colors">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#87102C] to-[#6E0C24] flex items-center justify-center flex-shrink-0 text-white text-xs font-bold shadow-[0_2px_6px_rgba(135,16,44,0.4)]">
             {getInitials(user)}
           </div>
           <div className="flex-1 min-w-0">
@@ -142,7 +149,7 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
           </span>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 text-white/25 hover:text-white/60 transition-colors text-xs"
+            className="flex items-center gap-1.5 text-white/25 hover:text-white/70 transition-colors text-xs"
             aria-label="Sign out"
           >
             <LogOut size={13} />

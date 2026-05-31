@@ -98,18 +98,18 @@ function ChipCard({
 }) {
   return (
     <div
-      className={`group bg-white border border-[#E7CDD3]/60 rounded-2xl p-6
-        hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] hover:-translate-y-1
+      className={`group bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-6
+        hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] dark:hover:shadow-[0_8px_40px_rgba(255,255,255,0.03)] hover:-translate-y-1
         transition-all duration-300 flex flex-col gap-4 h-full ${className}`}
     >
-      <div className="w-11 h-11 rounded-xl bg-[#FFE8ED] flex items-center justify-center flex-shrink-0">
-        <Icon size={17} className="text-[#87102C]" aria-hidden="true" />
+      <div className="w-11 h-11 rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/25 flex items-center justify-center flex-shrink-0">
+        <Icon size={17} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
       </div>
       <div className="flex-1">
-        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] mb-1.5">
+        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1] mb-1.5">
           {label}
         </p>
-        <div className="text-[15px] font-semibold text-[#111] leading-snug break-words">
+        <div className="text-[15px] font-semibold text-[#111] dark:text-white leading-snug break-words">
           {value}
         </div>
       </div>
@@ -162,18 +162,18 @@ function MembershipCard({ role }: { role: string }) {
  */
 function InsightChip({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
-    <div className="flex items-center gap-3.5 bg-white border border-[#E7CDD3]/60 rounded-2xl p-4 sm:p-5
-      hover:border-[#E7CDD3] hover:shadow-[0_4px_24px_rgba(135,16,44,0.07)] hover:-translate-y-0.5
+    <div className="flex items-center gap-3.5 bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-4 sm:p-5
+      hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_4px_24px_rgba(135,16,44,0.07)] dark:hover:shadow-none hover:-translate-y-0.5
       transition-all duration-300"
     >
-      <div className="w-10 h-10 rounded-xl bg-[#FFE8ED] flex items-center justify-center flex-shrink-0">
-        <Icon size={15} className="text-[#87102C]" aria-hidden="true" />
+      <div className="w-10 h-10 rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/25 flex items-center justify-center flex-shrink-0">
+        <Icon size={15} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
       </div>
       <div className="min-w-0">
-        <p className="text-[9px] tracking-[0.18em] uppercase font-semibold text-[#87102C]">
+        <p className="text-[9px] tracking-[0.18em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
           {label}
         </p>
-        <p className="text-sm font-bold text-[#111] mt-0.5 truncate">{value}</p>
+        <p className="text-sm font-bold text-[#111] dark:text-white mt-0.5 truncate">{value}</p>
       </div>
     </div>
   );
@@ -204,21 +204,21 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
         className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
       >
         <div>
-          <p className="text-[#87102C] text-xs tracking-[0.2em] uppercase font-semibold mb-2">
+          <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold mb-2">
             Member Portal
           </p>
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#111] tracking-tight leading-[1.1] text-balance">
+          <h1 className="text-3xl sm:text-4xl font-bold text-[#111] dark:text-white tracking-tight leading-[1.1] text-balance">
             My Profile
           </h1>
         </div>
 
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-[#8a7e80]">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-[#8a7e80] dark:text-white/45">
           <LayoutDashboard size={14} aria-hidden="true" />
-          <Link href="/dashboard" className="hover:text-[#111] transition-colors">
+          <Link href="/dashboard" className="hover:text-[#111] dark:hover:text-white transition-colors">
             Dashboard
           </Link>
-          <span aria-hidden="true" className="text-[#cbb9bd]">/</span>
-          <span className="font-semibold text-[#87102C]">Profile</span>
+          <span aria-hidden="true" className="text-[#cbb9bd] dark:text-white/20">/</span>
+          <span className="font-semibold text-[#87102C] dark:text-[#FFB3C1]">Profile</span>
         </nav>
       </motion.div>
 
@@ -360,11 +360,11 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
           <div className="flex items-center gap-3 mb-5">
             <h2
               id="contact-section-label"
-              className="text-[#87102C] text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0"
+              className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0"
             >
               How we reach you
             </h2>
-            <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60" />
+            <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
           </div>
         </ScrollReveal>
 
@@ -385,12 +385,12 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
                 profile.email ? (
                   <a
                     href={`mailto:${profile.email}`}
-                    className="hover:text-[#87102C] transition-colors break-all"
+                    className="hover:text-[#87102C] dark:hover:text-[#FFB3C1] transition-colors break-all"
                   >
                     {profile.email}
                   </a>
                 ) : (
-                  <span className="text-[#b8a8ac] italic font-normal text-sm">Not set</span>
+                  <span className="text-[#b8a8ac] dark:text-white/30 italic font-normal text-sm">Not set</span>
                 )
               }
             />
@@ -405,12 +405,12 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
                 profile.phone ? (
                   <a
                     href={`tel:${profile.phone}`}
-                    className="hover:text-[#87102C] transition-colors"
+                    className="hover:text-[#87102C] dark:hover:text-[#FFB3C1] transition-colors"
                   >
                     {profile.phone}
                   </a>
                 ) : (
-                  <span className="text-[#b8a8ac] italic font-normal text-sm">Not set</span>
+                  <span className="text-[#b8a8ac] dark:text-white/30 italic font-normal text-sm">Not set</span>
                 )
               }
             />
@@ -438,7 +438,7 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
                 label="Home address"
                 value={
                   profile.address ?? (
-                    <span className="text-[#b8a8ac] italic font-normal text-sm">Not set</span>
+                    <span className="text-[#b8a8ac] dark:text-white/30 italic font-normal text-sm">Not set</span>
                   )
                 }
               />
@@ -457,16 +457,16 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
           <div className="flex items-center gap-3 mb-5">
             <h2
               id="bio-section-title"
-              className="text-[#87102C] text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0"
+              className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0"
             >
               In their words
             </h2>
-            <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60" />
+            <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
           </div>
 
-          <div className="relative overflow-hidden bg-white border border-[#E7CDD3]/60 rounded-2xl
+          <div className="relative overflow-hidden bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl
             p-8 sm:p-10
-            hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.06)]
+            hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_8px_40px_rgba(135,16,44,0.06)] dark:hover:shadow-none
             transition-all duration-300">
 
             {/* Decorative quote mark */}
@@ -480,33 +480,33 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
             <div className="relative z-10">
               {/* Card header */}
               <div className="flex items-center gap-3 mb-7">
-                <div className="w-11 h-11 rounded-xl bg-[#FFE8ED] flex items-center justify-center flex-shrink-0">
-                  <Sparkles size={17} className="text-[#87102C]" aria-hidden="true" />
+                <div className="w-11 h-11 rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/25 flex items-center justify-center flex-shrink-0">
+                  <Sparkles size={17} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C]">
+                  <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
                     Bio
                   </p>
-                  <h3 id="bio-heading" className="text-base font-bold text-[#111] -mt-0.5">
+                  <h3 id="bio-heading" className="text-base font-bold text-[#111] dark:text-white -mt-0.5">
                     A short word
                   </h3>
                 </div>
               </div>
 
               {profile.bio ? (
-                <p className="text-base sm:text-lg leading-relaxed text-[#3a2d30]
+                <p className="text-base sm:text-lg leading-relaxed text-[#3a2d30] dark:text-white/75
                   whitespace-pre-line max-w-[60ch]">
                   {profile.bio}
                 </p>
               ) : (
                 <div className="max-w-[52ch] space-y-4">
-                  <p className="text-base text-[#8a7e80] leading-relaxed">
+                  <p className="text-base text-[#8a7e80] dark:text-white/45 leading-relaxed">
                     You haven&apos;t added a bio yet. Share a line about your walk with God,
                     your tribe at EHC, or what you&apos;re carrying in this season.
                   </p>
                   <Link
                     href="/dashboard/settings"
-                    className="group inline-flex items-center gap-2 text-sm font-semibold text-[#87102C]
+                    className="group inline-flex items-center gap-2 text-sm font-semibold text-[#87102C] dark:text-[#FFB3C1]
                       hover:gap-3 transition-all
                       focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#87102C]"
                   >
@@ -532,19 +532,19 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
       <ScrollReveal delay={0.05}>
         <section
           aria-labelledby="insights-heading"
-          className="bg-[#FFF4F6] border border-[#E7CDD3]/40 rounded-2xl p-7 sm:p-9"
+          className="bg-[#FFF4F6] dark:bg-white/[0.04] border border-[#E7CDD3]/40 dark:border-white/[0.07] rounded-2xl p-7 sm:p-9"
         >
           <div className="mb-7">
-            <p className="text-[#87102C] text-xs tracking-[0.2em] uppercase font-semibold mb-2">
+            <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold mb-2">
               Member Insights
             </p>
             <h3
               id="insights-heading"
-              className="text-xl sm:text-2xl font-bold text-[#111] tracking-tight"
+              className="text-xl sm:text-2xl font-bold text-[#111] dark:text-white tracking-tight"
             >
               Your story at EHC
             </h3>
-            <p className="text-sm text-[#8a7e80] mt-2 leading-relaxed max-w-[48ch]">
+            <p className="text-sm text-[#8a7e80] dark:text-white/45 mt-2 leading-relaxed max-w-[48ch]">
               A snapshot of your journey and engagement with the Everlasting Hills community.
             </p>
           </div>
@@ -581,18 +581,18 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
       ──────────────────────────────────────────────────────────────────────── */}
       <ScrollReveal delay={0.05}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5
-          p-6 sm:p-8 bg-white border border-[#E7CDD3]/60 rounded-2xl
-          hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.06)]
+          p-6 sm:p-8 bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl
+          hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_8px_40px_rgba(135,16,44,0.06)] dark:hover:shadow-none
           transition-all duration-300">
 
           {/* Church identity */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#FFE8ED] flex items-center justify-center flex-shrink-0">
-              <Users size={19} className="text-[#87102C]" aria-hidden="true" />
+            <div className="w-12 h-12 rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/25 flex items-center justify-center flex-shrink-0">
+              <Users size={19} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
             </div>
             <div>
-              <p className="text-sm font-bold text-[#111]">Part of the EHC Family</p>
-              <p className="text-xs text-[#8a7e80] mt-0.5">
+              <p className="text-sm font-bold text-[#111] dark:text-white">Part of the EHC Family</p>
+              <p className="text-xs text-[#8a7e80] dark:text-white/45 mt-0.5">
                 Everlasting Hills Church · Ibadan, Nigeria
               </p>
             </div>
@@ -603,8 +603,8 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
             <a
               href="/prayer-request"
               className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-full
-                border border-[#E7CDD3] text-[#87102C] text-sm font-semibold
-                hover:bg-[#FFF4F6] transition-colors
+                border border-[#E7CDD3] dark:border-white/20 text-[#87102C] dark:text-white/80 text-sm font-semibold
+                hover:bg-[#FFF4F6] dark:hover:bg-white/[0.07] transition-colors
                 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#87102C]"
             >
               Submit Prayer

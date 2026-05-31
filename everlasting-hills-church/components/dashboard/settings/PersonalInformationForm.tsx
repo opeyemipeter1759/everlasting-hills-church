@@ -97,10 +97,7 @@ export default function PersonalInformationForm({ user }: Props) {
         phone: parsed.data.phone || null,
         bio: parsed.data.bio || null,
       });
-      // Refresh the cookie session so the sidebar/header pick up the new full name.
-      patchFrontendSession({
-        fullName: parsed.data.fullName,
-      });
+      patchFrontendSession({ fullName: parsed.data.fullName });
       setSaved(true);
       reset(values, { keepValues: true });
       window.setTimeout(() => setSaved(false), 3000);
@@ -124,12 +121,12 @@ export default function PersonalInformationForm({ user }: Props) {
     <form
       onSubmit={handleSubmit(onSubmit)}
       noValidate
-      className="bg-white border border-[#E7CDD3]/60 rounded-2xl shadow-[0_1px_2px_rgba(135,16,44,0.04)]"
+      className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl shadow-[0_1px_2px_rgba(135,16,44,0.04)] dark:shadow-none"
     >
       {/* Card header */}
-      <div className="px-6 sm:px-8 pt-7 pb-5 border-b border-[#E7CDD3]/40">
-        <h2 className="text-lg font-bold text-[#111]">Personal Information</h2>
-        <p className="text-xs text-[#8a7e80] mt-1">
+      <div className="px-6 sm:px-8 pt-7 pb-5 border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
+        <h2 className="text-lg font-bold text-[#111] dark:text-white">Personal Information</h2>
+        <p className="text-xs text-[#8a7e80] dark:text-white/45 mt-1">
           Update how the church family sees you.
         </p>
       </div>
@@ -164,20 +161,20 @@ export default function PersonalInformationForm({ user }: Props) {
           disabled
           {...register("email")}
           hint="Your sign-in email — contact an admin to change it"
-          className="!bg-[#FFF4F6]"
+          className="!bg-[#FFF4F6] dark:!bg-white/[0.03]"
         />
 
-        {/* Role badge in place of the meaningless "Username" from the reference */}
+        {/* Role badge */}
         <div>
-          <label className="block text-xs font-semibold text-[#5A4A4D] mb-2 tracking-wide">
+          <label className="block text-xs font-semibold text-[#5A4A4D] dark:text-white/60 mb-2 tracking-wide">
             Role
           </label>
-          <div className="w-full text-sm bg-[#FFF4F6] border border-[#E7CDD3]/60 rounded-xl px-4 py-3 flex items-center justify-between">
-            <span className="font-semibold text-[#87102C] inline-flex items-center gap-2">
+          <div className="w-full text-sm bg-[#FFF4F6] dark:bg-white/[0.04] border border-[#E7CDD3]/60 dark:border-white/[0.08] rounded-xl px-4 py-3 flex items-center justify-between">
+            <span className="font-semibold text-[#87102C] dark:text-[#FFB3C1] inline-flex items-center gap-2">
               <ShieldCheck size={14} />
               {roleLabel}
             </span>
-            <span className="text-[10px] tracking-[0.2em] uppercase text-[#8a7e80] font-semibold">
+            <span className="text-[10px] tracking-[0.2em] uppercase text-[#8a7e80] dark:text-white/35 font-semibold">
               Read-only
             </span>
           </div>
@@ -202,8 +199,8 @@ export default function PersonalInformationForm({ user }: Props) {
           <div
             className={`mb-4 rounded-xl px-4 py-3 text-sm flex items-start gap-2.5 ${
               serverError
-                ? "bg-red-50 border border-red-200 text-red-700"
-                : "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                ? "bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400"
+                : "bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
             }`}
             role={serverError ? "alert" : "status"}
           >
@@ -217,14 +214,14 @@ export default function PersonalInformationForm({ user }: Props) {
             type="button"
             onClick={handleCancel}
             disabled={isSubmitting || !isDirty}
-            className="px-5 py-2.5 rounded-xl border border-[#E7CDD3] text-[#5A4A4D] text-sm font-semibold hover:bg-[#FFF4F6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-5 py-2.5 rounded-xl border border-[#E7CDD3] dark:border-white/[0.14] text-[#5A4A4D] dark:text-white/70 text-sm font-semibold hover:bg-[#FFF4F6] dark:hover:bg-white/[0.07] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#87102C]/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"
+            className="px-6 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#87102C]/25 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"
           >
             {isSubmitting ? "Saving…" : "Save"}
           </button>

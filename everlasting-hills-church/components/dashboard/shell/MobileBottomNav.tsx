@@ -58,7 +58,7 @@ export default function MobileBottomNav({ user }: { user: SessionUser }) {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-[#0d0810]/90 dark:backdrop-blur-md border-t border-gray-200 dark:border-white/[0.07]"
       aria-label="Mobile navigation"
     >
       <div className="flex items-center justify-around h-16 px-2">
@@ -72,7 +72,9 @@ export default function MobileBottomNav({ user }: { user: SessionUser }) {
               className={[
                 "flex flex-col items-center justify-center gap-1 flex-1 h-full min-w-0 px-1",
                 "transition-colors duration-150",
-                active ? "text-[#87102C]" : "text-gray-400",
+                active
+                  ? "text-[#87102C] dark:text-[#FFB3C1]"
+                  : "text-gray-400 dark:text-white/35",
               ].join(" ")}
             >
               <Icon size={20} strokeWidth={active ? 2.5 : 1.75} />

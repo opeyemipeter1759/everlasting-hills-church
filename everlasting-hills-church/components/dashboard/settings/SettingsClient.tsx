@@ -32,25 +32,25 @@ export default function SettingsClient({ user }: Props) {
         className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
       >
         <div>
-          <p className="text-[10px] tracking-[0.28em] uppercase font-semibold text-[#87102C]/80 mb-1.5">
+          <p className="text-[10px] tracking-[0.28em] uppercase font-semibold text-[#87102C]/80 dark:text-white/40 mb-1.5">
             Member Portal
           </p>
-          <h1 className="text-3xl font-bold text-[#111] tracking-tight">Settings</h1>
+          <h1 className="text-3xl font-bold text-[#111] dark:text-white tracking-tight">Settings</h1>
         </div>
         <nav
           aria-label="Breadcrumb"
-          className="text-sm flex items-center gap-2 text-[#8a7e80]"
+          className="text-sm flex items-center gap-2 text-[#8a7e80] dark:text-white/45"
         >
           <Link
             href="/dashboard"
-            className="hover:text-[#111] transition-colors"
+            className="hover:text-[#111] dark:hover:text-white transition-colors"
           >
             Dashboard
           </Link>
-          <span aria-hidden="true" className="text-[#cbb9bd]">
+          <span aria-hidden="true" className="text-[#cbb9bd] dark:text-white/20">
             /
           </span>
-          <span className="text-[#87102C] font-semibold">Settings</span>
+          <span className="text-[#87102C] dark:text-[#FFB3C1] font-semibold">Settings</span>
         </nav>
       </motion.header>
 

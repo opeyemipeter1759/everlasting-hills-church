@@ -53,8 +53,6 @@ export default function ProfilePhotoCard({
     try {
       const fd = new FormData();
       fd.append("file", pendingFile);
-      // TODO(backend): /members/me/avatar endpoint not implemented yet.
-      // Expected: multipart/form-data { file } → { photoUrl }
       const res = await apiClient.post<{ photoUrl: string }>(
         "/members/me/avatar",
         fd,
@@ -62,7 +60,6 @@ export default function ProfilePhotoCard({
       );
       const next = res.data.photoUrl;
       setPhotoUrl(next);
-      // Broadcast so the sidebar avatar and top-right dropdown swap instantly.
       patchFrontendSession({ picture: next });
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPendingFile(null);
@@ -117,14 +114,14 @@ export default function ProfilePhotoCard({
 
       <section
         aria-labelledby="photo-card-title"
-        className="bg-white border border-[#E7CDD3]/60 rounded-2xl shadow-[0_1px_2px_rgba(135,16,44,0.04)]"
+        className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl shadow-[0_1px_2px_rgba(135,16,44,0.04)] dark:shadow-none"
       >
         {/* Card header */}
-        <div className="px-6 sm:px-7 pt-7 pb-5 border-b border-[#E7CDD3]/40">
-          <h2 id="photo-card-title" className="text-lg font-bold text-[#111]">
+        <div className="px-6 sm:px-7 pt-7 pb-5 border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
+          <h2 id="photo-card-title" className="text-lg font-bold text-[#111] dark:text-white">
             Your Photo
           </h2>
-          <p className="text-xs text-[#8a7e80] mt-1">
+          <p className="text-xs text-[#8a7e80] dark:text-white/45 mt-1">
             A square PNG or JPG looks best.
           </p>
         </div>
@@ -133,22 +130,22 @@ export default function ProfilePhotoCard({
         <div className="px-6 sm:px-7 pt-6">
           <div className="flex items-center gap-4">
             {currentPreview ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={currentPreview}
                 alt={displayName}
-                className="w-14 h-14 rounded-full object-cover ring-2 ring-[#E7CDD3]/70"
+                className="w-14 h-14 rounded-full object-cover ring-2 ring-[#E7CDD3]/70 dark:ring-white/[0.14]"
               />
             ) : (
               <div
                 aria-hidden="true"
-                className="w-14 h-14 rounded-full bg-[#FFE8ED] text-[#87102C] flex items-center justify-center text-base font-bold ring-2 ring-[#E7CDD3]/70"
+                className="w-14 h-14 rounded-full bg-[#FFE8ED] dark:bg-[#87102C]/25 text-[#87102C] dark:text-[#FFB3C1] flex items-center justify-center text-base font-bold ring-2 ring-[#E7CDD3]/70 dark:ring-white/[0.10]"
               >
                 {fallbackInitials}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#111]">Edit your photo</p>
+              <p className="text-sm font-semibold text-[#111] dark:text-white">Edit your photo</p>
               <div className="flex items-center gap-4 mt-1">
                 <button
                   type="button"
@@ -161,7 +158,7 @@ export default function ProfilePhotoCard({
                     }
                   }}
                   disabled={!photoUrl && !pendingFile}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#87102C] hover:text-[#6E0C24] disabled:text-[#cbb9bd] disabled:cursor-not-allowed transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#87102C] dark:text-[#FFB3C1] hover:text-[#6E0C24] dark:hover:text-white disabled:text-[#cbb9bd] dark:disabled:text-white/25 disabled:cursor-not-allowed transition-colors"
                 >
                   <Trash2 size={12} />
                   Delete
@@ -174,7 +171,7 @@ export default function ProfilePhotoCard({
                     );
                     input?.click();
                   }}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#87102C] hover:text-[#6E0C24] transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#87102C] dark:text-[#FFB3C1] hover:text-[#6E0C24] dark:hover:text-white transition-colors"
                 >
                   <RefreshCw size={12} />
                   Update
@@ -202,8 +199,8 @@ export default function ProfilePhotoCard({
             <div
               className={`mb-4 rounded-xl px-4 py-3 text-sm flex items-start gap-2.5 ${
                 error
-                  ? "bg-red-50 border border-red-200 text-red-700"
-                  : "bg-emerald-50 border border-emerald-200 text-emerald-700"
+                  ? "bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-400"
+                  : "bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
               }`}
               role={error ? "alert" : "status"}
             >
@@ -216,7 +213,7 @@ export default function ProfilePhotoCard({
               type="button"
               onClick={handleCancel}
               disabled={!pendingFile || saving}
-              className="px-5 py-2.5 rounded-xl border border-[#E7CDD3] text-[#5A4A4D] text-sm font-semibold hover:bg-[#FFF4F6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-5 py-2.5 rounded-xl border border-[#E7CDD3] dark:border-white/[0.14] text-[#5A4A4D] dark:text-white/70 text-sm font-semibold hover:bg-[#FFF4F6] dark:hover:bg-white/[0.07] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Cancel
             </button>
@@ -224,7 +221,7 @@ export default function ProfilePhotoCard({
               type="button"
               onClick={handleSave}
               disabled={!pendingFile || saving}
-              className="px-6 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#87102C]/20 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"
+              className="px-6 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#87102C]/25 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 transition-all duration-200"
             >
               {saving ? "Saving…" : "Save"}
             </button>
