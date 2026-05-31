@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { ContactDto } from './dto/contact.dto';
 import { FirstTimerDto } from './dto/first-timer.dto';
 import { PrayerRequestDto } from './dto/prayer-request.dto';
 import { TestimonyDto } from './dto/testimony.dto';
@@ -287,6 +288,59 @@ export class FormsService {
     return {
       success: true,
       message: 'Testimony submitted successfully',
+      data: record,
+    };
+  }
+
+  async submitContact(data: ContactDto) {
+    const normalizedEmail = data.email.trim();
+    const normalizedName = data.name.trim();
+
+    const record = await this.prisma.contactMessage.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        name: normalizedName,
+        email: normalizedEmail,
+        message: data.message.trim(),
+      },
+    });
+
+    const subjectLine = data.subject?.trim()
+      ? `[Contact] ${data.subject.trim()}`
+      : `New contact message from ${normalizedName}`;
+
+    this.dispatchEmail({
+      to: this.adminEmail,
+      subject: subjectLine,
+      text: [
+        `Name: ${normalizedName}`,
+        `Email: ${normalizedEmail}`,
+        `Phone: ${data.phone?.trim() ?? '—'}`,
+        '',
+        'Message:',
+        data.message.trim(),
+      ].join('\n'),
+      tag: 'contact-admin',
+    });
+
+    this.dispatchEmail({
+      to: normalizedEmail,
+      subject: 'We received your message',
+      text: [
+        `Dear ${normalizedName.split(/\s+/)[0]},`,
+        '',
+        'Thanks for reaching out to Everlasting Hills Church. Our team will get back to you shortly.',
+        '',
+        'God bless you,',
+        'Everlasting Hills Church',
+      ].join('\n'),
+      tag: 'contact-visitor',
+    });
+
+    return {
+      success: true,
+      message: 'Contact message submitted successfully',
       data: record,
     };
   }

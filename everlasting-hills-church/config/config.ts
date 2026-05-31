@@ -139,6 +139,7 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "Administration",
     items: [
       { label: "Members",       href: "/dashboard/members",       icon: Users,         minRole: "ADMIN" },
+      { label: "Manage Users",  href: "/dashboard/users",         icon: UserPlus,      minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/attendance",    icon: ClipboardList, minRole: "ADMIN" },

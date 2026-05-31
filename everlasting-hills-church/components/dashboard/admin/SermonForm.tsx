@@ -72,13 +72,20 @@ export default function SermonForm({
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const res = await fetch("/api/sermons/audio", { method: "POST", body: fd });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(json.error ?? "Upload failed"); return; }
-      set("audioUrl", json.data.audioUrl);
-      set("audioKey", json.data.audioKey);
-    } catch { setError("Upload failed. Please try again."); }
-    finally { setUploading(false); }
+      // /sermons/upload-audio expects multipart/form-data — let axios set the boundary header.
+      const { apiClient } = await import("@/lib/api/axios");
+      const res = await apiClient.post<{ audioUrl: string; audioKey: string }>(
+        "/sermons/upload-audio",
+        fd,
+        { headers: { "Content-Type": undefined as unknown as string } },
+      );
+      set("audioUrl", res.data.audioUrl);
+      set("audioKey", res.data.audioKey);
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function addQuestion() {
@@ -130,19 +137,19 @@ export default function SermonForm({
         isFeatured: form.isFeatured,
       };
 
-      const url = form.id ? `/api/sermons/${form.id}` : "/api/sermons";
-      const method = form.id ? "PATCH" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(json.error ?? "Save failed"); return; }
+      const { apiClient } = await import("@/lib/api/axios");
+      if (form.id) {
+        await apiClient.patch(`/sermons/admin/${form.id}`, payload);
+      } else {
+        await apiClient.post("/sermons/admin", payload);
+      }
       router.push("/dashboard/sermons");
       router.refresh();
-    } catch { setError("Network error."); }
-    finally { setSaving(false); }
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Save failed");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

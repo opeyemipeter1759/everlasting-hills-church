@@ -5,7 +5,7 @@ node_modules
 # Next.js build output
 /.next
 /out
-
+/UI-DESIGN-PROMPT
 # Environment variables — NEVER commit these
 .env
 .env.local

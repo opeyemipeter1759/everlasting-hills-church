@@ -9,6 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
+import { ContactDto } from './dto/contact.dto';
 import { FirstTimerDto } from './dto/first-timer.dto';
 import { PrayerRequestDto } from './dto/prayer-request.dto';
 import { TestimonyDto } from './dto/testimony.dto';
@@ -65,5 +66,19 @@ export class FormsController {
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async testimony(@Body() body: TestimonyDto) {
     return this.formsService.submitTestimony(body);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('contact')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Submit Contact Message',
+    description: 'Store a contact message and notify the church team by email.',
+  })
+  @ApiCreatedResponse({ description: 'Contact message submitted' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  async contact(@Body() body: ContactDto) {
+    return this.formsService.submitContact(body);
   }
 }

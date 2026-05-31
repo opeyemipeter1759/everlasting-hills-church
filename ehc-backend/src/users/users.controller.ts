@@ -1,0 +1,93 @@
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { Role } from '@prisma/client';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import type { AuthUser } from '../auth/types/auth-user';
+import { CreateUserDto, UpdateUserDto, UpdateUserRoleDto } from './dto/user.dto';
+import { UsersService } from './users.service';
+
+/**
+ * User management.
+ *
+ * Class-gate at ADMIN — that's the minimum to even SEE this endpoint. The actual
+ * authorization for any specific role action (create PASTOR vs MEMBER, etc.) is
+ * enforced per-call in the service via `canActOnRole`. The gate just keeps
+ * UNIT_LEAD and MEMBER out entirely.
+ */
+@ApiTags('users')
+@Controller('users')
+@Roles(Role.ADMIN)
+@ApiBearerAuth('access-token')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get('assignable-roles')
+  @ApiOperation({ summary: 'Roles the current user can create/assign' })
+  @ApiOkResponse({
+    description: 'Array of roles the actor can assign',
+    schema: { example: ['MEMBER', 'UNIT_LEAD'] },
+  })
+  async assignableRoles(@CurrentUser() user: AuthUser) {
+    return this.usersService.assignableRolesFor(user);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List all users (profile + member)' })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'role', required: false, enum: Role })
+  async list(@Query('search') search?: string, @Query('role') role?: Role) {
+    return this.usersService.list({ search, role });
+  }
+
+  @Post()
+  @ApiOperation({
+    summary: 'Create a new user with a role',
+    description:
+      'Creates a Supabase auth user, Profile, and Member in one flow. Phone number is the initial password.',
+  })
+  @ApiBody({ type: CreateUserDto })
+  @ApiCreatedResponse({ description: 'User created' })
+  async create(@CurrentUser() actor: AuthUser, @Body() body: CreateUserDto) {
+    return this.usersService.create(actor, body);
+  }
+
+  @Patch(':profileId/role')
+  @ApiOperation({ summary: 'Change a user role' })
+  @ApiBody({ type: UpdateUserRoleDto })
+  async updateRole(
+    @CurrentUser() actor: AuthUser,
+    @Param('profileId') profileId: string,
+    @Body() body: UpdateUserRoleDto,
+  ) {
+    return this.usersService.updateRole(actor, profileId, body);
+  }
+
+  @Patch(':profileId')
+  @ApiOperation({ summary: 'Update user profile (name/phone)' })
+  @ApiBody({ type: UpdateUserDto })
+  async updateProfile(
+    @CurrentUser() actor: AuthUser,
+    @Param('profileId') profileId: string,
+    @Body() body: UpdateUserDto,
+  ) {
+    return this.usersService.updateProfile(actor, profileId, body);
+  }
+
+  @Delete(':profileId')
+  @ApiOperation({ summary: 'Deactivate a user (soft delete — sets status=INACTIVE)' })
+  async deactivate(
+    @CurrentUser() actor: AuthUser,
+    @Param('profileId') profileId: string,
+  ) {
+    return this.usersService.deactivate(actor, profileId);
+  }
+}

@@ -160,19 +160,11 @@ function ConvertButton({
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/members/convert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ visitorId: visitor.id }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setError(json.error ?? "Conversion failed");
-        return;
-      }
+      const { apiClient } = await import("@/lib/api/axios");
+      await apiClient.post(`/members/convert-visitor/${visitor.id}`);
       onConverted(visitor.email!);
-    } catch {
-      setError("Network error");
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Conversion failed");
     } finally {
       setLoading(false);
     }
@@ -209,17 +201,18 @@ function ServiceAttendanceRow({ service, isToday }: { service: ServiceRow; isTod
     if (attendees !== null) return;
     setLoadingAttendees(true);
     try {
-      const res = await fetch("/api/attendance/today");
-      if (!res.ok) return;
-      const json = await res.json();
-      // Find the matching service
-      const all: { today: TodayAttendance | null; allServices: ServiceRow[] } = json;
-      const todayData = all.today;
+      const { apiClient } = await import("@/lib/api/axios");
+      const res = await apiClient.get<{ today: TodayAttendance | null; allServices: ServiceRow[] }>(
+        "/attendance/today",
+      );
+      const todayData = res.data.today;
       if (todayData && todayData.service.id === service.id) {
         setAttendees(todayData.records.map((r) => r.member));
       } else {
         setAttendees([]);
       }
+    } catch {
+      setAttendees([]);
     } finally {
       setLoadingAttendees(false);
     }

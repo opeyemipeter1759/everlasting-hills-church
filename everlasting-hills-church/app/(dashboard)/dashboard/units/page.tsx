@@ -1,12 +1,16 @@
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { Network } from "lucide-react";
+import UnitsCmsClient from "@/components/dashboard/admin/UnitsCmsClient";
 
-export default function UnitsPage() {
-  return (
-    <ComingSoon
-      title="Units"
-      description="Manage church departments and ministries. Assign unit leads and track member rosters."
-      icon={Network}
-    />
-  );
+export const metadata = { title: "Units — Dashboard" };
+
+/**
+ * Units management page.
+ *
+ * Server Component shell — the actual master/detail UI lives in a Client Component
+ * because it owns interactive selection, add/remove member forms, and refetch state.
+ *
+ * Middleware gates the route to UNIT_LEAD+; the backend enforces the finer rules
+ * (UNIT_LEAD can only mutate units they lead; ADMIN+ has full control).
+ */
+export default function UnitsAdminPage() {
+  return <UnitsCmsClient />;
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
-import Button from "@/ui/Button";
-import TextAreaForm from "@/components/form/TextAreaForm";
+import { apiClient } from "@/lib/api/axios";
 
 type QuestionFormValues = {
   name: string;
@@ -19,18 +18,15 @@ export default function QuestionForm() {
   } = useForm<QuestionFormValues>();
 
   const onSubmit = async (data: QuestionFormValues) => {
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      throw new Error(json.error ?? "Failed to send. Please try again.");
+    try {
+      // POST /forms/contact — public endpoint, no auth needed
+      await apiClient.post("/forms/contact", { ...data, subject: "Question from website" });
+      reset();
+    } catch (err) {
+      throw new Error(
+        (err as { message?: string }).message ?? "Failed to send. Please try again.",
+      );
     }
-
-    reset();
   };
 
   if (isSubmitSuccessful) {

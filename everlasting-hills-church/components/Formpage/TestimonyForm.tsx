@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { apiClient } from "@/lib/api/axios";
 
 type FormValues = {
   name?: string;
@@ -58,21 +59,20 @@ export default function TestimonyForm() {
     setServerError("");
 
     try {
-      const res = await fetch("/api/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "TESTIMONY", ...data }),
-      });
-
-      if (!res.ok) {
-        const json = await res.json();
-        setServerError(json.error ?? "Something went wrong.");
-        return;
-      }
-
+      // POST /forms/testimony is @Public. Backend's TestimonyDto expects:
+      //   { title?, testimony, name?, email?, phone? }
+      // This form's FormValues use `content` for the body and `phone_number` —
+      // remap so the backend DTO validates.
+      const payload: Record<string, unknown> = {
+        name: data.name,
+        phone: data.phone_number,
+        testimony: data.content,
+      };
+      await apiClient.post("/forms/testimony", payload);
       setSubmitted(true);
-    } catch {
-      setServerError("Network error. Please try again.");
+    } catch (err) {
+      const msg = (err as { message?: string }).message;
+      setServerError(msg ?? "Something went wrong. Please try again.");
     }
   };
 

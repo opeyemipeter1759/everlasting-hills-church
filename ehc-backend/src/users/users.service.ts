@@ -1,0 +1,285 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Role } from '@prisma/client';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { randomUUID } from 'crypto';
+import { PrismaService } from '../prisma/prisma.service';
+import type { Env } from '../config/env.validation';
+import type { AuthUser } from '../auth/types/auth-user';
+import { canActOnRole, assignableRoles } from './role-hierarchy';
+import type { CreateUserDto, UpdateUserDto, UpdateUserRoleDto } from './dto/user.dto';
+
+/**
+ * Admin-only user management. Creates Supabase auth users + their Profile + Member rows
+ * in a single coordinated flow. Hierarchical authorization enforced server-side — even if
+ * the frontend forgets to filter the dropdown, the API will reject.
+ */
+@Injectable()
+export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+  private readonly supabaseUrl: string;
+  private readonly supabaseServiceRoleKey: string | undefined;
+  private supabaseClient: SupabaseClient | null = null;
+  private readonly tenantId: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
+    this.supabaseServiceRoleKey = config.get('SUPABASE_SERVICE_ROLE_KEY', { infer: true }) as
+      | string
+      | undefined;
+    if (!this.supabaseServiceRoleKey) {
+      // Don't throw at boot — let createUser fail at call time with a clear message.
+      // The app still boots; only the create-user path is unavailable.
+      this.logger.warn(
+        'SUPABASE_SERVICE_ROLE_KEY not set — POST /users will fail with 500 until configured',
+      );
+    }
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
+
+  /**
+   * Lazy admin client. The Supabase SDK refuses to construct with an empty key, so
+   * we delay creation until first use and throw a clear error.
+   */
+  private getSupabaseAdmin(): SupabaseClient {
+    if (!this.supabaseServiceRoleKey) {
+      throw new BadRequestException(
+        'User management is not configured on this server. Set SUPABASE_SERVICE_ROLE_KEY.',
+      );
+    }
+    if (!this.supabaseClient) {
+      this.supabaseClient = createClient(this.supabaseUrl, this.supabaseServiceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+    }
+    return this.supabaseClient;
+  }
+
+  // ── Authorization helpers ───────────────────────────────────────────────────
+
+  private assertCanActOn(actor: AuthUser, targetRole: Role) {
+    if (!canActOnRole(actor.role, targetRole)) {
+      throw new ForbiddenException(
+        `Your role (${actor.role ?? 'none'}) cannot manage a ${targetRole}.`,
+      );
+    }
+  }
+
+  /** Exposed via GET /users/assignable-roles for frontend dropdown filtering. */
+  assignableRolesFor(actor: AuthUser): Role[] {
+    return assignableRoles(actor.role);
+  }
+
+  // ── Read ────────────────────────────────────────────────────────────────────
+
+  async list(opts: { search?: string; role?: Role } = {}) {
+    const profiles = await this.prisma.profile.findMany({
+      where: {
+        tenantId: this.tenantId,
+        ...(opts.role && { role: opts.role }),
+        ...(opts.search && {
+          Member: {
+            OR: [
+              { firstName: { contains: opts.search, mode: 'insensitive' } },
+              { lastName: { contains: opts.search, mode: 'insensitive' } },
+              { email: { contains: opts.search, mode: 'insensitive' } },
+            ],
+          },
+        }),
+      },
+      include: {
+        Member: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            photoUrl: true,
+            joinedAt: true,
+            status: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return profiles.map((p) => ({
+      profileId: p.id,
+      userId: p.userId,
+      role: p.role,
+      createdAt: p.createdAt,
+      member: p.Member,
+    }));
+  }
+
+  // ── Create ─────────────────────────────────────────────────────────────────
+
+  async create(actor: AuthUser, data: CreateUserDto) {
+    this.assertCanActOn(actor, data.role);
+
+    const normalizedEmail = data.email.toLowerCase().trim();
+
+    // Reject if email already taken at the Member level (cheap check before hitting Supabase)
+    const existing = await this.prisma.member.findFirst({
+      where: { email: normalizedEmail, tenantId: this.tenantId },
+    });
+    if (existing) {
+      throw new BadRequestException(
+        `A user with email "${normalizedEmail}" already exists`,
+      );
+    }
+
+    // 1) Create Supabase auth user — phone becomes initial password (church convention)
+    const { data: created, error } = await this.getSupabaseAdmin().auth.admin.createUser({
+      email: normalizedEmail,
+      password: data.phone,
+      email_confirm: true,
+      user_metadata: {
+        role: data.role,
+        full_name: `${data.firstName} ${data.lastName}`.trim(),
+      },
+    });
+    if (error || !created.user) {
+      throw new BadRequestException(
+        `Could not create auth user: ${error?.message ?? 'unknown error'}`,
+      );
+    }
+
+    const supabaseUserId = created.user.id;
+
+    // 2) Profile + Member in one transaction — if either fails, roll back the auth user
+    try {
+      const profile = await this.prisma.profile.create({
+        data: {
+          id: randomUUID(),
+          userId: supabaseUserId,
+          tenantId: this.tenantId,
+          role: data.role,
+        },
+      });
+      const member = await this.prisma.member.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          profileId: profile.id,
+          firstName: data.firstName.trim(),
+          lastName: data.lastName.trim(),
+          email: normalizedEmail,
+          phone: data.phone.trim(),
+        },
+      });
+
+      this.logger.log(
+        `[${actor.email}] created ${data.role}: ${normalizedEmail}`,
+      );
+
+      return {
+        profileId: profile.id,
+        userId: supabaseUserId,
+        role: profile.role,
+        member,
+      };
+    } catch (dbError) {
+      // Best-effort rollback so we don't leave an orphan Supabase user
+      this.logger.error(
+        `DB create failed after Supabase user creation — rolling back ${normalizedEmail}`,
+        dbError as Error,
+      );
+      await this.getSupabaseAdmin().auth.admin.deleteUser(supabaseUserId).catch((err) => {
+        this.logger.error(
+          `Failed to roll back Supabase user ${supabaseUserId}: ${(err as Error).message}`,
+        );
+      });
+      throw dbError;
+    }
+  }
+
+  // ── Update role ────────────────────────────────────────────────────────────
+
+  async updateRole(actor: AuthUser, profileId: string, data: UpdateUserRoleDto) {
+    const target = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+      select: { id: true, role: true, tenantId: true, userId: true, Member: { select: { email: true } } },
+    });
+    if (!target || target.tenantId !== this.tenantId) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Actor must out-rank BOTH the current and the new role
+    this.assertCanActOn(actor, target.role);
+    this.assertCanActOn(actor, data.role);
+
+    if (target.role === data.role) {
+      return target; // no-op
+    }
+
+    const updated = await this.prisma.profile.update({
+      where: { id: profileId },
+      data: { role: data.role },
+    });
+
+    this.logger.log(
+      `[${actor.email}] changed ${target.Member?.email ?? target.userId} role: ${target.role} → ${data.role}`,
+    );
+
+    return updated;
+  }
+
+  // ── Update profile (name/phone — doesn't touch role) ───────────────────────
+
+  async updateProfile(actor: AuthUser, profileId: string, data: UpdateUserDto) {
+    const target = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+      select: { id: true, role: true, tenantId: true, Member: { select: { id: true } } },
+    });
+    if (!target || target.tenantId !== this.tenantId) {
+      throw new NotFoundException('User not found');
+    }
+    this.assertCanActOn(actor, target.role);
+
+    if (!target.Member) {
+      throw new BadRequestException('User has no Member record to update');
+    }
+
+    return this.prisma.member.update({
+      where: { id: target.Member.id },
+      data: {
+        ...(data.firstName !== undefined && { firstName: data.firstName.trim() }),
+        ...(data.lastName !== undefined && { lastName: data.lastName.trim() }),
+        ...(data.phone !== undefined && { phone: data.phone.trim() }),
+      },
+    });
+  }
+
+  // ── Delete (soft — mark inactive; keeps audit trail) ───────────────────────
+
+  async deactivate(actor: AuthUser, profileId: string) {
+    const target = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+      select: { id: true, role: true, tenantId: true, Member: { select: { id: true } } },
+    });
+    if (!target || target.tenantId !== this.tenantId) {
+      throw new NotFoundException('User not found');
+    }
+    this.assertCanActOn(actor, target.role);
+
+    if (!target.Member) {
+      throw new BadRequestException('User has no Member record');
+    }
+
+    return this.prisma.member.update({
+      where: { id: target.Member.id },
+      data: { status: 'INACTIVE' },
+    });
+  }
+}

@@ -1,19 +1,48 @@
 "use client";
 
-import { MapPin, Navigation, Car, FootprintsIcon, Bus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MapPin, Navigation, Radio, ArrowUpRight } from "lucide-react";
+import { getNextService, isLiveNow } from "../../utils/ServiceUtils";
 import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
-import { CHURCH } from "@/config/config";
+import { CHURCH, SERVICES } from "@/config/config";
+
+function fmtTime(h: number, m: number) {
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 || 12;
+  return `${hour12}:${m.toString().padStart(2, "0")} ${period}`;
+}
+
+function nextServiceTimeLabel(day: "sunday" | "wednesday"): string {
+  const s = day === "sunday" ? SERVICES.sunday : SERVICES.wednesday;
+  return `${fmtTime(s.startH, s.startM)} — ${fmtTime(s.endH, s.endM)}`;
+}
 
 /**
- * Standalone "How to find us" section.
+ * Footer-slab "Find Us" — "Hills Live" pattern.
  *
- * Used in the global PageFooter slab so every public + auth page surfaces the
- * directions affordance consistently. Was previously bolted onto ServiceSection;
- * splitting it out lets ServiceSection focus purely on schedule + ServiceCards.
+ * What makes this different from a standard contact card: it shows the church's
+ * REAL-TIME service status — live now / counting down to the next service — instead
+ * of a static "Open directions" CTA. Time-aware copy gives users a reason to act NOW
+ * rather than "someday".
+ *
+ * Visual: split — left side has the live status pulse + headline; right side is a
+ * compact bento with address + next-service tile + the directions CTA.
+ *
+ * Voice: tied to EHC's "everlasting hills" identity (Genesis 49:26) instead of
+ * generic church-contact copy.
  */
 export default function DirectionsSection() {
   const directions = useDirections();
+  const [now, setNow] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(tick);
+  }, []);
+
+  const live = isLiveNow(now);
+  const next = getNextService(now);
 
   return (
     <section
@@ -21,61 +50,76 @@ export default function DirectionsSection() {
       aria-labelledby="directions-heading"
       className="max-w-[1400px] mx-auto px-5 sm:px-8 mb-16"
     >
-      <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/7 backdrop-blur-sm shadow-lg px-6 py-8 sm:px-8 sm:py-10">
-        <div className="grid gap-6 md:grid-cols-2 items-center">
-          {/* Left: address + heading */}
-          <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-[11px] uppercase tracking-[0.35em] text-white/60 shadow-inner shadow-black/20">
-              <MapPin size={12} />
-              Find us
+      <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-white/5 via-white/[0.03] to-white/[0.02] backdrop-blur-sm shadow-2xl">
+        {/* Decorative burgundy glow + faint topographic hill silhouettes */}
+        <div className="absolute -top-32 -right-16 w-96 h-96 bg-[#87102C]/15 blur-3xl rounded-full pointer-events-none" />
+        <div className="absolute -bottom-32 -left-16 w-80 h-80 bg-[#e8768a]/8 blur-3xl rounded-full pointer-events-none" />
+        <HillsSilhouette />
+
+        <div className="relative grid lg:grid-cols-5 gap-8 lg:gap-12 p-8 sm:p-10 lg:p-12 items-center">
+          {/* LEFT (3/5): live status + headline */}
+          <div className="lg:col-span-3">
+            {/* Live indicator pill */}
+            <div
+              className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[10px] uppercase tracking-[0.3em] backdrop-blur-md ${
+                live
+                  ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-300"
+                  : "border-white/10 bg-white/5 text-white/60"
+              }`}
+            >
+              <Radio
+                size={12}
+                className={live ? "animate-pulse text-emerald-300" : "text-white/40"}
+              />
+              {live ? "Service is live now" : `Next: ${next.label}`}
             </div>
-            <div>
-              <h2
-                id="directions-heading"
-                className="text-3xl sm:text-4xl font-semibold text-white tracking-tight leading-tight"
+
+            <h2
+              id="directions-heading"
+              className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.05]"
+            >
+              Worship with us on the{" "}
+              <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#87102C] bg-clip-text text-transparent italic font-serif">
+                everlasting hills
+              </span>
+              .
+            </h2>
+
+            <p className="mt-4 max-w-xl text-white/65 leading-relaxed">
+              A family, not a crowd — and there&apos;s always a seat for you.
+              We&apos;re in <span className="text-white/85 font-medium">Ibadan</span>,
+              gathered weekly to seek the One whose blessings rise higher than any
+              mountain.
+            </p>
+
+            {/* CTA + secondary link */}
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={directions.handleGetDirections}
+                className="group inline-flex items-center gap-2.5 rounded-2xl bg-white text-[#87102C] px-5 py-3 font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-black/20"
               >
-                Come and worship with us
-              </h2>
-              <p className="mt-4 max-w-xl text-white/65 leading-relaxed">
-                {CHURCH.address}. We&apos;d love to have you in service this week.
-              </p>
+                <Navigation size={15} />
+                Open directions
+                <ArrowUpRight
+                  size={14}
+                  className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+                />
+              </button>
+              <a
+                href="/contact"
+                className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white font-medium transition-colors"
+              >
+                Full contact info
+                <ArrowUpRight size={13} />
+              </a>
             </div>
           </div>
 
-          {/* Right: get directions CTA + transport modes */}
-          <div className="rounded-[20px] border border-white/8 bg-[#12050a]/95 p-6 shadow-sm md:ml-4">
-            <p className="text-white/50 text-xs uppercase tracking-[0.25em] font-semibold mb-5">
-              Get directions
-            </p>
-            <button
-              type="button"
-              onClick={directions.handleGetDirections}
-              className="inline-flex items-center gap-2.5 w-full justify-center rounded-2xl bg-white text-[#87102C] px-5 py-3.5 font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-black/10"
-            >
-              <Navigation size={16} />
-              Open directions
-            </button>
-
-            <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-              <div className="rounded-2xl border border-white/5 bg-white/5 px-3 py-3 flex flex-col items-center gap-1.5">
-                <Car size={16} className="text-white/60" />
-                <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">
-                  Drive
-                </span>
-              </div>
-              <div className="rounded-2xl border border-white/5 bg-white/5 px-3 py-3 flex flex-col items-center gap-1.5">
-                <FootprintsIcon size={16} className="text-white/60" />
-                <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">
-                  Walk
-                </span>
-              </div>
-              <div className="rounded-2xl border border-white/5 bg-white/5 px-3 py-3 flex flex-col items-center gap-1.5">
-                <Bus size={16} className="text-white/60" />
-                <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">
-                  Transit
-                </span>
-              </div>
-            </div>
+          {/* RIGHT (2/5): address + next-service tiles */}
+          <div className="lg:col-span-2 space-y-3">
+            <AddressTile address={CHURCH.address} />
+            <NextServiceTile next={next} live={live} />
           </div>
         </div>
       </div>
@@ -92,5 +136,80 @@ export default function DirectionsSection() {
         />
       )}
     </section>
+  );
+}
+
+// ── Pieces ───────────────────────────────────────────────────────────────────
+
+function AddressTile({ address }: { address: string }) {
+  return (
+    <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e0407]/70 p-5 backdrop-blur-sm hover:border-white/20 transition-colors">
+      <div className="flex items-start gap-3.5">
+        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center">
+          <MapPin size={16} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1.5">
+            The hills are here
+          </p>
+          <p className="text-sm text-white/90 leading-snug font-medium">{address}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NextServiceTile({
+  next,
+  live,
+}: {
+  next: ReturnType<typeof getNextService>;
+  live: boolean;
+}) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e0407]/70 p-5 backdrop-blur-sm">
+      {/* Subtle gradient accent strip on the left edge */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#e8768a] via-[#87102C] to-transparent" />
+
+      <div className="flex items-start gap-3.5 pl-2">
+        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center">
+          <Radio size={16} className={live ? "animate-pulse" : ""} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1.5">
+            {live ? "Happening now" : "Next gathering"}
+          </p>
+          <p className="text-sm text-white/90 leading-snug font-bold">{next.label}</p>
+          <p className="text-xs text-white/55 mt-1">{nextServiceTimeLabel(next.day)}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Faint topographic hill silhouette drawn in SVG and absolutely-positioned at the bottom.
+ * Reinforces the "everlasting hills" identity without being literal.
+ */
+function HillsSilhouette() {
+  return (
+    <svg
+      className="absolute bottom-0 left-0 right-0 w-full h-32 pointer-events-none opacity-[0.07]"
+      viewBox="0 0 1400 200"
+      fill="none"
+      preserveAspectRatio="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M0 200 L0 130 L180 90 L350 110 L520 70 L700 95 L880 60 L1050 90 L1220 75 L1400 110 L1400 200 Z"
+        fill="white"
+      />
+      <path
+        d="M0 200 L0 160 L220 120 L420 150 L620 110 L820 135 L1020 105 L1210 130 L1400 115 L1400 200 Z"
+        fill="white"
+        opacity="0.6"
+      />
+    </svg>
   );
 }

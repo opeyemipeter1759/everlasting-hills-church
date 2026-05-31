@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { apiClient } from "@/lib/api/axios";
 
 type FormValues = {
   request: string;
@@ -71,27 +72,16 @@ export default function PrayerForm() {
     setServerError("");
 
     try {
-      const payload = {
-        type: "PRAYER_REQUEST",
+      // POST /forms/prayer-request is @Public — coerce the radio's string "true" to boolean.
+      await apiClient.post("/forms/prayer-request", {
         ...data,
-        is_anonymous: data.is_anonymous === "true",
-      };
-
-      const res = await fetch("/api/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        is_anonymous: String(data.is_anonymous) === "true",
       });
 
-      if (!res.ok) {
-        const json = await res.json();
-        setServerError(json.error ?? "Something went wrong.");
-        return;
-      }
-
       setSubmitted(true);
-    } catch {
-      setServerError("Network error. Please try again.");
+    } catch (err) {
+      const msg = (err as { message?: string }).message;
+      setServerError(msg ?? "Something went wrong. Please try again.");
     }
   };
 

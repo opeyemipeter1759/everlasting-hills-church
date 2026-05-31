@@ -22,6 +22,7 @@ export class AuthService implements OnModuleInit {
   private readonly defaultSuperAdminEmail: string | undefined;
   private readonly defaultSuperAdminPassword: string | undefined;
   private readonly tenantId: string;
+  private readonly publicSiteUrl: string;
   /** Reused for password auth and session ops where we don't need user-scoped headers. */
   private readonly anonClient: SupabaseClient;
 
@@ -35,6 +36,10 @@ export class AuthService implements OnModuleInit {
     this.defaultSuperAdminEmail = config.get('DEFAULT_SUPER_ADMIN_EMAIL', { infer: true }) as string | undefined;
     this.defaultSuperAdminPassword = config.get('DEFAULT_SUPER_ADMIN_PASSWORD', { infer: true }) as string | undefined;
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    // Recovery link is sent by Supabase and lands at `${publicSiteUrl}/change-password`.
+    this.publicSiteUrl =
+      (config.get('FRONTEND_URL', { infer: true }) as string | undefined) ??
+      'http://localhost:3000';
     this.anonClient = createClient(this.supabaseUrl, this.supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
@@ -246,6 +251,48 @@ export class AuthService implements OnModuleInit {
       fullName,
       picture: summary.photoUrl,
     };
+  }
+
+  /**
+   * Trigger a Supabase password-reset email. Always returns success — we never reveal
+   * whether the email exists. Supabase silently no-ops for unknown addresses.
+   */
+  async requestPasswordReset(email: string) {
+    const redirectTo = `${this.publicSiteUrl.replace(/\/$/, '')}/change-password`;
+    const { error } = await this.anonClient.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    });
+    if (error) {
+      // Log but do not leak. Rate-limit failures from Supabase land here too.
+      this.logger.warn(`Password reset request for ${email}: ${error.message}`);
+    }
+    return {
+      success: true,
+      message: 'If an account exists for that email, a reset link has been sent.',
+    };
+  }
+
+  /**
+   * Update the caller's password. Requires a valid session JWT — the user must already
+   * be signed in (either via normal login or via the recovery link, which Supabase
+   * exchanges for a short-lived session on the client).
+   */
+  async changePassword(authorization: string | undefined, password: string) {
+    const accessToken = authorization?.startsWith('Bearer ')
+      ? authorization.slice(7).trim()
+      : '';
+    if (!accessToken) throw new UnauthorizedException('Access token is required');
+
+    const scoped = createClient(this.supabaseUrl, this.supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { error } = await scoped.auth.updateUser({ password });
+    if (error) {
+      this.logger.warn(`Password change failed: ${error.message}`);
+      throw new UnauthorizedException(error.message || 'Could not update password');
+    }
+    return { success: true, message: 'Password updated successfully' };
   }
 
   async logout(authorization?: string) {

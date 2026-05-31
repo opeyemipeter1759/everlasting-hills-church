@@ -185,16 +185,14 @@ function CreateAccountBtn({
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/members/convert", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ visitorId: visitor.id }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(json.error ?? "Failed"); return; }
+      const { apiClient } = await import("@/lib/api/axios");
+      await apiClient.post(`/members/convert-visitor/${visitor.id}`);
       onCreated(visitor.email!);
-    } catch { setError("Network error"); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Failed");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const highlighted = visitor.membershipInterest === "Yes";

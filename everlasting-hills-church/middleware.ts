@@ -30,7 +30,7 @@ import { verifySupabaseJwt } from "@/lib/auth/verify-jwt";
  *   - "Authenticated but no role" gets a single redirect to /me (which only requires being
  *     logged in, never a role) — that's the safe terminal state for orphan accounts.
  */
-const AUTH_PAGES = new Set(["/login", "/register", "/change-password"]);
+const AUTH_PAGES = new Set(["/login", "/register", "/forgot-password"]);
 const ROLELESS_LANDING = "/me";
 
 export async function middleware(req: NextRequest) {
@@ -87,6 +87,6 @@ export const config = {
     "/me/:path*",
     "/login",
     "/register",
-    "/change-password",
+    "/forgot-password",
   ],
 };

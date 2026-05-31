@@ -3,21 +3,16 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-import { 
-  ArrowLeft, 
-  Copy, 
-  Check, 
-  Search, 
-  ShieldCheck, 
-  Zap, 
-  Building2, 
-  ArrowUpRight,
-  Sparkles,
+import {
+  Copy,
+  Check,
+  Search,
+  Zap,
+  Building2,
   Info,
-  Globe,
-  Coins
+  Coins,
 } from "lucide-react";
-import Link from "next/link";
+import CosmicGiveHero from "@/components/home/CosmicGiveHero";
 
 // import bgImage from "/images/church_congregation_2_1779193607195.png";
 
@@ -162,75 +157,10 @@ export default function WaysToGivePage() {
 
   return (
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden font-sans">
-      {/* Cinematic Ambient Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* <Image 
-          src={bgImage} 
-          alt="Everlasting Hills Worship" 
-          className="w-full h-full object-cover opacity-15 scale-105 saturate-50 brightness-[0.3]"
-        /> */}
-        {/* Modern Fade gradients carefully overlaying the imagery to maintain absolute aesthetic cleanlines */}
-        <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/90 to-church-dark" />
-        <div className="absolute inset-0 bg-gradient-to-b from-church-dark via-transparent to-church-dark/80" />
-        
-        {/* Subtle decorative lights to enhance modern hook look */}
-        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-church-maroon/20 blur-[130px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-church-accent/10 blur-[120px] rounded-full" />
-        <div className="absolute inset-0 bg-grid-white opacity-20 pointer-events-none" />
-      </div>
+      {/* Cosmic hero — replaces the inline header/intro */}
+      <CosmicGiveHero />
 
-      <div className="relative z-10 container mx-auto px-6 pt-16 pb-32 max-w-7xl">
-        {/* Minimal High-End Header Navigation */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 mb-20">
-          <Link 
-            href="/" 
-            className="group inline-flex items-center gap-3 text-white/40 hover:text-white transition-all duration-300"
-          >
-            <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-church-accent/30 group-hover:bg-white/5 transition-all">
-              <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.4em]">Back to Home</span>
-          </Link>
-
-          <div className="flex items-center gap-4 bg-white/[0.03] border border-white/5 px-5 py-2.5 rounded-2xl backdrop-blur-md">
-            <ShieldCheck className="text-church-accent w-5 h-5 animate-pulse" />
-            <div className="text-left">
-              <span className="text-[9px] font-black uppercase tracking-wider text-white/30 block leading-tight">Secure Payment Gateway</span>
-              <span className="text-[11px] font-semibold text-white/70">PCI-DSS Secure Storage</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Hero Hook Intro */}
-        <div className="max-w-3xl mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1 bg-church-maroon/20 border border-church-maroon/30 rounded-lg mb-6"
-          >
-            <Sparkles size={12} className="text-church-accent" />
-            <span className="text-[9px] uppercase font-bold tracking-widest text-church-accent">Partnership & Stewardship</span>
-          </motion.div>
-
-          <motion.h1 
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl sm:text-7xl lg:text-8xl font-display font-black tracking-tighter leading-[0.85] uppercase mb-6"
-          >
-            Ways to <span className="text-church-accent font-serif italic lowercase font-normal">Give.</span>
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-white/50 text-base sm:text-lg leading-relaxed font-sans max-w-2xl font-medium"
-          >
-            Find account details for offerings, building funds, and domiciliary transfers below. Click any card to copy the account number instantly to your clipboard.
-          </motion.p>
-        </div>
-
+      <section id="accounts" className="relative z-10 container mx-auto px-6 py-16 max-w-7xl">
         {/* Tabs and Interactive Controls */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
           {/* Tab Switcher */}
@@ -418,7 +348,7 @@ export default function WaysToGivePage() {
           </motion.div>
         </div>
 
-      </div>
+      </section>
 
       {/* Elegant Micro-Toast Notification overlay */}
       <AnimatePresence>

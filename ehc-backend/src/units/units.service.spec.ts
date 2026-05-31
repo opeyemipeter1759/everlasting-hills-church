@@ -1,5 +1,6 @@
 import { UnitsService } from './units.service';
 import type { PrismaService } from '../prisma/prisma.service';
+import type { ConfigService } from '@nestjs/config';
 
 describe('UnitsService.findUnitLedBy', () => {
   function makeService(profileResult: unknown, unitMemberResult: unknown) {
@@ -7,7 +8,11 @@ describe('UnitsService.findUnitLedBy', () => {
       profile: { findUnique: jest.fn().mockResolvedValue(profileResult) },
       unitMember: { findFirst: jest.fn().mockResolvedValue(unitMemberResult) },
     } as unknown as PrismaService;
-    return { service: new UnitsService(prisma), prisma };
+    // Stub ConfigService — UnitsService only reads DEFAULT_TENANT_ID at construction
+    const config = {
+      get: jest.fn().mockReturnValue('test-tenant'),
+    } as unknown as ConfigService<Record<string, unknown>, true>;
+    return { service: new UnitsService(prisma, config), prisma };
   }
 
   it('returns null when the user has no Profile', async () => {

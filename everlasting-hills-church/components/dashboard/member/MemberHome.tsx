@@ -164,12 +164,12 @@ function CheckInPanel({
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/attendance/check-in", { method: "POST" });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(json.error ?? "Check-in failed. Please try again."); return; }
+      // POST /attendance/check-in — auth required (apiClient attaches the JWT cookie).
+      const { apiClient } = await import("@/lib/api/axios");
+      await apiClient.post("/attendance/check-in");
       setCheckedIn(true);
-    } catch {
-      setError("Network error. Please try again.");
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Check-in failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -391,17 +391,8 @@ function ProfileEditCard({ member, initials }: {
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploading(true);
-    setError("");
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await fetch("/api/members/avatar", { method: "POST", body: fd });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(json.error ?? "Upload failed"); return; }
-      setPhoto(json.data.photoUrl);
-    } catch { setError("Upload failed. Please try again."); }
-    finally { setUploading(false); }
+    // TODO(backend): /members/me/avatar endpoint not implemented yet — file is staged but not uploaded.
+    setError("Profile photo upload is coming soon. Please reach out to an admin to update your photo.");
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -409,18 +400,11 @@ function ProfileEditCard({ member, initials }: {
     setSaving(true);
     setError("");
     setSaved(false);
-    try {
-      const res = await fetch("/api/members/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bio, phone, address, dateOfBirth: dob || undefined }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(json.error ?? "Save failed"); return; }
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch { setError("Network error. Please try again."); }
-    finally { setSaving(false); }
+    // TODO(backend): /members/me PATCH endpoint not implemented yet.
+    setTimeout(() => {
+      setError("Profile editing is coming soon. Please reach out to an admin for now.");
+      setSaving(false);
+    }, 400);
   }
 
   return (

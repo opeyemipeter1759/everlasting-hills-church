@@ -171,15 +171,13 @@ export default function MemberProfileClient({
     setCheckInLoading(true);
     setCheckInError("");
     try {
-      const res = await fetch("/api/attendance/check-in", { method: "POST" });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setCheckInError(json.error ?? "Check-in failed. Please try again.");
-        return;
-      }
+      const { apiClient } = await import("@/lib/api/axios");
+      await apiClient.post("/attendance/check-in");
       setCheckedIn(true);
-    } catch {
-      setCheckInError("Network error. Please try again.");
+    } catch (err) {
+      setCheckInError(
+        (err as { message?: string }).message ?? "Check-in failed. Please try again.",
+      );
     } finally {
       setCheckInLoading(false);
     }
@@ -189,24 +187,13 @@ export default function MemberProfileClient({
     setSaving(true);
     setSaveError("");
     setSaveSuccess(false);
-    try {
-      const res = await fetch("/api/members/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, address, dateOfBirth }),
-      });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        setSaveError(json.error ?? "Failed to save changes");
-        return;
-      }
-      setSaveSuccess(true);
-      setEditing(false);
-    } catch {
-      setSaveError("Network error. Please try again.");
-    } finally {
+    // TODO(backend): member self-service profile update endpoint not implemented yet.
+    // When ready, swap this for: apiClient.patch('/members/me', { phone, address, dateOfBirth })
+    setTimeout(() => {
+      setSaveError("Profile editing is coming soon. Please reach out to an admin for now.");
       setSaving(false);
-    }
+    }, 400);
+    return;
   }
 
   async function handlePasswordChange() {

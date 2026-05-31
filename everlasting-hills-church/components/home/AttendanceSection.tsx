@@ -123,7 +123,7 @@ export default function AttendanceSection() {
   }
 
   // ── Anonymous: loud invitation ────────────────────────────────────────────
-  if (!session?.isLoggedIn) {
+  if (!session?.loggedIn) {
     return (
       <section className="relative py-20 sm:py-24 px-5 sm:px-8 bg-gradient-to-br from-[#87102C] via-[#6E0C24] to-[#4a081a] text-white overflow-hidden">
         {/* Decorative bg orbs */}

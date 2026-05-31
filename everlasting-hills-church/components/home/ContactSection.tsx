@@ -4,6 +4,7 @@ import { useState } from "react";
 import ScrollReveal from "./ScrollReveal";
 import GetInTouch from "./GetInTouch";
 import { Mail, MessageCircle, Instagram, Send } from "lucide-react";
+import { apiClient } from "@/lib/api/axios";
 
 // ── Update all contact info here ──
 const contactLinks = [
@@ -57,23 +58,12 @@ export default function ContactSection() {
     setError(null);
 
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formState),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error ?? "Something went wrong. Please try again.");
-        return;
-      }
-
+      await apiClient.post("/forms/contact", formState);
       setSubmitted(true);
       setFormState({ name: "", email: "", message: "" });
-    } catch {
-      setError("Could not send your message. Check your connection and try again.");
+    } catch (err) {
+      const msg = (err as { message?: string }).message;
+      setError(msg ?? "Could not send your message. Check your connection and try again.");
     } finally {
       setIsLoading(false);
     }

@@ -167,12 +167,10 @@ function EmailSubscribeCard() {
     e.preventDefault();
     setState("loading");
     try {
-      const res = await fetch("/api/sermons/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      setState(res.ok ? "done" : "error");
+      // POST /sermons/subscribers is @Public — backend upserts the email.
+      const { apiClient } = await import("@/lib/api/axios");
+      await apiClient.post("/sermons/subscribers", { email });
+      setState("done");
     } catch { setState("error"); }
   }
 

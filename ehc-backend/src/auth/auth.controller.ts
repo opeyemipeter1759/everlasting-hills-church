@@ -11,6 +11,8 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthUser } from './types/auth-user';
@@ -48,6 +50,43 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async login(@Body() body: LoginDto) {
     return this.authService.login(body.email, body.password);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Request Password Reset',
+    description: 'Send a Supabase recovery email. Always returns success to avoid leaking which emails exist.',
+  })
+  @ApiOkResponse({
+    description: 'Reset email dispatched (or silently no-op if the address is unknown)',
+    schema: { example: { success: true, message: 'If an account exists for that email, a reset link has been sent.' } },
+  })
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    return this.authService.requestPasswordReset(body.email);
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: 'Change Password',
+    description: 'Update the signed-in user\'s password. Caller must already have a valid JWT (normal login or recovery-link session).',
+  })
+  @ApiOkResponse({
+    description: 'Password updated',
+    schema: { example: { success: true, message: 'Password updated successfully' } },
+  })
+  @ApiUnauthorizedResponse({ description: 'Access token missing, invalid, or update rejected' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  async changePassword(
+    @Body() body: ChangePasswordDto,
+    @Req() request: { headers?: { authorization?: string } },
+  ) {
+    return this.authService.changePassword(request.headers?.authorization, body.password);
   }
 
   @Post('logout')

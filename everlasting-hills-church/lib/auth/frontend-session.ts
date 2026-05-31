@@ -98,6 +98,7 @@ export function getRequiredRole(pathname: string): UserRole | null {
 
   if (
     pathname.startsWith("/dashboard/members") ||
+    pathname.startsWith("/dashboard/users") ||
     pathname.startsWith("/dashboard/first-timers") ||
     pathname.startsWith("/dashboard/services") ||
     pathname.startsWith("/dashboard/events") ||
@@ -116,7 +117,7 @@ export function getRequiredRole(pathname: string): UserRole | null {
     return "UNIT_LEAD";
   }
 
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/me") || pathname === "/change-password") {
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/me")) {
     return "MEMBER";
   }
 

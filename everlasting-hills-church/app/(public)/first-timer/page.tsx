@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { apiClient } from "@/lib/api/axios";
 import {
   FormValues,
   Step1PersonalInfo,
@@ -74,24 +75,17 @@ export default function FirstTimerPage() {
     setIsSubmitting(true);
     setError("");
     try {
-      const res = await fetch("/api/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "FIRST_TIMER",
-          ...data,
-          located_in_ibadan: data.located_in_ibadan === "true",
-          whatsapp_interest: data.whatsapp_interest === "true",
-        }),
+      // POST /forms/register is @Public — no auth needed. Coerce string radio values.
+      await apiClient.post("/forms/register", {
+        type: "FIRST_TIMER",
+        ...data,
+        located_in_ibadan: String(data.located_in_ibadan) === "true",
+        whatsapp_interest: String(data.whatsapp_interest) === "true",
       });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        setError(json.error ?? "Something went wrong. Please try again.");
-        return;
-      }
       setSubmitted(true);
-    } catch {
-      setError("Network error. Please check your connection and try again.");
+    } catch (err) {
+      const msg = (err as { message?: string }).message;
+      setError(msg ?? "Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
