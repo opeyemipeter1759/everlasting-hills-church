@@ -6,12 +6,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Role } from '@prisma/client';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
+import { NotificationEvents } from '../notifications/notification-events';
+import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
 import { canActOnRole, assignableRoles } from './role-hierarchy';
 import type { CreateUserDto, UpdateUserDto, UpdateUserRoleDto } from './dto/user.dto';
 
@@ -27,9 +30,11 @@ export class UsersService {
   private readonly supabaseServiceRoleKey: string | undefined;
   private supabaseClient: SupabaseClient | null = null;
   private readonly tenantId: string;
+  private readonly appUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly events: EventEmitter2,
     config: ConfigService<Env, true>,
   ) {
     this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
@@ -44,6 +49,9 @@ export class UsersService {
       );
     }
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    this.appUrl =
+      (config.get('FRONTEND_URL', { infer: true }) as string | undefined) ??
+      'http://localhost:3000';
   }
 
   /**
@@ -139,7 +147,9 @@ export class UsersService {
       );
     }
 
-    // 1) Create Supabase auth user — phone becomes initial password (church convention)
+    // 1) Create Supabase auth user — phone becomes initial password (church convention).
+    // `needs_password_change` is read by the login handler so the UI can route the user
+    // to /change-password on their very first sign-in.
     const { data: created, error } = await this.getSupabaseAdmin().auth.admin.createUser({
       email: normalizedEmail,
       password: data.phone,
@@ -147,6 +157,7 @@ export class UsersService {
       user_metadata: {
         role: data.role,
         full_name: `${data.firstName} ${data.lastName}`.trim(),
+        needs_password_change: true,
       },
     });
     if (error || !created.user) {
@@ -181,6 +192,18 @@ export class UsersService {
 
       this.logger.log(
         `[${actor.email}] created ${data.role}: ${normalizedEmail}`,
+      );
+
+      // Fire-and-forget welcome email — sign-in link + the member features they get access to.
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildMemberWelcomeEmail({
+          firstName: data.firstName.trim(),
+          email: normalizedEmail,
+          phone: data.phone.trim(),
+          appUrl: this.appUrl,
+          source: 'admin-created',
+        }),
       );
 
       return {

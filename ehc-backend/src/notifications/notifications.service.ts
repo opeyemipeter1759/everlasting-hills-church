@@ -39,6 +39,7 @@ export class NotificationsService {
         to: payload.to,
         subject: payload.subject,
         text: payload.text,
+        ...(payload.html ? { html: payload.html } : {}),
       });
       this.logger.debug(`[${payload.tag}] email sent → ${payload.to}`);
     } catch (err) {

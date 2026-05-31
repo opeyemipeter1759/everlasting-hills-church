@@ -112,10 +112,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     if (exception instanceof Prisma.PrismaClientValidationError) {
-      // Schema-level bug; don't leak the message to clients
+      // Schema-level bug; don't leak the underlying message in production.
+      // In dev we surface Prisma's own error (last non-empty line) so the
+      // failing field is obvious without grepping server logs.
+      const isProd = process.env.NODE_ENV === 'production';
+      const inner = exception.message
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .pop();
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: 'Invalid database operation',
+        message: isProd ? 'Invalid database operation' : `Invalid database operation: ${inner}`,
         code: 'PRISMA_VALIDATION_ERROR',
       };
     }

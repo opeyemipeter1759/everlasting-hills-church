@@ -1,12 +1,18 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { createClient } from '@supabase/supabase-js';
 import type { Env } from '../config/env.validation';
-
-const FROM = process.env.RESEND_FROM ?? 'onboarding@resend.dev';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+import { NotificationEvents } from '../notifications/notification-events';
+import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
 
 function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
@@ -17,39 +23,110 @@ function createAdminClient() {
 
 @Injectable()
 export class MembersService {
-  private readonly logger = new Logger(MembersService.name);
   private readonly tenantId: string;
+  private readonly appUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly events: EventEmitter2,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    this.appUrl =
+      (config.get('FRONTEND_URL', { infer: true }) as string | undefined) ??
+      process.env.NEXT_PUBLIC_APP_URL ??
+      'http://localhost:3000';
   }
 
   async convertVisitorToMember(visitorId: string) {
     const visitor = await this.prisma.visitor.findUnique({ where: { id: visitorId } });
-    if (!visitor) throw new Error('Visitor not found');
-    if (!visitor.email) throw new Error('Visitor has no email — email is required to create an account');
-    if (!visitor.phone) throw new Error('Visitor has no phone number — phone is used as the initial password');
+    if (!visitor) throw new NotFoundException('Visitor not found');
+    if (!visitor.email) {
+      throw new BadRequestException('Visitor has no email — email is required to create an account');
+    }
+    if (!visitor.phone) {
+      throw new BadRequestException('Visitor has no phone number — phone is used as the initial password');
+    }
 
-    const existing = await this.prisma.member.findFirst({ where: { tenantId: this.tenantId, email: visitor.email } });
-    if (existing) throw new Error('A member account already exists for this email address');
+    const existing = await this.prisma.member.findFirst({
+      where: { tenantId: this.tenantId, email: visitor.email },
+    });
+    if (existing) {
+      throw new ConflictException('A member account already exists for this email address');
+    }
 
     const supabase = createAdminClient();
+    let userId: string;
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: visitor.email,
       password: visitor.phone,
       email_confirm: true,
       user_metadata: { needs_password_change: true },
     } as any);
-    if (authError) throw new Error(`Could not create auth account: ${authError.message}`);
 
-    const userId = authData.user.id;
+    if (authError) {
+      // The visitor's email is already in Supabase Auth (e.g. a prior convert attempt
+      // got past Supabase but failed before we wrote the Profile). Reuse that auth user
+      // instead of asking the admin to clean up by hand — this makes the action idempotent.
+      const isDuplicate = /already.*registered|already.*exists/i.test(authError.message);
+      if (!isDuplicate) {
+        throw new InternalServerErrorException(
+          `Could not create auth account: ${authError.message}`,
+        );
+      }
+      const { data: list, error: listError } = await supabase.auth.admin.listUsers({
+        page: 1,
+        perPage: 1000,
+      });
+      if (listError) {
+        throw new InternalServerErrorException(
+          `Auth user exists but could not be looked up: ${listError.message}`,
+        );
+      }
+      const found = list.users.find(
+        (u) => u.email?.toLowerCase() === visitor.email!.toLowerCase(),
+      );
+      if (!found) {
+        throw new InternalServerErrorException(
+          'Auth user reported as duplicate but could not be located',
+        );
+      }
+      // Re-link an orphan auth user: refresh password to the visitor's phone so the
+      // admin's intent ("their initial password is their phone") holds.
+      await supabase.auth.admin.updateUserById(found.id, {
+        password: visitor.phone,
+        email_confirm: true,
+      });
+      userId = found.id;
+      // If a Profile already exists for this user, the visitor was effectively converted
+      // before — bail out with a clear 409 so the admin knows.
+      const orphanProfile = await this.prisma.profile.findUnique({ where: { userId } });
+      if (orphanProfile) {
+        throw new ConflictException(
+          'This person already has an account. Their Member record may have been removed — restore it instead of creating a new one.',
+        );
+      }
+    } else {
+      userId = authData.user.id;
+    }
 
-    const profile = await this.prisma.profile.create({ data: { userId, tenantId: this.tenantId, role: 'MEMBER' } as any });
+    const profile = await this.prisma.profile.create({
+      data: {
+        id: randomUUID(),
+        userId,
+        tenantId: this.tenantId,
+        role: 'MEMBER',
+      },
+    });
 
-    await this.prisma.roleAssignment.create({ data: { tenantId: this.tenantId, profileId: profile.id, role: 'MEMBER' } as any });
+    await this.prisma.roleAssignment.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        profileId: profile.id,
+        role: 'MEMBER',
+      },
+    });
 
     const member = await this.prisma.member.create({
       data: {
@@ -65,42 +142,18 @@ export class MembersService {
       },
     });
 
-    // Welcome email if Resend configured
-    if (process.env.RESEND_API_KEY) {
-      try {
-        // dynamically require to avoid hard dependency if not installed
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { Resend } = require('resend');
-        const resend = new Resend(process.env.RESEND_API_KEY);
-        await resend.emails.send({
-          from: `Everlasting Hills Church <${FROM}>`,
-          to: visitor.email,
-          subject: 'Welcome to Everlasting Hills Church — Your Account is Ready',
-          html: `
-            <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">
-              <div style="background:#87102C;border-radius:12px;padding:24px;margin-bottom:24px;text-align:center">
-                <h1 style="color:#fff;margin:0;font-size:20px;font-weight:900;letter-spacing:-0.5px">Everlasting Hills Church</h1>
-                <p style="color:#FFE8ED;margin:4px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:2px">Member Portal</p>
-              </div>
-              <h2 style="color:#111;font-size:22px;margin:0 0 8px">Welcome, ${visitor.firstName}! 🎉</h2>
-              <p style="color:#555;margin:0 0 24px;line-height:1.6">Your member account at Everlasting Hills Church is ready. Here are your login details:</p>
-              <div style="background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:20px;margin-bottom:24px">
-                <p style="margin:0 0 8px;font-size:13px;color:#888;text-transform:uppercase;letter-spacing:1px;font-weight:700">Login Details</p>
-                <p style="margin:0 0 6px;color:#111"><strong>Website:</strong> <a href="${APP_URL}/login" style="color:#87102C">${APP_URL}/login</a></p>
-                <p style="margin:0 0 6px;color:#111"><strong>Email:</strong> ${visitor.email}</p>
-                <p style="margin:0;color:#111"><strong>Temporary Password:</strong> Your phone number (${visitor.phone})</p>
-              </div>
-              <p style="color:#555;margin:0 0 24px;font-size:14px;line-height:1.6">You will be asked to set a new password on your first login. We recommend doing this immediately.</p>
-              <a href="${APP_URL}/login" style="display:inline-block;background:#87102C;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px">Login to your account →</a>
-              <hr style="border:none;border-top:1px solid #E5E7EB;margin:32px 0"/>
-              <p style="color:#aaa;font-size:12px;margin:0">Everlasting Hills Church · Ibadan, Nigeria<br/>Raising men who flourish beyond limits.</p>
-            </div>
-          `,
-        });
-      } catch (err) {
-        this.logger.error(`Welcome email failed: ${(err as Error).message ?? err}`);
-      }
-    }
+    // Fire-and-forget welcome email — sign-in link + member features they get access to.
+    // Failures are logged inside NotificationsService and never block the conversion response.
+    this.events.emit(
+      NotificationEvents.SendEmail,
+      buildMemberWelcomeEmail({
+        firstName: visitor.firstName,
+        email: visitor.email,
+        phone: visitor.phone,
+        appUrl: this.appUrl,
+        source: 'visitor-converted',
+      }),
+    );
 
     return member;
   }

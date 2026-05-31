@@ -198,6 +198,12 @@ export class AuthService implements OnModuleInit {
         ? `${summary.firstName ?? ''} ${summary.lastName ?? ''}`.trim()
         : null;
 
+    const needsPasswordChange = Boolean(
+      (data.user.user_metadata as Record<string, unknown> | null | undefined)?.[
+        'needs_password_change'
+      ],
+    );
+
     return {
       access_token: data.session.access_token,
       refresh_token: data.session.refresh_token,
@@ -209,6 +215,7 @@ export class AuthService implements OnModuleInit {
         role: summary.role,
         fullName,
         picture: summary.photoUrl,
+        needsPasswordChange,
       },
     };
   }
@@ -287,7 +294,12 @@ export class AuthService implements OnModuleInit {
       global: { headers: { Authorization: `Bearer ${accessToken}` } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const { error } = await scoped.auth.updateUser({ password });
+    // Update password AND clear the first-login flag in one round-trip. `data` is
+    // merged into user_metadata, so other fields (role, full_name) are preserved.
+    const { error } = await scoped.auth.updateUser({
+      password,
+      data: { needs_password_change: false },
+    });
     if (error) {
       this.logger.warn(`Password change failed: ${error.message}`);
       throw new UnauthorizedException(error.message || 'Could not update password');

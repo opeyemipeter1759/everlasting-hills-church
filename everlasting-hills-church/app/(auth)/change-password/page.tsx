@@ -28,20 +28,22 @@ export default function ChangePasswordPage() {
   const [serverError, setServerError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [ready, setReady] = useState(false);
+  // "recovery" = arrived via Supabase reset email; "first-login" = forced change after
+  // signing in with the temp (phone-number) password; null until we figure it out.
+  const [flow, setFlow] = useState<"recovery" | "first-login" | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const existing = getAccessTokenFromCookie();
     const hash = window.location.hash;
+    const hasRecoveryHash = hash.includes("access_token") && hash.includes("type=recovery");
 
-    if (hash && hash.includes("access_token")) {
+    if (hasRecoveryHash) {
       const params = new URLSearchParams(hash.replace(/^#/, ""));
       const accessToken = params.get("access_token");
-      const type = params.get("type");
       const expiresIn = Number(params.get("expires_in") ?? "3600");
-
-      if (accessToken && type === "recovery") {
+      if (accessToken) {
         setFrontendSession({
           accessToken,
           email: "",
@@ -50,13 +52,11 @@ export default function ChangePasswordPage() {
         });
         window.history.replaceState(null, "", window.location.pathname);
       }
+      setFlow("recovery");
+    } else if (existing) {
+      setFlow("first-login");
     }
-
-    if (existing || (hash && hash.includes("access_token"))) {
-      setReady(true);
-    } else {
-      setReady(true);
-    }
+    setReady(true);
   }, []);
 
   const {
@@ -73,7 +73,10 @@ export default function ChangePasswordPage() {
     try {
       await apiClient.post("/auth/change-password", { password });
       setSubmitted(true);
-      setTimeout(() => router.replace("/login"), 1500);
+      // Recovery flow: the bridged session has no role/email, so send them to /login.
+      // First-login flow: existing session is still valid, push them straight into the app.
+      const next = flow === "first-login" ? "/dashboard" : "/login";
+      setTimeout(() => router.replace(next), 1500);
     } catch (err) {
       const msg = (err as { message?: string }).message;
       setServerError(msg ?? "Could not update password. Please try again.");

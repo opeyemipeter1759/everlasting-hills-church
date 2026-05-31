@@ -23,6 +23,8 @@ export interface SendEmailPayload {
   to: string;
   subject: string;
   text: string;
+  /** Optional rendered HTML. Resend sends `html` when present; `text` is still used as the fallback. */
+  html?: string;
   /** Tag for logging — e.g. "first-timer-admin", "prayer-request-visitor". */
   tag: string;
 }

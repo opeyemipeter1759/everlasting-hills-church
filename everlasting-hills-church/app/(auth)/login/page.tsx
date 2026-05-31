@@ -25,8 +25,9 @@ export default function LoginPage() {
   const onSubmit = async ({ email, password }: FormValues) => {
     setServerError("");
     try {
-      await auth.login({ email, password });
-      window.location.assign("/dashboard");
+      const resp = await auth.login({ email, password });
+      const next = resp.user.needsPasswordChange ? "/change-password" : "/dashboard";
+      window.location.assign(next);
     } catch (error) {
       const message =
         error && typeof error === "object" && "message" in error

@@ -24,6 +24,8 @@ export interface LoginResponse {
     role: UserRole | string | null;
     fullName: string | null;
     picture: string | null;
+    /** True when the account was just created with a temp (phone-number) password. */
+    needsPasswordChange: boolean;
   };
 }
 
