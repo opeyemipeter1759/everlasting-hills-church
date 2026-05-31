@@ -1,7 +1,26 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import type { AuthUser } from '../auth/types/auth-user';
+import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 import { MembersService } from './members.service';
 
 /**
@@ -73,6 +92,52 @@ export class MembersController {
     return this.membersService.getAbsentMembers(Number(missedSundays) || 3);
   }
 
+  /**
+   * Self-service routes — any signed-in user can update their own profile.
+   * Declared BEFORE the `:id` routes so Express does not match the literal "me" as an id.
+   */
+  @Patch('me')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Update my profile' })
+  @ApiBody({ type: UpdateMyProfileDto })
+  @ApiOkResponse({ description: 'Updated member' })
+  async updateMyProfile(
+    @CurrentUser() actor: AuthUser,
+    @Body() body: UpdateMyProfileDto,
+  ) {
+    return this.membersService.updateMyProfile(actor.userId, body);
+  }
+
+  @Post('me/avatar')
+  @Roles(Role.MEMBER)
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload my profile photo (PNG/JPG/JPEG, ≤ 1 MB)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
+  @ApiOkResponse({ description: 'Uploaded; returns the new public photoUrl' })
+  async uploadMyAvatar(
+    @CurrentUser() actor: AuthUser,
+    @UploadedFile()
+    file:
+      | { buffer: Buffer; mimetype: string; originalname: string; size: number }
+      | undefined,
+  ) {
+    if (!file) throw new BadRequestException('No file provided');
+    return this.membersService.setMyAvatar(actor.userId, file);
+  }
+
+  @Delete('me/avatar')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Remove my profile photo' })
+  async clearMyAvatar(@CurrentUser() actor: AuthUser) {
+    return this.membersService.clearMyAvatar(actor.userId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get member by id' })
   async getById(@Param('id') id: string) {
@@ -84,6 +149,18 @@ export class MembersController {
   @ApiBody({ schema: { example: { status: 'ACTIVE' } } })
   async updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.membersService.updateMemberStatus(id, status);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Permanently delete a member',
+    description:
+      'Removes the Member, their Profile, all related records (attendance, notes, follow-ups, etc.), and their Supabase auth user. Actor role must out-rank the target.',
+  })
+  @ApiNoContentResponse({ description: 'Member fully removed' })
+  async deleteMember(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.membersService.deleteMember(actor, id);
   }
 
   @Post(':id/pastor-note')

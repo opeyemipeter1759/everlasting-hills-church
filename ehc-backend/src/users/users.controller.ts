@@ -83,11 +83,15 @@ export class UsersController {
   }
 
   @Delete(':profileId')
-  @ApiOperation({ summary: 'Deactivate a user (soft delete — sets status=INACTIVE)' })
-  async deactivate(
+  @ApiOperation({
+    summary: 'Permanently delete a user',
+    description:
+      'Removes the Profile, Member, all member-related records, and the Supabase auth user. Cannot be undone.',
+  })
+  async deleteUser(
     @CurrentUser() actor: AuthUser,
     @Param('profileId') profileId: string,
   ) {
-    return this.usersService.deactivate(actor, profileId);
+    return this.usersService.deleteUser(actor, profileId);
   }
 }

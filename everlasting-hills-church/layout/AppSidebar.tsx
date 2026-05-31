@@ -7,7 +7,12 @@ import Image from 'next/image';
 import { ChevronRight, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
- import { getFrontendSessionUser, normalizeRole } from '@/lib/auth/frontend-session';
+import {
+  getFrontendSessionUser,
+  normalizeRole,
+  SESSION_CHANGED_EVENT,
+  type FrontendSessionUser,
+} from '@/lib/auth/frontend-session';
  
 type NavItem = {
   name: string;
@@ -75,7 +80,16 @@ const AppSidebar: React.FC = () => {
   };
   const pathname = usePathname();
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const currentUser = getFrontendSessionUser();
+  const [currentUser, setCurrentUser] = useState<FrontendSessionUser | null>(null);
+
+  // Re-read identity cookies on mount and whenever a profile edit broadcasts a change.
+  useEffect(() => {
+    setCurrentUser(getFrontendSessionUser());
+    const refresh = () => setCurrentUser(getFrontendSessionUser());
+    window.addEventListener(SESSION_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(SESSION_CHANGED_EVENT, refresh);
+  }, []);
+
   const showLabels = isExpanded || isMobileOpen || isHovered;
   const isActive = buildActiveMatcher(pathname);
   const userRole = normalizeRole(currentUser?.role);

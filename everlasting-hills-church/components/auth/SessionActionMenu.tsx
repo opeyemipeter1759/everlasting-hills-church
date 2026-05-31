@@ -9,6 +9,7 @@ import {
   clearFrontendSession,
   getFrontendSessionUser,
   normalizeRole,
+  SESSION_CHANGED_EVENT,
   type FrontendSessionUser,
 } from "@/lib/auth/frontend-session";
 import { ROLE_LABELS } from "@/config/config";
@@ -54,7 +55,16 @@ export default function SessionActionMenu({
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  const session = getFrontendSessionUser();
+  const [session, setSession] = useState<FrontendSessionUser | null>(null);
+
+  // Hydrate from cookies on mount, then re-read whenever the session cookies change
+  // (e.g. user updated their profile photo or name in /dashboard/settings).
+  useEffect(() => {
+    setSession(getFrontendSessionUser());
+    const refresh = () => setSession(getFrontendSessionUser());
+    window.addEventListener(SESSION_CHANGED_EVENT, refresh);
+    return () => window.removeEventListener(SESSION_CHANGED_EVENT, refresh);
+  }, []);
   const role = normalizeRole(session?.role ?? null);
   const dashboardLabel = pathname?.startsWith("/dashboard") ? "Home" : "Dashboard";
   const dashboardTargetHref = pathname?.startsWith("/dashboard") ? "/" : dashboardHref;

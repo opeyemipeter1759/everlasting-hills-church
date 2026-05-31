@@ -231,7 +231,7 @@ export default function UsersCmsClient() {
         open={pending !== null}
         title={
           pending?.kind === "delete"
-            ? "Deactivate this user?"
+            ? "Permanently delete this user?"
             : pending?.kind === "role"
               ? `Change role to ${ROLE_LABELS[pending.newRole]}?`
               : ""
@@ -242,7 +242,8 @@ export default function UsersCmsClient() {
               <strong className="text-gray-900 dark:text-white">
                 {pending.user.member?.firstName} {pending.user.member?.lastName}
               </strong>{" "}
-              will not be able to sign in until reactivated.
+              and all their records (attendance, notes, follow-ups, sermon bookmarks) will
+              be permanently removed. Their sign-in account is also deleted. This cannot be undone.
               {actionError && (
                 <span className="block mt-2 text-red-600 dark:text-red-400 text-xs">{actionError}</span>
               )}
@@ -262,7 +263,7 @@ export default function UsersCmsClient() {
           ) : null
         }
         confirmLabel={
-          pending?.kind === "delete" ? "Yes, deactivate" : "Yes, change role"
+          pending?.kind === "delete" ? "Yes, delete permanently" : "Yes, change role"
         }
         tone={pending?.kind === "delete" ? "danger" : "warning"}
         loading={actionLoading}

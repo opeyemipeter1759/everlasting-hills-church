@@ -280,9 +280,18 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * Update the caller's password. Requires a valid session JWT — the user must already
-   * be signed in (either via normal login or via the recovery link, which Supabase
-   * exchanges for a short-lived session on the client).
+   * Update the caller's password.
+   *
+   * Two-step flow so the password actually persists:
+   *   1. Use the user's bearer JWT to call `auth.getUser()` — this both *verifies* the
+   *      token and returns the authoritative user id + current metadata.
+   *   2. Use the admin (service-role) client to call `auth.admin.updateUserById(...)`.
+   *
+   * Why not `scoped.auth.updateUser({ password })`: the SDK requires a bound session
+   * (set via `setSession`/storage) for that path. With just a global Authorization
+   * header and `persistSession: false`, `updateUser` silently no-ops on some SDK
+   * versions — the API returns 200 but the password is never written. Going via
+   * the admin path is unambiguous: the password change definitely lands.
    */
   async changePassword(authorization: string | undefined, password: string) {
     const accessToken = authorization?.startsWith('Bearer ')
@@ -290,20 +299,47 @@ export class AuthService implements OnModuleInit {
       : '';
     if (!accessToken) throw new UnauthorizedException('Access token is required');
 
+    // Step 1: verify the token and resolve the user id.
     const scoped = createClient(this.supabaseUrl, this.supabaseAnonKey, {
       global: { headers: { Authorization: `Bearer ${accessToken}` } },
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    // Update password AND clear the first-login flag in one round-trip. `data` is
-    // merged into user_metadata, so other fields (role, full_name) are preserved.
-    const { error } = await scoped.auth.updateUser({
-      password,
-      data: { needs_password_change: false },
-    });
-    if (error) {
-      this.logger.warn(`Password change failed: ${error.message}`);
-      throw new UnauthorizedException(error.message || 'Could not update password');
+    const { data: userData, error: userError } = await scoped.auth.getUser();
+    if (userError || !userData?.user) {
+      this.logger.warn(
+        `Password change rejected — invalid session: ${userError?.message ?? 'no user'}`,
+      );
+      throw new UnauthorizedException('Your session is no longer valid. Please sign in again.');
     }
+    const userId = userData.user.id;
+    const currentMetadata =
+      (userData.user.user_metadata as Record<string, unknown> | null | undefined) ?? {};
+
+    // Step 2: admin updateUserById is the reliable write path. Merge metadata
+    // explicitly because admin.updateUserById replaces (not merges) user_metadata.
+    let admin: SupabaseClient;
+    try {
+      admin = this.createAdminClient();
+    } catch (err) {
+      this.logger.error(`Admin client unavailable for password change: ${(err as Error).message}`);
+      throw new UnauthorizedException(
+        'Password changes are not configured on this server. Contact an admin.',
+      );
+    }
+
+    const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
+      password,
+      user_metadata: {
+        ...currentMetadata,
+        needs_password_change: false,
+      },
+    });
+    if (updateError) {
+      this.logger.warn(`Password change failed for ${userId}: ${updateError.message}`);
+      throw new UnauthorizedException(updateError.message || 'Could not update password');
+    }
+
+    this.logger.log(`Password changed for ${userData.user.email ?? userId}`);
     return { success: true, message: 'Password updated successfully' };
   }
 

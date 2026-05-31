@@ -105,7 +105,6 @@ export function getRequiredRole(pathname: string): UserRole | null {
     pathname.startsWith("/dashboard/submissions") ||
     pathname.startsWith("/dashboard/announcements") ||
     pathname.startsWith("/dashboard/inventory") ||
-    pathname.startsWith("/dashboard/settings") ||
     pathname.startsWith("/dashboard/analytics/attendance") ||
     pathname.startsWith("/dashboard/analytics/growth") ||
     pathname.startsWith("/dashboard/analytics/first-timers")
@@ -210,6 +209,44 @@ export function setFrontendSession({
   else clearCookie(FULL_NAME_COOKIE);
   if (picture) setCookie(PICTURE_COOKIE, picture, maxAge);
   else clearCookie(PICTURE_COOKIE);
+}
+
+/**
+ * Update specific session cookies without touching the access token.
+ *
+ * Used after a profile edit so the sidebar/header re-render with the new name, email,
+ * or avatar instead of staying on the values captured at login. A custom event is
+ * dispatched so any subscriber (SessionActionMenu, AppSidebar) can re-read cookies
+ * without a full page reload.
+ */
+export const SESSION_CHANGED_EVENT = "ehc:session-changed";
+
+export function patchFrontendSession(
+  partial: Partial<{
+    email: string;
+    fullName: string | null;
+    picture: string | null;
+    role: string | null;
+  }>,
+): void {
+  // 30 days — refreshed pieces shouldn't expire just because we updated them.
+  const maxAge = 60 * 60 * 24 * 30;
+  if (partial.email !== undefined) setCookie(EMAIL_COOKIE, partial.email, maxAge);
+  if (partial.fullName !== undefined) {
+    if (partial.fullName) setCookie(FULL_NAME_COOKIE, partial.fullName, maxAge);
+    else clearCookie(FULL_NAME_COOKIE);
+  }
+  if (partial.picture !== undefined) {
+    if (partial.picture) setCookie(PICTURE_COOKIE, partial.picture, maxAge);
+    else clearCookie(PICTURE_COOKIE);
+  }
+  if (partial.role !== undefined) {
+    if (partial.role) setCookie(ROLE_COOKIE, partial.role, maxAge);
+    else clearCookie(ROLE_COOKIE);
+  }
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(SESSION_CHANGED_EVENT));
+  }
 }
 
 export function clearFrontendSession(): void {

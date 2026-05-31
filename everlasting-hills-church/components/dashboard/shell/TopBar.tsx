@@ -7,7 +7,6 @@ import ThemeToggle from "@/components/theme/ThemeToggle";
 
 const PATH_TITLES: Record<string, string> = {
   "/dashboard":                 "Dashboard",
-  "/dashboard/profile":         "My Profile",
   "/dashboard/attendance":      "Attendance",
   "/dashboard/prayer-requests": "Prayer Requests",
   "/dashboard/testimonies":     "Testimonies",

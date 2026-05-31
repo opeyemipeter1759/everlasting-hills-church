@@ -1,16 +1,20 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { createClient } from '@supabase/supabase-js';
 import type { Env } from '../config/env.validation';
+import type { AuthUser } from '../auth/types/auth-user';
+import { canActOnRole } from '../users/role-hierarchy';
 import { NotificationEvents } from '../notifications/notification-events';
 import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
 
@@ -23,6 +27,7 @@ function createAdminClient() {
 
 @Injectable()
 export class MembersService {
+  private readonly logger = new Logger(MembersService.name);
   private readonly tenantId: string;
   private readonly appUrl: string;
 
@@ -158,6 +163,132 @@ export class MembersService {
     return member;
   }
 
+  /**
+   * Resolve the signed-in user's Member row from their Supabase userId.
+   * Used by the /members/me endpoints — every member self-service action goes through here
+   * so we never trust an id supplied by the client.
+   */
+  private async getMyMember(userId: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { id: true, Member: { select: { id: true } } },
+    });
+    if (!profile || !profile.Member) {
+      throw new NotFoundException(
+        'No member profile is attached to your account. Contact an admin.',
+      );
+    }
+    return { profileId: profile.id, memberId: profile.Member.id };
+  }
+
+  async updateMyProfile(userId: string, data: import('./dto/update-my-profile.dto').UpdateMyProfileDto) {
+    const { memberId } = await this.getMyMember(userId);
+    return this.prisma.member.update({
+      where: { id: memberId },
+      data: {
+        ...(data.firstName !== undefined && { firstName: data.firstName.trim() }),
+        ...(data.lastName !== undefined && {
+          lastName: data.lastName == null ? '' : data.lastName.trim(),
+        }),
+        ...(data.phone !== undefined && {
+          phone: data.phone == null || data.phone === '' ? null : data.phone.trim(),
+        }),
+        ...(data.bio !== undefined && {
+          bio: data.bio == null || data.bio === '' ? null : data.bio.trim(),
+        }),
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        bio: true,
+        photoUrl: true,
+      },
+    });
+  }
+
+  /**
+   * Upload a profile photo to Cloudflare R2 and stamp the public URL on the Member row.
+   * Mirrors the sermon-audio upload pattern in sermons.controller.ts so we stay consistent
+   * about how blob storage is wired (one place to swap providers later if needed).
+   */
+  async setMyAvatar(
+    userId: string,
+    file: { buffer: Buffer; mimetype: string; originalname: string; size: number },
+  ) {
+    const { memberId } = await this.getMyMember(userId);
+
+    const maxBytes = 1 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      throw new BadRequestException('Photo must be under 1 MB');
+    }
+    const allowed = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowed.includes(file.mimetype)) {
+      throw new BadRequestException('Photo must be PNG, JPG, or JPEG');
+    }
+
+    if (
+      !process.env.R2_ACCOUNT_ID ||
+      !process.env.R2_ACCESS_KEY_ID ||
+      !process.env.R2_SECRET_ACCESS_KEY
+    ) {
+      throw new InternalServerErrorException(
+        'Photo storage is not configured on this server. Add R2_* env vars.',
+      );
+    }
+
+    const ext = (file.originalname || '').split('.').pop() ?? 'jpg';
+    const key = `avatars/${memberId}-${Date.now()}.${ext.toLowerCase()}`;
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+      const endpoint =
+        process.env.R2_ENDPOINT ?? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+      const bucket =
+        process.env.R2_BUCKET ?? process.env.R2_BUCKET_NAME ?? process.env.R2_ACCOUNT_ID;
+      const client = new S3Client({
+        endpoint,
+        region: 'auto',
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID,
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+        },
+      });
+      await client.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        }),
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      throw new InternalServerErrorException(`Avatar upload failed: ${msg}`);
+    }
+
+    const publicBase = (process.env.R2_PUBLIC_URL ?? '').replace(/\/$/, '');
+    const photoUrl = publicBase ? `${publicBase}/${key}` : key;
+
+    await this.prisma.member.update({
+      where: { id: memberId },
+      data: { photoUrl },
+    });
+    return { photoUrl };
+  }
+
+  async clearMyAvatar(userId: string) {
+    const { memberId } = await this.getMyMember(userId);
+    await this.prisma.member.update({
+      where: { id: memberId },
+      data: { photoUrl: null },
+    });
+    return { success: true };
+  }
+
   async getAllMembers(opts?: { search?: string; status?: string }) {
     const where: any = { tenantId: this.tenantId };
     if (opts?.status) where.status = opts.status;
@@ -191,6 +322,96 @@ export class MembersService {
 
   async updateMemberStatus(memberId: string, status: string) {
     return this.prisma.member.update({ where: { id: memberId }, data: { status } as any });
+  }
+
+  /**
+   * Permanently delete a member.
+   *
+   * Steps (all-or-nothing for the DB side):
+   *   1. Load the member + their Profile + role so we can authorize.
+   *   2. Enforce the actor's role strictly out-ranks the target's role
+   *      (same rule as users.service — an ADMIN can't delete a PASTOR).
+   *   3. In one transaction: remove every child row that references this member,
+   *      then the Member, then their RoleAssignments + Profile.
+   *   4. Best-effort delete of the Supabase auth user. If this fails the DB is already
+   *      clean and the auth user becomes a harmless orphan — logged for cleanup.
+   *
+   * Why hard delete (vs the soft-delete on /users): "soft" leaves credentials live,
+   * which the admins reported as confusing — a deactivated member can still appear in
+   * Supabase admin and re-login if their status is flipped. Members deleted here are
+   * gone everywhere.
+   */
+  async deleteMember(actor: AuthUser, memberId: string) {
+    const member = await this.prisma.member.findUnique({
+      where: { id: memberId },
+      select: {
+        id: true,
+        tenantId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        Profile: { select: { id: true, userId: true, role: true } },
+      },
+    });
+    if (!member || member.tenantId !== this.tenantId) {
+      throw new NotFoundException('Member not found');
+    }
+
+    const targetRole = member.Profile?.role ?? 'MEMBER';
+    if (!canActOnRole(actor.role as any, targetRole as any)) {
+      throw new ForbiddenException(
+        `Your role (${actor.role ?? 'none'}) cannot delete a ${targetRole}.`,
+      );
+    }
+
+    const profileId = member.Profile?.id;
+    const supabaseUserId = member.Profile?.userId;
+
+    await this.prisma.$transaction(async (tx) => {
+      // Children that reference Member.id (schema declares no onDelete cascades, so
+      // we delete them explicitly). Keep this list in sync with members of the Member
+      // model in schema.prisma.
+      await tx.attendanceRecord.deleteMany({ where: { memberId } });
+      await tx.discussionResponse.deleteMany({ where: { memberId } });
+      await tx.engagementScore.deleteMany({ where: { memberId } });
+      await tx.followUpTask.deleteMany({ where: { memberId } });
+      await tx.listenProgress.deleteMany({ where: { memberId } });
+      await tx.pastorNote.deleteMany({ where: { memberId } });
+      await tx.pastoralAlert.deleteMany({ where: { memberId } });
+      await tx.sermonBookmark.deleteMany({ where: { memberId } });
+      await tx.sermonNote.deleteMany({ where: { memberId } });
+      await tx.sermonReaction.deleteMany({ where: { memberId } });
+      await tx.unitMember.deleteMany({ where: { memberId } });
+
+      await tx.member.delete({ where: { id: memberId } });
+
+      if (profileId) {
+        await tx.roleAssignment.deleteMany({ where: { profileId } });
+        await tx.profile.delete({ where: { id: profileId } });
+      }
+    });
+
+    if (supabaseUserId) {
+      try {
+        const supabase = createAdminClient();
+        const { error } = await supabase.auth.admin.deleteUser(supabaseUserId);
+        if (error) {
+          this.logger.warn(
+            `Member ${memberId} removed from DB but Supabase user ${supabaseUserId} could not be deleted: ${error.message}`,
+          );
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Member ${memberId} removed but Supabase admin client failed: ${(err as Error).message}`,
+        );
+      }
+    }
+
+    this.logger.log(
+      `[${actor.email}] deleted member ${member.firstName} ${member.lastName} (${member.email ?? 'no email'})`,
+    );
+
+    return { success: true, deletedId: memberId };
   }
 
   async getUpcomingBirthdays(daysAhead = 7) {
