@@ -2,37 +2,14 @@
 
 import { useEffect, useState } from "react";
 import ScrollReveal from "./ScrollReveal";
+import { SCRIPTURE_FALLBACK, type ScriptureContent } from "@/lib/site-settings";
 
-const pillars = [
-  {
-    symbol: "01",
-    phrase: "Fruitful by the well",
-    detail:
-      "Like a vine planted near water, we are meant to bear fruit — abundant, overflowing, and lasting.",
-  },
-  {
-    symbol: "02",
-    phrase: "Branches over the wall",
-    detail:
-      "Our reach is beyond ordinary limits. Blessing flows outward into families, cities, and generations.",
-  },
-  {
-    symbol: "03",
-    phrase: "Strengthened by the Mighty One",
-    detail:
-      "When the archers attack, it is God who steadies our arms. Our strength is not self-made.",
-  },
-  {
-    symbol: "04",
-    phrase: "Blessings to the everlasting hills",
-    detail:
-      "The promises on our lives are ancient, enduring, and greater than any mountain. They belong to eternity.",
-  },
-];
-
+const PILLAR_SYMBOLS = ["01", "02", "03", "04"] as const;
 const CYCLE_INTERVAL = 2200; // ms per card
 
-export default function ScriptureSection() {
+export default function ScriptureSection({ content }: { content?: ScriptureContent }) {
+  const c = content ?? SCRIPTURE_FALLBACK;
+  const pillars = c.pillars.map((p, i) => ({ symbol: PILLAR_SYMBOLS[i], ...p }));
   const [activeIndex, setActiveIndex] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [paused, setPaused] = useState(false);
@@ -260,19 +237,17 @@ export default function ScriptureSection() {
         <div className="text-center max-w-2xl mx-auto mb-16 md:mb-10">
           <ScrollReveal>
             <p className="text-white/40 text-xs tracking-[0.25em] uppercase font-medium mb-4">
-              Our Identity
+              {c.label}
             </p>
           </ScrollReveal>
           <ScrollReveal delay={0.1}>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.1] tracking-tight mb-2">
-              Rooted in a promise
+              {c.headline}
             </h2>
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
             <p className="text-white/55 text-base sm:text-lg leading-relaxed">
-              Our name and calling come from Genesis 49:22–26  a prophecy of
-              fruitfulness, divine strength, and blessings that reach the
-              everlasting hills.
+              {c.subtext}
             </p>
           </ScrollReveal>
         </div>
@@ -306,12 +281,10 @@ export default function ScriptureSection() {
               style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}
             >
               <p className="text-white/40 text-sm italic leading-relaxed">
-                &ldquo;The blessings of your father… are stronger than the
-                blessings of the ancient mountains, than the bounty of the
-                everlasting hills.&rdquo;
+                &ldquo;{c.bottomQuote.text}&rdquo;
               </p>
               <p className="text-white/30 text-xs tracking-[0.15em] uppercase mt-2">
-                Genesis 49:26
+                {c.bottomQuote.reference}
               </p>
             </div>
           </div>

@@ -9,7 +9,11 @@
       "PowerShell($conns = Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue; if \\($conns\\) { $conns.OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }; Start-Sleep -Seconds 2; if \\(Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue\\) { \"still busy\" } else { \"free\" })",
       "Bash(npx jest *)",
       "Bash(npm test *)",
-      "PowerShell(Start-Sleep -Seconds 3; $conns = Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue; if \\($conns\\) { $conns.OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue; \"Killed stragglers PID $_\" } }; Start-Sleep -Seconds 2; \"Port 4000: $\\(if \\(Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue\\) { 'busy' } else { 'free' }\\)\")"
+      "PowerShell(Start-Sleep -Seconds 3; $conns = Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue; if \\($conns\\) { $conns.OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue; \"Killed stragglers PID $_\" } }; Start-Sleep -Seconds 2; \"Port 4000: $\\(if \\(Get-NetTCPConnection -LocalPort 4000 -ErrorAction SilentlyContinue\\) { 'busy' } else { 'free' }\\)\")",
+      "Bash(npx prisma *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:4000/site-settings)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:4000/site-settings/contact)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:4000/site-settings/unknown)"
     ]
   }
 }

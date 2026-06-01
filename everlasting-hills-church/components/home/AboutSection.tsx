@@ -4,28 +4,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ScrollReveal from "./ScrollReveal";
 import EhcSlider, { EhcImage } from "../../ui/EHCSlider";
+import { ABOUT_FALLBACK, type AboutContent } from "@/lib/site-settings";
 
 const MAROON = "#87102C";
 const INTERVAL = 5500;
-
-const images: EhcImage[] = [
-  {
-    name: "Mountain lake",
-    src: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&q=80&auto=format&fit=crop",
-  },
-  {
-    name: "Forest light",
-    src: "https://images.unsplash.com/photo-1500534623283-312aade485b7?w=1200&q=80&auto=format&fit=crop",
-  },
-  {
-    name: "Green hills",
-    src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&q=80&auto=format&fit=crop",
-  },
-  {
-    name: "Mountain road",
-    src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80&auto=format&fit=crop",
-  },
-];
 
 const photos = [
   { src: "https://images.unsplash.com/photo-1438232992991-995b7058bbb3?auto=format&fit=crop&w=1200&q=80", location: "Akobo · Ibadan", pillar: 1 },
@@ -35,70 +17,66 @@ const photos = [
   { src: "https://images.unsplash.com/photo-1519491050282-cf00c82424b4?auto=format&fit=crop&w=1200&q=80", location: "Akobo · Ibadan", pillar: 2 },
 ];
 
-export default function AboutSection() {
+export default function AboutSection({ content }: { content?: AboutContent }) {
+  const c = content ?? ABOUT_FALLBACK;
+  const sliderImages: EhcImage[] = c.gallery.map((g) => ({ name: g.name, src: g.src }));
   return (
     <section id="about" className="pt-24 px-2 md:px-4 md:pt-32 bg-white overflow-hidden">
       <div className=" mx-auto max-w-[1400px] px-5 sm:px-8">
         <div className="grid md:grid-cols-2 gap-14 md:gap-20 items-center">
           {/* ── Left: animated gallery carousel ── */}
           <ScrollReveal direction="left">
-          <EhcSlider images={images} word="EHC" />
-
-            
+            <EhcSlider images={sliderImages} word="EHC" />
           </ScrollReveal>
           <div>
             <ScrollReveal delay={0.1}>
               <div className="flex items-center gap-3 mb-5">
                 <span className="w-full max-w-8 h-[1px] bg-[#87102C]/40" />
                 <p className="text-[#87102C] text-xs tracking-[0.25em] uppercase font-semibold">
-                  Who We Are
+                  {c.label}
                 </p>
               </div>
             </ScrollReveal>
 
             <ScrollReveal delay={0.2} className="flex flex-col md:gap-5">
               <h2 className="text-3xl sm:text-4xl md:text-[3.25rem] font-bold text-[#111]  tracking-tight text-balance">
-                Built on the Word.
+                {c.headline}
               </h2>
-                <span className="text-[#87102C] text-3xl sm:text-4xl md:text-[3.25rem] font-bold ">Alive in the Spirit.</span>
+              <span className="text-[#87102C] text-3xl sm:text-4xl md:text-[3.25rem] font-bold ">
+                {c.headlineAccent}
+              </span>
             </ScrollReveal>
 
-            <ScrollReveal delay={0.3}>
-              <p className="mt-6 text-[#3a3a3a] text-base leading-relaxed font-medium">
-                We exist to help people genuinely encounter Christ  not as a
-                distant doctrine, but as a living, present reality.
-              </p>
-            </ScrollReveal>
-
-            <ScrollReveal delay={0.4}>
-              <p className="mt-4 text-[#3a3a3a] text-base leading-relaxed">
-                The Word of God is the foundation beneath everything we do, and
-                the Holy Spirit is our daily source of strength. We are a family
-                committed to growing deeply in Scripture, living by the Spirit,
-                and flourishing together. You don't just attend here  you
-                belong here.
-              </p>
-            </ScrollReveal>
-
-            {/* Pillars as inline editorial markers */}
-            
+            {c.paragraphs.map((para, i) => (
+              <ScrollReveal key={i} delay={0.3 + i * 0.1}>
+                <p
+                  className={
+                    i === 0
+                      ? "mt-6 text-[#3a3a3a] text-base leading-relaxed font-medium"
+                      : "mt-4 text-[#3a3a3a] text-base leading-relaxed"
+                  }
+                >
+                  {para}
+                </p>
+              </ScrollReveal>
+            ))}
 
             <ScrollReveal delay={0.6}>
               <div className="pt-8 flex flex-wrap gap-3">
                 <a
-                  href="#community"
+                  href={c.ctaPrimary.href}
                   className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-[#87102C]/25 hover:-translate-y-0.5"
                 >
-                  Join the Family
+                  {c.ctaPrimary.label}
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden className="transition-transform group-hover:translate-x-0.5">
                     <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </a>
                 <a
-                  href="#culture"
+                  href={c.ctaSecondary.href}
                   className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl border border-[#E7CDD3] text-[#87102C] text-sm font-semibold hover:bg-[#FFF4F6] transition-colors"
                 >
-                  Our Culture
+                  {c.ctaSecondary.label}
                 </a>
               </div>
             </ScrollReveal>

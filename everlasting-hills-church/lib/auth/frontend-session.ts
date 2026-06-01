@@ -97,6 +97,7 @@ export function getRequiredRole(pathname: string): UserRole | null {
   }
 
   if (
+    pathname.startsWith("/dashboard/settings/homepage") ||
     pathname.startsWith("/dashboard/members") ||
     pathname.startsWith("/dashboard/users") ||
     pathname.startsWith("/dashboard/first-timers") ||

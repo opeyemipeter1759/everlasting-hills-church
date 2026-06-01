@@ -1,50 +1,74 @@
 "use client";
 
-import { Clock, MapPin, Calendar, Youtube } from "lucide-react";
+import { Clock, MapPin, Calendar, Youtube, type LucideIcon } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
 import { CHURCH } from "../../config/config";
-
+import type { ServiceSlot } from "@/lib/site-settings";
 
 interface ServiceCardsProps {
-  isSundayToday: boolean;
-  isWednesdayToday: boolean;
+  services: ServiceSlot[];
+  /** Label of the slot whose day matches today; null if today isn't a service day. */
+  todaySlotLabel: string | null;
   isLive: boolean;
+  locationName: string;
+  address: string | null;
+  formatTime: (hhmm: string) => string;
+}
+
+const DAY_PLURAL: Record<ServiceSlot["day"], string> = {
+  sunday: "Sundays",
+  monday: "Mondays",
+  tuesday: "Tuesdays",
+  wednesday: "Wednesdays",
+  thursday: "Thursdays",
+  friday: "Fridays",
+  saturday: "Saturdays",
+};
+
+/**
+ * Pick an icon based on position in the list. The first service gets the Clock
+ * icon (it's typically the main/Sunday service), midweek gets Calendar.
+ * Identity, not data — stays in code.
+ */
+function iconFor(index: number): LucideIcon {
+  if (index === 0) return Clock;
+  return Calendar;
 }
 
 export default function ServiceCards({
-  isSundayToday,
-  isWednesdayToday,
+  services,
+  todaySlotLabel,
   isLive,
+  locationName,
+  address,
+  formatTime,
 }: ServiceCardsProps) {
-  const cards = [
-    {
-      icon: Clock,
-      label: "Sunday Service",
-      value: "Sundays — 9:00 AM",
-      sub: isSundayToday ? "🟢 Service is on today" : "Doors open at 8:30 AM",
-      isActive: isSundayToday,
-    },
+  const cards = services.map((s, i) => {
+    const isActive = todaySlotLabel === s.label;
+    return {
+      icon: iconFor(i),
+      label: s.label,
+      value: `${DAY_PLURAL[s.day]} — ${formatTime(s.startTime)}`,
+      sub: isActive
+        ? "🟢 Service is on today"
+        : s.description,
+      isActive,
+    };
+  });
 
-    {
-      icon: Calendar,
-      label: "Midweek Service",
-      value: "Wednesdays — 5:30 PM",
-      sub: isWednesdayToday ? "🟢 Service is on today" : "Bible study & prayer",
-      isActive: isWednesdayToday,
-      },
-        {
-      icon: MapPin,
-      label: "Location",
-      value: "Ibadan, Nigeria",
-      sub: "Oyo State",
-      isActive: false,
-    },
-  ];
+  // Location card sits at the end of the stack.
+  const locationCard = {
+    icon: MapPin,
+    label: "Location",
+    value: locationName,
+    sub: address ?? "Address coming soon",
+    isActive: false,
+  };
 
   return (
     <div className="space-y-4">
-      {cards.map((card, i) => (
-        <ScrollReveal key={card.label} delay={0.15 + i * 0.1} direction="right">
+      {[...cards, locationCard].map((card, i) => (
+        <ScrollReveal key={`${card.label}-${i}`} delay={0.15 + i * 0.1} direction="right">
           <div
             className={`flex items-start gap-5 bg-white rounded-2xl p-6 border transition-all duration-300 ${
               card.isActive
@@ -52,7 +76,6 @@ export default function ServiceCards({
                 : "border-[#E7CDD3]/60 hover:border-[#E7CDD3] hover:shadow-[0_4px_24px_rgba(135,16,44,0.06)]"
             }`}
           >
-            {/* Icon */}
             <div
               className={`flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ${
                 card.isActive ? "bg-[#87102C]" : "bg-[#FFE8ED]"
@@ -64,7 +87,6 @@ export default function ServiceCards({
               />
             </div>
 
-            {/* Content */}
             <div className="flex-1 min-w-0">
               <p className="text-xs text-[#999] tracking-[0.15em] uppercase font-medium mb-0.5">
                 {card.label}
@@ -78,7 +100,6 @@ export default function ServiceCards({
                 {card.sub}
               </p>
 
-              {/* Live now → "Join Live" button */}
               {card.isActive && isLive && (
                 <a
                   href={CHURCH.youtubeUrl}
@@ -94,7 +115,6 @@ export default function ServiceCards({
                 </a>
               )}
 
-              {/* Service day but not live yet → softer "Watch on YouTube" */}
               {card.isActive && !isLive && (
                 <a
                   href={CHURCH.youtubeUrl}
@@ -110,9 +130,6 @@ export default function ServiceCards({
           </div>
         </ScrollReveal>
       ))}
-
-      {/* First-time visitor note */}
-    
     </div>
   );
 }

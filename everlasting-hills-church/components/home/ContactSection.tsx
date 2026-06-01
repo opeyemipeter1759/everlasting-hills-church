@@ -3,40 +3,96 @@
 import { useState } from "react";
 import ScrollReveal from "./ScrollReveal";
 import GetInTouch from "./GetInTouch";
-import { Mail, MessageCircle, Instagram, Send } from "lucide-react";
+import {
+  Facebook,
+  Mail,
+  MessageCircle,
+  Instagram,
+  Send,
+  Twitter,
+  Youtube,
+  type LucideIcon,
+} from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
+import { CONTACT_FALLBACK, type ContactContent } from "@/lib/site-settings";
 
-// ── Update all contact info here ──
-const contactLinks = [
-  {
-    icon: MessageCircle,
-    label: "WhatsApp",
-    value: "Chat with us on WhatsApp", // ← Update to your number
-    // ── Replace with your WhatsApp link: https://wa.me/234XXXXXXXXXX ──
-    href: "#",
-    color: "#25D366",
-    bg: "#ECFDF5",
-  },
-  {
-    icon: Instagram,
-    label: "Instagram",
-    value: "@everlastinghillschurch", // ← Update to your handle
-    // ── Replace with your Instagram URL ──
-    href: "#",
-    color: "#E1306C",
-    bg: "#FFF0F5",
-  },
-  {
-    icon: Mail,
-    label: "Email",
-    value: "hello@everlastinghills.org", // ← Update to your email
-    href: "mailto:hello@everlastinghills.org",
-    color: "#87102C",
-    bg: "#FFF4F6",
-  },
-];
+type ContactLink = {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  href: string;
+  color: string;
+  bg: string;
+};
 
-export default function ContactSection() {
+function buildContactLinks(c: ContactContent): ContactLink[] {
+  const out: ContactLink[] = [];
+  if (c.whatsapp.visible) {
+    out.push({
+      icon: MessageCircle,
+      label: "WhatsApp",
+      value: c.whatsapp.label,
+      href: c.whatsapp.url,
+      color: "#25D366",
+      bg: "#ECFDF5",
+    });
+  }
+  if (c.instagram.visible) {
+    out.push({
+      icon: Instagram,
+      label: "Instagram",
+      value: c.instagram.handle,
+      href: c.instagram.url,
+      color: "#E1306C",
+      bg: "#FFF0F5",
+    });
+  }
+  if (c.email.visible) {
+    out.push({
+      icon: Mail,
+      label: "Email",
+      value: c.email.address,
+      href: `mailto:${c.email.address}`,
+      color: "#87102C",
+      bg: "#FFF4F6",
+    });
+  }
+  if (c.youtube.visible && c.youtube.url) {
+    out.push({
+      icon: Youtube,
+      label: "YouTube",
+      value: "Watch our channel",
+      href: c.youtube.url,
+      color: "#FF0000",
+      bg: "#FFF0F0",
+    });
+  }
+  if (c.facebook.visible && c.facebook.url) {
+    out.push({
+      icon: Facebook,
+      label: "Facebook",
+      value: "Find us on Facebook",
+      href: c.facebook.url,
+      color: "#1877F2",
+      bg: "#EFF6FF",
+    });
+  }
+  if (c.twitter.visible && c.twitter.url) {
+    out.push({
+      icon: Twitter,
+      label: "Twitter / X",
+      value: "Follow our updates",
+      href: c.twitter.url,
+      color: "#0F1419",
+      bg: "#F4F4F5",
+    });
+  }
+  return out;
+}
+
+export default function ContactSection({ content }: { content?: ContactContent }) {
+  const c = content ?? CONTACT_FALLBACK;
+  const contactLinks = buildContactLinks(c);
   const [formState, setFormState] = useState({
     name: "",
     email: "",

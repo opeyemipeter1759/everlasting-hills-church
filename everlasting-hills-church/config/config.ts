@@ -148,7 +148,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone,     minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/units",         icon: Network,       minRole: "ADMIN" },
-      { label: "Settings",      href: "/dashboard/settings",      icon: Settings,      minRole: "ADMIN" },
+      { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
     ],
   },
   {

@@ -2,19 +2,10 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
+import { HERO_FALLBACK, type HeroContent } from "@/lib/site-settings";
 
-
-
-const IMAGES = [
-  "/images/church_congregation_1_1779193592146.png",
-  "/images/church_congregation_2_1779193607195.png",
-  "/images/church_congregation_3_1779193624434.png",
-  "/images/church_congregation_4_1779193639860.png",
-   "/images/church_congregation_3_1779193624434.png",
-  "/images/church_congregation_4_1779193639860.png",
-];
-
-export default function HeroSection() {
+export default function HeroSection({ content }: { content?: HeroContent }) {
+  const c = content ?? HERO_FALLBACK;
   const rootRef = useRef<HTMLElement | null>(null);
 
   return (
@@ -46,31 +37,33 @@ export default function HeroSection() {
         <div className="grid grid-cols-1 md:grid-cols-12 lg:gap-8 items-center mb-20">
           {/* Left Content */}
           <div className="md:col-span-12 lg:col-span-7 flex flex-col items-start justify-center  text-left mb-16 lg:mb-0">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.9 }}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-church-maroon/30 border border-church-maroon/50 mb-4"
-            >
-              <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-black text-church-accent">
-                Genesis 49:22–26
-              </span>
-            </motion.div>
+            {c.scriptureBadge.visible && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.9 }}
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-church-maroon/30 border border-church-maroon/50 mb-4"
+              >
+                <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-black text-church-accent">
+                  {c.scriptureBadge.text}
+                </span>
+              </motion.div>
+            )}
 
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.1 }}
               className="text-[48px] sm:text-[64px] text-white lg:text-[84px] leading-[0.95] font-bold font-display tracking-tight mb-5"
             >
-              The warmth of home <br/>
+              {c.headline} <br/>
               <motion.span
                 className="text-transparent bg-clip-text bg-gradient-to-r from-church-accent to-church-maroon font-serif italic font-normal"
                 animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
                 transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
                 style={{ backgroundSize: "200% 100%" }}
               >
-                before you arrive.
+                {c.headlineAccent}
               </motion.span>
             </motion.h1>
 
@@ -80,8 +73,7 @@ export default function HeroSection() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-white/60 text-lg sm:text-xl max-w-xl leading-relaxed mb-5 font-sans font-medium"
             >
-              Experience joyful worship and a peaceful place where hearts are heard. 
-              A community rooted in the Word and alive in the Spirit.
+              {c.subtext}
             </motion.p>
 
             <motion.div
@@ -90,15 +82,17 @@ export default function HeroSection() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
             >
-              <motion.button 
+              <motion.a
+                href={c.ctaPrimary.href}
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className="px-10 py-4 bg-white text-church-dark font-bold rounded-xl hover:bg-church-warm transition-all flex items-center justify-center gap-3 shadow-2xl shadow-white/10"
               >
-                Plan Your Visit
+                {c.ctaPrimary.label}
                 <ArrowRight className="w-5 h-5" />
-              </motion.button>
-              <motion.button 
+              </motion.a>
+              <motion.a
+                href={c.ctaSecondary.href}
                 whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
                 whileTap={{ scale: 0.98 }}
                 className="px-10 py-4 bg-transparent border border-white/20 font-bold rounded-xl transition-all flex items-center justify-center gap-3 text-white"
@@ -106,8 +100,8 @@ export default function HeroSection() {
                 <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
                   <Play className="w-3 h-3 fill-white" />
                 </div>
-                Watch Service
-              </motion.button>
+                {c.ctaSecondary.label}
+              </motion.a>
             </motion.div>
           </div>
 
@@ -126,7 +120,7 @@ export default function HeroSection() {
                     transition: "transform 0.08s linear",
                   }}
                 >
-                  <PhotoFan images={IMAGES} />
+                  <PhotoFan images={c.carouselImages} />
                 </div>
               </div>
 
@@ -134,11 +128,11 @@ export default function HeroSection() {
               <div className="relative h-full flex  flex-col justify-between z-20 pointer-events-none">
                 <div className="space-y-4">
                   <div className="h-1.5 w-16 bg-church-accent rounded-full transition-all group-hover:w-24"></div>
-                  <p className="text-[10px] text-white/40 tracking-[0.2em] uppercase font-bold">Weekly Gathering</p>
+                  <p className="text-[10px] text-white/40 tracking-[0.2em] uppercase font-bold">{c.mediaCard.eyebrow}</p>
                 </div>
 
                 <div className="flex flex-col md:mb-0 mb-16 gap-4">
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.8 }}
@@ -148,10 +142,10 @@ export default function HeroSection() {
                       <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-church-accent">
                         <Play className="w-5 h-5 fill-church-accent" />
                       </div>
-                      <span className="font-bold text-white tracking-tight text-sm">Join the Rhythm</span>
+                      <span className="font-bold text-white tracking-tight text-sm">{c.mediaCard.title}</span>
                     </div>
                     <p className="text-xs text-white/50 leading-relaxed uppercase tracking-wider font-semibold">
-                      Experience the pulse of praise.
+                      {c.mediaCard.subtitle}
                     </p>
                   </motion.div>
                 </div>

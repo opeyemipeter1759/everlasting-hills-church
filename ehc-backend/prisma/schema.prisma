@@ -387,9 +387,36 @@ model Tenant {
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
   Service            Service[]
+  SiteSettings       SiteSettings[]
   Testimonial        Testimonial[]
   Unit               Unit[]
   Visitor            Visitor[]
+}
+
+/// Homepage content store. One row per section, content is a typed JSON blob
+/// validated server-side by Zod (see src/site-settings/schemas).
+model SiteSettings {
+  id        String       @id
+  tenantId  String
+  section   SiteSection
+  content   Json
+  updatedAt DateTime     @default(now()) @updatedAt
+  updatedBy String?
+  Tenant    Tenant       @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, section])
+}
+
+enum SiteSection {
+  HERO
+  ABOUT
+  CULTURE
+  SCRIPTURE
+  SERVICE
+  SERMONS
+  COMMUNITY
+  GIVING
+  CONTACT
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

@@ -8,11 +8,17 @@ import HeroSection from "@/components/home/HeroSection";
 import SermonsSection from "@/components/home/SermonsSection";
 import AttendanceSection from "@/components/home/AttendanceSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import { getAllSiteSettings } from "@/lib/site-settings";
 
 export const metadata = {
   title: "Everlasting Hills Church — Ibadan",
   description: "A church family in Ibadan, Nigeria. Join us Sunday for service.",
 };
+
+// ISR matches the backend's 5-minute cache. Admin saves invalidate the
+// backend cache instantly; the public page picks up changes on the next
+// revalidation window (≤ 5 min) without manual purges.
+export const revalidate = 300;
 
 /**
  * Public homepage.
@@ -21,22 +27,25 @@ export const metadata = {
  *   Hero → About → Culture → Scripture → Services → Sermons → Attendance →
  *   Testimonials → Community → Contact
  *
- * The bottom slab (Directions → Giving → Footer) lives in the public layout
- * (see app/(public)/layout.tsx → PageFooter) so every public page surfaces it.
+ * All editable content comes from /site-settings — fetched server-side once
+ * per request. Components ship with hardcoded fallbacks so the page renders
+ * even if the API is down.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const settings = await getAllSiteSettings();
+
   return (
     <main className="min-h-screen flex overflow-x-hidden flex-col bg-church-dark">
-      <HeroSection />
-      <AboutSection />
-      <CultureSection />
-      <ScriptureSection />
-      <ServiceSection />
-      <SermonsSection />
+      <HeroSection content={settings.HERO} />
+      <AboutSection content={settings.ABOUT} />
+      <CultureSection content={settings.CULTURE} />
+      <ScriptureSection content={settings.SCRIPTURE} />
+      <ServiceSection content={settings.SERVICE} />
+      <SermonsSection content={settings.SERMONS} />
       <AttendanceSection />
       <TestimonialsSection />
-      <CommunitySection />
-      <ContactSection />
+      <CommunitySection content={settings.COMMUNITY} />
+      <ContactSection content={settings.CONTACT} />
     </main>
   );
 }

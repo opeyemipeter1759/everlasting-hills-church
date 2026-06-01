@@ -1,64 +1,63 @@
-"use client";
-
 import ScrollReveal from "./ScrollReveal";
-import { ArrowRight } from "lucide-react";
-import VideoFilterTabs from "./Videofiltertabs";
-import VideoSearchInput from "./VideoSearchInput";
-import type { CategoryCounts, VideoCategory, YouTubeVideo } from "@/types";
-import { useYouTubeVideos } from "../../utils/Useyoutubevideos";
-import { useMemo, useState } from "react";
-import VideoCardSkeleton from "../../ui/skelenton/VideoCardSkeleton";
-import VideoCard from "./VideoCard";
-import VideoPlayerModal from "./VideoPlayerModal";
+import { ArrowRight, BookOpen, Play } from "lucide-react";
+import Link from "next/link";
+import { SERMONS_FALLBACK, type SermonsContent } from "@/lib/site-settings";
+import type { LatestSermon } from "@/types";
 
-type TabLabel = "All" | VideoCategory;
-const INITIAL_FETCH = 12;
-const PAGE_SIZE = 4;
- 
-const CATEGORY_TABS: VideoCategory[] = ["Sunday", "Saturday", "Other"];
- 
-export default function SermonsSection() {
-  const { videos, loading, error } = useYouTubeVideos(INITIAL_FETCH);
-  const [activeTab, setActiveTab] = useState<TabLabel>("All");
-  const [visibleCount, setVisibleCount] = useState<number>(PAGE_SIZE);
-  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
-  const [search, setSearch] = useState<string>("");
- 
-  // Build per-category counts for the tab badges
-  const counts = useMemo<CategoryCounts>(() => {
-    const map: CategoryCounts = { total: videos.length };
-    for (const cat of CATEGORY_TABS) {
-      map[cat] = videos.filter((v) => v.category === cat).length;
-    }
-    return map;
-  }, [videos]);
- 
-  // Filter by active tab
-  const filtered = useMemo(() => {
-    const byTab = activeTab === "All" ? videos : videos.filter((v) => v.category === activeTab);
-    if (!search) return byTab;
-    const q = search.trim().toLowerCase();
-    return byTab.filter((v) => v.title.toLowerCase().includes(q));
-  }, [videos, activeTab, search]);
- 
-  // Paginate
-  const visible = filtered.slice(0, visibleCount);
-  const remaining = filtered.length - visibleCount;
- 
-  function handleTabChange(tab: TabLabel): void {
-    setActiveTab(tab);
-    setVisibleCount(PAGE_SIZE);
+/**
+ * Sermons section.
+ *
+ * Server component: fetches the latest N sermons (configurable via
+ * site_settings.SERMONS.displayCount) from the public /sermons/latest endpoint.
+ * Chrome (label, headline, subtext, "View all" CTA) also comes from site_settings.
+ *
+ * The previous YouTube-driven version stays useful for video discovery on the
+ * /sermons page, but the homepage strip is now backed by admin-created sermons.
+ * If the fetch fails or returns empty, we render the section header + a soft
+ * "no sermons yet" placeholder instead of breaking.
+ */
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
+  process.env.API_BASE_URL?.trim() ||
+  "http://localhost:4000";
+
+interface ServerEnvelope<T> {
+  data: T;
+}
+
+async function fetchLatestSermons(limit: number): Promise<LatestSermon[]> {
+  try {
+    const res = await fetch(`${BASE_URL}/sermons/latest?limit=${limit}`, {
+      next: { revalidate: 300, tags: ["sermons-latest"] },
+    });
+    if (!res.ok) return [];
+    const body = (await res.json()) as ServerEnvelope<LatestSermon[]>;
+    return body?.data ?? [];
+  } catch {
+    return [];
   }
+}
 
-  function handleOpen(video: YouTubeVideo): void {
-    setSelectedVideo(video);
-  }
+function formatSermonDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
 
-  function handleClose(): void {
-    setSelectedVideo(null);
-  }
+export default async function SermonsSection({
+  content,
+}: {
+  content?: SermonsContent;
+}) {
+  const c = content ?? SERMONS_FALLBACK;
+  const sermons = await fetchLatestSermons(c.displayCount);
 
-  return(
+  return (
     <section
       id="sermons"
       className="relative overflow-hidden py-24 md:py-32 bg-church-dark text-white"
@@ -75,94 +74,127 @@ export default function SermonsSection() {
           <div className="max-w-xl">
             <ScrollReveal>
               <p className="text-[#FFB3C1] text-sm tracking-[0.25em] uppercase font-semibold mb-3">
-                Recent Teachings
+                {c.label}
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.1}>
               <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.1] tracking-tight text-balance">
-                The Word, taught with clarity
+                {c.headline}
               </h2>
+            </ScrollReveal>
+            <ScrollReveal delay={0.15}>
+              <p className="mt-4 text-white/55 text-base sm:text-lg leading-relaxed max-w-prose">
+                {c.subtext}
+              </p>
             </ScrollReveal>
           </div>
           <ScrollReveal delay={0.2} direction="right">
-            <a
-              href="/sermons"
+            <Link
+              href={c.viewAllCta.href}
               className="flex items-center gap-2 text-[#FFB3C1] text-sm font-semibold hover:gap-3 transition-all whitespace-nowrap"
             >
-              View all sermons <ArrowRight size={15} />
-            </a>
+              {c.viewAllCta.label} <ArrowRight size={15} />
+            </Link>
           </ScrollReveal>
         </div>
 
-        {!loading && !error && (
-          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <VideoFilterTabs
-              categories={CATEGORY_TABS}
-              counts={counts}
-              active={activeTab}
-              onChange={handleTabChange}
-            />
-
-            <VideoSearchInput value={search} onChange={setSearch} />
-          </div>
-        )}
- 
-        {/* ── Error state ── */}
-        {error && (
-          <div className="rounded-[28px] border border-white/10 bg-white/5 px-6 py-8 text-center backdrop-blur-xl">
-            <p className="text-[#FFB3C1] text-sm font-medium mb-1">Could not load videos</p>
-            <p className="text-white/55 text-xs">{error}</p>
-          </div>
-        )}
- 
-        {/* ── Loading skeletons ── */}
-        {loading && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <VideoCardSkeleton key={i} />
+        {sermons.length > 0 ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {sermons.map((sermon, i) => (
+              <ScrollReveal key={sermon.id} delay={0.05 + i * 0.08}>
+                <SermonCard sermon={sermon} />
+              </ScrollReveal>
             ))}
           </div>
+        ) : (
+          <EmptyState viewAllHref={c.viewAllCta.href} viewAllLabel={c.viewAllCta.label} />
         )}
- 
-        {/* ── Video grid ── */}
-        {!loading && !error && visible.length > 0 && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {visible.map((video) => (
-              <VideoCard key={video.id} video={video} onOpen={handleOpen} />
-            ))}
-          </div>
-        )}
- 
-        {/* ── Empty state ── */}
-        {!loading && !error && visible.length === 0 && (
-          <div className="py-16 text-center">
-            <p className="text-white/60 text-sm">No videos in this category yet.</p>
-          </div>
-        )}
- 
-        {/* ── Load more ── */}
-        {!loading && !error && remaining > 0 && (
-          <div className="mt-10 flex justify-center">
-            <button
-              onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 text-[#FFE8ED] text-sm font-medium hover:bg-white/10 hover:border-white/20 transition-all backdrop-blur-xl"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path
-                  d="M2 7h10M7 2v10"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                />
-              </svg>
-              Load more · {remaining}
-            </button>
-          </div>
-        )}
-
-        {selectedVideo ? (
-          <VideoPlayerModal video={selectedVideo} onClose={handleClose} />
-        ) : null}
       </div>
     </section>
-);}
+  );
+}
+
+/* ── Sermon card (server) ───────────────────────────────────────────────── */
+
+function SermonCard({ sermon }: { sermon: LatestSermon }) {
+  const dateLabel = formatSermonDate(sermon.publishedAt || sermon.date);
+
+  return (
+    <Link
+      href={`/sermons/${sermon.slug}`}
+      className="group block overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.03)_0%,rgba(255,255,255,0.015)_100%)] shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition-all duration-300 hover:border-white/18 hover:shadow-[0_30px_80px_rgba(0,0,0,0.4)] hover:-translate-y-1"
+    >
+      <div className="relative aspect-[16/10] overflow-hidden bg-[#14070b]">
+        {sermon.thumbnailUrl ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={sermon.thumbnailUrl}
+            alt={sermon.title}
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#271015] via-[#14070b] to-[#0a0a0a]">
+            <div className="rounded-full border border-white/10 bg-white/5 p-5">
+              <Play className="h-8 w-8 text-[#FFB3C1]" />
+            </div>
+          </div>
+        )}
+
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/25 to-transparent" />
+
+        <div className="absolute inset-x-0 top-0 flex items-start gap-2 p-4">
+          {sermon.isFeatured && (
+            <span className="inline-flex items-center rounded-full bg-[#87102C] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white">
+              Featured
+            </span>
+          )}
+          {sermon.series && (
+            <span className="inline-flex items-center rounded-full bg-white/10 border border-white/15 backdrop-blur-sm px-3 py-1 text-[10px] font-semibold tracking-[0.15em] uppercase text-white/80">
+              {sermon.series}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="p-6 space-y-3">
+        <p className="text-[#FFB3C1]/80 text-xs tracking-[0.18em] uppercase font-semibold">
+          {sermon.speaker} · {dateLabel}
+        </p>
+        <h3 className="text-white text-lg font-bold leading-snug tracking-tight line-clamp-2">
+          {sermon.title}
+        </h3>
+        {sermon.description && (
+          <p className="text-white/55 text-sm leading-relaxed line-clamp-2">
+            {sermon.description}
+          </p>
+        )}
+        <p className="inline-flex items-center gap-1.5 text-[#FFB3C1] text-xs font-semibold group-hover:gap-2.5 transition-all">
+          Listen
+          <ArrowRight size={13} />
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+
+function EmptyState({ viewAllHref, viewAllLabel }: { viewAllHref: string; viewAllLabel: string }) {
+  return (
+    <div className="rounded-[28px] border border-white/10 bg-white/[0.03] px-8 py-16 text-center backdrop-blur-xl">
+      <div className="mx-auto w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5">
+        <BookOpen size={22} className="text-[#FFB3C1]" />
+      </div>
+      <p className="text-white font-semibold text-base mb-1">No sermons published yet</p>
+      <p className="text-white/55 text-sm max-w-md mx-auto">
+        Recent messages will appear here once they are added in the admin dashboard.
+      </p>
+      <Link
+        href={viewAllHref}
+        className="mt-6 inline-flex items-center gap-2 text-[#FFB3C1] text-sm font-semibold hover:gap-3 transition-all"
+      >
+        {viewAllLabel} <ArrowRight size={14} />
+      </Link>
+    </div>
+  );
+}

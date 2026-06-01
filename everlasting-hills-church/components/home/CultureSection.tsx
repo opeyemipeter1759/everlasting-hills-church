@@ -2,78 +2,77 @@
 
 import { useState } from "react";
 import ScrollReveal from "./ScrollReveal";
+import { CULTURE_FALLBACK, type CultureContent } from "@/lib/site-settings";
 
-const cultureCards = [
+/**
+ * The 3-card identity (Word / Spirit / Community) is brand-fixed: icons,
+ * pillar labels, inverted-middle visual treatment all live here. Content
+ * (headline / body / verse) comes from site_settings via props with fallback.
+ */
+const PILLAR_IDENTITY = [
   {
     id: "word",
     label: "Word",
     icon: BookIcon,
-    headline: "Shaped by Scripture",
-    body: "We are formed by the truth of God's Word. Everything we do how we think, love, and live  flows from a sincere engagement with Scripture.",
-    accent: "#87102C",
     bg: "bg-[#FFF4F6]",
     border: "border-[#E7CDD3]",
-    verse: "2 Tim. 3:16",
-    verseText:
-      "All Scripture is breathed out by God and profitable for teaching, for reproof, for correction, and for training in righteousness.",
+    inverted: false,
   },
   {
     id: "spirit",
     label: "Spirit",
     icon: FlameIcon,
-    headline: "Alive in the Spirit",
-    body: "We depend on the life and power of the Holy Spirit for everything. He is not a concept  He is the reason we move, breathe, and minister.",
-    accent: "#87102C",
     bg: "bg-[#87102C]",
     border: "border-transparent",
-    verse: "John 4:24",
-    verseText:
-      "God is spirit, and those who worship him must worship in spirit and truth.",
     inverted: true,
   },
   {
     id: "community",
     label: "Community",
     icon: PeopleIcon,
-    headline: "Family, Not a Crowd",
-    body: "We grow as a family, not just as a gathering. Real relationships, shared lives, and genuine accountability  that's the community we build.",
-    accent: "#87102C",
     bg: "bg-[#FFF4F6]",
     border: "border-[#E7CDD3]",
-    verse: "Acts 2:44",
-    verseText:
-      "And all who believed were together and had all things in common.",
+    inverted: false,
   },
-];
+] as const;
 
-export default function CultureSection() {
+export default function CultureSection({ content }: { content?: CultureContent }) {
+  const c = content ?? CULTURE_FALLBACK;
+  const cards = PILLAR_IDENTITY.map((identity, i) => ({
+    ...identity,
+    headline: c.cards[i].headline,
+    body: c.cards[i].body,
+    verse: c.cards[i].verseRef,
+    verseText: c.cards[i].verseText,
+  }));
+
   return (
     <section id="culture" className="py-24 w-full md:px-4  md:py-32 bg-white">
       <div className="px-8 mx-auto w-full max-w-[1400px] sm:px-8">
         <div className="mb-10">
           <ScrollReveal>
             <div className="flex items-center gap-3 mb-3">
-            <span className="w-full max-w-8 h-[1px] bg-[#87102C]/40" />
-            <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold ">
-              Our Culture
+              <span className="w-full max-w-8 h-[1px] bg-[#87102C]/40" />
+              <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold ">
+                {c.label}
               </p>
-              </div>
+            </div>
           </ScrollReveal>
           <ScrollReveal delay={0.1}>
             <h2 className="text-3xl sm:text-4xl md:text-[2.75rem] font-bold text-[#111] leading-[1.1] tracking-tight text-balance">
-              What we are about
+              {c.headline}
             </h2>
           </ScrollReveal>
           <ScrollReveal delay={0.2}>
             <p className="mt-4 text-[#555] text-base sm:text-lg leading-relaxed">
-              Three convictions at the heart of everything we do.
+              {c.subtext}
             </p>
           </ScrollReveal>
         </div>
 
         {/* Cards */}
         <div className="grid md:grid-cols-3 gap-5 md:gap-6">
-          {cultureCards.map((card, i) => (
+          {cards.map((card, i) => (
             <ScrollReveal key={card.id} delay={0.1 + i * 0.12}>
               <CultureCard card={card} />
             </ScrollReveal>
@@ -88,11 +87,20 @@ export default function CultureSection() {
   );
 }
 
-function CultureCard({
-  card,
-}: {
-  card: (typeof cultureCards)[number];
-}) {
+type ResolvedCard = {
+  id: string;
+  label: string;
+  icon: (props: { inverted?: boolean }) => React.ReactElement;
+  bg: string;
+  border: string;
+  inverted: boolean;
+  headline: string;
+  body: string;
+  verse: string;
+  verseText: string;
+};
+
+function CultureCard({ card }: { card: ResolvedCard }) {
   const [flipped, setFlipped] = useState(false);
 
   return (
