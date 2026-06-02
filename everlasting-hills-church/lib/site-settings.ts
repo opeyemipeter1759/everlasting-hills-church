@@ -11,9 +11,6 @@
  * frontend will still render with the fallback defaults below.
  */
 
-import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/frontend-session";
-import { cookies } from "next/headers";
-
 /* ── Type mirrors (kept in sync with ehc-backend/src/site-settings/schemas) ── */
 
 export interface Cta {
@@ -442,28 +439,4 @@ export async function getAllSiteSettings(): Promise<SiteSettingsMap> {
     console.warn("[site-settings] fetch failed, using fallbacks:", (err as Error).message);
     return FALLBACKS;
   }
-}
-
-/**
- * Admin-side fetch — one section, fresh, with the caller's JWT.
- * Used by the /dashboard/settings/homepage editor.
- */
-export async function getSectionForAdmin<S extends SiteSectionName>(
-  section: S,
-): Promise<SiteSettingsMap[S]> {
-  const jar = cookies();
-  const token = jar.get(ACCESS_TOKEN_COOKIE)?.value;
-  const res = await fetch(`${BASE_URL}/site-settings/${section.toLowerCase()}`, {
-    cache: "no-store",
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-  if (!res.ok) {
-    return FALLBACKS[section];
-  }
-  const body = (await res.json()) as ServerEnvelope<SectionRow>;
-  const merged = {
-    ...(FALLBACKS[section] as object),
-    ...((body?.data?.content as object) ?? {}),
-  };
-  return merged as SiteSettingsMap[S];
 }
