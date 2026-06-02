@@ -45,7 +45,7 @@ export default async function HomePage() {
       <AttendanceSection />
       <TestimonialsSection />
       <CommunitySection content={settings.COMMUNITY} />
-      <ContactSection content={settings.CONTACT} />
+      {/* <ContactSection content={settings.CONTACT} /> */}
     </main>
   );
 }
