@@ -371,6 +371,8 @@ model Tenant {
   DiscussionResponse DiscussionResponse[]
   EmailSubscriber    EmailSubscriber[]
   EngagementScore    EngagementScore[]
+  Event              Event[]
+  EventRsvp          EventRsvp[]
   FollowUpTask       FollowUpTask[]
   FormSubmission     FormSubmission[]
   GivingRecord       GivingRecord[]
@@ -391,6 +393,61 @@ model Tenant {
   Testimonial        Testimonial[]
   Unit               Unit[]
   Visitor            Visitor[]
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Event {
+  id              String      @id
+  tenantId        String
+  slug            String
+  title           String
+  tagline         String?
+  description     String?
+  startAt         DateTime
+  endAt           DateTime?
+  venueName       String?
+  venueAddress    String?
+  mapsLink        String?
+  flyerImageUrl   String?
+  hostName        String?
+  guestMinister   String?
+  contactPhone    String?
+  contactEmail    String?
+  contactWhatsapp String?
+  status          EventStatus @default(DRAFT)
+  featured        Boolean     @default(false)
+  rsvpEnabled     Boolean     @default(true)
+  capacity        Int?
+  customPath      String?
+  order           Int         @default(0)
+  publishedAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now())
+  Tenant          Tenant      @relation(fields: [tenantId], references: [id])
+  Rsvps           EventRsvp[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status, startAt])
+}
+
+model EventRsvp {
+  id        String   @id
+  tenantId  String
+  eventId   String
+  fullName  String
+  email     String
+  phone     String?
+  attendees Int      @default(1)
+  message   String?
+  createdAt DateTime @default(now())
+  Event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, eventId, createdAt])
 }
 
 /// Homepage content store. One row per section, content is a typed JSON blob

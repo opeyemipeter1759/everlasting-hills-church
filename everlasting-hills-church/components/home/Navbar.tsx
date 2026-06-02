@@ -12,6 +12,7 @@ const navLinks = [
   { label: "Our Culture", href: "/#culture" },
   // Real link to the public sermon library, not just the homepage section anchor.
   { label: "Sermons", href: "/sermons" },
+  { label: "Events", href: "/events" },
   { label: "Services", href: "/#services" },
   { label: "Community", href: "/#community" },
   { label: "Connect", href: "/connect" },

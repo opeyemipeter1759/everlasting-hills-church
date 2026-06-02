@@ -19,6 +19,7 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
 import { UsersModule } from './users/users.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { EventsModule } from './events/events.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 
@@ -94,6 +95,7 @@ import type { Env } from './config/env.validation';
     UsersModule,
     SiteSettingsModule,
     UploadsModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [

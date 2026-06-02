@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown, ChevronDown, Sparkles } from "lucide-react";
 import { HEAVEN_ON_EARTH } from "./event-constants";
@@ -13,6 +14,10 @@ import { HEAVEN_ON_EARTH } from "./event-constants";
  * rays (no JS overhead).
  */
 export default function HeroExperience() {
+  // The flyer doubles as the hero backdrop. If the artwork isn't present yet,
+  // we hide the <img> and the brand gradient below stands in on its own.
+  const [flyerVisible, setFlyerVisible] = useState(true);
+
   return (
     <section
       className="relative min-h-screen w-full flex items-center justify-center overflow-hidden text-white"
@@ -22,6 +27,28 @@ export default function HeroExperience() {
       }}
     >
       {/* ── Background layers ─────────────────────────────────────────────── */}
+
+      {/* Flyer artwork, fitted to cover the hero. Sits on the gradient so a
+          missing/loading flyer still renders the branded backdrop. */}
+      {flyerVisible && (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={HEAVEN_ON_EARTH.flyerImagePath}
+          alt=""
+          aria-hidden="true"
+          onError={() => setFlyerVisible(false)}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      )}
+
+      {/* Tint over the flyer so the headline + CTAs stay legible. */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "linear-gradient(160deg, rgba(42,4,16,0.82) 0%, rgba(74,8,25,0.72) 35%, rgba(135,16,44,0.6) 70%, rgba(160,21,53,0.62) 100%)",
+        }}
+      />
 
       {/* Noise texture */}
       <div

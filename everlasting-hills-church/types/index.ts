@@ -148,6 +148,56 @@ export interface LatestSermonsResponse {
   };
 }
 
+/* ── Events ──────────────────────────────────────────────────────────────── */
+
+export type EventStatus = "DRAFT" | "PUBLISHED";
+
+/** Slim shape returned by GET /events (public index). */
+export interface EventSummary {
+  id: string;
+  slug: string;
+  title: string;
+  tagline: string | null;
+  startAt: string;
+  endAt: string | null;
+  venueName: string | null;
+  flyerImageUrl: string | null;
+  featured: boolean;
+  customPath: string | null;
+}
+
+/** Full event returned by GET /events/:slug and the admin endpoints. */
+export interface EventDetail extends EventSummary {
+  tenantId: string;
+  description: string | null;
+  venueAddress: string | null;
+  mapsLink: string | null;
+  hostName: string | null;
+  guestMinister: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  contactWhatsapp: string | null;
+  status: EventStatus;
+  rsvpEnabled: boolean;
+  capacity: number | null;
+  order: number;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  _count?: { Rsvps: number };
+}
+
+export interface EventRsvp {
+  id: string;
+  eventId: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  attendees: number;
+  message: string | null;
+  createdAt: string;
+}
+
 export interface SermonAdminOverviewData {
   totalSermons: number;
   totalSeries: number;

@@ -1,12 +1,13 @@
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { CalendarDays } from "lucide-react";
+import EventsCmsClient from "@/components/dashboard/admin/EventsCmsClient";
 
-export default function EventsPage() {
-  return (
-    <ComingSoon
-      title="Events"
-      description="Create and manage church events. Track registrations, capacity, and attendance."
-      icon={CalendarDays}
-    />
-  );
+export const metadata = { title: "Events — Dashboard" };
+
+/**
+ * Admin CMS for church events.
+ *
+ * Server Component shell; the interactive list + form lives in the Client Component.
+ * Middleware gates this route to ADMIN+.
+ */
+export default function EventsAdminPage() {
+  return <EventsCmsClient />;
 }
