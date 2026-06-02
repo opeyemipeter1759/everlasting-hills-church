@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -9,6 +9,7 @@ import {
   Heart,
   HelpingHand,
   ImageIcon,
+  Loader2,
   Mountain,
   Phone,
   Play,
@@ -141,6 +142,11 @@ export default function SiteSettingsEditor({ initial }: Props) {
   const [parseError, setParseError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [fieldIssues, setFieldIssues] = useState<FieldIssue[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const meta = SECTION_META[active];
   const Icon = meta.icon;
@@ -176,6 +182,52 @@ export default function SiteSettingsEditor({ initial }: Props) {
       setParseError(null);
     } catch (err) {
       setParseError((err as Error).message);
+    }
+  }
+
+  /**
+   * Insert text at the textarea's caret (replacing any selection). Used to drop a
+   * freshly-uploaded image URL exactly where the editor is pointing — e.g. inside
+   * HERO.carouselImages or ABOUT.gallery. Falls back to appending if the textarea
+   * ref isn't available.
+   */
+  function insertAtCursor(text: string) {
+    const ta = textareaRef.current;
+    if (!ta) {
+      updateDraft(`${draft}${text}`);
+      return;
+    }
+    const start = ta.selectionStart ?? draft.length;
+    const end = ta.selectionEnd ?? draft.length;
+    updateDraft(draft.slice(0, start) + text + draft.slice(end));
+    requestAnimationFrame(() => {
+      ta.focus();
+      const caret = start + text.length;
+      ta.setSelectionRange(caret, caret);
+    });
+  }
+
+  async function handleImagePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    setUploadingImage(true);
+    setUploadError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiClient.post<{ url?: string }>("/uploads/image", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120_000,
+      });
+      const url = res.data?.url ?? "";
+      if (!url) throw new Error("Upload succeeded but returned no URL");
+      // Insert as a JSON string so it drops cleanly into an array/object value.
+      insertAtCursor(JSON.stringify(url));
+    } catch (err) {
+      setUploadError((err as { message?: string }).message ?? "Image upload failed");
+    } finally {
+      setUploadingImage(false);
     }
   }
 
@@ -313,6 +365,27 @@ export default function SiteSettingsEditor({ initial }: Props) {
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={handleImagePick}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImage}
+                title="Upload an image and insert its URL at the cursor"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E7CDD3] text-[#5A4A4D] text-xs font-semibold hover:bg-[#FFF4F6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {uploadingImage ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <ImageIcon size={13} />
+                )}
+                {uploadingImage ? "Uploading…" : "Upload image"}
+              </button>
               <button
                 type="button"
                 onClick={prettify}
@@ -395,7 +468,18 @@ export default function SiteSettingsEditor({ initial }: Props) {
             >
               Content (JSON)
             </label>
+            {uploadError && (
+              <div
+                role="alert"
+                className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              >
+                <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                <span>{uploadError}</span>
+              </div>
+            )}
+
             <textarea
+              ref={textareaRef}
               id={`editor-${active}`}
               value={draft}
               onChange={(e) => updateDraft(e.target.value)}

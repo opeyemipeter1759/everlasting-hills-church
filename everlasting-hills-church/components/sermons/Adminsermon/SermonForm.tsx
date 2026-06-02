@@ -470,7 +470,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
             <Field label="Thumbnail">
               <FileUpload
                 type="image"
-                endpoint="/sermons/upload-thumbnail"
+                endpoint="/uploads/image"
                 value={form.thumbnailUrl}
                 onChange={(url) => set('thumbnailUrl', url)}
                 disabled={isPending}
