@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapPin, Navigation, Radio, ArrowUpRight } from "lucide-react";
+import { Mail, MapPin, Navigation, Radio, ArrowUpRight } from "lucide-react";
 import { getNextService, isLiveNow } from "../../utils/ServiceUtils";
 import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
@@ -116,10 +116,12 @@ export default function DirectionsSection() {
             </div>
           </div>
 
-          {/* RIGHT (2/5): address + next-service tiles */}
+          {/* RIGHT (2/5): address + next-service + email + map */}
           <div className="lg:col-span-2 space-y-3">
             <AddressTile address={CHURCH.address} />
             <NextServiceTile next={next} live={live} />
+            <EmailTile />
+            <MapTile />
           </div>
         </div>
       </div>
@@ -183,6 +185,43 @@ function NextServiceTile({
           <p className="text-xs text-white/55 mt-1">{nextServiceTimeLabel(next.day)}</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EmailTile() {
+  return (
+    <a
+      href="mailto:hello@everlastinghills.org"
+      className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e0407]/70 p-5 backdrop-blur-sm hover:border-white/20 transition-colors flex items-start gap-3.5"
+    >
+      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center">
+        <Mail size={16} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1.5">
+          Email us
+        </p>
+        <p className="text-sm text-white/90 leading-snug font-medium truncate">
+          hello@everlastinghills.org
+        </p>
+      </div>
+    </a>
+  );
+}
+
+function MapTile() {
+  const embedUrl = `https://www.google.com/maps?q=${CHURCH.lat},${CHURCH.lng}&z=15&output=embed`;
+  return (
+    <div className="relative rounded-2xl overflow-hidden border border-white/10 h-44">
+      <iframe
+        src={embedUrl}
+        className="w-full h-full grayscale-[0.5] contrast-110"
+        loading="lazy"
+        title="Church location map"
+        referrerPolicy="no-referrer-when-downgrade"
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#87102C]/20 via-transparent to-black/30 pointer-events-none" />
     </div>
   );
 }

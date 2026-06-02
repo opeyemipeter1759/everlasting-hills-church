@@ -12,6 +12,7 @@ import {
 import dynamic from "next/dynamic";
 import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
+import ContactSection from "./ContactSection";
 import { CHURCH } from "@/config/config";
 
 /**
@@ -51,9 +52,8 @@ export default function CosmicContactHero() {
         />
       </div>
 
-      {/* ── Content ── */}
-      <div className="relative z-10 max-w-[1400px] mx-auto px-5 sm:px-8 pt-24 pb-16">
-        {/* Hero headline */}
+      {/* ── Hero: Find Your Way Home ── */}
+      {/* <div className="relative z-10 max-w-[1400px] mx-auto px-5 sm:px-8 pt-24 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -76,9 +76,7 @@ export default function CosmicContactHero() {
           </p>
         </motion.div>
 
-        {/* Split-screen: globe + bento cards */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* LEFT: animated globe */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -88,7 +86,6 @@ export default function CosmicContactHero() {
             <Globe size={520} label={`${CHURCH.address.split(",")[0]}, Nigeria`} />
           </motion.div>
 
-          {/* RIGHT: bento info cards */}
           <div className="space-y-4">
             <InfoCard
               icon={<MapPin size={18} />}
@@ -97,7 +94,6 @@ export default function CosmicContactHero() {
               href={`https://www.google.com/maps/search/?api=1&query=${CHURCH.lat},${CHURCH.lng}`}
               delay={0.3}
             />
-
             <InfoCard
               icon={<Phone size={18} />}
               eyebrow="Phone"
@@ -105,7 +101,6 @@ export default function CosmicContactHero() {
               href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`}
               delay={0.4}
             />
-
             <InfoCard
               icon={<Mail size={18} />}
               eyebrow="Email"
@@ -113,18 +108,12 @@ export default function CosmicContactHero() {
               href={`mailto:${CONTACT_EMAIL}`}
               delay={0.5}
             />
-
-            {/* Map preview */}
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.6 }}
               className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.02] backdrop-blur-sm h-48 sm:h-56"
             >
-              {/*
-                Embedded Google Map. We use a tinted overlay to dim the bright default map
-                colors and keep visual harmony with the cosmic theme.
-              */}
               <div className="relative w-full h-full">
                 <iframe
                   src={MAP_EMBED_URL}
@@ -136,8 +125,6 @@ export default function CosmicContactHero() {
                 <div className="absolute inset-0 bg-gradient-to-br from-[#87102C]/20 via-transparent to-black/30 pointer-events-none" />
               </div>
             </motion.div>
-
-            {/* Full-bleed CTA */}
             <motion.button
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -155,6 +142,14 @@ export default function CosmicContactHero() {
             </motion.button>
           </div>
         </div>
+      </div> */}
+
+      {/* Dark spacer — gives the transparent navbar a dark bg to sit over */}
+      <div className="relative z-10 h-20 md:h-24" />
+
+      {/* ── Contact Section ── */}
+      <div className="relative z-10">
+        <ContactSection />
       </div>
 
       {directions.showMap && (
