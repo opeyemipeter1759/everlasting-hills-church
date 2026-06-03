@@ -1,156 +1,60 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  ArrowUpRight,
-  ExternalLink,
-  Mail,
-  MapPin,
-  Navigation,
-  Phone,
-} from "lucide-react";
-import dynamic from "next/dynamic";
+import { MapPin } from "lucide-react";
 import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
 import ContactSection from "./ContactSection";
-import { CHURCH } from "@/config/config";
-
-/**
- * Cosmic find-us page hero.
- *
- * Pattern: split-screen cosmic dark theme with bento info cards on the right and
- * an animated WebGL globe on the left (Stripe / Linear marketing aesthetic).
- *
- * Globe is loaded client-only via next/dynamic (WebGL has no SSR equivalent).
- */
-
-const Globe = dynamic(() => import("./Globe"), { ssr: false });
-
-// Embed-friendly Google Maps URL for the church location
-const MAP_EMBED_URL = `https://www.google.com/maps?q=${CHURCH.lat},${CHURCH.lng}&z=15&output=embed`;
-
-const CONTACT_PHONE = "+234 706 872 7719";
-const CONTACT_EMAIL = "hello@everlastinghills.org";
 
 export default function CosmicContactHero() {
   const directions = useDirections();
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-church-dark text-white">
-      {/* ── Cosmic background ── */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#87102C]/15 blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#87102C]/10 blur-[120px] rounded-full" />
-        {/* Subtle starfield via repeated radial gradients */}
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              "radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 1px, transparent 0), radial-gradient(1px 1px at 70% 60%, rgba(255,255,255,0.3) 1px, transparent 0), radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.35) 1px, transparent 0), radial-gradient(1px 1px at 85% 20%, rgba(255,255,255,0.3) 1px, transparent 0), radial-gradient(1px 1px at 15% 70%, rgba(255,255,255,0.25) 1px, transparent 0)",
-            backgroundSize: "300px 300px",
-          }}
-        />
-      </div>
+    <main className="bg-white text-white">
 
-      {/* ── Hero: Find Your Way Home ── */}
-      {/* <div className="relative z-10 max-w-[1400px] mx-auto px-5 sm:px-8 pt-24 pb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 lg:mb-16 max-w-3xl"
-        >
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-sm mb-6">
-            <MapPin size={12} className="text-[#e8768a]" />
-            Find us
-          </span>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.95]">
-            Find Your{" "}
-            <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#87102C] bg-clip-text text-transparent italic font-serif">
-              Way Home
-            </span>
-          </h1>
-          <p className="mt-6 text-base sm:text-lg text-white/60 leading-relaxed max-w-xl">
-            We would love to welcome you. Come and experience God&apos;s presence
-            with us — there is always a place for you here.
-          </p>
-        </motion.div>
+      {/* ── Hero: background image + dark overlay + simple text ── */}
+      <div
+        className="relative overflow-hidden"
+        style={{
+          backgroundImage: "url('/images/church_congregation_1_1779193592146.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+          backgroundAttachment: "fixed",
+        }}
+      >
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/70 pointer-events-none" />
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+        {/* Content */}
+        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-52 pb-44 text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative flex items-center justify-center min-h-[400px] lg:min-h-[500px]"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="flex flex-col items-center gap-4"
           >
-            <Globe size={520} label={`${CHURCH.address.split(",")[0]}, Nigeria`} />
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-sm">
+              <MapPin size={12} className="text-[#e8768a]" />
+              Get in Touch
+            </span>
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.05] text-balance">
+              Connect{" "}
+              <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#FFB3C1] bg-clip-text text-transparent italic font-serif">
+                With Us
+              </span>
+            </h1>
+
+            <p className="text-white/55 text-base sm:text-lg leading-relaxed max-w-xl">
+              We would love to hear from you. Reach out — there is always
+              a place for you in the Everlasting Hills family.
+            </p>
           </motion.div>
-
-          <div className="space-y-4">
-            <InfoCard
-              icon={<MapPin size={18} />}
-              eyebrow="Our Location"
-              primary={CHURCH.address}
-              href={`https://www.google.com/maps/search/?api=1&query=${CHURCH.lat},${CHURCH.lng}`}
-              delay={0.3}
-            />
-            <InfoCard
-              icon={<Phone size={18} />}
-              eyebrow="Phone"
-              primary={CONTACT_PHONE}
-              href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`}
-              delay={0.4}
-            />
-            <InfoCard
-              icon={<Mail size={18} />}
-              eyebrow="Email"
-              primary={CONTACT_EMAIL}
-              href={`mailto:${CONTACT_EMAIL}`}
-              delay={0.5}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.02] backdrop-blur-sm h-48 sm:h-56"
-            >
-              <div className="relative w-full h-full">
-                <iframe
-                  src={MAP_EMBED_URL}
-                  className="w-full h-full grayscale-[0.5] contrast-110"
-                  loading="lazy"
-                  title="Church location map"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-[#87102C]/20 via-transparent to-black/30 pointer-events-none" />
-              </div>
-            </motion.div>
-            <motion.button
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-              type="button"
-              onClick={directions.handleGetDirections}
-              className="group w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#87102C] to-[#a52242] hover:from-[#6E0C24] hover:to-[#87102C] px-6 py-4 font-bold text-sm transition-all shadow-lg shadow-[#87102C]/30 hover:shadow-xl hover:shadow-[#87102C]/40 hover:-translate-y-0.5"
-            >
-              <Navigation size={16} />
-              Get Directions
-              <ExternalLink
-                size={14}
-                className="opacity-70 group-hover:translate-x-0.5 transition-transform"
-              />
-            </motion.button>
-          </div>
         </div>
-      </div> */}
-
-      {/* Dark spacer — gives the transparent navbar a dark bg to sit over */}
-      <div className="relative z-10 h-20 md:h-24" />
+      </div>
 
       {/* ── Contact Section ── */}
-      <div className="relative z-10">
-        <ContactSection />
-      </div>
+      <ContactSection />
 
       {directions.showMap && (
         <DirectionsModal
@@ -164,43 +68,5 @@ export default function CosmicContactHero() {
         />
       )}
     </main>
-  );
-}
-
-// ── Info card subcomponent ──────────────────────────────────────────────────
-
-interface InfoCardProps {
-  icon: React.ReactNode;
-  eyebrow: string;
-  primary: string;
-  href: string;
-  delay?: number;
-}
-
-function InfoCard({ icon, eyebrow, primary, href, delay = 0 }: InfoCardProps) {
-  return (
-    <motion.a
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
-      href={href}
-      target={href.startsWith("http") ? "_blank" : undefined}
-      rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-      className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20 backdrop-blur-md p-4 sm:p-5 transition-all"
-    >
-      <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#87102C]/20 text-[#e8768a] flex items-center justify-center group-hover:bg-[#87102C]/30 group-hover:scale-105 transition-all">
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1">
-          {eyebrow}
-        </p>
-        <p className="text-sm text-white font-medium truncate">{primary}</p>
-      </div>
-      <ArrowUpRight
-        size={16}
-        className="text-white/30 group-hover:text-white group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all flex-shrink-0"
-      />
-    </motion.a>
   );
 }
