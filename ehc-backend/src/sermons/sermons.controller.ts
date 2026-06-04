@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseInterceptors, UploadedFile, BadRequestException, ServiceUnavailableException, InternalServerErrorException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, Param, Patch, Post, Query, UseInterceptors, UploadedFile, BadRequestException, ServiceUnavailableException, InternalServerErrorException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import {
@@ -21,7 +21,10 @@ import { CreateSermonDto } from './dto/create-sermon.dto';
 import { UpdateSermonDto } from './dto/update-sermon.dto';
 import { SubscribeEmailDto } from './dto/subscribe-email.dto';
 import { NoteDto, ProgressDto, ReactionDto } from './dto/sermon-interaction.dto';
+import { RecentSermonsQueryDto, SermonFeedQueryDto } from './dto/sermon-read.query.dto';
 import { SermonsService } from './sermons.service';
+import { SermonReadService } from './recent/sermon-read.service';
+import { TenantId } from './recent/tenant-id.decorator';
 
 /**
  * Sermon endpoints, organized by audience:
@@ -36,7 +39,10 @@ import { SermonsService } from './sermons.service';
 @ApiTags('sermons')
 @Controller('sermons')
 export class SermonsController {
-  constructor(private readonly sermonsService: SermonsService) {}
+  constructor(
+    private readonly sermonsService: SermonsService,
+    private readonly sermonReadService: SermonReadService,
+  ) {}
 
   // ────────────────────────────────────────────────────────────────────────────
   // Admin (sermon CMS) — PASTOR+
@@ -161,6 +167,30 @@ export class SermonsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   getLatestSermons(@Query('limit') limit?: string) {
     return this.sermonsService.getLatestSermons(limit ? Number(limit) : 3);
+  }
+
+  /**
+   * Recent published sermons for the homepage strip. Tenant-scoped, sorted in the
+   * repository, capped, and cache-friendly so Next can ISR it.
+   */
+  @Public()
+  @Get('recent')
+  @Header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600')
+  @ApiOperation({ summary: 'Recent published sermons, newest first (public)' })
+  getRecentSermons(@TenantId() tenantId: string | undefined, @Query() query: RecentSermonsQueryDto) {
+    return this.sermonReadService.getRecent(tenantId, query.limit ?? 3);
+  }
+
+  /** Cursor-paginated public sermon listing. Never returns an unbounded list. */
+  @Public()
+  @Get('feed')
+  @ApiOperation({ summary: 'Cursor-paginated published sermons (public)' })
+  getSermonFeed(@TenantId() tenantId: string | undefined, @Query() query: SermonFeedQueryDto) {
+    return this.sermonReadService.getFeed(tenantId, {
+      cursor: query.cursor,
+      pageSize: query.pageSize ?? 12,
+      series: query.series,
+    });
   }
 
   @Public()

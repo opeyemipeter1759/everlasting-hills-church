@@ -6,42 +6,67 @@ import {
   ExternalLink,
   Mail,
   MapPin,
+  MessageCircle,
   Navigation,
   Phone,
+  type LucideIcon,
 } from "lucide-react";
-import dynamic from "next/dynamic";
 import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
 import ContactSection from "./ContactSection";
 import { CHURCH } from "@/config/config";
 
 /**
- * Cosmic find-us page hero.
+ * Find-us / contact hero.
  *
- * Pattern: split-screen cosmic dark theme with bento info cards on the right and
- * an animated WebGL globe on the left (Stripe / Linear marketing aesthetic).
- *
- * Globe is loaded client-only via next/dynamic (WebGL has no SSR equivalent).
+ * Pattern: SPLIT-SCREEN HERO on a dark cosmic ground — glassmorphic anchor-info
+ * chips (location, phone, email, WhatsApp) on one side, a framed live map on the
+ * other, and a full-bleed Get Directions CTA at the bottom. The contact form lives
+ * in the light ContactSection below.
  */
 
-const Globe = dynamic(() => import("./Globe"), { ssr: false });
-
-// Embed-friendly Google Maps URL for the church location
+const EASE = [0.22, 1, 0.36, 1] as const;
 const MAP_EMBED_URL = `https://www.google.com/maps?q=${CHURCH.lat},${CHURCH.lng}&z=15&output=embed`;
+const PHONE = "+234 706 872 7719";
+const EMAIL = "hello@everlastinghills.org";
+const WHATSAPP_URL = "https://wa.me/2347068727719";
 
-const CONTACT_PHONE = "+234 706 872 7719";
-const CONTACT_EMAIL = "hello@everlastinghills.org";
+const CHIPS: { icon: LucideIcon; eyebrow: string; value: string; href: string }[] = [
+  {
+    icon: MapPin,
+    eyebrow: "Our Location",
+    value: CHURCH.address,
+    href: `https://www.google.com/maps/search/?api=1&query=${CHURCH.lat},${CHURCH.lng}`,
+  },
+  {
+    icon: Phone,
+    eyebrow: "Phone",
+    value: PHONE,
+    href: `tel:${PHONE.replace(/\s/g, "")}`,
+  },
+  {
+    icon: Mail,
+    eyebrow: "Email",
+    value: EMAIL,
+    href: `mailto:${EMAIL}`,
+  },
+  {
+    icon: MessageCircle,
+    eyebrow: "WhatsApp",
+    value: "Chat with us",
+    href: WHATSAPP_URL,
+  },
+];
 
 export default function CosmicContactHero() {
   const directions = useDirections();
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-church-dark text-white">
-      {/* ── Cosmic background ── */}
+    <main className="relative overflow-hidden bg-church-dark text-white">
+      {/* Cosmic background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#87102C]/15 blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#87102C]/10 blur-[120px] rounded-full" />
-        {/* Subtle starfield via repeated radial gradients */}
+        <div className="absolute top-[-20%] right-[-10%] h-[60%] w-[60%] rounded-full bg-[#87102C]/15 blur-[140px]" />
+        <div className="absolute bottom-[-20%] left-[-10%] h-[50%] w-[50%] rounded-full bg-[#87102C]/10 blur-[120px]" />
         <div
           className="absolute inset-0 opacity-30"
           style={{
@@ -52,102 +77,77 @@ export default function CosmicContactHero() {
         />
       </div>
 
-      {/* ── Hero: Find Your Way Home ── */}
-      {/* <div className="relative z-10 max-w-[1400px] mx-auto px-5 sm:px-8 pt-24 pb-16">
+      <section className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8 pt-28 sm:pt-32 pb-20">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 lg:mb-16 max-w-3xl"
+          transition={{ duration: 0.6, ease: EASE }}
+          className="max-w-3xl"
         >
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-sm mb-6">
+          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-sm">
             <MapPin size={12} className="text-[#e8768a]" />
             Find us
           </span>
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[0.95]">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[0.95] tracking-tight">
             Find Your{" "}
-            <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#87102C] bg-clip-text text-transparent italic font-serif">
+            <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#87102C] bg-clip-text font-serif italic text-transparent">
               Way Home
             </span>
           </h1>
-          <p className="mt-6 text-base sm:text-lg text-white/60 leading-relaxed max-w-xl">
+          <p className="mt-6 max-w-xl text-base sm:text-lg leading-relaxed text-white/60">
             We would love to welcome you. Come and experience God&apos;s presence
-            with us — there is always a place for you here.
+            with us, there is always a place for you here.
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative flex items-center justify-center min-h-[400px] lg:min-h-[500px]"
-          >
-            <Globe size={520} label={`${CHURCH.address.split(",")[0]}, Nigeria`} />
-          </motion.div>
-
+        {/* Split-screen: info chips + map */}
+        <div className="mt-12 grid items-stretch gap-6 lg:grid-cols-2 lg:gap-8">
+          {/* Anchor-info chips */}
           <div className="space-y-4">
-            <InfoCard
-              icon={<MapPin size={18} />}
-              eyebrow="Our Location"
-              primary={CHURCH.address}
-              href={`https://www.google.com/maps/search/?api=1&query=${CHURCH.lat},${CHURCH.lng}`}
-              delay={0.3}
-            />
-            <InfoCard
-              icon={<Phone size={18} />}
-              eyebrow="Phone"
-              primary={CONTACT_PHONE}
-              href={`tel:${CONTACT_PHONE.replace(/\s/g, "")}`}
-              delay={0.4}
-            />
-            <InfoCard
-              icon={<Mail size={18} />}
-              eyebrow="Email"
-              primary={CONTACT_EMAIL}
-              href={`mailto:${CONTACT_EMAIL}`}
-              delay={0.5}
-            />
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="rounded-2xl overflow-hidden border border-white/10 bg-white/[0.02] backdrop-blur-sm h-48 sm:h-56"
-            >
-              <div className="relative w-full h-full">
-                <iframe
-                  src={MAP_EMBED_URL}
-                  className="w-full h-full grayscale-[0.5] contrast-110"
-                  loading="lazy"
-                  title="Church location map"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-[#87102C]/20 via-transparent to-black/30 pointer-events-none" />
-              </div>
-            </motion.div>
-            <motion.button
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-              type="button"
-              onClick={directions.handleGetDirections}
-              className="group w-full inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#87102C] to-[#a52242] hover:from-[#6E0C24] hover:to-[#87102C] px-6 py-4 font-bold text-sm transition-all shadow-lg shadow-[#87102C]/30 hover:shadow-xl hover:shadow-[#87102C]/40 hover:-translate-y-0.5"
-            >
-              <Navigation size={16} />
-              Get Directions
-              <ExternalLink
-                size={14}
-                className="opacity-70 group-hover:translate-x-0.5 transition-transform"
-              />
-            </motion.button>
+            {CHIPS.map((chip, i) => (
+              <InfoChip key={chip.eyebrow} {...chip} delay={0.2 + i * 0.08} />
+            ))}
           </div>
+
+          {/* Map visual */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.25, ease: EASE }}
+            className="relative min-h-[320px] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-sm lg:min-h-0"
+          >
+            <iframe
+              src={MAP_EMBED_URL}
+              className="h-full w-full grayscale-[0.5] contrast-110"
+              style={{ minHeight: "320px" }}
+              loading="lazy"
+              title="Church location map"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#87102C]/20 via-transparent to-black/30" />
+          </motion.div>
         </div>
-      </div> */}
 
-      {/* Dark spacer — gives the transparent navbar a dark bg to sit over */}
-      <div className="relative z-10 h-20 md:h-24" />
+        {/* Full-bleed CTA */}
+        <motion.button
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.55, ease: EASE }}
+          type="button"
+          onClick={directions.handleGetDirections}
+          className="group mt-6 inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#87102C] to-[#a52242] px-6 py-4 text-sm font-bold shadow-lg shadow-[#87102C]/30 transition-all hover:-translate-y-0.5 hover:from-[#6E0C24] hover:to-[#87102C] hover:shadow-xl hover:shadow-[#87102C]/40"
+        >
+          <Navigation size={16} />
+          Get Directions
+          <ExternalLink
+            size={14}
+            className="opacity-70 transition-transform group-hover:translate-x-0.5"
+          />
+        </motion.button>
+      </section>
 
-      {/* ── Contact Section ── */}
+      {/* Contact form (light) */}
       <div className="relative z-10">
         <ContactSection />
       </div>
@@ -167,39 +167,42 @@ export default function CosmicContactHero() {
   );
 }
 
-// ── Info card subcomponent ──────────────────────────────────────────────────
-
-interface InfoCardProps {
-  icon: React.ReactNode;
+function InfoChip({
+  icon: Icon,
+  eyebrow,
+  value,
+  href,
+  delay = 0,
+}: {
+  icon: LucideIcon;
   eyebrow: string;
-  primary: string;
+  value: string;
   href: string;
   delay?: number;
-}
-
-function InfoCard({ icon, eyebrow, primary, href, delay = 0 }: InfoCardProps) {
+}) {
+  const external = href.startsWith("http");
   return (
     <motion.a
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.5, delay, ease: EASE }}
       href={href}
-      target={href.startsWith("http") ? "_blank" : undefined}
-      rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-      className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/20 backdrop-blur-md p-4 sm:p-5 transition-all"
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
+      className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-md transition-all hover:border-white/20 hover:bg-white/[0.06] sm:p-5"
     >
-      <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-[#87102C]/20 text-[#e8768a] flex items-center justify-center group-hover:bg-[#87102C]/30 group-hover:scale-105 transition-all">
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1">
+      <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#87102C]/20 text-[#e8768a] transition-all group-hover:scale-105 group-hover:bg-[#87102C]/30">
+        <Icon size={18} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-white/40">
           {eyebrow}
         </p>
-        <p className="text-sm text-white font-medium truncate">{primary}</p>
+        <p className="truncate text-sm font-medium text-white">{value}</p>
       </div>
       <ArrowUpRight
         size={16}
-        className="text-white/30 group-hover:text-white group-hover:-translate-y-0.5 group-hover:translate-x-0.5 transition-all flex-shrink-0"
+        className="flex-shrink-0 text-white/30 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-white"
       />
     </motion.a>
   );

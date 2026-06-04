@@ -500,14 +500,13 @@ function EventForm({ initial, onCancel, onSaved }: FormProps) {
         <summary className="text-xs font-semibold text-gray-500 dark:text-gray-400 cursor-pointer">
           Advanced
         </summary>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+        <div className="mt-3">
           <Field label="Slug (auto from title if blank)">
             <input value={data.slug} onChange={(e) => set("slug", e.target.value)}
               placeholder="heaven-on-earth" className={inputCls} />
-          </Field>
-          <Field label="Custom page path (bespoke events only)">
-            <input value={data.customPath} onChange={(e) => set("customPath", e.target.value)}
-              placeholder="/events/heaven-on-earth" className={inputCls} />
+            <p className="text-[11px] text-gray-400 dark:text-gray-600 mt-1.5">
+              The event opens at <span className="font-mono">/events/{data.slug || "your-slug"}</span>.
+            </p>
           </Field>
         </div>
       </details>

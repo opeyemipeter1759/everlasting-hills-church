@@ -144,8 +144,8 @@ export default function SiteSettingsEditor({ initial }: Props) {
   const [fieldIssues, setFieldIssues] = useState<FieldIssue[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const meta = SECTION_META[active];
@@ -185,34 +185,13 @@ export default function SiteSettingsEditor({ initial }: Props) {
     }
   }
 
-  /**
-   * Insert text at the textarea's caret (replacing any selection). Used to drop a
-   * freshly-uploaded image URL exactly where the editor is pointing — e.g. inside
-   * HERO.carouselImages or ABOUT.gallery. Falls back to appending if the textarea
-   * ref isn't available.
-   */
-  function insertAtCursor(text: string) {
-    const ta = textareaRef.current;
-    if (!ta) {
-      updateDraft(`${draft}${text}`);
-      return;
-    }
-    const start = ta.selectionStart ?? draft.length;
-    const end = ta.selectionEnd ?? draft.length;
-    updateDraft(draft.slice(0, start) + text + draft.slice(end));
-    requestAnimationFrame(() => {
-      ta.focus();
-      const caret = start + text.length;
-      ta.setSelectionRange(caret, caret);
-    });
-  }
-
   async function handleImagePick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-picking the same file
     if (!file) return;
     setUploadingImage(true);
     setUploadError(null);
+    setUploadedUrl(null);
     try {
       const fd = new FormData();
       fd.append("file", file);
@@ -222,8 +201,19 @@ export default function SiteSettingsEditor({ initial }: Props) {
       });
       const url = res.data?.url ?? "";
       if (!url) throw new Error("Upload succeeded but returned no URL");
-      // Insert as a JSON string so it drops cleanly into an array/object value.
-      insertAtCursor(JSON.stringify(url));
+      // Don't auto-edit the JSON: inserting a value at the caret can land between
+      // existing tokens and break the document (missing comma → parse error).
+      // Instead surface the URL and copy it so the editor pastes it into the right
+      // quoted field.
+      setUploadedUrl(url);
+      try {
+        // Copy the URL already wrapped in quotes so pasting drops a valid JSON
+        // string value (and any special chars are escaped). Avoids the common
+        // "pasted a bare URL → invalid JSON" mistake.
+        await navigator.clipboard?.writeText(JSON.stringify(url));
+      } catch {
+        /* clipboard may be blocked; the URL is still shown for manual copy */
+      }
     } catch (err) {
       setUploadError((err as { message?: string }).message ?? "Image upload failed");
     } finally {
@@ -376,7 +366,7 @@ export default function SiteSettingsEditor({ initial }: Props) {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingImage}
-                title="Upload an image and insert its URL at the cursor"
+                title="Upload an image and copy its quoted URL to paste into a field"
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#E7CDD3] text-[#5A4A4D] text-xs font-semibold hover:bg-[#FFF4F6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {uploadingImage ? (
@@ -478,8 +468,35 @@ export default function SiteSettingsEditor({ initial }: Props) {
               </div>
             )}
 
+            {uploadedUrl && (
+              <div
+                role="status"
+                className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+              >
+                <Check size={16} className="flex-shrink-0 mt-0.5" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold">Image uploaded &amp; copied (with quotes)</p>
+                  <p className="text-xs mt-0.5 text-emerald-700">
+                    Paste it as a value — replace an existing entry in
+                    <code className="mx-1 font-mono">carouselImages</code> or a
+                    <code className="mx-1 font-mono">gallery[].src</code>. The quotes are
+                    already included, so don&apos;t add your own.
+                  </p>
+                  <code className="mt-1.5 block truncate font-mono text-[11px] text-emerald-900/80">
+                    {JSON.stringify(uploadedUrl)}
+                  </code>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard?.writeText(JSON.stringify(uploadedUrl))}
+                  className="flex-shrink-0 rounded-lg border border-emerald-300 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition-colors"
+                >
+                  Copy
+                </button>
+              </div>
+            )}
+
             <textarea
-              ref={textareaRef}
               id={`editor-${active}`}
               value={draft}
               onChange={(e) => updateDraft(e.target.value)}
