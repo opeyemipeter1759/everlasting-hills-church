@@ -27,9 +27,6 @@ import { CHURCH } from "@/config/config";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const MAP_EMBED_URL = `https://www.google.com/maps?q=${CHURCH.lat},${CHURCH.lng}&z=15&output=embed`;
-const PHONE = "+234 706 872 7719";
-const EMAIL = "hello@everlastinghills.org";
-const WHATSAPP_URL = "https://wa.me/2347068727719";
 
 const CHIPS: { icon: LucideIcon; eyebrow: string; value: string; href: string }[] = [
   {
@@ -41,20 +38,20 @@ const CHIPS: { icon: LucideIcon; eyebrow: string; value: string; href: string }[
   {
     icon: Phone,
     eyebrow: "Phone",
-    value: PHONE,
-    href: `tel:${PHONE.replace(/\s/g, "")}`,
+    value: CHURCH.phone,
+    href: `tel:${CHURCH.phone.replace(/\s/g, "")}`,
   },
   {
     icon: Mail,
     eyebrow: "Email",
-    value: EMAIL,
-    href: `mailto:${EMAIL}`,
+    value: CHURCH.email,
+    href: `mailto:${CHURCH.email}`,
   },
   {
     icon: MessageCircle,
     eyebrow: "WhatsApp",
     value: "Chat with us",
-    href: WHATSAPP_URL,
+    href: CHURCH.whatsappUrl,
   },
 ];
 

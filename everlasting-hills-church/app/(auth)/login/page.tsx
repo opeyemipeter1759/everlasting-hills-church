@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { auth } from "@/lib/api";
+import { getLandingPage } from "@/lib/auth/frontend-session";
 import AuthSplitScreen from "@/components/auth/AuthSplitScreen";
 
 type FormValues = {
@@ -32,7 +33,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const resp = await auth.login({ email, password });
-      const next = resp.user.needsPasswordChange ? "/change-password" : "/dashboard";
+      const next = resp.user.needsPasswordChange
+        ? "/change-password"
+        : getLandingPage(resp.user.role);
       window.location.assign(next);
       // Intentionally leave `loading` true — we are navigating away.
     } catch (error) {

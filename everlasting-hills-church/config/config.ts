@@ -5,6 +5,10 @@ export const CHURCH = {
   lat: 7.3775,
   lng: 3.9470,
   youtubeUrl: "https://www.youtube.com/@yourchannel/live", // ← replace
+  // Single source of truth for contact details (was duplicated across components).
+  phone: "+234 706 872 7719",
+  email: "hello@everlastinghills.org",
+  whatsappUrl: "https://wa.me/2347068727719",
 };
 
 // ── SERVICE SCHEDULE ──

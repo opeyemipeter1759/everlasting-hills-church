@@ -94,6 +94,10 @@ const AppSidebar: React.FC = () => {
   const isActive = buildActiveMatcher(pathname);
   const userRole = normalizeRole(currentUser?.role);
 
+  // Super admins land on the dedicated /admin/dashboard from the "Home" item.
+  const resolveHref = (href: string) =>
+    href === "/dashboard" && userRole === "SUPER_ADMIN" ? "/admin/dashboard" : href;
+
   const visibleGroups = userRole
     ? NAV_GROUPS.map((group) => ({
         ...group,
@@ -259,7 +263,7 @@ const AppSidebar: React.FC = () => {
               {renderItems(
                 group.items.map((it) => ({
                   name: it.label,
-                  path: it.href,
+                  path: resolveHref(it.href),
                   icon: it.icon ? React.createElement(it.icon, { size: 17, strokeWidth: 1.9, className: 'text-current' }) : null,
                   children: (it as { children?: { label: string; href: string }[] }).children?.map((c) => ({ name: c.label, path: c.href })),
                 }))
@@ -311,7 +315,7 @@ const AppSidebar: React.FC = () => {
                     {renderItems(
                       group.items.map((it) => ({
                         name: it.label,
-                        path: it.href,
+                        path: resolveHref(it.href),
                         icon: it.icon ? React.createElement(it.icon, { size: 17, strokeWidth: 1.9, className: 'text-current' }) : null,
                         children: (it as { children?: { label: string; href: string }[] }).children?.map((c) => ({ name: c.label, path: c.href })),
                       }))

@@ -414,6 +414,9 @@ export class SermonsController {
 
     const publicUrl = (process.env.R2_PUBLIC_URL ?? '').replace(/\/$/, '');
     const audioUrl = publicUrl ? `${publicUrl}/${key}` : key;
-    return { data: { audioUrl, audioKey: key } };
+    // Return the bare payload — the global ResponseEnvelopeInterceptor wraps it in
+    // { data, meta }. Returning { data: ... } here would double-wrap and the frontend
+    // would read res.data.audioUrl as undefined. (Matches /uploads/image.)
+    return { audioUrl, audioKey: key };
   }
 }
