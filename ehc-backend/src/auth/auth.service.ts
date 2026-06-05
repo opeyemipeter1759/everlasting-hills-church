@@ -79,6 +79,10 @@ export class AuthService implements OnModuleInit {
       const { data: updated, error: updateError } = await admin.auth.admin.updateUserById(existingUser.id, {
         password: this.defaultSuperAdminPassword,
         email_confirm: true,
+        app_metadata: {
+          ...(existingUser.app_metadata ?? {}),
+          role: Role.SUPER_ADMIN,
+        },
         user_metadata: {
           ...(existingUser.user_metadata ?? {}),
           role: Role.SUPER_ADMIN,
@@ -96,6 +100,7 @@ export class AuthService implements OnModuleInit {
         email,
         password: this.defaultSuperAdminPassword,
         email_confirm: true,
+        app_metadata: { role: Role.SUPER_ADMIN },
         user_metadata: { role: Role.SUPER_ADMIN, full_name: 'Super Admin' },
       });
 
