@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,6 +21,7 @@ function getTodayBounds() {
 
 @Injectable()
 export class AttendanceService {
+  private readonly logger = new Logger(AttendanceService.name);
   private readonly tenantId: string;
 
   constructor(
@@ -30,13 +31,46 @@ export class AttendanceService {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  private async getMemberByUserId(userId: string) {
-    const profile = await this.prisma.profile.findUnique({ where: { userId } });
+  /**
+   * Resolve the signed-in user's Member row from their Supabase userId.
+   *
+   * Self-healing: if a Profile exists but no Member row is attached, we
+   * auto-provision a minimal Member using the JWT email so check-in just
+   * works for orphan accounts (e.g. a SUPER_ADMIN seeded before the Member
+   * code path existed, or a user whose Member row was deleted).
+   *
+   * Returns null only when the Profile itself is missing — that genuinely
+   * needs an admin to assign a role.
+   */
+  private async getMemberByUserId(userId: string, fallbackEmail?: string) {
+    const profile = await this.prisma.profile.findUnique({
+      where: { userId },
+      select: { id: true, tenantId: true },
+    });
     if (!profile) {
       return null;
     }
 
-    return this.prisma.member.findUnique({ where: { profileId: profile.id } });
+    const existing = await this.prisma.member.findUnique({
+      where: { profileId: profile.id },
+    });
+    if (existing) return existing;
+
+    // Auto-provision
+    const created = await this.prisma.member.create({
+      data: {
+        id: randomUUID(),
+        tenantId: profile.tenantId,
+        profileId: profile.id,
+        firstName: 'New',
+        lastName: 'Member',
+        email: fallbackEmail ?? null,
+      },
+    });
+    this.logger.log(
+      `Auto-provisioned Member ${created.id} for orphan profile ${profile.id} (${fallbackEmail ?? 'no email'})`,
+    );
+    return created;
   }
 
   private async getTodayService() {
@@ -76,10 +110,12 @@ export class AttendanceService {
     });
   }
 
-  async checkIn(userId: string) {
-    const member = await this.getMemberByUserId(userId);
+  async checkIn(userId: string, fallbackEmail?: string) {
+    const member = await this.getMemberByUserId(userId, fallbackEmail);
     if (!member) {
-      throw new NotFoundException('Member record not found');
+      throw new NotFoundException(
+        'Your account has no profile yet. Contact an admin.',
+      );
     }
 
     const service = await this.findOrCreateTodayService();
@@ -110,10 +146,12 @@ export class AttendanceService {
     return { alreadyCheckedIn: false as const, service };
   }
 
-  async checkInByServiceId(userId: string, serviceId: string) {
-    const member = await this.getMemberByUserId(userId);
+  async checkInByServiceId(userId: string, serviceId: string, fallbackEmail?: string) {
+    const member = await this.getMemberByUserId(userId, fallbackEmail);
     if (!member) {
-      throw new NotFoundException('Member record not found');
+      throw new NotFoundException(
+        'Your account has no profile yet. Contact an admin.',
+      );
     }
 
     const service = await this.prisma.service.findFirst({

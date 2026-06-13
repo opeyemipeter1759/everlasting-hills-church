@@ -105,7 +105,7 @@ export class MembersController {
     @CurrentUser() actor: AuthUser,
     @Body() body: UpdateMyProfileDto,
   ) {
-    return this.membersService.updateMyProfile(actor.userId, body);
+    return this.membersService.updateMyProfile(actor.userId, body, actor.email);
   }
 
   @Post('me/avatar')
@@ -128,14 +128,14 @@ export class MembersController {
       | undefined,
   ) {
     if (!file) throw new BadRequestException('No file provided');
-    return this.membersService.setMyAvatar(actor.userId, file);
+    return this.membersService.setMyAvatar(actor.userId, file, actor.email);
   }
 
   @Delete('me/avatar')
   @Roles(Role.MEMBER)
   @ApiOperation({ summary: 'Remove my profile photo' })
   async clearMyAvatar(@CurrentUser() actor: AuthUser) {
-    return this.membersService.clearMyAvatar(actor.userId);
+    return this.membersService.clearMyAvatar(actor.userId, actor.email);
   }
 
   @Get(':id')
