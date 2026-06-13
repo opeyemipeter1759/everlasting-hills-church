@@ -4,7 +4,7 @@ export const CHURCH = {
   address: "Ibadan, Oyo State, Nigeria",
   lat: 7.3775,
   lng: 3.9470,
-  youtubeUrl: "https://www.youtube.com/@yourchannel/live", // ← replace
+  youtubeUrl: "https://youtube.com/@everlastinghillschurch?si=3ftJeVz2a6F7Hu3g",
 };
 
 // ── SERVICE SCHEDULE ──
