@@ -164,11 +164,11 @@ export default function GetInvolvedPage() {
           />
 
           {/* Large: Volunteer */}
-          <BentoCard 
-            title="Serve Team" 
+          <BentoCard
+            title="Serve Team"
             desc="Use your gifts to build the house."
             icon={<Handshake className="w-7 h-7" />}
-            href="#serve"
+            href="/connect/serve"
             className="md:col-span-2 md:row-span-2 bg-white/5"
             featured
           />

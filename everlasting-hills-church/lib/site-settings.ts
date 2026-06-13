@@ -135,6 +135,7 @@ export interface ContactContent {
   youtube: { visible: boolean; url: string | null };
   facebook: { visible: boolean; url: string | null };
   twitter: { visible: boolean; url: string | null };
+  tiktok: { visible: boolean; url: string | null };
 }
 
 export interface SiteSettingsMap {
@@ -361,19 +362,20 @@ export const GIVING_FALLBACK: GivingContent = {
 
 export const CONTACT_FALLBACK: ContactContent = {
   whatsapp: {
-    visible: true,
+    visible: false,
     label: "Chat with us on WhatsApp",
     url: "#",
   },
   instagram: {
     visible: true,
     handle: "@everlastinghillschurch",
-    url: "#",
+    url: "https://www.instagram.com/everlastinghillschurch?igsh=d2YwOWJlc2FtZnNs",
   },
   email: { visible: true, address: "hello@everlastinghills.org" },
-  youtube: { visible: false, url: null },
-  facebook: { visible: false, url: null },
+  youtube: { visible: true, url: "https://youtube.com/@everlastinghillschurch?si=3ftJeVz2a6F7Hu3g" },
+  facebook: { visible: true, url: "https://www.facebook.com/share/1AwdEL3f52/" },
   twitter: { visible: false, url: null },
+  tiktok: { visible: true, url: "https://www.tiktok.com/@everlasting_hills_church" },
 };
 
 const FALLBACKS: SiteSettingsMap = {

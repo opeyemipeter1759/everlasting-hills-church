@@ -92,8 +92,15 @@ export default function DirectionsSection() {
               mountain.
             </p>
 
-            {/* CTA + secondary link */}
-            <div className="mt-7 flex flex-wrap items-center gap-3">
+          </div>
+
+          {/* RIGHT (2/5): address + next-service + email + map */}
+          <div className="lg:col-span-2 space-y-3">
+            <AddressTile address={CHURCH.address} />
+            <NextServiceTile next={next} live={live} />
+            <EmailTile />
+            <MapTile />
+            <div className="flex flex-wrap items-center gap-3 pt-1">
               <button
                 type="button"
                 onClick={directions.handleGetDirections}
@@ -114,14 +121,6 @@ export default function DirectionsSection() {
                 <ArrowUpRight size={13} />
               </a>
             </div>
-          </div>
-
-          {/* RIGHT (2/5): address + next-service + email + map */}
-          <div className="lg:col-span-2 space-y-3">
-            <AddressTile address={CHURCH.address} />
-            <NextServiceTile next={next} live={live} />
-            <EmailTile />
-            <MapTile />
           </div>
         </div>
       </div>
@@ -209,6 +208,7 @@ function EmailTile() {
     </a>
   );
 }
+
 
 function MapTile() {
   const embedUrl = `https://www.google.com/maps?q=${CHURCH.lat},${CHURCH.lng}&z=15&output=embed`;
