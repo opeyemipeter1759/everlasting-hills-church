@@ -153,7 +153,7 @@ export default function ContactSection({ content }: { content?: ContactContent }
           {/* Left: Contact links */}
           <div>
             <ScrollReveal delay={0.1}>
-              <p className="text-[#111] font-semibold text-lg mb-6">
+              <p className="text-[#111] font-semibold text-lg leading-none mb-6">
                 Reach us directly
               </p>
             </ScrollReveal>
@@ -187,7 +187,7 @@ export default function ContactSection({ content }: { content?: ContactContent }
           </div>
 
           {/* Right: Contact form */}
-          <ScrollReveal delay={0.2} direction="right">
+          <ScrollReveal delay={0.2} direction="right" className="pt-[3px]">
             {submitted ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center rounded-2xl border border-dashed border-[#E7CDD3] p-12">
                 <div className="w-14 h-14 rounded-full bg-[#FFE8ED] flex items-center justify-center mb-5">

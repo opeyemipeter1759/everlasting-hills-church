@@ -15,7 +15,7 @@ function fmtTime(h: number, m: number) {
 
 function nextServiceTimeLabel(day: "sunday" | "wednesday"): string {
   const s = day === "sunday" ? SERVICES.sunday : SERVICES.wednesday;
-  return `${fmtTime(s.startH, s.startM)} — ${fmtTime(s.endH, s.endM)}`;
+  return fmtTime(s.startH, s.startM);
 }
 
 /**
