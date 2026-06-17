@@ -79,6 +79,10 @@ export class AuthService implements OnModuleInit {
       const { data: updated, error: updateError } = await admin.auth.admin.updateUserById(existingUser.id, {
         password: this.defaultSuperAdminPassword,
         email_confirm: true,
+        app_metadata: {
+          ...(existingUser.app_metadata ?? {}),
+          role: Role.SUPER_ADMIN,
+        },
         user_metadata: {
           ...(existingUser.user_metadata ?? {}),
           role: Role.SUPER_ADMIN,
@@ -96,6 +100,7 @@ export class AuthService implements OnModuleInit {
         email,
         password: this.defaultSuperAdminPassword,
         email_confirm: true,
+        app_metadata: { role: Role.SUPER_ADMIN },
         user_metadata: { role: Role.SUPER_ADMIN, full_name: 'Super Admin' },
       });
 
@@ -221,28 +226,21 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * @deprecated Use @CurrentUser() in controllers instead.
-   *
-   * Legacy helper for controllers that take the raw Authorization header and want
-   * "who is this caller". Validates the JWT against Supabase, then loads the Profile.
-   *
-   * Cost: one Supabase network call + one DB query per request. Migrate callers to
-   * @UseGuards(JwtAuthGuard) + @CurrentUser to eliminate the network hop.
+   * Exchange a Supabase refresh token for a fresh access token (+ rotated refresh
+   * token). Lets the frontend recover from access-token expiry (≈1h) without forcing
+   * a re-login. Mirrors the login() response shape.
    */
-  async getProfile(authorization?: string) {
-    const accessToken = authorization?.startsWith('Bearer ')
-      ? authorization.slice(7).trim()
-      : '';
-    if (!accessToken) throw new UnauthorizedException('Access token is required');
+  async refresh(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
 
-    const supabase = createClient(this.supabaseUrl, this.supabaseAnonKey, {
-      global: { headers: { Authorization: `Bearer ${accessToken}` } },
-      auth: { persistSession: false, autoRefreshToken: false },
+    const { data, error } = await this.anonClient.auth.refreshSession({
+      refresh_token: refreshToken,
     });
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data?.user) {
-      this.logger.warn(`Supabase getUser failed: ${error?.message ?? 'no user'}`);
-      throw new UnauthorizedException('Invalid access token');
+    if (error || !data.session || !data.user) {
+      this.logger.warn(`Token refresh failed: ${error?.message ?? 'no session'}`);
+      throw new UnauthorizedException('Session expired. Please sign in again.');
     }
 
     const summary = await this.getProfileSummary(data.user.id);
@@ -252,11 +250,17 @@ export class AuthService implements OnModuleInit {
         : null;
 
     return {
-      id: data.user.id,
-      email: data.user.email,
-      role: summary.role,
-      fullName,
-      picture: summary.photoUrl,
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_in: data.session.expires_in,
+      token_type: data.session.token_type,
+      user: {
+        id: data.user.id,
+        email: data.user.email,
+        role: summary.role,
+        fullName,
+        picture: summary.photoUrl,
+      },
     };
   }
 

@@ -12,9 +12,10 @@ export const metadata: Metadata = {
 
 async function fetchEvents(): Promise<EventSummary[]> {
   try {
+    // no-store so a freshly published/edited event shows immediately (no ISR lag).
     return await serverApi.get<EventSummary[]>("/events", {
       withAuth: false,
-      revalidate: 300,
+      cache: "no-store",
     });
   } catch {
     return [];

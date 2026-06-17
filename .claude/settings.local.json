@@ -15,7 +15,13 @@
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:4000/site-settings/contact)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:4000/site-settings/unknown)",
       "Bash(node -p \"JSON.stringify\\(require\\('./everlasting-hills-church/package.json'\\).scripts,null,2\\)\")",
-      "Bash(node -p \"JSON.stringify\\(require\\('./ehc-backend/package.json'\\).scripts,null,2\\)\")"
+      "Bash(node -p \"JSON.stringify\\(require\\('./ehc-backend/package.json'\\).scripts,null,2\\)\")",
+      "Bash(echo \"Testimony live region present:\"; grep -o \"Testimony\" /tmp/home.html | head -1; echo \"count of testimony slides aria-labels / dots:\"; grep -o \"Go to testimony [0-9]* of [0-9]*\" /tmp/home.html | head -6; echo \"seed name present \\(David Ade\\) or backend names:\"; grep -oE \"David Ade|Emma|Esther\" /tmp/home.html | head -3)",
+      "Read(//tmp/**)",
+      "Bash(cd /c/Users/HP/Downloads/everlasting-hills-church/everlasting-hills-church *)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
     ]
   }
 }

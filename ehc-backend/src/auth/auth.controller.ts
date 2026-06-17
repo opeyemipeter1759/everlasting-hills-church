@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { AuthUser } from './types/auth-user';
@@ -50,6 +51,21 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async login(@Body() body: LoginDto) {
     return this.authService.login(body.email, body.password);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Refresh Access Token',
+    description: 'Exchange a valid refresh token for a fresh access token (+ rotated refresh token).',
+  })
+  @ApiBody({ type: RefreshTokenDto })
+  @ApiOkResponse({ description: 'New session issued' })
+  @ApiUnauthorizedResponse({ description: 'Refresh token missing, invalid, or expired' })
+  async refresh(@Body() body: RefreshTokenDto) {
+    return this.authService.refresh(body.refresh_token);
   }
 
   @Public()

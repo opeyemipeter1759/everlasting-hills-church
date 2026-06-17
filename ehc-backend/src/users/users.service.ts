@@ -82,6 +82,27 @@ export class UsersService {
     }
   }
 
+  /**
+   * Mirror the app role into the Supabase user's app_metadata so it rides in the signed
+   * JWT (the frontend middleware verifies it cryptographically). Best-effort: a failure
+   * here doesn't fail the role change — the DB stays authoritative and the middleware
+   * falls back to the hint cookie until the next token refresh.
+   */
+  private async syncRoleClaim(userId: string, role: Role) {
+    try {
+      const admin = this.getSupabaseAdmin();
+      const { data: current } = await admin.auth.admin.getUserById(userId);
+      const existing = (current?.user?.app_metadata as Record<string, unknown> | undefined) ?? {};
+      await admin.auth.admin.updateUserById(userId, {
+        app_metadata: { ...existing, role },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Could not sync role claim for ${userId}: ${(err as Error).message}`,
+      );
+    }
+  }
+
   /** Exposed via GET /users/assignable-roles for frontend dropdown filtering. */
   assignableRolesFor(actor: AuthUser): Role[] {
     return assignableRoles(actor.role);
@@ -154,6 +175,9 @@ export class UsersService {
       email: normalizedEmail,
       password: data.phone,
       email_confirm: true,
+      // app_metadata.role is the authoritative, signed role claim the frontend
+      // middleware verifies. user_metadata.role is kept for display/back-compat.
+      app_metadata: { role: data.role },
       user_metadata: {
         role: data.role,
         full_name: `${data.firstName} ${data.lastName}`.trim(),
@@ -250,6 +274,9 @@ export class UsersService {
       where: { id: profileId },
       data: { role: data.role },
     });
+
+    // Push the new role into the signed JWT claim (best-effort; DB is authoritative).
+    await this.syncRoleClaim(target.userId, data.role);
 
     this.logger.log(
       `[${actor.email}] changed ${target.Member?.email ?? target.userId} role: ${target.role} → ${data.role}`,

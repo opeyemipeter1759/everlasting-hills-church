@@ -165,24 +165,54 @@ export class MembersService {
 
   /**
    * Resolve the signed-in user's Member row from their Supabase userId.
-   * Used by the /members/me endpoints — every member self-service action goes through here
-   * so we never trust an id supplied by the client.
+   *
+   * Self-healing: if a Profile exists but no Member row is attached, we create
+   * one on the fly using the email from the JWT. This handles "orphan" accounts
+   * (e.g. a SUPER_ADMIN seeded before the Member-row code path existed, or a
+   * user whose Member row was deleted but whose Profile + auth user survived).
+   *
+   * Throws only when the Profile itself is missing — that genuinely needs an
+   * admin to set the role.
    */
-  private async getMyMember(userId: string) {
+  private async getMyMember(userId: string, fallbackEmail?: string) {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
-      select: { id: true, Member: { select: { id: true } } },
+      select: { id: true, tenantId: true, Member: { select: { id: true } } },
     });
-    if (!profile || !profile.Member) {
+    if (!profile) {
       throw new NotFoundException(
-        'No member profile is attached to your account. Contact an admin.',
+        'Your account has no profile yet. Contact an admin.',
       );
     }
-    return { profileId: profile.id, memberId: profile.Member.id };
+    if (profile.Member) {
+      return { profileId: profile.id, memberId: profile.Member.id };
+    }
+
+    // Auto-provision a minimal Member row. The user can edit names/phone/bio
+    // from /dashboard/settings; we just need a row so subsequent updates work.
+    const member = await this.prisma.member.create({
+      data: {
+        id: randomUUID(),
+        tenantId: profile.tenantId,
+        profileId: profile.id,
+        firstName: 'New',
+        lastName: 'Member',
+        email: fallbackEmail ?? null,
+      },
+      select: { id: true },
+    });
+    this.logger.log(
+      `Auto-provisioned Member ${member.id} for orphan profile ${profile.id} (${fallbackEmail ?? 'no email'})`,
+    );
+    return { profileId: profile.id, memberId: member.id };
   }
 
-  async updateMyProfile(userId: string, data: import('./dto/update-my-profile.dto').UpdateMyProfileDto) {
-    const { memberId } = await this.getMyMember(userId);
+  async updateMyProfile(
+    userId: string,
+    data: import('./dto/update-my-profile.dto').UpdateMyProfileDto,
+    fallbackEmail?: string,
+  ) {
+    const { memberId } = await this.getMyMember(userId, fallbackEmail);
     return this.prisma.member.update({
       where: { id: memberId },
       data: {
@@ -217,8 +247,9 @@ export class MembersService {
   async setMyAvatar(
     userId: string,
     file: { buffer: Buffer; mimetype: string; originalname: string; size: number },
+    fallbackEmail?: string,
   ) {
-    const { memberId } = await this.getMyMember(userId);
+    const { memberId } = await this.getMyMember(userId, fallbackEmail);
 
     const maxBytes = 1 * 1024 * 1024;
     if (file.size > maxBytes) {
@@ -280,8 +311,8 @@ export class MembersService {
     return { photoUrl };
   }
 
-  async clearMyAvatar(userId: string) {
-    const { memberId } = await this.getMyMember(userId);
+  async clearMyAvatar(userId: string, fallbackEmail?: string) {
+    const { memberId } = await this.getMyMember(userId, fallbackEmail);
     await this.prisma.member.update({
       where: { id: memberId },
       data: { photoUrl: null },

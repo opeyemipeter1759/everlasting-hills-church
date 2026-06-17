@@ -28,6 +28,9 @@ export interface SupabaseJwtClaims extends JWTPayload {
   iat: number;
   aud?: string | string[];
   role?: string;
+  /** Supabase includes admin-controlled app_metadata in the access token. We put the
+   *  authoritative app role here so the middleware can verify it cryptographically. */
+  app_metadata?: { role?: string; [key: string]: unknown };
 }
 
 let cachedJWKS: ReturnType<typeof createRemoteJWKSet> | null = null;

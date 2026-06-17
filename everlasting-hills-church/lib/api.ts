@@ -36,6 +36,7 @@ export const auth = {
 
     setFrontendSession({
       accessToken: response.access_token,
+      refreshToken: response.refresh_token,
       email: response.user.email,
       role: response.user.role ?? null,
       fullName: response.user.fullName,

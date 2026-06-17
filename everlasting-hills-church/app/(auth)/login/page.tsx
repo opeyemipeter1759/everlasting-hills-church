@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { auth } from "@/lib/api";
+import { getLandingPage } from "@/lib/auth/frontend-session";
 import AuthSplitScreen from "@/components/auth/AuthSplitScreen";
 
 type FormValues = {
@@ -15,25 +16,35 @@ type FormValues = {
 export default function LoginPage() {
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  // Dedicated flag so the spinner appears the instant the button is pressed and
+  // stays up through the redirect. Unlike RHF's isSubmitting, it is not cleared
+  // when auth.login resolves, avoiding a flash back to "Sign In" before the page
+  // actually navigates. Only an error clears it.
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormValues>();
 
   const onSubmit = async ({ email, password }: FormValues) => {
     setServerError("");
+    setLoading(true);
     try {
       const resp = await auth.login({ email, password });
-      const next = resp.user.needsPasswordChange ? "/change-password" : "/dashboard";
+      const next = resp.user.needsPasswordChange
+        ? "/change-password"
+        : getLandingPage(resp.user.role);
       window.location.assign(next);
+      // Intentionally leave `loading` true — we are navigating away.
     } catch (error) {
       const message =
         error && typeof error === "object" && "message" in error
           ? String((error as { message: unknown }).message)
           : "An error occurred during login";
       setServerError(message);
+      setLoading(false);
     }
   };
 
@@ -108,10 +119,18 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#87102C] to-[#a52242] text-white text-sm font-bold tracking-wide hover:from-[#6E0C24] hover:to-[#87102C] transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-[#87102C]/20 hover:shadow-xl hover:shadow-[#87102C]/30 hover:-translate-y-0.5"
+          disabled={loading}
+          aria-busy={loading}
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#87102C] to-[#a52242] text-white text-sm font-bold tracking-wide hover:from-[#6E0C24] hover:to-[#87102C] transition-all disabled:opacity-90 disabled:cursor-not-allowed shadow-lg shadow-[#87102C]/20 hover:shadow-xl hover:shadow-[#87102C]/30 hover:-translate-y-0.5 disabled:hover:translate-y-0 inline-flex items-center justify-center gap-2"
         >
-          {isSubmitting ? "Signing in…" : "Sign In"}
+          {loading ? (
+            <>
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+              Signing in…
+            </>
+          ) : (
+            "Sign In"
+          )}
         </button>
 
         <p className="text-center text-xs text-gray-500 mt-2">

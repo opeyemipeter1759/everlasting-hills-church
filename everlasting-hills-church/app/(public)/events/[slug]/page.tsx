@@ -18,9 +18,10 @@ import { formatEventDate } from "@/components/events/detail/event-format";
 
 async function fetchEvent(slug: string): Promise<EventDetail | null> {
   try {
+    // no-store so a draft published after a failed visit isn't stuck on a cached 404.
     return await serverApi.get<EventDetail>(`/events/${slug}`, {
       withAuth: false,
-      revalidate: 300,
+      cache: "no-store",
     });
   } catch (err) {
     if ((err as ApiError).status === 404) return null;
