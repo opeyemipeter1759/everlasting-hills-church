@@ -4,8 +4,7 @@ export const CHURCH = {
   address: "Ibadan, Oyo State, Nigeria",
   lat: 7.3775,
   lng: 3.9470,
-  youtubeUrl: "https://www.youtube.com/@yourchannel/live", // ← replace
-  // Single source of truth for contact details (was duplicated across components).
+  youtubeUrl: "https://youtube.com/@everlastinghillschurch?si=3ftJeVz2a6F7Hu3g",
   phone: "+234 706 872 7719",
   email: "hello@everlastinghills.org",
   whatsappUrl: "https://wa.me/2347068727719",

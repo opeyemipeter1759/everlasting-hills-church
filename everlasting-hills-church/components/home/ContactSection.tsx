@@ -16,8 +16,16 @@ import {
 import { apiClient } from "@/lib/api/axios";
 import { CONTACT_FALLBACK, type ContactContent } from "@/lib/site-settings";
 
+function TikTokIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.75a8.16 8.16 0 0 0 4.77 1.52V6.82a4.85 4.85 0 0 1-1-.13z" />
+    </svg>
+  );
+}
+
 type ContactLink = {
-  icon: LucideIcon;
+  icon: LucideIcon | typeof TikTokIcon;
   label: string;
   value: string;
   href: string;
@@ -87,6 +95,16 @@ function buildContactLinks(c: ContactContent): ContactLink[] {
       bg: "#F4F4F5",
     });
   }
+  if (c.tiktok?.visible && c.tiktok.url) {
+    out.push({
+      icon: TikTokIcon,
+      label: "TikTok",
+      value: "@everlasting_hills_church",
+      href: c.tiktok.url,
+      color: "#010101",
+      bg: "#F4F4F5",
+    });
+  }
   return out;
 }
 
@@ -135,7 +153,7 @@ export default function ContactSection({ content }: { content?: ContactContent }
           {/* Left: Contact links */}
           <div>
             <ScrollReveal delay={0.1}>
-              <p className="text-[#111] font-semibold text-lg mb-6">
+              <p className="text-[#111] font-semibold text-lg leading-none mb-6">
                 Reach us directly
               </p>
             </ScrollReveal>
@@ -150,9 +168,9 @@ export default function ContactSection({ content }: { content?: ContactContent }
                   >
                     <div
                       className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: link.bg }}
+                      style={{ background: link.bg, color: link.color }}
                     >
-                      <link.icon size={18} style={{ color: link.color }} />
+                      <link.icon size={18} />
                     </div>
                     <div>
                       <p className="text-[#999] text-xs tracking-[0.12em] uppercase font-medium">
@@ -169,7 +187,7 @@ export default function ContactSection({ content }: { content?: ContactContent }
           </div>
 
           {/* Right: Contact form */}
-          <ScrollReveal delay={0.2} direction="right">
+          <ScrollReveal delay={0.2} direction="right" className="pt-[3px]">
             {submitted ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center rounded-2xl border border-dashed border-[#E7CDD3] p-12">
                 <div className="w-14 h-14 rounded-full bg-[#FFE8ED] flex items-center justify-center mb-5">
