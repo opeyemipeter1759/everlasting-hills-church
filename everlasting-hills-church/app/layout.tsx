@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { QueryProvider } from "@/lib/api/QueryProvider";
+import NavigationProgress from "@/components/ui/NavigationProgress";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -65,6 +67,9 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-white dark:bg-[#111111] transition-colors">
+        <Suspense fallback={null}>
+          <NavigationProgress />
+        </Suspense>
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

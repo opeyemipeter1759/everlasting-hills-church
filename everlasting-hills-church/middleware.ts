@@ -42,10 +42,17 @@ export async function middleware(req: NextRequest) {
   const claims = accessToken ? await verifySupabaseJwt(accessToken) : null;
   const isAuthenticated = Boolean(claims);
 
+  // Prefer the role from the cryptographically-verified token (app_metadata.role).
+  // Fall back to the editable ehc_role hint cookie ONLY while a user's token predates
+  // the claim (migration) — once their token carries it, the forgeable cookie is ignored
+  // for authorization. (The backend independently enforces role from the DB.)
+  const verifiedRole = claims?.app_metadata?.role ?? null;
+  const effectiveRole = verifiedRole ?? roleHint;
+
   // Auth pages: signed-in users get redirected to their landing page.
   if (AUTH_PAGES.has(pathname)) {
     if (isAuthenticated) {
-      const landing = getLandingPage(roleHint);
+      const landing = getLandingPage(effectiveRole);
       // Don't redirect to where we already are — would loop on /login itself if landing == /login.
       if (landing !== pathname) {
         return NextResponse.redirect(new URL(landing, req.url));
@@ -63,13 +70,13 @@ export async function middleware(req: NextRequest) {
 
   // Authenticated but no role at all (orphan Supabase account with no Profile).
   // /me is always reachable for any signed-in user and never re-redirects, so it's the safe sink.
-  if (!normalizeRole(roleHint)) {
+  if (!normalizeRole(effectiveRole)) {
     if (pathname === ROLELESS_LANDING) return NextResponse.next();
     return NextResponse.redirect(new URL(ROLELESS_LANDING, req.url));
   }
 
   // Insufficient role for this path.
-  if (!hasMinRole(roleHint, requiredRole)) {
+  if (!hasMinRole(effectiveRole, requiredRole)) {
     // Loop guard: if the safe-fallback is the current path, just let through.
     // (Page itself can render a "you don't have access" view.)
     const fallback = "/dashboard";
@@ -83,6 +90,7 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/admin/:path*",
     "/me",
     "/me/:path*",
     "/login",

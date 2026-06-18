@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Instagram, Facebook, Youtube, Mail } from "lucide-react";
 
 function TikTokIcon({ size = 16 }: { size?: number }) {
@@ -68,19 +69,9 @@ export default function Footer() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
           {/* Brand block */}
           <div className="lg:col-span-1">
-            {/* Logo mark */}
+            {/* Logo */}
             <div className="flex items-center gap-2.5 mb-5">
-              <svg
-                width="36"
-                height="36"
-                viewBox="0 0 40 40"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path d="M4 32L20 8L36 32H4Z" fill="white" opacity="0.1" />
-                <path d="M11 32L20 14L29 32H11Z" fill="white" opacity="0.3" />
-                <path d="M16 32L20 22L24 32H16Z" fill="white" opacity="0.8" />
-              </svg>
+              <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={48} height={48} className="flex-shrink-0" />
               <div>
                 <p className="text-white font-bold text-sm leading-none">
                   Everlasting Hills

@@ -15,7 +15,10 @@
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:4000/site-settings/contact)",
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:4000/site-settings/unknown)",
       "Bash(node -p \"JSON.stringify\\(require\\('./everlasting-hills-church/package.json'\\).scripts,null,2\\)\")",
-      "Bash(node -p \"JSON.stringify\\(require\\('./ehc-backend/package.json'\\).scripts,null,2\\)\")"
+      "Bash(node -p \"JSON.stringify\\(require\\('./ehc-backend/package.json'\\).scripts,null,2\\)\")",
+      "Bash(git add *)",
+      "Bash(git stash *)",
+      "Bash(git reset *)"
     ]
   }
 }

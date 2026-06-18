@@ -31,7 +31,11 @@ const ROLE_LEVELS: Record<UserRole, number> = {
 };
 
 export const ACCESS_TOKEN_COOKIE = "ehc_access_token";
+export const REFRESH_TOKEN_COOKIE = "ehc_refresh_token";
 export const ROLE_COOKIE = "ehc_role";
+
+/** Refresh tokens outlive the ~1h access token so a session can be silently renewed. */
+const REFRESH_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 export const EMAIL_COOKIE = "ehc_user_email";
 export const FULL_NAME_COOKIE = "ehc_user_full_name";
 export const PICTURE_COOKIE = "ehc_user_picture";
@@ -77,10 +81,16 @@ export function hasMinRole(userRole: string | null | undefined, minRole: UserRol
 }
 
 export function getLandingPage(role: string | null | undefined): string {
-  return normalizeRole(role) ? "/dashboard" : "/login";
+  const normalized = normalizeRole(role);
+  if (!normalized) return "/login";
+  // Super admins land on their dedicated dashboard; everyone else on /dashboard.
+  return normalized === "SUPER_ADMIN" ? "/admin/dashboard" : "/dashboard";
 }
 
 export function getRequiredRole(pathname: string): UserRole | null {
+  // Super Admin area (/admin/*) is the highest-privilege surface.
+  if (pathname.startsWith("/admin")) return "SUPER_ADMIN";
+
   if (pathname.startsWith("/dashboard/audit-log")) return "SUPER_ADMIN";
 
   if (
@@ -154,8 +164,17 @@ export function getAccessTokenFromCookie(): string | null {
   return found ? decodeURIComponent(found.slice(prefix.length)) : null;
 }
 
+export function getRefreshTokenFromCookie(): string | null {
+  if (typeof document === "undefined") return null;
+  const prefix = `${REFRESH_TOKEN_COOKIE}=`;
+  const found = document.cookie.split("; ").find((c) => c.startsWith(prefix));
+  return found ? decodeURIComponent(found.slice(prefix.length)) : null;
+}
+
 export interface FrontendSessionInput {
   accessToken: string;
+  /** Supabase refresh token — stored long-lived so the access token can be renewed. */
+  refreshToken?: string | null;
   email: string;
   role: string | null;
   fullName?: string | null;
@@ -194,6 +213,7 @@ export function getFrontendSessionUser(): FrontendSessionUser | null {
 
 export function setFrontendSession({
   accessToken,
+  refreshToken,
   email,
   role,
   fullName,
@@ -202,6 +222,8 @@ export function setFrontendSession({
 }: FrontendSessionInput): void {
   const maxAge = Math.max(60, expiresInSeconds);
   setCookie(ACCESS_TOKEN_COOKIE, accessToken, maxAge);
+  // Refresh token lives longer than the access token so the session can be renewed.
+  if (refreshToken) setCookie(REFRESH_TOKEN_COOKIE, refreshToken, REFRESH_MAX_AGE);
   setCookie(EMAIL_COOKIE, email, maxAge);
   setCookie(LOGGED_IN_COOKIE, "true", maxAge);
   if (role) setCookie(ROLE_COOKIE, role, maxAge);
@@ -252,6 +274,7 @@ export function patchFrontendSession(
 
 export function clearFrontendSession(): void {
   clearCookie(ACCESS_TOKEN_COOKIE);
+  clearCookie(REFRESH_TOKEN_COOKIE);
   clearCookie(ROLE_COOKIE);
   clearCookie(EMAIL_COOKIE);
   clearCookie(FULL_NAME_COOKIE);

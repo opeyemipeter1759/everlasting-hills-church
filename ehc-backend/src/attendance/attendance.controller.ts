@@ -45,10 +45,9 @@ export class AttendanceController {
   })
   @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
   async checkIn(@CurrentUser() user: AuthUser) {
-    if (!user.profileId) {
-      throw new Error('No profile associated with this user');
-    }
-    return this.attendanceService.checkIn(user.profileId);
+    // Pass the Supabase userId — the service looks up Profile by `userId` column
+    // and auto-provisions a Member row if the user has a Profile but no Member.
+    return this.attendanceService.checkIn(user.userId, user.email);
   }
 
   @Post('services/:serviceId/check-in')
@@ -57,17 +56,13 @@ export class AttendanceController {
     @CurrentUser() user: AuthUser,
     @Param('serviceId') serviceId: string,
   ) {
-    if (!user.profileId) {
-      throw new Error('No profile associated with this user');
-    }
-    return this.attendanceService.checkInByServiceId(user.profileId, serviceId);
+    return this.attendanceService.checkInByServiceId(user.userId, serviceId, user.email);
   }
 
   @Get('me')
   @ApiOperation({ summary: 'Get current member attendance history' })
   async getMyAttendance(@CurrentUser() user: AuthUser) {
-    if (!user.profileId) return [];
-    return this.attendanceService.getMemberAttendance(user.profileId);
+    return this.attendanceService.getMemberAttendance(user.userId);
   }
 
   // ── Admin endpoints (ADMIN+) ────────────────────────────────────────────────
