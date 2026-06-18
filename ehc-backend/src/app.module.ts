@@ -1,6 +1,10 @@
+// Load .env before any decorator below evaluates (JobsModule.forRoot reads
+// process.env.REDIS_URL synchronously). Must be the first import.
+import './config/load-env';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SentryModule } from '@sentry/nestjs/setup';
 import { ThrottlerGuard, ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
@@ -20,12 +24,18 @@ import { UsersModule } from './users/users.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { EventsModule } from './events/events.module';
+import { JobsModule } from './jobs/jobs.module';
+import { SchedulingModule } from './scheduling/scheduling.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, cache: true, validate: (raw) => validateEnv(raw) }),
+
+    // Sentry request integration. Only registered when a DSN is configured;
+    // Sentry.init() itself runs earlier in observability/instrument.ts.
+    ...(process.env.SENTRY_DSN ? [SentryModule.forRoot()] : []),
 
     /**
      * Structured JSON logging via pino. In dev we pipe through pino-pretty for human-readable
@@ -96,6 +106,8 @@ import type { Env } from './config/env.validation';
     SiteSettingsModule,
     UploadsModule,
     EventsModule,
+    JobsModule.forRoot(),
+    SchedulingModule,
   ],
   controllers: [AppController],
   providers: [

@@ -8,13 +8,13 @@ import Image from "next/image";
 import NavUserBadge, { useIsLoggedIn } from "./NavUserBadge";
 
 const navLinks = [
-  { label: "About", href: "/#about" },
-  { label: "Our Culture", href: "/#culture" },
+  { label: "About", href: "/about" },
+  { label: "Beliefs", href: "/beliefs" },
   // Real link to the public sermon library, not just the homepage section anchor.
   { label: "Sermons", href: "/sermons" },
   { label: "Events", href: "/events" },
-  { label: "Services", href: "/#services" },
-  { label: "Community", href: "/#community" },
+  { label: "Ministries", href: "/ministries" },
+  { label: "Visit", href: "/visit" },
   { label: "Connect", href: "/connect" },
 ];
 

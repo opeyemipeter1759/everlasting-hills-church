@@ -45,6 +45,20 @@ export const envSchema = z.object({
 
   THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(100),
+
+  /**
+   * Background jobs (BullMQ). When REDIS_URL is set, emails are enqueued to a
+   * durable, retrying queue. When it is absent, the app falls back to the
+   * in-process EventEmitter path — no Redis required to run locally.
+   */
+  REDIS_URL: z.url().optional(),
+
+  /**
+   * Error monitoring (Sentry). When SENTRY_DSN is set, exceptions are reported.
+   * Absent → Sentry is a no-op and the app behaves exactly as before.
+   */
+  SENTRY_DSN: z.url().optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
 });
 
 export type Env = z.infer<typeof envSchema>;
