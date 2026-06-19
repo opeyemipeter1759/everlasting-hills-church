@@ -6,6 +6,10 @@ import Link from "next/link";
 import { ArrowLeft, Mail } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import AuthSplitScreen from "@/components/auth/AuthSplitScreen";
+import { AuthDivider } from "@/components/auth/AuthDivider";
+import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
+import { AuthErrorBanner } from "@/components/auth/AuthErrorBanner";
+import { TextField } from "@/components/ui/form/TextField";
 
 type FormValues = {
   email: string;
@@ -38,13 +42,7 @@ export default function ForgotPasswordPage() {
       scriptureRef="Psalm 55:22"
       supportingCopy="Forgetting a password happens. Getting back in shouldn't be hard. Drop us your email and we'll send a fresh link."
     >
-      <div className="flex items-center justify-center mb-3">
-        <span className="block w-6 h-px bg-[#87102C]/30" />
-        <span className="px-3 text-[10px] tracking-[0.3em] uppercase text-[#87102C] font-bold">
-          Password Reset
-        </span>
-        <span className="block w-6 h-px bg-[#87102C]/30" />
-      </div>
+      <AuthDivider label="Password Reset" />
 
       <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-2">
         Forgot your password?
@@ -77,36 +75,22 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div>
-            <label htmlFor="email" className="block text-xs font-bold text-gray-700 mb-2">
-              Email Address <span className="text-[#87102C]">*</span>
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              {...register("email", { required: "Email is required" })}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C] focus:bg-white transition-colors"
-              placeholder="you@example.com"
-            />
-            {errors.email && (
-              <p className="text-red-600 text-xs mt-1.5">{errors.email.message}</p>
-            )}
-          </div>
+          <TextField
+            label="Email Address"
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            error={errors.email?.message}
+            required
+            {...register("email", { required: "Email is required" })}
+          />
 
-          {serverError && (
-            <p className="text-red-700 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-              {serverError}
-            </p>
-          )}
+          <AuthErrorBanner message={serverError} />
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#87102C] to-[#a52242] text-white text-sm font-bold tracking-wide hover:from-[#6E0C24] hover:to-[#87102C] transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-lg shadow-[#87102C]/20 hover:shadow-xl hover:shadow-[#87102C]/30 hover:-translate-y-0.5"
-          >
-            {isSubmitting ? "Sending link…" : "Send Reset Link"}
-          </button>
+          <AuthSubmitButton loading={isSubmitting} loadingText="Sending link…">
+            Send Reset Link
+          </AuthSubmitButton>
 
           <Link
             href="/login"

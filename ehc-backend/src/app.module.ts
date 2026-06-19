@@ -20,6 +20,7 @@ import { UsersModule } from './users/users.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { EventsModule } from './events/events.module';
+import { OverviewModule } from './overview/overview.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 
@@ -96,6 +97,7 @@ import type { Env } from './config/env.validation';
     SiteSettingsModule,
     UploadsModule,
     EventsModule,
+    OverviewModule,
   ],
   controllers: [AppController],
   providers: [

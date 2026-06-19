@@ -8,11 +8,36 @@ import {
 import { LoginPayload, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload } from "@/types";
 import type { UserRole } from "@/config/config";
 
-/**
- * Strict backend contract. The NestJS /auth/login response shape is known and locked.
- * If the backend changes shape, this type forces us to update — no more fishing-expedition
- * optional fields swallowing breakage.
- */
+export interface MeResponse {
+  profileId: string | null;
+  role: string | null;
+  tenantId: string | null;
+  member: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    dateOfBirth: string | null;
+    bio: string | null;
+    photoUrl: string | null;
+    joinedAt: string;
+    occupation: string | null;
+    facebookLink: string | null;
+    instagramLink: string | null;
+    tiktokLink: string | null;
+  } | null;
+}
+
+export function useMe() {
+  return useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: () => api.get<MeResponse>("/auth/me"),
+    enabled: typeof window !== "undefined",
+  });
+}
+
 export interface LoginResponse {
   access_token: string;
   refresh_token: string;
@@ -33,7 +58,6 @@ export interface LoginResponse {
 export const auth = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>("/auth/login", payload);
-
     setFrontendSession({
       accessToken: response.access_token,
       refreshToken: response.refresh_token,
@@ -54,11 +78,7 @@ export const auth = {
       clearFrontendSession();
     }
   },
-};
-
-
-
-
+}
 export function useUsers(filters: object = {}) {
   return useQuery({
     queryKey: queryKeys.users.list(filters),
@@ -89,8 +109,6 @@ export function useLatestSermons() {
   return useQuery({
     queryKey: ["sermons", "latest"],
     queryFn: () => api.get<LatestSermon[]>("/sermons/latest"),
-    // Axios needs an absolute base URL; skip the query on the server where
-    // NEXT_PUBLIC_API_BASE_URL may not be set and relative URLs fail in Node.
     enabled: typeof window !== "undefined",
   });
 }
@@ -138,5 +156,59 @@ export function useUpdateSermon() {
       queryClient.invalidateQueries({ queryKey: ["sermons"] });
     },
   });
+}
+
+export interface CanMarkResponse {
+  canMark: boolean;
+  reason?: 'NO_OPEN_SESSION' | 'ALREADY_MARKED';
+}
+
+export function useCanMark(options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: ['attendance', 'can-mark'],
+    queryFn: () => api.get<CanMarkResponse>('/attendance/can-mark'),
+    refetchInterval: 30_000,
+    enabled: (options?.enabled ?? true) && typeof window !== 'undefined',
+  });
+}
+
+export function useCheckIn() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post<void>('/attendance/check-in'),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['attendance', 'can-mark'] });
+    },
+  });
+}
+
+export interface MemberAttendanceOverview {
+  attendance: {
+    marked: number;
+    total: number;
+    percentage: number;
+    lastMarkedAt: string | null;
+  };
+}
+
+export function useMemberOverview() {
+  return useQuery({
+    queryKey: ['overview', 'member'],
+    queryFn: () => api.get<MemberAttendanceOverview>('/overview/member'),
+    enabled: typeof window !== 'undefined',
+  });
+}
+
+export function useChangePassword() {
+  const mutation = useMutation({
+    mutationFn: (password: string) =>
+      api.post<void>("/auth/change-password", { password }),
+  });
+
+  return {
+    submit: mutation.mutateAsync,
+    isLoading: mutation.isPending,
+    isError: mutation.isError,
+  };
 }
 

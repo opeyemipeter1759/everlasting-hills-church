@@ -57,8 +57,7 @@ export default function SessionActionMenu({
   const rootRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<FrontendSessionUser | null>(null);
 
-  // Hydrate from cookies on mount, then re-read whenever the session cookies change
-  // (e.g. user updated their profile photo or name in /dashboard/settings).
+
   useEffect(() => {
     setSession(getFrontendSessionUser());
     const refresh = () => setSession(getFrontendSessionUser());

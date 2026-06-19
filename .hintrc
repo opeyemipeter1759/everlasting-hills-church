@@ -8,6 +8,13 @@
       {
         "aria-valid-attr-value": "off"
       }
+    ],
+    "apple-touch-icons": "off",
+    "axe/forms": [
+      "default",
+      {
+        "label": "off"
+      }
     ]
   }
 }

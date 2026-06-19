@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/frontend-session";
+import type { MeResponse } from "@/lib/api";
 
 export interface ApiError {
   message: string;
@@ -111,4 +112,9 @@ export const serverApi = {
   put: <T>(path: string, body?: unknown, options?: FetchOptions) =>
     request<T>("PUT", path, { ...options, body }),
   delete: <T>(path: string, options?: FetchOptions) => request<T>("DELETE", path, options),
+};
+
+export const profile = {
+  getMe: (options?: FetchOptions) =>
+    serverApi.get<MeResponse>("/auth/me", options),
 };

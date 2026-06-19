@@ -16,8 +16,8 @@
   --color-church-accent: #ffb3c1;
   --color-church-warm: #ffe8ed;
 
-  --sidebar-w-expanded: 300px;
-  --sidebar-w-collapsed: 72px;
+  --sidebar-w-expanded: 240px;
+  --sidebar-w-collapsed: 65px;
 }
 
 * {

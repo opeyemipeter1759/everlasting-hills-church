@@ -112,7 +112,6 @@ export type NavItem = {
   href: string;
   icon: LucideIcon;
   minRole: UserRole;
-  /** If set, hide this item when user role >= maxRole (exclusive upper bound). */
   maxRole?: UserRole;
 };
 
@@ -125,11 +124,11 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: null,
     items: [
-      { label: "Home",            href: "/dashboard",                  icon: LayoutDashboard, minRole: "MEMBER" },
-      { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
-      { label: "My Attendance",   href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "MEMBER", maxRole: "ADMIN" },
-      { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "MEMBER" },
-      { label: "Testimonies",     href: "/dashboard/testimonies",      icon: MessageSquare,   minRole: "MEMBER" },
+      { label: "Home",            href: "/dashboard/admin",                  icon: LayoutDashboard, minRole: "ADMIN" },
+      { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "ADMIN" },
+      { label: "My Attendance",   href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "ADMIN", maxRole: "ADMIN" },
+      { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "ADMIN" },
+      { label: "Testimonies",     href: "/dashboard/testimonies",      icon: MessageSquare,   minRole: "ADMIN" },
     ],
   },
   {
@@ -183,5 +182,12 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Audit Log", href: "/dashboard/audit-log", icon: Shield, minRole: "SUPER_ADMIN" },
     ],
+  },{
+    section: "Member",
+    items: [
+      { label: "Home",           href: "/dashboard",            icon: BookOpen,       minRole: "MEMBER" },
+
+    ],
   },
+  
 ];

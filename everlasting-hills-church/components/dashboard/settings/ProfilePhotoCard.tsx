@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Check, Trash2, RefreshCw } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { patchFrontendSession } from "@/lib/auth/frontend-session";
-import { UploadDropzone } from "./form-primitives";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { UploadDropzone } from "@/components/ui/form/UploadDropzone";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 
 interface Props {
   initialPhotoUrl: string | null;

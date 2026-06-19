@@ -65,6 +65,23 @@ export class AttendanceController {
     return this.attendanceService.getMemberAttendance(user.userId);
   }
 
+  @Get('can-mark')
+  @ApiOperation({ summary: 'Check whether the current user can mark attendance now' })
+  @ApiOkResponse({
+    description: 'Whether the user can mark attendance for the active session',
+    schema: {
+      examples: {
+        canMark: { value: { canMark: true } },
+        noSession: { value: { canMark: false, reason: 'NO_OPEN_SESSION' } },
+        alreadyMarked: { value: { canMark: false, reason: 'ALREADY_MARKED' } },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
+  async canMark(@CurrentUser() user: AuthUser) {
+    return this.attendanceService.canMark(user.userId);
+  }
+
   // ── Admin endpoints (ADMIN+) ────────────────────────────────────────────────
 
   @Get('today')

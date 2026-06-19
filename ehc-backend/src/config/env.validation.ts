@@ -45,6 +45,19 @@ export const envSchema = z.object({
 
   THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(100),
+
+  // Attendance service windows — WAT (UTC+1), 24h "HH:MM" format.
+  ATTENDANCE_SUNDAY_OPEN: z.string().regex(/^\d{2}:\d{2}$/).default('08:30'),
+  ATTENDANCE_SUNDAY_CLOSE: z.string().regex(/^\d{2}:\d{2}$/).default('13:00'),
+  ATTENDANCE_WEDNESDAY_OPEN: z.string().regex(/^\d{2}:\d{2}$/).default('17:30'),
+  ATTENDANCE_WEDNESDAY_CLOSE: z.string().regex(/^\d{2}:\d{2}$/).default('21:00'),
+  // Override the current time for testing (ISO 8601). Leave blank in production.
+  ATTENDANCE_TEST_NOW: z.string().optional(),
+  // Force the attendance window open regardless of day/time. Testing only.
+  ATTENDANCE_FORCE_OPEN: z
+    .string()
+    .transform((v) => v === 'true')
+    .optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
