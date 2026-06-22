@@ -68,7 +68,7 @@ function DropdownPortal({ anchorRef, open, children }: DropdownPortalProps) {
 function TriggerButton({
   btnRef, label, placeholder, hasValue, onOpen, onClear, disabled,
 }: {
-  btnRef: React.RefObject<HTMLButtonElement | null>;
+  btnRef: React.RefObject<HTMLButtonElement>;
   label: string | null;
   placeholder: string;
   hasValue: boolean;

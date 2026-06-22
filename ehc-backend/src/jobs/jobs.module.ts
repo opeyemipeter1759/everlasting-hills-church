@@ -43,7 +43,8 @@ export class JobsModule {
       imports: [
         BullModule.forRootAsync({
           inject: [ConfigService],
-          useFactory: (config: ConfigService<Env, true>) => ({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          useFactory: (config: ConfigService<Env, true>): any => ({
             // BullMQ workers require maxRetriesPerRequest: null on the connection.
             connection: new Redis(config.get('REDIS_URL', { infer: true })!, {
               maxRetriesPerRequest: null,

@@ -30,7 +30,8 @@
       "Bash(sed -i 's|@/components/ui/SectionCard|@/components/ui/cards/SectionCard|g' \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/components/dashboard/member/AttendanceChart.tsx\")",
       "Bash(sed -i 's|@/components/ui/SectionCard|@/components/ui/cards/SectionCard|g' \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/components/dashboard/member/AnnouncementsPanel.tsx\")",
       "Bash(rm -rf \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/app/dashboard/\\(member\\)/profile\")",
-      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\taiwo\\\\OneDrive\\\\Desktop\\\\myproject\\\\2026\\\\everlasting-hills-church\\\\ehc-backend\\\\src\\\\overview\" -Force)"
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\taiwo\\\\OneDrive\\\\Desktop\\\\myproject\\\\2026\\\\everlasting-hills-church\\\\ehc-backend\\\\src\\\\overview\" -Force)",
+      "Bash(echo \"Exit: $?\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\taiwo\\OneDrive\\Desktop\\myproject\\2026\\everlasting-hills-church\\everlasting-hills-church\\app\\dashboard\\(member)\\profile"

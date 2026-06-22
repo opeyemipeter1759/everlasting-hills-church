@@ -10,14 +10,16 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model AttendanceRecord {
-  id        String  @id
-  memberId  String
-  serviceId String
-  present   Boolean @default(true)
-  tenantId  String
-  Member    Member  @relation(fields: [memberId], references: [id])
-  Service   Service @relation(fields: [serviceId], references: [id])
-  Tenant    Tenant  @relation(fields: [tenantId], references: [id])
+  id          String   @id
+  memberId    String
+  serviceId   String
+  present     Boolean  @default(true)
+  tenantId    String
+  checkedInAt DateTime @default(now())
+  markedBy    String?  @default("SELF")
+  Member      Member   @relation(fields: [memberId], references: [id])
+  Service     Service  @relation(fields: [serviceId], references: [id])
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
 
   @@unique([memberId, serviceId])
 }
@@ -160,6 +162,7 @@ model Member {
   photoUrl           String?
   status             MemberStatus         @default(ACTIVE)
   notifyNewSermons   Boolean              @default(true)
+  tags               String[]
   householdId        String?
   AttendanceRecord   AttendanceRecord[]
   DiscussionResponse DiscussionResponse[]
@@ -478,12 +481,13 @@ model Unit {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model UnitMember {
-  id       String   @id
-  tenantId String
-  unitId   String
-  memberId String
-  isLead   Boolean  @default(false)
-  joinedAt DateTime @default(now())
+  id          String   @id
+  tenantId    String
+  unitId      String
+  memberId    String
+  isLead      Boolean  @default(false)
+  isAssistant Boolean  @default(false)
+  joinedAt    DateTime @default(now())
   Member   Member   @relation(fields: [memberId], references: [id])
   Unit     Unit     @relation(fields: [unitId], references: [id])
 

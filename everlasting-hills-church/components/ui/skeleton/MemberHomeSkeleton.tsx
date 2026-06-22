@@ -51,8 +51,8 @@ function ChartSkeleton() {
         <Bone className="h-3 w-16" />
       </div>
       <div className="flex items-end gap-2 h-32">
-        {[60, 80, 45, 90, 55, 75, 40, 85].map((h, i) => (
-          <Bone key={i} className="flex-1 rounded-sm" style={{ height: `${h}%` } as React.CSSProperties} />
+        {(["h-[60%]","h-[80%]","h-[45%]","h-[90%]","h-[55%]","h-[75%]","h-[40%]","h-[85%]"] as const).map((h, i) => (
+          <Bone key={i} className={`flex-1 rounded-sm ${h}`} />
         ))}
       </div>
     </div>
