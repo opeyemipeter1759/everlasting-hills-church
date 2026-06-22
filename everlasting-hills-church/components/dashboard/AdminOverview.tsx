@@ -5,28 +5,11 @@ import Link from "next/link";
 import {
   Users, UserPlus, CheckCircle, Heart,
   ArrowUpRight, Search, ChevronRight,
-  Mail, Phone, MapPin, Briefcase, Wifi, WifiOff,
-  Cake, AlertTriangle, BarChart3, FileText,
+  Cake, BarChart3, FileText,
   CalendarDays, UserCog,
 } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-export interface VisitorRow {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-  phone: string | null;
-  gender: string | null;
-  attendanceType: string | null;
-  membershipInterest: string | null;
-  howDidYouLearn: string | null;
-  locatedInIbadan: boolean | null;
-  bornAgain: string | null;
-  occupation: string | null;
-  submittedAt: Date;
-}
 
 export interface MemberRow {
   id: string;
@@ -52,21 +35,11 @@ export interface BirthdayEntry {
   photoUrl: string | null;
 }
 
-export interface AbsentEntry {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-}
-
 export interface AdminOverviewProps {
   userName: string | null;
   stats: AdminStats;
-  recentVisitors: VisitorRow[];
   recentMembers: MemberRow[];
-  memberEmails: string[];
   birthdayFeed: BirthdayEntry[];
-  absentMembers: AbsentEntry[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -119,214 +92,6 @@ function getDateString() {
   });
 }
 
-// ── Badges ─────────────────────────────────────────────────────────────────────
-
-function TypeBadge({ type }: { type: string | null }) {
-  if (!type) return <span className="text-[#b8a8ac] dark:text-white/25 text-xs">—</span>;
-  const online = type.toLowerCase().includes("online");
-  return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-      online
-        ? "bg-purple-50 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400"
-        : "bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-400"
-    }`}>
-      {online ? <Wifi size={10} /> : <WifiOff size={10} />}
-      {type}
-    </span>
-  );
-}
-
-function InterestBadge({ interest }: { interest: string | null }) {
-  if (!interest) return <span className="text-[#b8a8ac] dark:text-white/25 text-xs">—</span>;
-  const yes = interest === "Yes";
-  return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-      yes
-        ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
-        : "bg-[#FFF4F6] dark:bg-white/[0.04] text-[#8a7e80] dark:text-white/40 border border-[#E7CDD3]/60 dark:border-white/[0.08]"
-    }`}>
-      {yes ? (
-        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      ) : (
-        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      )}
-      {yes ? "Interested" : "Not yet"}
-    </span>
-  );
-}
-
-// ── Create Account Button ──────────────────────────────────────────────────────
-
-function CreateAccountBtn({
-  visitor, alreadyMember, onCreated,
-}: {
-  visitor: VisitorRow;
-  alreadyMember: boolean;
-  onCreated: (email: string) => void;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  if (alreadyMember) {
-    return (
-      <span className="inline-flex items-center gap-1 text-[11px] bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 px-2.5 py-1 rounded-full font-semibold whitespace-nowrap">
-        <CheckCircle size={11} /> Member
-      </span>
-    );
-  }
-  if (!visitor.email || !visitor.phone) {
-    return <span className="text-xs text-[#b8a8ac] dark:text-white/30">No email/phone</span>;
-  }
-
-  async function handleCreate() {
-    setLoading(true);
-    setError("");
-    try {
-      const { apiClient } = await import("@/lib/api/axios");
-      await apiClient.post(`/members/convert-visitor/${visitor.id}`);
-      onCreated(visitor.email!);
-    } catch (err) {
-      setError((err as { message?: string }).message ?? "Failed");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const highlighted = visitor.membershipInterest === "Yes";
-
-  return (
-    <div>
-      <button
-        type="button"
-        onClick={handleCreate}
-        disabled={loading}
-        className={`text-xs font-semibold px-3 py-1.5 rounded-xl transition-all disabled:opacity-50 whitespace-nowrap ${
-          highlighted
-            ? "bg-[#87102C] text-white hover:bg-[#6E0C24] hover:shadow-md hover:shadow-[#87102C]/20"
-            : "bg-[#FFF4F6] dark:bg-white/[0.06] text-[#5A4A4D] dark:text-white/60 border border-[#E7CDD3]/60 dark:border-white/[0.10] hover:bg-[#FFE8ED] dark:hover:bg-white/[0.10]"
-        }`}
-      >
-        {loading ? "Creating…" : "Create Account"}
-      </button>
-      {error && <p className="text-red-500 dark:text-red-400 text-[10px] mt-1">{error}</p>}
-    </div>
-  );
-}
-
-// ── Expandable First-Timer Row ──────────────────────────────────────────────
-
-function VisitorRowItem({
-  visitor, alreadyMember, onCreated,
-}: {
-  visitor: VisitorRow;
-  alreadyMember: boolean;
-  onCreated: (email: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const name = `${visitor.firstName} ${visitor.lastName}`;
-
-  return (
-    <>
-      <tr
-        className="border-b border-[#E7CDD3]/40 dark:border-white/[0.07] last:border-0 hover:bg-[#FFF4F6]/60 dark:hover:bg-white/[0.03] transition-colors cursor-pointer"
-        onClick={() => setOpen((v) => !v)}
-      >
-        <td className="px-5 py-3.5">
-          <div className="flex items-center gap-3">
-            <Avatar name={name} size="sm" />
-            <div>
-              <p className="font-semibold text-[#111] dark:text-white text-sm leading-tight">{name}</p>
-              {visitor.email && (
-                <p className="text-[#8a7e80] dark:text-white/40 text-xs leading-tight truncate max-w-[160px]">
-                  {visitor.email}
-                </p>
-              )}
-            </div>
-          </div>
-        </td>
-        <td className="px-5 py-3.5 hidden sm:table-cell">
-          <TypeBadge type={visitor.attendanceType} />
-        </td>
-        <td className="px-5 py-3.5 hidden md:table-cell">
-          <InterestBadge interest={visitor.membershipInterest} />
-        </td>
-        <td className="px-5 py-3.5 hidden lg:table-cell">
-          <span className="text-xs text-[#8a7e80] dark:text-white/40">{relativeDate(visitor.submittedAt)}</span>
-        </td>
-        <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
-          <CreateAccountBtn visitor={visitor} alreadyMember={alreadyMember} onCreated={onCreated} />
-        </td>
-        <td className="px-3 py-3.5">
-          <div className={`text-[#b8a8ac] dark:text-white/25 transition-transform duration-200 ${open ? "rotate-90" : ""}`}>
-            <ChevronRight size={14} />
-          </div>
-        </td>
-      </tr>
-
-      {open && (
-        <tr className="bg-[#FFF4F6]/40 dark:bg-white/[0.02] border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
-          <td colSpan={6} className="px-5 py-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-              <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">Contact</p>
-                {visitor.email && (
-                  <a href={`mailto:${visitor.email}`} className="flex items-center gap-2 text-[#555] dark:text-white/60 hover:text-[#87102C] dark:hover:text-[#FFB3C1] transition-colors">
-                    <Mail size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
-                    {visitor.email}
-                  </a>
-                )}
-                {visitor.phone && (
-                  <a href={`tel:${visitor.phone}`} className="flex items-center gap-2 text-[#555] dark:text-white/60 hover:text-[#87102C] dark:hover:text-[#FFB3C1] transition-colors">
-                    <Phone size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
-                    {visitor.phone}
-                  </a>
-                )}
-                {visitor.locatedInIbadan !== null && (
-                  <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
-                    <MapPin size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
-                    {visitor.locatedInIbadan ? "Based in Ibadan" : "Visiting / outside Ibadan"}
-                  </span>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">About</p>
-                {visitor.gender && (
-                  <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
-                    <span className="text-[#b8a8ac] dark:text-white/30">Gender:</span> {visitor.gender}
-                  </span>
-                )}
-                {visitor.occupation && (
-                  <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
-                    <Briefcase size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
-                    {visitor.occupation}
-                  </span>
-                )}
-                {visitor.bornAgain && (
-                  <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
-                    <span className="text-[#b8a8ac] dark:text-white/30">Born again:</span> {visitor.bornAgain}
-                  </span>
-                )}
-              </div>
-
-              {visitor.howDidYouLearn && (
-                <div className="space-y-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">How They Found Us</p>
-                  <p className="text-[#555] dark:text-white/60">{visitor.howDidYouLearn}</p>
-                </div>
-              )}
-            </div>
-          </td>
-        </tr>
-      )}
-    </>
-  );
-}
-
 // ── Search Input ───────────────────────────────────────────────────────────────
 
 function SearchInput({ value, onChange, placeholder }: {
@@ -371,38 +136,10 @@ function CardHeader({ children }: { children: React.ReactNode }) {
 export default function AdminOverview({
   userName,
   stats,
-  recentVisitors,
   recentMembers,
-  memberEmails,
   birthdayFeed,
-  absentMembers,
 }: AdminOverviewProps) {
-  const [convertedEmails, setConvertedEmails] = useState(() => new Set(memberEmails));
-  const [ftSearch, setFtSearch] = useState("");
-  const [ftFilter, setFtFilter] = useState<"all" | "yes" | "no">("all");
   const [memberSearch, setMemberSearch] = useState("");
-
-  function handleCreated(email: string) {
-    setConvertedEmails((prev) => new Set(Array.from(prev).concat(email)));
-  }
-
-  const interestedCount = recentVisitors.filter((v) => v.membershipInterest === "Yes").length;
-  const notYetCount = recentVisitors.filter((v) => v.membershipInterest !== "Yes").length;
-
-  const filteredVisitors = useMemo(() => {
-    const q = ftSearch.toLowerCase().trim();
-    return recentVisitors.filter((v) => {
-      const matchQ = !q
-        || `${v.firstName} ${v.lastName}`.toLowerCase().includes(q)
-        || v.email?.toLowerCase().includes(q)
-        || v.phone?.includes(q);
-      const matchFilter =
-        ftFilter === "all"
-        || (ftFilter === "yes" && v.membershipInterest === "Yes")
-        || (ftFilter === "no" && v.membershipInterest !== "Yes");
-      return matchQ && matchFilter;
-    });
-  }, [recentVisitors, ftSearch, ftFilter]);
 
   const filteredMembers = useMemo(() => {
     const q = memberSearch.toLowerCase().trim();
@@ -455,12 +192,6 @@ export default function AdminOverview({
     { label: "Analytics", description: "Church growth insights", icon: BarChart3, href: "/dashboard/analytics" },
     { label: "Reports", description: "Generate & export data", icon: FileText, href: "/dashboard/reports" },
   ] as const;
-
-  const FILTER_TABS = [
-    { key: "all" as const, label: "All",        count: recentVisitors.length },
-    { key: "yes" as const, label: "Interested",  count: interestedCount       },
-    { key: "no"  as const, label: "Not yet",     count: notYetCount           },
-  ];
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -548,9 +279,9 @@ export default function AdminOverview({
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          3. ALERTS — birthdays + absent members (conditional)
+          3. ALERTS — birthdays this week (conditional)
       ──────────────────────────────────────────────────────────────────────── */}
-      {(birthdayFeed.length > 0 || absentMembers.length > 0) && (
+      {birthdayFeed.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
           {/* Birthdays this week */}
@@ -605,52 +336,6 @@ export default function AdminOverview({
               </ul>
             )}
           </SectionCard>
-
-          {/* Absent 3+ Sundays */}
-          <SectionCard>
-            <div className="flex items-center gap-3 px-6 py-4 border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
-              <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle size={15} className="text-amber-600 dark:text-amber-400" aria-hidden="true" />
-              </div>
-              <div className="flex-1">
-                <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
-                  Follow-Up Needed
-                </p>
-                <h3 className="text-sm font-bold text-[#111] dark:text-white -mt-0.5">Absent 3+ Sundays</h3>
-              </div>
-              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400">
-                {absentMembers.length}
-              </span>
-            </div>
-            {absentMembers.length === 0 ? (
-              <p className="px-6 py-6 text-sm text-[#8a7e80] dark:text-white/40 text-center">All members attended recently</p>
-            ) : (
-              <ul className="divide-y divide-[#E7CDD3]/30 dark:divide-white/[0.06] max-h-64 overflow-y-auto">
-                {absentMembers.map((a) => (
-                  <li key={a.id} className="flex items-center gap-3 px-6 py-3.5 hover:bg-[#FFF4F6]/50 dark:hover:bg-white/[0.03] transition-colors">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${avatarColor(`${a.firstName} ${a.lastName}`)}`}>
-                      {a.firstName[0]}{a.lastName[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#111] dark:text-white leading-tight">
-                        {a.firstName} {a.lastName}
-                      </p>
-                      {a.email && (
-                        <p className="text-xs text-[#8a7e80] dark:text-white/40 truncate">{a.email}</p>
-                      )}
-                    </div>
-                    <Link
-                      href={`/dashboard/members/${a.id}`}
-                      className="text-[#b8a8ac] dark:text-white/25 hover:text-[#87102C] dark:hover:text-[#FFB3C1] transition-colors flex-shrink-0"
-                      aria-label={`View ${a.firstName} ${a.lastName}`}
-                    >
-                      <ChevronRight size={14} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SectionCard>
         </div>
       )}
 
@@ -691,105 +376,7 @@ export default function AdminOverview({
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          5. FIRST TIMERS TABLE
-      ──────────────────────────────────────────────────────────────────────── */}
-      <SectionCard>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0">
-              <UserPlus size={15} className="text-amber-600 dark:text-amber-400" aria-hidden="true" />
-            </div>
-            <div>
-              <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
-                Newcomers
-              </p>
-              <div className="flex items-center gap-2 -mt-0.5">
-                <h2 className="font-bold text-[#111] dark:text-white text-sm">First Timers</h2>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[#FFF4F6] dark:bg-white/[0.07] text-[#8a7e80] dark:text-white/45">
-                  {recentVisitors.length}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Filter tabs */}
-            <div className="flex rounded-xl border border-[#E7CDD3]/60 dark:border-white/[0.10] overflow-hidden text-xs font-semibold">
-              {FILTER_TABS.map((tab) => (
-                <button
-                  type="button"
-                  key={tab.key}
-                  onClick={() => setFtFilter(tab.key)}
-                  className={`px-3 py-1.5 flex items-center gap-1.5 transition-colors ${
-                    ftFilter === tab.key
-                      ? "bg-[#87102C] text-white"
-                      : "bg-white dark:bg-transparent text-[#8a7e80] dark:text-white/45 hover:bg-[#FFF4F6] dark:hover:bg-white/[0.05]"
-                  }`}
-                >
-                  {tab.label}
-                  <span className={`text-[10px] font-bold ${
-                    ftFilter === tab.key ? "text-white/60" : "text-[#b8a8ac] dark:text-white/25"
-                  }`}>
-                    {tab.count}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <div className="w-full sm:w-48">
-              <SearchInput value={ftSearch} onChange={setFtSearch} placeholder="Search first timers…" />
-            </div>
-            <Link
-              href="/dashboard/first-timers"
-              className="group text-xs text-[#87102C] dark:text-[#FFB3C1] font-semibold flex items-center gap-1 hover:gap-1.5 transition-all whitespace-nowrap"
-            >
-              View all
-              <ArrowUpRight size={12} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" aria-hidden="true" />
-            </Link>
-          </div>
-        </CardHeader>
-
-        {filteredVisitors.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-14 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-[#FFE8ED] dark:bg-[#87102C]/20 flex items-center justify-center mb-3">
-              <UserPlus size={20} className="text-[#87102C] dark:text-[#FFB3C1]" />
-            </div>
-            <p className="text-sm font-semibold text-[#111] dark:text-white/70">
-              {recentVisitors.length === 0 ? "No first-timer submissions yet." : "No results match your search."}
-            </p>
-            <p className="text-xs text-[#8a7e80] dark:text-white/35 mt-1">
-              {recentVisitors.length === 0 ? "First timers will appear here after form submission." : "Try adjusting your search or filter."}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
-                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em]">Name</th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em] hidden sm:table-cell">Type</th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em] hidden md:table-cell">Interest</th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em] hidden lg:table-cell">Date</th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em]">Action</th>
-                  <th className="w-8" />
-                </tr>
-              </thead>
-              <tbody>
-                {filteredVisitors.map((v) => (
-                  <VisitorRowItem
-                    key={v.id}
-                    visitor={v}
-                    alreadyMember={!!v.email && convertedEmails.has(v.email)}
-                    onCreated={handleCreated}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </SectionCard>
-
-      {/* ─────────────────────────────────────────────────────────────────────
-          6. RECENT MEMBERS TABLE
+          5. RECENT MEMBERS TABLE
       ──────────────────────────────────────────────────────────────────────── */}
       <SectionCard>
         <CardHeader>

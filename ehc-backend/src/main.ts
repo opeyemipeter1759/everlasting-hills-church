@@ -1,3 +1,5 @@
+// Sentry must be initialised before any other import so it can auto-instrument.
+import './observability/instrument';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -31,6 +33,9 @@ async function bootstrap() {
      */
     abortOnError: false,
     bufferLogs: true,
+    // Preserve the raw request body so the Paystack webhook can verify its
+    // HMAC SHA512 signature over the exact bytes Paystack signed.
+    rawBody: true,
   });
 
   // Swap the default Nest logger for pino. Now every `new Logger('ctx')` and every HTTP

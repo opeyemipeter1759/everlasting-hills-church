@@ -58,6 +58,16 @@ export const envSchema = z.object({
     .string()
     .transform((v) => v === 'true')
     .optional(),
+
+  /** Background jobs (BullMQ). Absent → falls back to in-process EventEmitter. */
+  REDIS_URL: z.url().optional(),
+
+  /** Error monitoring (Sentry). Absent → Sentry is a no-op. */
+  SENTRY_DSN: z.url().optional(),
+  SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
+
+  /** Paystack giving. Absent → giving endpoints return 503. */
+  PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

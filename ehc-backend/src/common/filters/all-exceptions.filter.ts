@@ -9,6 +9,7 @@ import {
 import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
+import * as Sentry from '@sentry/nestjs';
 
 /**
  * Standardized error envelope returned to clients.
@@ -70,6 +71,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         `[${requestId}] ${request.method} ${request.url} → ${status} ${code}: ${message}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
+      // Report server-side failures to Sentry (no-op when SENTRY_DSN is unset).
+      Sentry.withScope((scope) => {
+        scope.setTag('requestId', requestId);
+        scope.setContext('request', { method: request.method, url: request.url });
+        Sentry.captureException(exception);
+      });
     } else {
       this.logger.debug(
         `[${requestId}] ${request.method} ${request.url} → ${status} ${code}: ${message}`,

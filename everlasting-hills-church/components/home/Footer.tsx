@@ -38,12 +38,12 @@ const socialLinks = [
 ];
 
 const footerLinks = [
-  { label: "About", href: "#about" },
-  { label: "Our Culture", href: "#culture" },
-  { label: "Sermons", href: "#sermons" },
-  { label: "Services", href: "#services" },
-  { label: "Community", href: "#community" },
-  { label: "Contact", href: "#contact" },
+  { label: "About", href: "/about" },
+  { label: "What We Believe", href: "/beliefs" },
+  { label: "Ministries", href: "/ministries" },
+  { label: "Sermons", href: "/sermons" },
+  { label: "Plan a Visit", href: "/visit" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export default function Footer() {
@@ -160,10 +160,21 @@ export default function Footer() {
             &copy; {new Date().getFullYear()} Everlasting Hills Church. All
             rights reserved.
           </p>
-          <p className="text-white/20 text-xs">
-            {/* ── Footer credit — remove or update ── */}
-            Ibadan, Nigeria
-          </p>
+          <div className="flex items-center gap-5">
+            <a
+              href="/privacy"
+              className="text-white/25 text-xs hover:text-white/60 transition-colors"
+            >
+              Privacy
+            </a>
+            <a
+              href="/terms"
+              className="text-white/25 text-xs hover:text-white/60 transition-colors"
+            >
+              Terms
+            </a>
+            <span className="text-white/20 text-xs">Ibadan, Nigeria</span>
+          </div>
         </div>
       </div>
     </footer>

@@ -28,45 +28,22 @@ interface BirthdayRowApi {
   daysUntil: number;
   photoUrl: string | null;
 }
-interface AbsentRowApi {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-}
-interface VisitorRowApi {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-  phone: string | null;
-  gender: string | null;
-  attendanceType: string | null;
-  membershipInterest: string | null;
-  howDidYouLearn: string | null;
-  locatedInIbadan: boolean | null;
-  bornAgain: string | null;
-  occupation: string | null;
-  submittedAt: string;
-}
 
 /**
  * Admin/Pastor/Super-Admin dashboard.
  *
- * 6 parallel fetches across analytics + attendance + members + visitors modules.
- * Each safeGet wrapper tolerates per-endpoint failure independently — one slow query
- * doesn't blank the whole dashboard.
+ * Parallel fetches across analytics + attendance + members. The newcomers
+ * (first-timers) module now lives on /dashboard/first-timers, and the follow-up
+ * (absent members) status moved to /admin/dashboard — so this loader no longer
+ * fetches visitors or absentees.
  */
 export async function loadAdminDashboard(me: MeResponse) {
-  const [analytics, attendanceStats, members, birthdaysRaw, absentRaw, visitors] =
-    await Promise.all([
-      safeGet<AdminAnalytics>("/admin/analytics"),
-      safeGet<AttendanceStats>("/attendance/stats"),
-      safeGet<MemberRowApi[]>("/members?status=ACTIVE"),
-      safeGet<BirthdayRowApi[]>("/members/birthdays/upcoming?daysAhead=7"),
-      safeGet<AbsentRowApi[]>("/members/absent?missedSundays=3"),
-      safeGet<VisitorRowApi[]>("/visitors?limit=10"),
-    ]);
+  const [analytics, attendanceStats, members, birthdaysRaw] = await Promise.all([
+    safeGet<AdminAnalytics>("/admin/analytics"),
+    safeGet<AttendanceStats>("/attendance/stats"),
+    safeGet<MemberRowApi[]>("/members?status=ACTIVE"),
+    safeGet<BirthdayRowApi[]>("/members/birthdays/upcoming?daysAhead=7"),
+  ]);
 
   const recentMembers = (members ?? []).slice(0, 10).map((m) => ({
     id: m.id,
@@ -75,22 +52,6 @@ export async function loadAdminDashboard(me: MeResponse) {
     email: m.email,
     phone: m.phone,
     joinedAt: new Date(m.joinedAt),
-  }));
-
-  const recentVisitors = (visitors ?? []).map((v) => ({
-    id: v.id,
-    firstName: v.firstName,
-    lastName: v.lastName,
-    email: v.email,
-    phone: v.phone,
-    gender: v.gender,
-    attendanceType: v.attendanceType,
-    membershipInterest: v.membershipInterest,
-    howDidYouLearn: v.howDidYouLearn,
-    locatedInIbadan: v.locatedInIbadan,
-    bornAgain: v.bornAgain,
-    occupation: v.occupation,
-    submittedAt: new Date(v.submittedAt),
   }));
 
   return (
@@ -102,11 +63,8 @@ export async function loadAdminDashboard(me: MeResponse) {
         todayCheckIns: attendanceStats?.todayCheckIns ?? 0,
         prayers: analytics?.totalPrayers ?? 0,
       }}
-      recentVisitors={recentVisitors}
       recentMembers={recentMembers}
-      memberEmails={recentMembers.map((m) => m.email).filter((e): e is string => !!e)}
       birthdayFeed={birthdaysRaw ?? []}
-      absentMembers={absentRaw ?? []}
     />
   );
 }

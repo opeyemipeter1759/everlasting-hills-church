@@ -22,6 +22,8 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 import { MembersService } from './members.service';
+import { BulkImportDto } from './dto/bulk-import.dto';
+import { SetTagsDto } from './dto/set-tags.dto';
 
 /**
  * Members module.
@@ -58,6 +60,18 @@ export class MembersController {
   })
   async convertVisitor(@Param('visitorId') visitorId: string) {
     return this.membersService.convertVisitorToMember(visitorId);
+  }
+
+  @Post('import')
+  @ApiOperation({ summary: 'Bulk-import members from CSV rows' })
+  async bulkImport(@Body() body: BulkImportDto) {
+    return this.membersService.bulkImport(body.rows, body.sendWelcome ?? false);
+  }
+
+  @Patch(':id/tags')
+  @ApiOperation({ summary: "Replace a member's tags" })
+  async setTags(@Param('id') id: string, @Body() body: SetTagsDto) {
+    return this.membersService.setTags(id, body.tags);
   }
 
   @Get()

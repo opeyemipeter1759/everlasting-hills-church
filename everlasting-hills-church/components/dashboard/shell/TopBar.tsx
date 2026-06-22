@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Menu, Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 import type { SessionUser } from "./DashboardShell";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import NotificationBell from "./NotificationBell";
 
 const PATH_TITLES: Record<string, string> = {
   "/dashboard":                 "Dashboard",
@@ -75,12 +76,7 @@ export default function TopBar({ user: _user, onMenuClick }: Props) {
 
       {/* Right actions */}
       <ThemeToggle />
-      <button
-        className="flex items-center justify-center w-9 h-9 rounded-lg hover:bg-gray-100 dark:hover:bg-white/[0.07] transition-colors text-gray-500 dark:text-white/50"
-        aria-label="Notifications"
-      >
-        <Bell size={18} />
-      </button>
+      <NotificationBell />
     </header>
   );
 }

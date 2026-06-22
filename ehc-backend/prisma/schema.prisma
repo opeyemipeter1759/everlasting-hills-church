@@ -10,16 +10,14 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model AttendanceRecord {
-  id          String   @id
-  memberId    String
-  serviceId   String
-  present     Boolean  @default(true)
-  tenantId    String
-  checkedInAt DateTime @default(now())
-  markedBy    String   @default("SELF")
-  Member      Member   @relation(fields: [memberId], references: [id])
-  Service     Service  @relation(fields: [serviceId], references: [id])
-  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  id        String  @id
+  memberId  String
+  serviceId String
+  present   Boolean @default(true)
+  tenantId  String
+  Member    Member  @relation(fields: [memberId], references: [id])
+  Service   Service @relation(fields: [serviceId], references: [id])
+  Tenant    Tenant  @relation(fields: [tenantId], references: [id])
 
   @@unique([memberId, serviceId])
 }
@@ -155,15 +153,14 @@ model Member {
   email              String?
   phone              String?
   dateOfBirth        DateTime?
+  weddingAnniversary DateTime?
   address            String?
   joinedAt           DateTime             @default(now())
   bio                String?
   photoUrl           String?
   status             MemberStatus         @default(ACTIVE)
   notifyNewSermons   Boolean              @default(true)
-  weddingAnniversary DateTime?
   householdId        String?
-  tags               String[]             @default([])
   AttendanceRecord   AttendanceRecord[]
   DiscussionResponse DiscussionResponse[]
   EngagementScore    EngagementScore?
@@ -178,8 +175,6 @@ model Member {
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
   UnitMember         UnitMember[]
-
-  @@index([householdId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -632,14 +627,14 @@ enum SermonType {
   SERIES
 }
 
-enum SermonStatus {
-  DRAFT
-  PUBLISHED
-  SCHEDULED
-}
-
 enum ServiceType {
   SUNDAY
   WEDNESDAY
   SPECIAL
+}
+
+enum SermonStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
 }

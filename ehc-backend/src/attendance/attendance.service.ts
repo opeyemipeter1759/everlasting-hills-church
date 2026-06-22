@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import * as XLSX from 'xlsx';
+import { ServiceType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 
@@ -382,6 +383,78 @@ export class AttendanceService {
 
   async countTotalServices() {
     return this.prisma.service.count({ where: { tenantId: this.tenantId } });
+  }
+
+  // ── Service session management (ADMIN) ──────────────────────────────────────
+
+  async createService(input: { name: string; scheduledAt: string; serviceType?: ServiceType }) {
+    return this.prisma.service.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        name: input.name.trim(),
+        scheduledAt: new Date(input.scheduledAt),
+        ...(input.serviceType ? { serviceType: input.serviceType } : {}),
+      },
+    });
+  }
+
+  /** Open a session for check-in. Stamps openAt the first time it opens. */
+  async openService(serviceId: string) {
+    const service = await this.prisma.service.findFirst({
+      where: { id: serviceId, tenantId: this.tenantId },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+    return this.prisma.service.update({
+      where: { id: serviceId },
+      data: { isOpen: true, openAt: service.openAt ?? new Date() },
+    });
+  }
+
+  /** Close a session. Stamps closeAt. */
+  async closeService(serviceId: string) {
+    const service = await this.prisma.service.findFirst({
+      where: { id: serviceId, tenantId: this.tenantId },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+    return this.prisma.service.update({
+      where: { id: serviceId },
+      data: { isOpen: false, closeAt: new Date() },
+    });
+  }
+
+  /**
+   * Build a CSV of who attended a given service. Returns the filename + content
+   * so the frontend can trigger a download (keeps the JSON response envelope intact).
+   */
+  async exportServiceCsv(serviceId: string): Promise<{ filename: string; csv: string }> {
+    const service = await this.prisma.service.findFirst({
+      where: { id: serviceId, tenantId: this.tenantId },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+
+    const records = await this.prisma.attendanceRecord.findMany({
+      where: { serviceId, tenantId: this.tenantId, present: true },
+      include: {
+        Member: { select: { firstName: true, lastName: true, email: true, phone: true } },
+      },
+      orderBy: { checkedInAt: 'asc' },
+    });
+
+    const header = ['First Name', 'Last Name', 'Email', 'Phone', 'Checked In At'];
+    const rows = records.map((r) => [
+      r.Member.firstName,
+      r.Member.lastName,
+      r.Member.email ?? '',
+      r.Member.phone ?? '',
+      r.checkedInAt.toISOString(),
+    ]);
+    const csv = [header, ...rows]
+      .map((cols) => cols.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .join('\r\n');
+
+    const safeName = service.name.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+    return { filename: `attendance-${safeName}.csv`, csv };
   }
 
   async getRecentServicesStats(limit = 4) {

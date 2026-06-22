@@ -1,14 +1,7 @@
-import { CalendarDays } from "lucide-react";
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
+import ServicesClient from "@/components/dashboard/admin/ServicesClient";
 
 export const metadata = { title: "Services — Dashboard" };
 
 export default function ServicesPage() {
-  return (
-    <ComingSoon
-      title="Services"
-      description="Service scheduling, attendance check-ins, and QR codes return once the Services module ships."
-      icon={CalendarDays}
-    />
-  );
+  return <ServicesClient />;
 }

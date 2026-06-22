@@ -1,12 +1,9 @@
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { Megaphone } from "lucide-react";
+import AnnouncementsClient from "@/components/dashboard/admin/AnnouncementsClient";
+
+export const metadata = {
+  title: "Announcements — Everlasting Hills Church",
+};
 
 export default function AnnouncementsPage() {
-  return (
-    <ComingSoon
-      title="Announcements"
-      description="Create and schedule announcements. Target specific units, roles, or all members."
-      icon={Megaphone}
-    />
-  );
+  return <AnnouncementsClient />;
 }
