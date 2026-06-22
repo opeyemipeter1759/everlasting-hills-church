@@ -89,6 +89,18 @@ export async function loadMemberDashboard(me: MeResponse) {
       prayerCount={0}
       recentServices={[]}
       monthlyAttendance={[]}
+      // New optional props — wire up to real endpoints as they become available
+      announcements={[]}
+      communityBirthdays={[]}
+      ministryUnit={null}
+      featuredSermon={null}
+      pastorWord={null}
+      dailyPrayer={null}
+      communityFeed={[]}
+      onlineCount={null}
+      discipleshipMilestones={[]}
+      memberSince={null}
+      anniversaryDaysUntil={null}
     />
   );
 }
