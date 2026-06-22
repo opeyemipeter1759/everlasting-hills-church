@@ -19,10 +19,14 @@ type NavItem = {
   children?: NavItem[];
 };
 
+// Paths that are parents of other nav items must match exactly so child
+// routes don't also highlight the parent as active.
+const EXACT_MATCH_PATHS = new Set(['/dashboard', '/dashboard/admin']);
+
 function buildActiveMatcher(pathname: string | null) {
   return (path: string): boolean => {
     if (!pathname) return false;
-    if (path === '/dashboard') return pathname === '/dashboard';
+    if (EXACT_MATCH_PATHS.has(path)) return pathname === path;
     return pathname === path || pathname.startsWith(path + '/');
   };
 }

@@ -35,8 +35,25 @@ export class AssignUnitMemberDto {
   @IsNotEmpty()
   memberId!: string;
 
-  @ApiProperty({ example: false, required: false, description: 'Mark this member as the unit lead' })
+  @ApiProperty({ example: false, required: false, description: 'Make this member the unit lead' })
   @IsOptional()
   @IsBoolean()
   isLead?: boolean;
+
+  @ApiProperty({ example: false, required: false, description: 'Make this member an assistant' })
+  @IsOptional()
+  @IsBoolean()
+  isAssistant?: boolean;
+}
+
+export class SetMemberRoleDto {
+  @ApiProperty({ example: false, required: false, description: 'Set lead status' })
+  @IsOptional()
+  @IsBoolean()
+  isLead?: boolean;
+
+  @ApiProperty({ example: true, required: false, description: 'Set assistant status' })
+  @IsOptional()
+  @IsBoolean()
+  isAssistant?: boolean;
 }

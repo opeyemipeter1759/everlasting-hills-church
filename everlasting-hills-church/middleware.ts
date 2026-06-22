@@ -17,7 +17,7 @@ export async function middleware(req: NextRequest) {
   const accessToken = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
   const roleHint = req.cookies.get(ROLE_COOKIE)?.value ?? null;
 
-  const claims = accessToken ? await verifySupabaseJwt(accessToken) : null;
+  const claims = accessToken ? await verifySupabaseJwt(accessToken, { ignoreExpiration: true }) : null;
   const isAuthenticated = Boolean(claims);
 
   const verifiedRole = claims?.app_metadata?.role ?? null;

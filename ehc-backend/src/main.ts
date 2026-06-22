@@ -14,6 +14,11 @@ import { ResponseEnvelopeInterceptor } from './common/interceptors/response-enve
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
 import { OverviewModule } from './overview/overview.module';
+import { SessionsModule } from './sessions/sessions.module';
+import { AdminModule } from './admin/admin.module';
+import { ReportsModule } from './reports/reports.module';
+import { UnitsModule } from './units/units.module';
+import { UsersModule } from './users/users.module';
 import type { Env } from './config/env.validation';
 
 async function bootstrap() {
@@ -127,7 +132,7 @@ async function bootstrap() {
 
   try {
     const document = SwaggerModule.createDocument(app, swagger, {
-      include: [AppModule, AuthModule, AttendanceModule, FormsModule, SermonsModule, AnalyticsModule, MembersModule, OverviewModule],
+      include: [AppModule, AuthModule, AttendanceModule, FormsModule, SermonsModule, AnalyticsModule, MembersModule, OverviewModule, SessionsModule, AdminModule, ReportsModule, UnitsModule, UsersModule],
     });
     // include MembersModule by referencing via AppModule's imports at runtime
     SwaggerModule.setup('docs', app, document);

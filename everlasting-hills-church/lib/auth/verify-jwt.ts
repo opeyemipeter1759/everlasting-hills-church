@@ -49,7 +49,10 @@ function getJWKS() {
   return cachedJWKS;
 }
 
-export async function verifySupabaseJwt(token: string): Promise<SupabaseJwtClaims | null> {
+export async function verifySupabaseJwt(
+  token: string,
+  options: { ignoreExpiration?: boolean } = {},
+): Promise<SupabaseJwtClaims | null> {
   if (!token) return null;
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -57,6 +60,11 @@ export async function verifySupabaseJwt(token: string): Promise<SupabaseJwtClaim
       algorithms: ["ES256"],
       audience: "authenticated",
       issuer: `${supabaseUrl}/auth/v1`,
+      // A large clockTolerance effectively ignores the exp claim while still
+      // verifying the cryptographic signature. Used by the middleware so that
+      // an expired access token does not kick the user out — the axios interceptor
+      // will silently refresh it on the next API call.
+      ...(options.ignoreExpiration ? { clockTolerance: 10 * 365 * 24 * 3600 } : {}),
     });
     return payload as SupabaseJwtClaims;
   } catch {

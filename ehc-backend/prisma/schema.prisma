@@ -16,6 +16,7 @@ model AttendanceRecord {
   present     Boolean  @default(true)
   tenantId    String
   checkedInAt DateTime @default(now())
+  markedBy    String   @default("SELF")
   Member      Member   @relation(fields: [memberId], references: [id])
   Service     Service  @relation(fields: [serviceId], references: [id])
   Tenant      Tenant   @relation(fields: [tenantId], references: [id])

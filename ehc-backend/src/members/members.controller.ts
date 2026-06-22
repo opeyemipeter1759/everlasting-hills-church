@@ -92,6 +92,21 @@ export class MembersController {
     return this.membersService.getAbsentMembers(Number(missedSundays) || 3);
   }
 
+  @Get('at-risk')
+  @ApiOperation({ summary: 'Members at risk — consecutive absences, never attended, below 50% rate (ADMIN+)' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        absentConsecutiveWeeks: [{ userId: 'uuid', userName: 'Emeka Nwosu', consecutiveAbsences: 3, lastSeen: null }],
+        neverAttended: [{ userId: 'uuid', userName: 'Tolu Bello', joinedAt: '2026-06-01' }],
+        belowFiftyPercent: [{ userId: 'uuid', userName: 'Sade Kalu', presentCount: 3, totalCount: 10, rate: 0.3 }],
+      },
+    },
+  })
+  getAtRisk() {
+    return this.membersService.getMembersAtRisk();
+  }
+
   /**
    * Self-service routes — any signed-in user can update their own profile.
    * Declared BEFORE the `:id` routes so Express does not match the literal "me" as an id.

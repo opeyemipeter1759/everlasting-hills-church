@@ -144,7 +144,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Manage Users",  href: "/dashboard/users",         icon: UserPlus,      minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/services",      icon: Calendar,      minRole: "ADMIN" },
-      { label: "Attendance",    href: "/dashboard/attendance",    icon: ClipboardList, minRole: "ADMIN" },
+      { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/events",        icon: CalendarDays,  minRole: "ADMIN" },
       { label: "Submissions",   href: "/dashboard/submissions",   icon: Inbox,         minRole: "ADMIN" },
       { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone,     minRole: "ADMIN" },

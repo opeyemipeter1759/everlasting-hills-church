@@ -156,19 +156,19 @@ export function setFrontendSession({
   role,
   fullName,
   picture,
-  expiresInSeconds = 3600,
 }: FrontendSessionInput): void {
-  const maxAge = Math.max(60, expiresInSeconds);
-  setCookie(ACCESS_TOKEN_COOKIE, accessToken, maxAge);
-  // Refresh token lives longer than the access token so the session can be renewed.
+  // All cookies live as long as the refresh token (30 days) so the browser never
+  // auto-deletes the session mid-use. Actual auth validity is enforced by the backend
+  // via JWT signature verification; the cookie lifetime is just a browser-side persistence.
+  setCookie(ACCESS_TOKEN_COOKIE, accessToken, REFRESH_MAX_AGE);
   if (refreshToken) setCookie(REFRESH_TOKEN_COOKIE, refreshToken, REFRESH_MAX_AGE);
-  setCookie(EMAIL_COOKIE, email, maxAge);
-  setCookie(LOGGED_IN_COOKIE, "true", maxAge);
-  if (role) setCookie(ROLE_COOKIE, role, maxAge);
+  setCookie(EMAIL_COOKIE, email, REFRESH_MAX_AGE);
+  setCookie(LOGGED_IN_COOKIE, "true", REFRESH_MAX_AGE);
+  if (role) setCookie(ROLE_COOKIE, role, REFRESH_MAX_AGE);
   else clearCookie(ROLE_COOKIE);
-  if (fullName) setCookie(FULL_NAME_COOKIE, fullName, maxAge);
+  if (fullName) setCookie(FULL_NAME_COOKIE, fullName, REFRESH_MAX_AGE);
   else clearCookie(FULL_NAME_COOKIE);
-  if (picture) setCookie(PICTURE_COOKIE, picture, maxAge);
+  if (picture) setCookie(PICTURE_COOKIE, picture, REFRESH_MAX_AGE);
   else clearCookie(PICTURE_COOKIE);
 }
 export const SESSION_CHANGED_EVENT = "ehc:session-changed";
