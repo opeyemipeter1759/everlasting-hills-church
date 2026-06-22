@@ -13,6 +13,7 @@ import {
   Coins,
 } from "lucide-react";
 import CosmicGiveHero from "@/components/home/CosmicGiveHero";
+import OnlineGivingForm from "@/components/give/OnlineGivingForm";
 
 // import bgImage from "/images/church_congregation_2_1779193607195.png";
 
@@ -159,6 +160,9 @@ export default function WaysToGivePage() {
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden font-sans">
       {/* Cosmic hero — replaces the inline header/intro */}
       <CosmicGiveHero />
+
+      {/* Online giving (Paystack) */}
+      <OnlineGivingForm />
 
       <section id="accounts" className="relative z-10 container mx-auto px-6 py-16 max-w-7xl">
         {/* Tabs and Interactive Controls */}

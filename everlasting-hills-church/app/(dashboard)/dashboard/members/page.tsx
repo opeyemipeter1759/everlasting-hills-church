@@ -3,6 +3,7 @@ import { serverApi } from "@/lib/api/server";
 import MembersListClient, {
   type MemberRow,
 } from "@/components/dashboard/admin/MembersListClient";
+import MemberImportDialog from "@/components/dashboard/admin/MemberImportDialog";
 
 export const metadata = { title: "Members — Dashboard" };
 export const dynamic = "force-dynamic";
@@ -40,6 +41,8 @@ export default async function MembersPage({ searchParams }: PageProps) {
         </div>
 
         {/* Search (URL-driven, no JS required) */}
+        <div className="flex items-center gap-2">
+        <MemberImportDialog />
         <form className="flex items-center gap-2">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -58,6 +61,7 @@ export default async function MembersPage({ searchParams }: PageProps) {
             Search
           </button>
         </form>
+        </div>
       </div>
 
       {/* Error state */}

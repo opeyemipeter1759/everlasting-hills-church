@@ -4,6 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
 import { buildBirthdayEmail } from '../notifications/templates/birthday.email';
+import { buildAnniversaryEmail } from '../notifications/templates/anniversary.email';
 import type { Env } from '../config/env.validation';
 
 /**
@@ -63,15 +64,49 @@ export class SchedulingService {
   }
 
   /**
-   * Daily anniversary greetings. The Member model has no anniversary date field
-   * yet, so this is a wired-but-dormant placeholder: the cron and the email
-   * template (buildAnniversaryEmail) are ready, and this becomes live the moment
-   * a `weddingAnniversary` (or similar) column is added and selected here.
+   * Daily anniversary greetings. Fires at 08:00 server time. Finds active
+   * members with an email whose wedding anniversary lands on today (month + day)
+   * and dispatches a greeting, including the year count when derivable.
    */
   @Cron(CronExpression.EVERY_DAY_AT_8AM, { name: 'anniversary-greetings' })
   async sendAnniversaryGreetings(): Promise<void> {
-    this.logger.debug(
-      'anniversary-greetings: skipped — no anniversary field on Member yet',
+    const today = new Date();
+    const month = today.getMonth();
+    const day = today.getDate();
+
+    const members = await this.prisma.member.findMany({
+      where: {
+        status: 'ACTIVE',
+        email: { not: null },
+        weddingAnniversary: { not: null },
+      },
+      select: { firstName: true, email: true, weddingAnniversary: true },
+    });
+
+    const celebrants = members.filter((m) => {
+      const date = m.weddingAnniversary as Date;
+      return date.getMonth() === month && date.getDate() === day;
+    });
+
+    if (celebrants.length === 0) {
+      this.logger.debug('anniversary-greetings: no anniversaries today');
+      return;
+    }
+
+    for (const m of celebrants) {
+      const start = m.weddingAnniversary as Date;
+      const years = today.getFullYear() - start.getFullYear();
+      await this.mail.dispatch(
+        buildAnniversaryEmail({
+          firstName: m.firstName,
+          email: m.email as string,
+          years: years > 0 ? years : undefined,
+          occasion: 'wedding anniversary',
+        }),
+      );
+    }
+    this.logger.log(
+      `anniversary-greetings: dispatched ${celebrants.length} greeting(s)`,
     );
   }
 

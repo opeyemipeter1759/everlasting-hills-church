@@ -24,6 +24,9 @@ import { UsersModule } from './users/users.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { EventsModule } from './events/events.module';
+import { GivingModule } from './giving/giving.module';
+import { InboxModule } from './inbox/inbox.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
 import { JobsModule } from './jobs/jobs.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { validateEnv } from './config/env.validation';
@@ -106,6 +109,9 @@ import type { Env } from './config/env.validation';
     SiteSettingsModule,
     UploadsModule,
     EventsModule,
+    GivingModule,
+    InboxModule,
+    AnnouncementsModule,
     JobsModule.forRoot(),
     SchedulingModule,
   ],

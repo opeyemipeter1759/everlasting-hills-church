@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -13,6 +13,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { AttendanceService } from './attendance.service';
+import { CreateServiceDto } from './dto/create-service.dto';
 
 /**
  * Attendance module.
@@ -80,6 +81,34 @@ export class AttendanceController {
   @ApiOperation({ summary: 'Get services with attendance counts (ADMIN+)' })
   async getServices() {
     return this.attendanceService.getAllServicesWithCounts();
+  }
+
+  @Post('services')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Create a service session (ADMIN+)' })
+  async createService(@Body() body: CreateServiceDto) {
+    return this.attendanceService.createService(body);
+  }
+
+  @Patch('services/:serviceId/open')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Open a service for check-in (ADMIN+)' })
+  async openService(@Param('serviceId') serviceId: string) {
+    return this.attendanceService.openService(serviceId);
+  }
+
+  @Patch('services/:serviceId/close')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Close a service (ADMIN+)' })
+  async closeService(@Param('serviceId') serviceId: string) {
+    return this.attendanceService.closeService(serviceId);
+  }
+
+  @Get('services/:serviceId/export')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Export a service attendance as CSV (ADMIN+)' })
+  async exportService(@Param('serviceId') serviceId: string) {
+    return this.attendanceService.exportServiceCsv(serviceId);
   }
 
   /**

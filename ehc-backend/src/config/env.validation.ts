@@ -59,6 +59,12 @@ export const envSchema = z.object({
    */
   SENTRY_DSN: z.url().optional(),
   SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
+
+  /**
+   * Paystack giving. PAYSTACK_SECRET_KEY enables online giving (initialise +
+   * verify + webhook HMAC). Absent → giving endpoints return 503.
+   */
+  PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

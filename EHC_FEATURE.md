@@ -71,9 +71,9 @@
 - [x] Member detail view with full history
 - [x] Member profile editing (self)
 - [x] Profile photo upload
-- [ ] Bulk member import (CSV)
-- [ ] Member tagging and segmentation
-- [ ] Family / household grouping
+- [x] Bulk member import (CSV) — `POST /members/import` + Import dialog (provisions accounts, optional welcome email)
+- [x] Member tagging and segmentation — `Member.tags` + `PATCH /members/:id/tags` + inline tag editor
+- [~] Family / household grouping — `Household` model + `Member.householdId`; created/assigned via import, no standalone manager UI yet
 - [x] Birthday and anniversary tracking
 - [x] Member notes (pastoral, private)
 - [x] Member status states (active, inactive, transferred, deceased)
@@ -95,8 +95,8 @@
 - [~] Per-service attendance history
 - [x] Member attendance percentage (personal)
 - [x] Last attended date (personal)
-- [ ] CSV export of attendance data
-- [~] Service session management (create, open, close) — `Service` model exists; UI is a stub
+- [x] CSV export of attendance data — `GET /attendance/services/:id/export` + download button
+- [x] Service session management (create, open, close) — `src/attendance` endpoints + `/dashboard/services` page
 - [~] Unit-scoped attendance for UnitLeads (via analytics)
 
 ---
@@ -123,7 +123,7 @@
 - [x] Event CMS (create, edit, delete)
 - [x] Event detail page
 - [x] RSVP flow
-- [ ] Registration with capacity limits
+- [x] Registration with capacity limits — `Event.capacity` enforced on RSVP
 - [ ] Event categories (service, conference, outreach, social)
 - [ ] Recurring events
 - [ ] Event reminders (email + in-app)
@@ -135,32 +135,34 @@
 
 ## Giving (Paystack)
 
-> **Data model + analytics exist; no transactional payment engine yet.**
+> **Live payment engine shipped (Phase C). `src/giving` + `/give` online form.**
 
-- [ ] One-time donation / tithe / offering form (live payment)
+- [x] One-time donation / tithe / offering form (live payment) — `/give` online form → Paystack
 - [ ] Recurring giving (subscriptions)
-- [ ] Paystack transaction initialization
-- [ ] Webhook handler with HMAC verification (`PaystackWebhookLog` model exists)
-- [ ] Idempotent webhook processing
-- [~] Member giving history (`GivingRecord` model exists)
+- [x] Paystack transaction initialization — `POST /giving/initialize`
+- [x] Webhook handler with HMAC verification — `POST /giving/webhook` (SHA512, timing-safe)
+- [x] Idempotent webhook processing — `PaystackWebhookLog` dedupe + first-success-only receipt
+- [x] Member giving history — `GET /giving/me`
 - [ ] Downloadable giving statements
-- [ ] Email receipts (per transaction)
+- [x] Email receipts (per transaction) — receipt template, sent on verify/webhook success
 - [ ] Year-end tax / contribution statements
-- [ ] Designated funds (building fund, missions, etc.)
+- [~] Designated funds — gift `category` captured (Tithe/Offering/Building/Missions/General); no fund ledger yet
 - [x] Pastor-level financial reports (analytics: trend, categories, summary, top-donors)
 - [ ] Transaction reconciliation view
 - [ ] Failed payment retry logic
 - [ ] Refund management
+
+> Activate with `PAYSTACK_SECRET_KEY`. Endpoints return 503 until set.
 
 ---
 
 ## Communications
 
 - [x] Transactional email via Resend (welcome email)
-- [ ] Announcement broadcast (church-wide) — UI is a stub
+- [x] Announcement broadcast (church-wide) — `src/announcements` + `/dashboard/announcements` composer; fans out to all members
 - [ ] Unit-scoped announcements
-- [x] Email templates (welcome, first-timer follow-up, birthday, anniversary)
-- [~] In-app notification center (event-driven service exists; no API/UI yet)
+- [x] Email templates (welcome, first-timer follow-up, birthday, anniversary, giving receipt, announcement)
+- [x] In-app notification center — `src/inbox` API + dashboard bell (`NotificationBell`)
 - [ ] Push notifications (mobile / PWA, later)
 - [ ] SMS notifications (later, behind feature flag)
 - [ ] Notification preferences per user
@@ -275,7 +277,7 @@
 
 - [~] Audit log of all sensitive actions (UI is a stub)
 - [x] Background job runner (BullMQ email queue; in-process fallback when REDIS_URL unset)
-- [~] Scheduled tasks (cron live; birthday emails done, anniversary placeholder pending DB field, weekly digest stubbed)
+- [~] Scheduled tasks (cron live; birthday + anniversary greetings live, weekly digest stubbed)
 - [x] Error monitoring integration (Sentry; activates when SENTRY_DSN set)
 - [x] Health check endpoints
 - [ ] Backup and restore for tenant data
@@ -334,43 +336,43 @@
 - [x] Error monitoring integration (Sentry) — `src/observability/instrument.ts`; activates with SENTRY_DSN
 - [x] Email template set (first-timer follow-up, birthday, anniversary) — `src/notifications/templates`
 
-## Phase C — Giving / Payments *(unlock a whole domain; models + analytics already exist)*
+## Phase C — Giving / Payments ✅ *(core shipped 2026-06-18)*
 
-- [ ] Paystack transaction initialization
-- [ ] Webhook handler with HMAC verification + idempotency
-- [ ] One-time donation / tithe / offering live form
-- [ ] Email receipts per transaction
-- [ ] Member giving history UI
-- [ ] Recurring giving (subscriptions) — depends on Phase B
-- [ ] Designated funds
+- [x] Paystack transaction initialization
+- [x] Webhook handler with HMAC verification + idempotency
+- [x] One-time donation / tithe / offering live form
+- [x] Email receipts per transaction
+- [x] Member giving history (API; `GET /giving/me`)
+- [ ] Recurring giving (subscriptions) — depends on Phase B queue
+- [~] Designated funds — category captured; no fund ledger yet
 - [ ] Downloadable + year-end statements
 - [ ] Transaction reconciliation view
 - [ ] Failed payment retry + refund management
 
-## Phase D — Communications & Notifications
+## Phase D — Communications & Notifications ✅ *(core shipped 2026-06-18)*
 
-- [ ] In-app notification center (API + UI)
+- [x] In-app notification center (API + dashboard bell UI)
 - [ ] Notification preferences per user
-- [ ] Announcement broadcast (church-wide)
+- [x] Announcement broadcast (church-wide) — composer + fan-out + optional email
 - [ ] Unit-scoped announcements
 - [ ] SMS notifications (feature-flagged)
 
 ## Phase E — Attendance & Events Hardening
 
-- [ ] Service session management UI (create / open / close)
-- [ ] Live attendance count + percentage vs expected
+- [x] Service session management UI (create / open / close) — `/dashboard/services`
+- [x] CSV export of attendance — per-service export
+- [x] Event capacity limits — enforced on RSVP (categories still open)
+- [~] Live attendance count + percentage vs expected — per-service counts shown; live % still open
 - [ ] Geofence + device fingerprint + anti-gaming controls
 - [ ] Admin override + per-service history polish
-- [ ] CSV export of attendance
-- [ ] Event capacity limits + categories
 - [ ] Recurring events + reminders (depends on Phase B)
 - [ ] Personal "my events" view + unit-scoped events
 
-## Phase F — Member & Unit Depth
+## Phase F — Member & Unit Depth *(core shipped 2026-06-18)*
 
-- [ ] Bulk member import (CSV)
-- [ ] Member tagging / segmentation
-- [ ] Family / household grouping
+- [x] Bulk member import (CSV) — provisions accounts; optional welcome email
+- [x] Member tagging / segmentation — tags + inline editor
+- [~] Family / household grouping — model + import assignment; no standalone manager UI
 - [ ] Unit detail page completion
 - [ ] Unit-specific announcements + events
 - [ ] Volunteer commitment tracking per unit

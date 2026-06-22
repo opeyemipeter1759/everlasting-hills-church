@@ -15,12 +15,13 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model AttendanceRecord {
-  id        String  @id
-  memberId  String
-  serviceId String
-  present   Boolean @default(true)
-  tenantId  String
-  Member    Member  @relation(fields: [memberId], references: [id])
+  id          String   @id
+  memberId    String
+  serviceId   String
+  present     Boolean  @default(true)
+  tenantId    String
+  checkedInAt DateTime @default(now())
+  Member      Member   @relation(fields: [memberId], references: [id])
   Service   Service @relation(fields: [serviceId], references: [id])
   Tenant    Tenant  @relation(fields: [tenantId], references: [id])
 
@@ -158,12 +159,15 @@ model Member {
   email              String?
   phone              String?
   dateOfBirth        DateTime?
+  weddingAnniversary DateTime?
   address            String?
   joinedAt           DateTime             @default(now())
   bio                String?
   photoUrl           String?
   status             MemberStatus         @default(ACTIVE)
   notifyNewSermons   Boolean              @default(true)
+  tags               String[]             @default([])
+  householdId        String?
   AttendanceRecord   AttendanceRecord[]
   DiscussionResponse DiscussionResponse[]
   EngagementScore    EngagementScore?
@@ -171,12 +175,27 @@ model Member {
   ListenProgress     ListenProgress[]
   Profile            Profile              @relation(fields: [profileId], references: [id])
   Tenant             Tenant               @relation(fields: [tenantId], references: [id])
+  Household          Household?           @relation(fields: [householdId], references: [id])
   PastorNote         PastorNote[]
   PastoralAlert      PastoralAlert[]
   SermonBookmark     SermonBookmark[]
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
   UnitMember         UnitMember[]
+
+  @@index([householdId])
+}
+
+/// A family / household grouping members can belong to.
+model Household {
+  id        String   @id
+  tenantId  String
+  name      String
+  createdAt DateTime @default(now())
+  Member    Member[]
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -236,6 +255,7 @@ model Profile {
   tenantId       String
   createdAt      DateTime         @default(now())
   Member         Member?
+  Notification   Notification[]
   RoleAssignment RoleAssignment[]
 }
 
@@ -355,6 +375,10 @@ model Service {
   name             String
   scheduledAt      DateTime
   createdAt        DateTime           @default(now())
+  serviceType      ServiceType        @default(SUNDAY)
+  openAt           DateTime?
+  closeAt          DateTime?
+  isOpen           Boolean            @default(false)
   AttendanceRecord AttendanceRecord[]
   Tenant           Tenant             @relation(fields: [tenantId], references: [id])
 }
@@ -369,10 +393,13 @@ model Tenant {
   ContactMessage     ContactMessage[]
   DiscussionQuestion DiscussionQuestion[]
   DiscussionResponse DiscussionResponse[]
+  Announcement       Announcement[]
   EmailSubscriber    EmailSubscriber[]
   EngagementScore    EngagementScore[]
   Event              Event[]
   EventRsvp          EventRsvp[]
+  Household          Household[]
+  Notification       Notification[]
   FollowUpTask       FollowUpTask[]
   FormSubmission     FormSubmission[]
   GivingRecord       GivingRecord[]
@@ -576,8 +603,50 @@ enum SermonType {
   SERIES
 }
 
+enum ServiceType {
+  SUNDAY
+  WEDNESDAY
+  SPECIAL
+}
+
 enum SermonStatus {
   DRAFT
   PUBLISHED
   SCHEDULED
+}
+
+/// In-app notification delivered to a single member (by Profile). Created by
+/// announcements fan-out and other system events.
+model Notification {
+  id        String    @id
+  tenantId  String
+  profileId String
+  type      String    @default("general")
+  title     String
+  body      String?
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  Profile   Profile   @relation(fields: [profileId], references: [id])
+  Tenant    Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([profileId, readAt])
+}
+
+/// A broadcast authored by an admin/pastor. Fans out into per-member
+/// Notification rows (and optionally email) at creation time.
+model Announcement {
+  id          String   @id
+  tenantId    String
+  title       String
+  body        String
+  /// Target audience: "all" | "members" | a unit id. Free-form for now.
+  audience    String   @default("all")
+  sendEmail   Boolean  @default(false)
+  createdById String?
+  recipients  Int      @default(0)
+  createdAt   DateTime @default(now())
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
 }

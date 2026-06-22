@@ -31,7 +31,10 @@ import { verifySupabaseJwt } from "@/lib/auth/verify-jwt";
  *     logged in, never a role) — that's the safe terminal state for orphan accounts.
  */
 const AUTH_PAGES = new Set(["/login", "/register", "/forgot-password"]);
-const ROLELESS_LANDING = "/me";
+// The roleless "safe sink" must be a route that actually exists. The page lives
+// at /dashboard/me (there is no top-level /me page), so redirecting to "/me"
+// produced a real 404 for authenticated accounts without a resolved role.
+const ROLELESS_LANDING = "/dashboard/me";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
