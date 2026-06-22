@@ -1,18 +1,23 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, Res } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
+  ApiBody,
   ApiOkResponse,
   ApiOperation,
+  ApiParam,
   ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import type { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import { AttendanceService } from './attendance.service';
+import { AttendanceService, type ListAttendanceQuery } from './attendance.service';
+import { BulkMarkAttendanceDto } from './dto/bulk-mark-attendance.dto';
+import { OverrideAttendanceDto } from './dto/override-attendance.dto';
 import { CreateServiceDto } from './dto/create-service.dto';
 
 /**
@@ -64,6 +69,23 @@ export class AttendanceController {
   @ApiOperation({ summary: 'Get current member attendance history' })
   async getMyAttendance(@CurrentUser() user: AuthUser) {
     return this.attendanceService.getMemberAttendance(user.userId);
+  }
+
+  @Get('can-mark')
+  @ApiOperation({ summary: 'Check whether the current user can mark attendance now' })
+  @ApiOkResponse({
+    description: 'Whether the user can mark attendance for the active session',
+    schema: {
+      examples: {
+        canMark: { value: { canMark: true } },
+        noSession: { value: { canMark: false, reason: 'NO_OPEN_SESSION' } },
+        alreadyMarked: { value: { canMark: false, reason: 'ALREADY_MARKED' } },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
+  async canMark(@CurrentUser() user: AuthUser) {
+    return this.attendanceService.canMark(user.userId);
   }
 
   // ── Admin endpoints (ADMIN+) ────────────────────────────────────────────────
@@ -162,5 +184,94 @@ export class AttendanceController {
   @ApiOperation({ summary: 'Attendance summary metrics (ADMIN+)' })
   async getAttendanceSummary() {
     return this.attendanceService.getAttendanceSummary();
+  }
+
+  // ── New admin endpoints ────────────────────────────────────────────────────
+
+  /** GET /attendance/feed/today — declared before :sessionId routes to avoid conflict */
+  @Get('feed/today')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: "Today's live check-in feed (ADMIN+). Poll every 30s." })
+  getTodayFeed() {
+    return this.attendanceService.getTodayFeed();
+  }
+
+  /** GET /attendance/export — Excel file download */
+  @Get('export')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Export attendance as Excel (ADMIN+)' })
+  @ApiQuery({ name: 'status', required: false, enum: ['PRESENT', 'ABSENT'] })
+  @ApiQuery({ name: 'serviceKey', required: false })
+  @ApiQuery({ name: 'month', required: false, example: '2026-06' })
+  @ApiQuery({ name: 'dateFrom', required: false })
+  @ApiQuery({ name: 'dateTo', required: false })
+  async exportCsv(
+    @Query() q: Omit<ListAttendanceQuery, 'page' | 'limit'>,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.attendanceService.exportAttendanceCsv(q);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename="attendance-export.xlsx"');
+    res.send(buffer);
+  }
+
+  /** GET /attendance — list with filters, sort, pagination */
+  @Get()
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Paginated attendance list with filters and sorting (ADMIN+)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'name', required: false })
+  @ApiQuery({ name: 'status', required: false, enum: ['PRESENT', 'ABSENT'] })
+  @ApiQuery({ name: 'serviceKey', required: false, enum: ['sunday', 'wednesday'] })
+  @ApiQuery({ name: 'year', required: false, example: '2026' })
+  @ApiQuery({ name: 'month', required: false, example: '2026-06' })
+  @ApiQuery({ name: 'date', required: false, example: '2026-06-19' })
+  @ApiQuery({ name: 'dateFrom', required: false })
+  @ApiQuery({ name: 'dateTo', required: false })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['date', 'name', 'status', 'markedAt', 'serviceKey'] })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['ASC', 'DESC'] })
+  listAttendance(@Query() q: ListAttendanceQuery) {
+    return this.attendanceService.listAttendance(q);
+  }
+
+  /** PATCH /attendance/session/:sessionId/member/:userId — inline status override */
+  @Patch('session/:sessionId/member/:userId')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Override a single member attendance status (ADMIN+)' })
+  @ApiParam({ name: 'sessionId', description: 'Service / session ID' })
+  @ApiParam({ name: 'userId', description: 'Member ID' })
+  @ApiBody({ type: OverrideAttendanceDto })
+  @ApiOkResponse({
+    description: 'Updated attendance record',
+    schema: {
+      example: { id: 'rec-1', status: 'PRESENT', markedBy: 'ADMIN', markedAt: '2026-06-19T09:00:00.000Z' },
+    },
+  })
+  @ApiForbiddenResponse({ description: 'Admin access required' })
+  overrideAttendance(
+    @Param('sessionId') sessionId: string,
+    @Param('userId') userId: string,
+    @Body() dto: OverrideAttendanceDto,
+  ) {
+    return this.attendanceService.overrideAttendance(sessionId, userId, dto.status);
+  }
+
+  /** PATCH /attendance/session/:sessionId/bulk — bulk mark */
+  @Patch('session/:sessionId/bulk')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Bulk mark attendance PRESENT or ABSENT (ADMIN+)' })
+  @ApiParam({ name: 'sessionId', description: 'Service / session ID' })
+  @ApiBody({ type: BulkMarkAttendanceDto })
+  @ApiOkResponse({
+    description: 'Number of records updated',
+    schema: { example: { updated: 12 } },
+  })
+  @ApiForbiddenResponse({ description: 'Admin access required' })
+  bulkMark(
+    @Param('sessionId') sessionId: string,
+    @Body() dto: BulkMarkAttendanceDto,
+  ) {
+    return this.attendanceService.bulkMarkAttendance(sessionId, dto.userIds, dto.status);
   }
 }

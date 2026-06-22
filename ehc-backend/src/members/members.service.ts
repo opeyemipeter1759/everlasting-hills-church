@@ -19,8 +19,13 @@ import { NotificationEvents } from '../notifications/notification-events';
 import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
 
 function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ??
+    process.env.SUPABASE_ANON_KEY ??
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+    '';
   if (!url || !key) throw new Error('Missing Supabase admin credentials');
   return createClient(url, key);
 }
@@ -44,45 +49,57 @@ export class MembersService {
   }
 
   async convertVisitorToMember(visitorId: string) {
-    const visitor = await this.prisma.visitor.findUnique({ where: { id: visitorId } });
+    const visitor = await this.prisma.visitor.findUnique({
+      where: { id: visitorId },
+    });
     if (!visitor) throw new NotFoundException('Visitor not found');
     if (!visitor.email) {
-      throw new BadRequestException('Visitor has no email — email is required to create an account');
+      throw new BadRequestException(
+        'Visitor has no email — email is required to create an account',
+      );
     }
     if (!visitor.phone) {
-      throw new BadRequestException('Visitor has no phone number — phone is used as the initial password');
+      throw new BadRequestException(
+        'Visitor has no phone number — phone is used as the initial password',
+      );
     }
 
     const existing = await this.prisma.member.findFirst({
       where: { tenantId: this.tenantId, email: visitor.email },
     });
     if (existing) {
-      throw new ConflictException('A member account already exists for this email address');
+      throw new ConflictException(
+        'A member account already exists for this email address',
+      );
     }
 
     const supabase = createAdminClient();
     let userId: string;
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: visitor.email,
-      password: visitor.phone,
-      email_confirm: true,
-      user_metadata: { needs_password_change: true },
-    } as any);
+    const { data: authData, error: authError } =
+      await supabase.auth.admin.createUser({
+        email: visitor.email,
+        password: visitor.phone,
+        email_confirm: true,
+        user_metadata: { needs_password_change: true },
+      } as any);
 
     if (authError) {
       // The visitor's email is already in Supabase Auth (e.g. a prior convert attempt
       // got past Supabase but failed before we wrote the Profile). Reuse that auth user
       // instead of asking the admin to clean up by hand — this makes the action idempotent.
-      const isDuplicate = /already.*registered|already.*exists/i.test(authError.message);
+      const isDuplicate = /already.*registered|already.*exists/i.test(
+        authError.message,
+      );
       if (!isDuplicate) {
         throw new InternalServerErrorException(
           `Could not create auth account: ${authError.message}`,
         );
       }
-      const { data: list, error: listError } = await supabase.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000,
-      });
+      const { data: list, error: listError } =
+        await supabase.auth.admin.listUsers({
+          page: 1,
+          perPage: 1000,
+        });
       if (listError) {
         throw new InternalServerErrorException(
           `Auth user exists but could not be looked up: ${listError.message}`,
@@ -105,7 +122,9 @@ export class MembersService {
       userId = found.id;
       // If a Profile already exists for this user, the visitor was effectively converted
       // before — bail out with a clear 409 so the admin knows.
-      const orphanProfile = await this.prisma.profile.findUnique({ where: { userId } });
+      const orphanProfile = await this.prisma.profile.findUnique({
+        where: { userId },
+      });
       if (orphanProfile) {
         throw new ConflictException(
           'This person already has an account. Their Member record may have been removed — restore it instead of creating a new one.',
@@ -363,12 +382,15 @@ export class MembersService {
     return this.prisma.member.update({
       where: { id: memberId },
       data: {
-        ...(data.firstName !== undefined && { firstName: data.firstName.trim() }),
+        ...(data.firstName !== undefined && {
+          firstName: data.firstName.trim(),
+        }),
         ...(data.lastName !== undefined && {
           lastName: data.lastName == null ? '' : data.lastName.trim(),
         }),
         ...(data.phone !== undefined && {
-          phone: data.phone == null || data.phone === '' ? null : data.phone.trim(),
+          phone:
+            data.phone == null || data.phone === '' ? null : data.phone.trim(),
         }),
         ...(data.bio !== undefined && {
           bio: data.bio == null || data.bio === '' ? null : data.bio.trim(),
@@ -393,7 +415,12 @@ export class MembersService {
    */
   async setMyAvatar(
     userId: string,
-    file: { buffer: Buffer; mimetype: string; originalname: string; size: number },
+    file: {
+      buffer: Buffer;
+      mimetype: string;
+      originalname: string;
+      size: number;
+    },
     fallbackEmail?: string,
   ) {
     const { memberId } = await this.getMyMember(userId, fallbackEmail);
@@ -424,9 +451,12 @@ export class MembersService {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
       const endpoint =
-        process.env.R2_ENDPOINT ?? `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
+        process.env.R2_ENDPOINT ??
+        `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
       const bucket =
-        process.env.R2_BUCKET ?? process.env.R2_BUCKET_NAME ?? process.env.R2_ACCOUNT_ID;
+        process.env.R2_BUCKET ??
+        process.env.R2_BUCKET_NAME ??
+        process.env.R2_ACCOUNT_ID;
       const client = new S3Client({
         endpoint,
         region: 'auto',
@@ -490,7 +520,11 @@ export class MembersService {
     return this.prisma.member.findUnique({
       where: { id: memberId },
       include: {
-        AttendanceRecord: { include: { Service: true }, orderBy: { Service: { scheduledAt: 'desc' } }, take: 20 },
+        AttendanceRecord: {
+          include: { Service: true },
+          orderBy: { Service: { scheduledAt: 'desc' } },
+          take: 20,
+        },
         PastorNote: { orderBy: { createdAt: 'desc' } },
         FollowUpTask: { orderBy: { createdAt: 'desc' } },
         UnitMember: { include: { Unit: true } },
@@ -499,26 +533,11 @@ export class MembersService {
   }
 
   async updateMemberStatus(memberId: string, status: string) {
-    return this.prisma.member.update({ where: { id: memberId }, data: { status } as any });
+    return this.prisma.member.update({
+      where: { id: memberId },
+      data: { status } as any,
+    });
   }
-
-  /**
-   * Permanently delete a member.
-   *
-   * Steps (all-or-nothing for the DB side):
-   *   1. Load the member + their Profile + role so we can authorize.
-   *   2. Enforce the actor's role strictly out-ranks the target's role
-   *      (same rule as users.service — an ADMIN can't delete a PASTOR).
-   *   3. In one transaction: remove every child row that references this member,
-   *      then the Member, then their RoleAssignments + Profile.
-   *   4. Best-effort delete of the Supabase auth user. If this fails the DB is already
-   *      clean and the auth user becomes a harmless orphan — logged for cleanup.
-   *
-   * Why hard delete (vs the soft-delete on /users): "soft" leaves credentials live,
-   * which the admins reported as confusing — a deactivated member can still appear in
-   * Supabase admin and re-login if their status is flipped. Members deleted here are
-   * gone everywhere.
-   */
   async deleteMember(actor: AuthUser, memberId: string) {
     const member = await this.prisma.member.findUnique({
       where: { id: memberId },
@@ -595,7 +614,14 @@ export class MembersService {
   async getUpcomingBirthdays(daysAhead = 7) {
     const members = await this.prisma.member.findMany({
       where: { tenantId: this.tenantId, dateOfBirth: { not: null } },
-      select: { id: true, firstName: true, lastName: true, email: true, dateOfBirth: true, photoUrl: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        dateOfBirth: true,
+        photoUrl: true,
+      },
     });
 
     const today = new Date();
@@ -605,15 +631,31 @@ export class MembersService {
       .filter((m) => {
         if (!m.dateOfBirth) return false;
         const dob = new Date(m.dateOfBirth as any);
-        const thisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-        const diff = Math.ceil((thisYear.getTime() - today.getTime()) / 86_400_000);
+        const thisYear = new Date(
+          today.getFullYear(),
+          dob.getMonth(),
+          dob.getDate(),
+        );
+        const diff = Math.ceil(
+          (thisYear.getTime() - today.getTime()) / 86_400_000,
+        );
         return diff >= 0 && diff <= daysAhead;
       })
       .map((m) => {
         const dob = new Date(m.dateOfBirth as any);
-        const thisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-        const daysUntil = Math.ceil((thisYear.getTime() - today.getTime()) / 86_400_000);
-        return { ...m, dateOfBirth: (m.dateOfBirth as Date).toISOString(), daysUntil };
+        const thisYear = new Date(
+          today.getFullYear(),
+          dob.getMonth(),
+          dob.getDate(),
+        );
+        const daysUntil = Math.ceil(
+          (thisYear.getTime() - today.getTime()) / 86_400_000,
+        );
+        return {
+          ...m,
+          dateOfBirth: (m.dateOfBirth as Date).toISOString(),
+          daysUntil,
+        };
       })
       .sort((a, b) => a.daysUntil - b.daysUntil);
   }
@@ -634,7 +676,11 @@ export class MembersService {
     const oldestSunday = sundays[sundays.length - 1].scheduledAt;
 
     const allActive = await this.prisma.member.findMany({
-      where: { tenantId: this.tenantId, status: 'ACTIVE', joinedAt: { lte: oldestSunday } },
+      where: {
+        tenantId: this.tenantId,
+        status: 'ACTIVE',
+        joinedAt: { lte: oldestSunday },
+      },
       select: {
         id: true,
         firstName: true,
@@ -642,7 +688,10 @@ export class MembersService {
         email: true,
         phone: true,
         photoUrl: true,
-        AttendanceRecord: { where: { serviceId: { in: sundayIds } }, select: { serviceId: true } },
+        AttendanceRecord: {
+          where: { serviceId: { in: sundayIds } },
+          select: { serviceId: true },
+        },
       },
     });
 
@@ -652,7 +701,9 @@ export class MembersService {
   }
 
   async addPastorNote(memberId: string, content: string) {
-    return this.prisma.pastorNote.create({ data: { id: randomUUID(), tenantId: this.tenantId, memberId, content } });
+    return this.prisma.pastorNote.create({
+      data: { id: randomUUID(), tenantId: this.tenantId, memberId, content },
+    });
   }
 
   async deletePastorNote(noteId: string) {
@@ -661,15 +712,124 @@ export class MembersService {
 
   async addFollowUpTask(memberId: string, title: string, dueDate?: string) {
     return this.prisma.followUpTask.create({
-      data: { id: randomUUID(), tenantId: this.tenantId, memberId, title, dueDate: dueDate ? new Date(dueDate) : null },
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        memberId,
+        title,
+        dueDate: dueDate ? new Date(dueDate) : null,
+      },
     });
   }
 
   async toggleFollowUpTask(taskId: string, done: boolean) {
-    return this.prisma.followUpTask.update({ where: { id: taskId }, data: { done, completedAt: done ? new Date() : null } });
+    return this.prisma.followUpTask.update({
+      where: { id: taskId },
+      data: { done, completedAt: done ? new Date() : null },
+    });
   }
 
   async deleteFollowUpTask(taskId: string) {
     return this.prisma.followUpTask.delete({ where: { id: taskId } });
+  }
+
+  /** GET /members/at-risk — three risk categories */
+  async getMembersAtRisk() {
+    const fourWeeksAgo = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [members, totalServices, presentThisMonth, recentPresent] =
+      await Promise.all([
+        this.prisma.member.findMany({
+          where: { tenantId: this.tenantId, status: 'ACTIVE' },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            photoUrl: true,
+            phone: true,
+            joinedAt: true,
+          },
+        }),
+        this.prisma.service.count({ where: { tenantId: this.tenantId } }),
+        this.prisma.attendanceRecord.groupBy({
+          by: ['memberId'],
+          where: {
+            tenantId: this.tenantId,
+            present: true,
+            Service: { scheduledAt: { gte: monthStart } },
+          },
+        }),
+        this.prisma.attendanceRecord.groupBy({
+          by: ['memberId'],
+          where: {
+            tenantId: this.tenantId,
+            present: true,
+            Service: { scheduledAt: { gte: fourWeeksAgo } },
+          },
+        }),
+      ]);
+
+    const presentThisMonthSet = new Set(
+      presentThisMonth.map((r) => r.memberId),
+    );
+    const recentPresentSet = new Set(recentPresent.map((r) => r.memberId));
+
+    const allTimePresent = await this.prisma.attendanceRecord.groupBy({
+      by: ['memberId'],
+      where: { tenantId: this.tenantId, present: true },
+      _count: { _all: true },
+    });
+    const presentCountMap = new Map(
+      allTimePresent.map((r) => [r.memberId, r._count._all]),
+    );
+
+    const neverAttended = members
+      .filter(
+        (m) =>
+          !presentCountMap.has(m.id) && new Date(m.joinedAt) < fourWeeksAgo,
+      )
+      .map((m) => ({
+        userId: m.id,
+        userName: `${m.firstName} ${m.lastName}`,
+        photoUrl: m.photoUrl ?? null,
+        phone: m.phone ?? null,
+        joinedAt: m.joinedAt.toISOString().slice(0, 10),
+      }));
+
+    const absentConsecutiveWeeks = members
+      .filter((m) => presentCountMap.has(m.id) && !recentPresentSet.has(m.id))
+      .map((m) => ({
+        userId: m.id,
+        userName: `${m.firstName} ${m.lastName}`,
+        photoUrl: m.photoUrl ?? null,
+        phone: m.phone ?? null,
+        consecutiveAbsences: Math.ceil(
+          (Date.now() - new Date(m.joinedAt).getTime()) /
+            (7 * 24 * 60 * 60 * 1000),
+        ),
+        lastSeen: null,
+      }));
+
+    const belowFiftyPercent = members
+      .filter((m) => {
+        const count = presentCountMap.get(m.id) ?? 0;
+        return totalServices > 0 && count / totalServices < 0.5 && count > 0;
+      })
+      .map((m) => {
+        const presentCount = presentCountMap.get(m.id) ?? 0;
+        return {
+          userId: m.id,
+          userName: `${m.firstName} ${m.lastName}`,
+          photoUrl: m.photoUrl ?? null,
+          phone: m.phone ?? null,
+          presentCount,
+          totalCount: totalServices,
+          rate: Math.round((presentCount / totalServices) * 100) / 100,
+        };
+      });
+
+    return { absentConsecutiveWeeks, neverAttended, belowFiftyPercent };
   }
 }

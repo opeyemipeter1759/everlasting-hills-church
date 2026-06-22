@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useSermonAdminOverview } from '@/lib/api';
 import type { StatCardProps } from '@/types';
-import StatCard from '@/ui/card/StatCard';
+import { StatCard } from '@/components/ui/cards/StatCard';
 
 /* ── stat config ───────────────────────────────────────────────────── */
 const STATS: Omit<StatCardProps, 'value' | 'loading'>[] = [
@@ -177,7 +177,7 @@ export default function SermonHeading() {
 
       {/* ── Stat cards ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {STATS.map((stat) => (
+        {STATS.map((stat: any) => (
           <StatCard
             key={stat.label}
             {...stat}

@@ -6,7 +6,8 @@ import { z } from "zod";
 import { Mail, Phone, ShieldCheck, User, FileText, Check } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { patchFrontendSession } from "@/lib/auth/frontend-session";
-import { FormInput, FormTextarea } from "./form-primitives";
+import { FormInput } from "@/components/ui/form/FormInput";
+import { FormTextarea } from "@/components/ui/form/FormTextarea";
 
 export type PersonalFormUser = {
   firstName: string | null;

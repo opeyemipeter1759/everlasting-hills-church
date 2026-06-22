@@ -254,3 +254,36 @@ export interface CreateSermonPayload {
   status: SermonStatus;
   scheduledFor?: string;
 }
+
+// ── Member Dashboard ──────────────────────────────────────────────────────────
+
+export interface MemberHomeProps {
+  member: {
+    firstName: string;
+    lastName: string;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    dateOfBirth: string | null;
+    bio: string | null;
+    photoUrl: string | null;
+  } | null;
+  userEmail: string;
+  memberDisplayId: string;
+  attendanceRate: number;
+  attendanceCount: number;
+  streakWeeks: number;
+  lastServiceDate: string | null;
+  nextService: { name: string; scheduledAt: string } | null;
+  hasCheckedInToday: boolean;
+  todayService: { id: string; name: string } | null;
+  prayerCount: number;
+  recentServices: Array<{ name: string; scheduledAt: string; totalAttended: number }>;
+  monthlyAttendance: Array<{ label: string; attended: number; total: number }>;
+  birthdayDaysUntil: number | null;
+  sermonStreak: number;
+  bookmarks: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; audioUrl: string | null }>;
+  listenHistory: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; positionSec: number; completed: boolean; audioDuration: number | null }>;
+}
+
+export type MemberHomePropsOptional = Partial<MemberHomeProps>;

@@ -117,16 +117,6 @@ export class AuthController {
   async logout(@Req() request: { headers?: { authorization?: string } }) {
     return this.authService.logout(request.headers?.authorization);
   }
-
-  /**
-   * Returns the current user's identity + their Member profile (if linked).
-   *
-   * Why @CurrentUser instead of reading the header again: the JwtAuthGuard already verified
-   * the JWT signature and looked up the Profile. Re-doing both work here would mean two
-   * DB queries per request. The @CurrentUser decorator just reads what's already on req.user.
-   *
-   * The frontend dashboard calls this as its single source of truth for "who am I".
-   */
   @Get('me')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get current user dashboard payload' })

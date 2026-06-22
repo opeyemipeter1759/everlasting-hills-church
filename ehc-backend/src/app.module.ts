@@ -24,6 +24,10 @@ import { UsersModule } from './users/users.module';
 import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { EventsModule } from './events/events.module';
+import { OverviewModule } from './overview/overview.module';
+import { SessionsModule } from './sessions/sessions.module';
+import { AdminModule } from './admin/admin.module';
+import { ReportsModule } from './reports/reports.module';
 import { GivingModule } from './giving/giving.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
@@ -109,6 +113,10 @@ import type { Env } from './config/env.validation';
     SiteSettingsModule,
     UploadsModule,
     EventsModule,
+    OverviewModule,
+    SessionsModule,
+    AdminModule,
+    ReportsModule,
     GivingModule,
     InboxModule,
     AnnouncementsModule,

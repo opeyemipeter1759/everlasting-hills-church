@@ -1,5 +1,5 @@
 'use client';
-import { Dropdown } from '@/ui/dropdown/Dropdown';
+import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 import React, { useState } from 'react';
 
 export default function NotificationDropdown() {

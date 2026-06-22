@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Mail, Phone, Trash2, Users, Tag, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 
 export interface MemberRow {
   id: string;

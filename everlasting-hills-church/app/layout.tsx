@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { QueryProvider } from "@/lib/api/QueryProvider";
-import NavigationProgress from "@/components/ui/NavigationProgress";
+import NavigationProgress from "@/components/ui/navigation/NavigationProgress";
+import { ToastProvider } from "@/lib/api/ToastProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -70,7 +71,10 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <NavigationProgress />
         </Suspense>
-        <QueryProvider>{children}</QueryProvider>
+        <QueryProvider>
+          {children}
+          <ToastProvider />
+        </QueryProvider>
       </body>
     </html>
   );

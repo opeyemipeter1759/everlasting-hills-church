@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Mail, Phone, Plus, ShieldCheck, Trash2, UserPlus, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 
 /**
  * User management CMS.

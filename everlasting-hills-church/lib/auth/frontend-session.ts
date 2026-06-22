@@ -1,20 +1,3 @@
-/**
- * Single source of truth for client-side auth cookies.
- *
- * After login, the backend returns a real Supabase JWT. We persist:
- *   - ehc_access_token  : the actual Supabase JWT (signed, verifiable)
- *   - ehc_role          : user role (UI hint only — middleware re-verifies via JWT)
- *   - ehc_user_email    : email (UI hint)
- *   - ehc_logged_in     : presence flag (UI hint)
- *
- * Why JS-readable (not HttpOnly): Axios needs to attach the JWT as a Bearer header.
- * Migrating to HttpOnly + Next.js API proxy is a Week 2 task — tracked.
- *
- * Why we still keep role/email as separate cookies: middleware decodes the JWT for the
- * authoritative role, but the UI gets faster initial paint reading the hint cookie instead
- * of decoding JWT on every render.
- */
-
 export type UserRole =
   | "SUPER_ADMIN"
   | "PASTOR"
@@ -34,7 +17,6 @@ export const ACCESS_TOKEN_COOKIE = "ehc_access_token";
 export const REFRESH_TOKEN_COOKIE = "ehc_refresh_token";
 export const ROLE_COOKIE = "ehc_role";
 
-/** Refresh tokens outlive the ~1h access token so a session can be silently renewed. */
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 export const EMAIL_COOKIE = "ehc_user_email";
 export const FULL_NAME_COOKIE = "ehc_user_full_name";
@@ -83,59 +65,17 @@ export function hasMinRole(userRole: string | null | undefined, minRole: UserRol
 export function getLandingPage(role: string | null | undefined): string {
   const normalized = normalizeRole(role);
   if (!normalized) return "/login";
-  // Super admins land on their dedicated dashboard; everyone else on /dashboard.
-  return normalized === "SUPER_ADMIN" ? "/admin/dashboard" : "/dashboard";
+  return normalized === "SUPER_ADMIN" ? "/dashboard" : "/dashboard";
 }
 
 export function getRequiredRole(pathname: string): UserRole | null {
-  // Super Admin area (/admin/*) is the highest-privilege surface.
   if (pathname.startsWith("/admin")) return "SUPER_ADMIN";
-
-  if (pathname.startsWith("/dashboard/audit-log")) return "SUPER_ADMIN";
-
-  if (
-    pathname.startsWith("/dashboard/subscribers") ||
-    pathname.startsWith("/dashboard/alerts") ||
-    pathname.startsWith("/dashboard/follow-ups") ||
-    pathname.startsWith("/dashboard/reports") ||
-    pathname.startsWith("/dashboard/giving") ||
-    pathname.startsWith("/dashboard/sermons") ||
-    pathname.startsWith("/dashboard/analytics/engagement") ||
-    pathname.startsWith("/dashboard/analytics/giving")
-  ) {
-    return "PASTOR";
-  }
-
-  if (
-    pathname.startsWith("/dashboard/settings/homepage") ||
-    pathname.startsWith("/dashboard/members") ||
-    pathname.startsWith("/dashboard/users") ||
-    pathname.startsWith("/dashboard/first-timers") ||
-    pathname.startsWith("/dashboard/services") ||
-    pathname.startsWith("/dashboard/events") ||
-    pathname.startsWith("/dashboard/submissions") ||
-    pathname.startsWith("/dashboard/announcements") ||
-    pathname.startsWith("/dashboard/inventory") ||
-    pathname.startsWith("/dashboard/analytics/attendance") ||
-    pathname.startsWith("/dashboard/analytics/growth") ||
-    pathname.startsWith("/dashboard/analytics/first-timers")
-  ) {
-    return "ADMIN";
-  }
-
-  if (pathname.startsWith("/dashboard/units") || pathname.startsWith("/dashboard/analytics/departments")) {
-    return "UNIT_LEAD";
-  }
-
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/me")) {
-    return "MEMBER";
-  }
-
+  if (pathname.startsWith("/dashboard/admin")) return "ADMIN";
+  if (pathname.startsWith("/dashboard/pastor")) return "PASTOR";
+  if (pathname.startsWith("/dashboard/unit-leader")) return "UNIT_LEAD";
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/me")) return "MEMBER";
   return null;
 }
-
-// ── Cookie helpers (client-side) ──────────────────────────────────────────────
-
 function isHttps(): boolean {
   return typeof window !== "undefined" && window.location.protocol === "https:";
 }
@@ -173,13 +113,11 @@ export function getRefreshTokenFromCookie(): string | null {
 
 export interface FrontendSessionInput {
   accessToken: string;
-  /** Supabase refresh token — stored long-lived so the access token can be renewed. */
   refreshToken?: string | null;
   email: string;
   role: string | null;
   fullName?: string | null;
   picture?: string | null;
-  /** Defaults to 1 hour (Supabase default token lifetime). */
   expiresInSeconds?: number;
 }
 
@@ -218,31 +156,23 @@ export function setFrontendSession({
   role,
   fullName,
   picture,
-  expiresInSeconds = 3600,
 }: FrontendSessionInput): void {
-  const maxAge = Math.max(60, expiresInSeconds);
-  setCookie(ACCESS_TOKEN_COOKIE, accessToken, maxAge);
-  // Refresh token lives longer than the access token so the session can be renewed.
+  // All cookies live as long as the refresh token (30 days) so the browser never
+  // auto-deletes the session mid-use. Actual auth validity is enforced by the backend
+  // via JWT signature verification; the cookie lifetime is just a browser-side persistence.
+  setCookie(ACCESS_TOKEN_COOKIE, accessToken, REFRESH_MAX_AGE);
   if (refreshToken) setCookie(REFRESH_TOKEN_COOKIE, refreshToken, REFRESH_MAX_AGE);
-  setCookie(EMAIL_COOKIE, email, maxAge);
-  setCookie(LOGGED_IN_COOKIE, "true", maxAge);
-  if (role) setCookie(ROLE_COOKIE, role, maxAge);
+  setCookie(EMAIL_COOKIE, email, REFRESH_MAX_AGE);
+  setCookie(LOGGED_IN_COOKIE, "true", REFRESH_MAX_AGE);
+  if (role) setCookie(ROLE_COOKIE, role, REFRESH_MAX_AGE);
   else clearCookie(ROLE_COOKIE);
-  if (fullName) setCookie(FULL_NAME_COOKIE, fullName, maxAge);
+  if (fullName) setCookie(FULL_NAME_COOKIE, fullName, REFRESH_MAX_AGE);
   else clearCookie(FULL_NAME_COOKIE);
-  if (picture) setCookie(PICTURE_COOKIE, picture, maxAge);
+  if (picture) setCookie(PICTURE_COOKIE, picture, REFRESH_MAX_AGE);
   else clearCookie(PICTURE_COOKIE);
 }
-
-/**
- * Update specific session cookies without touching the access token.
- *
- * Used after a profile edit so the sidebar/header re-render with the new name, email,
- * or avatar instead of staying on the values captured at login. A custom event is
- * dispatched so any subscriber (SessionActionMenu, AppSidebar) can re-read cookies
- * without a full page reload.
- */
 export const SESSION_CHANGED_EVENT = "ehc:session-changed";
+export const AUTH_ERROR_EVENT = "ehc:auth-error";
 
 export function patchFrontendSession(
   partial: Partial<{
@@ -252,7 +182,6 @@ export function patchFrontendSession(
     role: string | null;
   }>,
 ): void {
-  // 30 days — refreshed pieces shouldn't expire just because we updated them.
   const maxAge = 60 * 60 * 24 * 30;
   if (partial.email !== undefined) setCookie(EMAIL_COOKIE, partial.email, maxAge);
   if (partial.fullName !== undefined) {

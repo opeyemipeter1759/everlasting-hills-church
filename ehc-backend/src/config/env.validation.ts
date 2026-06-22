@@ -46,24 +46,27 @@ export const envSchema = z.object({
   THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(100),
 
-  /**
-   * Background jobs (BullMQ). When REDIS_URL is set, emails are enqueued to a
-   * durable, retrying queue. When it is absent, the app falls back to the
-   * in-process EventEmitter path — no Redis required to run locally.
-   */
+  // Attendance service windows — WAT (UTC+1), 24h "HH:MM" format.
+  ATTENDANCE_SUNDAY_OPEN: z.string().regex(/^\d{2}:\d{2}$/).default('08:30'),
+  ATTENDANCE_SUNDAY_CLOSE: z.string().regex(/^\d{2}:\d{2}$/).default('13:00'),
+  ATTENDANCE_WEDNESDAY_OPEN: z.string().regex(/^\d{2}:\d{2}$/).default('17:30'),
+  ATTENDANCE_WEDNESDAY_CLOSE: z.string().regex(/^\d{2}:\d{2}$/).default('21:00'),
+  // Override the current time for testing (ISO 8601). Leave blank in production.
+  ATTENDANCE_TEST_NOW: z.string().optional(),
+  // Force the attendance window open regardless of day/time. Testing only.
+  ATTENDANCE_FORCE_OPEN: z
+    .string()
+    .transform((v) => v === 'true')
+    .optional(),
+
+  /** Background jobs (BullMQ). Absent → falls back to in-process EventEmitter. */
   REDIS_URL: z.url().optional(),
 
-  /**
-   * Error monitoring (Sentry). When SENTRY_DSN is set, exceptions are reported.
-   * Absent → Sentry is a no-op and the app behaves exactly as before.
-   */
+  /** Error monitoring (Sentry). Absent → Sentry is a no-op. */
   SENTRY_DSN: z.url().optional(),
   SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),
 
-  /**
-   * Paystack giving. PAYSTACK_SECRET_KEY enables online giving (initialise +
-   * verify + webhook HMAC). Absent → giving endpoints return 503.
-   */
+  /** Paystack giving. Absent → giving endpoints return 503. */
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
 });
 
