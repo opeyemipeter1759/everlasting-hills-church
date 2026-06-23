@@ -4,13 +4,6 @@ import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AnalyticsService } from './analytics.service';
 
-/**
- * Admin analytics.
- *
- * All routes are ADMIN+ via class-level @Roles; pastor-only / giving routes are tightened
- * to PASTOR with method-level @Roles. JwtAuthGuard runs globally so the JWT is already
- * verified — no manual `authService.getProfile()` round-trip needed.
- */
 @ApiTags('admin')
 @Controller('admin')
 @Roles(Role.ADMIN)

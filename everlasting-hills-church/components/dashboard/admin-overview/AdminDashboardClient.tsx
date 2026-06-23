@@ -28,6 +28,7 @@ import BirthdayAnniversaryCard from "./BirthdayAnniversaryCard";
 import MinistryUnitsOverview from "./MinistryUnitsOverview";
 import RecentActivitiesCard from "./RecentActivitiesCard";
 import QuickActionsCard from "./QuickActionsCard";
+import FollowUpCard from "./FollowUpCard";
 
 const STAT_META: Record<StatKey, { icon: LucideIcon; iconBg: string; iconColor: string; href: string }> = {
   members: { icon: Users, iconBg: "bg-[#FFE8ED] dark:bg-[#87102C]/25", iconColor: "text-[#87102C] dark:text-[#FFB3C1]", href: "/dashboard/members" },
@@ -137,6 +138,11 @@ export default function AdminDashboardClient() {
                 onDismiss={() => dismiss("birthdays")}
               />
             )}
+          </div>
+
+          {/* Follow-up status — members absent 3+ Sundays (moved from /dashboard) */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <FollowUpCard />
           </div>
 
           {/* Ministry units — full width */}

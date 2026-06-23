@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { UserPlus, ArrowRight, MapPin, Calendar } from "lucide-react";
 import AuthSplitScreen from "@/components/auth/AuthSplitScreen";
+import { AuthDivider } from "@/components/auth/AuthDivider";
 
 export default function RegisterPage() {
   return (
@@ -9,13 +10,7 @@ export default function RegisterPage() {
       scriptureRef="Psalm 133:1"
       supportingCopy="At Everlasting Hills, membership is a covenant — not a sign-up form. Start by meeting us in person, and we'll set up your account."
     >
-      <div className="flex items-center justify-center mb-3">
-        <span className="block w-6 h-px bg-[#87102C]/30" />
-        <span className="px-3 text-[10px] tracking-[0.3em] uppercase text-[#87102C] font-bold">
-          Begin Your Journey
-        </span>
-        <span className="block w-6 h-px bg-[#87102C]/30" />
-      </div>
+      <AuthDivider label="Begin Your Journey" />
 
       <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-2">
         Welcome to the family

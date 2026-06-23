@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Mail, Phone, Trash2, Users } from "lucide-react";
+import { Mail, Phone, Trash2, Users, Tag, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 
 export interface MemberRow {
   id: string;
@@ -16,6 +16,7 @@ export interface MemberRow {
   joinedAt: string;
   status?: string;
   photoUrl?: string | null;
+  tags?: string[];
 }
 
 interface Props {
@@ -55,6 +56,38 @@ export default function MembersListClient({ initialMembers, searchQuery }: Props
   const [pending, setPending] = useState<MemberRow | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Tag editing
+  const [tagTarget, setTagTarget] = useState<MemberRow | null>(null);
+  const [tagValue, setTagValue] = useState("");
+  const [tagSaving, setTagSaving] = useState(false);
+
+  function openTagEditor(m: MemberRow) {
+    setTagTarget(m);
+    setTagValue((m.tags ?? []).join(", "));
+  }
+
+  async function saveTags() {
+    if (!tagTarget) return;
+    setTagSaving(true);
+    const tags = tagValue
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean);
+    try {
+      const res = await apiClient.patch<{ id: string; tags: string[] }>(
+        `/members/${tagTarget.id}/tags`,
+        { tags },
+      );
+      const saved = res.data?.tags ?? tags;
+      setMembers((prev) =>
+        prev.map((m) => (m.id === tagTarget.id ? { ...m, tags: saved } : m)),
+      );
+      setTagTarget(null);
+    } finally {
+      setTagSaving(false);
+    }
+  }
 
   async function confirmDelete() {
     if (!pending) return;
@@ -118,6 +151,55 @@ export default function MembersListClient({ initialMembers, searchQuery }: Props
           }
         }}
       />
+
+      {/* Tag editor */}
+      {tagTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => !tagSaving && setTagTarget(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-gray-900 dark:text-white">
+                Tags · {tagTarget.firstName} {tagTarget.lastName}
+              </h3>
+              <button
+                onClick={() => !tagSaving && setTagTarget(null)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <input
+              autoFocus
+              value={tagValue}
+              onChange={(e) => setTagValue(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && saveTags()}
+              placeholder="comma-separated, e.g. choir, youth, first-timer"
+              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-[#87102C]/40"
+            />
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setTagTarget(null)}
+                disabled={tagSaving}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveTags}
+                disabled={tagSaving}
+                className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#87102C] text-white hover:bg-[#6E0C24] disabled:opacity-50"
+              >
+                {tagSaving ? "Saving..." : "Save tags"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
         <ul className="divide-y divide-gray-100 dark:divide-white/8">
@@ -191,9 +273,29 @@ export default function MembersListClient({ initialMembers, searchQuery }: Props
                       </span>
                     )}
                   </div>
+                  {m.tags && m.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {m.tags.map((t) => (
+                        <span
+                          key={t}
+                          className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#87102C]/10 text-[#87102C] dark:bg-[#87102C]/25 dark:text-[#e8768a]"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </Link>
 
                 <div className="flex items-center gap-3 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => openTagEditor(m)}
+                    title="Edit tags"
+                    className="p-2 rounded-lg text-gray-400 hover:text-[#87102C] hover:bg-[#87102C]/5 dark:hover:bg-white/5 transition-colors"
+                  >
+                    <Tag size={14} />
+                  </button>
                   <div className="text-right">
                     {m.status && (
                       <span

@@ -13,8 +13,7 @@ import {
   BellRing, Award,
 } from "lucide-react";
 import { CHURCH } from "@/config/config";
-
-const DEV_ALWAYS_SHOW_CHECKIN = true;
+import { useCanMark, useCheckIn } from "@/lib/api";
 
 // ── Design tokens (match admin DashboardCard exactly) ────────────────────────
 const card   = "flex flex-col rounded-2xl border border-[#E7CDD3]/60 dark:border-white/[0.09] bg-white dark:bg-white/[0.05] shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none";
@@ -836,31 +835,28 @@ function CheckInPanel({
   hasCheckedInToday: boolean;
   nextService: MemberHomeProps["nextService"];
 }) {
-  const [checkedIn, setCheckedIn] = useState(hasCheckedInToday);
-  const [loading, setLoading] = useState(false);
+  const { data: canMarkData, isLoading: canMarkLoading } = useCanMark();
+  const checkIn = useCheckIn();
   const [error, setError] = useState("");
 
-  const effectiveTodayService = DEV_ALWAYS_SHOW_CHECKIN
-    ? todayService ?? { id: "dev-preview", name: "Today's Service" }
-    : todayService;
+  const canMark = canMarkData?.canMark === true;
+  const alreadyMarked = canMarkData?.reason === "ALREADY_MARKED";
+  const checkedIn = hasCheckedInToday || alreadyMarked || checkIn.isSuccess;
 
-  async function handleCheckIn() {
-    setLoading(true); setError("");
-    try {
-      const { apiClient } = await import("@/lib/api/axios");
-      await apiClient.post("/attendance/check-in");
-      setCheckedIn(true);
-    } catch (err) {
-      setError((err as { message?: string }).message ?? "Check-in failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const isServiceDay = !!effectiveTodayService;
-  const serviceName = effectiveTodayService?.name ?? "Everlasting Hills";
+  // Derive service context from the API response or props
+  const isServiceDay = canMark || checkedIn || !!todayService;
+  const serviceName = todayService?.name ?? "Everlasting Hills";
   const todayDay = new Date().getDay();
   const serviceTime = todayDay === 0 ? "9:00 AM" : todayDay === 3 ? "5:30 PM" : null;
+
+  async function handleCheckIn() {
+    setError("");
+    try {
+      await checkIn.mutateAsync();
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Check-in failed. Please try again.");
+    }
+  }
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a0610] via-[#0e0407] to-[#1a0610] border border-white/[0.07] min-h-[440px] shadow-[0_8px_40px_rgba(0,0,0,0.35)]">
@@ -885,12 +881,12 @@ function CheckInPanel({
                 <MapPin size={11} className="text-[#FFB3C1]/50" />
                 Hills Auditorium, Ibadan
               </span>
-              {effectiveTodayService?.sermonTitle && (
+              {todayService?.sermonTitle && (
                 <>
                   <span className="w-px h-3 bg-white/15" />
                   <span className="flex items-center gap-1.5 text-white/45 text-[11px]">
                     <BookOpen size={11} className="text-[#FFB3C1]/50" />
-                    <span className="italic">{effectiveTodayService.sermonTitle}</span>
+                    <span className="italic">{todayService.sermonTitle}</span>
                   </span>
                 </>
               )}
@@ -909,10 +905,16 @@ function CheckInPanel({
 
         {/* Center stage */}
         <div className="flex-1 flex items-center justify-center py-6">
-          {checkedIn
+          {canMarkLoading ? (
+            <motion.span
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+              className="w-8 h-8 border-2 border-white/20 border-t-white/70 rounded-full"
+            />
+          ) : checkedIn
             ? <CheckedInCenter />
-            : isServiceDay
-            ? <ServiceDayCenter onClick={handleCheckIn} loading={loading} />
+            : canMark
+            ? <ServiceDayCenter onClick={handleCheckIn} loading={checkIn.isPending} />
             : <NoServiceCenter nextService={nextService} />}
         </div>
 
@@ -2020,10 +2022,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     ? `${member.firstName[0]}${member.lastName[0]}`.toUpperCase()
     : (userEmail[0] ?? "M").toUpperCase();
 
-  const effectiveTodayService = DEV_ALWAYS_SHOW_CHECKIN
-    ? todayService ?? { id: "dev-preview", name: "Today's Service" }
-    : todayService;
-  const isServiceDay = !!effectiveTodayService;
+  const isServiceDay = !!todayService;
   const isNewMember = attendanceCount === 0 && prayerCount === 0;
 
   const [qrBanner, setQrBanner] = useState<{

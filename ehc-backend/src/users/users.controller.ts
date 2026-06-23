@@ -30,6 +30,29 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('roles')
+  @ApiOperation({ summary: 'All roles in the system with label and hierarchy level' })
+  @ApiOkResponse({
+    schema: {
+      example: [
+        { role: 'SUPER_ADMIN', label: 'Super Admin', level: 5 },
+        { role: 'PASTOR', label: 'Pastor', level: 4 },
+      ],
+    },
+  })
+  async getAllRoles() {
+    return this.usersService.getAllRoles();
+  }
+
+  @Get('by-role')
+  @ApiOperation({
+    summary: 'All members grouped by role',
+    description: 'Returns every profile organised by role. UNIT_LEAD entries include which units they lead or assist.',
+  })
+  async listByRole() {
+    return this.usersService.listByRole();
+  }
+
   @Get('assignable-roles')
   @ApiOperation({ summary: 'Roles the current user can create/assign' })
   @ApiOkResponse({

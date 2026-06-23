@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import {
   ACCESS_TOKEN_COOKIE,
+  AUTH_ERROR_EVENT,
   clearFrontendSession,
   getAccessTokenFromCookie,
   getRefreshTokenFromCookie,
@@ -9,12 +10,6 @@ import {
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "/api";
 
-/**
- * Single-flight access-token refresh. On a 401 we try to exchange the refresh token
- * for a fresh access token (POST /auth/refresh via raw axios so we don't re-enter this
- * interceptor) before giving up and logging the user out. Concurrent 401s share one
- * in-flight refresh so we don't stampede Supabase.
- */
 let refreshPromise: Promise<string | null> | null = null;
 
 async function performRefresh(): Promise<string | null> {
@@ -87,15 +82,6 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-/**
- * Unwrap successful envelope: response.data = { data, meta } → response.data = T
- *
- * Why unwrap here (not in callers):
- *  - Hundreds of call sites would otherwise need `.then(r => r.data.data)`.
- *  - The envelope is an infrastructure concern — callers shouldn't care it exists.
- *  - If a backend route ever returns an un-enveloped response, we tolerate that by
- *    falling back to the raw body.
- */
 apiClient.interceptors.response.use(
   (response: AxiosResponse<ServerEnvelope<unknown> | unknown>) => {
     const body = response.data as ServerEnvelope<unknown> | unknown;
@@ -133,7 +119,7 @@ apiClient.interceptors.response.use(
     if (status === 401) {
       clearFrontendSession();
       if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-        window.location.href = "/login";
+        window.dispatchEvent(new CustomEvent(AUTH_ERROR_EVENT));
       }
     }
     return Promise.reject(normalizeError(error));

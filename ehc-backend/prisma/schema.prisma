@@ -4,25 +4,22 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  // Runtime connection — Supabase pgbouncer pool (port 6543), shared and tight pool.
   url       = env("DATABASE_URL")
-  // Schema engine connection — direct Postgres (port 5432). pgbouncer's transaction-mode
-  // pool reuses connections with stale prepared statements which makes `prisma db push`
-  // and migrations fail with "prepared statement s1 already exists". directUrl bypasses
-  // pgbouncer for those operations only.
   directUrl = env("DIRECT_URL")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model AttendanceRecord {
-  id        String  @id
-  memberId  String
-  serviceId String
-  present   Boolean @default(true)
-  tenantId  String
-  Member    Member  @relation(fields: [memberId], references: [id])
-  Service   Service @relation(fields: [serviceId], references: [id])
-  Tenant    Tenant  @relation(fields: [tenantId], references: [id])
+  id          String   @id
+  memberId    String
+  serviceId   String
+  present     Boolean  @default(true)
+  tenantId    String
+  checkedInAt DateTime @default(now())
+  markedBy    String?  @default("SELF")
+  Member      Member   @relation(fields: [memberId], references: [id])
+  Service     Service  @relation(fields: [serviceId], references: [id])
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
 
   @@unique([memberId, serviceId])
 }
@@ -158,17 +155,21 @@ model Member {
   email              String?
   phone              String?
   dateOfBirth        DateTime?
+  weddingAnniversary DateTime?
   address            String?
   joinedAt           DateTime             @default(now())
   bio                String?
   photoUrl           String?
   status             MemberStatus         @default(ACTIVE)
   notifyNewSermons   Boolean              @default(true)
+  tags               String[]
+  householdId        String?
   AttendanceRecord   AttendanceRecord[]
   DiscussionResponse DiscussionResponse[]
   EngagementScore    EngagementScore?
   FollowUpTask       FollowUpTask[]
   ListenProgress     ListenProgress[]
+  Household          Household?           @relation(fields: [householdId], references: [id])
   Profile            Profile              @relation(fields: [profileId], references: [id])
   Tenant             Tenant               @relation(fields: [tenantId], references: [id])
   PastorNote         PastorNote[]
@@ -236,6 +237,7 @@ model Profile {
   tenantId       String
   createdAt      DateTime         @default(now())
   Member         Member?
+  Notification   Notification[]
   RoleAssignment RoleAssignment[]
 }
 
@@ -259,7 +261,6 @@ model Sermon {
   title              String
   speaker            String
   date               DateTime
-  type               SermonType           @default(SINGLE)
   audioUrl           String?
   videoUrl           String?
   thumbnailUrl       String?
@@ -279,11 +280,12 @@ model Sermon {
   tags               String[]
   transcript         String?
   updatedAt          DateTime
+  type               SermonType           @default(SINGLE)
   DiscussionQuestion DiscussionQuestion[]
   ListenProgress     ListenProgress[]
   Tenant             Tenant               @relation(fields: [tenantId], references: [id])
-  Episodes           SermonEpisode[]
   SermonBookmark     SermonBookmark[]
+  Episodes           SermonEpisode[]
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
 }
@@ -355,6 +357,10 @@ model Service {
   name             String
   scheduledAt      DateTime
   createdAt        DateTime           @default(now())
+  serviceType      ServiceType        @default(SUNDAY)
+  openAt           DateTime?
+  closeAt          DateTime?
+  isOpen           Boolean            @default(false)
   AttendanceRecord AttendanceRecord[]
   Tenant           Tenant             @relation(fields: [tenantId], references: [id])
 }
@@ -365,6 +371,7 @@ model Tenant {
   name               String
   slug               String               @unique
   createdAt          DateTime             @default(now())
+  Announcement       Announcement[]
   AttendanceRecord   AttendanceRecord[]
   ContactMessage     ContactMessage[]
   DiscussionQuestion DiscussionQuestion[]
@@ -376,16 +383,18 @@ model Tenant {
   FollowUpTask       FollowUpTask[]
   FormSubmission     FormSubmission[]
   GivingRecord       GivingRecord[]
+  Household          Household[]
   ListenProgress     ListenProgress[]
   Member             Member[]
+  Notification       Notification[]
   PastorNote         PastorNote[]
   PastoralAlert      PastoralAlert[]
   PaystackWebhookLog PaystackWebhookLog[]
   PrayerRequest      PrayerRequest[]
   RoleAssignment     RoleAssignment[]
   Sermon             Sermon[]
-  SermonEpisode      SermonEpisode[]
   SermonBookmark     SermonBookmark[]
+  SermonEpisode      SermonEpisode[]
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
   Service            Service[]
@@ -393,11 +402,6 @@ model Tenant {
   Testimonial        Testimonial[]
   Unit               Unit[]
   Visitor            Visitor[]
-}
-
-enum EventStatus {
-  DRAFT
-  PUBLISHED
 }
 
 model Event {
@@ -453,27 +457,15 @@ model EventRsvp {
 /// Homepage content store. One row per section, content is a typed JSON blob
 /// validated server-side by Zod (see src/site-settings/schemas).
 model SiteSettings {
-  id        String       @id
+  id        String      @id
   tenantId  String
   section   SiteSection
   content   Json
-  updatedAt DateTime     @default(now()) @updatedAt
+  updatedAt DateTime    @default(now()) @updatedAt
   updatedBy String?
-  Tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  Tenant    Tenant      @relation(fields: [tenantId], references: [id])
 
   @@unique([tenantId, section])
-}
-
-enum SiteSection {
-  HERO
-  ABOUT
-  CULTURE
-  SCRIPTURE
-  SERVICE
-  SERMONS
-  COMMUNITY
-  GIVING
-  CONTACT
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -489,12 +481,13 @@ model Unit {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model UnitMember {
-  id       String   @id
-  tenantId String
-  unitId   String
-  memberId String
-  isLead   Boolean  @default(false)
-  joinedAt DateTime @default(now())
+  id          String   @id
+  tenantId    String
+  unitId      String
+  memberId    String
+  isLead      Boolean  @default(false)
+  isAssistant Boolean  @default(false)
+  joinedAt    DateTime @default(now())
   Member   Member   @relation(fields: [memberId], references: [id])
   Unit     Unit     @relation(fields: [unitId], references: [id])
 
@@ -530,20 +523,82 @@ model Visitor {
 /// Admin/PASTOR curates these — distinct from raw form-submission testimonies (which go
 /// through FormSubmission with type='testimony' and are awaiting moderation).
 model Testimonial {
-  id             String   @id
+  id             String    @id
   tenantId       String
   authorName     String
   authorRole     String?
   authorPhotoUrl String?
   content        String
-  published      Boolean  @default(false)
+  published      Boolean   @default(false)
   publishedAt    DateTime?
-  order          Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now())
-  Tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  order          Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now())
+  Tenant         Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, published, order])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Announcement {
+  id          String   @id
+  tenantId    String
+  title       String
+  body        String
+  audience    String   @default("all")
+  sendEmail   Boolean  @default(false)
+  createdById String?
+  recipients  Int      @default(0)
+  createdAt   DateTime @default(now())
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Household {
+  id        String   @id
+  tenantId  String
+  name      String
+  createdAt DateTime @default(now())
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Member    Member[]
+
+  @@index([tenantId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model Notification {
+  id        String    @id
+  tenantId  String
+  profileId String
+  type      String    @default("general")
+  title     String
+  body      String?
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  Profile   Profile   @relation(fields: [profileId], references: [id])
+  Tenant    Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([profileId, readAt])
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum SiteSection {
+  HERO
+  ABOUT
+  CULTURE
+  SCRIPTURE
+  SERVICE
+  SERMONS
+  COMMUNITY
+  GIVING
+  CONTACT
 }
 
 enum AlertType {
@@ -574,6 +629,12 @@ enum Role {
 enum SermonType {
   SINGLE
   SERIES
+}
+
+enum ServiceType {
+  SUNDAY
+  WEDNESDAY
+  SPECIAL
 }
 
 enum SermonStatus {

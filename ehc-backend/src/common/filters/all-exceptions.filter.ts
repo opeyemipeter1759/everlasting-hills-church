@@ -9,6 +9,7 @@ import {
 import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
+import * as Sentry from '@sentry/nestjs';
 
 /**
  * Standardized error envelope returned to clients.
@@ -70,6 +71,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         `[${requestId}] ${request.method} ${request.url} → ${status} ${code}: ${message}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
+      // Report server-side failures to Sentry (no-op when SENTRY_DSN is unset).
+      Sentry.withScope((scope) => {
+        scope.setTag('requestId', requestId);
+        scope.setContext('request', { method: request.method, url: request.url });
+        Sentry.captureException(exception);
+      });
     } else {
       this.logger.debug(
         `[${requestId}] ${request.method} ${request.url} → ${status} ${code}: ${message}`,
@@ -146,6 +153,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     code: string;
   } {
     switch (err.code) {
+      case 'P1001':
+        return {
+          status: HttpStatus.SERVICE_UNAVAILABLE,
+          message: 'Database is temporarily unreachable. Please try again shortly.',
+          code: 'DATABASE_UNAVAILABLE',
+        };
+      case 'P1002':
+        return {
+          status: HttpStatus.GATEWAY_TIMEOUT,
+          message: 'Database connection timed out. Please try again shortly.',
+          code: 'DATABASE_TIMEOUT',
+        };
       case 'P2002': {
         const target = (err.meta?.target as string[] | undefined)?.join(', ') ?? 'field';
         return {
@@ -185,6 +204,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
         409: 'CONFLICT',
         429: 'TOO_MANY_REQUESTS',
         500: 'INTERNAL_SERVER_ERROR',
+        503: 'SERVICE_UNAVAILABLE',
+        504: 'GATEWAY_TIMEOUT',
       }[status] ?? `HTTP_${status}`
     );
   }

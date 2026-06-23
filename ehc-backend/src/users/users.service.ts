@@ -108,6 +108,129 @@ export class UsersService {
     return assignableRoles(actor.role);
   }
 
+  /** Returns every role with its display label, level, and count.
+   *  Visitors are counted from the Visitor table (form submissions),
+   *  all other roles are counted from the Profile table.
+   */
+  async getAllRoles() {
+    const [profileCounts, visitorCount] = await Promise.all([
+      this.prisma.profile.groupBy({
+        by: ['role'],
+        where: {
+          tenantId: this.tenantId,
+          role: { not: Role.VISITOR },
+        },
+        _count: { role: true },
+      }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId } }),
+    ]);
+
+    const countMap = Object.fromEntries(profileCounts.map((c) => [c.role, c._count.role]));
+
+    return [
+      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 5, count: countMap[Role.SUPER_ADMIN] ?? 0 },
+      { role: Role.PASTOR,      label: 'Pastor',      level: 4, count: countMap[Role.PASTOR]      ?? 0 },
+      { role: Role.ADMIN,       label: 'Admin',       level: 3, count: countMap[Role.ADMIN]        ?? 0 },
+      { role: Role.UNIT_LEAD,   label: 'Unit Leader', level: 2, count: countMap[Role.UNIT_LEAD]   ?? 0 },
+      { role: Role.MEMBER,      label: 'Member',      level: 1, count: countMap[Role.MEMBER]       ?? 0 },
+      { role: 'VISITOR',        label: 'Visitor',     level: 0, count: visitorCount },
+    ];
+  }
+
+  /**
+   * Returns all members grouped by role.
+   * - SUPER_ADMIN / PASTOR / ADMIN / UNIT_LEAD / MEMBER come from Profile + Member.
+   * - VISITOR comes from the Visitor table (form submissions — no auth account).
+   * - UNIT_LEAD entries include which units they lead or assist.
+   */
+  async listByRole() {
+    const [profiles, visitors] = await Promise.all([
+      this.prisma.profile.findMany({
+        where: {
+          tenantId: this.tenantId,
+          role: { not: Role.VISITOR },
+        },
+        include: {
+          Member: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              phone: true,
+              photoUrl: true,
+              status: true,
+              joinedAt: true,
+              UnitMember: {
+                where: { OR: [{ isLead: true }, { isAssistant: true }] },
+                include: { Unit: { select: { id: true, name: true } } },
+              },
+            },
+          },
+        },
+        orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+      }),
+      this.prisma.visitor.findMany({
+        where: { tenantId: this.tenantId },
+        orderBy: { submittedAt: 'desc' },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          submittedAt: true,
+        },
+      }),
+    ]);
+
+    const grouped: Record<string, unknown[]> = {
+      [Role.SUPER_ADMIN]: [],
+      [Role.PASTOR]: [],
+      [Role.ADMIN]: [],
+      [Role.UNIT_LEAD]: [],
+      [Role.MEMBER]: [],
+      VISITOR: [],
+    };
+
+    for (const p of profiles) {
+      const role = p.role ?? Role.MEMBER;
+      const member = p.Member
+        ? {
+            id: p.Member.id,
+            firstName: p.Member.firstName,
+            lastName: p.Member.lastName,
+            email: p.Member.email,
+            phone: p.Member.phone,
+            photoUrl: p.Member.photoUrl,
+            status: p.Member.status,
+            joinedAt: p.Member.joinedAt,
+            ...(role === Role.UNIT_LEAD && {
+              units: p.Member.UnitMember.map((um) => ({
+                unitId: um.Unit.id,
+                unitName: um.Unit.name,
+                isLead: um.isLead,
+                isAssistant: um.isAssistant,
+              })),
+            }),
+          }
+        : null;
+
+      grouped[role].push({ profileId: p.id, userId: p.userId, role, member });
+    }
+
+    grouped['VISITOR'] = visitors.map((v) => ({
+      id: v.id,
+      firstName: v.firstName,
+      lastName: v.lastName,
+      email: v.email,
+      phone: v.phone,
+      submittedAt: v.submittedAt,
+    }));
+
+    return grouped;
+  }
+
   // ── Read ────────────────────────────────────────────────────────────────────
 
   async list(opts: { search?: string; role?: Role } = {}) {

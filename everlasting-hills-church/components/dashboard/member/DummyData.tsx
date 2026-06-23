@@ -1,4 +1,4 @@
-import type { MemberHomeProps } from "./MemberHome";
+import type { MemberHomeProps } from "@/types";
 
 /* Dates here are ISO STRINGS (not Date objects) because MemberHomeProps types
  * every date field as `string`. Helpers build them relative to now so the
