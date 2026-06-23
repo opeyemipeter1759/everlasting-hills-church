@@ -12,13 +12,26 @@ import 'dotenv/config';
 import { EventStatus, PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
+const DEFAULT_NAME = 'Everlasting Hills Church';
+const DEFAULT_SLUG = 'everlasting-hills';
+
 const prisma = new PrismaClient();
+
+async function ensureDefaultTenant(tenantId: string) {
+  await prisma.tenant.upsert({
+    where: { id: tenantId },
+    create: { id: tenantId, name: DEFAULT_NAME, slug: DEFAULT_SLUG },
+    update: {},
+  });
+}
 
 async function main() {
   const tenantId = process.env.DEFAULT_TENANT_ID;
   if (!tenantId) {
     throw new Error('DEFAULT_TENANT_ID is not set in the environment (.env)');
   }
+
+  await ensureDefaultTenant(tenantId);
 
   const slug = 'heaven-on-earth';
   const now = new Date();

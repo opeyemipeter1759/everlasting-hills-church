@@ -10,6 +10,7 @@ import { Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
+import { ensureDefaultTenant } from '../tenant/ensure-default-tenant';
 
 interface UserProfileSummary {
   role: string | null;
@@ -142,6 +143,8 @@ export class AuthService implements OnModuleInit {
 
       userId = created.user.id;
     }
+
+    await ensureDefaultTenant(this.prisma, this.tenantId);
 
     const profile = await this.prisma.profile.upsert({
       where: { userId },
