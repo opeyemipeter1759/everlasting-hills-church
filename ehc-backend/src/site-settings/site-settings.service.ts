@@ -17,6 +17,7 @@ import {
   type SiteSectionName,
 } from './schemas/site-settings.schemas';
 import { DEFAULT_CONTENT } from './schemas/default-content';
+import { ensureDefaultTenant } from '../tenant/ensure-default-tenant';
 
 export interface SiteSettingsRow {
   section: SiteSectionName;
@@ -60,6 +61,8 @@ export class SiteSettingsService implements OnModuleInit {
 
   /** Seed any section that doesn't yet have a row. Idempotent. */
   private async seedMissing() {
+    await ensureDefaultTenant(this.prisma, this.tenantId);
+
     const existing = await this.prisma.siteSettings.findMany({
       where: { tenantId: this.tenantId },
       select: { section: true },
