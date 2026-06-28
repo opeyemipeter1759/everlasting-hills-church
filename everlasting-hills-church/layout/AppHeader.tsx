@@ -3,8 +3,9 @@ import { useSidebar } from '@/context/SidebarContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Menu, Sun, Moon, X, Bell } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import SessionActionMenu from '@/components/auth/SessionActionMenu';
+import { AppHeaderSkeleton } from '@/components/ui/skeleton/AppHeaderSkeleton';
 
 function usePageTitle() {
   const pathname = usePathname();
@@ -36,6 +37,11 @@ const AppHeader: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const pageTitle = usePageTitle();
   const today = useTodayLabel();
+  const [sessionReady, setSessionReady] = useState(false);
+
+  useEffect(() => { setSessionReady(true); }, []);
+
+  if (!sessionReady) return <AppHeaderSkeleton />;
 
   const handleMenuToggle = () => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
@@ -46,13 +52,12 @@ const AppHeader: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex  py-2 w-full shrink-0 items-center gap-4
-      border-b border-gray-200/80 justify-between  backdrop-blur-sm px-2
-      dark:border-gray-800 dark:bg-gray-900/95
+    <header className="sticky top-0 z-50  flex  py-1.5 w-full shrink-0 items-center gap-4
+      border-b border-gray-200/80 justify-between  bg-white  backdrop-blur-sm px-2
+      dark:border-gray-800 dark:bg-gray-900
       shadow-[0_1px_3px_rgba(0,0,0,0.04)]
       transition-colors duration-300 lg:px-6">
 
-      {/* ── Left ── */}
       <div className="flex items-center gap-3 mr-auto min-w-0">
         <button
           type="button"
@@ -67,7 +72,7 @@ const AppHeader: React.FC = () => {
         </button>
 
         {/* page title + date */}
-        <div className="hidden sm:flex flex-col min-w-0 leading-none">
+        <div className="hidden sm:flex gap-1 flex-col min-w-0 leading-none">
           <h1 className="truncate text-[15px] font-bold font-jakarta text-gray-900 dark:text-white tracking-tight">
             {pageTitle}
           </h1>
@@ -76,11 +81,7 @@ const AppHeader: React.FC = () => {
           </p>
         </div>
       </div>
-
-      {/* ── Right ── */}
-      <div className="flex shrink-0 items-center gap-1 mr-20">
-
-        {/* dark-mode toggle */}
+      <div className="flex shrink-0 items-center gap-1 ">
         <button
           type="button"
           onClick={toggleTheme}

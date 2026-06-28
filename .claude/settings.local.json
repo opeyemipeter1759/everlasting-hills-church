@@ -18,7 +18,23 @@
       "Bash(node -p \"JSON.stringify\\(require\\('./ehc-backend/package.json'\\).scripts,null,2\\)\")",
       "Bash(git add *)",
       "Bash(git stash *)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(dir \"c:\\\\Users\\\\taiwo\\\\OneDrive\\\\Desktop\\\\myproject\\\\2026\\\\everlasting-hills-church\\\\everlasting-hills-church\")",
+      "Bash(cd /c/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church && find . -maxdepth 3 -type d | grep -v node_modules | grep -v .next | sort)",
+      "Read(//c/c/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/**)",
+      "Bash(xargs dirname)",
+      "Bash(xargs ls -la)",
+      "Bash(sed -i 's|@/components/ui/SectionHeader|@/components/ui/layout/SectionHeader|g' \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/components/dashboard/profile/AboutSection.tsx\")",
+      "Bash(sed -i 's|@/components/ui/StatCard|@/components/ui/cards/StatCard|g; s|@/components/ui/SectionCard|@/components/ui/cards/SectionCard|g; s|@/components/ui/CircleProgress|@/components/ui/feedback/CircleProgress|g' \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/components/dashboard/member/MemberHome.tsx\")",
+      "Bash(sed -i 's|@/components/ui/SectionCard|@/components/ui/cards/SectionCard|g' \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/components/dashboard/member/ActivityFeed.tsx\")",
+      "Bash(sed -i 's|@/components/ui/SectionCard|@/components/ui/cards/SectionCard|g' \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/components/dashboard/member/AttendanceChart.tsx\")",
+      "Bash(sed -i 's|@/components/ui/SectionCard|@/components/ui/cards/SectionCard|g' \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/components/dashboard/member/AnnouncementsPanel.tsx\")",
+      "Bash(rm -rf \"c:/Users/taiwo/OneDrive/Desktop/myproject/2026/everlasting-hills-church/everlasting-hills-church/app/dashboard/\\(member\\)/profile\")",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\taiwo\\\\OneDrive\\\\Desktop\\\\myproject\\\\2026\\\\everlasting-hills-church\\\\ehc-backend\\\\src\\\\overview\" -Force)",
+      "Bash(echo \"Exit: $?\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\taiwo\\OneDrive\\Desktop\\myproject\\2026\\everlasting-hills-church\\everlasting-hills-church\\app\\dashboard\\(member)\\profile"
     ]
   }
 }

@@ -8,5 +8,6 @@ import { AttendanceService } from './attendance.service';
   imports: [PrismaModule, AuthModule],
   controllers: [AttendanceController],
   providers: [AttendanceService],
+  exports: [AttendanceService],
 })
 export class AttendanceModule {}

@@ -13,8 +13,8 @@ import {
   X,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
-import FileUpload from "@/components/ui/FileUpload";
-import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import FileUpload from "@/components/ui/form/FileUpload";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import type { EventDetail, EventRsvp } from "@/types";
 
 /**

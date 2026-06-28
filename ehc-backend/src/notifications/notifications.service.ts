@@ -27,25 +27,44 @@ export class NotificationsService {
     }
   }
 
+  /**
+   * In-process delivery path. Fired by EventEmitter when no Redis queue is
+   * configured. Swallows failures (logged, never thrown) so it can never break
+   * the request that triggered it.
+   */
   @OnEvent(NotificationEvents.SendEmail, { async: true, promisify: true })
   async handleSendEmail(payload: SendEmailPayload) {
-    if (!this.resend) {
-      this.logger.warn(`[${payload.tag}] dropped email to ${payload.to} — Resend not configured`);
-      return;
-    }
     try {
-      await this.resend.emails.send({
-        from: this.fromAddress,
-        to: payload.to,
-        subject: payload.subject,
-        text: payload.text,
-        ...(payload.html ? { html: payload.html } : {}),
-      });
-      this.logger.debug(`[${payload.tag}] email sent → ${payload.to}`);
+      await this.deliver(payload);
     } catch (err) {
       this.logger.error(
         `[${payload.tag}] email failed → ${payload.to}: ${(err as Error).message}`,
       );
     }
+  }
+
+  /**
+   * Actually send the email via Resend. Shared by both the in-process
+   * EventEmitter handler and the BullMQ queue processor.
+   *
+   * When invoked from the queue we WANT failures to throw, so BullMQ can retry.
+   * The EventEmitter handler awaits this too but its surrounding wrapper treats
+   * a rejection as fire-and-forget.
+   */
+  async deliver(payload: SendEmailPayload): Promise<void> {
+    if (!this.resend) {
+      this.logger.warn(
+        `[${payload.tag}] dropped email to ${payload.to} — Resend not configured`,
+      );
+      return;
+    }
+    await this.resend.emails.send({
+      from: this.fromAddress,
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.text,
+      ...(payload.html ? { html: payload.html } : {}),
+    });
+    this.logger.debug(`[${payload.tag}] email sent → ${payload.to}`);
   }
 }

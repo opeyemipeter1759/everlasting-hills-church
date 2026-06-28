@@ -8,14 +8,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { PrismaModule } from '../prisma/prisma.module';
 
-/**
- * Globally enables:
- *   - JwtAuthGuard (every route requires a valid Supabase JWT unless @Public)
- *   - RolesGuard   (routes with @Roles enforce hierarchy)
- *
- * APP_GUARD is the canonical NestJS way to register guards application-wide
- * without touching every controller.
- */
 @Module({
   imports: [PrismaModule, PassportModule],
   controllers: [AuthController],

@@ -1,10 +1,16 @@
-import { Injectable, Logger, OnModuleInit, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  OnModuleInit,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
+import { ensureDefaultTenant } from '../tenant/ensure-default-tenant';
 
 interface UserProfileSummary {
   role: string | null;
@@ -32,9 +38,16 @@ export class AuthService implements OnModuleInit {
   ) {
     this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
     this.supabaseAnonKey = config.get('SUPABASE_ANON_KEY', { infer: true });
-    this.supabaseServiceRoleKey = config.get('SUPABASE_SERVICE_ROLE_KEY', { infer: true }) as string | undefined;
-    this.defaultSuperAdminEmail = config.get('DEFAULT_SUPER_ADMIN_EMAIL', { infer: true }) as string | undefined;
-    this.defaultSuperAdminPassword = config.get('DEFAULT_SUPER_ADMIN_PASSWORD', { infer: true }) as string | undefined;
+    this.supabaseServiceRoleKey = config.get('SUPABASE_SERVICE_ROLE_KEY', {
+      infer: true,
+    }) as string | undefined;
+    this.defaultSuperAdminEmail = config.get('DEFAULT_SUPER_ADMIN_EMAIL', {
+      infer: true,
+    }) as string | undefined;
+    this.defaultSuperAdminPassword = config.get(
+      'DEFAULT_SUPER_ADMIN_PASSWORD',
+      { infer: true },
+    ) as string | undefined;
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
     // Recovery link is sent by Supabase and lands at `${publicSiteUrl}/change-password`.
     this.publicSiteUrl =
@@ -46,12 +59,22 @@ export class AuthService implements OnModuleInit {
   }
 
   async onModuleInit() {
-    await this.ensureDefaultSuperAdmin();
+    try {
+      await this.ensureDefaultSuperAdmin();
+    } catch (err) {
+      // Non-fatal: Supabase may be temporarily unreachable at startup (DNS, cold start).
+      // The server continues running; the super-admin seed will be skipped this boot.
+      this.logger.warn(
+        `ensureDefaultSuperAdmin skipped: ${(err as Error).message}`,
+      );
+    }
   }
 
   private createAdminClient() {
     if (!this.supabaseServiceRoleKey) {
-      throw new Error('SUPABASE_SERVICE_ROLE_KEY must be set for admin actions');
+      throw new Error(
+        'SUPABASE_SERVICE_ROLE_KEY must be set for admin actions',
+      );
     }
 
     return createClient(this.supabaseUrl, this.supabaseServiceRoleKey, {
@@ -67,49 +90,61 @@ export class AuthService implements OnModuleInit {
     const admin = this.createAdminClient();
     const email = this.defaultSuperAdminEmail.toLowerCase();
 
-    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const { data, error } = await admin.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
     if (error) {
       throw new Error(`Could not list Supabase users: ${error.message}`);
     }
 
-    const existingUser = data.users.find((user) => user.email?.toLowerCase() === email) ?? null;
+    const existingUser =
+      data.users.find((user) => user.email?.toLowerCase() === email) ?? null;
 
     let userId = existingUser?.id ?? null;
     if (existingUser) {
-      const { data: updated, error: updateError } = await admin.auth.admin.updateUserById(existingUser.id, {
-        password: this.defaultSuperAdminPassword,
-        email_confirm: true,
-        app_metadata: {
-          ...(existingUser.app_metadata ?? {}),
-          role: Role.SUPER_ADMIN,
-        },
-        user_metadata: {
-          ...(existingUser.user_metadata ?? {}),
-          role: Role.SUPER_ADMIN,
-          full_name: 'Super Admin',
-        },
-      });
+      const { data: updated, error: updateError } =
+        await admin.auth.admin.updateUserById(existingUser.id, {
+          password: this.defaultSuperAdminPassword,
+          email_confirm: true,
+          app_metadata: {
+            ...(existingUser.app_metadata ?? {}),
+            role: Role.SUPER_ADMIN,
+          },
+          user_metadata: {
+            ...(existingUser.user_metadata ?? {}),
+            role: Role.SUPER_ADMIN,
+            full_name: 'Super Admin',
+          },
+        });
 
       if (updateError) {
-        throw new Error(`Could not update default super admin: ${updateError.message}`);
+        throw new Error(
+          `Could not update default super admin: ${updateError.message}`,
+        );
       }
 
       userId = updated.user.id;
     } else {
-      const { data: created, error: createError } = await admin.auth.admin.createUser({
-        email,
-        password: this.defaultSuperAdminPassword,
-        email_confirm: true,
-        app_metadata: { role: Role.SUPER_ADMIN },
-        user_metadata: { role: Role.SUPER_ADMIN, full_name: 'Super Admin' },
-      });
+      const { data: created, error: createError } =
+        await admin.auth.admin.createUser({
+          email,
+          password: this.defaultSuperAdminPassword,
+          email_confirm: true,
+          app_metadata: { role: Role.SUPER_ADMIN },
+          user_metadata: { role: Role.SUPER_ADMIN, full_name: 'Super Admin' },
+        });
 
       if (createError || !created.user) {
-        throw new Error(`Could not create default super admin: ${createError?.message ?? 'unknown error'}`);
+        throw new Error(
+          `Could not create default super admin: ${createError?.message ?? 'unknown error'}`,
+        );
       }
 
       userId = created.user.id;
     }
+
+    await ensureDefaultTenant(this.prisma, this.tenantId);
 
     const profile = await this.prisma.profile.upsert({
       where: { userId },
@@ -147,12 +182,6 @@ export class AuthService implements OnModuleInit {
     this.logger.log(`Default super admin ready: ${email}`);
   }
 
-  /**
-   * Resolve the application's view of a Supabase auth user.
-   *
-   * Lookup by Profile.userId (the Supabase auth UUID) — same path JwtStrategy uses.
-   * Returns null fields when the user has signed up but no Profile/Member row exists yet.
-   */
   private async getProfileSummary(userId: string): Promise<UserProfileSummary> {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
@@ -225,11 +254,6 @@ export class AuthService implements OnModuleInit {
     };
   }
 
-  /**
-   * Exchange a Supabase refresh token for a fresh access token (+ rotated refresh
-   * token). Lets the frontend recover from access-token expiry (≈1h) without forcing
-   * a re-login. Mirrors the login() response shape.
-   */
   async refresh(refreshToken: string) {
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is required');
@@ -239,7 +263,9 @@ export class AuthService implements OnModuleInit {
       refresh_token: refreshToken,
     });
     if (error || !data.session || !data.user) {
-      this.logger.warn(`Token refresh failed: ${error?.message ?? 'no session'}`);
+      this.logger.warn(
+        `Token refresh failed: ${error?.message ?? 'no session'}`,
+      );
       throw new UnauthorizedException('Session expired. Please sign in again.');
     }
 
@@ -264,10 +290,6 @@ export class AuthService implements OnModuleInit {
     };
   }
 
-  /**
-   * Trigger a Supabase password-reset email. Always returns success — we never reveal
-   * whether the email exists. Supabase silently no-ops for unknown addresses.
-   */
   async requestPasswordReset(email: string) {
     const redirectTo = `${this.publicSiteUrl.replace(/\/$/, '')}/change-password`;
     const { error } = await this.anonClient.auth.resetPasswordForEmail(email, {
@@ -279,44 +301,34 @@ export class AuthService implements OnModuleInit {
     }
     return {
       success: true,
-      message: 'If an account exists for that email, a reset link has been sent.',
+      message:
+        'If an account exists for that email, a reset link has been sent.',
     };
   }
 
-  /**
-   * Update the caller's password.
-   *
-   * Two-step flow so the password actually persists:
-   *   1. Use the user's bearer JWT to call `auth.getUser()` — this both *verifies* the
-   *      token and returns the authoritative user id + current metadata.
-   *   2. Use the admin (service-role) client to call `auth.admin.updateUserById(...)`.
-   *
-   * Why not `scoped.auth.updateUser({ password })`: the SDK requires a bound session
-   * (set via `setSession`/storage) for that path. With just a global Authorization
-   * header and `persistSession: false`, `updateUser` silently no-ops on some SDK
-   * versions — the API returns 200 but the password is never written. Going via
-   * the admin path is unambiguous: the password change definitely lands.
-   */
   async changePassword(authorization: string | undefined, password: string) {
     const accessToken = authorization?.startsWith('Bearer ')
       ? authorization.slice(7).trim()
       : '';
-    if (!accessToken) throw new UnauthorizedException('Access token is required');
+    if (!accessToken)
+      throw new UnauthorizedException('Access token is required');
 
-    // Step 1: verify the token and resolve the user id.
-    // auth.getUser() WITHOUT a jwt argument reads from the internal session store, which is
-    // always empty here (persistSession: false + no setSession call) → "Auth session missing!".
-    // Passing the token as the argument validates it server-side without needing a local session.
-    const { data: userData, error: userError } = await this.anonClient.auth.getUser(accessToken);
+    const { data: userData, error: userError } =
+      await this.anonClient.auth.getUser(accessToken);
     if (userError || !userData?.user) {
       this.logger.warn(
         `Password change rejected — invalid token: ${userError?.message ?? 'no user'}`,
       );
-      throw new UnauthorizedException('Your session is no longer valid. Please sign in again.');
+      throw new UnauthorizedException(
+        'Your session is no longer valid. Please sign in again.',
+      );
     }
     const userId = userData.user.id;
     const currentMetadata =
-      (userData.user.user_metadata as Record<string, unknown> | null | undefined) ?? {};
+      (userData.user.user_metadata as
+        | Record<string, unknown>
+        | null
+        | undefined) ?? {};
 
     // Step 2: admin updateUserById is the reliable write path. Merge metadata
     // explicitly because admin.updateUserById replaces (not merges) user_metadata.
@@ -324,22 +336,31 @@ export class AuthService implements OnModuleInit {
     try {
       admin = this.createAdminClient();
     } catch (err) {
-      this.logger.error(`Admin client unavailable for password change: ${(err as Error).message}`);
+      this.logger.error(
+        `Admin client unavailable for password change: ${(err as Error).message}`,
+      );
       throw new UnauthorizedException(
         'Password changes are not configured on this server. Contact an admin.',
       );
     }
 
-    const { error: updateError } = await admin.auth.admin.updateUserById(userId, {
-      password,
-      user_metadata: {
-        ...currentMetadata,
-        needs_password_change: false,
+    const { error: updateError } = await admin.auth.admin.updateUserById(
+      userId,
+      {
+        password,
+        user_metadata: {
+          ...currentMetadata,
+          needs_password_change: false,
+        },
       },
-    });
+    );
     if (updateError) {
-      this.logger.warn(`Password change failed for ${userId}: ${updateError.message}`);
-      throw new UnauthorizedException(updateError.message || 'Could not update password');
+      this.logger.warn(
+        `Password change failed for ${userId}: ${updateError.message}`,
+      );
+      throw new UnauthorizedException(
+        updateError.message || 'Could not update password',
+      );
     }
 
     this.logger.log(`Password changed for ${userData.user.email ?? userId}`);

@@ -10,16 +10,10 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
-import type { AssignUnitMemberDto, CreateUnitDto, UpdateUnitDto } from './dto/unit.dto';
+import type { AssignUnitMemberDto, CreateUnitDto, SetMemberRoleDto, UpdateUnitDto } from './dto/unit.dto';
 
-/**
- * Units module.
- *
- * Three audiences:
- *   - any signed-in user → /units/me (their lead-assignment)
- *   - ADMIN+             → full CRUD on units
- *   - UNIT_LEAD          → can assign/remove members ONLY for units they lead
- */
+const ADMIN_ROLES: Role[] = [Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN];
+
 @Injectable()
 export class UnitsService {
   private readonly tenantId: string;
@@ -33,38 +27,62 @@ export class UnitsService {
 
   // ── Self ────────────────────────────────────────────────────────────────────
 
-  async findUnitLedBy(userId: string) {
+  async findMyUnit(userId: string) {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
       select: { Member: { select: { id: true } } },
     });
     if (!profile?.Member) return null;
 
-    const lead = await this.prisma.unitMember.findFirst({
-      where: { memberId: profile.Member.id, isLead: true },
+    const membership = await this.prisma.unitMember.findFirst({
+      where: {
+        memberId: profile.Member.id,
+        OR: [{ isLead: true }, { isAssistant: true }],
+      },
       include: {
         Unit: { include: { _count: { select: { UnitMember: true } } } },
       },
     });
-    if (!lead) return null;
+    if (!membership) return null;
 
     return {
-      id: lead.Unit.id,
-      name: lead.Unit.name,
-      description: lead.Unit.description,
-      totalMembers: lead.Unit._count.UnitMember,
-      isLead: true,
+      id: membership.Unit.id,
+      name: membership.Unit.name,
+      description: membership.Unit.description,
+      totalMembers: membership.Unit._count.UnitMember,
+      isLead: membership.isLead,
+      isAssistant: membership.isAssistant,
     };
   }
 
   // ── Admin CRUD ──────────────────────────────────────────────────────────────
 
   async listAll() {
-    return this.prisma.unit.findMany({
+    const units = await this.prisma.unit.findMany({
       where: { tenantId: this.tenantId },
-      include: { _count: { select: { UnitMember: true } } },
+      include: {
+        UnitMember: {
+          where: { OR: [{ isLead: true }, { isAssistant: true }] },
+          include: {
+            Member: {
+              select: { id: true, firstName: true, lastName: true, email: true, photoUrl: true },
+            },
+          },
+        },
+        _count: { select: { UnitMember: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
+
+    return units.map((u) => ({
+      id: u.id,
+      name: u.name,
+      description: u.description,
+      createdAt: u.createdAt,
+      totalMembers: u._count.UnitMember,
+      lead: u.UnitMember.find((m) => m.isLead)?.Member ?? null,
+      assistant: u.UnitMember.find((m) => m.isAssistant)?.Member ?? null,
+    }));
   }
 
   async getById(unitId: string) {
@@ -74,14 +92,33 @@ export class UnitsService {
         UnitMember: {
           include: {
             Member: {
-              select: { id: true, firstName: true, lastName: true, email: true, photoUrl: true, status: true },
+              select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true, status: true },
             },
           },
+          orderBy: [{ isLead: 'desc' }, { isAssistant: 'desc' }, { joinedAt: 'asc' }],
         },
       },
     });
     if (!unit) throw new NotFoundException('Unit not found');
-    return unit;
+
+    return {
+      id: unit.id,
+      name: unit.name,
+      description: unit.description,
+      createdAt: unit.createdAt,
+      members: unit.UnitMember.map((um) => ({
+        id: um.Member.id,
+        firstName: um.Member.firstName,
+        lastName: um.Member.lastName,
+        email: um.Member.email,
+        phone: um.Member.phone,
+        photoUrl: um.Member.photoUrl,
+        status: um.Member.status,
+        isLead: um.isLead,
+        isAssistant: um.isAssistant,
+        joinedAt: um.joinedAt,
+      })),
+    };
   }
 
   async create(data: CreateUnitDto) {
@@ -120,10 +157,6 @@ export class UnitsService {
 
   // ── Member assignment ──────────────────────────────────────────────────────
 
-  /**
-   * Add a member to a unit. ADMIN+ can do this for any unit. UNIT_LEAD can only
-   * do it for the unit they lead.
-   */
   async addMember(actor: AuthUser, unitId: string, data: AssignUnitMemberDto) {
     await this.assertCanManageUnit(actor, unitId);
 
@@ -133,6 +166,10 @@ export class UnitsService {
     });
     if (!member) throw new NotFoundException('Member not found');
 
+    if (data.isLead && data.isAssistant) {
+      throw new BadRequestException('A member cannot be both lead and assistant');
+    }
+
     try {
       return await this.prisma.unitMember.create({
         data: {
@@ -141,6 +178,7 @@ export class UnitsService {
           unitId,
           memberId: data.memberId,
           isLead: data.isLead ?? false,
+          isAssistant: data.isAssistant ?? false,
         },
       });
     } catch {
@@ -159,18 +197,18 @@ export class UnitsService {
   }
 
   /**
-   * Promote/demote a unit member to/from lead status.
-   * Only ADMIN+ — UNIT_LEADs can't crown peers.
+   * Set the lead/assistant role for an existing unit member.
+   * Only ADMIN+ can change roles — leads/assistants cannot self-promote peers.
    */
-  async setMemberLead(actor: AuthUser, unitId: string, memberId: string, isLead: boolean) {
-    if (
-      !actor.role ||
-      (actor.role !== Role.ADMIN &&
-        actor.role !== Role.PASTOR &&
-        actor.role !== Role.SUPER_ADMIN)
-    ) {
-      throw new ForbiddenException('Only ADMIN+ can change unit lead');
+  async setMemberRole(actor: AuthUser, unitId: string, memberId: string, dto: SetMemberRoleDto) {
+    if (!actor.role || !ADMIN_ROLES.includes(actor.role)) {
+      throw new ForbiddenException('Only ADMIN+ can change unit roles');
     }
+
+    if (dto.isLead && dto.isAssistant) {
+      throw new BadRequestException('A member cannot be both lead and assistant');
+    }
+
     const link = await this.prisma.unitMember.findFirst({
       where: { unitId, memberId, tenantId: this.tenantId },
       select: { id: true },
@@ -179,34 +217,101 @@ export class UnitsService {
 
     return this.prisma.unitMember.update({
       where: { id: link.id },
-      data: { isLead },
+      data: {
+        ...(dto.isLead !== undefined && { isLead: dto.isLead }),
+        ...(dto.isAssistant !== undefined && { isAssistant: dto.isAssistant }),
+      },
     });
+  }
+
+  // ── Directory ───────────────────────────────────────────────────────────────
+
+  /**
+   * Returns all units (with lead + assistant) and all named leaders:
+   * UNIT_LEAD, ADMIN, PASTOR, SUPER_ADMIN.
+   */
+  async getDirectory() {
+    const [units, profiles] = await Promise.all([
+      this.prisma.unit.findMany({
+        where: { tenantId: this.tenantId },
+        include: {
+          UnitMember: {
+            where: { OR: [{ isLead: true }, { isAssistant: true }] },
+            include: {
+              Member: {
+                select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true },
+              },
+            },
+          },
+          _count: { select: { UnitMember: true } },
+        },
+        orderBy: { name: 'asc' },
+      }),
+      this.prisma.profile.findMany({
+        where: {
+          tenantId: this.tenantId,
+          role: { in: [Role.UNIT_LEAD, Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN] },
+        },
+        include: {
+          Member: {
+            select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true },
+          },
+        },
+        orderBy: { role: 'asc' },
+      }),
+    ]);
+
+    return {
+      units: units.map((u) => ({
+        id: u.id,
+        name: u.name,
+        description: u.description,
+        totalMembers: u._count.UnitMember,
+        lead: u.UnitMember.find((m) => m.isLead)?.Member ?? null,
+        assistant: u.UnitMember.find((m) => m.isAssistant)?.Member ?? null,
+      })),
+      leadership: profiles.map((p) => ({
+        profileId: p.id,
+        role: p.role,
+        member: p.Member
+          ? {
+              id: p.Member.id,
+              firstName: p.Member.firstName,
+              lastName: p.Member.lastName,
+              email: p.Member.email,
+              phone: p.Member.phone,
+              photoUrl: p.Member.photoUrl,
+            }
+          : null,
+      })),
+    };
   }
 
   // ── Authorization helper ────────────────────────────────────────────────────
 
   /**
-   * Throws ForbiddenException unless the actor is ADMIN+ OR is the lead of THIS unit.
+   * Throws ForbiddenException unless:
+   *   - actor is ADMIN / PASTOR / SUPER_ADMIN, OR
+   *   - actor is the LEAD or ASSISTANT of THIS unit
    */
   private async assertCanManageUnit(actor: AuthUser, unitId: string) {
-    if (
-      actor.role === Role.ADMIN ||
-      actor.role === Role.PASTOR ||
-      actor.role === Role.SUPER_ADMIN
-    ) {
-      return;
-    }
+    if (actor.role && ADMIN_ROLES.includes(actor.role)) return;
 
-    if (actor.role === Role.UNIT_LEAD) {
+    if (actor.role === Role.UNIT_LEAD || actor.role === Role.MEMBER) {
       if (!actor.memberId) {
         throw new ForbiddenException('No member record on your account');
       }
-      const lead = await this.prisma.unitMember.findFirst({
-        where: { unitId, memberId: actor.memberId, isLead: true, tenantId: this.tenantId },
+      const membership = await this.prisma.unitMember.findFirst({
+        where: {
+          unitId,
+          memberId: actor.memberId,
+          tenantId: this.tenantId,
+          OR: [{ isLead: true }, { isAssistant: true }],
+        },
         select: { id: true },
       });
-      if (!lead) {
-        throw new ForbiddenException('You do not lead this unit');
+      if (!membership) {
+        throw new ForbiddenException('You are not a lead or assistant of this unit');
       }
       return;
     }

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Link, Upload } from 'lucide-react';
 import { useCreateSermon, useUpdateSermon, useSermon } from '@/lib/api';
-import FileUpload from '@/components/ui/FileUpload';
+import FileUpload from '@/components/ui/form/FileUpload';
 import type {
   CreateSermonPayload,
   SermonEpisodeInput,

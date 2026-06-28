@@ -38,7 +38,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const supabaseUrl = config.get('SUPABASE_URL', { infer: true });
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
+      ignoreExpiration: true,
       secretOrKeyProvider: passportJwtSecret({
         cache: true,
         rateLimit: true,

@@ -1,3 +1,5 @@
+// Sentry must be initialised before any other import so it can auto-instrument.
+import './observability/instrument';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
@@ -13,6 +15,12 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
+import { OverviewModule } from './overview/overview.module';
+import { SessionsModule } from './sessions/sessions.module';
+import { AdminModule } from './admin/admin.module';
+import { ReportsModule } from './reports/reports.module';
+import { UnitsModule } from './units/units.module';
+import { UsersModule } from './users/users.module';
 import type { Env } from './config/env.validation';
 
 async function bootstrap() {
@@ -25,6 +33,9 @@ async function bootstrap() {
      */
     abortOnError: false,
     bufferLogs: true,
+    // Preserve the raw request body so the Paystack webhook can verify its
+    // HMAC SHA512 signature over the exact bytes Paystack signed.
+    rawBody: true,
   });
 
   // Swap the default Nest logger for pino. Now every `new Logger('ctx')` and every HTTP
@@ -126,7 +137,7 @@ async function bootstrap() {
 
   try {
     const document = SwaggerModule.createDocument(app, swagger, {
-      include: [AppModule, AuthModule, AttendanceModule, FormsModule, SermonsModule, AnalyticsModule, MembersModule],
+      include: [AppModule, AuthModule, AttendanceModule, FormsModule, SermonsModule, AnalyticsModule, MembersModule, OverviewModule, SessionsModule, AdminModule, ReportsModule, UnitsModule, UsersModule],
     });
     // include MembersModule by referencing via AppModule's imports at runtime
     SwaggerModule.setup('docs', app, document);
