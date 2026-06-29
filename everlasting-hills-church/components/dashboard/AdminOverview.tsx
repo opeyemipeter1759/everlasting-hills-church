@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { CheckInPanel } from "./member/CheckInPanel";
 import {
   Users, UserPlus, CheckCircle, Heart,
   ArrowUpRight, Search, ChevronRight,
@@ -276,6 +277,19 @@ export default function AdminOverview({
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────────────
+          2b. CHECK-IN — sign in attendance for today's service
+      ──────────────────────────────────────────────────────────────────────── */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0">
+            Sign In Attendance
+          </p>
+          <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
+        </div>
+        <CheckInPanel todayService={null} hasCheckedInToday={false} />
       </div>
 
       {/* ─────────────────────────────────────────────────────────────────────

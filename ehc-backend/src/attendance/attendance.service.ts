@@ -41,6 +41,14 @@ function getTodayBounds() {
   return { startUtc, endUtc };
 }
 
+export interface MemberHistoryRow {
+  id: string;
+  serviceName: string;
+  date: string;
+  status: 'present' | 'absent';
+  mode: 'onsite' | null;
+}
+
 @Injectable()
 export class AttendanceService {
   private readonly logger = new Logger(AttendanceService.name);
@@ -203,21 +211,36 @@ export class AttendanceService {
     }
 
     const { startUtc } = getTodayBounds();
-    const label = new Date(
-      startUtc.getTime() + WAT_OFFSET_MS,
-    ).toLocaleDateString('en-GB', {
+    const watDate = new Date(startUtc.getTime() + WAT_OFFSET_MS);
+    const dow = watDate.getUTCDay();
+    const label = watDate.toLocaleDateString('en-GB', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
       year: 'numeric',
     });
 
+    // Name + type follow the actual weekday so a service auto-created on a
+    // non-Sunday (e.g. while ATTENDANCE_FORCE_OPEN testing) isn't mislabeled.
+    let serviceType: ServiceType = ServiceType.SPECIAL;
+    let title: string;
+    if (dow === 0) {
+      serviceType = ServiceType.SUNDAY;
+      title = 'Sunday Service';
+    } else if (dow === 3) {
+      serviceType = ServiceType.WEDNESDAY;
+      title = 'Midweek Service';
+    } else {
+      title = `${watDate.toLocaleDateString('en-GB', { weekday: 'long' })} Service`;
+    }
+
     return this.prisma.service.create({
       data: {
         id: randomUUID(),
         tenantId: this.tenantId,
-        name: `Sunday Service — ${label}`,
+        name: `${title} — ${label}`,
         scheduledAt: startUtc,
+        serviceType,
       },
     });
   }
@@ -323,6 +346,69 @@ export class AttendanceService {
         },
       },
     });
+  }
+
+  /**
+   * Per-service attendance tracking for the signed-in member: one row for every
+   * past service, marked present/absent by cross-referencing their check-ins.
+   * Powers the member "My Attendance" table (present rows are mode "onsite";
+   * absent rows have no mode).
+   */
+  async getMemberHistory(userId: string) {
+    const member = await this.getMemberByUserId(userId);
+    if (!member) {
+      return { member: null, records: [] as MemberHistoryRow[] };
+    }
+
+    // The member's own check-in records first, so we always surface a service
+    // they actually attended — even if its scheduled timestamp predates their
+    // join time (e.g. a service stamped at midnight that they joined + checked
+    // into later the same day).
+    const records = await this.prisma.attendanceRecord.findMany({
+      where: { memberId: member.id, tenantId: this.tenantId },
+      select: { serviceId: true, present: true, checkedInAt: true },
+    });
+    const recordServiceIds = records.map((r) => r.serviceId);
+
+    // A service appears in the member's history if EITHER:
+    //   • they have a check-in for it (always show what they attended), OR
+    //   • it occurred on/after they joined (so we can mark genuine absences,
+    //     without penalising them for services before they were a member).
+    const services = await this.prisma.service.findMany({
+      where: {
+        tenantId: this.tenantId,
+        scheduledAt: { lte: new Date() },
+        OR: [
+          { scheduledAt: { gte: member.joinedAt } },
+          { id: { in: recordServiceIds } },
+        ],
+      },
+      orderBy: { scheduledAt: 'desc' },
+      take: 365,
+      select: { id: true, name: true, scheduledAt: true },
+    });
+
+    const byService = new Map(records.map((r) => [r.serviceId, r]));
+    const rows: MemberHistoryRow[] = services.map((s) => {
+      const rec = byService.get(s.id);
+      const present = rec?.present ?? false;
+      return {
+        id: s.id,
+        serviceName: s.name,
+        date: s.scheduledAt.toISOString(),
+        status: present ? 'present' : 'absent',
+        mode: present ? 'onsite' : null,
+      };
+    });
+
+    return {
+      member: {
+        name: `${member.firstName} ${member.lastName}`.trim(),
+        email: member.email,
+        phone: member.phone,
+      },
+      records: rows,
+    };
   }
 
   async getTodayAttendanceWithMembers() {

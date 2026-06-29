@@ -32,7 +32,7 @@ import FollowUpCard from "./FollowUpCard";
 
 const STAT_META: Record<StatKey, { icon: LucideIcon; iconBg: string; iconColor: string; href: string }> = {
   members: { icon: Users, iconBg: "bg-[#FFE8ED] dark:bg-[#87102C]/25", iconColor: "text-[#87102C] dark:text-[#FFB3C1]", href: "/dashboard/members" },
-  attendance: { icon: CalendarCheck, iconBg: "bg-emerald-50 dark:bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400", href: "/dashboard/attendance" },
+  attendance: { icon: CalendarCheck, iconBg: "bg-emerald-50 dark:bg-emerald-500/15", iconColor: "text-emerald-600 dark:text-emerald-400", href: "/dashboard/analytics/attendance" },
   visitors: { icon: UserPlus, iconBg: "bg-amber-50 dark:bg-amber-500/15", iconColor: "text-amber-600 dark:text-amber-400", href: "/dashboard/first-timers" },
   volunteers: { icon: HeartHandshake, iconBg: "bg-violet-50 dark:bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400", href: "/dashboard/units" },
   events: { icon: CalendarDays, iconBg: "bg-sky-50 dark:bg-sky-500/15", iconColor: "text-sky-600 dark:text-sky-400", href: "/dashboard/events" },
@@ -68,6 +68,7 @@ export default function AdminDashboardClient() {
                   label={s.label}
                   value={s.value}
                   trend={s.trend}
+                  note={s.note}
                   icon={meta.icon}
                   iconBg={meta.iconBg}
                   iconColor={meta.iconColor}

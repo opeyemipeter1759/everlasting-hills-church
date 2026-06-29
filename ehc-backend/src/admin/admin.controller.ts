@@ -26,4 +26,20 @@ export class AdminController {
   getStatsOverview() {
     return this.adminService.getStatsOverview();
   }
+
+  @Get('dashboard-summary')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Live stat cards (members, attendance, visitors, volunteers, events, sermons) with MoM trends (ADMIN+)' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        stats: [
+          { key: 'members', label: 'Members', value: 1284, trend: { value: 4.2, direction: 'up' } },
+        ],
+      },
+    },
+  })
+  getDashboardSummary() {
+    return this.adminService.getDashboardSummary();
+  }
 }
