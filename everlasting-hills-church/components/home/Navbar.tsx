@@ -16,6 +16,7 @@ const navLinks = [
   { label: "Ministries", href: "/ministries" },
   { label: "Visit", href: "/visit" },
   { label: "Connect", href: "/connect" },
+  { label: "Give", href: "/give" },
 ];
 
 export default function Navbar() {

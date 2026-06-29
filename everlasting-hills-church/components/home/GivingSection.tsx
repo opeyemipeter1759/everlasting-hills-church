@@ -2,6 +2,7 @@
 
 import { ArrowUpRight, GitBranch, Heart, Sprout } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 /**
  * Footer-slab "Give" — "Branches over the wall" pattern.
@@ -16,6 +17,10 @@ import Link from "next/link";
  * with one prominent CTA. No tabs, no account numbers — those live on /give.
  */
 export default function GivingSection() {
+  // Redundant on the dedicated /give page — the full giving UI is already there.
+  const pathname = usePathname();
+  if (pathname === "/give") return null;
+
   return (
     <section
       aria-labelledby="giving-heading"

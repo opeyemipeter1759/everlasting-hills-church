@@ -12,7 +12,12 @@ import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import { CreateUserDto, UpdateUserDto, UpdateUserRoleDto } from './dto/user.dto';
+import {
+  BulkCreateUsersDto,
+  CreateUserDto,
+  UpdateUserDto,
+  UpdateUserRoleDto,
+} from './dto/user.dto';
 import { UsersService } from './users.service';
 
 /**
@@ -81,6 +86,18 @@ export class UsersController {
   @ApiCreatedResponse({ description: 'User created' })
   async create(@CurrentUser() actor: AuthUser, @Body() body: CreateUserDto) {
     return this.usersService.create(actor, body);
+  }
+
+  @Post('bulk')
+  @ApiOperation({
+    summary: 'Create one or many people at once',
+    description:
+      'Each row creates a Supabase auth user + Profile + Member (phone = initial password). A failed row does not abort the batch; failures are returned.',
+  })
+  @ApiBody({ type: BulkCreateUsersDto })
+  @ApiCreatedResponse({ description: 'Batch result: { created[], failed[], total }' })
+  async bulkCreate(@CurrentUser() actor: AuthUser, @Body() body: BulkCreateUsersDto) {
+    return this.usersService.bulkCreate(actor, body.members);
   }
 
   @Patch(':profileId/role')

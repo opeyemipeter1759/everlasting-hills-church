@@ -334,6 +334,7 @@ export class UsersService {
           lastName: data.lastName.trim(),
           email: normalizedEmail,
           phone: data.phone.trim(),
+          ...(data.gender ? { gender: data.gender } : {}),
         },
       });
 
@@ -372,6 +373,33 @@ export class UsersService {
       });
       throw dbError;
     }
+  }
+
+  // ── Bulk create (People console — one or many at once) ──────────────────────
+
+  /**
+   * Create several people in one submission. Each row goes through the same
+   * single-create path (Supabase auth + Profile + Member + welcome email).
+   * A failure on one row does NOT abort the batch — failures are collected and
+   * returned so the UI can report exactly which rows need fixing.
+   */
+  async bulkCreate(actor: AuthUser, rows: CreateUserDto[]) {
+    const created: Array<{ email: string; profileId: string }> = [];
+    const failed: Array<{ email: string; reason: string }> = [];
+
+    for (const row of rows) {
+      try {
+        const result = await this.create(actor, row);
+        created.push({ email: row.email, profileId: result.profileId });
+      } catch (err) {
+        failed.push({
+          email: row.email,
+          reason: (err as Error)?.message ?? 'Unknown error',
+        });
+      }
+    }
+
+    return { created, failed, total: rows.length };
   }
 
   // ── Update role ────────────────────────────────────────────────────────────
@@ -469,6 +497,9 @@ export class UsersService {
     await this.prisma.$transaction(async (tx) => {
       if (memberId) {
         // Keep this list in sync with relations on the Member model in schema.prisma.
+        await tx.careAssignment.deleteMany({
+          where: { OR: [{ memberId }, { leaderId: memberId }] },
+        });
         await tx.attendanceRecord.deleteMany({ where: { memberId } });
         await tx.discussionResponse.deleteMany({ where: { memberId } });
         await tx.engagementScore.deleteMany({ where: { memberId } });

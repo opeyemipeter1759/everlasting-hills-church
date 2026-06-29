@@ -154,6 +154,7 @@ model Member {
   lastName           String
   email              String?
   phone              String?
+  gender             String?
   dateOfBirth        DateTime?
   weddingAnniversary DateTime?
   address            String?
@@ -178,6 +179,26 @@ model Member {
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
   UnitMember         UnitMember[]
+  CareAsMember       CareAssignment[]     @relation("CareMember")
+  CareAsLeader       CareAssignment[]     @relation("CareLeader")
+}
+
+/// Care / discipleship assignment: a member shepherded by a leader (also a member).
+model CareAssignment {
+  id           String               @id
+  tenantId     String
+  memberId     String
+  leaderId     String
+  assignedById String?
+  note         String?
+  status       CareAssignmentStatus @default(ACTIVE)
+  createdAt    DateTime             @default(now())
+  Member       Member               @relation("CareMember", fields: [memberId], references: [id])
+  Leader       Member               @relation("CareLeader", fields: [leaderId], references: [id])
+  Tenant       Tenant               @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, memberId, leaderId])
+  @@index([tenantId, leaderId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -373,6 +394,7 @@ model Tenant {
   createdAt          DateTime             @default(now())
   Announcement       Announcement[]
   AttendanceRecord   AttendanceRecord[]
+  CareAssignment     CareAssignment[]
   ContactMessage     ContactMessage[]
   DiscussionQuestion DiscussionQuestion[]
   DiscussionResponse DiscussionResponse[]
@@ -615,6 +637,11 @@ enum MemberStatus {
   INACTIVE
   TRANSFERRED
   DECEASED
+}
+
+enum CareAssignmentStatus {
+  ACTIVE
+  COMPLETED
 }
 
 enum Role {
