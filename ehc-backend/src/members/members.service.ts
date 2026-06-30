@@ -464,6 +464,43 @@ export class MembersService {
         ...(data.bio !== undefined && {
           bio: data.bio == null || data.bio === '' ? null : data.bio.trim(),
         }),
+        ...(data.gender !== undefined && { gender: data.gender }),
+        ...(data.dateOfBirth !== undefined && {
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
+        }),
+        ...(data.weddingAnniversary !== undefined && {
+          weddingAnniversary: data.weddingAnniversary
+            ? new Date(data.weddingAnniversary)
+            : null,
+        }),
+        ...(data.instagram !== undefined && {
+          instagram:
+            data.instagram == null || data.instagram === ''
+              ? null
+              : data.instagram.trim(),
+        }),
+        ...(data.facebook !== undefined && {
+          facebook:
+            data.facebook == null || data.facebook === ''
+              ? null
+              : data.facebook.trim(),
+        }),
+        ...(data.twitter !== undefined && {
+          twitter:
+            data.twitter == null || data.twitter === ''
+              ? null
+              : data.twitter.trim(),
+        }),
+        ...(data.linkedin !== undefined && {
+          linkedin:
+            data.linkedin == null || data.linkedin === ''
+              ? null
+              : data.linkedin.trim(),
+        }),
+        ...(data.tiktok !== undefined && {
+          tiktok:
+            data.tiktok == null || data.tiktok === '' ? null : data.tiktok.trim(),
+        }),
       },
       select: {
         id: true,
@@ -473,6 +510,14 @@ export class MembersService {
         phone: true,
         bio: true,
         photoUrl: true,
+        gender: true,
+        dateOfBirth: true,
+        weddingAnniversary: true,
+        instagram: true,
+        facebook: true,
+        twitter: true,
+        linkedin: true,
+        tiktok: true,
       },
     });
   }

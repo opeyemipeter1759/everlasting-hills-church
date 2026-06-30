@@ -5,12 +5,16 @@ import { motion } from "framer-motion";
 import PersonalInformationForm, {
   type PersonalFormUser,
 } from "./PersonalInformationForm";
+import ProfileDetailsForm, { type ProfileDetailsUser } from "./ProfileDetailsForm";
+import SocialLinksForm, { type SocialLinksUser } from "./SocialLinksForm";
 import ProfilePhotoCard from "./ProfilePhotoCard";
 
 interface Props {
-  user: PersonalFormUser & {
-    photoUrl: string | null;
-  };
+  user: PersonalFormUser &
+    ProfileDetailsUser &
+    SocialLinksUser & {
+      photoUrl: string | null;
+    };
 }
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
@@ -56,13 +60,31 @@ export default function SettingsClient({ user }: Props) {
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_0.9fr] gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.08, ease: easeOut }}
-        >
-          <PersonalInformationForm user={user} />
-        </motion.div>
+        <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.08, ease: easeOut }}
+          >
+            <PersonalInformationForm user={user} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.14, ease: easeOut }}
+          >
+            <ProfileDetailsForm user={user} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.2, ease: easeOut }}
+          >
+            <SocialLinksForm user={user} />
+          </motion.div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 18 }}
