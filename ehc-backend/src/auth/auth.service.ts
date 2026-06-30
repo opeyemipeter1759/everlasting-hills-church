@@ -411,9 +411,25 @@ export class AuthService implements OnModuleInit {
             phone: true,
             address: true,
             dateOfBirth: true,
+            weddingAnniversary: true,
+            gender: true,
+            instagram: true,
+            facebook: true,
+            twitter: true,
+            linkedin: true,
+            tiktok: true,
             bio: true,
             photoUrl: true,
             joinedAt: true,
+            tags: true,
+            Household: { select: { name: true } },
+            UnitMember: {
+              select: {
+                isLead: true,
+                isAssistant: true,
+                Unit: { select: { id: true, name: true, description: true } },
+              },
+            },
           },
         },
       },
@@ -425,17 +441,56 @@ export class AuthService implements OnModuleInit {
       return { profileId: null, role: null, tenantId: null, member: null };
     }
 
+    // Gender is editable directly on Member now, but members converted from the
+    // public first-timer form may only have it on their original Visitor row.
+    // Prefer Member.gender; fall back to the Visitor record by email/phone so
+    // older converted members still see a value without re-asking.
+    let gender = profile.Member?.gender ?? null;
+    if (!gender && profile.Member && (profile.Member.email || profile.Member.phone)) {
+      const visitor = await this.prisma.visitor.findFirst({
+        where: {
+          tenantId: profile.tenantId,
+          OR: [
+            profile.Member.email ? { email: profile.Member.email } : undefined,
+            profile.Member.phone ? { phone: profile.Member.phone } : undefined,
+          ].filter(Boolean) as Array<{ email: string } | { phone: string }>,
+        },
+        select: { gender: true },
+      });
+      gender = visitor?.gender ?? null;
+    }
+
+    const {
+      Household,
+      UnitMember,
+      dateOfBirth,
+      weddingAnniversary,
+      joinedAt,
+      gender: _g,
+      ...rest
+    } = profile.Member ?? {};
+
     return {
       profileId: profile.id,
       role: profile.role,
       tenantId: profile.tenantId,
       member: profile.Member
         ? {
-            ...profile.Member,
-            dateOfBirth: profile.Member.dateOfBirth
-              ? profile.Member.dateOfBirth.toISOString()
+            ...rest,
+            dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : null,
+            weddingAnniversary: weddingAnniversary
+              ? weddingAnniversary.toISOString()
               : null,
-            joinedAt: profile.Member.joinedAt.toISOString(),
+            joinedAt: joinedAt!.toISOString(),
+            household: Household?.name ?? null,
+            gender,
+            units: (UnitMember ?? []).map((um) => ({
+              id: um.Unit.id,
+              name: um.Unit.name,
+              description: um.Unit.description,
+              isLead: um.isLead,
+              isAssistant: um.isAssistant,
+            })),
           }
         : null,
     };

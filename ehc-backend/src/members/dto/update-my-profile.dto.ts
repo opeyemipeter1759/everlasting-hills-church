@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  IsDateString,
+  IsIn,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class UpdateMyProfileDto {
   @ApiProperty({ required: false, example: 'Opeyemi' })
@@ -26,4 +33,53 @@ export class UpdateMyProfileDto {
   @IsString()
   @MaxLength(300)
   bio?: string | null;
+
+  @ApiProperty({ required: false, enum: ['Male', 'Female'] })
+  @IsOptional()
+  @IsIn(['Male', 'Female'])
+  gender?: string | null;
+
+  @ApiProperty({ required: false, example: '1990-02-18' })
+  @IsOptional()
+  @IsDateString()
+  dateOfBirth?: string | null;
+
+  @ApiProperty({
+    required: false,
+    example: '2015-06-20',
+    description: 'Pass null to clear it and mark the member as single.',
+  })
+  @IsOptional()
+  @IsDateString()
+  weddingAnniversary?: string | null;
+
+  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  instagram?: string | null;
+
+  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  facebook?: string | null;
+
+  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  twitter?: string | null;
+
+  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  linkedin?: string | null;
+
+  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  tiktok?: string | null;
 }

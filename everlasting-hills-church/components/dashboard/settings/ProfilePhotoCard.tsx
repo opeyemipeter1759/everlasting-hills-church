@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Trash2, RefreshCw } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { patchFrontendSession } from "@/lib/auth/frontend-session";
@@ -21,6 +22,7 @@ export default function ProfilePhotoCard({
   fallbackInitials,
   displayName,
 }: Props) {
+  const router = useRouter();
   const [photoUrl, setPhotoUrl] = useState<string | null>(initialPhotoUrl);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -65,7 +67,7 @@ export default function ProfilePhotoCard({
       setPendingFile(null);
       setPreviewUrl(null);
       setSaved(true);
-      window.setTimeout(() => setSaved(false), 3000);
+      window.setTimeout(() => router.push("/dashboard/profile"), 900);
     } catch (err) {
       setError(
         (err as { message?: string }).message ??

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Mail, Phone, ShieldCheck, User, FileText, Check } from "lucide-react";
@@ -57,6 +58,7 @@ interface Props {
 }
 
 export default function PersonalInformationForm({ user }: Props) {
+  const router = useRouter();
   const initial = {
     fullName: `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim(),
     phone: user.phone ?? "",
@@ -101,7 +103,7 @@ export default function PersonalInformationForm({ user }: Props) {
       patchFrontendSession({ fullName: parsed.data.fullName });
       setSaved(true);
       reset(values, { keepValues: true });
-      window.setTimeout(() => setSaved(false), 3000);
+      window.setTimeout(() => router.push("/dashboard/profile"), 900);
     } catch (err) {
       setServerError(
         (err as { message?: string }).message ??
