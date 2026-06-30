@@ -209,6 +209,24 @@ export class MembersController {
     return this.membersService.clearMyAvatar(actor.userId, actor.email);
   }
 
+  @Post('me/deactivate')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Request deactivation of my own account' })
+  @ApiOkResponse({
+    description: 'Account deactivated; reversible within the stated window',
+    schema: { example: { success: true, status: 'INACTIVE', reversalDays: 14 } },
+  })
+  async deactivateMe(@CurrentUser() actor: AuthUser) {
+    return this.membersService.requestDeactivation(actor.userId, actor.email);
+  }
+
+  @Post('me/reactivate')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Reactivate my own (self-deactivated) account' })
+  async reactivateMe(@CurrentUser() actor: AuthUser) {
+    return this.membersService.reactivateMe(actor.userId, actor.email);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get member by id' })
   async getById(@Param('id') id: string) {

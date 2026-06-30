@@ -61,7 +61,7 @@ export default function PeopleFilterPanel({
       open={open}
       onClose={onClose}
       title="Filter people"
-      subtitle="Narrow the directory by status, unit, gender, birth month, or join date."
+      subtitle="Narrow the directory by status, service team, gender, birth month, or join date."
       footer={
         <>
           <button type="button" className={btnGhost} onClick={reset}>
@@ -98,9 +98,9 @@ export default function PeopleFilterPanel({
           </select>
         </Field>
 
-        <Field label="Unit">
+        <Field label="EHC Service Team">
           <select className={fieldCls} value={draft.unit ?? ""} onChange={(e) => set({ unit: e.target.value })}>
-            <option value="">Any unit</option>
+            <option value="">Any team</option>
             {(units.data ?? []).map((u) => (
               <option key={u.id} value={u.id}>{u.name}</option>
             ))}

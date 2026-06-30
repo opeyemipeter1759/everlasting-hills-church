@@ -165,6 +165,13 @@ model Member {
   notifyNewSermons   Boolean              @default(true)
   tags               String[]
   householdId        String?
+  deactivationRequestedAt DateTime?
+  // Legacy social columns present in the DB — declared here to reconcile drift
+  // (prevents prisma db push from dropping them). Not surfaced in the app yet.
+  facebook           String?
+  instagram          String?
+  linkedin           String?
+  twitter            String?
   AttendanceRecord   AttendanceRecord[]
   DiscussionResponse DiscussionResponse[]
   EngagementScore    EngagementScore?
@@ -199,6 +206,23 @@ model CareAssignment {
 
   @@unique([tenantId, memberId, leaderId])
   @@index([tenantId, leaderId])
+}
+
+/// A device/browser a user has logged in from before. Used to alert on logins
+/// from new (previously unseen) devices.
+model KnownDevice {
+  id          String   @id
+  tenantId    String
+  userId      String
+  fingerprint String
+  userAgent   String?
+  lastIp      String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([userId, fingerprint])
+  @@index([userId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -406,6 +430,7 @@ model Tenant {
   FormSubmission     FormSubmission[]
   GivingRecord       GivingRecord[]
   Household          Household[]
+  KnownDevice        KnownDevice[]
   ListenProgress     ListenProgress[]
   Member             Member[]
   Notification       Notification[]

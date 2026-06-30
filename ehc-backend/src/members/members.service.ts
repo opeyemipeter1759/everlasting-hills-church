@@ -19,6 +19,10 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { canActOnRole } from '../users/role-hierarchy';
 import { NotificationEvents } from '../notifications/notification-events';
 import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
+import { buildAccountDeactivationEmail } from '../notifications/templates/account-deactivation.email';
+
+/** Days a member has to reverse a self-deactivation before data may be removed. */
+const DEACTIVATION_REVERSAL_DAYS = 14;
 
 export interface DirectoryQuery {
   page?: string | number;
@@ -240,6 +244,7 @@ export class MembersService {
         phone: visitor.phone,
         appUrl: this.appUrl,
         source: 'visitor-converted',
+        memberId: member.id,
       }),
     );
 
@@ -848,10 +853,54 @@ export class MembersService {
     throw new BadRequestException('Unknown bulk operation');
   }
 
+  /**
+   * Member-initiated account deactivation. Marks the account INACTIVE and stamps
+   * the request time (start of the reversal window), then sends a confirmation
+   * email explaining what happens and how to reverse it.
+   */
+  async requestDeactivation(userId: string, fallbackEmail?: string) {
+    const { memberId } = await this.getMyMember(userId, fallbackEmail);
+    const member = await this.prisma.member.update({
+      where: { id: memberId },
+      data: { status: 'INACTIVE', deactivationRequestedAt: new Date() },
+      select: { id: true, firstName: true, email: true },
+    });
+
+    if (member.email) {
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildAccountDeactivationEmail({
+          email: member.email,
+          firstName: member.firstName,
+          reversalDays: DEACTIVATION_REVERSAL_DAYS,
+          appUrl: this.appUrl,
+        }),
+      );
+    }
+
+    return {
+      success: true,
+      status: 'INACTIVE',
+      reversalDays: DEACTIVATION_REVERSAL_DAYS,
+    };
+  }
+
+  /** Reverse a self-deactivation — reactivates the account and clears the request stamp. */
+  async reactivateMe(userId: string, fallbackEmail?: string) {
+    const { memberId } = await this.getMyMember(userId, fallbackEmail);
+    await this.prisma.member.update({
+      where: { id: memberId },
+      data: { status: 'ACTIVE', deactivationRequestedAt: null },
+    });
+    return { success: true, status: 'ACTIVE' };
+  }
+
   async getMemberById(memberId: string) {
     return this.prisma.member.findUnique({
       where: { id: memberId },
       include: {
+        Profile: { select: { role: true } },
+        EngagementScore: true,
         AttendanceRecord: {
           include: { Service: true },
           orderBy: { Service: { scheduledAt: 'desc' } },
@@ -860,6 +909,14 @@ export class MembersService {
         PastorNote: { orderBy: { createdAt: 'desc' } },
         FollowUpTask: { orderBy: { createdAt: 'desc' } },
         UnitMember: { include: { Unit: true } },
+        CareAsMember: {
+          where: { status: 'ACTIVE' },
+          include: { Leader: { select: { id: true, firstName: true, lastName: true, photoUrl: true } } },
+        },
+        CareAsLeader: {
+          where: { status: 'ACTIVE' },
+          include: { Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true } } },
+        },
       },
     });
   }

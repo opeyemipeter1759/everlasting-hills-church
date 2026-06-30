@@ -351,6 +351,7 @@ export class UsersService {
           phone: data.phone.trim(),
           appUrl: this.appUrl,
           source: 'admin-created',
+          memberId: member.id,
         }),
       );
 

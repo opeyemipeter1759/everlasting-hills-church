@@ -54,9 +54,9 @@ const DEFAULT_PARAMS: DirectoryParams = {
 };
 
 type Chip =
-  | { key: "all"; label: "All" }
+  | { key: "all"; label: string }
   | { key: "role"; label: string; role: PersonRole }
-  | { key: "noUnit"; label: "No unit" };
+  | { key: "noUnit"; label: string };
 
 const ROLE_CHIPS: Chip[] = [
   { key: "all", label: "All" },
@@ -64,7 +64,7 @@ const ROLE_CHIPS: Chip[] = [
   { key: "role", label: "Admins", role: "ADMIN" },
   { key: "role", label: "Unit Leads", role: "UNIT_LEAD" },
   { key: "role", label: "Members", role: "MEMBER" },
-  { key: "noUnit", label: "No unit" },
+  { key: "noUnit", label: "No team" },
 ];
 
 export default function PeopleConsole() {
@@ -227,7 +227,7 @@ export default function PeopleConsole() {
         <StatCard icon={<Users size={16} />} label="Total" value={c?.total} />
         <StatCard icon={<Activity size={16} />} label="Active" value={c?.active} />
         <StatCard icon={<ShieldCheck size={16} />} label="Leaders" value={leaders} />
-        <StatCard icon={<Network size={16} />} label="In a unit" value={c?.withUnit} />
+        <StatCard icon={<Network size={16} />} label="On a team" value={c?.withUnit} />
         <StatCard icon={<CalendarPlus size={16} />} label="New this month" value={c?.thisMonth} />
       </div>
 
