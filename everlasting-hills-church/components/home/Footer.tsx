@@ -43,6 +43,7 @@ const footerLinks = [
   { label: "Ministries", href: "/ministries" },
   { label: "Sermons", href: "/sermons" },
   { label: "Plan a Visit", href: "/visit" },
+  { label: "Give", href: "/give" },
   { label: "Contact", href: "/contact" },
 ];
 

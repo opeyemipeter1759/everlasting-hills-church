@@ -10,6 +10,8 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import * as XLSX from 'xlsx';
+import { MemberStatus, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { createClient } from '@supabase/supabase-js';
 import type { Env } from '../config/env.validation';
@@ -17,6 +19,71 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { canActOnRole } from '../users/role-hierarchy';
 import { NotificationEvents } from '../notifications/notification-events';
 import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
+import { buildAccountDeactivationEmail } from '../notifications/templates/account-deactivation.email';
+
+/** Days a member has to reverse a self-deactivation before data may be removed. */
+const DEACTIVATION_REVERSAL_DAYS = 14;
+
+export interface DirectoryQuery {
+  page?: string | number;
+  limit?: string | number;
+  search?: string;
+  role?: string;
+  status?: string;
+  gender?: string;
+  unit?: string;
+  hasUnit?: string;
+  joinedFrom?: string;
+  joinedTo?: string;
+  birthMonth?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+export interface UpdateMemberInput {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  gender?: string | null;
+  dateOfBirth?: string | null;
+  address?: string;
+}
+
+export interface BulkMemberOpInput {
+  ids: string[];
+  op: 'status' | 'addTag' | 'removeTag';
+  value: string;
+}
+
+const DIRECTORY_INCLUDE = {
+  Profile: { select: { id: true, userId: true, role: true } },
+  EngagementScore: { select: { score: true } },
+  _count: { select: { AttendanceRecord: true } },
+  UnitMember: { include: { Unit: { select: { id: true, name: true } } } },
+  CareAsMember: {
+    where: { status: 'ACTIVE' as const },
+    include: { Leader: { select: { id: true, firstName: true, lastName: true } } },
+  },
+} satisfies Prisma.MemberInclude;
+
+type DirectoryRow = Prisma.MemberGetPayload<{ include: typeof DIRECTORY_INCLUDE }>;
+
+/** Normalize a free-text visitor gender ("Male"/"f"/"FEMALE") to MALE|FEMALE|null. */
+export function normalizeGender(raw?: string | null): string | null {
+  if (!raw) return null;
+  const v = raw.trim().toUpperCase();
+  if (v === 'MALE' || v === 'M') return 'MALE';
+  if (v === 'FEMALE' || v === 'F') return 'FEMALE';
+  return null;
+}
+
+/** Safely parse a visitor's free-text birthday string to a Date, or null. */
+export function parseBirthday(raw?: string | null): Date | null {
+  if (!raw) return null;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
 
 function createAdminClient() {
   const url =
@@ -161,7 +228,8 @@ export class MembersService {
         lastName: visitor.lastName,
         email: visitor.email,
         phone: visitor.phone,
-        dateOfBirth: visitor.dateOfBirth ? new Date(visitor.dateOfBirth) : null,
+        gender: normalizeGender(visitor.gender),
+        dateOfBirth: parseBirthday(visitor.dateOfBirth),
         address: visitor.address ?? null,
       },
     });
@@ -176,6 +244,7 @@ export class MembersService {
         phone: visitor.phone,
         appUrl: this.appUrl,
         source: 'visitor-converted',
+        memberId: member.id,
       }),
     );
 
@@ -561,10 +630,322 @@ export class MembersService {
     });
   }
 
+  // ── Unified People directory (paginated / filtered / sorted) ─────────────────
+
+  /**
+   * Powers the merged People console. Returns a paginated, filtered, sorted slice
+   * of members joined with their role (Profile), units, engagement, attendance
+   * count and care-assignment summary — plus tenant-wide counts for the stats
+   * strip and role chips. Shaped as { data, meta } like AttendanceService.listAttendance.
+   */
+  async getDirectory(q: DirectoryQuery) {
+    const page = Math.max(1, Number(q.page ?? 1) || 1);
+    const limit = Math.min(200, Math.max(1, Number(q.limit ?? 50) || 50));
+
+    const where = await this.buildDirectoryWhere(q);
+
+    const orderBy = this.directoryOrderBy(q.sortBy, q.sortOrder);
+
+    const [rows, total, counts] = await Promise.all([
+      this.prisma.member.findMany({
+        where,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+        include: this.directoryInclude(),
+      }),
+      this.prisma.member.count({ where }),
+      this.directoryCounts(),
+    ]);
+
+    return {
+      data: rows.map((r) => this.toPersonRow(r)),
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+        counts,
+      },
+    };
+  }
+
+  private directoryInclude() {
+    return DIRECTORY_INCLUDE;
+  }
+
+  private async buildDirectoryWhere(q: DirectoryQuery): Promise<Prisma.MemberWhereInput> {
+    const where: Prisma.MemberWhereInput = { tenantId: this.tenantId };
+
+    if (q.search) {
+      const s = q.search.trim();
+      where.OR = [
+        { firstName: { contains: s, mode: 'insensitive' } },
+        { lastName: { contains: s, mode: 'insensitive' } },
+        { email: { contains: s, mode: 'insensitive' } },
+        { phone: { contains: s, mode: 'insensitive' } },
+      ];
+    }
+    if (q.status) where.status = q.status as MemberStatus;
+    if (q.gender) where.gender = q.gender.toUpperCase();
+    if (q.role) where.Profile = { is: { role: q.role as Role } };
+    if (q.unit) where.UnitMember = { some: { unitId: q.unit } };
+    if (q.hasUnit === 'true') where.UnitMember = { some: {} };
+    if (q.hasUnit === 'false') where.UnitMember = { none: {} };
+
+    if (q.joinedFrom || q.joinedTo) {
+      where.joinedAt = {};
+      if (q.joinedFrom) where.joinedAt.gte = new Date(q.joinedFrom);
+      if (q.joinedTo) where.joinedAt.lte = new Date(`${q.joinedTo}T23:59:59.999Z`);
+    }
+
+    // Birth month needs MONTH() extraction Prisma can't express in a filter —
+    // resolve matching ids with a raw query, then constrain by id.
+    if (q.birthMonth) {
+      const month = Number(q.birthMonth);
+      if (month >= 1 && month <= 12) {
+        const matches = await this.prisma.$queryRaw<{ id: string }[]>`
+          SELECT id FROM "Member"
+          WHERE "tenantId" = ${this.tenantId}
+            AND "dateOfBirth" IS NOT NULL
+            AND EXTRACT(MONTH FROM "dateOfBirth") = ${month}
+        `;
+        where.id = { in: matches.map((m) => m.id) };
+      }
+    }
+
+    return where;
+  }
+
+  private directoryOrderBy(
+    sortBy?: string,
+    sortOrder?: string,
+  ): Prisma.MemberOrderByWithRelationInput {
+    const dir = sortOrder === 'asc' ? 'asc' : 'desc';
+    switch (sortBy) {
+      case 'name':
+        return { firstName: dir };
+      case 'status':
+        return { status: dir };
+      case 'role':
+        return { Profile: { role: dir } };
+      case 'joinedAt':
+      default:
+        return { joinedAt: dir };
+    }
+  }
+
+  /** Tenant-wide counts for the stats strip + role chips (unfiltered). */
+  private async directoryCounts() {
+    const monthStart = new Date();
+    monthStart.setUTCDate(1);
+    monthStart.setUTCHours(0, 0, 0, 0);
+
+    const [byRoleRaw, active, withUnit, thisMonth, total] = await Promise.all([
+      this.prisma.profile.groupBy({
+        by: ['role'],
+        where: { tenantId: this.tenantId, Member: { is: {} } },
+        _count: { role: true },
+      }),
+      this.prisma.member.count({ where: { tenantId: this.tenantId, status: 'ACTIVE' } }),
+      this.prisma.member.count({
+        where: { tenantId: this.tenantId, UnitMember: { some: {} } },
+      }),
+      this.prisma.member.count({
+        where: { tenantId: this.tenantId, joinedAt: { gte: monthStart } },
+      }),
+      this.prisma.member.count({ where: { tenantId: this.tenantId } }),
+    ]);
+
+    const byRole = Object.fromEntries(byRoleRaw.map((g) => [g.role, g._count.role]));
+    return { total, active, withUnit, thisMonth, byRole };
+  }
+
+  private toPersonRow(r: DirectoryRow) {
+    return {
+      id: r.id,
+      profileId: r.Profile?.id ?? null,
+      userId: r.Profile?.userId ?? null,
+      firstName: r.firstName,
+      lastName: r.lastName,
+      name: `${r.firstName} ${r.lastName}`.trim(),
+      email: r.email,
+      phone: r.phone,
+      gender: r.gender,
+      photoUrl: r.photoUrl,
+      role: r.Profile?.role ?? 'MEMBER',
+      status: r.status,
+      tags: r.tags ?? [],
+      dateOfBirth: r.dateOfBirth ? r.dateOfBirth.toISOString() : null,
+      address: r.address,
+      joinedAt: r.joinedAt.toISOString(),
+      attendanceCount: r._count.AttendanceRecord,
+      engagementScore: r.EngagementScore?.score ?? 0,
+      units: r.UnitMember.map((um) => ({
+        id: um.Unit.id,
+        name: um.Unit.name,
+        isLead: um.isLead,
+        isAssistant: um.isAssistant,
+      })),
+      shepherdedBy: r.CareAsMember.map((c) => ({
+        assignmentId: c.id,
+        leaderId: c.leaderId,
+        leaderName: `${c.Leader.firstName} ${c.Leader.lastName}`.trim(),
+      })),
+    };
+  }
+
+  /** Excel export of the directory honoring the same filters (no pagination). */
+  async exportDirectory(q: DirectoryQuery): Promise<Buffer> {
+    const where = await this.buildDirectoryWhere(q);
+    const rows = await this.prisma.member.findMany({
+      where,
+      orderBy: this.directoryOrderBy(q.sortBy, q.sortOrder),
+      include: this.directoryInclude(),
+      take: 20_000,
+    });
+    const people = rows.map((r) => this.toPersonRow(r));
+
+    const headers = [
+      'First Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Role',
+      'Status', 'Units', 'Tags', 'Birthday', 'Address', 'Joined', 'Shepherded By',
+    ];
+    const body = people.map((p) => [
+      p.firstName,
+      p.lastName,
+      p.email ?? '',
+      p.phone ?? '',
+      p.gender ?? '',
+      p.role,
+      p.status,
+      p.units.map((u) => u.name).join('; '),
+      p.tags.join('; '),
+      p.dateOfBirth ? p.dateOfBirth.slice(0, 10) : '',
+      p.address ?? '',
+      p.joinedAt.slice(0, 10),
+      p.shepherdedBy.map((s) => s.leaderName).join('; '),
+    ]);
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...body]);
+    ws['!cols'] = headers.map((h, ci) => ({
+      wch: Math.max(h.length, ...body.map((r) => String(r[ci] ?? '').length)) + 2,
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'People');
+    return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+  }
+
+  /** Admin edit of a member's core fields. */
+  async updateMemberDetails(id: string, dto: UpdateMemberInput) {
+    const member = await this.prisma.member.findFirst({
+      where: { id, tenantId: this.tenantId },
+      select: { id: true },
+    });
+    if (!member) throw new NotFoundException('Member not found');
+
+    const data: Prisma.MemberUpdateInput = {};
+    if (dto.firstName !== undefined) data.firstName = dto.firstName.trim();
+    if (dto.lastName !== undefined) data.lastName = dto.lastName.trim();
+    if (dto.phone !== undefined) data.phone = dto.phone.trim() || null;
+    if (dto.email !== undefined) data.email = dto.email.trim().toLowerCase() || null;
+    if (dto.address !== undefined) data.address = dto.address.trim() || null;
+    if (dto.gender !== undefined) {
+      const g = (dto.gender ?? '').toUpperCase();
+      data.gender = g === 'MALE' || g === 'FEMALE' ? g : null;
+    }
+    if (dto.dateOfBirth !== undefined) {
+      data.dateOfBirth = dto.dateOfBirth ? new Date(dto.dateOfBirth) : null;
+    }
+
+    return this.prisma.member.update({ where: { id }, data });
+  }
+
+  /** Bulk status / tag operations on a set of member ids. */
+  async bulkMemberOp(input: BulkMemberOpInput) {
+    const ids = input.ids ?? [];
+    if (ids.length === 0) return { updated: 0 };
+
+    if (input.op === 'status') {
+      const status = (input.value ?? '').toUpperCase();
+      if (!['ACTIVE', 'INACTIVE', 'TRANSFERRED', 'DECEASED'].includes(status)) {
+        throw new BadRequestException('Invalid status');
+      }
+      const res = await this.prisma.member.updateMany({
+        where: { id: { in: ids }, tenantId: this.tenantId },
+        data: { status: status as MemberStatus },
+      });
+      return { updated: res.count };
+    }
+
+    if (input.op === 'addTag' || input.op === 'removeTag') {
+      const tag = (input.value ?? '').trim().toLowerCase();
+      if (!tag) throw new BadRequestException('Tag required');
+      const members = await this.prisma.member.findMany({
+        where: { id: { in: ids }, tenantId: this.tenantId },
+        select: { id: true, tags: true },
+      });
+      await Promise.all(
+        members.map((m) => {
+          const next =
+            input.op === 'addTag'
+              ? Array.from(new Set([...m.tags, tag]))
+              : m.tags.filter((t) => t !== tag);
+          return this.prisma.member.update({ where: { id: m.id }, data: { tags: next } });
+        }),
+      );
+      return { updated: members.length };
+    }
+
+    throw new BadRequestException('Unknown bulk operation');
+  }
+
+  /**
+   * Member-initiated account deactivation. Marks the account INACTIVE and stamps
+   * the request time (start of the reversal window), then sends a confirmation
+   * email explaining what happens and how to reverse it.
+   */
+  async requestDeactivation(userId: string, fallbackEmail?: string) {
+    const { memberId } = await this.getMyMember(userId, fallbackEmail);
+    const member = await this.prisma.member.update({
+      where: { id: memberId },
+      data: { status: 'INACTIVE', deactivationRequestedAt: new Date() },
+      select: { id: true, firstName: true, email: true },
+    });
+
+    if (member.email) {
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildAccountDeactivationEmail({
+          email: member.email,
+          firstName: member.firstName,
+          reversalDays: DEACTIVATION_REVERSAL_DAYS,
+          appUrl: this.appUrl,
+        }),
+      );
+    }
+
+    return {
+      success: true,
+      status: 'INACTIVE',
+      reversalDays: DEACTIVATION_REVERSAL_DAYS,
+    };
+  }
+
+  /** Reverse a self-deactivation — reactivates the account and clears the request stamp. */
+  async reactivateMe(userId: string, fallbackEmail?: string) {
+    const { memberId } = await this.getMyMember(userId, fallbackEmail);
+    await this.prisma.member.update({
+      where: { id: memberId },
+      data: { status: 'ACTIVE', deactivationRequestedAt: null },
+    });
+    return { success: true, status: 'ACTIVE' };
+  }
+
   async getMemberById(memberId: string) {
     return this.prisma.member.findUnique({
       where: { id: memberId },
       include: {
+        Profile: { select: { role: true } },
+        EngagementScore: true,
         AttendanceRecord: {
           include: { Service: true },
           orderBy: { Service: { scheduledAt: 'desc' } },
@@ -573,6 +954,14 @@ export class MembersService {
         PastorNote: { orderBy: { createdAt: 'desc' } },
         FollowUpTask: { orderBy: { createdAt: 'desc' } },
         UnitMember: { include: { Unit: true } },
+        CareAsMember: {
+          where: { status: 'ACTIVE' },
+          include: { Leader: { select: { id: true, firstName: true, lastName: true, photoUrl: true } } },
+        },
+        CareAsLeader: {
+          where: { status: 'ACTIVE' },
+          include: { Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true } } },
+        },
       },
     });
   }
@@ -613,6 +1002,9 @@ export class MembersService {
       // Children that reference Member.id (schema declares no onDelete cascades, so
       // we delete them explicitly). Keep this list in sync with members of the Member
       // model in schema.prisma.
+      await tx.careAssignment.deleteMany({
+        where: { OR: [{ memberId }, { leaderId: memberId }] },
+      });
       await tx.attendanceRecord.deleteMany({ where: { memberId } });
       await tx.discussionResponse.deleteMany({ where: { memberId } });
       await tx.engagementScore.deleteMany({ where: { memberId } });

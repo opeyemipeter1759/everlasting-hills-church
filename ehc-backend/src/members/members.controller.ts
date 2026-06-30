@@ -17,13 +17,17 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiNoContentResponse, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import type { Response } from 'express';
+import { Res } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
-import { MembersService } from './members.service';
+import { MembersService, type DirectoryQuery } from './members.service';
 import { BulkImportDto } from './dto/bulk-import.dto';
 import { SetTagsDto } from './dto/set-tags.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
+import { BulkMemberOpDto } from './dto/bulk-member-op.dto';
 
 /**
  * Members module.
@@ -80,6 +84,44 @@ export class MembersController {
   @ApiQuery({ name: 'status', required: false })
   async list(@Query('search') search?: string, @Query('status') status?: string) {
     return this.membersService.getAllMembers({ search, status });
+  }
+
+  @Get('directory')
+  @ApiOperation({ summary: 'Unified People directory — paginated, filtered, sorted (ADMIN+)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'role', required: false, enum: Role })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'gender', required: false, enum: ['MALE', 'FEMALE'] })
+  @ApiQuery({ name: 'unit', required: false })
+  @ApiQuery({ name: 'hasUnit', required: false, enum: ['true', 'false'] })
+  @ApiQuery({ name: 'joinedFrom', required: false })
+  @ApiQuery({ name: 'joinedTo', required: false })
+  @ApiQuery({ name: 'birthMonth', required: false, type: Number })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['name', 'joinedAt', 'role', 'status'] })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
+  async directory(@Query() q: DirectoryQuery) {
+    return this.membersService.getDirectory(q);
+  }
+
+  @Get('export')
+  @ApiOperation({ summary: 'Export the filtered People directory as Excel (ADMIN+)' })
+  async exportDirectory(@Query() q: DirectoryQuery, @Res() res: Response) {
+    const buffer = await this.membersService.exportDirectory(q);
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
+    res.setHeader('Content-Disposition', 'attachment; filename="people-export.xlsx"');
+    res.send(buffer);
+  }
+
+  @Patch('bulk')
+  @ApiOperation({ summary: 'Bulk status / tag operation on member ids (ADMIN+)' })
+  @ApiBody({ type: BulkMemberOpDto })
+  async bulkOp(@Body() body: BulkMemberOpDto) {
+    return this.membersService.bulkMemberOp(body);
   }
 
   /**
@@ -167,10 +209,35 @@ export class MembersController {
     return this.membersService.clearMyAvatar(actor.userId, actor.email);
   }
 
+  @Post('me/deactivate')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Request deactivation of my own account' })
+  @ApiOkResponse({
+    description: 'Account deactivated; reversible within the stated window',
+    schema: { example: { success: true, status: 'INACTIVE', reversalDays: 14 } },
+  })
+  async deactivateMe(@CurrentUser() actor: AuthUser) {
+    return this.membersService.requestDeactivation(actor.userId, actor.email);
+  }
+
+  @Post('me/reactivate')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Reactivate my own (self-deactivated) account' })
+  async reactivateMe(@CurrentUser() actor: AuthUser) {
+    return this.membersService.reactivateMe(actor.userId, actor.email);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get member by id' })
   async getById(@Param('id') id: string) {
     return this.membersService.getMemberById(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: "Admin edit of a member's core fields (ADMIN+)" })
+  @ApiBody({ type: UpdateMemberDto })
+  async updateMember(@Param('id') id: string, @Body() body: UpdateMemberDto) {
+    return this.membersService.updateMemberDetails(id, body);
   }
 
   @Patch(':id/status')

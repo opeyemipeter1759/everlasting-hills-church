@@ -9,6 +9,13 @@ interface BuildArgs {
   appUrl: string;
   /** "admin-created" or "visitor-converted" — only used as a logging tag, not visible to recipient. */
   source: 'admin-created' | 'visitor-converted';
+  /** Member record id — rendered as a friendly member code (EHC-XXXX). */
+  memberId?: string;
+}
+
+/** Stable, human-readable member code derived from the record id (matches the dashboard). */
+export function memberCode(id: string): string {
+  return `EHC-${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
 }
 
 /**
@@ -22,8 +29,9 @@ interface BuildArgs {
  *   - Single CTA: log in. Don't dilute it with a second button.
  */
 export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
-  const { firstName, email, phone, appUrl, source } = args;
+  const { firstName, email, phone, appUrl, source, memberId } = args;
   const loginUrl = `${appUrl.replace(/\/$/, '')}/login`;
+  const code = memberId ? memberCode(memberId) : null;
 
   const subject = `Welcome to Everlasting Hills, ${firstName} — your member account is ready`;
 
@@ -32,9 +40,10 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
     '',
     'Your member portal is ready. Use the credentials below to sign in for the first time.',
     '',
-    `  Login URL: ${loginUrl}`,
-    `  Email:     ${email}`,
-    `  Password:  ${phone}   (your phone number — change it on first login)`,
+    `  Login URL:  ${loginUrl}`,
+    ...(code ? [`  Member ID:  ${code}`] : []),
+    `  Email:      ${email}`,
+    `  Password:   ${phone}   (your phone number — change it on first login)`,
     '',
     'Inside the portal you can:',
     '  • Listen to the latest sermons (audio, video, transcripts)',
@@ -70,6 +79,7 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
       <div style="background:#FFF;border:1px solid #E5E7EB;border-radius:12px;padding:20px 22px;margin-bottom:24px">
         <p style="margin:0 0 14px;font-size:11px;color:#6B7280;text-transform:uppercase;letter-spacing:2px;font-weight:800">Your sign-in details</p>
         <p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Login URL:</strong> <a href="${loginUrl}" style="color:#87102C;text-decoration:none">${loginUrl}</a></p>
+        ${code ? `<p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Member ID:</strong> <span style="font-family:monospace;color:#87102C;font-weight:700">${code}</span></p>` : ''}
         <p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Email:</strong> ${escapeHtml(email)}</p>
         <p style="margin:0;font-size:14px;color:#111"><strong>Temporary password:</strong> ${escapeHtml(phone)} <span style="color:#6B7280">(your phone number)</span></p>
       </div>

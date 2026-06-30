@@ -1,16 +1,9 @@
-import UsersCmsClient from "@/components/dashboard/admin/UsersCmsClient";
-
-export const metadata = { title: "Manage Users — Dashboard" };
+import { redirect } from "next/navigation";
 
 /**
- * Admin user management.
- *
- * Server Component shell — the actual CRUD UI lives in a Client Component because
- * the form + table need interactive state, role-filtered dropdowns, and optimistic
- * refresh after mutations.
- *
- * Middleware gates this to ADMIN+; the backend enforces per-action role hierarchy.
+ * "Manage Users" has been merged into the unified People console at
+ * /dashboard/members. This redirect keeps old links and bookmarks working.
  */
 export default function ManageUsersPage() {
-  return <UsersCmsClient />;
+  redirect("/dashboard/members");
 }
