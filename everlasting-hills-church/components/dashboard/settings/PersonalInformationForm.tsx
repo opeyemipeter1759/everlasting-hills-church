@@ -103,6 +103,7 @@ export default function PersonalInformationForm({ user }: Props) {
       patchFrontendSession({ fullName: parsed.data.fullName });
       setSaved(true);
       reset(values, { keepValues: true });
+      router.refresh();
       window.setTimeout(() => router.push("/dashboard/profile"), 900);
     } catch (err) {
       setServerError(

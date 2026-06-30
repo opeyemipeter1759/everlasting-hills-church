@@ -11,7 +11,6 @@ import {
   Calendar,
   CheckCircle2,
   Crown,
-  ExternalLink,
   Facebook,
   Flower2,
   Globe,
@@ -387,6 +386,19 @@ const SOCIAL_PLATFORMS: SocialPlatform[] = [
   },
 ];
 
+/** Renders a clean @handle from either a raw handle or a full profile URL. */
+function extractHandle(value: string): string {
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const segment = new URL(value).pathname.split("/").filter(Boolean).pop();
+      return segment ? `@${segment.replace(/^@/, "")}` : value;
+    } catch {
+      return value;
+    }
+  }
+  return `@${value.replace(/^@/, "")}`;
+}
+
 function SocialCard({
   platform,
   value,
@@ -422,22 +434,22 @@ function SocialCard({
           {label}
         </p>
         {connected ? (
-          <p className="text-sm font-semibold text-[#111] dark:text-white break-all leading-snug">
-            {fullUrl}
-          </p>
+          <>
+            <p className="text-sm font-bold text-[#111] dark:text-white truncate leading-snug">
+              {extractHandle(value!)}
+            </p>
+            <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#87102C] dark:text-[#FFB3C1] mt-1
+              group-hover:gap-1.5 transition-all">
+              View profile
+              <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+            </span>
+          </>
         ) : (
           <p className="text-sm italic font-normal text-[#b8a8ac] dark:text-white/30 leading-tight">
             Not connected
           </p>
         )}
       </div>
-      {connected && (
-        <ExternalLink
-          size={14}
-          className="text-[#b8a8ac] dark:text-white/25 group-hover:text-[#87102C] dark:group-hover:text-[#FFB3C1] transition-colors flex-shrink-0"
-          aria-hidden="true"
-        />
-      )}
     </div>
   );
 
@@ -448,7 +460,7 @@ function SocialCard({
       href={fullUrl!}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`${label}: ${fullUrl}`}
+      aria-label={`${label}: ${extractHandle(value!)}`}
       className="block"
     >
       {inner}
@@ -591,6 +603,13 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
   const birthday  = fmtDayMonth(profile.dateOfBirth);
   const anniversary = fmtDayMonth(profile.weddingAnniversary);
   const ministries = getMyMinistries(profile.dateOfBirth, profile.gender, isMarried);
+  const hasEngagementStats =
+    prayers > 0 ||
+    testimonies > 0 ||
+    profile.attendanceRate != null ||
+    profile.totalServicesAttended != null ||
+    profile.sermonListenStreak != null ||
+    profile.bookmarkCount != null;
 
   return (
     <div className="space-y-8">
@@ -625,143 +644,217 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
       </motion.div>
 
       {/* ─────────────────────────────────────────────────────────────────────
-          2. HERO PROFILE CARD
-          Dark gradient card — establishes identity immediately.
-          Avatar · Name · Tenure · Badge chips · Edit CTA
+          2. HERO + STORY — TWO-COLUMN, ABOVE THE FOLD
+          Left (lg:2/3): dark gradient hero — avatar, name, bio, badges, Edit CTA.
+          Right (lg:1/3): condensed "Your story" panel — only the 3 facts that
+          matter on day one (Tenure, Role, Membership); engagement metrics
+          (prayers, testimonies, attendance, streak, bookmarks) only render
+          once the member actually has data, instead of a wall of "—" chips.
+          Leads with bio/photo/personality, not contact details.
       ──────────────────────────────────────────────────────────────────────── */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, delay: 0.08, ease }}
-        aria-labelledby="profile-hero-name"
-        className="relative overflow-hidden rounded-2xl"
-        style={{
-          background:
-            "linear-gradient(155deg, #2a0410 0%, #4a0819 35%, #87102C 75%, #a01535 100%)",
-        }}
-      >
-        {/* noise texture */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none opacity-[0.04]"
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.08, ease }}
+          aria-labelledby="profile-hero-name"
+          className="lg:col-span-2 relative overflow-hidden rounded-2xl"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+            background:
+              "linear-gradient(155deg, #2a0410 0%, #4a0819 35%, #87102C 75%, #a01535 100%)",
           }}
-        />
-        {/* radial glow orbs */}
-        <div
-          aria-hidden="true"
-          className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-3xl pointer-events-none"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute -bottom-28 -left-16 w-64 h-64 rounded-full bg-amber-300/10 blur-3xl pointer-events-none"
-        />
+        >
+          {/* noise texture */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none opacity-[0.04]"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+            }}
+          />
+          {/* radial glow orbs */}
+          <div
+            aria-hidden="true"
+            className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-3xl pointer-events-none"
+          />
+          <div
+            aria-hidden="true"
+            className="absolute -bottom-28 -left-16 w-64 h-64 rounded-full bg-amber-300/10 blur-3xl pointer-events-none"
+          />
 
-        <div className="relative z-10 p-7 sm:p-9 lg:p-12 flex flex-col sm:flex-row sm:items-center gap-7">
+          <div className="relative z-10 h-full p-7 sm:p-9 lg:p-10 flex flex-col gap-7">
 
-          {/* Avatar */}
-          <div className="flex-shrink-0 self-start sm:self-center">
-            {profile.photoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={profile.photoUrl}
-                alt={`${displayName}'s profile photo`}
-                className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-2xl object-cover
-                  ring-4 ring-white/20 shadow-2xl shadow-black/40"
-              />
-            ) : (
-              <div
-                aria-hidden="true"
-                className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-2xl
-                  bg-white/10 border border-white/20 flex items-center justify-center
-                  text-3xl sm:text-4xl font-extrabold text-white
-                  ring-4 ring-white/15 shadow-2xl shadow-black/30"
-              >
-                {initials}
-              </div>
-            )}
-          </div>
-
-          {/* Identity block */}
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] tracking-[0.32em] uppercase font-bold text-[#FFB3C1] mb-2">
-              Everlasting Hills Church · {role}
-            </p>
-            <h2
-              id="profile-hero-name"
-              className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white
-                tracking-tight leading-[1.1] text-balance"
-            >
-              {displayName}
-            </h2>
-            {profile.bio ? (
-              <p className="text-sm sm:text-base text-white/70 italic mt-2 leading-relaxed max-w-[52ch] line-clamp-3">
-                &ldquo;{profile.bio}&rdquo;
-              </p>
-            ) : (
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                {tenure && (
-                  <p className="text-sm text-white/55 leading-relaxed">
-                    {tenure} as part of the Everlasting Hills family.
-                  </p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-7">
+              {/* Avatar */}
+              <div className="flex-shrink-0 self-start sm:self-center">
+                {profile.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.photoUrl}
+                    alt={`${displayName}'s profile photo`}
+                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover
+                      ring-4 ring-white/20 shadow-2xl shadow-black/40"
+                  />
+                ) : (
+                  <div
+                    aria-hidden="true"
+                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl
+                      bg-white/10 border border-white/20 flex items-center justify-center
+                      text-3xl sm:text-4xl font-extrabold text-white
+                      ring-4 ring-white/15 shadow-2xl shadow-black/30"
+                  >
+                    {initials}
+                  </div>
                 )}
-                <Link
-                  href="/dashboard/settings"
-                  className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[#FFB3C1] hover:text-white transition-colors"
-                >
-                  Add your bio
-                  <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-                </Link>
               </div>
-            )}
 
-            {/* Anchor badge chips */}
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full
-                bg-white/10 border border-white/15 backdrop-blur-sm
-                px-3.5 py-1.5 text-[11px] font-semibold text-white/90">
-                <ShieldCheck size={12} aria-hidden="true" />
-                {role}
-              </span>
-              {profile.joinedAt && (
-                <span className="inline-flex items-center gap-1.5 rounded-full
-                  bg-white/10 border border-white/15 backdrop-blur-sm
-                  px-3.5 py-1.5 text-[11px] font-semibold text-white/90">
-                  <Calendar size={12} aria-hidden="true" />
-                  Joined {fmtJoined(profile.joinedAt)}
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1.5 rounded-full
-                bg-white/10 border border-white/15 backdrop-blur-sm
-                px-3.5 py-1.5 text-[11px] font-semibold text-white/90">
-                <Sparkles size={12} aria-hidden="true" />
-                Active
-              </span>
+              {/* Identity block */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] tracking-[0.32em] uppercase font-bold text-[#FFB3C1] mb-2">
+                  Everlasting Hills Church · {role}
+                </p>
+                <h2
+                  id="profile-hero-name"
+                  className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white
+                    tracking-tight leading-[1.1] text-balance"
+                >
+                  {displayName}
+                </h2>
+                {profile.bio ? (
+                  <p className="text-sm sm:text-base text-white/70 italic mt-2 leading-relaxed max-w-[52ch] line-clamp-3">
+                    &ldquo;{profile.bio}&rdquo;
+                  </p>
+                ) : (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {tenure && (
+                      <p className="text-sm text-white/55 leading-relaxed">
+                        {tenure} as part of the Everlasting Hills family.
+                      </p>
+                    )}
+                    <Link
+                      href="/dashboard/settings"
+                      className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[#FFB3C1] hover:text-white transition-colors"
+                    >
+                      Add your bio
+                      <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                    </Link>
+                  </div>
+                )}
+
+                {/* Anchor badge chips */}
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full
+                    bg-white/10 border border-white/15 backdrop-blur-sm
+                    px-3.5 py-1.5 text-[11px] font-semibold text-white/90">
+                    <ShieldCheck size={12} aria-hidden="true" />
+                    {role}
+                  </span>
+                  {profile.joinedAt && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full
+                      bg-white/10 border border-white/15 backdrop-blur-sm
+                      px-3.5 py-1.5 text-[11px] font-semibold text-white/90">
+                      <Calendar size={12} aria-hidden="true" />
+                      Joined {fmtJoined(profile.joinedAt)}
+                    </span>
+                  )}
+                  <span className="inline-flex items-center gap-1.5 rounded-full
+                    bg-white/10 border border-white/15 backdrop-blur-sm
+                    px-3.5 py-1.5 text-[11px] font-semibold text-white/90">
+                    <Sparkles size={12} aria-hidden="true" />
+                    Active
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Edit Profile CTA */}
+            <div className="mt-auto">
+              <Link
+                href="/dashboard/settings"
+                className="group inline-flex items-center gap-2.5 px-5 py-3 rounded-xl
+                  bg-white text-[#87102C] text-sm font-bold tracking-wide shadow-lg
+                  hover:bg-amber-50 hover:-translate-y-0.5 hover:shadow-xl
+                  transition-all duration-200
+                  focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                <Pencil size={14} aria-hidden="true" />
+                Edit Profile
+                <ArrowRight
+                  size={14}
+                  className="group-hover:translate-x-0.5 transition-transform"
+                  aria-hidden="true"
+                />
+              </Link>
             </div>
           </div>
+        </motion.section>
 
-          {/* Edit Profile CTA */}
-          <div className="flex-shrink-0 self-start sm:self-center">
-            <Link
-              href="/dashboard/settings"
-              className="group inline-flex items-center gap-2.5 px-5 py-3 rounded-xl
-                bg-white text-[#87102C] text-sm font-bold tracking-wide shadow-lg
-                hover:bg-amber-50 hover:-translate-y-0.5 hover:shadow-xl
-                transition-all duration-200
-                focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-            >
-              <Pencil size={14} aria-hidden="true" />
-              Edit Profile
-              <ArrowRight
-                size={14}
-                className="group-hover:translate-x-0.5 transition-transform"
-                aria-hidden="true"
-              />
-            </Link>
-          </div>
-        </div>
-      </motion.section>
+        {/* Your story — trimmed to what matters on day one; more reveals as the member engages */}
+        <ScrollReveal delay={0.14} className="lg:col-span-1">
+          <section
+            aria-labelledby="story-heading"
+            className="relative overflow-hidden rounded-2xl h-full"
+            style={{
+              background:
+                "linear-gradient(160deg, #2a0410 0%, #4a0819 30%, #87102C 70%, #a01535 100%)",
+            }}
+          >
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 opacity-[0.04] pointer-events-none"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
+              }}
+            />
+            <div aria-hidden="true" className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/8 blur-3xl pointer-events-none" />
+
+            <div className="relative z-10 p-6 sm:p-7 flex flex-col gap-5">
+              <div>
+                <p className="text-white/40 text-xs tracking-[0.2em] uppercase font-semibold mb-1.5">
+                  Member Insights
+                </p>
+                <h3 id="story-heading" className="text-lg font-bold text-white tracking-tight">
+                  Your story at EHC
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                <DarkInsightChip icon={Calendar} label="Tenure" value={tenure} />
+                <DarkInsightChip icon={ShieldCheck} label="Role" value={role} />
+                <DarkInsightChip icon={Sparkles} label="Membership" value="Active" />
+              </div>
+
+              {hasEngagementStats && (
+                <div className="space-y-3 pt-4 border-t border-white/10">
+                  {prayers > 0 && (
+                    <DarkInsightChip icon={MessageSquare} label="Prayers submitted" value={`${prayers}`} />
+                  )}
+                  {testimonies > 0 && (
+                    <DarkInsightChip icon={Star} label="Testimonies" value={`${testimonies}`} />
+                  )}
+                  {profile.attendanceRate != null && (
+                    <DarkInsightChip icon={TrendingUp} label="Attendance rate" value={`${profile.attendanceRate}%`} />
+                  )}
+                  {profile.totalServicesAttended != null && (
+                    <DarkInsightChip icon={Calendar} label="Services attended" value={`${profile.totalServicesAttended}`} />
+                  )}
+                  {profile.sermonListenStreak != null && (
+                    <DarkInsightChip
+                      icon={Headphones}
+                      label="Sermon streak"
+                      value={`${profile.sermonListenStreak} day${profile.sermonListenStreak === 1 ? "" : "s"}`}
+                    />
+                  )}
+                  {profile.bookmarkCount != null && (
+                    <DarkInsightChip icon={Bookmark} label="Bookmarks" value={`${profile.bookmarkCount}`} />
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        </ScrollReveal>
+      </div>
 
       {/* ─────────────────────────────────────────────────────────────────────
           2b. PROFILE COMPLETION
@@ -1078,113 +1171,6 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
               ))}
             </div>
           )}
-        </section>
-      </ScrollReveal>
-
-      {/* ─────────────────────────────────────────────────────────────────────
-          5. MEMBER INSIGHTS STRIP — DARK GRADIENT SECTION
-          8 chips: tenure, role, prayers, testimonies,
-                   attendance rate, services attended, sermon streak, bookmarks.
-          Uses glassmorphic chip pattern on dark background.
-      ──────────────────────────────────────────────────────────────────────── */}
-      <ScrollReveal delay={0.05}>
-        <section
-          aria-labelledby="insights-heading"
-          className="relative overflow-hidden rounded-2xl"
-          style={{
-            background:
-              "linear-gradient(160deg, #2a0410 0%, #4a0819 30%, #87102C 70%, #a01535 100%)",
-          }}
-        >
-          {/* noise texture */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 opacity-[0.04] pointer-events-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E")`,
-            }}
-          />
-          {/* glow orbs */}
-          <div aria-hidden="true" className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/8 blur-3xl pointer-events-none" />
-          <div aria-hidden="true" className="absolute -bottom-24 -left-12 w-56 h-56 rounded-full bg-amber-300/8 blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 p-7 sm:p-9">
-            <div className="mb-7">
-              <p className="text-white/40 text-xs tracking-[0.2em] uppercase font-semibold mb-2">
-                Member Insights
-              </p>
-              <h3
-                id="insights-heading"
-                className="text-xl sm:text-2xl font-bold text-white tracking-tight"
-              >
-                Your story at EHC
-              </h3>
-              <p className="text-sm text-white/50 mt-2 leading-relaxed max-w-[48ch]">
-                A snapshot of your journey and engagement with the Everlasting Hills community.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {/* Row 1 — activity */}
-              <DarkInsightChip
-                icon={Calendar}
-                label="Tenure"
-                value={tenure}
-              />
-              <DarkInsightChip
-                icon={ShieldCheck}
-                label="Role"
-                value={role}
-              />
-              <DarkInsightChip
-                icon={MessageSquare}
-                label="Prayers submitted"
-                value={prayers > 0 ? `${prayers}` : "—"}
-              />
-              <DarkInsightChip
-                icon={Star}
-                label="Testimonies"
-                value={testimonies > 0 ? `${testimonies}` : "—"}
-              />
-              {/* Row 2 — attendance & engagement */}
-              <DarkInsightChip
-                icon={TrendingUp}
-                label="Attendance rate"
-                value={
-                  profile.attendanceRate != null
-                    ? `${profile.attendanceRate}%`
-                    : "—"
-                }
-              />
-              <DarkInsightChip
-                icon={Calendar}
-                label="Services attended"
-                value={
-                  profile.totalServicesAttended != null
-                    ? `${profile.totalServicesAttended}`
-                    : "—"
-                }
-              />
-              <DarkInsightChip
-                icon={Headphones}
-                label="Sermon streak"
-                value={
-                  profile.sermonListenStreak != null
-                    ? `${profile.sermonListenStreak} day${profile.sermonListenStreak === 1 ? "" : "s"}`
-                    : "—"
-                }
-              />
-              <DarkInsightChip
-                icon={Bookmark}
-                label="Bookmarks"
-                value={
-                  profile.bookmarkCount != null
-                    ? `${profile.bookmarkCount}`
-                    : "—"
-                }
-              />
-            </div>
-          </div>
         </section>
       </ScrollReveal>
 

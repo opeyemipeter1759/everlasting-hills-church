@@ -67,6 +67,7 @@ export default function ProfilePhotoCard({
       setPendingFile(null);
       setPreviewUrl(null);
       setSaved(true);
+      router.refresh();
       window.setTimeout(() => router.push("/dashboard/profile"), 900);
     } catch (err) {
       setError(

@@ -53,31 +53,31 @@ export class UpdateMyProfileDto {
   @IsDateString()
   weddingAnniversary?: string | null;
 
-  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @ApiProperty({ required: false, example: 'opeyemi.peter' })
   @IsOptional()
   @IsString()
   @MaxLength(120)
   instagram?: string | null;
 
-  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @ApiProperty({ required: false, example: 'opeyemi.peter' })
   @IsOptional()
   @IsString()
   @MaxLength(120)
   facebook?: string | null;
 
-  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @ApiProperty({ required: false, example: 'opeyemi.peter' })
   @IsOptional()
   @IsString()
   @MaxLength(120)
   twitter?: string | null;
 
-  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @ApiProperty({ required: false, example: 'opeyemi.peter' })
   @IsOptional()
   @IsString()
   @MaxLength(120)
   linkedin?: string | null;
 
-  @ApiProperty({ required: false, example: '@opeyemi.peter' })
+  @ApiProperty({ required: false, example: 'opeyemi.peter' })
   @IsOptional()
   @IsString()
   @MaxLength(120)

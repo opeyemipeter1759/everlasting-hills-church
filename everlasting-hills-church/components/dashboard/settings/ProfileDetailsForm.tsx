@@ -72,6 +72,7 @@ export default function ProfileDetailsForm({ user }: Props) {
       });
       setSaved(true);
       reset(values, { keepValues: true });
+      router.refresh();
       window.setTimeout(() => router.push("/dashboard/profile"), 900);
     } catch (err) {
       setServerError(

@@ -24,12 +24,27 @@ type FormValues = {
 };
 
 const FIELDS: { key: keyof FormValues; label: string; icon: LucideIcon }[] = [
-  { key: "instagram", label: "Instagram", icon: Instagram },
-  { key: "facebook", label: "Facebook", icon: Facebook },
-  { key: "twitter", label: "Twitter / X", icon: Twitter },
-  { key: "linkedin", label: "LinkedIn", icon: Linkedin },
-  { key: "tiktok", label: "TikTok", icon: Music2 },
+  { key: "instagram", label: "Instagram username", icon: Instagram },
+  { key: "facebook", label: "Facebook username", icon: Facebook },
+  { key: "twitter", label: "X (Twitter) username", icon: Twitter },
+  { key: "linkedin", label: "LinkedIn username", icon: Linkedin },
+  { key: "tiktok", label: "TikTok username", icon: Music2 },
 ];
+
+/** Accepts a bare username, an @handle, or a pasted profile link — always stores a clean username. */
+function toHandle(raw: string): string {
+  const value = raw.trim();
+  if (!value) return value;
+  if (/^https?:\/\//i.test(value)) {
+    try {
+      const segment = new URL(value).pathname.split("/").filter(Boolean).pop();
+      return (segment ?? value).replace(/^@/, "");
+    } catch {
+      return value.replace(/^@/, "");
+    }
+  }
+  return value.replace(/^@/, "");
+}
 
 interface Props {
   user: SocialLinksUser;
@@ -38,11 +53,11 @@ interface Props {
 export default function SocialLinksForm({ user }: Props) {
   const router = useRouter();
   const initial: FormValues = {
-    instagram: user.instagram ?? "",
-    facebook: user.facebook ?? "",
-    twitter: user.twitter ?? "",
-    linkedin: user.linkedin ?? "",
-    tiktok: user.tiktok ?? "",
+    instagram: user.instagram ? toHandle(user.instagram) : "",
+    facebook: user.facebook ? toHandle(user.facebook) : "",
+    twitter: user.twitter ? toHandle(user.twitter) : "",
+    linkedin: user.linkedin ? toHandle(user.linkedin) : "",
+    tiktok: user.tiktok ? toHandle(user.tiktok) : "",
   };
 
   const {
@@ -60,14 +75,15 @@ export default function SocialLinksForm({ user }: Props) {
     setServerError(null);
     try {
       await apiClient.patch("/members/me", {
-        instagram: values.instagram.trim() || null,
-        facebook: values.facebook.trim() || null,
-        twitter: values.twitter.trim() || null,
-        linkedin: values.linkedin.trim() || null,
-        tiktok: values.tiktok.trim() || null,
+        instagram: values.instagram.trim() ? toHandle(values.instagram) : null,
+        facebook: values.facebook.trim() ? toHandle(values.facebook) : null,
+        twitter: values.twitter.trim() ? toHandle(values.twitter) : null,
+        linkedin: values.linkedin.trim() ? toHandle(values.linkedin) : null,
+        tiktok: values.tiktok.trim() ? toHandle(values.tiktok) : null,
       });
       setSaved(true);
       reset(values, { keepValues: true });
+      router.refresh();
       window.setTimeout(() => router.push("/dashboard/profile"), 900);
     } catch (err) {
       setServerError(
@@ -93,7 +109,7 @@ export default function SocialLinksForm({ user }: Props) {
       <div className="px-6 sm:px-8 pt-7 pb-5 border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
         <h2 className="text-lg font-bold text-[#111] dark:text-white">Social Media</h2>
         <p className="text-xs text-[#8a7e80] dark:text-white/45 mt-1">
-          Let your church family find and connect with you. Leave blank to keep a platform hidden.
+          Just your username on each platform — we&rsquo;ll build the link for you. Leave blank to keep a platform hidden.
         </p>
       </div>
 
@@ -104,7 +120,7 @@ export default function SocialLinksForm({ user }: Props) {
             key={f.key}
             label={f.label}
             icon={f.icon}
-            placeholder="@yourhandle"
+            placeholder="yourusername"
             {...register(f.key)}
           />
         ))}
