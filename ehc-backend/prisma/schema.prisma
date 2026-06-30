@@ -157,7 +157,6 @@ model Member {
   gender             String?
   dateOfBirth        DateTime?
   weddingAnniversary DateTime?
-  gender             String?
   instagram          String?
   facebook           String?
   twitter            String?
@@ -172,12 +171,6 @@ model Member {
   tags               String[]
   householdId        String?
   deactivationRequestedAt DateTime?
-  // Legacy social columns present in the DB — declared here to reconcile drift
-  // (prevents prisma db push from dropping them). Not surfaced in the app yet.
-  facebook           String?
-  instagram          String?
-  linkedin           String?
-  twitter            String?
   AttendanceRecord   AttendanceRecord[]
   DiscussionResponse DiscussionResponse[]
   EngagementScore    EngagementScore?
