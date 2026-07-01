@@ -72,7 +72,7 @@ export function getRequiredRole(pathname: string): UserRole | null {
   if (pathname.startsWith("/admin")) return "SUPER_ADMIN";
   if (pathname.startsWith("/dashboard/admin")) return "ADMIN";
   if (pathname.startsWith("/dashboard/pastor")) return "PASTOR";
-  if (pathname.startsWith("/dashboard/unit-leader")) return "UNIT_LEAD";
+  if (pathname.startsWith("/dashboard/unit-lead")) return "UNIT_LEAD";
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/me")) return "MEMBER";
   return null;
 }

@@ -134,7 +134,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Unit",
     items: [
-      { label: "Unit Dashboard", href: "/dashboard/units", icon: Users, minRole: "UNIT_LEAD", maxRole: "ADMIN" },
+      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD" },
     ],
   },
   {
@@ -149,7 +149,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Submissions",   href: "/dashboard/submissions",   icon: Inbox,         minRole: "ADMIN" },
       { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone,     minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/inventory",     icon: Package,       minRole: "ADMIN" },
-      { label: "Units",         href: "/dashboard/units",         icon: Network,       minRole: "ADMIN" },
+      { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
     ],
   },
@@ -159,7 +159,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Attendance",    href: "/dashboard/analytics/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Growth",        href: "/dashboard/analytics/growth",        icon: TrendingUp,    minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/analytics/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
-      { label: "Departments",   href: "/dashboard/analytics/departments",   icon: Network,       minRole: "UNIT_LEAD" },
+     // { label: "Departments",   href: "/dashboard/analytics/departments",   icon: Network,       minRole: "UNIT_LEAD" },
       { label: "Engagement",    href: "/dashboard/analytics/engagement",    icon: Activity,      minRole: "PASTOR" },
       { label: "Giving",        href: "/dashboard/analytics/giving",        icon: DollarSign,    minRole: "PASTOR" },
     ],

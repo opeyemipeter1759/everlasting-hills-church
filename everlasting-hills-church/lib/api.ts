@@ -5,7 +5,7 @@ import {
   clearFrontendSession,
   setFrontendSession,
 } from "@/lib/auth/frontend-session";
-import { LoginPayload, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload } from "@/types";
+import { LoginPayload, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, Unit, UnitDetail, UnitMemberEntry } from "@/types";
 import type { UserRole } from "@/config/config";
 
 export interface MeResponse {
@@ -474,5 +474,77 @@ export function useChangePassword() {
     isLoading: mutation.isPending,
     isError: mutation.isError,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Units
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function useUnitsList() {
+  return useQuery({
+    queryKey: ["units"],
+    queryFn: () => api.get<Unit[]>("/units"),
+    enabled: typeof window !== "undefined",
+  });
+}
+
+export function useUnitDetail(unitId: string | null) {
+  return useQuery({
+    queryKey: ["units", unitId],
+    queryFn: () => api.get<UnitDetail>(`/units/${unitId}`),
+    enabled: !!unitId,
+  });
+}
+
+export function useCreateUnit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ name, description }: { name: string; description: string }) =>
+      api.post<Unit>("/units", { name, description: description || null }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["units"] }),
+  });
+}
+
+export function useDeleteUnit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (unitId: string) => api.delete(`/units/${unitId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["units"] }),
+  });
+}
+
+export function useAddUnitMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, memberId, isLead }: { unitId: string; memberId: string; isLead: boolean }) =>
+      api.post<UnitMemberEntry>(`/units/${unitId}/members`, { memberId, isLead }),
+    onSuccess: (_data, { unitId }) => {
+      qc.invalidateQueries({ queryKey: ["units", unitId] });
+      qc.invalidateQueries({ queryKey: ["units"] });
+    },
+  });
+}
+
+export function useRemoveUnitMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, memberId }: { unitId: string; memberId: string }) =>
+      api.delete(`/units/${unitId}/members/${memberId}`),
+    onSuccess: (_data, { unitId }) => {
+      qc.invalidateQueries({ queryKey: ["units", unitId] });
+      qc.invalidateQueries({ queryKey: ["units"] });
+    },
+  });
+}
+
+export function useSetUnitMemberRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, memberId, isLead }: { unitId: string; memberId: string; isLead: boolean }) =>
+      api.patch(`/units/${unitId}/members/${memberId}`, { isLead }),
+    onSuccess: (_data, { unitId }) => {
+      qc.invalidateQueries({ queryKey: ["units", unitId] });
+    },
+  });
 }
 

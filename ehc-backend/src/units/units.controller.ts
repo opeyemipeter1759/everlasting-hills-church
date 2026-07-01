@@ -107,6 +107,19 @@ export class UnitsController {
     return this.unitsService.removeMember(actor, unitId, memberId);
   }
 
+  @Patch(':unitId/members/:memberId')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Set lead or assistant role for a unit member (ADMIN+ only)' })
+  @ApiBody({ type: SetMemberRoleDto })
+  async setMemberRoleShort(
+    @CurrentUser() actor: AuthUser,
+    @Param('unitId') unitId: string,
+    @Param('memberId') memberId: string,
+    @Body() body: SetMemberRoleDto,
+  ) {
+    return this.unitsService.setMemberRole(actor, unitId, memberId, body);
+  }
+
   @Patch(':unitId/members/:memberId/role')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Set lead or assistant role for a unit member (ADMIN+ only)' })
