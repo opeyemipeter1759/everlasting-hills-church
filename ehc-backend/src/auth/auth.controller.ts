@@ -49,8 +49,14 @@ export class AuthController {
   })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
-  async login(@Body() body: LoginDto) {
-    return this.authService.login(body.email, body.password);
+  async login(
+    @Body() body: LoginDto,
+    @Req() request: { headers?: Record<string, string | undefined>; ip?: string },
+  ) {
+    const ip =
+      request.headers?.['x-forwarded-for']?.split(',')[0]?.trim() || request.ip;
+    const userAgent = request.headers?.['user-agent'];
+    return this.authService.login(body.email, body.password, { ip, userAgent });
   }
 
   @Public()
@@ -100,9 +106,12 @@ export class AuthController {
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async changePassword(
     @Body() body: ChangePasswordDto,
-    @Req() request: { headers?: { authorization?: string } },
+    @Req() request: { headers?: { authorization?: string }; ip?: string },
   ) {
-    return this.authService.changePassword(request.headers?.authorization, body.password);
+    const ip =
+      (request.headers as Record<string, string> | undefined)?.['x-forwarded-for']?.split(',')[0]?.trim() ||
+      request.ip;
+    return this.authService.changePassword(request.headers?.authorization, body.password, ip);
   }
 
   @Post('logout')

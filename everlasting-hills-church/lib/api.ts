@@ -176,7 +176,9 @@ export function useCheckIn() {
   return useMutation({
     mutationFn: () => api.post<void>('/attendance/check-in'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['attendance', 'can-mark'] });
+      // Refresh check-in state AND the member's history table so a fresh
+      // check-in shows up immediately.
+      queryClient.invalidateQueries({ queryKey: ['attendance'] });
     },
   });
 }

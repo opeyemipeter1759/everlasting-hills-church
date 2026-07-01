@@ -27,6 +27,8 @@ export interface SummaryStat {
   label: string;
   value: number;
   trend?: Trend;
+  /** Optional sub-line under the label, e.g. "1/5 active · 20%". */
+  note?: string;
 }
 
 export interface AttendancePoint {

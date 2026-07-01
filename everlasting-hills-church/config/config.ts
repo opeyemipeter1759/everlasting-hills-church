@@ -125,8 +125,7 @@ export const NAV_GROUPS: NavGroup[] = [
     section: null,
     items: [
       { label: "Home",            href: "/dashboard/admin",                  icon: LayoutDashboard, minRole: "ADMIN" },
-      //{ label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "ADMIN" },
-      { label: "My Attendance",   href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "ADMIN", maxRole: "ADMIN" },
+      { label: "Attendance",      href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "ADMIN" },
       { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "ADMIN" },
       { label: "Testimonies",     href: "/dashboard/testimonies",      icon: MessageSquare,   minRole: "ADMIN" },
     ],
@@ -140,8 +139,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "Administration",
     items: [
-      { label: "Members",       href: "/dashboard/members",       icon: Users,         minRole: "ADMIN" },
-      { label: "Manage Users",  href: "/dashboard/users",         icon: UserPlus,      minRole: "ADMIN" },
+      { label: "People",        href: "/dashboard/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
@@ -186,6 +184,7 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "Member",
     items: [
       { label: "Home",           href: "/dashboard",            icon: BookOpen,       minRole: "MEMBER" },
+      { label: "Attendance",     href: "/dashboard/attendance", icon: CheckCircle,    minRole: "MEMBER" },
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
 
     ],

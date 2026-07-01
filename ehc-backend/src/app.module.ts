@@ -16,6 +16,7 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { SermonsModule } from './sermons/sermons.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
+import { AssignmentsModule } from './assignments/assignments.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { UnitsModule } from './units/units.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -105,6 +106,7 @@ import type { Env } from './config/env.validation';
     SermonsModule,
     AnalyticsModule,
     MembersModule,
+    AssignmentsModule,
     VisitorsModule,
     UnitsModule,
     NotificationsModule,

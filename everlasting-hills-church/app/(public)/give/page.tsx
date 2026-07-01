@@ -1,383 +1,203 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Copy, Check, Search, Building2, Info } from "lucide-react";
+import ScrollReveal from "@/components/home/ScrollReveal";
+import GiveHero from "@/components/give/GiveHero";
 
-import {
-  Copy,
-  Check,
-  Search,
-  Zap,
-  Building2,
-  Info,
-  Coins,
-} from "lucide-react";
-import CosmicGiveHero from "@/components/home/CosmicGiveHero";
-import OnlineGivingForm from "@/components/give/OnlineGivingForm";
+// ── Account data (Globus Bank) ──────────────────────────────────────────────
 
-// import bgImage from "/images/church_congregation_2_1779193607195.png";
+const ACCOUNT_NAME = "EVERLASTING HEIGHTS MINISTRIES";
+// Drop the Globus Bank logo (transparent PNG) at this path; cards fall back to
+// an icon box until the file exists.
+const GLOBUS_LOGO = "/images/globus-bank.png";
 
-const LOCAL_ACCOUNTS = {
-  primary: [
-    {
-      id: "prim-1",
-      bank: "FIDELITY",
-      purpose: "OFFERING / TITHE",
-      number: "12345678",
-      currency: "NGN",
-    },
-    {
-      id: "prim-2",
-      bank: "FIDELITY",
-      purpose: "BUILDING",
-      number: "12345678",
-      currency: "NGN",
-    },
-    {
-      id: "prim-3",
-      bank: "FIDELITY",
-      purpose: "RENT",
-      number: "12345678",
-      currency: "NGN",
-    },
-    {
-      id: "prim-4",
-      bank: "FIDELITY",
-      purpose: "GLOBAL",
-      number: "12345678",
-      currency: "NGN",
-    },
-  ],
-  others: [
-    {
-      id: "oth-1",
-      bank: "ACCESS BANK",
-      purpose: "BUILDING ACCOUNT",
-      number: "12345678",
-      currency: "NGN",
-    },
-    {
-      id: "oth-2",
-      bank: "ACCESS BANK",
-      purpose: "SEED CHURCH",
-      number: "12345678",
-      currency: "NGN",
-    },
-    {
-      id: "oth-3",
-      bank: "STANBIC IBTC",
-      purpose: "BUILDING ACCOUNT",
-      number: "12345678",
-      currency: "NGN",
-    },
-    {
-      id: "oth-4",
-      bank: "MONIEPOINT MFB",
-      purpose: "MICROFINANCE BANK",
-      number: "12345678",
-      currency: "NGN",
-    },
-  ]
-};
+interface Account {
+  id: string;
+  bank: string;
+  purpose: string;
+  number: string;
+  currency: string;
+  name: string;
+  logo?: string;
+}
 
-const DOM_ACCOUNTS = [
-  {
-    id: "dom-1",
-    bank: "FIDELITY BANK",
-    purpose: "USD DOMICILIARY",
-    number: "12345678",
-    currency: "USD",
-  },
-  {
-    id: "dom-2",
-    bank: "FIDELITY BANK",
-    purpose: "GBP DOMICILIARY",
-    number: "12345678",
-    currency: "GBP",
-  },
-  {
-    id: "dom-3",
-    bank: "ACCESS BANK",
-    purpose: "USD DOMICILIARY",
-    number: "12345678",
-    currency: "USD",
-  }
+const LOCAL_ACCOUNTS: Account[] = [
+  { id: "prim-1", bank: "Globus Bank", purpose: "Tithe & Offering", number: "2007044595", currency: "NGN", name: ACCOUNT_NAME, logo: GLOBUS_LOGO },
+  { id: "prim-2", bank: "Globus Bank", purpose: "Rent", number: "2007060182", currency: "NGN", name: ACCOUNT_NAME, logo: GLOBUS_LOGO },
+  { id: "prim-3", bank: "Globus Bank", purpose: "Building / Project", number: "2007060223", currency: "NGN", name: ACCOUNT_NAME, logo: GLOBUS_LOGO },
 ];
 
-export default function WaysToGivePage() {
-  const [activeTab, setActiveTab] = useState<"local" | "dom">("local");
-  const [searchQuery, setSearchQuery] = useState("");
+const DOM_ACCOUNTS: Account[] = [
+  { id: "dom-1", bank: "Globus Bank", purpose: "USD Domiciliary", number: "1000596249", currency: "USD", name: ACCOUNT_NAME, logo: GLOBUS_LOGO },
+  { id: "dom-2", bank: "Globus Bank", purpose: "GBP Domiciliary", number: "1000596311", currency: "GBP", name: ACCOUNT_NAME, logo: GLOBUS_LOGO },
+];
+
+const TABS = [
+  { key: "local" as const, label: "Local (Naira)" },
+  { key: "dom" as const, label: "Domiciliary" },
+];
+
+export default function GivePage() {
+  const [tab, setTab] = useState<"local" | "dom">("local");
+  const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
 
-  const handleCopy = (accountNum: string, id: string, purpose: string) => {
-    navigator.clipboard.writeText(accountNum);
-    setCopiedId(id);
-    setToastMessage(`Copied: ${purpose} (${accountNum})`);
-    setShowToast(true);
-    
-    setTimeout(() => {
-      setCopiedId(null);
-    }, 2000);
-
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
-  };
-
-  // Filter Local Accounts
-  const filteredLocalPrimary = useMemo(() => {
-    return LOCAL_ACCOUNTS.primary.filter(acc => 
-      acc.bank.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      acc.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      acc.number.includes(searchQuery)
+  const accounts = tab === "local" ? LOCAL_ACCOUNTS : DOM_ACCOUNTS;
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return accounts;
+    return accounts.filter(
+      (a) =>
+        a.bank.toLowerCase().includes(q) ||
+        a.purpose.toLowerCase().includes(q) ||
+        a.number.includes(q),
     );
-  }, [searchQuery]);
+  }, [accounts, query]);
 
-  const filteredLocalOthers = useMemo(() => {
-    return LOCAL_ACCOUNTS.others.filter(acc => 
-      acc.bank.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      acc.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      acc.number.includes(searchQuery)
-    );
-  }, [searchQuery]);
-
-  // Filter Domiciliary Accounts
-  const filteredDom = useMemo(() => {
-    return DOM_ACCOUNTS.filter(acc => 
-      acc.bank.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      acc.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      acc.number.includes(searchQuery)
-    );
-  }, [searchQuery]);
-
-  const hasResults = activeTab === "local" 
-    ? (filteredLocalPrimary.length > 0 || filteredLocalOthers.length > 0)
-    : filteredDom.length > 0;
+  function handleCopy(acc: Account) {
+    navigator.clipboard?.writeText(acc.number);
+    setCopiedId(acc.id);
+    setToast(`${acc.purpose} · ${acc.number}`);
+    window.setTimeout(() => setCopiedId(null), 2000);
+    window.setTimeout(() => setToast(null), 3000);
+  }
 
   return (
-    <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden font-sans">
-      {/* Cosmic hero — replaces the inline header/intro */}
-      <CosmicGiveHero />
+    <main className="bg-white">
+      {/* ── Hero (full-bleed image) ── */}
+      <GiveHero />
 
-      {/* Online giving (Paystack) */}
-      <OnlineGivingForm />
+      {/* ── Ways to give (light) ── */}
+      <section id="ways-to-give" className="scroll-mt-20 bg-white py-20 md:py-28">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+          <ScrollReveal>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#87102C]">
+              Ways to Give
+            </p>
+          </ScrollReveal>
+          <ScrollReveal delay={0.1}>
+            <h2 className="text-balance text-3xl font-bold leading-[1.1] tracking-tight text-[#111] sm:text-4xl">
+              Give by <span className="text-[#87102C]">bank transfer</span>
+            </h2>
+          </ScrollReveal>
+          {/* <ScrollReveal delay={0.2}>
+            <p className="mt-4 max-w-2xl text-base leading-relaxed text-[#555] sm:text-lg">
+              100% of your gift goes directly to the ministry, with no payment
+              gateway fees. Tap any account below to copy the number.
+            </p>
+          </ScrollReveal> */}
 
-      <section id="accounts" className="relative z-10 container mx-auto px-6 py-16 max-w-7xl">
-        {/* Tabs and Interactive Controls */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-12">
-          {/* Tab Switcher */}
-          <div className="flex bg-white/[0.03] border border-white/5 p-1 rounded-2xl max-w-xs self-start backdrop-blur-md">
-            <button 
-              onClick={() => { setActiveTab("local"); setSearchQuery(""); }}
-              className={`px-6 py-2.5 rounded-xl font-display text-xs font-black tracking-wider uppercase transition-all duration-300 ${
-                activeTab === "local" 
-                  ? "bg-church-maroon text-white shadow-lg shadow-church-maroon/20" 
-                  : "text-white/40 hover:text-white/80"
-              }`}
-            >
-              Local Accounts
-            </button>
-            <button 
-              onClick={() => { setActiveTab("dom"); setSearchQuery(""); }}
-              className={`px-6 py-2.5 rounded-xl font-display text-xs font-black tracking-wider uppercase transition-all duration-300 ${
-                activeTab === "dom" 
-                  ? "bg-church-maroon text-white shadow-lg shadow-church-maroon/20" 
-                  : "text-white/40 hover:text-white/80"
-              }`}
-            >
-              Domiciliary Account
-            </button>
-          </div>
-
-          {/* Inline Search Filter to keep UI tidy and beautiful */}
-          <div className="relative max-w-md w-full">
-            <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-            <input 
-              type="text" 
-              placeholder="Search account by bank or purpose..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/[0.03] hover:bg-white/[0.05] focus:bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-6 text-sm text-white placeholder-white/20 focus:outline-none focus:border-church-accent/30 transition-all font-medium"
-            />
-          </div>
-        </div>
-
-        {/* Dynamic Content Grid */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.25 }}
-          >
-            {/* If no search match */}
-            {!hasResults && (
-              <div className="text-center py-20 bg-white/[0.02] border border-white/5 rounded-3xl backdrop-blur-sm">
-                <Info className="w-10 h-10 text-church-accent/40 mx-auto mb-4" />
-                <p className="text-white/40 font-display font-medium text-lg">No matching accounts found for "{searchQuery}"</p>
-                <button 
-                  onClick={() => setSearchQuery("")}
-                  className="text-church-accent hover:text-white transition-colors text-xs font-black uppercase mt-4 tracking-wider"
-                >
-                  Clear search filter
-                </button>
+          {/* Controls: tabs + search */}
+          <ScrollReveal delay={0.3}>
+            <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="inline-flex rounded-full border border-[#E7CDD3] bg-[#FFF4F6] p-1 self-start">
+                {TABS.map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => {
+                      setTab(t.key);
+                      setQuery("");
+                    }}
+                    className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                      tab === t.key
+                        ? "bg-[#87102C] text-white shadow-sm"
+                        : "text-[#8a7e80] hover:text-[#87102C]"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
-            )}
 
-            {/* Local Accounts view */}
-            {activeTab === "local" && hasResults && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                
-                {/* Primary Column */}
-                {filteredLocalPrimary.length > 0 && (
-                  <div>
-                    <h3 className="text-xs uppercase tracking-[0.3em] font-black text-white/30 mb-6 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-church-accent" />
-                      Primary Accounts
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      {filteredLocalPrimary.map((acc) => (
-                        <AccountCard 
-                          key={acc.id}
-                          acc={acc}
-                          isCopied={copiedId === acc.id}
-                          onCopy={() => handleCopy(acc.number, acc.id, acc.purpose)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Others Column */}
-                {filteredLocalOthers.length > 0 && (
-                  <div>
-                    <h3 className="text-xs uppercase tracking-[0.3em] font-black text-white/30 mb-6 flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-church-maroon" />
-                      Other Accounts
-                    </h3>
-                    
-                    <div className="space-y-4">
-                      {filteredLocalOthers.map((acc) => (
-                        <AccountCard 
-                          key={acc.id}
-                          acc={acc}
-                          isCopied={copiedId === acc.id}
-                          onCopy={() => handleCopy(acc.number, acc.id, acc.purpose)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+              <div className="relative w-full sm:w-72">
+                <Search
+                  size={15}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#b8a8ac]"
+                />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search account or purpose…"
+                  className="w-full rounded-full border border-[#E7CDD3] bg-white py-3 pl-11 pr-4 text-sm text-[#111] placeholder:text-[#b8a8ac] transition-all focus-visible:border-[#87102C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/15"
+                />
               </div>
-            )}
+            </div>
+          </ScrollReveal>
 
-            {/* Domiciliary Accounts view */}
-            {activeTab === "dom" && hasResults && (
-              <div>
-                <h3 className="text-xs uppercase tracking-[0.3em] font-black text-white/30 mb-6 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-church-accent" />
-                  International Transfers
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredDom.map((acc) => (
-                    <AccountCard 
+          {/* Cards */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {filtered.length === 0 ? (
+                <div className="mt-10 rounded-2xl border border-dashed border-[#E7CDD3] bg-[#FFF4F6]/50 py-16 text-center">
+                  <Info className="mx-auto mb-3 text-[#87102C]/40" size={28} />
+                  <p className="font-medium text-[#8a7e80]">
+                    No account matches “{query}”.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    className="mt-3 text-xs font-bold uppercase tracking-wider text-[#87102C] hover:underline"
+                  >
+                    Clear search
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {filtered.map((acc, i) => (
+                    <AccountCard
                       key={acc.id}
                       acc={acc}
-                      isCopied={copiedId === acc.id}
-                      onCopy={() => handleCopy(acc.number, acc.id, acc.purpose)}
+                      copied={copiedId === acc.id}
+                      onCopy={() => handleCopy(acc)}
+                      delay={i * 0.08}
                     />
                   ))}
                 </div>
-              </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+              )}
+            </motion.div>
+          </AnimatePresence>
 
-        {/* Global Informative / Hook Module */}
-        <div className="grid lg:grid-cols-12 gap-6 mt-24">
-          <motion.div 
-            whileHover={{ scale: 0.99 }}
-            className="lg:col-span-8 glass-card p-10 border-white/5 bg-white/[0.01] flex flex-col justify-between"
-          >
-            <div>
-              <h4 className="text-2xl font-display font-black mb-4 uppercase text-church-accent">Direct Kingdom Partner</h4>
-              <p className="text-white/40 text-sm leading-relaxed mb-10 max-w-2xl font-medium">
-                For recurring partnership, tithes, or larger seed contributions, bank transfers offer instant direct support to local church operations, events, outreach campaigns, and building developments.
-              </p>
-            </div>
-            
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 py-3.5 px-6 rounded-2xl">
-                 <Coins className="text-church-accent w-5 h-5" />
-                 <div>
-                    <span className="text-[9px] block uppercase font-bold text-white/30 leading-none">ZERO PAYGATE FEES</span>
-                    <span className="text-xs font-bold">100% Direct Receipt</span>
-                 </div>
-              </div>
-
-              <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 py-3.5 px-6 rounded-2xl">
-                 <Building2 className="text-church-accent w-5 h-5" />
-                 <div>
-                    <span className="text-[9px] block uppercase font-bold text-white/30 leading-none">ACCURATE ATTRIBUTION</span>
-                    <span className="text-xs font-bold">Always Safe</span>
-                 </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right side report and contact hooks */}
-          <motion.div 
-            whileHover={{ scale: 0.99 }}
-            className="lg:col-span-4 glass-card p-10 border-church-accent/10 bg-church-accent/5 flex flex-col text-center items-center justify-center relative overflow-hidden group"
-          >
-            <div className="w-16 h-16 rounded-full border border-church-accent/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-               <Zap size={24} className="text-church-accent" />
-            </div>
-            
-            <h4 className="text-xl font-display font-black uppercase text-white tracking-wide mb-3">Auditted & Transparent</h4>
-            
-            <p className="text-white/40 text-xs leading-relaxed max-w-xs mb-8 font-medium">
-              We publish comprehensive stewardship statements at the close of every ecclesiastical calendar year.
+          {/* Reassurance line (single, quiet) */}
+          {/* <ScrollReveal delay={0.2}>
+            <p className="mt-12 text-center text-sm text-[#8a7e80]">
+              All gifts go to{" "}
+              <span className="font-semibold text-[#111]">{ACCOUNT_NAME}</span>. For
+              giving statements or help, reach out via the{" "}
+              <a href="/contact" className="font-semibold text-[#87102C] hover:underline">
+                contact page
+              </a>
+              .
             </p>
-
-            <button className="px-6 py-3 w-full bg-white text-church-dark rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-church-accent hover:shadow-lg transition-all">
-              Request Latest Report
-            </button>
-          </motion.div>
+          </ScrollReveal> */}
         </div>
-
       </section>
 
-      {/* Elegant Micro-Toast Notification overlay */}
+      {/* Copy toast */}
       <AnimatePresence>
-        {showToast && (
+        {toast && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            className="fixed bottom-8 right-6 left-6 sm:left-auto sm:max-w-md z-50 bg-[#160b0d] border border-church-accent/30 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-4 backdrop-blur-xl"
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full border border-[#E7CDD3] bg-white px-5 py-3 shadow-[0_8px_40px_rgba(135,16,44,0.12)]"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-church-maroon flex items-center justify-center text-church-accent shadow-inner">
-                <Check size={14} className="animate-bounce" />
-              </div>
-              <div className="text-left">
-                <p className="text-[10px] font-black uppercase tracking-widest text-church-accent">Copied to Clipboard</p>
-                <p className="text-xs text-white/70 font-semibold max-w-[200px] truncate">{toastMessage}</p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setShowToast(false)}
-              className="text-[9px] font-bold uppercase tracking-widest text-white/40 hover:text-white transition-colors"
-            >
-              Dismiss
-            </button>
+            <span className="flex items-center gap-2 text-sm font-semibold text-[#111]">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#87102C] text-white">
+                <Check size={13} />
+              </span>
+              Copied · {toast}
+            </span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -385,69 +205,78 @@ export default function WaysToGivePage() {
   );
 }
 
-interface AccountCardProps {
-  acc: {
-    id: string;
-    bank: string;
-    purpose: string;
-    number: string;
-    currency: string;
-  };
-  isCopied: boolean;
+// ── Elevated card + anchor-info-chip pattern ────────────────────────────────
+
+function AccountCard({
+  acc,
+  copied,
+  onCopy,
+  delay,
+}: {
+  acc: Account;
+  copied: boolean;
   onCopy: () => void;
-}
+  delay: number;
+}) {
+  const [logoErr, setLogoErr] = useState(false);
+  const showLogo = Boolean(acc.logo) && !logoErr;
 
-function AccountCard({ acc, isCopied, onCopy }: AccountCardProps) {
   return (
-    <motion.div
-      onClick={onCopy}
-      whileHover={{ y: -2, backgroundColor: "rgba(255, 255, 255, 0.05)", borderColor: "rgba(255, 179, 193, 0.3)" }}
-      whileTap={{ scale: 0.98 }}
-      className={`
-        relative px-8 py-7 rounded-2xl border transition-all duration-300 cursor-pointer select-none overflow-hidden
-        ${isCopied 
-          ? "bg-church-maroon/20 border-church-accent" 
-          : "bg-white/[0.02] border-white/10"
-        }
-      `}
-    >
-      {/* Visual Ambient flash behind active/copied cards */}
-      {isCopied && (
-        <div className="absolute top-0 right-0 w-32 h-32 bg-church-accent/10 blur-[30px] rounded-full pointer-events-none" />
-      )}
-
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <span className="text-[10px] font-black tracking-widest text-white/40 uppercase block mb-1">
-            {acc.bank} <span className="opacity-40 font-normal">—</span> {acc.purpose}
-          </span>
-          <p className="font-mono text-3xl font-black text-white tracking-tight flex items-baseline gap-2">
-            {acc.number}
-            <span className="text-[10px] font-black text-church-accent uppercase font-sans tracking-wide">
-              {acc.currency}
+    <ScrollReveal delay={delay}>
+      <button
+        type="button"
+        onClick={onCopy}
+        aria-label={`Copy ${acc.purpose} account number ${acc.number}`}
+        className="group h-full w-full rounded-2xl border border-[#E7CDD3]/60 bg-white p-6 text-left shadow-[0_1px_3px_rgba(135,16,44,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40"
+      >
+        {/* Icon chip + currency */}
+        <div className="mb-5 flex items-start justify-between">
+          {showLogo ? (
+            <span className="inline-flex h-11 items-center rounded-xl border border-[#E7CDD3]/70 bg-white px-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={acc.logo}
+                alt={acc.bank}
+                onError={() => setLogoErr(true)}
+                className="h-6 w-auto object-contain"
+              />
             </span>
-          </p>
+          ) : (
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FFE8ED] text-[#87102C]">
+              <Building2 size={20} />
+            </span>
+          )}
+          <span className="rounded-full bg-[#FFF4F6] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#87102C]">
+            {acc.currency}
+          </span>
         </div>
 
-        <div className={`
-          w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300
-          ${isCopied 
-            ? "bg-church-accent text-church-dark rotate-12 scale-105" 
-            : "bg-white/5 text-white/30 hover:text-white"
-          }
-        `}>
-          {isCopied ? <Check size={15} strokeWidth={3} /> : <Copy size={15} />}
-        </div>
-      </div>
+        {/* Anchor info chip: label → value */}
+        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a7e80]">
+          {acc.bank} · {acc.purpose}
+        </p>
+        <p className="font-mono text-2xl font-bold tracking-tight text-[#111]">
+          {acc.number}
+        </p>
+        <p className="mt-1.5 truncate text-sm text-[#555]">{acc.name}</p>
 
-      <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-wider text-white/30">
-        <span className={`w-1.5 h-1.5 rounded-full ${isCopied ? "bg-church-accent animate-ping" : "bg-white/20"}`} />
-        {isCopied ? (
-          <span className="text-church-accent">Copied to clipboard successfully!</span>
-        ) : (
-          <span>Click Anywhere to Copy</span>
-        )}
-      </div>
-    </motion.div>
+        {/* Copy affordance */}
+        <span className="mt-5 flex items-center gap-1.5 border-t border-[#E7CDD3]/50 pt-4 text-xs font-bold uppercase tracking-wider text-[#87102C]">
+          {copied ? (
+            <>
+              <Check size={14} /> Copied to clipboard
+            </>
+          ) : (
+            <>
+              <Copy
+                size={14}
+                className="transition-transform group-hover:-translate-y-0.5"
+              />
+              Tap to copy
+            </>
+          )}
+        </span>
+      </button>
+    </ScrollReveal>
   );
 }

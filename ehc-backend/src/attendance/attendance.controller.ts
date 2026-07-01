@@ -71,6 +71,12 @@ export class AttendanceController {
     return this.attendanceService.getMemberAttendance(user.userId);
   }
 
+  @Get('me/history')
+  @ApiOperation({ summary: 'Per-service present/absent tracking for the current member' })
+  async getMyHistory(@CurrentUser() user: AuthUser) {
+    return this.attendanceService.getMemberHistory(user.userId);
+  }
+
   @Get('can-mark')
   @ApiOperation({ summary: 'Check whether the current user can mark attendance now' })
   @ApiOkResponse({

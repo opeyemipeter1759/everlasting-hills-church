@@ -58,13 +58,21 @@ export class NotificationsService {
       );
       return;
     }
-    await this.resend.emails.send({
+    // Resend returns { data, error } — it does NOT throw on API-level failures
+    // (e.g. unverified sender, sandbox recipient restrictions). Inspect `error`
+    // explicitly, otherwise a rejected send is silently logged as "sent".
+    const { data, error } = await this.resend.emails.send({
       from: this.fromAddress,
       to: payload.to,
       subject: payload.subject,
       text: payload.text,
       ...(payload.html ? { html: payload.html } : {}),
     });
-    this.logger.debug(`[${payload.tag}] email sent → ${payload.to}`);
+    if (error) {
+      throw new Error(
+        `Resend rejected [${payload.tag}] → ${payload.to}: ${error.name ?? 'error'} — ${error.message ?? JSON.stringify(error)}`,
+      );
+    }
+    this.logger.debug(`[${payload.tag}] email sent → ${payload.to} (id: ${data?.id ?? 'n/a'})`);
   }
 }

@@ -17,6 +17,13 @@ interface MeResponse {
     phone: string | null;
     address: string | null;
     dateOfBirth: string | null;
+    weddingAnniversary: string | null;
+    gender: string | null;
+    instagram: string | null;
+    facebook: string | null;
+    twitter: string | null;
+    linkedin: string | null;
+    tiktok: string | null;
     bio: string | null;
     photoUrl: string | null;
     joinedAt: string;
@@ -43,6 +50,14 @@ export default async function SettingsPage() {
     bio: me.member?.bio ?? null,
     photoUrl: me.member?.photoUrl ?? null,
     role: me.role,
+    gender: me.member?.gender ?? null,
+    dateOfBirth: me.member?.dateOfBirth ?? null,
+    weddingAnniversary: me.member?.weddingAnniversary ?? null,
+    instagram: me.member?.instagram ?? null,
+    facebook: me.member?.facebook ?? null,
+    twitter: me.member?.twitter ?? null,
+    linkedin: me.member?.linkedin ?? null,
+    tiktok: me.member?.tiktok ?? null,
   };
 
   return <SettingsClient user={user} />;

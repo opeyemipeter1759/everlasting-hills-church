@@ -14,6 +14,29 @@ import {
   type SendEmailPayload,
 } from '../notifications/notification-events';
 import type { Env } from '../config/env.validation';
+import { buildFirstTimerWelcomeEmail } from '../notifications/templates/first-timer-welcome.email';
+import { buildFirstTimerAdminEmail } from '../notifications/templates/first-timer-admin.email';
+
+const MONTH_INDEX: Record<string, number> = {
+  january: 0, jan: 0, february: 1, feb: 1, march: 2, mar: 2, april: 3, apr: 3,
+  may: 4, june: 5, jun: 5, july: 6, jul: 6, august: 7, aug: 7,
+  september: 8, sep: 8, sept: 8, october: 9, oct: 9, november: 10, nov: 10,
+  december: 11, dec: 11,
+};
+
+/**
+ * The first-timer form collects a birthday as day + month name (no year).
+ * Compose them into an ISO date string (sentinel year 2000 — only day/month
+ * are meaningful) so it can be stored on the Visitor and later carried to the
+ * Member on conversion. Returns null when either part is missing/invalid.
+ */
+export function composeBirthdayIso(day?: string, month?: string): string | null {
+  if (!day || !month) return null;
+  const mi = MONTH_INDEX[month.trim().toLowerCase()];
+  const d = parseInt(day, 10);
+  if (mi === undefined || !d || d < 1 || d > 31) return null;
+  return new Date(Date.UTC(2000, mi, d)).toISOString();
+}
 
 /**
  * Public form intake. Writes the record synchronously (so the user gets immediate confirmation)
@@ -27,6 +50,7 @@ import type { Env } from '../config/env.validation';
 export class FormsService {
   private readonly tenantId: string;
   private readonly adminEmail: string;
+  private readonly appUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -38,45 +62,12 @@ export class FormsService {
       config.get('RESEND_ADMIN_EMAIL', { infer: true }) ??
       config.get('CONTACT_EMAIL', { infer: true }) ??
       'hello@everlastinghills.org';
+    this.appUrl =
+      (config.get('FRONTEND_URL', { infer: true }) as string | undefined) ??
+      'http://localhost:3000';
   }
 
   // ── Email payload builders ──────────────────────────────────────────────────
-
-  private buildFirstTimerAdminText(d: FirstTimerDto): string {
-    return [
-      'New first timer registration received.',
-      '',
-      `Name: ${d.first_name} ${d.last_name}`,
-      `Phone: ${d.phone_number}`,
-      `Email: ${d.email ?? 'N/A'}`,
-      `Attendance: ${d.attendance_type ?? 'N/A'}`,
-      `How they learned about us: ${d.how_did_you_learn ?? 'N/A'}`,
-      `Invited by: ${d.invited_by ?? 'N/A'}`,
-      `Located in Ibadan: ${d.located_in_ibadan ?? 'N/A'}`,
-      `Membership interest: ${d.membership_interest ?? 'N/A'}`,
-      `Address: ${d.address ?? 'N/A'}`,
-      `Occupation: ${d.occupation ?? 'N/A'}`,
-      `Born again: ${d.born_again ?? 'N/A'}`,
-      `Service experience: ${d.service_experience ?? 'N/A'}`,
-      `Prayer point: ${d.prayer_point ?? 'N/A'}`,
-      `WhatsApp interest: ${d.whatsapp_interest ?? 'N/A'}`,
-      `Birth day: ${d.birth_day ?? 'N/A'}`,
-      `Birth month: ${d.birth_month ?? 'N/A'}`,
-      `Type: ${d.type ?? 'N/A'}`,
-    ].join('\n');
-  }
-
-  private buildFirstTimerVisitorText(d: FirstTimerDto): string {
-    return [
-      `Dear ${d.first_name},`,
-      '',
-      'Thank you for registering with Everlasting Hills Church.',
-      'We have received your information and our team will be in touch soon.',
-      '',
-      'God bless you,',
-      'Everlasting Hills Church',
-    ].join('\n');
-  }
 
   private buildPrayerAdminText(d: PrayerRequestDto): string {
     const displayName = d.is_anonymous ? 'Anonymous' : d.name?.trim() || 'Anonymous';
@@ -173,6 +164,7 @@ export class FormsService {
           phone: normalizedPhone,
           email: normalizedEmail ?? null,
           gender: data.gender ?? null,
+          dateOfBirth: composeBirthdayIso(data.birth_day, data.birth_month),
           attendanceType: data.attendance_type ?? null,
           howDidYouLearn: data.how_did_you_learn ?? null,
           invitedBy: data.invited_by ?? null,
@@ -196,20 +188,20 @@ export class FormsService {
       }),
     ]);
 
-    // Fire-and-forget — does not block response
-    this.dispatchEmail({
-      to: this.adminEmail,
-      subject: `New First Timer: ${data.first_name} ${data.last_name}`,
-      text: this.buildFirstTimerAdminText(data),
-      tag: 'first-timer-admin',
-    });
+    // Fire-and-forget — does not block response.
+    // Admin/pastoral team: full details + review & assign-for-follow-up CTAs.
+    this.dispatchEmail(
+      buildFirstTimerAdminEmail({ data, adminEmail: this.adminEmail, appUrl: this.appUrl }),
+    );
+    // The guest: warm welcome with service times, address, and ways to connect.
     if (normalizedEmail) {
-      this.dispatchEmail({
-        to: normalizedEmail,
-        subject: 'Welcome to Everlasting Hills Church!',
-        text: this.buildFirstTimerVisitorText(data),
-        tag: 'first-timer-visitor',
-      });
+      this.dispatchEmail(
+        buildFirstTimerWelcomeEmail({
+          firstName: data.first_name.trim(),
+          email: normalizedEmail,
+          appUrl: this.appUrl,
+        }),
+      );
     }
 
     return {

@@ -1,14 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import {
+  ArrayMaxSize,
+  ArrayNotEmpty,
+  IsArray,
   IsEmail,
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 /**
  * Allowed roles when creating/updating a user. VISITOR isn't manageable here
@@ -50,6 +56,22 @@ export class CreateUserDto {
   @ApiProperty({ example: 'MEMBER', enum: MANAGEABLE_ROLES })
   @IsEnum(MANAGEABLE_ROLES)
   role!: (typeof MANAGEABLE_ROLES)[number];
+
+  @ApiProperty({ required: false, enum: ['MALE', 'FEMALE'] })
+  @IsOptional()
+  @IsIn(['MALE', 'FEMALE'])
+  gender?: 'MALE' | 'FEMALE';
+}
+
+/** Create one or many people in a single submission (People console). */
+export class BulkCreateUsersDto {
+  @ApiProperty({ type: [CreateUserDto] })
+  @IsArray()
+  @ArrayNotEmpty()
+  @ArrayMaxSize(100)
+  @ValidateNested({ each: true })
+  @Type(() => CreateUserDto)
+  members!: CreateUserDto[];
 }
 
 export class UpdateUserRoleDto {

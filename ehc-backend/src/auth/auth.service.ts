@@ -5,12 +5,49 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Role } from '@prisma/client';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import { ensureDefaultTenant } from '../tenant/ensure-default-tenant';
+import { NotificationEvents } from '../notifications/notification-events';
+import { buildPasswordChangedEmail } from '../notifications/templates/password-changed.email';
+import { buildNewDeviceLoginEmail } from '../notifications/templates/new-device-login.email';
+
+export interface LoginContext {
+  ip?: string;
+  userAgent?: string;
+}
+
+/** Best-effort human label from a User-Agent string (no external dependency). */
+function describeUserAgent(ua: string): string {
+  if (!ua) return 'Unknown device';
+  const browser = /Edg\//.test(ua)
+    ? 'Edge'
+    : /OPR\/|Opera/.test(ua)
+      ? 'Opera'
+      : /Chrome\//.test(ua)
+        ? 'Chrome'
+        : /Firefox\//.test(ua)
+          ? 'Firefox'
+          : /Safari\//.test(ua) && !/Chrome/.test(ua)
+            ? 'Safari'
+            : 'a browser';
+  const os = /Windows/.test(ua)
+    ? 'Windows'
+    : /Android/.test(ua)
+      ? 'Android'
+      : /iPhone|iPad|iPod|iOS/.test(ua)
+        ? 'iOS'
+        : /Mac OS X|Macintosh/.test(ua)
+          ? 'macOS'
+          : /Linux/.test(ua)
+            ? 'Linux'
+            : 'an unknown OS';
+  return `${browser} on ${os}`;
+}
 
 interface UserProfileSummary {
   role: string | null;
@@ -34,6 +71,7 @@ export class AuthService implements OnModuleInit {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly events: EventEmitter2,
     config: ConfigService<Env, true>,
   ) {
     this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
@@ -214,7 +252,7 @@ export class AuthService implements OnModuleInit {
     return `${firstName ?? ''} ${lastName ?? ''}`.trim() || null;
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string, ctx?: LoginContext) {
     const { data, error } = await this.anonClient.auth.signInWithPassword({
       email,
       password,
@@ -231,6 +269,9 @@ export class AuthService implements OnModuleInit {
       summary.firstName || summary.lastName
         ? `${summary.firstName ?? ''} ${summary.lastName ?? ''}`.trim()
         : null;
+
+    // Fire-and-forget: record the device and alert if it's new for this account.
+    void this.checkLoginDevice(data.user.id, data.user.email, summary.firstName, ctx);
 
     const needsPasswordChange = Boolean(
       (data.user.user_metadata as Record<string, unknown> | null | undefined)?.[
@@ -252,6 +293,69 @@ export class AuthService implements OnModuleInit {
         needsPasswordChange,
       },
     };
+  }
+
+  /**
+   * Record the device used for this login. If it's a device we've never seen for
+   * this account (and the account already had at least one known device), send a
+   * security alert. Swallows its own errors — never affects the login response.
+   */
+  private async checkLoginDevice(
+    userId: string,
+    email: string | undefined,
+    firstName: string | null,
+    ctx?: LoginContext,
+  ) {
+    if (!email) return;
+    const ua = ctx?.userAgent ?? '';
+    const fingerprint = createHash('sha256')
+      .update(ua || 'unknown')
+      .digest('hex')
+      .slice(0, 32);
+
+    try {
+      const existing = await this.prisma.knownDevice.findUnique({
+        where: { userId_fingerprint: { userId, fingerprint } },
+      });
+      if (existing) {
+        await this.prisma.knownDevice.update({
+          where: { id: existing.id },
+          data: { lastSeenAt: new Date(), lastIp: ctx?.ip ?? existing.lastIp },
+        });
+        return;
+      }
+
+      const knownCount = await this.prisma.knownDevice.count({ where: { userId } });
+      await this.prisma.knownDevice.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          userId,
+          fingerprint,
+          userAgent: ua || null,
+          lastIp: ctx?.ip ?? null,
+        },
+      });
+
+      // Don't alert on the very first device an account ever uses.
+      if (knownCount > 0) {
+        this.events.emit(
+          NotificationEvents.SendEmail,
+          buildNewDeviceLoginEmail({
+            email,
+            firstName: firstName ?? undefined,
+            device: describeUserAgent(ua),
+            ip: ctx?.ip,
+            when: new Date(),
+            appUrl: this.publicSiteUrl,
+          }),
+        );
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Device check failed for ${userId}: ${(err as Error).message}`,
+      );
+    }
   }
 
   async refresh(refreshToken: string) {
@@ -306,7 +410,11 @@ export class AuthService implements OnModuleInit {
     };
   }
 
-  async changePassword(authorization: string | undefined, password: string) {
+  async changePassword(
+    authorization: string | undefined,
+    password: string,
+    ip?: string,
+  ) {
     const accessToken = authorization?.startsWith('Bearer ')
       ? authorization.slice(7).trim()
       : '';
@@ -364,6 +472,23 @@ export class AuthService implements OnModuleInit {
     }
 
     this.logger.log(`Password changed for ${userData.user.email ?? userId}`);
+
+    // Fire-and-forget security confirmation (covers forced first-login change and
+    // password-reset completion — both flow through this endpoint).
+    if (userData.user.email) {
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildPasswordChangedEmail({
+          email: userData.user.email,
+          firstName:
+            (currentMetadata.full_name as string | undefined)?.split(' ')[0],
+          when: new Date(),
+          ip,
+          appUrl: this.publicSiteUrl,
+        }),
+      );
+    }
+
     return { success: true, message: 'Password updated successfully' };
   }
 
@@ -411,9 +536,25 @@ export class AuthService implements OnModuleInit {
             phone: true,
             address: true,
             dateOfBirth: true,
+            weddingAnniversary: true,
+            gender: true,
+            instagram: true,
+            facebook: true,
+            twitter: true,
+            linkedin: true,
+            tiktok: true,
             bio: true,
             photoUrl: true,
             joinedAt: true,
+            tags: true,
+            Household: { select: { name: true } },
+            UnitMember: {
+              select: {
+                isLead: true,
+                isAssistant: true,
+                Unit: { select: { id: true, name: true, description: true } },
+              },
+            },
           },
         },
       },
@@ -425,17 +566,56 @@ export class AuthService implements OnModuleInit {
       return { profileId: null, role: null, tenantId: null, member: null };
     }
 
+    // Gender is editable directly on Member now, but members converted from the
+    // public first-timer form may only have it on their original Visitor row.
+    // Prefer Member.gender; fall back to the Visitor record by email/phone so
+    // older converted members still see a value without re-asking.
+    let gender = profile.Member?.gender ?? null;
+    if (!gender && profile.Member && (profile.Member.email || profile.Member.phone)) {
+      const visitor = await this.prisma.visitor.findFirst({
+        where: {
+          tenantId: profile.tenantId,
+          OR: [
+            profile.Member.email ? { email: profile.Member.email } : undefined,
+            profile.Member.phone ? { phone: profile.Member.phone } : undefined,
+          ].filter(Boolean) as Array<{ email: string } | { phone: string }>,
+        },
+        select: { gender: true },
+      });
+      gender = visitor?.gender ?? null;
+    }
+
+    const {
+      Household,
+      UnitMember,
+      dateOfBirth,
+      weddingAnniversary,
+      joinedAt,
+      gender: _g,
+      ...rest
+    } = profile.Member ?? {};
+
     return {
       profileId: profile.id,
       role: profile.role,
       tenantId: profile.tenantId,
       member: profile.Member
         ? {
-            ...profile.Member,
-            dateOfBirth: profile.Member.dateOfBirth
-              ? profile.Member.dateOfBirth.toISOString()
+            ...rest,
+            dateOfBirth: dateOfBirth ? dateOfBirth.toISOString() : null,
+            weddingAnniversary: weddingAnniversary
+              ? weddingAnniversary.toISOString()
               : null,
-            joinedAt: profile.Member.joinedAt.toISOString(),
+            joinedAt: joinedAt!.toISOString(),
+            household: Household?.name ?? null,
+            gender,
+            units: (UnitMember ?? []).map((um) => ({
+              id: um.Unit.id,
+              name: um.Unit.name,
+              description: um.Unit.description,
+              isLead: um.isLead,
+              isAssistant: um.isAssistant,
+            })),
           }
         : null,
     };

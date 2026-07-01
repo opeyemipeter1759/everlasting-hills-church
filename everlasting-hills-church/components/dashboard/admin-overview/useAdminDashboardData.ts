@@ -4,7 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getAdminDashboardMock,
   type AdminDashboardData,
+  type SummaryStat,
 } from "@/lib/mock/admin-dashboard.mock";
+import { apiClient } from "@/lib/api/axios";
 
 export type DataStatus = "loading" | "error" | "empty" | "success";
 
@@ -26,8 +28,22 @@ export function useAdminDashboardData() {
   const load = useCallback(async () => {
     setState({ status: "loading", data: null, error: null });
     try {
-      const data = await getAdminDashboardMock();
-      if (!data || data.stats.length === 0) {
+      const mock = await getAdminDashboardMock();
+
+      // Real stat cards from the backend. The remaining sections (giving, trend,
+      // funnel, etc.) still come from the mock until their endpoints land.
+      let stats = mock.stats;
+      try {
+        const res = await apiClient.get<{ stats: SummaryStat[] }>(
+          "/admin/dashboard-summary",
+        );
+        if (res.data?.stats?.length) stats = res.data.stats;
+      } catch {
+        // Backend unavailable → keep mock stats so the dashboard still renders.
+      }
+
+      const data: AdminDashboardData = { ...mock, stats };
+      if (!data.stats.length) {
         setState({ status: "empty", data: null, error: null });
         return;
       }

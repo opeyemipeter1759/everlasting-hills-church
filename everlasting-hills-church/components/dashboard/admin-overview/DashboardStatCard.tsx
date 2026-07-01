@@ -27,6 +27,7 @@ export default function DashboardStatCard({
   label,
   value,
   trend,
+  note,
   icon: Icon,
   iconBg,
   iconColor,
@@ -36,6 +37,8 @@ export default function DashboardStatCard({
   label: string;
   value: number;
   trend?: Trend;
+  /** Optional sub-line under the label (e.g. attendance rate). */
+  note?: string;
   icon: LucideIcon;
   iconBg: string;
   iconColor: string;
@@ -75,6 +78,11 @@ export default function DashboardStatCard({
           <p className="mt-1.5 text-xs font-medium tracking-wide text-[#8a7e80] dark:text-white/45">
             {label}
           </p>
+          {note ? (
+            <p className="mt-1 text-[11px] font-medium tabular-nums text-[#87102C]/80 dark:text-[#FFB3C1]/70">
+              {note}
+            </p>
+          ) : null}
         </>
       )}
     </>
