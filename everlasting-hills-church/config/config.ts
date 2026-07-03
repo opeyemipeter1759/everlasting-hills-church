@@ -79,6 +79,7 @@ export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
 };
 
 import {
+  PanelsTopLeft,
   LayoutDashboard,
   User,
   CheckCircle,
@@ -149,6 +150,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Inventory",     href: "/dashboard/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
+      { label: "Public Site (CMS)", href: "/dashboard/cms",          icon: PanelsTopLeft, minRole: "PASTOR" },
     ],
   },
   {

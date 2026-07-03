@@ -171,6 +171,13 @@ model Member {
   tags               String[]
   householdId        String?
   deactivationRequestedAt DateTime?
+  // Legacy social columns present in the DB — declared here to reconcile drift
+  // (prevents prisma db push from dropping them). Not surfaced in the app yet.
+  facebook           String?
+  instagram          String?
+  linkedin           String?
+  twitter            String?
+  tiktok             String?
   AttendanceRecord   AttendanceRecord[]
   DiscussionResponse DiscussionResponse[]
   EngagementScore    EngagementScore?
@@ -417,7 +424,12 @@ model Tenant {
   createdAt          DateTime             @default(now())
   Announcement       Announcement[]
   AttendanceRecord   AttendanceRecord[]
+  AuditLog           AuditLog[]
   CareAssignment     CareAssignment[]
+  CmsPage            Page[]
+  ContentVersion     ContentVersion[]
+  MediaAsset         MediaAsset[]
+  SiteConfig         SiteConfig?
   ContactMessage     ContactMessage[]
   DiscussionQuestion DiscussionQuestion[]
   DiscussionResponse DiscussionResponse[]
@@ -512,6 +524,102 @@ model SiteSettings {
   Tenant    Tenant      @relation(fields: [tenantId], references: [id])
 
   @@unique([tenantId, section])
+}
+
+// ── Public-site CMS ──────────────────────────────────────────────────────────
+// Versioned, draft/publish content for the public website. Tenant-scoped in the
+// service layer (@Roles + tenantId filter); RLS added as defense-in-depth via
+// prisma/manual SQL. Rich content lives as a portable Tiptap JSON block array in
+// ContentVersion.content — no normalized block table (keeps content portable and
+// reads single-row). See CMS_ARCHITECTURE.md.
+
+/// One editable public route per tenant. Points at the live published version.
+model Page {
+  id                 String           @id
+  tenantId           String
+  key                String // e.g. "home", "about", "about/beliefs", "give"
+  title              String
+  status             ContentStatus    @default(DRAFT)
+  publishedVersionId String? // FK to the ContentVersion the public site reads
+  cacheTag           String // ISR revalidation tag, mirrors the public route
+  featureFlag        String? // e.g. "blog" — page hidden unless flag enabled
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @default(now()) @updatedAt
+  updatedBy          String?
+  Tenant             Tenant           @relation(fields: [tenantId], references: [id])
+  Versions           ContentVersion[] @relation("PageVersions")
+  PublishedVersion   ContentVersion?  @relation("PagePublished", fields: [publishedVersionId], references: [id])
+
+  @@unique([tenantId, key])
+  @@index([tenantId, status])
+}
+
+/// Immutable content snapshot. Drafts = newest non-published rows; history =
+/// all rows. Rollback republishes any prior version.
+model ContentVersion {
+  id          String        @id
+  tenantId    String
+  pageId      String
+  version     Int // monotonic per page
+  content     Json // Tiptap JSON block array (validated by Zod)
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+  publishedBy String?
+  createdAt   DateTime      @default(now())
+  createdBy   String?
+  Tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  Page        Page          @relation("PageVersions", fields: [pageId], references: [id])
+  PublishedOn Page[]        @relation("PagePublished")
+
+  @@unique([pageId, version])
+  @@index([tenantId, pageId])
+}
+
+/// R2-backed media. Stores the object key (never a public URL); the URL is
+/// generated at read time from R2_PUBLIC_URL.
+model MediaAsset {
+  id         String   @id
+  tenantId   String
+  r2Key      String
+  alt        String // required for accessibility
+  mimeType   String
+  sizeBytes  Int
+  width      Int?
+  height     Int?
+  uploadedBy String?
+  createdAt  DateTime @default(now())
+  Tenant     Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
+}
+
+/// Site-wide settings singleton (one row per tenant): church identity, contact,
+/// socials, footer. A form, not blocks — edited live (no draft/publish), audited.
+model SiteConfig {
+  id        String   @id
+  tenantId  String   @unique
+  content   Json
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy String?
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+/// Generic audit trail (create/update/publish/unpublish/delete). Platform-wide,
+/// not CMS-only.
+model AuditLog {
+  id        String   @id
+  tenantId  String
+  actorId   String?
+  action    String // CREATE | UPDATE | PUBLISH | UNPUBLISH | DELETE | ROLLBACK
+  entity    String // e.g. "Page", "MediaAsset"
+  entityId  String?
+  before    Json?
+  after     Json?
+  createdAt DateTime @default(now())
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, entity, entityId])
+  @@index([tenantId, createdAt])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -666,6 +774,12 @@ enum MemberStatus {
 enum CareAssignmentStatus {
   ACTIVE
   COMPLETED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
 
 enum Role {

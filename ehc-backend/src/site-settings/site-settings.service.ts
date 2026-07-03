@@ -48,11 +48,36 @@ export class SiteSettingsService implements OnModuleInit {
   /** section → { value, expiresAt }. One slot per section. */
   private cache = new Map<SiteSectionName, { value: SiteSettingsRow; expiresAt: number }>();
 
+  private readonly appUrl: string;
+  private readonly revalidateSecret: string;
+
   constructor(
     private readonly prisma: PrismaService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    this.appUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    this.revalidateSecret =
+      process.env.CMS_REVALIDATE_SECRET ??
+      process.env.SUPABASE_JWT_SECRET ??
+      'ehc-cms-revalidate';
+  }
+
+  /**
+   * Publish a homepage edit to the live site immediately by revalidating the
+   * "site-settings" ISR tag (the homepage reads that tag). Fire-and-forget.
+   */
+  private triggerRevalidate() {
+    void fetch(`${this.appUrl}/api/revalidate`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-revalidate-secret': this.revalidateSecret,
+      },
+      body: JSON.stringify({ tags: ['site-settings'], paths: ['/'] }),
+    }).catch((err) =>
+      this.logger.warn(`ISR revalidate call failed: ${(err as Error).message}`),
+    );
   }
 
   async onModuleInit() {
@@ -224,6 +249,9 @@ export class SiteSettingsService implements OnModuleInit {
     // Cache invalidation — overwrite the slot with the fresh value so the next
     // GET (likely the admin's own re-render) is instant.
     this.cache.set(section, { value, expiresAt: Date.now() + this.CACHE_TTL_MS });
+    // Revalidate the public homepage ISR so the edit is live immediately
+    // (rather than waiting up to the 5-minute revalidation window).
+    this.triggerRevalidate();
     return value;
   }
 
