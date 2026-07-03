@@ -32,7 +32,7 @@ export const PAGE_REGISTRY: PageDef[] = [
   { key: 'about/beliefs', title: 'What We Believe', route: '/beliefs', group: 'About', editor: 'structured', contentType: 'beliefs' },
   { key: 'about/pastor', title: 'Lead Pastor', route: '/pastor', group: 'About' },
 
-  { key: 'ministries', title: 'Ministries', route: '/ministries', group: 'Ministries', editor: 'structured', contentType: 'ministries' },
+  { key: 'ministries', title: 'Ministries', route: '/ministries', group: 'Ministries' },
   { key: 'sermons', title: 'Sermons (intro copy)', route: '/sermons', group: 'Sermons' },
   { key: 'events', title: 'Events (intro copy)', route: '/events', group: 'Events', editor: 'structured', contentType: 'eventsIntro' },
 
