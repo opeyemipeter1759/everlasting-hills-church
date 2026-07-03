@@ -3,9 +3,14 @@ import { BeliefsSchema, DEFAULT_BELIEFS } from './schemas/structured/beliefs.sch
 import {
   AboutSchema, DEFAULT_ABOUT,
   MinistriesSchema, DEFAULT_MINISTRIES,
+  MinistryDetailSchema,
+  DEFAULT_MINISTRY_MENS, DEFAULT_MINISTRY_WOMENS,
+  DEFAULT_MINISTRY_TEENS, DEFAULT_MINISTRY_COUPLES,
   VisitSchema, DEFAULT_VISIT,
   IntroSchema, DEFAULT_SERMONS_INTRO, DEFAULT_EVENTS_INTRO,
   LegalSchema, DEFAULT_PRIVACY, DEFAULT_TERMS,
+  GiveSchema, DEFAULT_GIVE,
+  ContactSchema, DEFAULT_CONTACT,
 } from './schemas/structured/pages.schema';
 
 /**
@@ -26,7 +31,13 @@ export const CONTENT_TYPES: Record<string, ContentType> = {
   beliefs: { schema: BeliefsSchema, default: DEFAULT_BELIEFS },
   about: { schema: AboutSchema, default: DEFAULT_ABOUT },
   ministries: { schema: MinistriesSchema, default: DEFAULT_MINISTRIES },
+  ministryMens: { schema: MinistryDetailSchema, default: DEFAULT_MINISTRY_MENS },
+  ministryWomens: { schema: MinistryDetailSchema, default: DEFAULT_MINISTRY_WOMENS },
+  ministryTeens: { schema: MinistryDetailSchema, default: DEFAULT_MINISTRY_TEENS },
+  ministryCouples: { schema: MinistryDetailSchema, default: DEFAULT_MINISTRY_COUPLES },
   visit: { schema: VisitSchema, default: DEFAULT_VISIT },
+  give: { schema: GiveSchema, default: DEFAULT_GIVE },
+  contact: { schema: ContactSchema, default: DEFAULT_CONTACT },
   sermonsIntro: { schema: IntroSchema, default: DEFAULT_SERMONS_INTRO },
   eventsIntro: { schema: IntroSchema, default: DEFAULT_EVENTS_INTRO },
   privacyLegal: { schema: LegalSchema, default: DEFAULT_PRIVACY },

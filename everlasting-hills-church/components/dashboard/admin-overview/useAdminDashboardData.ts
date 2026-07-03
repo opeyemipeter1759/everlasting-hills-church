@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getAdminDashboardMock,
   type AdminDashboardData,
+  type AttendancePoint,
   type SummaryStat,
 } from "@/lib/mock/admin-dashboard.mock";
 import { apiClient } from "@/lib/api/axios";
@@ -30,19 +31,24 @@ export function useAdminDashboardData() {
     try {
       const mock = await getAdminDashboardMock();
 
-      // Real stat cards from the backend. The remaining sections (giving, trend,
+      // Real stat cards from the backend. The remaining sections (giving,
       // funnel, etc.) still come from the mock until their endpoints land.
       let stats = mock.stats;
+      let attendanceTrend = mock.attendanceTrend;
       try {
-        const res = await apiClient.get<{ stats: SummaryStat[] }>(
-          "/admin/dashboard-summary",
-        );
-        if (res.data?.stats?.length) stats = res.data.stats;
+        const [summary, trend] = await Promise.all([
+          apiClient.get<{ stats: SummaryStat[] }>("/admin/dashboard-summary"),
+          apiClient
+            .get<{ points: AttendancePoint[] }>("/admin/attendance-trend")
+            .catch(() => null),
+        ]);
+        if (summary.data?.stats?.length) stats = summary.data.stats;
+        if (trend?.data?.points?.length) attendanceTrend = trend.data.points;
       } catch {
-        // Backend unavailable → keep mock stats so the dashboard still renders.
+        // Backend unavailable → keep mock data so the dashboard still renders.
       }
 
-      const data: AdminDashboardData = { ...mock, stats };
+      const data: AdminDashboardData = { ...mock, stats, attendanceTrend };
       if (!data.stats.length) {
         setState({ status: "empty", data: null, error: null });
         return;

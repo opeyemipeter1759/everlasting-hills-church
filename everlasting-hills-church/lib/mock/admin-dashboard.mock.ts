@@ -31,9 +31,21 @@ export interface SummaryStat {
   note?: string;
 }
 
+export type ServiceTypeKey = "SUNDAY" | "WEDNESDAY" | "SPECIAL";
+
 export interface AttendancePoint {
   label: string; // service label, e.g. "Apr 7"
-  value: number;
+  value: number; // total present (usher headcount)
+  /** Which gathering this point represents — powers the Sunday/Wednesday filter. */
+  serviceType?: ServiceTypeKey;
+  /** ISO date of the service, for tooltips/sorting. */
+  date?: string;
+  // Category breakdown (from the usher headcount). Lets the growth surface show
+  // men / women / children / first-timers over time, not just the total.
+  men?: number;
+  women?: number;
+  children?: number;
+  firstTimers?: number;
 }
 
 export interface FunnelStage {
@@ -95,7 +107,7 @@ const MOCK: AdminDashboardData = {
     { key: "members", label: "Members", value: 1284, trend: { value: 4.2, direction: "up" } },
     { key: "attendance", label: "Attendance", value: 612, trend: { value: 11, direction: "up" } },
     { key: "visitors", label: "Visitors", value: 38, trend: { value: 6, direction: "down" } },
-    { key: "volunteers", label: "Volunteers", value: 96, trend: { value: 3, direction: "up" } },
+    { key: "volunteers", label: "Service Team", value: 96, trend: { value: 3, direction: "up" } },
     { key: "events", label: "Events", value: 7, trend: { value: 2, direction: "up" } },
     { key: "sermons", label: "Sermons", value: 142, trend: { value: 5, direction: "up" } },
   ],
@@ -115,14 +127,22 @@ const MOCK: AdminDashboardData = {
     membersNeedingFollowUp: 14,
   },
   attendanceTrend: [
-    { label: "Apr 7", value: 420 },
-    { label: "Apr 14", value: 455 },
-    { label: "Apr 21", value: 472 },
-    { label: "Apr 28", value: 510 },
-    { label: "May 5", value: 498 },
-    { label: "May 12", value: 540 },
-    { label: "May 19", value: 576 },
-    { label: "May 26", value: 612 },
+    { label: "Apr 5", value: 420, serviceType: "SUNDAY", men: 126, women: 147, children: 147, firstTimers: 17 },
+    { label: "Apr 8", value: 180, serviceType: "WEDNESDAY", men: 54, women: 63, children: 63, firstTimers: 8 },
+    { label: "Apr 12", value: 455, serviceType: "SUNDAY", men: 137, women: 159, children: 159, firstTimers: 18 },
+    { label: "Apr 15", value: 205, serviceType: "WEDNESDAY", men: 62, women: 72, children: 71, firstTimers: 9 },
+    { label: "Apr 19", value: 472, serviceType: "SUNDAY", men: 142, women: 165, children: 165, firstTimers: 19 },
+    { label: "Apr 22", value: 214, serviceType: "WEDNESDAY", men: 64, women: 75, children: 75, firstTimers: 10 },
+    { label: "Apr 26", value: 510, serviceType: "SUNDAY", men: 153, women: 179, children: 178, firstTimers: 22 },
+    { label: "Apr 29", value: 232, serviceType: "WEDNESDAY", men: 70, women: 81, children: 81, firstTimers: 11 },
+    { label: "May 3", value: 498, serviceType: "SUNDAY", men: 149, women: 174, children: 175, firstTimers: 20 },
+    { label: "May 6", value: 221, serviceType: "WEDNESDAY", men: 66, women: 77, children: 78, firstTimers: 10 },
+    { label: "May 10", value: 540, serviceType: "SUNDAY", men: 162, women: 189, children: 189, firstTimers: 24 },
+    { label: "May 13", value: 244, serviceType: "WEDNESDAY", men: 73, women: 85, children: 86, firstTimers: 12 },
+    { label: "May 17", value: 576, serviceType: "SUNDAY", men: 173, women: 202, children: 201, firstTimers: 26 },
+    { label: "May 20", value: 258, serviceType: "WEDNESDAY", men: 77, women: 90, children: 91, firstTimers: 13 },
+    { label: "May 24", value: 612, serviceType: "SUNDAY", men: 184, women: 214, children: 214, firstTimers: 30 },
+    { label: "May 27", value: 271, serviceType: "WEDNESDAY", men: 81, women: 95, children: 95, firstTimers: 15 },
   ],
   firstTimerFunnel: [
     { label: "Registered", value: 19 },

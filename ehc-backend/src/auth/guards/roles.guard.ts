@@ -12,9 +12,13 @@ const ROLE_LEVEL: Record<Role, number> = {
   VISITOR: 0,
   MEMBER: 1,
   UNIT_LEAD: 2,
-  ADMIN: 3,
-  PASTOR: 4,
-  SUPER_ADMIN: 5,
+  // Head usher: records congregation headcounts, ranked above unit lead but below
+  // admin so @Roles(HEAD_USHER) admits admins too, while @Roles(ADMIN) still
+  // excludes head ushers (no general admin powers).
+  HEAD_USHER: 3,
+  ADMIN: 4,
+  PASTOR: 5,
+  SUPER_ADMIN: 6,
 };
 
 /**

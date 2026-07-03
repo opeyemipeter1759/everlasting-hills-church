@@ -42,4 +42,20 @@ export class AdminController {
   getDashboardSummary() {
     return this.adminService.getDashboardSummary();
   }
+
+  @Get('attendance-trend')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Attendance trend points tagged by service type for Sunday/Wednesday filtering (ADMIN+)' })
+  @ApiOkResponse({
+    schema: {
+      example: {
+        points: [
+          { label: '7 Apr', value: 420, serviceType: 'SUNDAY', date: '2026-04-07T09:00:00.000Z' },
+        ],
+      },
+    },
+  })
+  getAttendanceTrend() {
+    return this.adminService.getAttendanceTrend();
+  }
 }

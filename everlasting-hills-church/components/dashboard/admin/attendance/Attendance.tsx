@@ -8,6 +8,7 @@ import { AttendanceTable } from "./AttendanceTable";
 import { AtRiskPanel } from "./AtRiskPanel";
 import { TodayFeed } from "./TodayFeed";
 import { ReportsSection } from "./ReportsSection";
+import HeadcountSection from "./headcount/HeadcountSection";
 
 export default function Attendance() {
   const queryClient = useQueryClient();
@@ -42,6 +43,7 @@ export default function Attendance() {
       </div>
       <LiveSessionBanner />
       <AttendanceStatCards />
+      <HeadcountSection />
       <AttendanceTable />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <AtRiskPanel />

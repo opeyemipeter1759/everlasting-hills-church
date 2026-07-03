@@ -171,13 +171,6 @@ model Member {
   tags               String[]
   householdId        String?
   deactivationRequestedAt DateTime?
-  // Legacy social columns present in the DB — declared here to reconcile drift
-  // (prevents prisma db push from dropping them). Not surfaced in the app yet.
-  facebook           String?
-  instagram          String?
-  linkedin           String?
-  twitter            String?
-  tiktok             String?
   AttendanceRecord   AttendanceRecord[]
   DiscussionResponse DiscussionResponse[]
   EngagementScore    EngagementScore?
@@ -413,7 +406,35 @@ model Service {
   closeAt          DateTime?
   isOpen           Boolean            @default(false)
   AttendanceRecord AttendanceRecord[]
+  ServiceHeadcount ServiceHeadcount?
   Tenant           Tenant             @relation(fields: [tenantId], references: [id])
+}
+
+/// Authoritative usher headcount: one aggregate count per service. Source of
+/// truth for congregation size and all growth / attendance-trend analytics.
+/// Distinct from AttendanceRecord (per-person check-ins), which stays as-is and
+/// powers per-member metrics only. Tenant-scoped in the service layer (@Roles +
+/// tenantId); RLS deny-all backstop via prisma/manual SQL.
+model ServiceHeadcount {
+  id            String          @id
+  tenantId      String
+  serviceId     String          @unique
+  recordedBy    String? // authenticated principal id (no FK; mirrors AuditLog.actorId)
+  men           Int             @default(0)
+  women         Int             @default(0)
+  boys          Int             @default(0)
+  girls         Int             @default(0)
+  firstTimers   Int             @default(0)
+  total         Int             @default(0) // service-computed = men+women+boys+girls; DB CHECK guards it
+  reportedTotal Int? // optional usher-reported total, for reconciliation only
+  notes         String?
+  status        HeadcountStatus @default(DRAFT)
+  recordedAt    DateTime        @default(now())
+  updatedAt     DateTime        @default(now()) @updatedAt
+  Service       Service         @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  Tenant        Tenant          @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, status])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -456,6 +477,7 @@ model Tenant {
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
   Service            Service[]
+  ServiceHeadcount   ServiceHeadcount[]
   SiteSettings       SiteSettings[]
   Testimonial        Testimonial[]
   Unit               Unit[]
@@ -776,6 +798,11 @@ enum CareAssignmentStatus {
   COMPLETED
 }
 
+enum HeadcountStatus {
+  DRAFT
+  CONFIRMED
+}
+
 enum ContentStatus {
   DRAFT
   PUBLISHED
@@ -786,6 +813,7 @@ enum Role {
   SUPER_ADMIN
   PASTOR
   ADMIN
+  HEAD_USHER
   UNIT_LEAD
   MEMBER
   VISITOR

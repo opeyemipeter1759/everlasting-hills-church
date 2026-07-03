@@ -37,7 +37,7 @@ export function AttendanceStatCards() {
       <Card label="Total Members" value={data?.totalMembers ?? 0} sub="registered members" icon={<Users size={14} />} bg="bg-blue-50 dark:bg-blue-500/10" fg="text-blue-600 dark:text-blue-400" loading={isLoading} />
       <Card label="Active This Month" value={data?.activeThisMonth ?? 0} sub="attended at least once" icon={<TrendingUp size={14} />} bg="bg-emerald-50 dark:bg-emerald-500/10" fg="text-emerald-600 dark:text-emerald-400" loading={isLoading} />
       <Card label="Inactive This Month" value={data?.inactiveThisMonth ?? 0} sub="zero attendance" icon={<TrendingDown size={14} />} bg="bg-amber-50 dark:bg-amber-500/10" fg="text-amber-600 dark:text-amber-400" loading={isLoading} />
-      <Card label="Today's Present" value={data?.todayPresent ?? 0} sub="checked in today" icon={<CalendarCheck size={14} />} bg="bg-[#87102C]/10 dark:bg-[#87102C]/15" fg="text-[#87102C] dark:text-[#e8768a]" loading={isLoading} />
+      <Card label="Today's Check-ins" value={data?.todayPresent ?? 0} sub="individual app check-ins" icon={<CalendarCheck size={14} />} bg="bg-[#87102C]/10 dark:bg-[#87102C]/15" fg="text-[#87102C] dark:text-[#e8768a]" loading={isLoading} />
     </div>
   );
 }

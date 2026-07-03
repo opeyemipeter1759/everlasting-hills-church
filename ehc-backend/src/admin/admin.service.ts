@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { HeadcountService } from '../headcount/headcount.service';
 import type { Env } from '../config/env.validation';
 
 const WAT = 60 * 60 * 1000;
@@ -20,6 +21,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<Env, true>,
+    private readonly headcount: HeadcountService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -82,17 +84,15 @@ export class AdminService {
 
     const [
       totalMembers, mThis, mLast,
-      activeMembers,
       totalVisitors, vThis, vLast,
       totalEvents, eThis, eLast,
       totalSermons, sThis, sLast,
       volunteerRows, volThis, volLast,
-      recentServices,
+      recentHeadcounts,
     ] = await Promise.all([
       this.prisma.member.count({ where: { tenantId: t } }),
       this.prisma.member.count({ where: { tenantId: t, joinedAt: thisM } }),
       this.prisma.member.count({ where: { tenantId: t, joinedAt: lastM } }),
-      this.prisma.member.count({ where: { tenantId: t, status: 'ACTIVE' } }),
       this.prisma.visitor.count({ where: { tenantId: t } }),
       this.prisma.visitor.count({ where: { tenantId: t, submittedAt: thisM } }),
       this.prisma.visitor.count({ where: { tenantId: t, submittedAt: lastM } }),
@@ -105,51 +105,70 @@ export class AdminService {
       this.prisma.unitMember.groupBy({ by: ['memberId'], where: { tenantId: t } }),
       this.prisma.unitMember.count({ where: { tenantId: t, joinedAt: thisM } }),
       this.prisma.unitMember.count({ where: { tenantId: t, joinedAt: lastM } }),
-      // Last several services with their type + present count. We pick the most
-      // recent service for the card value and compare to the previous service of
-      // the SAME type (Sunday→Sunday, Wednesday→Wednesday) so the trend isn't
-      // distorted by Sunday/Wednesday size differences.
-      this.prisma.service.findMany({
-        where: { tenantId: t },
-        orderBy: { scheduledAt: 'desc' },
+      // Congregation size is now sourced from the authoritative usher headcount,
+      // NOT individual check-ins. Most recent CONFIRMED headcounts; we compare the
+      // latest to the previous of the SAME service type so Sunday/Wednesday size
+      // differences don't distort the trend.
+      this.prisma.serviceHeadcount.findMany({
+        where: { tenantId: t, status: 'CONFIRMED' },
+        orderBy: { Service: { scheduledAt: 'desc' } },
         take: 12,
-        select: {
-          serviceType: true,
-          _count: { select: { AttendanceRecord: { where: { present: true } } } },
-        },
+        include: { Service: { select: { name: true, scheduledAt: true, serviceType: true } } },
       }),
     ]);
 
     const volunteers = volunteerRows.length;
 
-    // Attendance = most recent service's check-ins, vs the previous service of the
-    // same type, plus a rate against active members (who are all expected to attend).
-    const last = recentServices[0];
-    const lastAttendance = last?._count.AttendanceRecord ?? 0;
-    const prevSameType = recentServices
+    // Attendance card = the latest confirmed congregation headcount (bodies in the
+    // room), vs the previous headcount of the SAME service type. Named after the
+    // service, with its date + first-timers on the sub-line. This is congregation-
+    // level truth; per-member attendance % lives on the member-facing metrics.
+    const lastHc = recentHeadcounts[0];
+    const lastAttendance = lastHc?.total ?? 0;
+    const prevSameType = recentHeadcounts
       .slice(1)
-      .find((s) => s.serviceType === last?.serviceType);
-    const prevAttendance = prevSameType?._count.AttendanceRecord ?? 0;
-    const rate = activeMembers > 0 ? Math.round((lastAttendance / activeMembers) * 100) : 0;
-    const attendanceNote = last
-      ? `${lastAttendance}/${activeMembers} active · ${rate}%`
-      : 'No services yet';
+      .find((h) => h.Service.serviceType === lastHc?.Service.serviceType);
+    const prevAttendance = prevSameType?.total ?? 0;
+    const attendanceLabel = lastHc?.Service.name ?? 'Congregation';
+    const svcDate = lastHc
+      ? new Date(lastHc.Service.scheduledAt).toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'Africa/Lagos',
+        })
+      : '';
+    const attendanceNote = lastHc
+      ? `${svcDate} · ${lastHc.firstTimers} first-timer${lastHc.firstTimers === 1 ? '' : 's'}`
+      : 'No headcount recorded yet';
 
     return {
       stats: [
         { key: 'members', label: 'Members', value: totalMembers, trend: this.trend(mThis, mLast) },
         {
           key: 'attendance',
-          label: 'Last Service',
+          label: attendanceLabel,
           value: lastAttendance,
           trend: this.trend(lastAttendance, prevAttendance),
           note: attendanceNote,
         },
         { key: 'visitors', label: 'Visitors', value: totalVisitors, trend: this.trend(vThis, vLast) },
-        { key: 'volunteers', label: 'Volunteers', value: volunteers, trend: this.trend(volThis, volLast) },
+        { key: 'volunteers', label: 'Service Team', value: volunteers, trend: this.trend(volThis, volLast) },
         { key: 'events', label: 'Events', value: totalEvents, trend: this.trend(eThis, eLast) },
         { key: 'sermons', label: 'Sermons', value: totalSermons, trend: this.trend(sThis, sLast) },
       ],
     };
+  }
+
+  /**
+   * Attendance trend for the dashboard growth chart. Now sourced from the
+   * authoritative usher headcount (total bodies per service), NOT individual
+   * check-ins. Each point is chronological, tagged by service type (so the UI can
+   * compare like service to like service), and carries the category breakdown
+   * (men / women / children / first-timers) for the growth surface.
+   */
+  async getAttendanceTrend(limit = 24) {
+    const points = await this.headcount.getTrend({ limit });
+    return { points };
   }
 }

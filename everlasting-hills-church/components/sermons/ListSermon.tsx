@@ -285,7 +285,17 @@ const DUMMY_SERMONS: LatestSermon[] = [
 
 // SermonCard moved to ./SermonCard.tsx
 
-export default function ListSermon() {
+export interface ListSermonProps {
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
+}
+
+export default function ListSermon({
+  eyebrow = "Sermon Library",
+  title = "Browse sermons by category",
+  subtitle = "A fuller library view inspired by music apps: compact cards, clear categories, and quick access to audio or video messages.",
+}: ListSermonProps = {}) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const session = getFrontendSessionUser();
   const [last, setLast] = useState<string | null>(null);
@@ -497,13 +507,13 @@ export default function ListSermon() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 py-1 text-[11px] font-semibold uppercase tracking-[0.28em] text-black">
-              Sermon Library
+              {eyebrow}
             </div>
             <h2 className="text-3xl font-black mt-3 tracking-tight text-black sm:text-[2.5rem]">
-              Browse sermons by category
+              {title}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/52 sm:text-[15px]">
-              A fuller library view inspired by music apps: compact cards, clear categories, and quick access to audio or video messages.
+              {subtitle}
             </p>
           </div>
 

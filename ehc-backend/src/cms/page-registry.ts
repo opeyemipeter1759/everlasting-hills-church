@@ -32,13 +32,17 @@ export const PAGE_REGISTRY: PageDef[] = [
   { key: 'about/beliefs', title: 'What We Believe', route: '/beliefs', group: 'About', editor: 'structured', contentType: 'beliefs' },
   { key: 'about/pastor', title: 'Lead Pastor', route: '/pastor', group: 'About' },
 
-  { key: 'ministries', title: 'Ministries', route: '/ministries', group: 'Ministries' },
-  { key: 'sermons', title: 'Sermons (intro copy)', route: '/sermons', group: 'Sermons' },
+  { key: 'ministries', title: 'Ministries', route: '/ministries', group: 'Ministries', editor: 'structured', contentType: 'ministries' },
+  { key: 'ministries/mens', title: "Men's Ministry", route: '/ministries/mens', group: 'Ministries', editor: 'structured', contentType: 'ministryMens' },
+  { key: 'ministries/womens', title: "Women's Ministry", route: '/ministries/womens', group: 'Ministries', editor: 'structured', contentType: 'ministryWomens' },
+  { key: 'ministries/teens', title: "Teen's Ministry", route: '/ministries/teens', group: 'Ministries', editor: 'structured', contentType: 'ministryTeens' },
+  { key: 'ministries/couples', title: "Couple's Ministry", route: '/ministries/couples', group: 'Ministries', editor: 'structured', contentType: 'ministryCouples' },
+  { key: 'sermons', title: 'Sermons (library header)', route: '/sermons', group: 'Sermons', editor: 'structured', contentType: 'sermonsIntro' },
   { key: 'events', title: 'Events (intro copy)', route: '/events', group: 'Events', editor: 'structured', contentType: 'eventsIntro' },
 
   { key: 'visit', title: 'Plan a Visit', route: '/visit', group: 'Visit', editor: 'structured', contentType: 'visit' },
-  { key: 'contact', title: 'Contact', route: '/contact', group: 'Contact' },
-  { key: 'give', title: 'Give', route: '/give', group: 'Give' },
+  { key: 'contact', title: 'Contact', route: '/contact', group: 'Contact', editor: 'structured', contentType: 'contact' },
+  { key: 'give', title: 'Give', route: '/give', group: 'Give', editor: 'structured', contentType: 'give' },
 
   { key: 'privacy', title: 'Privacy Policy', route: '/privacy', group: 'Legal', highImpact: true, editor: 'structured', contentType: 'privacyLegal' },
   { key: 'terms', title: 'Terms of Service', route: '/terms', group: 'Legal', highImpact: true, editor: 'structured', contentType: 'termsLegal' },

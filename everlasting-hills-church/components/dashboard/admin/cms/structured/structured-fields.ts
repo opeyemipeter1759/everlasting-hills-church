@@ -67,17 +67,22 @@ export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
 
   ministries: [
     ...hero,
+    { kind: "text", key: "sectionLabel", label: "Groups section label" },
+    { kind: "text", key: "sectionHeading", label: "Groups section heading" },
+    { kind: "textarea", key: "sectionLead", label: "Groups section intro" },
     {
       kind: "repeat",
-      key: "ministries",
-      label: "Ministry units",
-      itemLabel: "Unit",
+      key: "groups",
+      label: "Ministry groups (four)",
+      itemLabel: "Group",
+      fixed: true,
       fields: [
         { kind: "text", key: "name", label: "Name" },
-        { kind: "textarea", key: "body", label: "Description" },
+        { kind: "textarea", key: "body", label: "Card description" },
+        { kind: "text", key: "verseRef", label: "Verse reference" },
+        { kind: "textarea", key: "verseText", label: "Verse text (card back)" },
       ],
     },
-    cta,
   ],
 
   visit: [
@@ -117,7 +122,83 @@ export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
     },
     cta,
   ],
+
+  give: [
+    { kind: "text", key: "eyebrow", label: "Eyebrow" },
+    { kind: "text", key: "titleTop", label: "Headline line 1" },
+    { kind: "text", key: "accentTop", label: "Headline line 1 — accent word" },
+    { kind: "text", key: "titleBottom", label: "Headline line 2" },
+    { kind: "text", key: "accentBottom", label: "Headline line 2 — accent word" },
+    { kind: "textarea", key: "subtitle", label: "Subtitle" },
+    { kind: "text", key: "sectionLabel", label: "Accounts section label" },
+    { kind: "text", key: "headingLead", label: "Accounts heading" },
+    { kind: "text", key: "headingAccent", label: "Accounts heading — accent" },
+    { kind: "text", key: "accountName", label: "Account name (shared by all accounts)" },
+    {
+      kind: "repeat",
+      key: "local",
+      label: "Local (Naira) accounts",
+      itemLabel: "Account",
+      fields: [
+        { kind: "text", key: "bank", label: "Bank" },
+        { kind: "text", key: "purpose", label: "Purpose" },
+        { kind: "text", key: "number", label: "Account number" },
+        { kind: "text", key: "currency", label: "Currency" },
+      ],
+    },
+    {
+      kind: "repeat",
+      key: "domiciliary",
+      label: "Domiciliary accounts",
+      itemLabel: "Account",
+      fields: [
+        { kind: "text", key: "bank", label: "Bank" },
+        { kind: "text", key: "purpose", label: "Purpose" },
+        { kind: "text", key: "number", label: "Account number" },
+        { kind: "text", key: "currency", label: "Currency" },
+      ],
+    },
+  ],
+
+  contact: [
+    { kind: "text", key: "eyebrow", label: "Eyebrow" },
+    { kind: "text", key: "title", label: "Title" },
+    { kind: "text", key: "accent", label: "Accent (highlighted words)" },
+    { kind: "textarea", key: "subtitle", label: "Subtitle" },
+  ],
 };
+
+// Ministry detail pages (/ministries/mens, /womens, /teens, /couples) — same
+// bespoke layout, one shared field set; icon + hero image stay fixed per group.
+const ministryDetailFields: FieldDef[] = [
+  { kind: "text", key: "name", label: "Ministry name" },
+  { kind: "text", key: "heroLabel", label: "Hero eyebrow" },
+  { kind: "text", key: "heroHeadline", label: "Hero headline" },
+  { kind: "text", key: "heroAccent", label: "Hero accent line" },
+  { kind: "textarea", key: "heroBody", label: "Hero body" },
+  { kind: "textarea", key: "overview", label: 'Overview ("Who we are")' },
+  { kind: "text", key: "pullQuote", label: "Pull quote" },
+  { kind: "text", key: "verseRef", label: "Verse reference" },
+  { kind: "textarea", key: "verseText", label: "Verse text" },
+  {
+    kind: "repeat",
+    key: "activities",
+    label: "Activities (four)",
+    itemLabel: "Activity",
+    fixed: true,
+    fields: [
+      { kind: "text", key: "num", label: "Number (e.g. 01)" },
+      { kind: "text", key: "title", label: "Title" },
+      { kind: "textarea", key: "body", label: "Description" },
+    ],
+  },
+  { kind: "textarea", key: "who", label: "Who it's for" },
+  { kind: "text", key: "close", label: "Closing statement" },
+];
+STRUCTURED_FIELDS.ministryMens = ministryDetailFields;
+STRUCTURED_FIELDS.ministryWomens = ministryDetailFields;
+STRUCTURED_FIELDS.ministryTeens = ministryDetailFields;
+STRUCTURED_FIELDS.ministryCouples = ministryDetailFields;
 
 // Intro copy over module-driven pages (sermons, events)
 const introFields: FieldDef[] = [
