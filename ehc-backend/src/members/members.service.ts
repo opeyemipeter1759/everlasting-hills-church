@@ -611,6 +611,37 @@ export class MembersService {
     return { success: true };
   }
 
+  /**
+   * Member-safe search for "pick a person" UI (e.g. addressing a sermon note/question to
+   * someone). Deliberately returns only display-safe fields — no email/phone/tags — since,
+   * unlike getAllMembers/getDirectory, this is reachable by any signed-in MEMBER, not just
+   * ADMIN+.
+   */
+  async searchMembersForPicker(query: string, requestingUserId: string) {
+    const q = query.trim();
+    if (q.length < 2) return [];
+
+    const profile = await this.prisma.profile.findUnique({ where: { userId: requestingUserId } });
+    const self = profile ? await this.prisma.member.findUnique({ where: { profileId: profile.id } }) : null;
+
+    const members = await this.prisma.member.findMany({
+      where: {
+        tenantId: this.tenantId,
+        status: MemberStatus.ACTIVE,
+        ...(self && { id: { not: self.id } }),
+        OR: [
+          { firstName: { contains: q, mode: 'insensitive' } },
+          { lastName: { contains: q, mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true, firstName: true, lastName: true, photoUrl: true },
+      orderBy: [{ firstName: 'asc' }],
+      take: 15,
+    });
+
+    return members;
+  }
+
   async getAllMembers(opts?: { search?: string; status?: string }) {
     const where: any = { tenantId: this.tenantId };
     if (opts?.status) where.status = opts.status;

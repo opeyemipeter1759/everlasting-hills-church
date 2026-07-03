@@ -17,10 +17,18 @@ import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
+import { ROLE_LEVELS } from '../users/role-hierarchy';
 import { CreateSermonDto } from './dto/create-sermon.dto';
 import { UpdateSermonDto } from './dto/update-sermon.dto';
 import { SubscribeEmailDto } from './dto/subscribe-email.dto';
-import { NoteDto, ProgressDto, ReactionDto } from './dto/sermon-interaction.dto';
+import {
+  CreateCommentDto,
+  DiscussionResponseDto,
+  NoteDto,
+  ProgressDto,
+  ReactionDto,
+  SendDirectMessageDto,
+} from './dto/sermon-interaction.dto';
 import { RecentSermonsQueryDto, SermonFeedQueryDto } from './dto/sermon-read.query.dto';
 import { SermonsService } from './sermons.service';
 import { SermonReadService } from './recent/sermon-read.service';
@@ -318,6 +326,69 @@ export class SermonsController {
     );
   }
 
+  @Public()
+  @Get(':sermonId/comments')
+  @ApiOperation({ summary: 'List comments on a sermon (public)' })
+  getComments(@Param('sermonId') sermonId: string) {
+    return this.sermonsService.getComments(sermonId);
+  }
+
+  @Post('me/:sermonId/comments')
+  @ApiBearerAuth('access-token')
+  @ApiBody({ type: CreateCommentDto })
+  @ApiOperation({ summary: 'Post a comment (or reply) on a sermon' })
+  createComment(
+    @CurrentUser() user: AuthUser,
+    @Param('sermonId') sermonId: string,
+    @Body() body: CreateCommentDto,
+  ) {
+    if (!user.memberId) return null;
+    return this.sermonsService.createComment(user.memberId, sermonId, body.content, body.parentId);
+  }
+
+  @Delete('me/comments/:commentId')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Delete my comment (or any comment, if PASTOR+)' })
+  deleteComment(@CurrentUser() user: AuthUser, @Param('commentId') commentId: string) {
+    if (!user.memberId) return null;
+    const isPastor = !!user.role && ROLE_LEVELS[user.role] >= ROLE_LEVELS[Role.PASTOR];
+    return this.sermonsService.deleteComment(commentId, { memberId: user.memberId, isPastor });
+  }
+
+  @Post('me/questions/:questionId/response')
+  @ApiBearerAuth('access-token')
+  @ApiBody({ type: DiscussionResponseDto })
+  @ApiOperation({ summary: 'Answer a reflection question (upserts my response)' })
+  answerDiscussionQuestion(
+    @CurrentUser() user: AuthUser,
+    @Param('questionId') questionId: string,
+    @Body() body: DiscussionResponseDto,
+  ) {
+    if (!user.memberId) return null;
+    return this.sermonsService.upsertDiscussionResponse(user.memberId, questionId, body.content);
+  }
+
+  @Post('me/:sermonId/direct-messages')
+  @ApiBearerAuth('access-token')
+  @ApiBody({ type: SendDirectMessageDto })
+  @ApiOperation({ summary: 'Send a private note or question about a sermon to another member' })
+  sendDirectMessage(
+    @CurrentUser() user: AuthUser,
+    @Param('sermonId') sermonId: string,
+    @Body() body: SendDirectMessageDto,
+  ) {
+    if (!user.memberId) return null;
+    return this.sermonsService.sendDirectMessage(user.memberId, sermonId, body);
+  }
+
+  @Get('me/:sermonId/direct-messages')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My private notes/questions (sent + received) for a sermon' })
+  getMyDirectMessages(@CurrentUser() user: AuthUser, @Param('sermonId') sermonId: string) {
+    if (!user.memberId) return [];
+    return this.sermonsService.getSermonDirectMessages(user.memberId, sermonId);
+  }
+
   @Get('me/bookmarks')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'My bookmarked sermons' })
@@ -330,6 +401,13 @@ export class SermonsController {
   @ApiOperation({ summary: 'My listen history' })
   getMyListenHistory(@CurrentUser() user: AuthUser) {
     return this.sermonsService.getMemberListenHistory(user.userId);
+  }
+
+  @Get('me/stats')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My sermon stats — completed / in progress / bookmarked counts' })
+  getMySermonStats(@CurrentUser() user: AuthUser) {
+    return this.sermonsService.getMemberSermonStats(user.userId);
   }
 
   @Get('me/streak')

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { ArrowLeft, BookOpen, Headphones, Heart, Play, Search } from "lucide-react";
+import { useSermonPlayer } from "@/context/SermonPlayerContext";
 
 type Sermon = {
   id: string;
@@ -26,11 +27,12 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
 
-function SermonRow({ s }: { s: Sermon }) {
+function SermonRow({ s, onPlay }: { s: Sermon; onPlay: (slug: string) => void }) {
   return (
-    <Link
-      href={`/sermons/${s.slug}`}
-      className="group flex gap-4 bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-4 hover:border-[#87102C]/30 hover:shadow-sm transition-all"
+    <button
+      type="button"
+      onClick={() => onPlay(s.slug)}
+      className="group w-full flex gap-4 bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-4 hover:border-[#87102C]/30 hover:shadow-sm transition-all text-left"
     >
       {s.thumbnailUrl ? (
         <div className="w-24 sm:w-32 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-white/5 flex-shrink-0">
@@ -66,7 +68,7 @@ function SermonRow({ s }: { s: Sermon }) {
           </span>
         </div>
       </div>
-    </Link>
+    </button>
   );
 }
 
@@ -80,6 +82,7 @@ export default function SeriesPage({
   sermons: Sermon[];
 }) {
   const [search, setSearch] = useState("");
+  const { play } = useSermonPlayer();
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -142,7 +145,7 @@ export default function SeriesPage({
         ) : (
           <div className="space-y-3">
             {filtered.map((s) => (
-              <SermonRow key={s.id} s={s} />
+              <SermonRow key={s.id} s={s} onPlay={play} />
             ))}
           </div>
         )}

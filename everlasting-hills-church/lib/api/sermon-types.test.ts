@@ -20,16 +20,18 @@ describe("SERMON_STATUSES", () => {
 
 describe("toUiCount", () => {
   it("aliases Prisma relation names to UI-friendly names", () => {
-    expect(toUiCount({ SermonReaction: 5, SermonBookmark: 12 })).toEqual({
+    expect(toUiCount({ SermonReaction: 5, SermonBookmark: 12, SermonComment: 7 })).toEqual({
       reactions: 5,
       bookmarks: 12,
+      comments: 7,
     });
   });
 
   it("handles zero counts", () => {
-    expect(toUiCount({ SermonReaction: 0, SermonBookmark: 0 })).toEqual({
+    expect(toUiCount({ SermonReaction: 0, SermonBookmark: 0, SermonComment: 0 })).toEqual({
       reactions: 0,
       bookmarks: 0,
+      comments: 0,
     });
   });
 });
@@ -41,17 +43,19 @@ describe("toUiSermon", () => {
     slug: "power-of-faith-2026-05",
     speaker: "Pastor John",
     date: "2026-05-25T09:00:00.000Z",
+    type: "SINGLE",
     scriptureRef: "Hebrews 11:1",
     series: "Faith",
     seriesSlug: "faith",
     description: "A message on trusting God",
     audioUrl: "https://cdn.example.com/audio.mp3",
+    audioDuration: 1800,
     videoUrl: null,
     thumbnailUrl: null,
     playCount: 42,
     tags: ["faith", "hope"],
     status: "PUBLISHED",
-    _count: { SermonReaction: 8, SermonBookmark: 3 },
+    _count: { SermonReaction: 8, SermonBookmark: 3, SermonComment: 4 },
   };
 
   it("preserves identity fields verbatim", () => {
@@ -64,7 +68,7 @@ describe("toUiSermon", () => {
   });
 
   it("maps _count via toUiCount", () => {
-    expect(toUiSermon(raw)._count).toEqual({ reactions: 8, bookmarks: 3 });
+    expect(toUiSermon(raw)._count).toEqual({ reactions: 8, bookmarks: 3, comments: 4 });
   });
 
   it("preserves tags array reference content (no shuffle)", () => {

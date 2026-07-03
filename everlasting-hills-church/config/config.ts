@@ -165,7 +165,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "Pastoral",
     items: [
-      { label: "Sermons",           href: "/dashboard/sermons",            icon: BookOpen,       minRole: "PASTOR" },
+      { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "PASTOR" },
       { label: "Sermon Analytics",  href: "/dashboard/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
       { label: "Subscribers",       href: "/dashboard/subscribers",        icon: Mail,           minRole: "PASTOR" },
       { label: "Testimonials",      href: "/dashboard/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
@@ -186,6 +186,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Home",           href: "/dashboard",            icon: BookOpen,       minRole: "MEMBER" },
       { label: "Attendance",     href: "/dashboard/attendance", icon: CheckCircle,    minRole: "MEMBER" },
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
+      { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
 
     ],
   },

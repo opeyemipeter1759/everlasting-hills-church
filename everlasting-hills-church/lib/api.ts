@@ -5,8 +5,17 @@ import {
   clearFrontendSession,
   setFrontendSession,
 } from "@/lib/auth/frontend-session";
-import { LoginPayload, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, Unit, UnitDetail, UnitMemberEntry } from "@/types";
+import { LoginPayload, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry } from "@/types";
 import type { UserRole } from "@/config/config";
+import type {
+  SermonDetailRaw,
+  MemberSermonContext,
+  SermonComment,
+  ReactionType,
+  MemberPickerResult,
+  SermonDirectMessage,
+  DirectMessageType,
+} from "@/lib/api/sermon-types";
 
 export interface MeResponse {
   profileId: string | null;
@@ -113,6 +122,14 @@ export function useLatestSermons() {
   });
 }
 
+export function usePublishedSermons(filters: { series?: string; search?: string; limit?: number } = {}) {
+  return useQuery({
+    queryKey: ["sermons", "published", filters],
+    queryFn: () => api.get<LatestSermon[]>("/sermons/published", filters),
+    enabled: typeof window !== "undefined",
+  });
+}
+
 export function useSermons(filters: { q?: string; tag?: string; page?: number; pageSize?: number } = {}) {
   return useQuery({
     queryKey: ["sermons", "list", filters],
@@ -125,6 +142,13 @@ export function useSermonAdminOverview() {
   return useQuery({
     queryKey: ["sermons", "admin", "overview"],
     queryFn: () => api.get<SermonAdminOverviewData>("/sermons/admin/overview"),
+  });
+}
+
+export function useAdminSermons(filters: { status?: SermonStatus; series?: string } = {}) {
+  return useQuery({
+    queryKey: ["sermons", "admin", "list", filters],
+    queryFn: () => api.get<LatestSermon[]>("/sermons/admin", filters),
   });
 }
 
@@ -155,6 +179,179 @@ export function useUpdateSermon() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sermons"] });
     },
+  });
+}
+
+export function useDeleteSermon() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<{ id: string; deleted: boolean }>(`/sermons/admin/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["sermons"] });
+    },
+  });
+}
+
+/* ── Public sermon watch experience — detail, reactions, notes, comments, Q&A ──────── */
+
+export function useSermonBySlug(slug?: string) {
+  return useQuery({
+    queryKey: ["sermons", "public", "detail", slug],
+    queryFn: () => api.get<SermonDetailRaw>(`/sermons/slug/${slug}`),
+    enabled: !!slug,
+  });
+}
+
+/** Only fires for signed-in visitors — anonymous calls to /sermons/me/* would 401-loop. */
+export function useSermonMemberContext(sermonId?: string, isLoggedIn?: boolean) {
+  return useQuery({
+    queryKey: ["sermons", "me", "context", sermonId],
+    queryFn: () => api.get<MemberSermonContext>(`/sermons/me/${sermonId}/context`),
+    enabled: !!sermonId && !!isLoggedIn,
+  });
+}
+
+export function useSermonReaction() {
+  return useMutation({
+    mutationFn: ({ sermonId, type }: { sermonId: string; type: ReactionType }) =>
+      api.post(`/sermons/me/${sermonId}/reaction`, { type }),
+  });
+}
+
+export function useSermonBookmark() {
+  return useMutation({
+    mutationFn: (sermonId: string) => api.post<boolean>(`/sermons/me/${sermonId}/bookmark`),
+  });
+}
+
+export function useSermonNote() {
+  return useMutation({
+    mutationFn: ({ sermonId, content }: { sermonId: string; content: string }) =>
+      api.post(`/sermons/me/${sermonId}/note`, { content }),
+  });
+}
+
+export function useSermonProgress() {
+  return useMutation({
+    mutationFn: ({ sermonId, positionSec, completed }: { sermonId: string; positionSec: number; completed?: boolean }) =>
+      api.post(`/sermons/me/${sermonId}/progress`, { positionSec, completed }),
+  });
+}
+
+export function useIncrementSermonPlay() {
+  return useMutation({
+    mutationFn: (sermonId: string) => api.post(`/sermons/${sermonId}/play`),
+  });
+}
+
+export function useSermonComments(sermonId?: string) {
+  return useQuery({
+    queryKey: ["sermons", "comments", sermonId],
+    queryFn: () => api.get<SermonComment[]>(`/sermons/${sermonId}/comments`),
+    enabled: !!sermonId,
+  });
+}
+
+export function useAddComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ sermonId, content, parentId }: { sermonId: string; content: string; parentId?: string }) =>
+      api.post<SermonComment>(`/sermons/me/${sermonId}/comments`, { content, parentId }),
+    onSuccess: (_data, { sermonId }) => {
+      queryClient.invalidateQueries({ queryKey: ["sermons", "comments", sermonId] });
+    },
+  });
+}
+
+export function useDeleteComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId }: { commentId: string; sermonId: string }) =>
+      api.delete<{ id: string; deleted: boolean }>(`/sermons/me/comments/${commentId}`),
+    onSuccess: (_data, { sermonId }) => {
+      queryClient.invalidateQueries({ queryKey: ["sermons", "comments", sermonId] });
+    },
+  });
+}
+
+export function useAnswerQuestion() {
+  return useMutation({
+    mutationFn: ({ questionId, content }: { questionId: string; content: string }) =>
+      api.post(`/sermons/me/questions/${questionId}/response`, { content }),
+  });
+}
+
+/* ── Direct notes/questions to another member, about a sermon ──────────────────────── */
+
+export function useMemberSearch(q: string) {
+  return useQuery({
+    queryKey: ["members", "search", q],
+    queryFn: () => api.get<MemberPickerResult[]>("/members/search", { q }),
+    enabled: q.trim().length >= 2,
+  });
+}
+
+export function useSermonDirectMessages(sermonId?: string) {
+  return useQuery({
+    queryKey: ["sermons", "direct-messages", sermonId],
+    queryFn: () => api.get<SermonDirectMessage[]>(`/sermons/me/${sermonId}/direct-messages`),
+    enabled: !!sermonId,
+  });
+}
+
+export function useSendDirectMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      sermonId, recipientMemberId, type, content, parentId,
+    }: { sermonId: string; recipientMemberId: string; type: DirectMessageType; content: string; parentId?: string }) =>
+      api.post<SermonDirectMessage>(`/sermons/me/${sermonId}/direct-messages`, { recipientMemberId, type, content, parentId }),
+    onSuccess: (_data, { sermonId }) => {
+      queryClient.invalidateQueries({ queryKey: ["sermons", "direct-messages", sermonId] });
+    },
+  });
+}
+
+/* ── Member "My Learning" — bookmarks + continue-listening history ─────────────────── */
+
+export interface MemberBookmarkEntry {
+  id: string;
+  createdAt: string;
+  Sermon: LatestSermon;
+}
+
+export function useMemberSermonBookmarks() {
+  return useQuery({
+    queryKey: ["sermons", "me", "bookmarks"],
+    queryFn: () => api.get<MemberBookmarkEntry[]>("/sermons/me/bookmarks"),
+  });
+}
+
+export interface MemberHistoryEntry {
+  id: string;
+  positionSec: number;
+  completed: boolean;
+  updatedAt: string;
+  Sermon: LatestSermon;
+}
+
+export function useMemberSermonHistory() {
+  return useQuery({
+    queryKey: ["sermons", "me", "history"],
+    queryFn: () => api.get<MemberHistoryEntry[]>("/sermons/me/history"),
+  });
+}
+
+export interface MemberSermonStats {
+  completed: number;
+  inProgress: number;
+  bookmarked: number;
+}
+
+export function useMemberSermonStats() {
+  return useQuery({
+    queryKey: ["sermons", "me", "stats"],
+    queryFn: () => api.get<MemberSermonStats>("/sermons/me/stats"),
   });
 }
 

@@ -1,11 +1,7 @@
-import ListSermon from "@/components/sermons/ListSermon";
-import SermonHero from "../../../components/sermons/SermonHero";
+import SermonsPageClient from "@/components/sermons/SermonsPageClient";
 
-export default function page() {
-  return (
-    <main>
-      <SermonHero />
-      <ListSermon/>
-    </main>
-  )
+export const metadata = { title: "Sermons — Everlasting Hills Church" };
+
+export default function SermonsPage() {
+  return <SermonsPageClient />;
 }

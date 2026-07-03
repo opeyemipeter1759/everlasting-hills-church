@@ -139,6 +139,11 @@ export interface LatestSermon {
   transcript: string | null;
   updatedAt: string;
   episodes?: SermonEpisodeInput[];
+  _count?: {
+    SermonReaction: number;
+    SermonBookmark: number;
+    SermonComment: number;
+  };
 }
 
 export interface LatestSermonsResponse {
@@ -223,8 +228,7 @@ export interface SermonEpisodeInput {
   id?: string;
   title: string;
   url: string;
-  videoUrl?: string;
-  duration?: number;
+  duration: number;
   order: number;
 }
 

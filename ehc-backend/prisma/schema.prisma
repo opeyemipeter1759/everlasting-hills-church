@@ -182,6 +182,9 @@ model Member {
   PastorNote         PastorNote[]
   PastoralAlert      PastoralAlert[]
   SermonBookmark     SermonBookmark[]
+  SermonComment      SermonComment[]
+  SermonDirectMessageSent     SermonDirectMessage[] @relation("SermonDirectMessageSender")
+  SermonDirectMessageReceived SermonDirectMessage[] @relation("SermonDirectMessageRecipient")
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
   UnitMember         UnitMember[]
@@ -329,6 +332,8 @@ model Sermon {
   ListenProgress     ListenProgress[]
   Tenant             Tenant               @relation(fields: [tenantId], references: [id])
   SermonBookmark     SermonBookmark[]
+  SermonComment      SermonComment[]
+  SermonDirectMessage SermonDirectMessage[]
   Episodes           SermonEpisode[]
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]
@@ -394,6 +399,49 @@ model SermonReaction {
   @@unique([sermonId, memberId])
 }
 
+model SermonComment {
+  id        String          @id
+  tenantId  String
+  sermonId  String
+  memberId  String
+  parentId  String?
+  content   String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime
+  Member    Member          @relation(fields: [memberId], references: [id])
+  Sermon    Sermon          @relation(fields: [sermonId], references: [id])
+  Tenant    Tenant          @relation(fields: [tenantId], references: [id])
+  Parent    SermonComment?  @relation("SermonCommentReplies", fields: [parentId], references: [id])
+  Replies   SermonComment[] @relation("SermonCommentReplies")
+
+  @@index([sermonId])
+}
+
+/// A private note or question about a sermon sent directly to one other member (not visible
+/// to anyone else, unlike SermonComment). Threaded via parentId so the recipient can reply.
+model SermonDirectMessage {
+  id          String                @id
+  tenantId    String
+  sermonId    String
+  senderId    String
+  recipientId String
+  type        String
+  content     String
+  parentId    String?
+  createdAt   DateTime              @default(now())
+  readAt      DateTime?
+  Sender      Member                @relation("SermonDirectMessageSender", fields: [senderId], references: [id])
+  Recipient   Member                @relation("SermonDirectMessageRecipient", fields: [recipientId], references: [id])
+  Sermon      Sermon                @relation(fields: [sermonId], references: [id])
+  Tenant      Tenant                @relation(fields: [tenantId], references: [id])
+  Parent      SermonDirectMessage?  @relation("SermonDirectMessageReplies", fields: [parentId], references: [id])
+  Replies     SermonDirectMessage[] @relation("SermonDirectMessageReplies")
+
+  @@index([sermonId])
+  @@index([recipientId])
+  @@index([senderId])
+}
+
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Service {
   id               String             @id
@@ -440,6 +488,8 @@ model Tenant {
   RoleAssignment     RoleAssignment[]
   Sermon             Sermon[]
   SermonBookmark     SermonBookmark[]
+  SermonComment      SermonComment[]
+  SermonDirectMessage SermonDirectMessage[]
   SermonEpisode      SermonEpisode[]
   SermonNote         SermonNote[]
   SermonReaction     SermonReaction[]

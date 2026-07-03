@@ -4,7 +4,9 @@ import { SermonStatus, SermonType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import slugify from 'slugify';
 import { PrismaService } from '../prisma/prisma.service';
+import { InboxService } from '../inbox/inbox.service';
 import type { Env } from '../config/env.validation';
+import type { DirectMessageType } from './dto/sermon-interaction.dto';
 
 type SermonEpisodeLike = {
   id: string;
@@ -36,7 +38,7 @@ type SermonLike = {
 };
 
 const SERMON_COUNTS_INCLUDE = {
-  _count: { select: { SermonReaction: true, SermonBookmark: true } },
+  _count: { select: { SermonReaction: true, SermonBookmark: true, SermonComment: true } },
 } as const;
 
 const SERMON_EPISODES_INCLUDE = {
@@ -94,6 +96,7 @@ export class SermonsService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly inbox: InboxService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -690,6 +693,196 @@ export class SermonsService {
     });
   }
 
+  /**
+   * Flat list of comments for a sermon, newest top-level first with replies nested
+   * underneath (oldest reply first, so a thread reads top-to-bottom).
+   */
+  async getComments(sermonId: string) {
+    const comments = await this.prisma.sermonComment.findMany({
+      where: { sermonId, tenantId: this.tenantId },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        Member: { select: { firstName: true, lastName: true, photoUrl: true } },
+      },
+    });
+
+    const byParent = new Map<string | null, typeof comments>();
+    for (const comment of comments) {
+      const key = comment.parentId;
+      byParent.set(key, [...(byParent.get(key) ?? []), comment]);
+    }
+
+    const serialize = (comment: (typeof comments)[number]) => ({
+      id: comment.id,
+      content: comment.content,
+      createdAt: comment.createdAt,
+      memberId: comment.memberId,
+      member: comment.Member,
+      replies: (byParent.get(comment.id) ?? []).map(serialize),
+    });
+
+    return (byParent.get(null) ?? []).reverse().map(serialize);
+  }
+
+  async createComment(memberId: string, sermonId: string, content: string, parentId?: string) {
+    const sermon = await this.prisma.sermon.findFirst({ where: { id: sermonId, tenantId: this.tenantId } });
+    if (!sermon) {
+      throw new NotFoundException('Sermon not found');
+    }
+
+    if (parentId) {
+      const parent = await this.prisma.sermonComment.findFirst({
+        where: { id: parentId, sermonId, tenantId: this.tenantId },
+      });
+      if (!parent) {
+        throw new NotFoundException('Comment being replied to was not found');
+      }
+    }
+
+    return this.prisma.sermonComment.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        sermonId,
+        memberId,
+        parentId: parentId ?? null,
+        content,
+        updatedAt: new Date(),
+      },
+      include: {
+        Member: { select: { firstName: true, lastName: true, photoUrl: true } },
+      },
+    });
+  }
+
+  /** Author or a PASTOR may delete a comment. Deleting a parent cascades to its replies. */
+  async deleteComment(commentId: string, requester: { memberId: string; isPastor: boolean }) {
+    const comment = await this.prisma.sermonComment.findFirst({
+      where: { id: commentId, tenantId: this.tenantId },
+    });
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+    if (comment.memberId !== requester.memberId && !requester.isPastor) {
+      throw new BadRequestException('You can only delete your own comments');
+    }
+
+    await this.prisma.sermonComment.deleteMany({
+      where: { OR: [{ id: commentId }, { parentId: commentId }], tenantId: this.tenantId },
+    });
+    return { id: commentId, deleted: true };
+  }
+
+  /** One response per member per reflection question — re-submitting edits the existing answer. */
+  async upsertDiscussionResponse(memberId: string, questionId: string, content: string) {
+    const question = await this.prisma.discussionQuestion.findFirst({
+      where: { id: questionId, tenantId: this.tenantId },
+    });
+    if (!question) {
+      throw new NotFoundException('Reflection question not found');
+    }
+
+    return this.prisma.discussionResponse.upsert({
+      where: { questionId_memberId: { questionId, memberId } },
+      create: { id: randomUUID(), tenantId: this.tenantId, questionId, memberId, content },
+      update: { content },
+      include: {
+        Member: { select: { firstName: true, lastName: true, photoUrl: true } },
+      },
+    });
+  }
+
+  /**
+   * Sends a private note/question about a sermon to exactly one other member and drops a
+   * notification in their inbox (read by the dashboard bell) linking back to the sermon.
+   */
+  async sendDirectMessage(
+    senderId: string,
+    sermonId: string,
+    input: { recipientMemberId: string; type: DirectMessageType; content: string; parentId?: string },
+  ) {
+    if (input.recipientMemberId === senderId) {
+      throw new BadRequestException('You cannot send a message to yourself');
+    }
+
+    const [sermon, recipient] = await Promise.all([
+      this.prisma.sermon.findFirst({ where: { id: sermonId, tenantId: this.tenantId } }),
+      this.prisma.member.findFirst({ where: { id: input.recipientMemberId, tenantId: this.tenantId } }),
+    ]);
+    if (!sermon) throw new NotFoundException('Sermon not found');
+    if (!recipient) throw new NotFoundException('Recipient not found');
+
+    if (input.parentId) {
+      const parent = await this.prisma.sermonDirectMessage.findFirst({
+        where: { id: input.parentId, sermonId, tenantId: this.tenantId },
+      });
+      if (!parent) throw new NotFoundException('Message being replied to was not found');
+    }
+
+    const message = await this.prisma.sermonDirectMessage.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        sermonId,
+        senderId,
+        recipientId: input.recipientMemberId,
+        type: input.type,
+        content: input.content,
+        parentId: input.parentId ?? null,
+      },
+      include: {
+        Sender: { select: { firstName: true, lastName: true, photoUrl: true } },
+        Recipient: { select: { firstName: true, lastName: true, photoUrl: true } },
+      },
+    });
+
+    const sender = await this.prisma.member.findUnique({ where: { id: senderId } });
+    await this.inbox.createMany([
+      {
+        tenantId: this.tenantId,
+        profileId: recipient.profileId,
+        type: 'sermon_direct_message',
+        title: input.type === 'QUESTION' ? 'New question about a sermon' : 'Someone shared a note with you',
+        body: `${sender?.firstName ?? 'A member'} ${input.parentId ? 'replied' : input.type === 'QUESTION' ? 'asked you about' : 'shared a note on'} "${sermon.title}"`,
+        link: `/dashboard/sermon/${sermon.slug}`,
+      },
+    ]);
+
+    return message;
+  }
+
+  /** Everything I've sent or received for this sermon — threaded, oldest first per thread. */
+  async getSermonDirectMessages(memberId: string, sermonId: string) {
+    const messages = await this.prisma.sermonDirectMessage.findMany({
+      where: { sermonId, tenantId: this.tenantId, OR: [{ senderId: memberId }, { recipientId: memberId }] },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        Sender: { select: { firstName: true, lastName: true, photoUrl: true } },
+        Recipient: { select: { firstName: true, lastName: true, photoUrl: true } },
+      },
+    });
+
+    const byParent = new Map<string | null, typeof messages>();
+    for (const m of messages) {
+      const key = m.parentId;
+      byParent.set(key, [...(byParent.get(key) ?? []), m]);
+    }
+
+    const serialize = (m: (typeof messages)[number]) => ({
+      id: m.id,
+      type: m.type,
+      content: m.content,
+      createdAt: m.createdAt,
+      senderId: m.senderId,
+      recipientId: m.recipientId,
+      sender: m.Sender,
+      recipient: m.Recipient,
+      replies: (byParent.get(m.id) ?? []).map(serialize),
+    });
+
+    return (byParent.get(null) ?? []).reverse().map(serialize);
+  }
+
   async getMemberBookmarks(userId: string) {
     const member = await this.getMemberByUserId(userId);
     if (!member) {
@@ -698,7 +891,7 @@ export class SermonsService {
 
     return this.prisma.sermonBookmark.findMany({
       where: { memberId: member.id },
-      include: { Sermon: true },
+      include: { Sermon: { include: SERMON_COUNTS_INCLUDE } },
       orderBy: { createdAt: 'desc' },
     });
   }
@@ -711,10 +904,32 @@ export class SermonsService {
 
     return this.prisma.listenProgress.findMany({
       where: { memberId: member.id, positionSec: { gt: 0 } },
-      include: { Sermon: true },
+      include: { Sermon: { include: SERMON_COUNTS_INCLUDE } },
       orderBy: { updatedAt: 'desc' },
       take: 10,
     });
+  }
+
+  /**
+   * Counted directly (not derived from the capped history list above) so "completed" and
+   * "in progress" stay accurate even once a member has listened to more than the 10 most
+   * recent sermons.
+   */
+  async getMemberSermonStats(userId: string) {
+    const member = await this.getMemberByUserId(userId);
+    if (!member) {
+      return { completed: 0, inProgress: 0, bookmarked: 0 };
+    }
+
+    const [completed, inProgress, bookmarked] = await this.prisma.$transaction([
+      this.prisma.listenProgress.count({ where: { memberId: member.id, completed: true } }),
+      this.prisma.listenProgress.count({
+        where: { memberId: member.id, completed: false, positionSec: { gt: 0 } },
+      }),
+      this.prisma.sermonBookmark.count({ where: { memberId: member.id } }),
+    ]);
+
+    return { completed, inProgress, bookmarked };
   }
 
   async getSermonStreak(userId: string): Promise<number> {

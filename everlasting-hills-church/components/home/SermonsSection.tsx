@@ -3,13 +3,6 @@ import { ArrowRight } from "lucide-react";
 import { SERMONS_FALLBACK, type SermonsContent } from "@/lib/site-settings";
 import RecentSermonsGrid, { type RecentSermon } from "./RecentSermonsGrid";
 
-/**
- * "Recent Sermons" — dark stacked section.
- *
- * Server component: fetches the recent strip from NestJS (GET /sermons/recent) with
- * ISR, so Nest owns the data + sort and Next owns render + cache. The grid (motion)
- * is a client component; the cards are CSS-only group-hover Links.
- */
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||

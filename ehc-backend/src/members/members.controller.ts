@@ -227,6 +227,14 @@ export class MembersController {
     return this.membersService.reactivateMe(actor.userId, actor.email);
   }
 
+  @Get('search')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Search active members by name — for "pick a person" pickers (MEMBER+)' })
+  @ApiQuery({ name: 'q', required: true })
+  async search(@Query('q') q: string, @CurrentUser() actor: AuthUser) {
+    return this.membersService.searchMembersForPicker(q ?? '', actor.userId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get member by id' })
   async getById(@Param('id') id: string) {

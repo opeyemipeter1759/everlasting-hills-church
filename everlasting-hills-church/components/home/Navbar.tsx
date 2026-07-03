@@ -7,6 +7,10 @@ import Link from "next/link";
 import Image from "next/image";
 import NavUserBadge, { useIsLoggedIn } from "./NavUserBadge";
 
+// Client-side nav for the mobile menu — a raw <a> would force a full page reload, which
+// unmounts the sermon player (and its <audio> element) on every tap.
+const MotionLink = motion(Link);
+
 const navLinks = [
   { label: "About", href: "/about" },
   { label: "Beliefs", href: "/beliefs" },
@@ -53,7 +57,7 @@ export default function Navbar() {
         <div className="max-w-[1400px]  mx-auto px-5 sm:px-8">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
-            <a href="/" className="flex items-center gap-2.5 group">
+            <Link href="/" className="flex items-center gap-2.5 group">
             {scrolled ? (
                           <Image src="/logoblack.png" alt="Everlasting Hills Church Logo" width={62} height={62} className="flex-shrink-0" />
             ) : (
@@ -75,12 +79,12 @@ export default function Navbar() {
                   Church
                 </span>
               </div>
-            </a>
+            </Link>
 
             {/* Desktop nav */}
             <nav className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => (
-                <a
+                <Link
                   key={link.href}
                   href={link.href}
                   className={`text-sm font-medium transition-colors duration-200 hover:text-burgundy ${
@@ -88,7 +92,7 @@ export default function Navbar() {
                   }`}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
             </nav>
             <div className="flex items-center gap-3">
@@ -139,7 +143,7 @@ export default function Navbar() {
           >
             <nav className="flex flex-col py-4 px-5">
               {navLinks.map((link, i) => (
-                <motion.a
+                <MotionLink
                   key={link.href}
                   href={link.href}
                   initial={{ opacity: 0, x: -10 }}
@@ -149,7 +153,7 @@ export default function Navbar() {
                   className="py-3.5 text-[15px] font-medium text-[#222] border-b border-brand-rose/50 last:border-0 hover:text-burgundy transition-colors"
                 >
                   {link.label}
-                </motion.a>
+                </MotionLink>
               ))}
               <div className="flex gap-3 mt-4">
                 {isLoggedIn === true ? (

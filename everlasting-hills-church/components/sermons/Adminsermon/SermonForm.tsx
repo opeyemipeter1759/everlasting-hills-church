@@ -64,7 +64,6 @@ type EpisodeRow = {
   id?: string;
   title: string;
   url: string;           // audio URL — filled by upload or typed
-  videoUrl: string;      // video URL — manual input
   duration: string;
   order: string;
   audioMode: AudioMode;  // UI-only: which audio input mode is active
@@ -73,7 +72,6 @@ type EpisodeRow = {
 const BLANK_EPISODE: EpisodeRow = {
   title: '',
   url: '',
-  videoUrl: '',
   duration: '',
   order: '0',
   audioMode: 'upload',
@@ -141,7 +139,6 @@ function episodesToRows(episodes?: SermonEpisodeInput[]): EpisodeRow[] {
     id: ep.id,
     title: ep.title,
     url: ep.url,
-    videoUrl: ep.videoUrl ?? '',
     duration: ep.duration != null ? String(ep.duration) : '',
     order: String(ep.order),
     audioMode: 'upload' as AudioMode,
@@ -259,8 +256,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
               ...(ep.id && { id: ep.id }),
               title: ep.title,
               url: ep.url,
-              ...(ep.videoUrl && { videoUrl: ep.videoUrl }),
-              ...(ep.duration && { duration: Number(ep.duration) }),
+              duration: Number(ep.duration || 0),
               order: ep.order ? Number(ep.order) : i,
             }),
           ),
@@ -275,14 +271,14 @@ export default function SermonForm({ mode }: SermonFormProps) {
 
     if (mode === 'create') {
       createSermon(payload, {
-        onSuccess: () => router.push('/dashboard/sermons'),
+        onSuccess: () => router.push('/dashboard/pastor/sermons'),
         onError,
       });
     } else {
       updateSermon(
         { id: sermonId!, payload },
         {
-          onSuccess: () => router.push('/dashboard/sermons'),
+          onSuccess: () => router.push('/dashboard/pastor/sermons'),
           onError,
         },
       );
@@ -302,13 +298,13 @@ export default function SermonForm({ mode }: SermonFormProps) {
 
   /* ── render ─────────────────────────────────────────────────────── */
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-[1400px]">
       {/* ── header ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 rounded-t-2xl bg-gradient-to-br from-[#87102C] via-[#6e0c24] to-[#4a0617] px-6 py-5">
+      <div className="sticky top-0 z-20 flex flex-wrap items-center justify-between gap-4 rounded-t-2xl bg-gradient-to-br from-[#87102C] via-[#6e0c24] to-[#4a0617] px-6 py-5">
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => router.push('/dashboard/sermons')}
+            onClick={() => router.push('/dashboard/pastor/sermons')}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
           >
             <ArrowLeft size={15} />
@@ -329,17 +325,53 @@ export default function SermonForm({ mode }: SermonFormProps) {
             </div>
           </div>
         </div>
+
+        {/* desktop action bar */}
+        <div className="hidden items-center gap-2.5 sm:flex">
+          <button
+            type="button"
+            onClick={() => router.push('/dashboard/pastor/sermons')}
+            disabled={isPending}
+            className="font-sans rounded-xl border border-white/20 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="sermon-form"
+            disabled={isPending}
+            className="font-sans inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-[#87102C] shadow-lg shadow-black/20 hover:bg-church-warm active:scale-[0.97] transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isPending ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                {mode === 'create' ? 'Creating…' : 'Saving…'}
+              </>
+            ) : mode === 'create' ? (
+              <>
+                <Plus size={14} strokeWidth={2.5} /> Create Sermon
+              </>
+            ) : (
+              <>
+                <Save size={14} /> Save Changes
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ── form body ──────────────────────────────────────────────── */}
       <div className="rounded-b-2xl border border-t-0 border-gray-100 dark:border-white/[0.07] bg-white dark:bg-[#141414]">
-        <form id="sermon-form" onSubmit={handleSubmit} className="space-y-6 px-6 py-6">
+        <form id="sermon-form" onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 px-6 py-6 lg:grid-cols-3">
 
           {error && (
-            <div className="font-sans rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
+            <div className="font-sans lg:col-span-3 rounded-xl border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400">
               {error}
             </div>
           )}
+
+          {/* ── Main column ────────────────────────────────────────── */}
+          <div className="space-y-6 lg:col-span-2">
 
           {/* ── Basic Information ──────────────────────────────────── */}
           <Section title="Basic Information">
@@ -375,41 +407,6 @@ export default function SermonForm({ mode }: SermonFormProps) {
                 />
               </Field>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Type">
-                <select
-                  value={form.type}
-                  onChange={(e) => set('type', e.target.value as SermonType)}
-                  className={INPUT}
-                >
-                  <option value="SINGLE">Single</option>
-                  <option value="SERIES">Series</option>
-                </select>
-              </Field>
-              <Field label="Status">
-                <select
-                  value={form.status}
-                  onChange={(e) => set('status', e.target.value as SermonStatus)}
-                  className={INPUT}
-                >
-                  <option value="DRAFT">Draft</option>
-                  <option value="PUBLISHED">Published</option>
-                  <option value="SCHEDULED">Scheduled</option>
-                </select>
-              </Field>
-            </div>
-
-            {form.status === 'SCHEDULED' && (
-              <Field label="Scheduled For">
-                <input
-                  type="datetime-local"
-                  value={form.scheduledFor}
-                  onChange={(e) => set('scheduledFor', e.target.value)}
-                  className={INPUT}
-                />
-              </Field>
-            )}
           </Section>
 
           <hr className="border-gray-100 dark:border-white/[0.06]" />
@@ -464,16 +461,6 @@ export default function SermonForm({ mode }: SermonFormProps) {
                 value={form.transcript}
                 onChange={(e) => set('transcript', e.target.value)}
                 className={`${INPUT} resize-none`}
-              />
-            </Field>
-
-            <Field label="Thumbnail">
-              <FileUpload
-                type="image"
-                endpoint="/uploads/image"
-                value={form.thumbnailUrl}
-                onChange={(url) => set('thumbnailUrl', url)}
-                disabled={isPending}
               />
             </Field>
           </Section>
@@ -614,29 +601,16 @@ export default function SermonForm({ mode }: SermonFormProps) {
                           )}
                         </div>
 
-                        {/* video URL */}
-                        <div>
-                          <label className={LABEL}>Video URL</label>
-                          <div className="relative">
-                            <Link size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                            <input
-                              type="url"
-                              placeholder="https://youtube.com/watch?v=…"
-                              value={ep.videoUrl}
-                              onChange={(e) => updateEpisode(i, 'videoUrl', e.target.value)}
-                              className={`${INPUT} pl-8`}
-                            />
-                          </div>
-                        </div>
-
                         {/* duration + order */}
                         <div className="grid grid-cols-2 gap-2">
                           <div>
                             <label className={LABEL}>
                               Duration{' '}
                               <span className="font-normal text-gray-400">(sec — auto-filled)</span>
+                              <span className="ml-0.5 text-red-500">*</span>
                             </label>
                             <input
+                              required
                               type="number"
                               min={0}
                               placeholder="e.g. 2700"
@@ -672,13 +646,68 @@ export default function SermonForm({ mode }: SermonFormProps) {
               </Section>
             </>
           )}
+          </div>
+
+          {/* ── Sidebar column ─────────────────────────────────────── */}
+          <div className="space-y-6 lg:col-span-1">
+            <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-gray-50/60 dark:bg-white/[0.02] p-5">
+              <Section title="Publishing">
+                <Field label="Type">
+                  <select
+                    value={form.type}
+                    onChange={(e) => set('type', e.target.value as SermonType)}
+                    className={INPUT}
+                  >
+                    <option value="SINGLE">Single</option>
+                    <option value="SERIES">Series</option>
+                  </select>
+                </Field>
+                <Field label="Status">
+                  <select
+                    value={form.status}
+                    onChange={(e) => set('status', e.target.value as SermonStatus)}
+                    className={INPUT}
+                  >
+                    <option value="DRAFT">Draft</option>
+                    <option value="PUBLISHED">Published</option>
+                    <option value="SCHEDULED">Scheduled</option>
+                  </select>
+                </Field>
+
+                {form.status === 'SCHEDULED' && (
+                  <Field label="Scheduled For">
+                    <input
+                      type="datetime-local"
+                      value={form.scheduledFor}
+                      onChange={(e) => set('scheduledFor', e.target.value)}
+                      className={INPUT}
+                    />
+                  </Field>
+                )}
+              </Section>
+            </div>
+
+            <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-gray-50/60 dark:bg-white/[0.02] p-5">
+              <Section title="Thumbnail">
+                <Field label="Cover Image">
+                  <FileUpload
+                    type="image"
+                    endpoint="/uploads/image"
+                    value={form.thumbnailUrl}
+                    onChange={(url) => set('thumbnailUrl', url)}
+                    disabled={isPending}
+                  />
+                </Field>
+              </Section>
+            </div>
+          </div>
         </form>
 
-        {/* ── footer ─────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-end gap-3 border-t border-gray-100 dark:border-white/[0.07] px-6 py-4">
+        {/* ── mobile footer (desktop uses the sticky header actions) ─── */}
+        <div className="flex items-center justify-end gap-3 border-t border-gray-100 dark:border-white/[0.07] px-6 py-4 sm:hidden">
           <button
             type="button"
-            onClick={() => router.push('/dashboard/sermons')}
+            onClick={() => router.push('/dashboard/pastor/sermons')}
             disabled={isPending}
             className="font-sans rounded-xl border border-gray-200 dark:border-white/10 px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
           >

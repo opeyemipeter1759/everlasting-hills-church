@@ -3,13 +3,14 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { SermonsController } from './sermons.controller';
 import { SermonsService } from './sermons.service';
 import { AuthModule } from '../auth/auth.module';
+import { InboxModule } from '../inbox/inbox.module';
 import { SermonReadService } from './recent/sermon-read.service';
 import { SERMON_REPOSITORY } from './recent/sermon-repository';
 import { PrismaSermonRepository } from './recent/prisma-sermon.repository';
 import { InMemorySermonRepository } from './recent/in-memory-sermon.repository';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, InboxModule],
   controllers: [SermonsController],
   providers: [
     SermonsService,

@@ -4,6 +4,7 @@ import { QueryProvider } from "@/lib/api/QueryProvider";
 import NavigationProgress from "@/components/ui/navigation/NavigationProgress";
 import { ToastProvider } from "@/lib/api/ToastProvider";
 import "./globals.css";
+import { SermonPlayerProvider } from "@/context/SermonPlayerContext";
 
 export const metadata: Metadata = {
   title: "Everlasting Hills Church — Raising Men Who Flourish Beyond Limits",
@@ -27,9 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Prevent flash of wrong theme */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ehc-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
-        {/* Preconnect for Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -72,8 +71,10 @@ export default function RootLayout({
           <NavigationProgress />
         </Suspense>
         <QueryProvider>
-          {children}
-          <ToastProvider />
+          <SermonPlayerProvider>
+            {children}
+            <ToastProvider />
+          </SermonPlayerProvider>
         </QueryProvider>
       </body>
     </html>

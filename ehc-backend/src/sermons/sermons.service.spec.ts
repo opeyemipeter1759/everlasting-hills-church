@@ -44,7 +44,8 @@ function makeService(prisma: PrismaService): SermonsService {
   const config = {
     get: jest.fn().mockReturnValue('tenant-test'),
   } as unknown as ConfigService;
-  return new SermonsService(prisma, config as never);
+  const inbox = { createMany: jest.fn() } as never;
+  return new SermonsService(prisma, inbox, config as never);
 }
 
 describe('SermonsService', () => {
