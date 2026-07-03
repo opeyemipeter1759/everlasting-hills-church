@@ -4,6 +4,8 @@ import {
   AboutSchema, DEFAULT_ABOUT,
   MinistriesSchema, DEFAULT_MINISTRIES,
   VisitSchema, DEFAULT_VISIT,
+  IntroSchema, DEFAULT_SERMONS_INTRO, DEFAULT_EVENTS_INTRO,
+  LegalSchema, DEFAULT_PRIVACY, DEFAULT_TERMS,
 } from './schemas/structured/pages.schema';
 
 /**
@@ -25,6 +27,10 @@ export const CONTENT_TYPES: Record<string, ContentType> = {
   about: { schema: AboutSchema, default: DEFAULT_ABOUT },
   ministries: { schema: MinistriesSchema, default: DEFAULT_MINISTRIES },
   visit: { schema: VisitSchema, default: DEFAULT_VISIT },
+  sermonsIntro: { schema: IntroSchema, default: DEFAULT_SERMONS_INTRO },
+  eventsIntro: { schema: IntroSchema, default: DEFAULT_EVENTS_INTRO },
+  privacyLegal: { schema: LegalSchema, default: DEFAULT_PRIVACY },
+  termsLegal: { schema: LegalSchema, default: DEFAULT_TERMS },
 };
 
 export function contentType(name?: string | null): ContentType | undefined {

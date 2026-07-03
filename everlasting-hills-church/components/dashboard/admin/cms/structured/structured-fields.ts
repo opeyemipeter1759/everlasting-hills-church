@@ -119,6 +119,36 @@ export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
   ],
 };
 
+// Intro copy over module-driven pages (sermons, events)
+const introFields: FieldDef[] = [
+  { kind: "text", key: "eyebrow", label: "Eyebrow" },
+  { kind: "text", key: "title", label: "Title" },
+  { kind: "textarea", key: "subtitle", label: "Subtitle" },
+];
+STRUCTURED_FIELDS.sermonsIntro = introFields;
+STRUCTURED_FIELDS.eventsIntro = introFields;
+
+// Legal / policy pages
+const legalFields: FieldDef[] = [
+  { kind: "text", key: "eyebrow", label: "Eyebrow" },
+  { kind: "text", key: "title", label: "Title" },
+  { kind: "text", key: "accent", label: "Accent" },
+  { kind: "text", key: "updated", label: "Last updated" },
+  { kind: "textarea", key: "intro", label: "Intro" },
+  {
+    kind: "repeat",
+    key: "sections",
+    label: "Sections",
+    itemLabel: "Section",
+    fields: [
+      { kind: "text", key: "heading", label: "Heading" },
+      { kind: "textarea", key: "body", label: "Body", help: "Blank line between paragraphs; start a line with '- ' for a bullet" },
+    ],
+  },
+];
+STRUCTURED_FIELDS.privacyLegal = legalFields;
+STRUCTURED_FIELDS.termsLegal = legalFields;
+
 export function structuredFields(contentType: string): FieldDef[] | undefined {
   return STRUCTURED_FIELDS[contentType];
 }

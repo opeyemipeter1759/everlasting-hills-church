@@ -9,6 +9,63 @@ import { z } from 'zod';
 const t = (max: number) => z.string().trim().min(1).max(max);
 const CtaSchema = z.object({ heading: t(160), body: t(600) });
 
+// ── Intro (wrapper copy over module-driven content: sermons, events) ───────────
+export const IntroSchema = z.object({
+  eyebrow: t(60),
+  title: t(120),
+  subtitle: t(400),
+});
+export const DEFAULT_SERMONS_INTRO: z.infer<typeof IntroSchema> = {
+  eyebrow: 'Sermons',
+  title: 'Watch. Listen. Grow.',
+  subtitle: 'Recent messages from Everlasting Hills — keep walking in the Word through the week.',
+};
+export const DEFAULT_EVENTS_INTRO: z.infer<typeof IntroSchema> = {
+  eyebrow: 'Gather with us',
+  title: 'Events',
+  subtitle: "Conferences, special services, and gatherings designed to strengthen faith and build family. We'd love to see you there.",
+};
+
+// ── Legal (privacy / terms / cookies) ──────────────────────────────────────────
+const LegalSection = z.object({ heading: t(120), body: z.string().trim().min(1).max(4000) });
+export const LegalSchema = z.object({
+  eyebrow: t(60),
+  title: t(80),
+  accent: t(80),
+  updated: t(40),
+  intro: t(1000),
+  sections: z.array(LegalSection).min(1).max(20),
+});
+export const DEFAULT_PRIVACY: z.infer<typeof LegalSchema> = {
+  eyebrow: 'Legal',
+  title: 'Privacy',
+  accent: 'Policy',
+  updated: '18 June 2026',
+  intro: 'Everlasting Hills Church values your trust. This policy explains what information we collect, why we collect it, and how we keep it safe.',
+  sections: [
+    { heading: 'Information we collect', body: '- Contact details you provide through our forms (name, email, phone).\n- Membership and attendance records when you join or check in.\n- Prayer requests, testimonies, and messages you choose to share.\n- Basic technical data such as device and browser information.' },
+    { heading: 'How we use your information', body: '- To welcome, follow up with, and care for you as part of the church family.\n- To send service updates, event details, and communications you opt into.\n- To improve our website, services, and pastoral care.' },
+    { heading: 'How we protect it', body: 'We apply reasonable technical and organisational measures to guard your information. Access is limited to authorised leaders and staff who need it to serve you.' },
+    { heading: 'Your choices', body: 'You may request access to, correction of, or deletion of your personal data at any time. You can also opt out of non-essential communications.' },
+    { heading: 'Contact us', body: 'For any privacy question or request, email us at hello@everlastinghills.org.' },
+  ],
+};
+export const DEFAULT_TERMS: z.infer<typeof LegalSchema> = {
+  eyebrow: 'Legal',
+  title: 'Terms of',
+  accent: 'Service',
+  updated: '18 June 2026',
+  intro: 'Welcome to the Everlasting Hills Church website. By using this site and our online services, you agree to the terms below. Please read them carefully.',
+  sections: [
+    { heading: 'Use of the site', body: 'You agree to use this website lawfully and respectfully, and not to misuse, disrupt, or attempt to gain unauthorised access to any part of it or its underlying systems.' },
+    { heading: 'Accounts', body: '- You are responsible for keeping your login details secure.\n- You agree to provide accurate information when you register.\n- We may suspend accounts that breach these terms or are misused.' },
+    { heading: 'Submissions and content', body: 'Prayer requests, testimonies, and other content you submit may be read by our pastoral team. Do not submit unlawful, harmful, or content you do not have the right to share.' },
+    { heading: 'Giving', body: 'Online giving is processed securely through our payment partner. Gifts are voluntary and, unless stated otherwise, non-refundable. Receipts are issued for your records.' },
+    { heading: 'Changes', body: 'We may update these terms from time to time. Continued use of the site after changes means you accept the updated terms.' },
+    { heading: 'Contact us', body: 'Questions about these terms? Email us at hello@everlastinghills.org.' },
+  ],
+};
+
 // ── About ────────────────────────────────────────────────────────────────────
 const AboutCard = z.object({ title: t(60), body: t(600) });
 export const AboutSchema = z.object({

@@ -33,15 +33,15 @@ export const PAGE_REGISTRY: PageDef[] = [
   { key: 'about/pastor', title: 'Lead Pastor', route: '/pastor', group: 'About' },
 
   { key: 'ministries', title: 'Ministries', route: '/ministries', group: 'Ministries', editor: 'structured', contentType: 'ministries' },
-  { key: 'sermons', title: 'Sermons (wrapper copy)', route: '/sermons', group: 'Sermons' },
-  { key: 'events', title: 'Events (wrapper copy)', route: '/events', group: 'Events' },
+  { key: 'sermons', title: 'Sermons (intro copy)', route: '/sermons', group: 'Sermons' },
+  { key: 'events', title: 'Events (intro copy)', route: '/events', group: 'Events', editor: 'structured', contentType: 'eventsIntro' },
 
   { key: 'visit', title: 'Plan a Visit', route: '/visit', group: 'Visit', editor: 'structured', contentType: 'visit' },
   { key: 'contact', title: 'Contact', route: '/contact', group: 'Contact' },
   { key: 'give', title: 'Give', route: '/give', group: 'Give' },
 
-  { key: 'privacy', title: 'Privacy Policy', route: '/privacy', group: 'Legal', highImpact: true },
-  { key: 'terms', title: 'Terms of Service', route: '/terms', group: 'Legal', highImpact: true },
+  { key: 'privacy', title: 'Privacy Policy', route: '/privacy', group: 'Legal', highImpact: true, editor: 'structured', contentType: 'privacyLegal' },
+  { key: 'terms', title: 'Terms of Service', route: '/terms', group: 'Legal', highImpact: true, editor: 'structured', contentType: 'termsLegal' },
   { key: 'cookies', title: 'Cookie Policy', route: '/cookies', group: 'Legal', highImpact: true },
 
   { key: 'blog', title: 'Blog', route: '/blog', group: 'Blog', featureFlag: 'blog' },
