@@ -13,10 +13,12 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { FormsModule } from './forms/forms.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { HeadcountModule } from './headcount/headcount.module';
 import { SermonsModule } from './sermons/sermons.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
 import { AssignmentsModule } from './assignments/assignments.module';
+import { CmsModule } from './cms/cms.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { UnitsModule } from './units/units.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -103,10 +105,12 @@ import type { Env } from './config/env.validation';
     AuthModule,
     FormsModule,
     AttendanceModule,
+    HeadcountModule,
     SermonsModule,
     AnalyticsModule,
     MembersModule,
     AssignmentsModule,
+    CmsModule,
     VisitorsModule,
     UnitsModule,
     NotificationsModule,

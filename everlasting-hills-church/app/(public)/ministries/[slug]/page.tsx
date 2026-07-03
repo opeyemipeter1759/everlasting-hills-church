@@ -3,6 +3,28 @@ import Link from "next/link";
 import { Crown, Heart, Zap, Users, ArrowLeft, ArrowRight } from "lucide-react";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import type { Metadata } from "next";
+import { getStructuredContent } from "@/lib/cms-page";
+
+/** CMS-editable text fields for a ministry detail page (icon + image stay fixed). */
+interface MinistryDetailContent {
+  name: string;
+  heroLabel: string;
+  heroHeadline: string;
+  heroAccent: string;
+  heroBody: string;
+  overview: string;
+  pullQuote: string;
+  verseRef: string;
+  verseText: string;
+  activities: { num: string; title: string; body: string }[];
+  who: string;
+  close: string;
+}
+
+function isValidDetail(c: unknown): c is MinistryDetailContent {
+  const v = c as MinistryDetailContent;
+  return Boolean(v && v.heroHeadline && Array.isArray(v.activities) && v.activities.length > 0);
+}
 
 // ── Ministry content ───────────────────────────────────────────────────────────
 
@@ -205,17 +227,34 @@ function DotOverlay() {
 
 export default async function MinistryDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }) {
   const { slug } = await params;
-  const m = MINISTRIES[slug as Slug];
-  if (!m) notFound();
+  const { preview } = await searchParams;
+  const base = MINISTRIES[slug as Slug];
+  if (!base) notFound();
+
+  // Text comes from the CMS (falling back to the bundled copy); the icon and hero
+  // image stay fixed per group since they aren't text-editable.
+  const content = await getStructuredContent<MinistryDetailContent>(`ministries/${slug}`, {
+    preview,
+    fallback: base as unknown as MinistryDetailContent,
+    valid: isValidDetail,
+  });
+  const m = { ...content, icon: base.icon, heroImage: base.heroImage };
 
   const Icon = m.icon;
 
   return (
     <main>
+      {preview && (
+        <div className="bg-[#87102C] text-white text-center text-xs font-semibold py-2 tracking-wide">
+          PREVIEW — draft, not published
+        </div>
+      )}
 
       {/* ════════════════════════════════════════════════════════════════
           1. HERO — split-screen, dark

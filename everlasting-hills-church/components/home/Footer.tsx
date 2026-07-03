@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Instagram, Facebook, Youtube, Mail } from "lucide-react";
+import { getSiteConfig, type SiteIdentity } from "@/lib/site-config";
 
 function TikTokIcon({ size = 16 }: { size?: number }) {
   return (
@@ -9,33 +10,17 @@ function TikTokIcon({ size = 16 }: { size?: number }) {
   );
 }
 
-const socialLinks = [
-  {
-    icon: Instagram,
-    label: "Instagram",
-    href: "https://www.instagram.com/everlastinghillschurch?igsh=d2YwOWJlc2FtZnNs",
-  },
-  {
-    icon: Facebook,
-    label: "Facebook",
-    href: "https://www.facebook.com/share/1AwdEL3f52/",
-  },
-  {
-    icon: Youtube,
-    label: "YouTube",
-    href: "https://youtube.com/@everlastinghillschurch?si=3ftJeVz2a6F7Hu3g",
-  },
-  {
-    icon: TikTokIcon,
-    label: "TikTok",
-    href: "https://www.tiktok.com/@everlasting_hills_church",
-  },
-  {
-    icon: Mail,
-    label: "Email",
-    href: "mailto:hello@everlastinghills.org",
-  },
-];
+/** Build the visible social links from CMS site settings (hides empty channels). */
+function buildSocialLinks(cfg: SiteIdentity) {
+  const s = cfg.socials;
+  return [
+    { icon: Instagram, label: "Instagram", href: s.instagram },
+    { icon: Facebook, label: "Facebook", href: s.facebook },
+    { icon: Youtube, label: "YouTube", href: s.youtube },
+    { icon: TikTokIcon, label: "TikTok", href: s.tiktok },
+    { icon: Mail, label: "Email", href: cfg.contactEmail ? `mailto:${cfg.contactEmail}` : "" },
+  ].filter((l) => l.href);
+}
 
 const footerLinks = [
   { label: "About", href: "/about" },
@@ -47,7 +32,9 @@ const footerLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
-export default function Footer() {
+export default async function Footer() {
+  const cfg = await getSiteConfig();
+  const socialLinks = buildSocialLinks(cfg);
   return (
     <footer
       className="relative overflow-visible"
@@ -85,8 +72,8 @@ export default function Footer() {
 
             {/* Tagline */}
             <p className="text-white/60 text-sm leading-relaxed mb-4 max-w-[230px]">
-              {/* ── Church tagline ── */}
-              Raising men who flourish beyond limits.
+              {/* ── Church tagline (CMS site settings) ── */}
+              {cfg.footerTagline}
             </p>
 
             {/* Pillars */}
@@ -105,7 +92,7 @@ export default function Footer() {
 
             {/* Location */}
             <p className="text-white/35 text-xs tracking-wide">
-              Ibadan, Nigeria {/* ← Update with specific address when ready */}
+              {cfg.address}
             </p>
           </div>
 
@@ -174,7 +161,7 @@ export default function Footer() {
             >
               Terms
             </a>
-            <span className="text-white/20 text-xs">Ibadan, Nigeria</span>
+            <span className="text-white/20 text-xs">{cfg.address}</span>
           </div>
         </div>
       </div>

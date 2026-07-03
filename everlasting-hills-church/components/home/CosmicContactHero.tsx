@@ -6,7 +6,19 @@ import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
 import ContactSection from "./ContactSection";
 
-export default function CosmicContactHero() {
+export interface CosmicContactHeroProps {
+  eyebrow?: string;
+  title?: string;
+  accent?: string;
+  subtitle?: string;
+}
+
+export default function CosmicContactHero({
+  eyebrow = "Get in Touch",
+  title = "Connect",
+  accent = "With Us",
+  subtitle = "We would love to hear from you. Reach out — there is always a place for you in the Everlasting Hills family.",
+}: CosmicContactHeroProps = {}) {
   const directions = useDirections();
 
   return (
@@ -35,19 +47,18 @@ export default function CosmicContactHero() {
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-sm">
               <MapPin size={12} className="text-[#e8768a]" />
-              Get in Touch
+              {eyebrow}
             </span>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.05] text-balance">
-              Connect{" "}
+              {title}{" "}
               <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#FFB3C1] bg-clip-text text-transparent italic font-serif">
-                With Us
+                {accent}
               </span>
             </h1>
 
             <p className="text-white/55 text-base sm:text-lg leading-relaxed max-w-xl">
-              We would love to hear from you. Reach out — there is always
-              a place for you in the Everlasting Hills family.
+              {subtitle}
             </p>
           </motion.div>
         </div>

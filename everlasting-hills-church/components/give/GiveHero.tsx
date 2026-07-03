@@ -14,7 +14,23 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * rules (solid white primary, ghost-outline secondary). Both CTAs reveal the
  * account options below, since bank transfer is how giving happens.
  */
-export default function GiveHero() {
+export interface GiveHeroProps {
+  eyebrow?: string;
+  titleTop?: string;
+  accentTop?: string;
+  titleBottom?: string;
+  accentBottom?: string;
+  subtitle?: string;
+}
+
+export default function GiveHero({
+  eyebrow = "Give",
+  titleTop = "Your",
+  accentTop = "Generosity",
+  titleBottom = "Our",
+  accentBottom = "Mission",
+  subtitle = "Your gifts fuel worship, outreach, and pastoral care, carrying the gospel unto the utmost bound of the everlasting hills.",
+}: GiveHeroProps = {}) {
   function scrollToAccounts() {
     document
       .getElementById("ways-to-give")
@@ -59,7 +75,7 @@ export default function GiveHero() {
           className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70 backdrop-blur-sm"
         >
           <HandHeart size={12} className="text-[#FFB3C1]" />
-          Give
+          {eyebrow}
         </motion.span>
 
         {/* Two-tone headline */}
@@ -69,14 +85,14 @@ export default function GiveHero() {
           transition={{ duration: 0.7, delay: 0.1, ease: EASE }}
           className="text-balance text-4xl font-bold leading-[1.04] tracking-tight text-white sm:text-6xl lg:text-7xl"
         >
-          Your{" "}
+          {titleTop}{" "}
           <em className="not-italic bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#FFB3C1] bg-clip-text text-transparent">
-            Generosity
+            {accentTop}
           </em>
           ,
-          <br className="hidden sm:block" /> Our{" "}
+          <br className="hidden sm:block" /> {titleBottom}{" "}
           <em className="not-italic bg-gradient-to-r from-[#FFB3C1] via-[#c93860] to-[#87102C] bg-clip-text text-transparent">
-            Mission
+            {accentBottom}
           </em>
         </motion.h1>
 
@@ -87,8 +103,7 @@ export default function GiveHero() {
           transition={{ duration: 0.6, delay: 0.25, ease: EASE }}
           className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg"
         >
-          Your gifts fuel worship, outreach, and pastoral care, carrying the
-          gospel unto the utmost bound of the everlasting hills.
+          {subtitle}
         </motion.p>
 
         {/* CTAs */}
