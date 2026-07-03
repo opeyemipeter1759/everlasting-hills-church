@@ -17,6 +17,7 @@ import { SermonsModule } from './sermons/sermons.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
 import { AssignmentsModule } from './assignments/assignments.module';
+import { CmsModule } from './cms/cms.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { UnitsModule } from './units/units.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -107,6 +108,7 @@ import type { Env } from './config/env.validation';
     AnalyticsModule,
     MembersModule,
     AssignmentsModule,
+    CmsModule,
     VisitorsModule,
     UnitsModule,
     NotificationsModule,
