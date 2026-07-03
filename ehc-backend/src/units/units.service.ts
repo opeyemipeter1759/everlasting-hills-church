@@ -76,10 +76,11 @@ export class UnitsService {
 
     return units.map((u) => ({
       id: u.id,
+      tenantId: u.tenantId,
       name: u.name,
       description: u.description,
       createdAt: u.createdAt,
-      totalMembers: u._count.UnitMember,
+      _count: { UnitMember: u._count.UnitMember },
       lead: u.UnitMember.find((m) => m.isLead)?.Member ?? null,
       assistant: u.UnitMember.find((m) => m.isAssistant)?.Member ?? null,
     }));
@@ -92,31 +93,36 @@ export class UnitsService {
         UnitMember: {
           include: {
             Member: {
-              select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true, status: true },
+              select: { id: true, firstName: true, lastName: true, email: true, photoUrl: true, status: true },
             },
           },
           orderBy: [{ isLead: 'desc' }, { isAssistant: 'desc' }, { joinedAt: 'asc' }],
         },
+        _count: { select: { UnitMember: true } },
       },
     });
     if (!unit) throw new NotFoundException('Unit not found');
 
     return {
       id: unit.id,
+      tenantId: unit.tenantId,
       name: unit.name,
       description: unit.description,
       createdAt: unit.createdAt,
-      members: unit.UnitMember.map((um) => ({
-        id: um.Member.id,
-        firstName: um.Member.firstName,
-        lastName: um.Member.lastName,
-        email: um.Member.email,
-        phone: um.Member.phone,
-        photoUrl: um.Member.photoUrl,
-        status: um.Member.status,
+      _count: { UnitMember: unit._count.UnitMember },
+      UnitMember: unit.UnitMember.map((um) => ({
+        id: um.id,
+        memberId: um.memberId,
         isLead: um.isLead,
         isAssistant: um.isAssistant,
-        joinedAt: um.joinedAt,
+        Member: {
+          id: um.Member.id,
+          firstName: um.Member.firstName,
+          lastName: um.Member.lastName,
+          email: um.Member.email,
+          photoUrl: um.Member.photoUrl,
+          status: um.Member.status,
+        },
       })),
     };
   }
@@ -171,7 +177,7 @@ export class UnitsService {
     }
 
     try {
-      return await this.prisma.unitMember.create({
+      const um = await this.prisma.unitMember.create({
         data: {
           id: randomUUID(),
           tenantId: this.tenantId,
@@ -180,7 +186,26 @@ export class UnitsService {
           isLead: data.isLead ?? false,
           isAssistant: data.isAssistant ?? false,
         },
+        include: {
+          Member: {
+            select: { id: true, firstName: true, lastName: true, email: true, photoUrl: true, status: true },
+          },
+        },
       });
+      return {
+        id: um.id,
+        memberId: um.memberId,
+        isLead: um.isLead,
+        isAssistant: um.isAssistant,
+        Member: {
+          id: um.Member.id,
+          firstName: um.Member.firstName,
+          lastName: um.Member.lastName,
+          email: um.Member.email,
+          photoUrl: um.Member.photoUrl,
+          status: um.Member.status,
+        },
+      };
     } catch {
       throw new BadRequestException('Member is already in this unit');
     }

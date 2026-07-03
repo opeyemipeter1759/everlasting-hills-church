@@ -56,7 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Unit",
     items: [
-      { label: "Unit Dashboard", href: "/dashboard/units", icon: Users, minRole: "UNIT_LEAD", maxRole: "ADMIN" },
+      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD" },
     ],
   },
   {

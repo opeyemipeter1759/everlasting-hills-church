@@ -301,3 +301,49 @@ export interface MemberHomeProps {
 }
 
 export type MemberHomePropsOptional = Partial<MemberHomeProps>;
+
+export interface Unit {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  createdAt: string;
+  _count: { UnitMember: number };
+}
+
+export interface UnitMemberEntry {
+  id: string;
+  memberId: string;
+  isLead: boolean;
+  Member: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string | null;
+    photoUrl: string | null;
+    status: string;
+  };
+}
+
+export interface UnitDetail extends Unit {
+  UnitMember: UnitMemberEntry[];
+}
+
+export interface MemberRow {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+}
+
+export type Role =
+  | "MEMBER"
+  | "UNIT_LEAD"
+  | "ADMIN"
+  | "PASTOR"
+  | "SUPER_ADMIN"
+  | null;
+
+export function isAdminPlus(role: Role): boolean {
+  return role === "ADMIN" || role === "PASTOR" || role === "SUPER_ADMIN";
+}

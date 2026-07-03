@@ -157,6 +157,11 @@ model Member {
   gender             String?
   dateOfBirth        DateTime?
   weddingAnniversary DateTime?
+  instagram          String?
+  facebook           String?
+  twitter            String?
+  linkedin           String?
+  tiktok             String?
   address            String?
   joinedAt           DateTime             @default(now())
   bio                String?
