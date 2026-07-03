@@ -12,7 +12,8 @@ import type { Env } from '../config/env.validation';
 import { UploadsService } from '../uploads/uploads.service';
 import { EMPTY_CONTENT, PageContent } from './schemas/blocks.schema';
 import { DEFAULT_SITE_IDENTITY, SiteIdentitySchema } from './schemas/site-config.schema';
-import { PAGE_REGISTRY, cacheTagFor, pageDef } from './page-registry';
+import { PAGE_REGISTRY, cacheTagFor, pageDef, type PageDef } from './page-registry';
+import { contentType } from './content-types';
 
 type AuditAction =
   | 'CREATE'
@@ -36,6 +37,8 @@ export class CmsService {
   private readonly tenantId: string;
   private readonly previewSecret: string;
   private readonly r2PublicUrl: string;
+  private readonly appUrl: string;
+  private readonly revalidateSecret: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -50,6 +53,29 @@ export class CmsService {
       process.env.SUPABASE_JWT_SECRET ??
       'ehc-cms-preview-secret';
     this.r2PublicUrl = (process.env.R2_PUBLIC_URL ?? '').replace(/\/$/, '');
+    this.appUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    this.revalidateSecret =
+      process.env.CMS_REVALIDATE_SECRET ??
+      process.env.SUPABASE_JWT_SECRET ??
+      'ehc-cms-revalidate';
+  }
+
+  /**
+   * Ask the Next.js site to revalidate ISR cache tags / paths after a publish.
+   * Fire-and-forget server-to-server call; failures are logged, never thrown into
+   * the publish path (the DB is already the source of truth).
+   */
+  private triggerRevalidate(tags: string[] = [], paths: string[] = []) {
+    void fetch(`${this.appUrl}/api/revalidate`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-revalidate-secret': this.revalidateSecret,
+      },
+      body: JSON.stringify({ tags, paths }),
+    }).catch((err) =>
+      this.logger.warn(`ISR revalidate call failed: ${(err as Error).message}`),
+    );
   }
 
   // ── Pages ────────────────────────────────────────────────────────────────────
@@ -74,6 +100,24 @@ export class CmsService {
 
   private assertKnownKey(key: string) {
     if (!pageDef(key)) throw new NotFoundException(`Unknown CMS page: ${key}`);
+  }
+
+  /** The Zod schema a page's content is validated against (structured or blocks). */
+  private contentSchemaFor(def: PageDef) {
+    if (def.editor === 'structured') {
+      const ct = contentType(def.contentType);
+      if (ct) return ct.schema;
+    }
+    return PageContent;
+  }
+
+  /** The content a page is seeded with on first access (real content, not empty). */
+  private defaultContentFor(def: PageDef): unknown {
+    if (def.editor === 'structured') {
+      const ct = contentType(def.contentType);
+      if (ct) return ct.default;
+    }
+    return EMPTY_CONTENT;
   }
 
   /** Lazily create a Page + its first empty draft version on first access. */
@@ -101,7 +145,7 @@ export class CmsService {
             id: randomUUID(),
             tenantId: this.tenantId,
             version: 1,
-            content: EMPTY_CONTENT as unknown as Prisma.InputJsonValue,
+            content: this.defaultContentFor(def) as Prisma.InputJsonValue,
             status: ContentStatus.DRAFT,
             createdBy: actorId ?? null,
           },
@@ -152,7 +196,9 @@ export class CmsService {
     body: { title?: string; content: unknown },
     actorId?: string | null,
   ) {
-    const parsed = PageContent.safeParse(body.content);
+    const def = pageDef(key);
+    if (!def) throw new NotFoundException(`Unknown CMS page: ${key}`);
+    const parsed = this.contentSchemaFor(def).safeParse(body.content);
     if (!parsed.success) {
       throw new BadRequestException({
         message: 'Invalid page content',
@@ -220,6 +266,7 @@ export class CmsService {
     });
 
     const def = pageDef(key)!;
+    this.triggerRevalidate([page.cacheTag], [def.route]);
     return { key, route: def.route, cacheTag: page.cacheTag, version: working.version };
   }
 
@@ -232,6 +279,7 @@ export class CmsService {
     });
     await this.writeAudit({ action: 'UNPUBLISH', entity: 'Page', entityId: page.id, actorId, before: { publishedVersionId: page.publishedVersionId } });
     const def = pageDef(key)!;
+    this.triggerRevalidate([page.cacheTag], [def.route]);
     return { key, route: def.route, cacheTag: page.cacheTag };
   }
 
@@ -295,6 +343,7 @@ export class CmsService {
     });
     await this.writeAudit({ action: 'ROLLBACK', entity: 'Page', entityId: page.id, actorId, before: { fromVersion: version }, after: { newVersion: restored.version } });
     const def = pageDef(key)!;
+    this.triggerRevalidate([page.cacheTag], [def.route]);
     return { key, route: def.route, cacheTag: page.cacheTag, version: restored.version };
   }
 
@@ -350,6 +399,8 @@ export class CmsService {
       update: { content, updatedBy: actorId ?? null },
     });
     await this.writeAudit({ action: 'UPDATE', entity: 'SiteConfig', entityId: row.id, actorId });
+    // Site settings appear in the footer on every page — revalidate the tag.
+    this.triggerRevalidate(['cms:site-config']);
     return { content: parsed.data, updatedAt: row.updatedAt };
   }
 

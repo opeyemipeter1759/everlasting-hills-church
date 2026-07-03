@@ -15,20 +15,28 @@ export interface PageDef {
   featureFlag?: string;
   /** High-impact pages get a publish confirmation modal. */
   highImpact?: boolean;
+  /**
+   * Editor kind. "structured" = a bespoke field form seeded from current content
+   * (design preserved). "blocks" (default) = the generic block editor for
+   * free-form pages.
+   */
+  editor?: 'blocks' | 'structured';
+  /** For structured pages: the content-type key in content-types.ts. */
+  contentType?: string;
 }
 
 export const PAGE_REGISTRY: PageDef[] = [
   { key: 'home', title: 'Homepage', route: '/', group: 'Homepage', highImpact: true },
 
-  { key: 'about', title: 'About', route: '/about', group: 'About' },
-  { key: 'about/beliefs', title: 'What We Believe', route: '/beliefs', group: 'About' },
+  { key: 'about', title: 'About', route: '/about', group: 'About', editor: 'structured', contentType: 'about' },
+  { key: 'about/beliefs', title: 'What We Believe', route: '/beliefs', group: 'About', editor: 'structured', contentType: 'beliefs' },
   { key: 'about/pastor', title: 'Lead Pastor', route: '/pastor', group: 'About' },
 
-  { key: 'ministries', title: 'Ministries', route: '/ministries', group: 'Ministries' },
+  { key: 'ministries', title: 'Ministries', route: '/ministries', group: 'Ministries', editor: 'structured', contentType: 'ministries' },
   { key: 'sermons', title: 'Sermons (wrapper copy)', route: '/sermons', group: 'Sermons' },
   { key: 'events', title: 'Events (wrapper copy)', route: '/events', group: 'Events' },
 
-  { key: 'visit', title: 'Plan a Visit', route: '/visit', group: 'Visit' },
+  { key: 'visit', title: 'Plan a Visit', route: '/visit', group: 'Visit', editor: 'structured', contentType: 'visit' },
   { key: 'contact', title: 'Contact', route: '/contact', group: 'Contact' },
   { key: 'give', title: 'Give', route: '/give', group: 'Give' },
 

@@ -30,6 +30,8 @@ export const ImageBlock = z.object({
   type: z.literal('image'),
   mediaId: z.string().nullable().optional(),
   r2Key: z.string().nullable().optional(),
+  /** Denormalized public URL (derived from r2Key at pick time) for simple rendering. */
+  url: z.string().max(2000).nullable().optional(),
   alt: z.string().max(300),
   caption: z.string().max(500).optional(),
 });

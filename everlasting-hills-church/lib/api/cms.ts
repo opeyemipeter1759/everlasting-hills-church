@@ -30,7 +30,15 @@ export interface CmsContent {
 }
 
 export interface CmsEditorPage {
-  def: { key: string; title: string; route: string; group: string; highImpact?: boolean };
+  def: {
+    key: string;
+    title: string;
+    route: string;
+    group: string;
+    highImpact?: boolean;
+    editor?: "blocks" | "structured";
+    contentType?: string;
+  };
   page: {
     id: string;
     key: string;
@@ -40,7 +48,8 @@ export interface CmsEditorPage {
     publishedVersionId: string | null;
     updatedAt: string;
   };
-  working: { versionId: string | null; version: number; status: ContentStatus; content: CmsContent };
+  // content is { blocks } for block pages, or a structured object for structured pages
+  working: { versionId: string | null; version: number; status: ContentStatus; content: unknown };
 }
 
 export interface CmsVersion {
@@ -115,7 +124,8 @@ function useInvalidateCms() {
 export function useSaveDraft(key: string) {
   const invalidate = useInvalidateCms();
   return useMutation({
-    mutationFn: (body: { title?: string; content: CmsContent }) =>
+    // content is { blocks } for block pages, or a structured object for structured pages
+    mutationFn: (body: { title?: string; content: unknown }) =>
       api.post(`/cms/pages/${enc(key)}/draft`, body),
     onSuccess: invalidate,
   });

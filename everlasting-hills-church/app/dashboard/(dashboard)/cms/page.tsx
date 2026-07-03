@@ -1,7 +1,13 @@
 "use client";
 
-import { ExternalLink, Lock } from "lucide-react";
+import Link from "next/link";
+import { ExternalLink, Lock, Pencil } from "lucide-react";
 import { useCmsPages, type CmsPageRow } from "@/lib/api/cms";
+
+// Pages that already have a bespoke editor (not the generic block editor).
+const CUSTOM_EDITORS: Record<string, string> = {
+  home: "/dashboard/settings/homepage",
+};
 
 function StatusBadge({ row }: { row: CmsPageRow }) {
   if (row.published) {
@@ -78,16 +84,20 @@ export default function CmsPagesOverview() {
                 </div>
                 <div className="flex items-center gap-4 flex-shrink-0">
                   <StatusBadge row={row} />
-                  {row.published && (
-                    <a
-                      href={row.route}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#87102C] dark:text-[#e8768a] hover:underline"
-                    >
-                      View live <ExternalLink size={12} />
-                    </a>
-                  )}
+                  <Link
+                    href={CUSTOM_EDITORS[row.key] ?? `/dashboard/cms/pages/${row.key}`}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#87102C] dark:text-[#e8768a] hover:underline"
+                  >
+                    <Pencil size={12} /> Edit
+                  </Link>
+                  <a
+                    href={row.route}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-gray-500 dark:text-white/50 hover:text-[#87102C] dark:hover:text-[#e8768a]"
+                  >
+                    View <ExternalLink size={12} />
+                  </a>
                 </div>
               </div>
             ))}
