@@ -2,11 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Minus, Plus, Check, Save, AlertTriangle, Users, Pencil } from "lucide-react";
-import {
-  useSaveHeadcount,
-  type Headcount,
-  type ServiceState,
-} from "@/lib/api/headcount";
+import type { Headcount, SaveHeadcountInput } from "@/lib/api/headcount";
 
 type Cat = "men" | "women" | "boys" | "girls" | "firstTimers";
 
@@ -26,22 +22,18 @@ const CATEGORIES: { key: Cat; label: string; hint?: string }[] = [
  * subset of those present and are tracked separately, never added to the total.
  */
 export default function HeadcountEntryForm({
-  serviceId,
-  serviceName,
-  state,
   canRecord,
+  disabledReason,
   existing,
-  onSaved,
+  pending,
+  onSubmit,
 }: {
-  serviceId: string;
-  serviceName: string;
-  state: ServiceState;
   canRecord: boolean;
+  disabledReason?: string;
   existing: Headcount | null;
-  onSaved?: () => void;
+  pending: boolean;
+  onSubmit: (input: SaveHeadcountInput, confirm: boolean) => Promise<void>;
 }) {
-  const save = useSaveHeadcount(serviceId);
-
   const [counts, setCounts] = useState<Record<Cat, number>>({
     men: existing?.men ?? 0,
     women: existing?.women ?? 0,
@@ -92,17 +84,19 @@ export default function HeadcountEntryForm({
     }
     setError(null);
     try {
-      await save.mutateAsync({
-        men: counts.men,
-        women: counts.women,
-        boys: counts.boys,
-        girls: counts.girls,
-        firstTimers: counts.firstTimers,
-        reportedTotal: reported,
-        notes: notes.trim() || null,
+      await onSubmit(
+        {
+          men: counts.men,
+          women: counts.women,
+          boys: counts.boys,
+          girls: counts.girls,
+          firstTimers: counts.firstTimers,
+          reportedTotal: reported,
+          notes: notes.trim() || null,
+          confirm,
+        },
         confirm,
-      });
-      onSaved?.();
+      );
     } catch (e) {
       setError((e as { message?: string }).message ?? "Could not save the headcount.");
     }
@@ -114,7 +108,7 @@ export default function HeadcountEntryForm({
         <Users size={22} className="mx-auto mb-2 text-gray-300 dark:text-white/20" />
         <p className="text-sm font-semibold text-gray-700 dark:text-white/80">Not open for counting yet</p>
         <p className="mt-1 text-xs text-gray-400 dark:text-white/40">
-          A headcount can be recorded once {serviceName} is live. Current status: {state.toLowerCase()}.
+          {disabledReason ?? "This service is not available for counting yet."}
         </p>
       </div>
     );
@@ -216,7 +210,7 @@ export default function HeadcountEntryForm({
         <button
           type="button"
           onClick={() => submit(true)}
-          disabled={save.isPending || firstTimersTooHigh}
+          disabled={pending || firstTimersTooHigh}
           className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
         >
           <Check size={15} /> {existing?.status === "CONFIRMED" ? "Save changes" : "Confirm headcount"}
@@ -224,10 +218,10 @@ export default function HeadcountEntryForm({
         <button
           type="button"
           onClick={() => submit(false)}
-          disabled={save.isPending || firstTimersTooHigh}
+          disabled={pending || firstTimersTooHigh}
           className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-white/80 hover:bg-gray-50 dark:hover:bg-white/10 disabled:opacity-50"
         >
-          <Save size={15} /> {save.isPending ? "Saving…" : "Save draft"}
+          <Save size={15} /> {pending ? "Saving…" : "Save draft"}
         </button>
         {existing?.status === "CONFIRMED" && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">

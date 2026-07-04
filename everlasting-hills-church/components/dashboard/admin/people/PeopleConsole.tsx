@@ -62,6 +62,7 @@ const ROLE_CHIPS: Chip[] = [
   { key: "all", label: "All" },
   { key: "role", label: "Pastors", role: "PASTOR" },
   { key: "role", label: "Admins", role: "ADMIN" },
+  { key: "role", label: "Head Ushers", role: "HEAD_USHER" },
   { key: "role", label: "Unit Leads", role: "UNIT_LEAD" },
   { key: "role", label: "Members", role: "MEMBER" },
   { key: "noUnit", label: "No team" },
@@ -197,7 +198,7 @@ export default function PeopleConsole() {
 
   const c = meta?.counts;
   const leaders =
-    (c?.byRole.PASTOR ?? 0) + (c?.byRole.ADMIN ?? 0) + (c?.byRole.UNIT_LEAD ?? 0) + (c?.byRole.SUPER_ADMIN ?? 0);
+    (c?.byRole.PASTOR ?? 0) + (c?.byRole.ADMIN ?? 0) + (c?.byRole.UNIT_LEAD ?? 0) + (c?.byRole.SUPER_ADMIN ?? 0) + (c?.byRole.HEAD_USHER ?? 0);
 
   return (
     <div className="space-y-6 max-w-[1500px]">

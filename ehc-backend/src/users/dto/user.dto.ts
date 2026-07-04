@@ -23,6 +23,7 @@ import { Type } from 'class-transformer';
 const MANAGEABLE_ROLES = [
   Role.MEMBER,
   Role.UNIT_LEAD,
+  Role.HEAD_USHER,
   Role.ADMIN,
   Role.PASTOR,
   Role.SUPER_ADMIN,

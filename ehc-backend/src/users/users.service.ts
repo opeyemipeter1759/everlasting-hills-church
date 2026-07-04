@@ -128,9 +128,10 @@ export class UsersService {
     const countMap = Object.fromEntries(profileCounts.map((c) => [c.role, c._count.role]));
 
     return [
-      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 5, count: countMap[Role.SUPER_ADMIN] ?? 0 },
-      { role: Role.PASTOR,      label: 'Pastor',      level: 4, count: countMap[Role.PASTOR]      ?? 0 },
-      { role: Role.ADMIN,       label: 'Admin',       level: 3, count: countMap[Role.ADMIN]        ?? 0 },
+      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 6, count: countMap[Role.SUPER_ADMIN] ?? 0 },
+      { role: Role.PASTOR,      label: 'Pastor',      level: 5, count: countMap[Role.PASTOR]      ?? 0 },
+      { role: Role.ADMIN,       label: 'Admin',       level: 4, count: countMap[Role.ADMIN]        ?? 0 },
+      { role: Role.HEAD_USHER,  label: 'Head Usher',  level: 3, count: countMap[Role.HEAD_USHER]  ?? 0 },
       { role: Role.UNIT_LEAD,   label: 'Unit Leader', level: 2, count: countMap[Role.UNIT_LEAD]   ?? 0 },
       { role: Role.MEMBER,      label: 'Member',      level: 1, count: countMap[Role.MEMBER]       ?? 0 },
       { role: 'VISITOR',        label: 'Visitor',     level: 0, count: visitorCount },
