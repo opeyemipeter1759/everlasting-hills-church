@@ -1051,7 +1051,7 @@ function TodayInfoPanel({
         </div>
 
         {/* Announcement items */}
-        <div className="overflow-y-auto max-h-[340px] divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06]" style={{ scrollbarWidth: "none" }}>
+        <div className="overflow-y-auto max-h-[340px] divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#E7CDD3] dark:[&::-webkit-scrollbar-thumb]:bg-white/20">
           {announcements.map((a, i) => (
             <div
               key={a.id}
