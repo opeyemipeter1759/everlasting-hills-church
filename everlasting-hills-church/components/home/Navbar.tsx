@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import NavUserBadge, { useIsLoggedIn } from "./NavUserBadge";
 
 // Client-side nav for the mobile menu — a raw <a> would force a full page reload, which
@@ -27,6 +28,9 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const isLoggedIn = useIsLoggedIn(); // null on first paint (hydration-safe), then true/false
+  const pathname = usePathname();
+  // Only the home page has a dark hero — every other public page has a light background.
+  const darkHero = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
@@ -49,7 +53,7 @@ export default function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
+          scrolled || !darkHero
             ? "bg-white/95 backdrop-blur-sm shadow-[0_1px_20px_rgba(135,16,44,0.08)]"
             : "bg-transparent"
         }`}
@@ -58,22 +62,22 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 group">
-            {scrolled ? (
-                          <Image src="/logoblack.png" alt="Everlasting Hills Church Logo" width={62} height={62} className="flex-shrink-0" />
+            {scrolled || !darkHero ? (
+              <Image src="/logoblack.png" alt="Everlasting Hills Church Logo" width={62} height={62} className="flex-shrink-0" />
             ) : (
               <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={52} height={52} className="flex-shrink-0" />
             )}
               <div className="flex flex-col leading-none">
                 <span
                   className={`font-bold  tracking-wide transition-colors duration-300 ${
-                    scrolled ? "text-[#111111]" : "text-white"
+                    scrolled || !darkHero ? "text-[#111111]" : "text-white"
                   }`}
                 >
                   Everlasting Hills
                 </span>
                 <span
                   className={`text-sm tracking-[0.15em] uppercase font-medium transition-colors duration-300 ${
-                    scrolled ? "text-burgundy font-semibold" : "text-white/70"
+                    scrolled || !darkHero ? "text-burgundy font-semibold" : "text-white/70"
                   }`}
                 >
                   Church
@@ -88,7 +92,7 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   className={`text-sm font-medium transition-colors duration-200 hover:text-burgundy ${
-                    scrolled ? "text-[#333]" : "text-white/90"
+                    scrolled || !darkHero ? "text-[#333]" : "text-white/90"
                   }`}
                 >
                   {link.label}
@@ -103,8 +107,8 @@ export default function Navbar() {
                 <>
                   <Link
                     href="/login"
-                    className={`hidden lg:inline-flex px-5 py-2.5 rounded-xl border hover:bg-[#87102C] border-white/20 items-center text-sm font-medium transition-colors duration-200 hover:text-white hover:border-none ${
-                      scrolled ? "text-[#333]" : "text-white/80"
+                    className={`hidden lg:inline-flex px-5 py-2.5 rounded-xl border hover:bg-[#87102C] items-center text-sm font-medium transition-colors duration-200 hover:text-white hover:border-none ${
+                      scrolled || !darkHero ? "text-[#333] border-[#E7CDD3]" : "text-white/80 border-white/20"
                     }`}
                   >
                     Login
@@ -120,7 +124,7 @@ export default function Navbar() {
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
                 className={`lg:hidden p-2 rounded-lg transition-colors ${
-                  scrolled
+                  scrolled || !darkHero
                     ? "text-[#111] hover:bg-brand-blush"
                     : "text-white hover:bg-white/10"
                 }`}
