@@ -90,6 +90,87 @@ export class HeadcountService {
     return svc;
   }
 
+  // ── Date helpers (calendar-driven flow) ─────────────────────────────────────
+
+  /** UTC bounds for a "YYYY-MM-DD" WAT calendar day. */
+  private dayBoundsUtc(dateStr: string) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const startUtc = new Date(Date.UTC(y, m - 1, d) - WAT_OFFSET_MS);
+    return { startUtc, endUtc: new Date(startUtc.getTime() + 86_400_000), y, m, d };
+  }
+
+  private weekdayOf(dateStr: string): number {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0 = Sun, 3 = Wed
+  }
+
+  private typeForWeekday(weekday: number): ServiceType {
+    return weekday === 0 ? ServiceType.SUNDAY : weekday === 3 ? ServiceType.WEDNESDAY : ServiceType.SPECIAL;
+  }
+
+  /** A headcount can be recorded for a date that is today or earlier (WAT). */
+  private canRecordDate(dateStr: string): boolean {
+    const { startUtc } = this.dayBoundsUtc(dateStr);
+    const watNow = new Date(this.getNow().getTime() + WAT_OFFSET_MS);
+    const todayStartUtc = new Date(
+      Date.UTC(watNow.getUTCFullYear(), watNow.getUTCMonth(), watNow.getUTCDate()) - WAT_OFFSET_MS,
+    );
+    return startUtc.getTime() <= todayStartUtc.getTime();
+  }
+
+  private async findServiceForDate(dateStr: string) {
+    const { startUtc, endUtc } = this.dayBoundsUtc(dateStr);
+    return this.prisma.service.findFirst({
+      where: { tenantId: this.tenantId, scheduledAt: { gte: startUtc, lt: endUtc } },
+      orderBy: { scheduledAt: 'asc' },
+      select: { id: true, name: true, serviceType: true, scheduledAt: true, openAt: true, closeAt: true, isOpen: true },
+    });
+  }
+
+  /** Create a service for a date, inferring its type from the weekday. */
+  private async createServiceForDate(dateStr: string) {
+    const { y, m, d } = this.dayBoundsUtc(dateStr);
+    const type = this.typeForWeekday(this.weekdayOf(dateStr));
+    // Start time by type (WAT -> UTC): Sunday 09:00, Wednesday 17:30, else 10:00.
+    const hourUtc = type === ServiceType.SUNDAY ? 8 : type === ServiceType.WEDNESDAY ? 16 : 9;
+    const minUtc = type === ServiceType.WEDNESDAY ? 30 : 0;
+    const scheduledAt = new Date(Date.UTC(y, m - 1, d, hourUtc, minUtc));
+    const label = type === ServiceType.SUNDAY ? 'Sunday' : type === ServiceType.WEDNESDAY ? 'Wednesday' : 'Special';
+    const pretty = new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC',
+    });
+    return this.prisma.service.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        name: `${label} Service, ${pretty}`,
+        scheduledAt,
+        serviceType: type,
+      },
+    });
+  }
+
+  /** The service + headcount for a chosen calendar date (service may not exist yet). */
+  async getForDate(dateStr: string) {
+    const svc = await this.findServiceForDate(dateStr);
+    const hc = svc ? await this.prisma.serviceHeadcount.findUnique({ where: { serviceId: svc.id } }) : null;
+    return {
+      date: dateStr,
+      inferredType: this.typeForWeekday(this.weekdayOf(dateStr)),
+      canRecord: this.canRecordDate(dateStr),
+      service: svc
+        ? {
+            id: svc.id,
+            name: svc.name,
+            serviceType: svc.serviceType,
+            scheduledAt: svc.scheduledAt.toISOString(),
+            state: this.serviceState(svc),
+          }
+        : null,
+      headcount: hc ? this.toDto(hc) : null,
+    };
+  }
+
   // ── Read ────────────────────────────────────────────────────────────────────
 
   /** The headcount for a service (or null), plus the service and whether it can be recorded now. */
@@ -180,11 +261,36 @@ export class HeadcountService {
   // ── Write ───────────────────────────────────────────────────────────────────
 
   /**
-   * Create or update the authoritative headcount for a service. total is computed
-   * here (never trusted from the client); firstTimers must not exceed it. Recording
-   * is blocked until the service is LIVE or ENDED. Every write is audited.
+   * Create or update the authoritative headcount for a service, addressed by its
+   * id. Recording is blocked until the service is LIVE or ENDED.
    */
   async upsert(serviceId: string, rawBody: unknown, actor: { id?: string | null }) {
+    const svc = await this.serviceOrThrow(serviceId);
+    if (this.serviceState(svc) === 'SCHEDULED') {
+      throw new BadRequestException('This service has not started yet. A headcount can only be recorded once the service is live.');
+    }
+    return this.persist(serviceId, rawBody, actor);
+  }
+
+  /**
+   * Date-driven entry: the head usher picks a date, we find (or create) the
+   * service for that day, then record the headcount against it. Only dates that
+   * have already occurred (today or earlier, WAT) can be recorded.
+   */
+  async upsertByDate(dateStr: string, rawBody: unknown, actor: { id?: string | null }) {
+    if (!this.canRecordDate(dateStr)) {
+      throw new BadRequestException('You can only record a headcount for a date that has already occurred.');
+    }
+    const svc = (await this.findServiceForDate(dateStr)) ?? (await this.createServiceForDate(dateStr));
+    return this.persist(svc.id, rawBody, actor);
+  }
+
+  /**
+   * Shared write core. total is computed here (never trusted from the client);
+   * firstTimers must not exceed it. Every write is audited. Callers gate on the
+   * service/date state before calling this.
+   */
+  private async persist(serviceId: string, rawBody: unknown, actor: { id?: string | null }) {
     const parsed = UpsertHeadcountSchema.safeParse(rawBody);
     if (!parsed.success) {
       throw new BadRequestException({
@@ -193,11 +299,6 @@ export class HeadcountService {
       });
     }
     const body: UpsertHeadcountInput = parsed.data;
-
-    const svc = await this.serviceOrThrow(serviceId);
-    if (this.serviceState(svc) === 'SCHEDULED') {
-      throw new BadRequestException('This service has not started yet. A headcount can only be recorded once the service is live.');
-    }
 
     const total = body.men + body.women + body.boys + body.girls;
     if (body.firstTimers > total) {

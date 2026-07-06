@@ -15,6 +15,7 @@ export type PersonRole =
   | "SUPER_ADMIN"
   | "PASTOR"
   | "ADMIN"
+  | "HEAD_USHER"
   | "UNIT_LEAD"
   | "MEMBER"
   | "VISITOR";

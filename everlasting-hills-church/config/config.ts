@@ -109,6 +109,7 @@ import {
   Bell,
   FileText,
   Activity,
+  Tally5,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -150,6 +151,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/events",        icon: CalendarDays,  minRole: "ADMIN" },
       { label: "Submissions",   href: "/dashboard/submissions",   icon: Inbox,         minRole: "ADMIN" },
+      { label: "Usher",         href: "/dashboard/usher",         icon: Tally5,        minRole: "HEAD_USHER" },
       { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone,     minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },

@@ -50,6 +50,14 @@ export interface ServiceHeadcountResponse {
   headcount: Headcount | null;
 }
 
+export interface HeadcountByDateResponse {
+  date: string;
+  inferredType: ServiceTypeKey;
+  canRecord: boolean;
+  service: HeadcountServiceInfo | null;
+  headcount: Headcount | null;
+}
+
 export interface HeadcountHistoryRow extends Headcount {
   serviceName: string;
   serviceType: ServiceTypeKey;
@@ -93,6 +101,25 @@ export function useServiceHeadcount(serviceId: string | null | undefined) {
     queryKey: [...KEY, "service", serviceId],
     queryFn: () => api.get<ServiceHeadcountResponse>(`/headcount/service/${serviceId}`),
     enabled: Boolean(serviceId),
+  });
+}
+
+export function useHeadcountByDate(date: string | null | undefined) {
+  return useQuery({
+    queryKey: [...KEY, "by-date", date],
+    queryFn: () => api.get<HeadcountByDateResponse>(`/headcount/by-date?date=${date}`),
+    enabled: Boolean(date),
+  });
+}
+
+export function useSaveHeadcountByDate(date: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SaveHeadcountInput) => api.put<Headcount>(`/headcount/by-date?date=${encodeURIComponent(date)}`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["admin"] });
+    },
   });
 }
 

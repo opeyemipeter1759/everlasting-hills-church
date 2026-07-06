@@ -21,6 +21,24 @@ import { HeadcountService } from './headcount.service';
 export class HeadcountController {
   constructor(private readonly headcount: HeadcountService) {}
 
+  @Get('by-date')
+  @ApiOperation({ summary: 'Service + headcount for a chosen calendar date (HEAD_USHER+)' })
+  @ApiQuery({ name: 'date', required: true, example: '2026-07-04' })
+  getForDate(@Query('date') date: string) {
+    return this.headcount.getForDate(date);
+  }
+
+  @Put('by-date')
+  @ApiOperation({ summary: 'Record the headcount for a chosen date; finds or creates that day\'s service (HEAD_USHER+)' })
+  @ApiQuery({ name: 'date', required: true, example: '2026-07-04' })
+  upsertByDate(
+    @CurrentUser() user: AuthUser,
+    @Query('date') date: string,
+    @Body() body: unknown,
+  ) {
+    return this.headcount.upsertByDate(date, body, { id: user.userId });
+  }
+
   @Get('service/:serviceId')
   @ApiOperation({ summary: 'Headcount for a service + whether it can be recorded now (HEAD_USHER+)' })
   getForService(@Param('serviceId') serviceId: string) {
