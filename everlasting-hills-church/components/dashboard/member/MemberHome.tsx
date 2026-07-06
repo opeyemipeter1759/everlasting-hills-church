@@ -1051,8 +1051,8 @@ function TodayInfoPanel({
         </div>
 
         {/* Announcement items */}
-        <div className="flex-1 divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06]">
-          {announcements.slice(0, 3).map((a, i) => (
+        <div className="overflow-y-auto max-h-[340px] divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06]" style={{ scrollbarWidth: "none" }}>
+          {announcements.map((a, i) => (
             <div
               key={a.id}
               className={`flex gap-4 px-5 py-4 ${
@@ -1064,7 +1064,7 @@ function TodayInfoPanel({
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
                   i === 0 ? "bg-[#87102C] dark:bg-[#FFB3C1]" : "bg-[#E7CDD3] dark:bg-white/20"
                 }`} />
-                {i < announcements.slice(0, 3).length - 1 && (
+                {i < announcements.length - 1 && (
                   <div className="w-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07] min-h-[16px]" />
                 )}
               </div>
