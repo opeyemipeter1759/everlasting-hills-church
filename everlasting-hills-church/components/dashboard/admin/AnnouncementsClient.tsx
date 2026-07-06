@@ -19,7 +19,7 @@ export default function AnnouncementsClient() {
   const qc = useQueryClient();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [sendEmail, setSendEmail] = useState(false);
+  const [sendEmail, setSendEmail] = useState(true);
   const [justSent, setJustSent] = useState(false);
 
   const { data: items = [], isLoading } = useQuery({
@@ -76,15 +76,17 @@ export default function AnnouncementsClient() {
           />
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-white/60 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
               <input
                 type="checkbox"
                 checked={sendEmail}
                 onChange={(e) => setSendEmail(e.target.checked)}
                 className="rounded border-gray-300 text-[#87102C] focus:ring-[#87102C]"
               />
-              <Mail size={14} />
-              Also send by email
+              <Mail size={14} className={sendEmail ? "text-[#87102C]" : "text-gray-400"} />
+              <span className={sendEmail ? "text-[#87102C] font-medium" : "text-gray-400 dark:text-white/40"}>
+                {sendEmail ? "Email all members" : "Skip email"}
+              </span>
             </label>
 
             <button

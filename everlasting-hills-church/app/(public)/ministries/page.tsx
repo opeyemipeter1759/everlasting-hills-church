@@ -1,5 +1,6 @@
 import ScrollReveal from "@/components/home/ScrollReveal";
 import MinistriesCards, { type MinistryGroup, MINISTRIES } from "@/components/ministries/MinistriesCards";
+import GroupFinder from "@/components/ministries/GroupFinder";
 import { getStructuredContent } from "@/lib/cms-page";
 
 export const metadata = {
@@ -107,6 +108,43 @@ export default async function MinistriesPage({ searchParams }: { searchParams: {
           <p className="text-center text-[#999] text-xs mt-10 tracking-wide md:hidden">
             Tap a card to explore the ministry
           </p>
+        </div>
+      </section>
+
+      {/* ── GROUP FINDER — dark section ──────────────────────────────────── */}
+      <section className="relative overflow-hidden bg-church-dark py-24 md:py-32">
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <div className="absolute left-[-10%] top-[-20%] h-[55%] w-[55%] rounded-full bg-[#87102C]/12 blur-[130px]" />
+          <div className="absolute bottom-[-20%] right-[-10%] h-[50%] w-[50%] rounded-full bg-[#87102C]/10 blur-[120px]" />
+        </div>
+        <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* left — copy */}
+            <div>
+              <ScrollReveal>
+                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#FFB3C1]/60 mb-4">
+                  Stay Connected
+                </p>
+              </ScrollReveal>
+              <ScrollReveal delay={0.1}>
+                <h2 className="text-3xl sm:text-4xl md:text-[2.6rem] font-bold leading-[1.1] tracking-tight text-white text-balance">
+                  Join your{" "}
+                  <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#FFB3C1] bg-clip-text font-serif italic font-normal text-transparent">
+                    WhatsApp group
+                  </span>
+                </h2>
+              </ScrollReveal>
+              <ScrollReveal delay={0.2}>
+                <p className="mt-5 text-base leading-relaxed text-white/45 max-w-md">
+                  Stay close to your ministry family between Sundays — prayer requests, updates, encouragement, and community, right in your pocket.
+                </p>
+              </ScrollReveal>
+            </div>
+            {/* right — interactive finder */}
+            <ScrollReveal delay={0.15}>
+              <GroupFinder />
+            </ScrollReveal>
+          </div>
         </div>
       </section>
     </main>

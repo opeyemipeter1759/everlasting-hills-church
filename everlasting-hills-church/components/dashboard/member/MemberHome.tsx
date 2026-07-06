@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { CHURCH } from "@/config/config";
 import { useCanMark, useCheckIn } from "@/lib/api";
+import { apiClient } from "@/lib/api/axios";
 
 // ── Design tokens (match admin DashboardCard exactly) ────────────────────────
 const card   = "flex flex-col rounded-2xl border border-[#E7CDD3]/60 dark:border-white/[0.09] bg-white dark:bg-white/[0.05] shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none";
@@ -1563,13 +1564,67 @@ function DiscipleshipTrackerCard({ milestones }: {
 
 // ── Band 4: Community Feed ────────────────────────────────────────────────────
 
+type FeedPost = NonNullable<MemberHomeProps["communityFeed"]>[number];
+
 function CommunityFeedPanel({
   feed, onlineCount,
 }: {
   feed: MemberHomeProps["communityFeed"];
   onlineCount?: number | null;
 }) {
-  const items = feed ?? [];
+  const [posts, setPosts] = useState<FeedPost[]>(feed ?? []);
+  const [draft, setDraft] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [reactingIds, setReactingIds] = useState<Set<string>>(new Set());
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  async function handleSubmit() {
+    const text = draft.trim();
+    if (!text || submitting) return;
+
+    const tempId = `temp-${Date.now()}`;
+    const tempPost: FeedPost = {
+      id: tempId,
+      text,
+      reactions: 0,
+      createdAt: new Date().toISOString(),
+      authorName: "You",
+      authorPhotoUrl: null,
+    };
+
+    // Optimistic: show immediately, clear draft
+    setPosts((prev) => [tempPost, ...prev]);
+    setDraft("");
+    setSubmitting(true);
+
+    try {
+      const res = await apiClient.post<{ id: string; createdAt: string }>("/community/posts", { text });
+      // Replace temp entry with server-assigned id
+      setPosts((prev) =>
+        prev.map((p) => p.id === tempId ? { ...p, id: res.data.id, createdAt: res.data.createdAt } : p)
+      );
+    } catch {
+      // Roll back and restore draft
+      setPosts((prev) => prev.filter((p) => p.id !== tempId));
+      setDraft(text);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleReact(id: string) {
+    if (reactingIds.has(id)) return;
+    setReactingIds((prev) => new Set(prev).add(id));
+    setPosts((prev) => prev.map((p) => p.id === id ? { ...p, reactions: p.reactions + 1 } : p));
+    try {
+      await apiClient.post(`/community/posts/${id}/react`);
+    } catch {
+      setPosts((prev) => prev.map((p) => p.id === id ? { ...p, reactions: Math.max(0, p.reactions - 1) } : p));
+    } finally {
+      setReactingIds((prev) => { const s = new Set(prev); s.delete(id); return s; });
+    }
+  }
+
   return (
     <PanelCard
       kicker="Community"
@@ -1585,20 +1640,44 @@ function CommunityFeedPanel({
           </p>
         </div>
       )}
-      {items.length === 0 ? (
+
+      {/* Composer */}
+      <div className="flex gap-2 mb-4">
+        <textarea
+          ref={textareaRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit(); }}
+          rows={2}
+          maxLength={500}
+          placeholder="Share something with the church family…"
+          className="flex-1 resize-none rounded-xl border border-[#E7CDD3]/70 dark:border-white/[0.1] bg-[#FFF8F9] dark:bg-white/[0.04] px-3 py-2 text-xs text-[#111] dark:text-white placeholder:text-[#c0a8af] dark:placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-[#87102C]/40 transition"
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={!draft.trim() || submitting}
+          className="self-end flex items-center justify-center w-8 h-8 rounded-xl bg-[#87102C] text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#6E0C24] transition flex-shrink-0"
+          aria-label="Post"
+        >
+          <Send size={13} />
+        </button>
+      </div>
+
+      {posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
           <span className={`${iconBg} !w-11 !h-11 !rounded-2xl`}>
             <MessageCircle size={18} className={iconCl} />
           </span>
           <div>
             <p className="text-sm font-semibold text-[#111] dark:text-white">No posts yet</p>
-            <p className={`text-xs ${muted} mt-0.5`}>Community activity will appear here</p>
+            <p className={`text-xs ${muted} mt-0.5`}>Be the first to share something</p>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {items.slice(0, 3).map((post) => {
+          {posts.slice(0, 5).map((post) => {
             const postInitials = post.authorName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+            const reacted = reactingIds.has(post.id);
             return (
               <div key={post.id} className="flex gap-3 pb-4 border-b border-[#E7CDD3]/50 dark:border-white/[0.06] last:border-0 last:pb-0">
                 {post.authorPhotoUrl ? (
@@ -1614,11 +1693,20 @@ function CommunityFeedPanel({
                     <p className="text-xs font-semibold text-[#111] dark:text-white truncate">{post.authorName}</p>
                     <p className={`text-[10px] ${muted} flex-shrink-0`}>{relativeTime(post.createdAt)}</p>
                   </div>
-                  <p className={`text-xs ${muted} mt-0.5 leading-relaxed line-clamp-2`}>{post.text}</p>
-                  <div className="flex items-center gap-1 mt-1.5">
-                    <Heart size={11} className="text-rose-400" fill="currentColor" />
+                  <p className={`text-xs ${muted} mt-0.5 leading-relaxed`}>{post.text}</p>
+                  <button
+                    onClick={() => handleReact(post.id)}
+                    disabled={reacted}
+                    className={`flex items-center gap-1 mt-1.5 group transition ${reacted ? "cursor-default" : "hover:scale-105 active:scale-95"}`}
+                    aria-label="React with heart"
+                  >
+                    <Heart
+                      size={12}
+                      className={`transition ${reacted ? "text-rose-500" : "text-rose-300 group-hover:text-rose-500"}`}
+                      fill={reacted ? "currentColor" : "none"}
+                    />
                     <span className={`text-[10px] ${muted}`}>{post.reactions}</span>
-                  </div>
+                  </button>
                 </div>
               </div>
             );

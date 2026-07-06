@@ -286,6 +286,7 @@ model Profile {
   Member         Member?
   Notification   Notification[]
   RoleAssignment RoleAssignment[]
+  CommunityPost  CommunityPost[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -492,6 +493,7 @@ model Tenant {
   slug               String               @unique
   createdAt          DateTime             @default(now())
   Announcement       Announcement[]
+  CommunityPost      CommunityPost[]
   AttendanceRecord   AttendanceRecord[]
   AuditLog           AuditLog[]
   CareAssignment     CareAssignment[]
@@ -884,4 +886,17 @@ enum SermonStatus {
   DRAFT
   PUBLISHED
   SCHEDULED
+}
+
+model CommunityPost {
+  id        String   @id
+  tenantId  String
+  profileId String
+  text      String   @db.VarChar(500)
+  reactions Int      @default(0)
+  createdAt DateTime @default(now())
+  Profile   Profile  @relation(fields: [profileId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
 }
