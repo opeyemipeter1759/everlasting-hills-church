@@ -22,7 +22,7 @@ export class AnnouncementsService {
     private readonly prisma: PrismaService,
     private readonly inbox: InboxService,
     private readonly mail: MailDispatcher,
-    config: ConfigService<Env, true>,
+    private readonly config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -60,15 +60,33 @@ export class AnnouncementsService {
       },
     });
 
-    // 3) Optional email blast to members with an address on file.
-    if (dto.sendEmail) {
+    // 3) Email blast — sent by default unless the caller explicitly opts out.
+    const shouldEmail = dto.sendEmail !== false;
+    if (shouldEmail) {
+      const frontendUrl =
+        this.config.get('FRONTEND_URL', { infer: true })?.replace(/\/$/, '') ??
+        'https://everlastinghills.org';
+      const dashboardUrl = `${frontendUrl}/dashboard`;
+
       const emails = profiles
         .map((p) => p.Member?.email)
         .filter((e): e is string => Boolean(e));
-      for (const email of emails) {
-        await this.mail.dispatch(
-          buildAnnouncementEmail({ email, title: dto.title, body: dto.body }),
+
+      // Dispatch in batches of 8 with a 1-second pause between batches to stay
+      // well under Resend's 10 req/s rate limit.
+      const BATCH = 8;
+      for (let i = 0; i < emails.length; i += BATCH) {
+        const batch = emails.slice(i, i + BATCH);
+        await Promise.all(
+          batch.map((email) =>
+            this.mail.dispatch(
+              buildAnnouncementEmail({ email, title: dto.title, body: dto.body, dashboardUrl }),
+            ),
+          ),
         );
+        if (i + BATCH < emails.length) {
+          await new Promise((r) => setTimeout(r, 1_100));
+        }
       }
       this.logger.log(`Announcement "${dto.title}" emailed to ${emails.length} member(s)`);
     }
@@ -84,6 +102,15 @@ export class AnnouncementsService {
       where: { tenantId: this.tenantId },
       orderBy: { createdAt: 'desc' },
       take: 100,
+    });
+  }
+
+  async listFeed() {
+    return this.prisma.announcement.findMany({
+      where: { tenantId: this.tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: { id: true, title: true, body: true, createdAt: true },
     });
   }
 }

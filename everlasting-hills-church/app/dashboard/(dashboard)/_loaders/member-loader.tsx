@@ -20,11 +20,13 @@ interface MemberAttendanceOverview {
  * Optional sections (announcements, feed, milestones) get empty defaults until endpoints are built.
  */
 export async function loadMemberDashboard(me: MeResponse) {
-  const [bookmarksRaw, historyRaw, streakRaw, overviewRaw] = await Promise.all([
+  const [bookmarksRaw, historyRaw, streakRaw, overviewRaw, announcementsRaw, communityFeedRaw] = await Promise.all([
     safeGet<SermonBookmark[]>("/sermons/me/bookmarks"),
     safeGet<ListenHistoryItem[]>("/sermons/me/history"),
     safeGet<number>("/sermons/me/streak"),
     safeGet<MemberAttendanceOverview>("/overview/member"),
+    safeGet<Array<{ id: string; title: string; body: string; createdAt: string }>>("/announcements/feed"),
+    safeGet<Array<{ id: string; text: string; reactions: number; createdAt: string; authorName: string; authorPhotoUrl: string | null }>>("/community/feed"),
   ]);
 
   const bookmarks = bookmarksRaw?.map((b) => ({
@@ -97,13 +99,13 @@ export async function loadMemberDashboard(me: MeResponse) {
       prayerCount={0}
       recentServices={[]}
       monthlyAttendance={[]}
-      announcements={[]}
+      announcements={announcementsRaw ?? []}
       communityBirthdays={[]}
       ministryUnit={null}
       featuredSermon={null}
       pastorWord={null}
       dailyPrayer={null}
-      communityFeed={[]}
+      communityFeed={communityFeedRaw ?? []}
       onlineCount={null}
       discipleshipMilestones={[]}
       memberSince={null}

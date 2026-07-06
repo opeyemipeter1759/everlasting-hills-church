@@ -68,6 +68,19 @@ export const envSchema = z.object({
 
   /** Paystack giving. Absent → giving endpoints return 503. */
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
+
+  /**
+   * Cloudflare R2 object storage. Absent → upload endpoints return 503.
+   * R2_ENDPOINT is auto-derived from R2_ACCOUNT_ID if omitted.
+   * R2_BUCKET falls back to R2_ACCOUNT_ID if omitted (not ideal — set explicitly).
+   * R2_PUBLIC_URL is the public base URL for uploaded files (e.g. https://cdn.example.com).
+   */
+  R2_ACCOUNT_ID: z.string().min(1).optional(),
+  R2_ACCESS_KEY_ID: z.string().min(1).optional(),
+  R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  R2_BUCKET: z.string().min(1).optional(),
+  R2_ENDPOINT: z.url().optional(),
+  R2_PUBLIC_URL: z.url().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, GitBranch, Heart, Sprout } from "lucide-react";
+import { ArrowUpRight, Sprout } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -32,9 +32,9 @@ export default function GivingSection() {
         <div className="absolute -bottom-32 -right-16 w-96 h-96 bg-amber-500/8 blur-3xl rounded-full pointer-events-none" />
         <VineMotif />
 
-        <div className="relative grid lg:grid-cols-5 gap-8 lg:gap-12 p-8 sm:p-10 lg:p-12">
-          {/* LEFT (3/5): headline + scripture-rooted impact tiles */}
-          <div className="lg:col-span-3 flex flex-col">
+        <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-10 p-8 sm:p-10 items-center">
+          {/* LEFT: headline */}
+          <div className="flex flex-col">
             <span className="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-md">
               <Sprout size={12} className="text-[#e8768a]" />
               Sow into the hills
@@ -42,7 +42,7 @@ export default function GivingSection() {
 
             <h2
               id="giving-heading"
-              className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.05]"
+              className="mt-5 text-3xl sm:text-4xl lg:text-[2.6rem] font-semibold text-white tracking-tight leading-[1.08]"
             >
               Plant where{" "}
               <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#87102C] bg-clip-text text-transparent italic font-serif">
@@ -51,38 +51,15 @@ export default function GivingSection() {
               .
             </h2>
 
-            <p className="mt-4 max-w-xl text-white/65 leading-relaxed">
+            <p className="mt-4 text-white/65 leading-relaxed text-[15px]">
               Like a vine planted near water, every gift bears fruit — and the
               branches reach over the wall, into families, cities, and generations
               we may never meet.
             </p>
-
-            {/* Impact tiles — non-uniform "branches" arrangement */}
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <ImpactTile
-                icon={<Sprout size={16} />}
-                eyebrow="Fruit by the well"
-                title="Local life"
-                copy="Pastoral care, weekly worship, & a family that gathers."
-              />
-              <ImpactTile
-                icon={<GitBranch size={16} />}
-                eyebrow="Branches over the wall"
-                title="Outreach"
-                copy="Serving Ibadan and beyond — beyond ordinary limits."
-                accent
-              />
-              <ImpactTile
-                icon={<Heart size={16} />}
-                eyebrow="Ancient & enduring"
-                title="Generations"
-                copy="Building a house that outlives a single season."
-              />
-            </div>
           </div>
 
-          {/* RIGHT (2/5): How to give panel + CTA */}
-          <aside className="lg:col-span-2 relative rounded-[20px] border border-white/8 bg-[#0a0306]/95 p-6 sm:p-7 shadow-inner">
+          {/* RIGHT: How to give panel + CTA */}
+          <aside className="relative rounded-[20px] border border-white/8 bg-[#0a0306]/95 p-6 sm:p-7 shadow-inner">
             <div className="flex items-center justify-between mb-5">
               <p className="text-white/50 text-[10px] uppercase tracking-[0.3em] font-bold">
                 Ways to give
@@ -133,43 +110,6 @@ export default function GivingSection() {
 }
 
 // ── Pieces ───────────────────────────────────────────────────────────────────
-
-function ImpactTile({
-  icon,
-  eyebrow,
-  title,
-  copy,
-  accent = false,
-}: {
-  icon: React.ReactNode;
-  eyebrow: string;
-  title: string;
-  copy: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`relative overflow-hidden rounded-2xl border p-4 backdrop-blur-sm transition-all hover:-translate-y-0.5 ${
-        accent
-          ? "border-[#87102C]/40 bg-gradient-to-br from-[#87102C]/15 to-[#87102C]/5"
-          : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
-      }`}
-    >
-      <div
-        className={`inline-flex w-9 h-9 rounded-xl items-center justify-center mb-3 ${
-          accent ? "bg-white/15 text-white" : "bg-[#87102C]/20 text-[#e8768a]"
-        }`}
-      >
-        {icon}
-      </div>
-      <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1">
-        {eyebrow}
-      </p>
-      <p className="text-sm text-white font-bold mb-1.5">{title}</p>
-      <p className="text-xs text-white/55 leading-relaxed">{copy}</p>
-    </div>
-  );
-}
 
 function GiveRow({
   stepNumber,

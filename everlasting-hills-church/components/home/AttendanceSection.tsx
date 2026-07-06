@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  BellRing,
   CheckCircle2,
   ChevronRight,
   Clock,
@@ -16,6 +17,14 @@ import {
 import { CHURCH } from "@/config/config";
 import { getFrontendSessionUser, type FrontendSessionUser } from "@/lib/auth/frontend-session";
 import { useCanMark, useCheckIn } from "@/lib/api";
+import { apiClient } from "@/lib/api/axios";
+
+interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+}
 
 export default function AttendanceSection() {
   const [session, setSession] = useState<FrontendSessionUser | null>(null);
@@ -23,10 +32,18 @@ export default function AttendanceSection() {
   const [checkedIn, setCheckedIn] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
-    setSession(getFrontendSessionUser());
+    const user = getFrontendSessionUser();
+    setSession(user);
     setSessionReady(true);
+    if (user?.loggedIn) {
+      apiClient
+        .get<Announcement[]>("/announcements/feed")
+        .then((res) => setAnnouncements(res.data))
+        .catch(() => {});
+    }
   }, []);
 
   const isLoggedIn = !!session?.loggedIn;
@@ -87,18 +104,85 @@ export default function AttendanceSection() {
           <div className="h-px w-16 bg-white/20 mt-5" />
         </div>
 
-        {/* Hero block */}
-        <div className="relative">
-          {!isLoggedIn ? (
-            <AnonymousInvitation />
-          ) : alreadyMarked ? (
-            <CheckedInHero justCheckedIn={justCheckedIn} />
-          ) : canMark ? (
-            <ServiceDayHero onClick={handleCheckIn} loading={checkIn.isPending} error={error} />
-          ) : (
-            <NoServiceHero />
-          )}
-        </div>
+        {/* Hero block — anonymous: full width; logged-in: side-by-side with announcements */}
+        {!isLoggedIn ? (
+          <AnonymousInvitation />
+        ) : (
+          <div className={`grid grid-cols-1 gap-6 ${announcements.length > 0 ? "lg:grid-cols-2" : ""}`}>
+            {/* Left — service / check-in */}
+            <div className="relative">
+              {alreadyMarked ? (
+                <CheckedInHero justCheckedIn={justCheckedIn} />
+              ) : canMark ? (
+                <ServiceDayHero onClick={handleCheckIn} loading={checkIn.isPending} error={error} />
+              ) : (
+                <NoServiceHero />
+              )}
+            </div>
+
+            {/* Right — announcements panel */}
+            {announcements.length > 0 && (
+              <motion.div
+                className="overflow-hidden rounded-2xl border border-white/[0.09]"
+                initial={{ opacity: 0, x: 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.12 }}
+              >
+                {/* Gradient header */}
+                <div
+                  className="px-5 py-4 flex items-center justify-between gap-3"
+                  style={{ background: "linear-gradient(135deg, #2a0410 0%, #4a0819 50%, #87102C 100%)" }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 border border-white/20">
+                      <BellRing size={15} className="text-[#FFB3C1]" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFB3C1]/70">
+                        From the Church
+                      </p>
+                      <h3 className="text-sm font-bold text-white truncate">Announcements</h3>
+                    </div>
+                  </div>
+                  <span className="flex-shrink-0 text-[10px] font-bold text-[#FFB3C1] bg-white/10 border border-white/15 px-2.5 py-1 rounded-full">
+                    {announcements.length} {announcements.length === 1 ? "update" : "updates"}
+                  </span>
+                </div>
+
+                {/* Items */}
+                <div className="overflow-y-auto max-h-[340px] divide-y divide-white/[0.06] bg-white/[0.03] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20">
+                  {announcements.map((a, i) => (
+                    <div key={a.id} className={`flex gap-4 px-5 py-4 ${i === 0 ? "bg-[#87102C]/10" : ""}`}>
+                      <div className="flex flex-col items-center gap-1.5 flex-shrink-0 pt-1">
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${i === 0 ? "bg-[#FFB3C1]" : "bg-white/20"}`} />
+                        {i < announcements.length - 1 && (
+                          <div className="w-px flex-1 bg-white/[0.07] min-h-[16px]" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`text-[13px] font-bold leading-snug ${i === 0 ? "text-[#FFB3C1]" : "text-white"}`}>
+                            {a.title}
+                          </p>
+                          {i === 0 && (
+                            <span className="flex-shrink-0 text-[9px] font-bold uppercase tracking-[0.18em] text-[#FFB3C1] bg-[#87102C]/25 px-2 py-0.5 rounded-full mt-0.5">
+                              New
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-white/45 mt-1 leading-relaxed line-clamp-2">{a.body}</p>
+                        <p className="text-[10px] text-white/30 mt-1.5 flex items-center gap-1">
+                          <Clock size={9} className="flex-shrink-0" />
+                          {relativeTime(a.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        )}
 
         {/* Dashboard link */}
         {isLoggedIn && (
@@ -328,4 +412,15 @@ function AnonymousInvitation() {
       </div>
     </div>
   );
+}
+
+function relativeTime(iso: string) {
+  const ms = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(ms / 86_400_000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks === 1) return "Last week";
+  return `${weeks} weeks ago`;
 }

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { CHURCH } from "@/config/config";
 import { useCanMark, useCheckIn } from "@/lib/api";
+import { apiClient } from "@/lib/api/axios";
 
 // ── Design tokens (match admin DashboardCard exactly) ────────────────────────
 const card   = "flex flex-col rounded-2xl border border-[#E7CDD3]/60 dark:border-white/[0.09] bg-white dark:bg-white/[0.05] shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none";
@@ -931,12 +932,13 @@ function CheckInPanel({
 // ── Band 2: Today Info Panel (right) ─────────────────────────────────────────
 
 function TodayInfoPanel({
-  nextService, isServiceDay, hasCheckedIn, featuredSermon,
+  nextService, isServiceDay, hasCheckedIn, featuredSermon, announcements,
 }: {
   nextService: MemberHomeProps["nextService"];
   isServiceDay: boolean;
   hasCheckedIn: boolean;
   featuredSermon: MemberHomeProps["featuredSermon"];
+  announcements: Array<{ id: string; title: string; body: string; createdAt: string }>;
 }) {
   if (isServiceDay && hasCheckedIn) {
     return (
@@ -1022,6 +1024,79 @@ function TodayInfoPanel({
           </Link>
         </div>
       </PanelCard>
+    );
+  }
+
+  if (announcements.length > 0) {
+    return (
+      <section className={`${card} overflow-hidden`}>
+        {/* Gradient header */}
+        <div
+          className="px-5 py-4 flex items-center justify-between gap-3"
+          style={{ background: "linear-gradient(135deg, #2a0410 0%, #4a0819 50%, #87102C 100%)" }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white/15 border border-white/20">
+              <BellRing size={15} className="text-[#FFB3C1]" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFB3C1]/70">
+                From the Church
+              </p>
+              <h3 className="text-sm font-bold text-white truncate">Announcements</h3>
+            </div>
+          </div>
+          <span className="flex-shrink-0 text-[10px] font-bold text-[#FFB3C1] bg-white/10 border border-white/15 px-2.5 py-1 rounded-full">
+            {announcements.length} {announcements.length === 1 ? "update" : "updates"}
+          </span>
+        </div>
+
+        {/* Announcement items */}
+        <div className="overflow-y-auto max-h-[340px] divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#E7CDD3] dark:[&::-webkit-scrollbar-thumb]:bg-white/20">
+          {announcements.map((a, i) => (
+            <div
+              key={a.id}
+              className={`flex gap-4 px-5 py-4 ${
+                i === 0 ? "bg-[#FFF4F6] dark:bg-[#87102C]/10" : ""
+              }`}
+            >
+              {/* Colored dot accent */}
+              <div className="flex flex-col items-center gap-1.5 flex-shrink-0 pt-1">
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                  i === 0 ? "bg-[#87102C] dark:bg-[#FFB3C1]" : "bg-[#E7CDD3] dark:bg-white/20"
+                }`} />
+                {i < announcements.length - 1 && (
+                  <div className="w-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07] min-h-[16px]" />
+                )}
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <p className={`text-[13px] font-bold leading-snug ${
+                    i === 0
+                      ? "text-[#87102C] dark:text-[#FFB3C1]"
+                      : "text-[#111] dark:text-white"
+                  }`}>
+                    {a.title}
+                  </p>
+                  {i === 0 && (
+                    <span className="flex-shrink-0 text-[9px] font-bold uppercase tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1] bg-[#FFE8ED] dark:bg-[#87102C]/25 px-2 py-0.5 rounded-full mt-0.5">
+                      New
+                    </span>
+                  )}
+                </div>
+                <p className={`text-xs ${muted} mt-1 leading-relaxed line-clamp-2`}>
+                  {a.body}
+                </p>
+                <p className={`text-[10px] ${muted} opacity-60 mt-1.5 flex items-center gap-1`}>
+                  <Clock size={9} className="flex-shrink-0" />
+                  {relativeTime(a.createdAt)}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     );
   }
 
@@ -1489,13 +1564,67 @@ function DiscipleshipTrackerCard({ milestones }: {
 
 // ── Band 4: Community Feed ────────────────────────────────────────────────────
 
+type FeedPost = NonNullable<MemberHomeProps["communityFeed"]>[number];
+
 function CommunityFeedPanel({
   feed, onlineCount,
 }: {
   feed: MemberHomeProps["communityFeed"];
   onlineCount?: number | null;
 }) {
-  const items = feed ?? [];
+  const [posts, setPosts] = useState<FeedPost[]>(feed ?? []);
+  const [draft, setDraft] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [reactingIds, setReactingIds] = useState<Set<string>>(new Set());
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  async function handleSubmit() {
+    const text = draft.trim();
+    if (!text || submitting) return;
+
+    const tempId = `temp-${Date.now()}`;
+    const tempPost: FeedPost = {
+      id: tempId,
+      text,
+      reactions: 0,
+      createdAt: new Date().toISOString(),
+      authorName: "You",
+      authorPhotoUrl: null,
+    };
+
+    // Optimistic: show immediately, clear draft
+    setPosts((prev) => [tempPost, ...prev]);
+    setDraft("");
+    setSubmitting(true);
+
+    try {
+      const res = await apiClient.post<{ id: string; createdAt: string }>("/community/posts", { text });
+      // Replace temp entry with server-assigned id
+      setPosts((prev) =>
+        prev.map((p) => p.id === tempId ? { ...p, id: res.data.id, createdAt: res.data.createdAt } : p)
+      );
+    } catch {
+      // Roll back and restore draft
+      setPosts((prev) => prev.filter((p) => p.id !== tempId));
+      setDraft(text);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleReact(id: string) {
+    if (reactingIds.has(id)) return;
+    setReactingIds((prev) => new Set(prev).add(id));
+    setPosts((prev) => prev.map((p) => p.id === id ? { ...p, reactions: p.reactions + 1 } : p));
+    try {
+      await apiClient.post(`/community/posts/${id}/react`);
+    } catch {
+      setPosts((prev) => prev.map((p) => p.id === id ? { ...p, reactions: Math.max(0, p.reactions - 1) } : p));
+    } finally {
+      setReactingIds((prev) => { const s = new Set(prev); s.delete(id); return s; });
+    }
+  }
+
   return (
     <PanelCard
       kicker="Community"
@@ -1511,20 +1640,44 @@ function CommunityFeedPanel({
           </p>
         </div>
       )}
-      {items.length === 0 ? (
+
+      {/* Composer */}
+      <div className="flex gap-2 mb-4">
+        <textarea
+          ref={textareaRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleSubmit(); }}
+          rows={2}
+          maxLength={500}
+          placeholder="Share something with the church family…"
+          className="flex-1 resize-none rounded-xl border border-[#E7CDD3]/70 dark:border-white/[0.1] bg-[#FFF8F9] dark:bg-white/[0.04] px-3 py-2 text-xs text-[#111] dark:text-white placeholder:text-[#c0a8af] dark:placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-[#87102C]/40 transition"
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={!draft.trim() || submitting}
+          className="self-end flex items-center justify-center w-8 h-8 rounded-xl bg-[#87102C] text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#6E0C24] transition flex-shrink-0"
+          aria-label="Post"
+        >
+          <Send size={13} />
+        </button>
+      </div>
+
+      {posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 text-center gap-3">
           <span className={`${iconBg} !w-11 !h-11 !rounded-2xl`}>
             <MessageCircle size={18} className={iconCl} />
           </span>
           <div>
             <p className="text-sm font-semibold text-[#111] dark:text-white">No posts yet</p>
-            <p className={`text-xs ${muted} mt-0.5`}>Community activity will appear here</p>
+            <p className={`text-xs ${muted} mt-0.5`}>Be the first to share something</p>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {items.slice(0, 3).map((post) => {
+          {posts.slice(0, 5).map((post) => {
             const postInitials = post.authorName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+            const reacted = reactingIds.has(post.id);
             return (
               <div key={post.id} className="flex gap-3 pb-4 border-b border-[#E7CDD3]/50 dark:border-white/[0.06] last:border-0 last:pb-0">
                 {post.authorPhotoUrl ? (
@@ -1540,11 +1693,20 @@ function CommunityFeedPanel({
                     <p className="text-xs font-semibold text-[#111] dark:text-white truncate">{post.authorName}</p>
                     <p className={`text-[10px] ${muted} flex-shrink-0`}>{relativeTime(post.createdAt)}</p>
                   </div>
-                  <p className={`text-xs ${muted} mt-0.5 leading-relaxed line-clamp-2`}>{post.text}</p>
-                  <div className="flex items-center gap-1 mt-1.5">
-                    <Heart size={11} className="text-rose-400" fill="currentColor" />
+                  <p className={`text-xs ${muted} mt-0.5 leading-relaxed`}>{post.text}</p>
+                  <button
+                    onClick={() => handleReact(post.id)}
+                    disabled={reacted}
+                    className={`flex items-center gap-1 mt-1.5 group transition ${reacted ? "cursor-default" : "hover:scale-105 active:scale-95"}`}
+                    aria-label="React with heart"
+                  >
+                    <Heart
+                      size={12}
+                      className={`transition ${reacted ? "text-rose-500" : "text-rose-300 group-hover:text-rose-500"}`}
+                      fill={reacted ? "currentColor" : "none"}
+                    />
                     <span className={`text-[10px] ${muted}`}>{post.reactions}</span>
-                  </div>
+                  </button>
                 </div>
               </div>
             );
@@ -2108,6 +2270,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           isServiceDay={isServiceDay}
           hasCheckedIn={hasCheckedInToday}
           featuredSermon={featuredSermon}
+          announcements={announcements}
         />
       </div>
 
@@ -2150,10 +2313,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           BAND 4 — COMMUNITY
           ═══════════════════════════════════════════════════════════ */}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <AnnouncementsPanel announcements={announcements} featuredSermon={featuredSermon} communityBirthdays={communityBirthdays} />
-        <CommunityBirthdayPanel communityBirthdays={communityBirthdays} />
-      </div>
+      <CommunityBirthdayPanel communityBirthdays={communityBirthdays} />
 
       <CommunityFeedPanel feed={communityFeed} onlineCount={onlineCount} />
 
