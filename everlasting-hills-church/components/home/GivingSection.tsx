@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, GitBranch, Heart, Sprout } from "lucide-react";
+import { ArrowUpRight, Sprout } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -57,28 +57,6 @@ export default function GivingSection() {
               we may never meet.
             </p>
 
-            {/* Impact tiles — non-uniform "branches" arrangement */}
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <ImpactTile
-                icon={<Sprout size={16} />}
-                eyebrow="Fruit by the well"
-                title="Local life"
-                copy="Pastoral care, weekly worship, & a family that gathers."
-              />
-              <ImpactTile
-                icon={<GitBranch size={16} />}
-                eyebrow="Branches over the wall"
-                title="Outreach"
-                copy="Serving Ibadan and beyond — beyond ordinary limits."
-                accent
-              />
-              <ImpactTile
-                icon={<Heart size={16} />}
-                eyebrow="Ancient & enduring"
-                title="Generations"
-                copy="Building a house that outlives a single season."
-              />
-            </div>
           </div>
 
           {/* RIGHT (2/5): How to give panel + CTA */}
@@ -133,43 +111,6 @@ export default function GivingSection() {
 }
 
 // ── Pieces ───────────────────────────────────────────────────────────────────
-
-function ImpactTile({
-  icon,
-  eyebrow,
-  title,
-  copy,
-  accent = false,
-}: {
-  icon: React.ReactNode;
-  eyebrow: string;
-  title: string;
-  copy: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`relative overflow-hidden rounded-2xl border p-4 backdrop-blur-sm transition-all hover:-translate-y-0.5 ${
-        accent
-          ? "border-[#87102C]/40 bg-gradient-to-br from-[#87102C]/15 to-[#87102C]/5"
-          : "border-white/10 bg-white/[0.03] hover:bg-white/[0.06]"
-      }`}
-    >
-      <div
-        className={`inline-flex w-9 h-9 rounded-xl items-center justify-center mb-3 ${
-          accent ? "bg-white/15 text-white" : "bg-[#87102C]/20 text-[#e8768a]"
-        }`}
-      >
-        {icon}
-      </div>
-      <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1">
-        {eyebrow}
-      </p>
-      <p className="text-sm text-white font-bold mb-1.5">{title}</p>
-      <p className="text-xs text-white/55 leading-relaxed">{copy}</p>
-    </div>
-  );
-}
 
 function GiveRow({
   stepNumber,
