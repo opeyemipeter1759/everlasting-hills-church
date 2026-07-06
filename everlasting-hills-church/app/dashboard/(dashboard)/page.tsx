@@ -16,11 +16,11 @@ export default async function DashboardPage() {
     };
   const role = normalizeRole(me.role);
 
-  if (role === "ADMIN" || role === "PASTOR" || role === "SUPER_ADMIN") {
+/*   if (role === "ADMIN" || role === "PASTOR" || role === "SUPER_ADMIN") {
     return loadAdminDashboard(me);
   }
   if (role === "UNIT_LEAD") {
     return loadUnitLeadDashboard(me);
-  }
+  } */
   return loadMemberDashboard(me);
 }
