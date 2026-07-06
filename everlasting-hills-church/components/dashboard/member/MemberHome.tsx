@@ -931,12 +931,13 @@ function CheckInPanel({
 // ── Band 2: Today Info Panel (right) ─────────────────────────────────────────
 
 function TodayInfoPanel({
-  nextService, isServiceDay, hasCheckedIn, featuredSermon,
+  nextService, isServiceDay, hasCheckedIn, featuredSermon, announcements,
 }: {
   nextService: MemberHomeProps["nextService"];
   isServiceDay: boolean;
   hasCheckedIn: boolean;
   featuredSermon: MemberHomeProps["featuredSermon"];
+  announcements: Array<{ id: string; title: string; body: string; createdAt: string }>;
 }) {
   if (isServiceDay && hasCheckedIn) {
     return (
@@ -1020,6 +1021,43 @@ function TodayInfoPanel({
             <Play size={12} fill="currentColor" />
             Listen now
           </Link>
+        </div>
+      </PanelCard>
+    );
+  }
+
+  if (announcements.length > 0) {
+    return (
+      <PanelCard
+        kicker="From the Church"
+        title="Announcements"
+        icon={Bell}
+        action={
+          <span className="text-[10px] font-bold text-[#87102C] dark:text-[#FFB3C1] bg-[#FFE8ED] dark:bg-[#87102C]/25 px-2.5 py-1 rounded-full">
+            {announcements.length} new
+          </span>
+        }
+      >
+        <div className="space-y-4">
+          {announcements.slice(0, 3).map((a) => (
+            <div
+              key={a.id}
+              className="flex gap-3.5 pb-4 border-b border-[#E7CDD3]/50 dark:border-white/[0.06] last:border-0 last:pb-0"
+            >
+              <div className="w-0.5 rounded-full bg-[#87102C]/40 dark:bg-[#FFB3C1]/25 flex-shrink-0 self-stretch" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#111] dark:text-white leading-snug">
+                  {a.title}
+                </p>
+                <p className={`text-xs ${muted} mt-1 leading-relaxed line-clamp-3`}>
+                  {a.body}
+                </p>
+                <p className={`text-[10px] ${muted} opacity-70 mt-1.5`}>
+                  {relativeTime(a.createdAt)}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </PanelCard>
     );
@@ -2108,6 +2146,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           isServiceDay={isServiceDay}
           hasCheckedIn={hasCheckedInToday}
           featuredSermon={featuredSermon}
+          announcements={announcements}
         />
       </div>
 

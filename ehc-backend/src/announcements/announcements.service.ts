@@ -86,4 +86,13 @@ export class AnnouncementsService {
       take: 100,
     });
   }
+
+  async listFeed() {
+    return this.prisma.announcement.findMany({
+      where: { tenantId: this.tenantId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: { id: true, title: true, body: true, createdAt: true },
+    });
+  }
 }

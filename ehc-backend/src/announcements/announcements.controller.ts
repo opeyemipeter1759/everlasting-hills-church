@@ -29,4 +29,11 @@ export class AnnouncementsController {
   list() {
     return this.announcements.list();
   }
+
+  @Get('feed')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Recent announcements for the member dashboard (max 5)' })
+  feed() {
+    return this.announcements.listFeed();
+  }
 }
