@@ -297,7 +297,7 @@ function EventForm({ initial, onCancel, onSaved }: FormProps) {
     contactPhone: initial?.contactPhone ?? "",
     contactEmail: initial?.contactEmail ?? "",
     contactWhatsapp: initial?.contactWhatsapp ?? "",
-    status: initial?.status ?? "DRAFT",
+    status: initial?.status ?? "PUBLISHED",
     featured: initial?.featured ?? false,
     rsvpEnabled: initial?.rsvpEnabled ?? true,
     capacity: initial?.capacity != null ? String(initial.capacity) : "",

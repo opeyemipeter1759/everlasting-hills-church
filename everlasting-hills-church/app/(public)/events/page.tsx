@@ -39,6 +39,12 @@ export default async function EventsIndexPage({ searchParams }: { searchParams: 
     getStructuredContent("events", { preview: searchParams.preview, fallback: INTRO_FALLBACK, valid: isIntro }),
   ]);
 
+  const now = new Date();
+  const upcoming = events.filter((e) => new Date(e.startAt) >= now);
+  const past = events.filter((e) => new Date(e.startAt) < now).reverse(); // most recent past first
+
+  const showPast = upcoming.length === 0 && past.length > 0;
+
   return (
     <main className="bg-white">
       {searchParams.preview && <div className="bg-[#87102C] text-white text-center text-xs font-semibold py-2 tracking-wide">PREVIEW — draft, not published</div>}
@@ -58,25 +64,42 @@ export default async function EventsIndexPage({ searchParams }: { searchParams: 
         </div>
       </section>
 
-      {/* Grid */}
+      {/* Upcoming events */}
       <section className="pb-24 md:pb-32 px-5 sm:px-8">
         <div className="max-w-6xl mx-auto">
-          {events.length === 0 ? (
-            <EmptyState />
-          ) : (
+          {upcoming.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {events.map((event) => (
+              {upcoming.map((event) => (
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
           )}
+
+          {/* Past events fallback */}
+          {showPast && (
+            <>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="flex-1 h-px bg-[#E7CDD3]/60" />
+                <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#8a7e80]">Past Events</span>
+                <div className="flex-1 h-px bg-[#E7CDD3]/60" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 opacity-80">
+                {past.map((event) => (
+                  <EventCard key={event.id} event={event} past />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Truly empty — no events at all */}
+          {events.length === 0 && <EmptyState />}
         </div>
       </section>
     </main>
   );
 }
 
-function EventCard({ event }: { event: EventSummary }) {
+function EventCard({ event, past = false }: { event: EventSummary; past?: boolean }) {
   const href = event.customPath ?? `/events/${event.slug}`;
   const dateLabel = formatEventDateShort(event.startAt);
 
@@ -91,7 +114,7 @@ function EventCard({ event }: { event: EventSummary }) {
           <img
             src={event.flyerImageUrl}
             alt={event.title}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${past ? "grayscale-[30%]" : ""}`}
           />
         ) : (
           <div
@@ -104,7 +127,11 @@ function EventCard({ event }: { event: EventSummary }) {
             <CalendarDays size={40} className="text-[#FFB3C1]/60" />
           </div>
         )}
-        {event.featured && (
+        {past ? (
+          <span className="absolute top-3 left-3 inline-flex items-center rounded-full bg-black/50 backdrop-blur-sm px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/80">
+            Past
+          </span>
+        ) : event.featured && (
           <span className="absolute top-3 left-3 inline-flex items-center rounded-full bg-[#87102C] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white">
             Featured
           </span>
