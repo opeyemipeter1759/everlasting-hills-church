@@ -2,6 +2,58 @@
 
 Component-level inventory of what exists and where. Created alongside the Usher Headcount work.
 
+## Administrative Departments + Admin Head [NEW]
+
+### Backend (`ehc-backend`)
+
+| Item | Path |
+| --- | --- |
+| Prisma models `Department`, `DepartmentHead` + `Unit.departmentId` + `Role.ADMIN_HEAD` | `prisma/schema.prisma` |
+| DDL (tables, role value, partial unique index, FKs, RLS) | `prisma/manual/2026-07-departments.sql` |
+| Idempotent seed (7 departments + unit mapping) | `prisma/seed-departments.cjs` |
+| Module | `src/departments/departments.module.ts` |
+| Service (CRUD, head assignment with history, unit assignment, scope resolution, announcements, nudge, audit) | `src/departments/departments.service.ts` |
+| Controller (`@Roles(ADMIN)` management, `@Roles(ADMIN_HEAD)` /mine) | `src/departments/departments.controller.ts` |
+| Zod DTOs | `src/departments/dto/department.schema.ts` |
+| `UsersService.ensureRoleAtLeast` (promotes head to ADMIN_HEAD) | `src/users/users.service.ts` |
+| Role hierarchy (guard + user management + roles list + manageable roles) | `src/auth/guards/roles.guard.ts`, `src/users/role-hierarchy.ts`, `src/users/users.service.ts`, `src/users/dto/user.dto.ts` |
+
+### API endpoints
+
+| Method + path | Purpose | Access |
+| --- | --- | --- |
+| `GET /departments` | Index + unassigned units | ADMIN+ |
+| `GET /departments/:id` | Detail + succession history | ADMIN+ |
+| `POST/PATCH/DELETE /departments` | CRUD | ADMIN+ |
+| `POST/DELETE /departments/:id/head` | Assign / end head tenure | ADMIN+ |
+| `POST /departments/:id/units`, `DELETE /departments/:id/units/:unitId` | Assign / unassign units | ADMIN+ |
+| `POST /departments/:id/announcements` | Department announcement | ADMIN+ |
+| `GET /departments/mine` | Admin Head scope | ADMIN_HEAD+ |
+| `GET /departments/mine/units/:unitId/roster` | Scoped roster (403 outside scope) | ADMIN_HEAD+ |
+| `POST /departments/mine/announcements` | Scoped announcement | ADMIN_HEAD+ |
+| `POST /departments/mine/units/:unitId/nudge` | Nudge a unit lead | ADMIN_HEAD+ |
+
+### Frontend (`everlasting-hills-church`)
+
+| Item | Path |
+| --- | --- |
+| React Query hooks + types | `lib/api/departments.ts` |
+| Pastor/Admin console (index + unassigned quick-assign) | `components/dashboard/admin/departments/DepartmentsConsole.tsx` |
+| Department detail (head, units, history, announcement) | `components/dashboard/admin/departments/DepartmentDetail.tsx` |
+| Admin Head surface | `components/dashboard/admin/departments/MyDepartment.tsx` |
+| Head person-picker | `components/dashboard/admin/departments/HeadPicker.tsx` |
+| Routes | `app/dashboard/(dashboard)/departments/`, `app/dashboard/(dashboard)/my-department/` |
+| Role-aware nav (Departments for ADMIN, My Department for ADMIN_HEAD only) | `config/config.ts` |
+| Role maps | `config/config.ts`, `lib/auth/frontend-session.ts`, `lib/api/people.ts`, `components/dashboard/admin/people/peopleShared.tsx` |
+
+### Design decisions locked
+
+- Tenant column is `tenantId` (this repo's `church_id`); "FK to User" resolves to `Profile.id`.
+- RLS is a deny-all backstop; enforcement is the API (postgres BYPASSRLS) plus per-request scope from active `DepartmentHead` rows.
+- Hierarchy: `MEMBER < UNIT_LEAD < HEAD_USHER < ADMIN_HEAD < ADMIN < PASTOR < SUPER_ADMIN`. HEAD_USHER stays a lateral specialist; its behavior is unchanged.
+- One active head per department (partial unique index); head history rows are never rewritten.
+- `Unit.departmentId` is nullable; deleting a department sets its units unassigned (ON DELETE SET NULL).
+
 ## Usher Headcount [NEW]
 
 ### Backend (`ehc-backend`)

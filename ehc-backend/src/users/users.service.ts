@@ -15,7 +15,7 @@ import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
 import { NotificationEvents } from '../notifications/notification-events';
 import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
-import { canActOnRole, assignableRoles } from './role-hierarchy';
+import { canActOnRole, assignableRoles, ROLE_LEVELS } from './role-hierarchy';
 import type { CreateUserDto, UpdateUserDto, UpdateUserRoleDto } from './dto/user.dto';
 
 /**
@@ -128,9 +128,10 @@ export class UsersService {
     const countMap = Object.fromEntries(profileCounts.map((c) => [c.role, c._count.role]));
 
     return [
-      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 6, count: countMap[Role.SUPER_ADMIN] ?? 0 },
-      { role: Role.PASTOR,      label: 'Pastor',      level: 5, count: countMap[Role.PASTOR]      ?? 0 },
-      { role: Role.ADMIN,       label: 'Admin',       level: 4, count: countMap[Role.ADMIN]        ?? 0 },
+      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 7, count: countMap[Role.SUPER_ADMIN] ?? 0 },
+      { role: Role.PASTOR,      label: 'Pastor',      level: 6, count: countMap[Role.PASTOR]      ?? 0 },
+      { role: Role.ADMIN,       label: 'Admin',       level: 5, count: countMap[Role.ADMIN]        ?? 0 },
+      { role: Role.ADMIN_HEAD,  label: 'Admin Head',  level: 4, count: countMap[Role.ADMIN_HEAD]  ?? 0 },
       { role: Role.HEAD_USHER,  label: 'Head Usher',  level: 3, count: countMap[Role.HEAD_USHER]  ?? 0 },
       { role: Role.UNIT_LEAD,   label: 'Unit Leader', level: 2, count: countMap[Role.UNIT_LEAD]   ?? 0 },
       { role: Role.MEMBER,      label: 'Member',      level: 1, count: countMap[Role.MEMBER]       ?? 0 },
@@ -436,6 +437,28 @@ export class UsersService {
     );
 
     return updated;
+  }
+
+  /**
+   * Promote a profile so its role is at least `minRole` (never demotes). Used when
+   * assigning a department head: the person needs ADMIN_HEAD to reach the Admin
+   * Head surface, but scope still comes from active DepartmentHead rows. Best-effort
+   * JWT claim sync; the DB role is authoritative.
+   */
+  async ensureRoleAtLeast(profileId: string, minRole: Role): Promise<Role> {
+    const target = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+      select: { role: true, tenantId: true, userId: true },
+    });
+    if (!target || target.tenantId !== this.tenantId) {
+      throw new NotFoundException('User not found');
+    }
+    if (ROLE_LEVELS[target.role] >= ROLE_LEVELS[minRole]) {
+      return target.role; // already at or above; no change
+    }
+    await this.prisma.profile.update({ where: { id: profileId }, data: { role: minRole } });
+    await this.syncRoleClaim(target.userId, minRole);
+    return minRole;
   }
 
   // ── Update profile (name/phone — doesn't touch role) ───────────────────────

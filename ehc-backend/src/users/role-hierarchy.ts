@@ -16,11 +16,14 @@ export const ROLE_LEVELS: Record<Role, number> = {
   VISITOR: 0,
   MEMBER: 1,
   UNIT_LEAD: 2,
-  // Head usher: records congregation headcounts. Above unit lead, below admin.
+  // Head usher: records congregation headcounts. Lateral specialist above unit lead.
   HEAD_USHER: 3,
-  ADMIN: 4,
-  PASTOR: 5,
-  SUPER_ADMIN: 6,
+  // Admin head: oversees one or more departments. Above the lead/specialist tier,
+  // below admin.
+  ADMIN_HEAD: 4,
+  ADMIN: 5,
+  PASTOR: 6,
+  SUPER_ADMIN: 7,
 };
 
 export function canActOnRole(actorRole: Role | null | undefined, targetRole: Role): boolean {

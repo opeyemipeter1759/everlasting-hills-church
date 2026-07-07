@@ -2,6 +2,7 @@ export type UserRole =
   | "SUPER_ADMIN"
   | "PASTOR"
   | "ADMIN"
+  | "ADMIN_HEAD"
   | "HEAD_USHER"
   | "UNIT_LEAD"
   | "MEMBER";
@@ -10,9 +11,10 @@ const ROLE_LEVELS: Record<UserRole, number> = {
   MEMBER: 1,
   UNIT_LEAD: 2,
   HEAD_USHER: 3,
-  ADMIN: 4,
-  PASTOR: 5,
-  SUPER_ADMIN: 6,
+  ADMIN_HEAD: 4,
+  ADMIN: 5,
+  PASTOR: 6,
+  SUPER_ADMIN: 7,
 };
 
 export const ACCESS_TOKEN_COOKIE = "ehc_access_token";
@@ -38,6 +40,7 @@ export const ROLE_OPTIONS = [
   { label: "Leader", value: "leader" },
   { label: "Unit Head", value: "unit head" },
   { label: "Head Usher", value: "head usher" },
+  { label: "Admin Head", value: "admin head" },
   { label: "Admin", value: "admin" },
   { label: "Pastor", value: "pastor" },
   { label: "Super Admin", value: "superadmin" },
@@ -50,6 +53,7 @@ export function normalizeRole(role: string | null | undefined): UserRole | null 
   if (cleaned === "member") return "MEMBER";
   if (cleaned === "leader" || cleaned === "unit head" || cleaned === "unit_head") return "UNIT_LEAD";
   if (cleaned === "head usher" || cleaned === "head_usher" || cleaned === "headusher") return "HEAD_USHER";
+  if (cleaned === "admin head" || cleaned === "admin_head" || cleaned === "adminhead") return "ADMIN_HEAD";
   if (cleaned === "admin") return "ADMIN";
   if (cleaned === "pastor") return "PASTOR";
   if (cleaned === "superadmin" || cleaned === "super admin" || cleaned === "super_admin") return "SUPER_ADMIN";
