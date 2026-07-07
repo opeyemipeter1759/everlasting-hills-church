@@ -287,6 +287,8 @@ model Profile {
   Notification   Notification[]
   RoleAssignment RoleAssignment[]
   CommunityPost  CommunityPost[]
+  DepartmentHeadOf       DepartmentHead[] @relation("DepartmentHeadUser")
+  DepartmentHeadAssigned DepartmentHead[] @relation("DepartmentHeadAssignedBy")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -530,6 +532,8 @@ model Tenant {
   SermonReaction     SermonReaction[]
   Service            Service[]
   ServiceHeadcount   ServiceHeadcount[]
+  Department         Department[]
+  DepartmentHead     DepartmentHead[]
   SiteSettings       SiteSettings[]
   Testimonial        Testimonial[]
   Unit               Unit[]
@@ -698,13 +702,58 @@ model AuditLog {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Unit {
-  id          String       @id
+  id           String       @id
+  tenantId     String
+  name         String
+  description  String?
+  departmentId String? // nullable: units can exist unassigned and the UI surfaces them
+  createdAt    DateTime     @default(now())
+  Tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  Department   Department?  @relation(fields: [departmentId], references: [id])
+  UnitMember   UnitMember[]
+
+  @@index([departmentId])
+}
+
+/// A church Administrative Structure (department). Service Units are grouped under
+/// departments; each department is led by an Admin Head (see DepartmentHead).
+/// Tenant-scoped in the service layer; RLS deny-all backstop via prisma/manual SQL.
+model Department {
+  id          String           @id
   tenantId    String
+  code        String // e.g. OSM, MA, CI, FIN, DATA, WPC, GO
   name        String
   description String?
-  createdAt   DateTime     @default(now())
-  Tenant      Tenant       @relation(fields: [tenantId], references: [id])
-  UnitMember  UnitMember[]
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
+  Tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  Units       Unit[]
+  Heads       DepartmentHead[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+}
+
+/// History-preserving assignment of a user (Profile) as head of a department.
+/// Replacing a head ends the current row (endedAt) and inserts a new one; a DB
+/// partial unique index (endedAt IS NULL) enforces one active head per department.
+model DepartmentHead {
+  id           String     @id
+  tenantId     String
+  departmentId String
+  userId       String // Profile.id of the head
+  assignedById String? // Profile.id of the actor who assigned them
+  assignedAt   DateTime   @default(now())
+  endedAt      DateTime? // null = current head
+  Tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  Department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  User         Profile    @relation("DepartmentHeadUser", fields: [userId], references: [id], onDelete: Cascade)
+  AssignedBy   Profile?   @relation("DepartmentHeadAssignedBy", fields: [assignedById], references: [id])
+
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([userId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -865,6 +914,7 @@ enum Role {
   SUPER_ADMIN
   PASTOR
   ADMIN
+  ADMIN_HEAD
   HEAD_USHER
   UNIT_LEAD
   MEMBER

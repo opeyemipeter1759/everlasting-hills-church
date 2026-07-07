@@ -14,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { FormsModule } from './forms/forms.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { HeadcountModule } from './headcount/headcount.module';
+import { DepartmentsModule } from './departments/departments.module';
 import { SermonsModule } from './sermons/sermons.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
@@ -107,6 +108,7 @@ import type { Env } from './config/env.validation';
     FormsModule,
     AttendanceModule,
     HeadcountModule,
+    DepartmentsModule,
     SermonsModule,
     AnalyticsModule,
     MembersModule,

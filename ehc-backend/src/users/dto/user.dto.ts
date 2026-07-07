@@ -24,6 +24,7 @@ const MANAGEABLE_ROLES = [
   Role.MEMBER,
   Role.UNIT_LEAD,
   Role.HEAD_USHER,
+  Role.ADMIN_HEAD,
   Role.ADMIN,
   Role.PASTOR,
   Role.SUPER_ADMIN,
