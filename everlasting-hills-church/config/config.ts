@@ -43,6 +43,7 @@ export type UserRole =
   | "SUPER_ADMIN"
   | "PASTOR"
   | "ADMIN"
+  | "ADMIN_HEAD"
   | "HEAD_USHER"
   | "UNIT_LEAD"
   | "MEMBER"
@@ -53,9 +54,10 @@ const LEVELS: Record<UserRole, number> = {
   MEMBER: 1,
   UNIT_LEAD: 2,
   HEAD_USHER: 3,
-  ADMIN: 4,
-  PASTOR: 5,
-  SUPER_ADMIN: 6,
+  ADMIN_HEAD: 4,
+  ADMIN: 5,
+  PASTOR: 6,
+  SUPER_ADMIN: 7,
 };
 
 export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
@@ -66,6 +68,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   SUPER_ADMIN: "Super Admin",
   PASTOR: "Pastor",
   ADMIN: "Admin",
+  ADMIN_HEAD: "Admin Head",
   HEAD_USHER: "Head Usher",
   UNIT_LEAD: "Unit Lead",
   MEMBER: "Member",
@@ -76,6 +79,7 @@ export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
   SUPER_ADMIN: "bg-purple-500/20 text-purple-300 border border-purple-500/30",
   PASTOR: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
   ADMIN: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+  ADMIN_HEAD: "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30",
   HEAD_USHER: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
   UNIT_LEAD: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
   MEMBER: "bg-white/10 text-white/50 border border-white/10",
@@ -109,6 +113,7 @@ import {
   FileText,
   Activity,
   Tally5,
+  Building2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -142,6 +147,14 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    // Admin Head surface only. maxRole caps it below ADMIN so admins (who manage
+    // departments via the Administration group) do not also see this.
+    section: "My Department",
+    items: [
+      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", maxRole: "ADMIN" },
+    ],
+  },
+  {
     section: "Administration",
     items: [
       { label: "People",        href: "/dashboard/members",       icon: Users,         minRole: "ADMIN" },
@@ -153,6 +166,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone,     minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
+      { label: "Departments",   href: "/dashboard/departments",   icon: Building2,     minRole: "ADMIN" },
       { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
       { label: "Public Site (CMS)", href: "/dashboard/cms",          icon: PanelsTopLeft, minRole: "PASTOR" },
     ],
