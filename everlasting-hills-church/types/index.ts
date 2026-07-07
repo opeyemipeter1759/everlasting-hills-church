@@ -1,6 +1,15 @@
 import { UserRole } from "@/config/config";
 
-export type VideoCategory = "Sunday" | "Saturday" | "Shorts" | "Other";
+export type VideoCategory =
+  | "Sunday"
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday"
+  | "Shorts"
+  | "Other";
 
 export interface YouTubeVideo {
   id: string;
@@ -80,6 +89,7 @@ export interface YouTubeChannelResponse {
 
 export interface YouTubePlaylistResponse {
   items: YouTubePlaylistItem[];
+  nextPageToken?: string;
 }
 
 export interface YouTubeVideosResponse {

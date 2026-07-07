@@ -12,6 +12,11 @@ interface VideoCardProps {
 const BADGE_COLORS: Record<VideoCategory, string> = {
   Sunday: "bg-[#87102C] text-white",
   Saturday: "bg-[#FFB3C1] text-[#3b0714]",
+  Monday: "bg-[#2a1216] text-[#FFB3C1]/80",
+  Tuesday: "bg-[#2a1216] text-[#FFB3C1]/80",
+  Wednesday: "bg-[#2a1216] text-[#FFB3C1]/80",
+  Thursday: "bg-[#2a1216] text-[#FFB3C1]/80",
+  Friday: "bg-[#2a1216] text-[#FFB3C1]/80",
   Shorts: "bg-[#5d091f] text-[#FFE8ED]",
   Other: "bg-[#2a1216] text-[#FFB3C1]/80",
 };

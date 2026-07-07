@@ -3,16 +3,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Send } from "lucide-react";
+import { submitEventRsvp, getRsvpErrorMessage } from "@/lib/api/events";
 
 /**
  * Generic event RSVP form — posts to POST /events/:slug/rsvp. Premium Elevated Card
  * on the blush section with a spring-animated success state, matching the bespoke
- * Heaven on Earth form.
+ * Heaven on Earth form. One RSVP per person — no attendee/party-size count.
  */
-
-const API_BASE =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_BASE_URL?.trim()) ||
-  "http://localhost:4000";
 
 interface Props {
   slug: string;
@@ -21,7 +18,7 @@ interface Props {
 }
 
 export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
-  const [form, setForm] = useState({ fullName: "", email: "", phone: "", attendees: 1 });
+  const [form, setForm] = useState({ fullName: "", email: "", phone: "" });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,32 +32,14 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
     setSubmitting(true);
     setError(null);
     try {
-      const payload = {
+      await submitEventRsvp(slug, {
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         ...(form.phone.trim() && { phone: form.phone.trim() }),
-        attendees: Number(form.attendees) || 1,
-      };
-      const res = await fetch(
-        `${API_BASE.replace(/\/$/, "")}/events/${slug}/rsvp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-      const body = (await res.json().catch(() => null)) as
-        | { data?: unknown; error?: { message?: string } }
-        | null;
-      if (!res.ok) {
-        throw new Error(body?.error?.message ?? `RSVP failed (${res.status})`);
-      }
+      });
       setSuccess(true);
     } catch (err) {
-      setError(
-        (err as Error).message ??
-          "Couldn't send your RSVP. Please try again, or call us directly.",
-      );
+      setError(getRsvpErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -103,7 +82,7 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
                 type="button"
                 onClick={() => {
                   setSuccess(false);
-                  setForm({ fullName: "", email: "", phone: "", attendees: 1 });
+                  setForm({ fullName: "", email: "", phone: "" });
                 }}
                 className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#87102C] hover:gap-3 transition-all"
               >
@@ -150,18 +129,6 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
                   />
                 </Field>
               </div>
-
-              <Field label="Number of attendees" htmlFor="rsvp-attendees">
-                <input
-                  id="rsvp-attendees"
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={form.attendees}
-                  onChange={(e) => set("attendees", Number(e.target.value) || 1)}
-                  className={inputClass}
-                />
-              </Field>
 
               {error && (
                 <p

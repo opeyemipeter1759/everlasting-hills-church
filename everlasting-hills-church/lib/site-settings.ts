@@ -1,17 +1,3 @@
-/**
- * Server-side helper for homepage content.
- *
- * One source — GET /site-settings (NestJS, cached for 5 min in-process). The
- * homepage uses `getAllSiteSettings()` once per request; section components are
- * dumb display components that take their content as a prop.
- *
- * Type strategy: we mirror the Zod-inferred shapes from the backend here as
- * plain TypeScript types. Slightly duplicative but keeps the frontend free of
- * a Zod runtime dependency for read-only consumption. If a shape drifts, the
- * frontend will still render with the fallback defaults below.
- */
-
-/* ── Type mirrors (kept in sync with ehc-backend/src/site-settings/schemas) ── */
 
 export interface Cta {
   label: string;
@@ -164,12 +150,12 @@ export const HERO_FALLBACK: HeroContent = {
   ctaPrimary: { label: "Plan Your Visit", href: "#services" },
   ctaSecondary: { label: "Watch Service", href: "#sermons" },
   carouselImages: [
-    "/images/church_congregation_1_1779193592146.png",
-    "/images/church_congregation_2_1779193607195.png",
-    "/images/church_congregation_3_1779193624434.png",
-    "/images/church_congregation_4_1779193639860.png",
-    "/images/church_congregation_3_1779193624434.png",
-    "/images/church_congregation_4_1779193639860.png",
+    "/HeroImages/IMG_4565.jpg",
+    "/HeroImages/1.jpg",
+    "/HeroImages/2.jpg",
+    "/HeroImages/3.jpg",
+    "/HeroImages/4.jpg",   
+    "/HeroImages/IMG_9.jpg",
   ],
   mediaCard: {
     eyebrow: "Weekly Gathering",
@@ -188,20 +174,48 @@ export const ABOUT_FALLBACK: AboutContent = {
   ],
   gallery: [
     {
-      name: "Mountain lake",
-      src: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&q=80&auto=format&fit=crop",
+      name: "Family",
+      src: "/HeroImages/IMG_8470.jpg",
     },
     {
-      name: "Forest light",
-      src: "https://images.unsplash.com/photo-1500534623283-312aade485b7?w=1200&q=80&auto=format&fit=crop",
+      name: "Worship",
+      src: "/HeroImages/IMG_8248.jpg",
     },
     {
       name: "Green hills",
-      src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&q=80&auto=format&fit=crop",
+      src: "/HeroImages/IMG_5684.jpg",
+    },
+      {
+      name: "After Service",
+      src: "/HeroImages/21.jpg",
+    },
+       {
+      name: "Worship",
+      src: "/HeroImages/IMG_8931.jpg",
     },
     {
-      name: "Mountain road",
-      src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=80&auto=format&fit=crop",
+      name: "Service",
+      src: "/HeroImages/IMG_9014.jpg",
+    },
+         {
+      name: "Service Moments",
+      src: "/HeroImages/IMG_101.jpg",
+    },
+    {
+      name: "After Service",
+      src: "/HeroImages/IMG_1080.jpg",
+    },
+    {
+      name: "Prayer",
+      src: "/HeroImages/IMG_4565.jpg",
+    },
+        {
+      name: "Service Moments",
+      src: "/HeroImages/IMG_4667.jpg",
+    },
+    {
+      name: "Service Moments",
+      src: "/HeroImages/IMG_9014.jpg",
     },
   ],
   ctaPrimary: { label: "Join the Family", href: "#community" },

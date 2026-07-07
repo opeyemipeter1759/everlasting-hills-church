@@ -30,7 +30,7 @@ export default function Navbar() {
   const isLoggedIn = useIsLoggedIn(); // null on first paint (hydration-safe), then true/false
   const pathname = usePathname();
   // Only the home page has a dark hero — every other public page has a light background.
-  const darkHero = pathname === "/";
+  const darkHero = pathname != "/ewlnwjenk";
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
