@@ -1,50 +1,21 @@
 "use client";
-
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-/**
- * EhcSlider
- * ---------
- * An auto-playing image slider where the picture is split into a grid of
- * pieces. The pieces first gather into the letters "EHC", hold so the word
- * is readable, then flow outward into their real positions to form the
- * complete image. Before the next image, every piece slides back into the
- * letterforms, the image swaps behind them, and they spread out again.
- */
 
 export type EhcImage = {
-  /** Caption shown in the lower-left corner. */
   name: string;
-  /**
-   * Image URL — remote or from /public, e.g.
-   *   "https://example.com/photo.jpg" or "/photos/aurora.jpg"
-   */
   src?: string;
-  /**
-   * CSS gradient used instead of (or as a fallback for) `src`, e.g.
-   *   "linear-gradient(135deg,#7F77DD,#1D9E75)"
-   * One of `src` or `gradient` must be provided.
-   */
   gradient?: string;
 };
 
 export type EhcSliderProps = {
   images: EhcImage[];
-  /** The word the pieces spell out. Defaults to "EHC". */
   word?: string;
-  /** Grid resolution. More = sharper letters but heavier. Default 16 x 10. */
   cols?: number;
   rows?: number;
-  /** How long the finished image is shown, in ms. Default 2400. */
   holdMs?: number;
-  /**
-   * How long the EHC word stays on screen before flowing into the image, in ms.
-   * Defaults to matching `holdMs` so the word and image hold equally long.
-   */
   wordHoldMs?: number;
-  /** Aspect ratio of the stage, e.g. "16 / 10". */
   aspectRatio?: string;
-  /** Start playing automatically. Default true. */
   autoPlay?: boolean;
   className?: string;
 };
@@ -55,7 +26,6 @@ const LETTERS: Record<string, string[]> = {
   E: ["#####", "#....", "####.", "#....", "#####"],
   H: ["#...#", "#...#", "#####", "#...#", "#...#"],
   C: [".####", "#....", "#....", "#....", ".####"],
-  // A small fallback set so other words still render something sensible.
   A: [".###.", "#...#", "#####", "#...#", "#...#"],
   B: ["####.", "#...#", "####.", "#...#", "####."],
   D: ["####.", "#...#", "#...#", "#...#", "####."],
@@ -140,17 +110,12 @@ export default function EhcSlider({
     return arr;
   }, [cols, rows]);
 
-  // Where each piece goes when forming the word. Every piece participates;
-  // if there are more pieces than letter dots, dots get multiple pieces
-  // (with a tiny offset) so the word looks dense and fully formed.
-  const textAssign = useMemo<Target[]>(() => {
+   const textAssign = useMemo<Target[]>(() => {
     const targets = buildTextTargets(word);
     if (targets.length === 0) return homes;
     const arr: Target[] = [];
     for (let i = 0; i < N; i++) {
       const base = targets[i % targets.length];
-      // Pieces beyond the first pass on a dot get a small deterministic jitter
-      // so they don't perfectly overlap — keeps the letter edges crisp/full.
       const pass = Math.floor(i / targets.length);
       const jx = pass === 0 ? 0 : ((((i * 31) % 7) - 3) / 3) * 0.006;
       const jy = pass === 0 ? 0 : ((((i * 17) % 7) - 3) / 3) * 0.006;
@@ -212,6 +177,55 @@ export default function EhcSlider({
     });
   }, []);
 
+  const naturalSizeCache = useRef<Map<string, { w: number; h: number }>>(new Map());
+
+  const getNaturalSize = useCallback((src: string) => {
+    return new Promise<{ w: number; h: number } | null>((resolve) => {
+      const cached = naturalSizeCache.current.get(src);
+      if (cached) return resolve(cached);
+      const probe = new window.Image();
+      probe.onload = () => {
+        const size = { w: probe.naturalWidth, h: probe.naturalHeight };
+        naturalSizeCache.current.set(src, size);
+        resolve(size);
+      };
+      probe.onerror = () => resolve(null);
+      probe.src = src;
+    });
+  }, []);
+
+  // Sizes/positions each piece's background slice so the full image is scaled
+  // uniformly to cover the stage (crop overflow) instead of being stretched
+  // per-axis to match the stage's aspect ratio.
+  const applyCoverSizing = useCallback((size: { w: number; h: number } | null) => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const stageW = stage.clientWidth;
+    const stageH = stage.clientHeight;
+    const cellW = stageW / cols;
+    const cellH = stageH / rows;
+
+    let bgW = stageW;
+    let bgH = stageH;
+    let offX = 0;
+    let offY = 0;
+
+    if (size && size.w > 0 && size.h > 0) {
+      const scale = Math.max(stageW / size.w, stageH / size.h);
+      bgW = size.w * scale;
+      bgH = size.h * scale;
+      offX = (stageW - bgW) / 2;
+      offY = (stageH - bgH) / 2;
+    }
+
+    pieceRefs.current.forEach((el, i) => {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      el.style.backgroundSize = `${bgW}px ${bgH}px`;
+      el.style.backgroundPosition = `${offX - c * cellW}px ${offY - r * cellH}px`;
+    });
+  }, [cols, rows]);
+
   const paint = useCallback((i: number) => {
     const img = images[i];
     const value = img.src
@@ -220,7 +234,23 @@ export default function EhcSlider({
     pieceRefs.current.forEach((el) => {
       el.style.backgroundImage = value;
     });
-  }, [images]);
+    if (img.src) {
+      getNaturalSize(img.src).then(applyCoverSizing);
+    } else {
+      applyCoverSizing(null);
+    }
+  }, [images, getNaturalSize, applyCoverSizing]);
+
+  // Re-fit the current image's cover sizing when the stage is resized.
+  useEffect(() => {
+    const onResize = () => {
+      const current = images[idxRef.current];
+      const cached = current?.src ? naturalSizeCache.current.get(current.src) ?? null : null;
+      applyCoverSizing(cached);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [images, applyCoverSizing]);
 
   const schedule = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -281,7 +311,6 @@ export default function EhcSlider({
       if (timerRef.current) clearTimeout(timerRef.current);
       clearRafs();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const togglePlay = () => {
@@ -338,7 +367,7 @@ export default function EhcSlider({
       </div>
 
       <div className="flex items-center justify-between gap-3">
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           {images.map((_, i) => (
             <button
               key={i}
@@ -351,7 +380,7 @@ export default function EhcSlider({
               }}
             />
           ))}
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,36 +1,75 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Video, Send } from "lucide-react";
 import { SERMONS_FALLBACK, type SermonsContent } from "@/lib/site-settings";
-import RecentSermonsGrid, { type RecentSermon } from "./RecentSermonsGrid";
+import { useYouTubeVideos } from "@/utils/Useyoutubevideos";
+import type { CategoryCounts, VideoCategory, YouTubeVideo } from "@/types";
+import type { TelegramSermonItem } from "@/lib/telegram-sermons";
+import VideoFilterTabs from "./Videofiltertabs";
+import VideoCard from "./VideoCard";
+import VideoPlayerModal from "./VideoPlayerModal";
+import VideoCardSkeleton from "../ui/skeleton/VideoCardSkeleton";
+import TelegramSermonCard from "./TelegramSermonCard";
 
+type TabLabel = "All" | VideoCategory;
+type SourceTab = "YouTube" | "Telegram";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
-  process.env.API_BASE_URL?.trim() ||
-  "http://localhost:4000";
+const CATEGORY_TABS: VideoCategory[] = ["Sunday", "Saturday"];
 
-interface ServerEnvelope<T> {
-  data: T;
-}
-
-async function fetchRecentSermons(limit: number): Promise<RecentSermon[]> {
-  try {
-    const res = await fetch(`${BASE_URL}/sermons/recent?limit=${limit}`, {
-      next: { revalidate: 300, tags: ["sermons-recent"] },
-    });
-    if (!res.ok) return [];
-    const body = (await res.json()) as ServerEnvelope<RecentSermon[]>;
-    return body?.data ?? [];
-  } catch {
-    return [];
-  }
-}
-
-export default async function SermonsSection({ content }: { content?: SermonsContent }) {
+export default function SermonsSection({
+  content,
+  telegramSermons = [],
+}: {
+  content?: SermonsContent;
+  telegramSermons?: TelegramSermonItem[];
+}) {
   const c = content ?? SERMONS_FALLBACK;
-  const sermons = await fetchRecentSermons(c.displayCount || 3);
+  const pageSize = 4;
   // Our writing style uses no em dashes.
   const lead = (c.subtext ?? "").replace(/\s*—\s*/g, ", ");
+
+  const [source, setSource] = useState<SourceTab>("YouTube");
+
+  const { videos, loading, error } = useYouTubeVideos();
+  const [activeTab, setActiveTab] = useState<TabLabel>("All");
+  const [visibleCount, setVisibleCount] = useState(pageSize);
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+
+  const [telegramVisibleCount, setTelegramVisibleCount] = useState(pageSize);
+  const visibleTelegram = telegramSermons.slice(0, telegramVisibleCount);
+  const telegramRemaining = telegramSermons.length - telegramVisibleCount;
+  const [playingTelegramId, setPlayingTelegramId] = useState<string | null>(null);
+
+  const counts = useMemo<CategoryCounts>(() => {
+    const map: CategoryCounts = { total: videos.length };
+    for (const cat of CATEGORY_TABS) {
+      map[cat] = videos.filter((v) => v.category === cat).length;
+    }
+    return map;
+  }, [videos]);
+
+  const filtered = useMemo(
+    () => (activeTab === "All" ? videos : videos.filter((v) => v.category === activeTab)),
+    [videos, activeTab]
+  );
+
+  const visible = filtered.slice(0, visibleCount);
+  const remaining = filtered.length - visibleCount;
+
+  function handleTabChange(tab: TabLabel): void {
+    setActiveTab(tab);
+    setVisibleCount(pageSize);
+  }
+
+  function handleOpen(video: YouTubeVideo): void {
+    setSelectedVideo(video);
+  }
+
+  function handleClose(): void {
+    setSelectedVideo(null);
+  }
 
   return (
     <section id="sermons" className="relative overflow-hidden bg-[#080808] py-24 md:py-32 text-white">
@@ -61,11 +100,120 @@ export default async function SermonsSection({ content }: { content?: SermonsCon
             <ArrowRight size={15} />
           </Link>
         </div>
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="inline-flex items-center gap-2 rounded-[28px] border border-white/10 bg-white/5 p-2 backdrop-blur-xl">
+            <button
+              type="button"
+              onClick={() => setSource("YouTube")}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+                source === "YouTube" ? "bg-[#87102C] text-white" : "text-white/60 hover:text-white/85"
+              }`}
+            >
+              <Video size={15} />
+              YouTube
+            </button>
+            <button
+              type="button"
+              onClick={() => setSource("Telegram")}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
+                source === "Telegram" ? "bg-[#87102C] text-white" : "text-white/60 hover:text-white/85"
+              }`}
+            >
+              <Send size={15} />
+              Telegram
+            </button>
+          </div>
 
-        {sermons.length > 0 ? (
-          <RecentSermonsGrid sermons={sermons} />
-        ) : (
-          <EmptyState viewAllHref={c.viewAllCta.href} viewAllLabel={c.viewAllCta.label} />
+          {source === "YouTube" && !loading && !error && (
+            <VideoFilterTabs
+              categories={CATEGORY_TABS}
+              counts={counts}
+              active={activeTab}
+              onChange={handleTabChange}
+            />
+          )}
+        </div>
+
+        {source === "YouTube" && (
+          <>
+            {error && (
+              <div className="rounded-[28px] border border-white/10 bg-white/5 px-6 py-8 text-center backdrop-blur-xl">
+                <p className="mb-1 text-sm font-medium text-[#FFB3C1]">Could not load videos</p>
+                <p className="text-xs text-white/55">{error}</p>
+              </div>
+            )}
+
+            {loading && (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <VideoCardSkeleton key={i} />
+                ))}
+              </div>
+            )}
+
+            {!loading && !error && visible.length > 0 && (
+              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                {visible.map((video) => (
+                  <VideoCard key={video.id} video={video} onOpen={handleOpen} />
+                ))}
+              </div>
+            )}
+
+            {!loading && !error && visible.length === 0 && (
+              <EmptyState viewAllHref={c.viewAllCta.href} viewAllLabel={c.viewAllCta.label} />
+            )}
+
+            {!loading && !error && remaining > 0 && (
+              <div className="mt-10 flex justify-center">
+                <button
+                  onClick={() => setVisibleCount((n) => n + pageSize)}
+                  className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-[#FFE8ED] backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7h10M7 2v10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                  Load more · {remaining}
+                </button>
+              </div>
+            )}
+
+            {selectedVideo ? <VideoPlayerModal video={selectedVideo} onClose={handleClose} /> : null}
+          </>
+        )}
+
+        {source === "Telegram" && (
+          <>
+            {visibleTelegram.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {visibleTelegram.map((item) => (
+                  <TelegramSermonCard
+                    key={item.id}
+                    item={item}
+                    isPlaying={playingTelegramId === item.id}
+                    onTogglePlay={() =>
+                      setPlayingTelegramId((cur) => (cur === item.id ? null : item.id))
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState viewAllHref={c.viewAllCta.href} viewAllLabel={c.viewAllCta.label} />
+            )}
+
+            {telegramRemaining > 0 && (
+              <div className="mt-10 flex justify-center">
+                <button
+                  onClick={() => setTelegramVisibleCount((n) => n + pageSize)}
+                  className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-[#FFE8ED] backdrop-blur-xl transition-all hover:border-white/20 hover:bg-white/10"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 7h10M7 2v10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+                  </svg>
+                  Load more · {telegramRemaining}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

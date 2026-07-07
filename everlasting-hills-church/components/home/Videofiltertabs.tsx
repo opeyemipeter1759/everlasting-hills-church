@@ -45,6 +45,11 @@ const TAB_ICONS: Record<TabLabel, ReactNode> = {
       <path d="M5.5 5l4 2-4 2V5z" fill="currentColor" />
     </svg>
   ),
+  Monday: null,
+  Tuesday: null,
+  Wednesday: null,
+  Thursday: null,
+  Friday: null,
   Other: null,
 };
 
