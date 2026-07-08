@@ -11,6 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
 import type { AssignUnitMemberDto, CreateUnitDto, SetMemberRoleDto, UpdateUnitDto } from './dto/unit.dto';
+import { EffectiveRolesService } from '../auth/effective-roles.service';
 
 const ADMIN_ROLES: Role[] = [Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN];
 
@@ -20,6 +21,7 @@ export class UnitsService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly effectiveRoles: EffectiveRolesService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -272,19 +274,27 @@ export class UnitsService {
         },
         orderBy: { name: 'asc' },
       }),
+      // Leaders = anyone with an active grant or unit-lead / department-head
+      // assignment (the new source of truth), not the legacy role column.
       this.prisma.profile.findMany({
         where: {
           tenantId: this.tenantId,
-          role: { in: [Role.UNIT_LEAD, Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN] },
+          OR: [
+            { RoleGrantOf: { some: { endedAt: null } } },
+            { UnitLeadOf: { some: { endedAt: null } } },
+            { DepartmentHeadOf: { some: { endedAt: null } } },
+          ],
         },
         include: {
           Member: {
             select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true },
           },
         },
-        orderBy: { role: 'asc' },
+        orderBy: { createdAt: 'asc' },
       }),
     ]);
+
+    const roleMap = await this.effectiveRoles.getEffectiveRolesBatch(profiles.map((p) => p.id));
 
     return {
       units: units.map((u) => ({
@@ -297,7 +307,7 @@ export class UnitsService {
       })),
       leadership: profiles.map((p) => ({
         profileId: p.id,
-        role: p.role,
+        role: roleMap.get(p.id)?.primaryRole ?? Role.MEMBER,
         member: p.Member
           ? {
               id: p.Member.id,

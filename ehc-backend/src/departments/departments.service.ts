@@ -10,7 +10,6 @@ import { randomUUID } from 'crypto';
 import { Prisma, Role } from '@prisma/client';
 import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
-import { UsersService } from '../users/users.service';
 import { InboxService } from '../inbox/inbox.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
@@ -38,7 +37,6 @@ export class DepartmentsService {
   constructor(
     private readonly prisma: PrismaService,
     config: ConfigService<Env, true>,
-    private readonly users: UsersService,
     private readonly inbox: InboxService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -322,8 +320,8 @@ export class DepartmentsService {
       });
     });
 
-    // Ensure the person can reach the Admin Head surface (never demotes admins).
-    await this.users.ensureRoleAtLeast(dto.profileId, Role.ADMIN_HEAD);
+    // The ADMIN_HEAD effective role is derived from this active DepartmentHead row,
+    // so no explicit role grant is needed; it applies on the person's next request.
 
     await this.writeAudit({
       action: 'ASSIGN_HEAD',

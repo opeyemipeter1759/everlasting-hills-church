@@ -11,6 +11,7 @@ import { Role } from '@prisma/client';
 import { createHash, randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
+import { EffectiveRolesService } from './effective-roles.service';
 import { ensureDefaultTenant } from '../tenant/ensure-default-tenant';
 import { NotificationEvents } from '../notifications/notification-events';
 import { buildPasswordChangedEmail } from '../notifications/templates/password-changed.email';
@@ -72,6 +73,7 @@ export class AuthService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
+    private readonly effectiveRoles: EffectiveRolesService,
     config: ConfigService<Env, true>,
   ) {
     this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
@@ -190,13 +192,23 @@ export class AuthService implements OnModuleInit {
         id: randomUUID(),
         userId,
         tenantId: this.tenantId,
-        role: Role.SUPER_ADMIN,
       },
       update: {
         tenantId: this.tenantId,
-        role: Role.SUPER_ADMIN,
       },
     });
+
+    // Source of truth for the super admin's role is an active RoleGrant, not the
+    // legacy column. Idempotent: only create if no active SUPER_ADMIN grant exists.
+    const existingGrant = await this.prisma.roleGrant.findFirst({
+      where: { userId: profile.id, role: Role.SUPER_ADMIN, endedAt: null },
+      select: { id: true },
+    });
+    if (!existingGrant) {
+      await this.prisma.roleGrant.create({
+        data: { id: randomUUID(), tenantId: this.tenantId, userId: profile.id, role: Role.SUPER_ADMIN },
+      });
+    }
 
     await this.prisma.member.upsert({
       where: { profileId: profile.id },
@@ -224,12 +236,14 @@ export class AuthService implements OnModuleInit {
     const profile = await this.prisma.profile.findUnique({
       where: { userId },
       select: {
-        role: true,
+        id: true,
         Member: { select: { firstName: true, lastName: true, photoUrl: true } },
       },
     });
+    // Role is the highest effective role (grants + assignments), not the legacy column.
+    const eff = await this.effectiveRoles.getEffectiveRoles(profile?.id ?? null);
     return {
-      role: profile?.role ?? null,
+      role: profile ? eff.primaryRole : null,
       firstName: profile?.Member?.firstName ?? null,
       lastName: profile?.Member?.lastName ?? null,
       photoUrl: profile?.Member?.photoUrl ?? null,
@@ -243,7 +257,6 @@ export class AuthService implements OnModuleInit {
         firstName: true,
         lastName: true,
         photoUrl: true,
-        Profile: { select: { role: true } },
       },
     });
   }
@@ -525,7 +538,6 @@ export class AuthService implements OnModuleInit {
       where: { userId },
       select: {
         id: true,
-        role: true,
         tenantId: true,
         Member: {
           select: {
@@ -563,8 +575,14 @@ export class AuthService implements OnModuleInit {
     if (!profile) {
       // Authenticated Supabase user with no Profile row yet — orphan account.
       // Return enough for the UI to render a "complete your profile" state.
-      return { profileId: null, role: null, tenantId: null, member: null };
+      return {
+        profileId: null, role: null, tenantId: null, member: null,
+        effectiveRoles: [], unitLeadOf: [], adminHeadOf: [], headUsher: false,
+      };
     }
+
+    // Effective roles + scopes drive the role-aware dashboard navigation.
+    const eff = await this.effectiveRoles.getEffectiveRoles(profile.id);
 
     // Gender is editable directly on Member now, but members converted from the
     // public first-timer form may only have it on their original Visitor row.
@@ -597,7 +615,11 @@ export class AuthService implements OnModuleInit {
 
     return {
       profileId: profile.id,
-      role: profile.role,
+      role: eff.primaryRole,
+      effectiveRoles: eff.roles,
+      unitLeadOf: eff.unitLeadOf,
+      adminHeadOf: eff.adminHeadOf,
+      headUsher: eff.headUsher,
       tenantId: profile.tenantId,
       member: profile.Member
         ? {

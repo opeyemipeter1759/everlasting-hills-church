@@ -44,16 +44,20 @@ export class RolesGuard implements CanActivate {
     }
 
     const { user } = context.switchToHttp().getRequest<{ user?: AuthUser }>();
-    if (!user?.role) {
+    // Effective roles (grants + assignments) are the source of truth. A user
+    // passes if ANY of their effective roles meets the required level, preserving
+    // hierarchy (e.g. PASTOR clears an ADMIN route) while supporting multi-role.
+    const effective = user?.effectiveRoles?.length ? user.effectiveRoles : user?.role ? [user.role] : [];
+    if (effective.length === 0) {
       throw new ForbiddenException('No role assigned to user');
     }
 
-    const userLevel = ROLE_LEVEL[user.role];
+    const userLevel = Math.max(...effective.map((r) => ROLE_LEVEL[r] ?? 0));
     const minRequiredLevel = Math.min(...required.map((r) => ROLE_LEVEL[r]));
 
     if (userLevel < minRequiredLevel) {
       throw new ForbiddenException(
-        `Requires role ${required.join(' or ')} (you are ${user.role})`,
+        `Requires role ${required.join(' or ')} (you have ${effective.join(', ')})`,
       );
     }
 

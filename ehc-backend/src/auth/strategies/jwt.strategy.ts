@@ -6,6 +6,7 @@ import { passportJwtSecret } from 'jwks-rsa';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../types/auth-user';
+import { EffectiveRolesService } from '../effective-roles.service';
 
 interface SupabaseJwtPayload {
   sub: string;
@@ -34,6 +35,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     config: ConfigService<Env, true>,
     private readonly prisma: PrismaService,
+    private readonly effectiveRoles: EffectiveRolesService,
   ) {
     const supabaseUrl = config.get('SUPABASE_URL', { infer: true });
     super({
@@ -62,21 +64,28 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     const email = String(payload.email ?? '');
 
-    // Single query: profile + linked member, by Supabase user id.
+    // Identity only (no role): profile + linked member, by Supabase user id.
     const profile = await this.prisma.profile.findUnique({
       where: { userId: payload.sub },
       select: {
         id: true,
-        role: true,
         tenantId: true,
         Member: { select: { id: true } },
       },
     });
 
+    // Roles are resolved per request from grants + active assignments (never from
+    // the JWT), so revocations take effect immediately on the next request.
+    const eff = await this.effectiveRoles.getEffectiveRoles(profile?.id ?? null);
+
     return {
       userId: payload.sub,
       email,
-      role: profile?.role ?? null,
+      role: profile ? eff.primaryRole : null,
+      effectiveRoles: profile ? eff.roles : [],
+      unitLeadOf: eff.unitLeadOf,
+      adminHeadOf: eff.adminHeadOf,
+      headUsher: eff.headUsher,
       profileId: profile?.id ?? null,
       memberId: profile?.Member?.id ?? null,
       tenantId: profile?.tenantId ?? null,

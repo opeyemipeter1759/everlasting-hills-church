@@ -280,7 +280,10 @@ model PrayerRequest {
 model Profile {
   id             String           @id
   userId         String           @unique
-  role           Role             @default(MEMBER)
+  /// DEPRECATED: no longer the source of truth for authorization. Effective roles
+  /// are derived from RoleGrant + assignments (UnitLeadAssignment, DepartmentHead,
+  /// HeadUsherAssignment). Kept as a frozen pre-migration snapshot; do not read it.
+  legacyRole     Role             @default(MEMBER)
   tenantId       String
   createdAt      DateTime         @default(now())
   Member         Member?
@@ -289,6 +292,69 @@ model Profile {
   CommunityPost  CommunityPost[]
   DepartmentHeadOf       DepartmentHead[] @relation("DepartmentHeadUser")
   DepartmentHeadAssigned DepartmentHead[] @relation("DepartmentHeadAssignedBy")
+  RoleGrantOf            RoleGrant[]           @relation("RoleGrantUser")
+  RoleGrantGranted       RoleGrant[]           @relation("RoleGrantGrantedBy")
+  UnitLeadOf             UnitLeadAssignment[]  @relation("UnitLeadUser")
+  UnitLeadAssigned       UnitLeadAssignment[]  @relation("UnitLeadAssignedBy")
+  HeadUsherOf            HeadUsherAssignment[] @relation("HeadUsherUser")
+  HeadUsherAssigned      HeadUsherAssignment[] @relation("HeadUsherAssignedBy")
+}
+
+/// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
+/// revoking sets endedAt. A DB partial unique index enforces one active grant per
+/// (user, role). Tenant-scoped in the service layer; RLS deny-all backstop.
+model RoleGrant {
+  id          String    @id
+  tenantId    String
+  userId      String // Profile.id of the grantee
+  role        Role // PASTOR | ADMIN | SUPER_ADMIN (enforced in the service)
+  grantedById String? // Profile.id of the actor
+  grantedAt   DateTime  @default(now())
+  endedAt     DateTime? // null = active
+  Tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  User        Profile   @relation("RoleGrantUser", fields: [userId], references: [id], onDelete: Cascade)
+  GrantedBy   Profile?  @relation("RoleGrantGrantedBy", fields: [grantedById], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+/// History-preserving unit leadership. One active lead per unit (DB partial unique
+/// index). UnitMember.isLead is kept as a denormalized pointer synced in the same
+/// transaction. Derives the UNIT_LEAD effective role.
+model UnitLeadAssignment {
+  id           String    @id
+  tenantId     String
+  unitId       String
+  userId       String // Profile.id of the lead
+  assignedById String?
+  assignedAt   DateTime  @default(now())
+  endedAt      DateTime?
+  Tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  Unit         Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  User         Profile   @relation("UnitLeadUser", fields: [userId], references: [id], onDelete: Cascade)
+  AssignedBy   Profile?  @relation("UnitLeadAssignedBy", fields: [assignedById], references: [id])
+
+  @@index([tenantId])
+  @@index([unitId])
+  @@index([userId])
+}
+
+/// History-preserving head usher assignment (global, unscoped). One active per user.
+/// Derives the HEAD_USHER effective role.
+model HeadUsherAssignment {
+  id           String    @id
+  tenantId     String
+  userId       String
+  assignedById String?
+  assignedAt   DateTime  @default(now())
+  endedAt      DateTime?
+  Tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  User         Profile   @relation("HeadUsherUser", fields: [userId], references: [id], onDelete: Cascade)
+  AssignedBy   Profile?  @relation("HeadUsherAssignedBy", fields: [assignedById], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -534,6 +600,9 @@ model Tenant {
   ServiceHeadcount   ServiceHeadcount[]
   Department         Department[]
   DepartmentHead     DepartmentHead[]
+  RoleGrant          RoleGrant[]
+  UnitLeadAssignment UnitLeadAssignment[]
+  HeadUsherAssignment HeadUsherAssignment[]
   SiteSettings       SiteSettings[]
   Testimonial        Testimonial[]
   Unit               Unit[]
@@ -711,6 +780,7 @@ model Unit {
   Tenant       Tenant       @relation(fields: [tenantId], references: [id])
   Department   Department?  @relation(fields: [departmentId], references: [id])
   UnitMember   UnitMember[]
+  LeadAssignments UnitLeadAssignment[]
 
   @@index([departmentId])
 }

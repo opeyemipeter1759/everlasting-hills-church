@@ -17,6 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
 import { canActOnRole } from '../users/role-hierarchy';
+import { EffectiveRolesService } from '../auth/effective-roles.service';
 import { NotificationEvents } from '../notifications/notification-events';
 import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
 import { buildAccountDeactivationEmail } from '../notifications/templates/account-deactivation.email';
@@ -57,7 +58,7 @@ export interface BulkMemberOpInput {
 }
 
 const DIRECTORY_INCLUDE = {
-  Profile: { select: { id: true, userId: true, role: true } },
+  Profile: { select: { id: true, userId: true } },
   EngagementScore: { select: { score: true } },
   _count: { select: { AttendanceRecord: true } },
   UnitMember: { include: { Unit: { select: { id: true, name: true } } } },
@@ -106,6 +107,7 @@ export class MembersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
+    private readonly effectiveRoles: EffectiveRolesService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -206,7 +208,6 @@ export class MembersService {
         id: randomUUID(),
         userId,
         tenantId: this.tenantId,
-        role: 'MEMBER',
       },
     });
 
@@ -330,7 +331,6 @@ export class MembersService {
             id: randomUUID(),
             userId: authData.user.id,
             tenantId: this.tenantId,
-            role: 'MEMBER',
           },
         });
         await this.prisma.roleAssignment.create({
@@ -689,8 +689,9 @@ export class MembersService {
       this.directoryCounts(),
     ]);
 
+    const roleMap = await this.pageRoleMap(rows);
     return {
-      data: rows.map((r) => this.toPersonRow(r)),
+      data: rows.map((r) => this.toPersonRow(r, roleMap)),
       meta: {
         total,
         page,
@@ -699,6 +700,15 @@ export class MembersService {
         counts,
       },
     };
+  }
+
+  /** Batch-resolve the primary effective role for a page of member rows. */
+  private async pageRoleMap(rows: DirectoryRow[]): Promise<Map<string, Role>> {
+    const profileIds = rows.map((r) => r.Profile?.id).filter((v): v is string => Boolean(v));
+    const eff = await this.effectiveRoles.getEffectiveRolesBatch(profileIds);
+    const map = new Map<string, Role>();
+    for (const [pid, e] of eff) map.set(pid, e.primaryRole);
+    return map;
   }
 
   private directoryInclude() {
@@ -719,7 +729,7 @@ export class MembersService {
     }
     if (q.status) where.status = q.status as MemberStatus;
     if (q.gender) where.gender = q.gender.toUpperCase();
-    if (q.role) where.Profile = { is: { role: q.role as Role } };
+    if (q.role) where.Profile = { is: this.roleFilter(q.role as Role) };
     if (q.unit) where.UnitMember = { some: { unitId: q.unit } };
     if (q.hasUnit === 'true') where.UnitMember = { some: {} };
     if (q.hasUnit === 'false') where.UnitMember = { none: {} };
@@ -748,6 +758,31 @@ export class MembersService {
     return where;
   }
 
+  /** Translate a requested effective role into a Profile relation filter. */
+  private roleFilter(role: Role): Prisma.ProfileWhereInput {
+    switch (role) {
+      case Role.PASTOR:
+      case Role.ADMIN:
+      case Role.SUPER_ADMIN:
+        return { RoleGrantOf: { some: { role, endedAt: null } } };
+      case Role.UNIT_LEAD:
+        return { UnitLeadOf: { some: { endedAt: null } } };
+      case Role.ADMIN_HEAD:
+        return { DepartmentHeadOf: { some: { endedAt: null } } };
+      case Role.HEAD_USHER:
+        return { HeadUsherOf: { some: { endedAt: null } } };
+      case Role.MEMBER:
+      default:
+        // Plain members: no active grant or assignment of any kind.
+        return {
+          RoleGrantOf: { none: { endedAt: null } },
+          UnitLeadOf: { none: { endedAt: null } },
+          DepartmentHeadOf: { none: { endedAt: null } },
+          HeadUsherOf: { none: { endedAt: null } },
+        };
+    }
+  }
+
   private directoryOrderBy(
     sortBy?: string,
     sortOrder?: string,
@@ -758,8 +793,8 @@ export class MembersService {
         return { firstName: dir };
       case 'status':
         return { status: dir };
-      case 'role':
-        return { Profile: { role: dir } };
+      // 'role' is effective (grants + assignments), not a column, so it cannot be
+      // sorted in the query; fall back to a stable order.
       case 'joinedAt':
       default:
         return { joinedAt: dir };
@@ -772,27 +807,33 @@ export class MembersService {
     monthStart.setUTCDate(1);
     monthStart.setUTCHours(0, 0, 0, 0);
 
-    const [byRoleRaw, active, withUnit, thisMonth, total] = await Promise.all([
-      this.prisma.profile.groupBy({
-        by: ['role'],
-        where: { tenantId: this.tenantId, Member: { is: {} } },
-        _count: { role: true },
-      }),
-      this.prisma.member.count({ where: { tenantId: this.tenantId, status: 'ACTIVE' } }),
-      this.prisma.member.count({
-        where: { tenantId: this.tenantId, UnitMember: { some: {} } },
-      }),
-      this.prisma.member.count({
-        where: { tenantId: this.tenantId, joinedAt: { gte: monthStart } },
-      }),
-      this.prisma.member.count({ where: { tenantId: this.tenantId } }),
+    const t = this.tenantId;
+    const [grantRows, unitLeads, deptHeads, ushers, active, withUnit, thisMonth, total] = await Promise.all([
+      this.prisma.roleGrant.groupBy({ by: ['role'], where: { tenantId: t, endedAt: null }, _count: { role: true } }),
+      this.prisma.unitLeadAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.departmentHead.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.headUsherAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.member.count({ where: { tenantId: t, status: 'ACTIVE' } }),
+      this.prisma.member.count({ where: { tenantId: t, UnitMember: { some: {} } } }),
+      this.prisma.member.count({ where: { tenantId: t, joinedAt: { gte: monthStart } } }),
+      this.prisma.member.count({ where: { tenantId: t } }),
     ]);
 
-    const byRole = Object.fromEntries(byRoleRaw.map((g) => [g.role, g._count.role]));
+    // Counts by effective role (grants + assignments). MEMBER is the base = total.
+    const grant = Object.fromEntries(grantRows.map((g) => [g.role, g._count.role])) as Record<string, number>;
+    const byRole: Record<string, number> = {
+      SUPER_ADMIN: grant.SUPER_ADMIN ?? 0,
+      PASTOR: grant.PASTOR ?? 0,
+      ADMIN: grant.ADMIN ?? 0,
+      ADMIN_HEAD: deptHeads.length,
+      HEAD_USHER: ushers.length,
+      UNIT_LEAD: unitLeads.length,
+      MEMBER: total,
+    };
     return { total, active, withUnit, thisMonth, byRole };
   }
 
-  private toPersonRow(r: DirectoryRow) {
+  private toPersonRow(r: DirectoryRow, roleMap?: Map<string, Role>) {
     return {
       id: r.id,
       profileId: r.Profile?.id ?? null,
@@ -804,7 +845,7 @@ export class MembersService {
       phone: r.phone,
       gender: r.gender,
       photoUrl: r.photoUrl,
-      role: r.Profile?.role ?? 'MEMBER',
+      role: (r.Profile?.id ? roleMap?.get(r.Profile.id) : undefined) ?? 'MEMBER',
       status: r.status,
       tags: r.tags ?? [],
       dateOfBirth: r.dateOfBirth ? r.dateOfBirth.toISOString() : null,
@@ -835,7 +876,8 @@ export class MembersService {
       include: this.directoryInclude(),
       take: 20_000,
     });
-    const people = rows.map((r) => this.toPersonRow(r));
+    const roleMap = await this.pageRoleMap(rows);
+    const people = rows.map((r) => this.toPersonRow(r, roleMap));
 
     const headers = [
       'First Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Role',
@@ -972,10 +1014,10 @@ export class MembersService {
   }
 
   async getMemberById(memberId: string) {
-    return this.prisma.member.findUnique({
+    const member = await this.prisma.member.findUnique({
       where: { id: memberId },
       include: {
-        Profile: { select: { role: true } },
+        Profile: { select: { id: true } },
         EngagementScore: true,
         AttendanceRecord: {
           include: { Service: true },
@@ -995,6 +1037,12 @@ export class MembersService {
         },
       },
     });
+    if (!member) return null;
+    // Effective role (grants + assignments) exposed as Profile.role + top-level role.
+    const role = member.Profile
+      ? (await this.effectiveRoles.getEffectiveRoles(member.Profile.id)).primaryRole
+      : Role.MEMBER;
+    return { ...member, role, Profile: member.Profile ? { ...member.Profile, role } : null };
   }
 
   async updateMemberStatus(memberId: string, status: string) {
@@ -1012,14 +1060,16 @@ export class MembersService {
         firstName: true,
         lastName: true,
         email: true,
-        Profile: { select: { id: true, userId: true, role: true } },
+        Profile: { select: { id: true, userId: true } },
       },
     });
     if (!member || member.tenantId !== this.tenantId) {
       throw new NotFoundException('Member not found');
     }
 
-    const targetRole = member.Profile?.role ?? 'MEMBER';
+    const targetRole = member.Profile
+      ? (await this.effectiveRoles.getEffectiveRoles(member.Profile.id)).primaryRole
+      : Role.MEMBER;
     if (!canActOnRole(actor.role as any, targetRole as any)) {
       throw new ForbiddenException(
         `Your role (${actor.role ?? 'none'}) cannot delete a ${targetRole}.`,
