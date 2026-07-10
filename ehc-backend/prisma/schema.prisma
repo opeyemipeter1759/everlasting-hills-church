@@ -280,13 +280,81 @@ model PrayerRequest {
 model Profile {
   id             String           @id
   userId         String           @unique
-  role           Role             @default(MEMBER)
+  /// DEPRECATED: no longer the source of truth for authorization. Effective roles
+  /// are derived from RoleGrant + assignments (UnitLeadAssignment, DepartmentHead,
+  /// HeadUsherAssignment). Kept as a frozen pre-migration snapshot; do not read it.
+  legacyRole     Role             @default(MEMBER)
   tenantId       String
   createdAt      DateTime         @default(now())
   Member         Member?
   Notification   Notification[]
   RoleAssignment RoleAssignment[]
   CommunityPost  CommunityPost[]
+  DepartmentHeadOf       DepartmentHead[] @relation("DepartmentHeadUser")
+  DepartmentHeadAssigned DepartmentHead[] @relation("DepartmentHeadAssignedBy")
+  RoleGrantOf            RoleGrant[]           @relation("RoleGrantUser")
+  RoleGrantGranted       RoleGrant[]           @relation("RoleGrantGrantedBy")
+  UnitLeadOf             UnitLeadAssignment[]  @relation("UnitLeadUser")
+  UnitLeadAssigned       UnitLeadAssignment[]  @relation("UnitLeadAssignedBy")
+  HeadUsherOf            HeadUsherAssignment[] @relation("HeadUsherUser")
+  HeadUsherAssigned      HeadUsherAssignment[] @relation("HeadUsherAssignedBy")
+}
+
+/// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
+/// revoking sets endedAt. A DB partial unique index enforces one active grant per
+/// (user, role). Tenant-scoped in the service layer; RLS deny-all backstop.
+model RoleGrant {
+  id          String    @id
+  tenantId    String
+  userId      String // Profile.id of the grantee
+  role        Role // PASTOR | ADMIN | SUPER_ADMIN (enforced in the service)
+  grantedById String? // Profile.id of the actor
+  grantedAt   DateTime  @default(now())
+  endedAt     DateTime? // null = active
+  Tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  User        Profile   @relation("RoleGrantUser", fields: [userId], references: [id], onDelete: Cascade)
+  GrantedBy   Profile?  @relation("RoleGrantGrantedBy", fields: [grantedById], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+/// History-preserving unit leadership. One active lead per unit (DB partial unique
+/// index). UnitMember.isLead is kept as a denormalized pointer synced in the same
+/// transaction. Derives the UNIT_LEAD effective role.
+model UnitLeadAssignment {
+  id           String    @id
+  tenantId     String
+  unitId       String
+  userId       String // Profile.id of the lead
+  assignedById String?
+  assignedAt   DateTime  @default(now())
+  endedAt      DateTime?
+  Tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  Unit         Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  User         Profile   @relation("UnitLeadUser", fields: [userId], references: [id], onDelete: Cascade)
+  AssignedBy   Profile?  @relation("UnitLeadAssignedBy", fields: [assignedById], references: [id])
+
+  @@index([tenantId])
+  @@index([unitId])
+  @@index([userId])
+}
+
+/// History-preserving head usher assignment (global, unscoped). One active per user.
+/// Derives the HEAD_USHER effective role.
+model HeadUsherAssignment {
+  id           String    @id
+  tenantId     String
+  userId       String
+  assignedById String?
+  assignedAt   DateTime  @default(now())
+  endedAt      DateTime?
+  Tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  User         Profile   @relation("HeadUsherUser", fields: [userId], references: [id], onDelete: Cascade)
+  AssignedBy   Profile?  @relation("HeadUsherAssignedBy", fields: [assignedById], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -530,6 +598,11 @@ model Tenant {
   SermonReaction     SermonReaction[]
   Service            Service[]
   ServiceHeadcount   ServiceHeadcount[]
+  Department         Department[]
+  DepartmentHead     DepartmentHead[]
+  RoleGrant          RoleGrant[]
+  UnitLeadAssignment UnitLeadAssignment[]
+  HeadUsherAssignment HeadUsherAssignment[]
   SiteSettings       SiteSettings[]
   Testimonial        Testimonial[]
   Unit               Unit[]
@@ -698,13 +771,59 @@ model AuditLog {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Unit {
-  id          String       @id
+  id           String       @id
+  tenantId     String
+  name         String
+  description  String?
+  departmentId String? // nullable: units can exist unassigned and the UI surfaces them
+  createdAt    DateTime     @default(now())
+  Tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  Department   Department?  @relation(fields: [departmentId], references: [id])
+  UnitMember   UnitMember[]
+  LeadAssignments UnitLeadAssignment[]
+
+  @@index([departmentId])
+}
+
+/// A church Administrative Structure (department). Service Units are grouped under
+/// departments; each department is led by an Admin Head (see DepartmentHead).
+/// Tenant-scoped in the service layer; RLS deny-all backstop via prisma/manual SQL.
+model Department {
+  id          String           @id
   tenantId    String
+  code        String // e.g. OSM, MA, CI, FIN, DATA, WPC, GO
   name        String
   description String?
-  createdAt   DateTime     @default(now())
-  Tenant      Tenant       @relation(fields: [tenantId], references: [id])
-  UnitMember  UnitMember[]
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
+  Tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  Units       Unit[]
+  Heads       DepartmentHead[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+}
+
+/// History-preserving assignment of a user (Profile) as head of a department.
+/// Replacing a head ends the current row (endedAt) and inserts a new one; a DB
+/// partial unique index (endedAt IS NULL) enforces one active head per department.
+model DepartmentHead {
+  id           String     @id
+  tenantId     String
+  departmentId String
+  userId       String // Profile.id of the head
+  assignedById String? // Profile.id of the actor who assigned them
+  assignedAt   DateTime   @default(now())
+  endedAt      DateTime? // null = current head
+  Tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  Department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  User         Profile    @relation("DepartmentHeadUser", fields: [userId], references: [id], onDelete: Cascade)
+  AssignedBy   Profile?   @relation("DepartmentHeadAssignedBy", fields: [assignedById], references: [id])
+
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([userId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -865,6 +984,7 @@ enum Role {
   SUPER_ADMIN
   PASTOR
   ADMIN
+  ADMIN_HEAD
   HEAD_USHER
   UNIT_LEAD
   MEMBER

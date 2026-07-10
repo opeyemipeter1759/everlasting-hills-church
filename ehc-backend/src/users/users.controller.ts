@@ -101,7 +101,7 @@ export class UsersController {
   }
 
   @Patch(':profileId/role')
-  @ApiOperation({ summary: 'Change a user role' })
+  @ApiOperation({ summary: 'Set a user single granted role (People dropdown)' })
   @ApiBody({ type: UpdateUserRoleDto })
   async updateRole(
     @CurrentUser() actor: AuthUser,
@@ -109,6 +109,27 @@ export class UsersController {
     @Body() body: UpdateUserRoleDto,
   ) {
     return this.usersService.updateRole(actor, profileId, body);
+  }
+
+  @Post(':profileId/grants')
+  @ApiOperation({ summary: 'Grant a global role (PASTOR / ADMIN / SUPER_ADMIN), additive' })
+  @ApiBody({ type: UpdateUserRoleDto })
+  async grantRole(
+    @CurrentUser() actor: AuthUser,
+    @Param('profileId') profileId: string,
+    @Body() body: UpdateUserRoleDto,
+  ) {
+    return this.usersService.grantRole(actor, profileId, body.role);
+  }
+
+  @Delete(':profileId/grants/:role')
+  @ApiOperation({ summary: 'Revoke a global role grant' })
+  async revokeGrant(
+    @CurrentUser() actor: AuthUser,
+    @Param('profileId') profileId: string,
+    @Param('role') role: Role,
+  ) {
+    return this.usersService.revokeGrant(actor, profileId, role);
   }
 
   @Patch(':profileId')

@@ -12,13 +12,14 @@ const ROLE_LEVEL: Record<Role, number> = {
   VISITOR: 0,
   MEMBER: 1,
   UNIT_LEAD: 2,
-  // Head usher: records congregation headcounts, ranked above unit lead but below
-  // admin so @Roles(HEAD_USHER) admits admins too, while @Roles(ADMIN) still
-  // excludes head ushers (no general admin powers).
+  // Head usher: records congregation headcounts. Lateral specialist above unit lead.
   HEAD_USHER: 3,
-  ADMIN: 4,
-  PASTOR: 5,
-  SUPER_ADMIN: 6,
+  // Admin head: oversees one or more departments. Above the specialist/lead tier,
+  // below admin. @Roles(ADMIN_HEAD) admits admins; @Roles(ADMIN) excludes heads.
+  ADMIN_HEAD: 4,
+  ADMIN: 5,
+  PASTOR: 6,
+  SUPER_ADMIN: 7,
 };
 
 /**
@@ -43,16 +44,20 @@ export class RolesGuard implements CanActivate {
     }
 
     const { user } = context.switchToHttp().getRequest<{ user?: AuthUser }>();
-    if (!user?.role) {
+    // Effective roles (grants + assignments) are the source of truth. A user
+    // passes if ANY of their effective roles meets the required level, preserving
+    // hierarchy (e.g. PASTOR clears an ADMIN route) while supporting multi-role.
+    const effective = user?.effectiveRoles?.length ? user.effectiveRoles : user?.role ? [user.role] : [];
+    if (effective.length === 0) {
       throw new ForbiddenException('No role assigned to user');
     }
 
-    const userLevel = ROLE_LEVEL[user.role];
+    const userLevel = Math.max(...effective.map((r) => ROLE_LEVEL[r] ?? 0));
     const minRequiredLevel = Math.min(...required.map((r) => ROLE_LEVEL[r]));
 
     if (userLevel < minRequiredLevel) {
       throw new ForbiddenException(
-        `Requires role ${required.join(' or ')} (you are ${user.role})`,
+        `Requires role ${required.join(' or ')} (you have ${effective.join(', ')})`,
       );
     }
 

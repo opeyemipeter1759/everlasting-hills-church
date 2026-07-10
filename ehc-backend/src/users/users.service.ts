@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -16,7 +16,11 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { NotificationEvents } from '../notifications/notification-events';
 import { buildMemberWelcomeEmail } from '../notifications/member-welcome-email';
 import { canActOnRole, assignableRoles } from './role-hierarchy';
+import { EffectiveRolesService } from '../auth/effective-roles.service';
 import type { CreateUserDto, UpdateUserDto, UpdateUserRoleDto } from './dto/user.dto';
+
+/** Roles stored as explicit grants (everything else is derived from assignments). */
+const GRANTED_ROLES: Role[] = [Role.PASTOR, Role.ADMIN, Role.SUPER_ADMIN];
 
 /**
  * Admin-only user management. Creates Supabase auth users + their Profile + Member rows
@@ -35,6 +39,7 @@ export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
+    private readonly effectiveRoles: EffectiveRolesService,
     config: ConfigService<Env, true>,
   ) {
     this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
@@ -88,18 +93,65 @@ export class UsersService {
    * here doesn't fail the role change — the DB stays authoritative and the middleware
    * falls back to the hint cookie until the next token refresh.
    */
-  private async syncRoleClaim(userId: string, role: Role) {
+  /** The target's highest effective role (grants + assignments), for hierarchy checks. */
+  private async targetPrimaryRole(profileId: string): Promise<Role> {
+    return (await this.effectiveRoles.getEffectiveRoles(profileId)).primaryRole;
+  }
+
+  /** Grant a global role. History-preserving; idempotent on the active (user, role). */
+  async grantRole(actor: AuthUser, profileId: string, role: Role) {
+    if (!GRANTED_ROLES.includes(role)) {
+      throw new BadRequestException(`${role} is a derived role; assign it via a unit or department, not a grant`);
+    }
+    const target = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+      select: { id: true, tenantId: true },
+    });
+    if (!target || target.tenantId !== this.tenantId) throw new NotFoundException('User not found');
+    this.assertCanActOn(actor, role);
+    this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
+
+    const existing = await this.prisma.roleGrant.findFirst({
+      where: { userId: profileId, role, endedAt: null },
+      select: { id: true },
+    });
+    if (!existing) {
+      await this.prisma.roleGrant.create({
+        data: { id: randomUUID(), tenantId: this.tenantId, userId: profileId, role, grantedById: actor.profileId ?? null },
+      });
+      await this.writeAudit(actor, 'GRANT_ROLE', profileId, { role });
+    }
+    return { granted: role };
+  }
+
+  /** End an active grant (history-preserving). */
+  async revokeGrant(actor: AuthUser, profileId: string, role: Role) {
+    const target = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+      select: { id: true, tenantId: true },
+    });
+    if (!target || target.tenantId !== this.tenantId) throw new NotFoundException('User not found');
+    this.assertCanActOn(actor, role);
+    this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
+
+    await this.prisma.roleGrant.updateMany({
+      where: { userId: profileId, role, endedAt: null },
+      data: { endedAt: new Date() },
+    });
+    await this.writeAudit(actor, 'REVOKE_ROLE', profileId, { role });
+    return { revoked: role };
+  }
+
+  private async writeAudit(actor: AuthUser, action: string, entityId: string, after: Prisma.InputJsonValue) {
     try {
-      const admin = this.getSupabaseAdmin();
-      const { data: current } = await admin.auth.admin.getUserById(userId);
-      const existing = (current?.user?.app_metadata as Record<string, unknown> | undefined) ?? {};
-      await admin.auth.admin.updateUserById(userId, {
-        app_metadata: { ...existing, role },
+      await this.prisma.auditLog.create({
+        data: {
+          id: randomUUID(), tenantId: this.tenantId, actorId: actor.userId,
+          action, entity: 'RoleGrant', entityId, after,
+        },
       });
     } catch (err) {
-      this.logger.warn(
-        `Could not sync role claim for ${userId}: ${(err as Error).message}`,
-      );
+      this.logger.error(`Audit write failed (${action}): ${(err as Error).message}`);
     }
   }
 
@@ -113,24 +165,34 @@ export class UsersService {
    *  all other roles are counted from the Profile table.
    */
   async getAllRoles() {
-    const [profileCounts, visitorCount] = await Promise.all([
-      this.prisma.profile.groupBy({
-        by: ['role'],
-        where: {
-          tenantId: this.tenantId,
-          role: { not: Role.VISITOR },
-        },
-        _count: { role: true },
-      }),
-      this.prisma.visitor.count({ where: { tenantId: this.tenantId } }),
+    // Counts come from grants + active assignments (the new source of truth), not
+    // the legacy column. MEMBER is the universal base = every profile.
+    const t = this.tenantId;
+    const [totalProfiles, grantRows, unitLeads, deptHeads, ushers, visitorCount] = await Promise.all([
+      this.prisma.profile.count({ where: { tenantId: t } }),
+      this.prisma.roleGrant.groupBy({ by: ['role'], where: { tenantId: t, endedAt: null }, _count: { role: true } }),
+      this.prisma.unitLeadAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.departmentHead.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.headUsherAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.visitor.count({ where: { tenantId: t } }),
     ]);
 
-    const countMap = Object.fromEntries(profileCounts.map((c) => [c.role, c._count.role]));
+    const grantCount = Object.fromEntries(grantRows.map((g) => [g.role, g._count.role])) as Record<string, number>;
+    const countMap: Record<string, number> = {
+      [Role.SUPER_ADMIN]: grantCount[Role.SUPER_ADMIN] ?? 0,
+      [Role.PASTOR]: grantCount[Role.PASTOR] ?? 0,
+      [Role.ADMIN]: grantCount[Role.ADMIN] ?? 0,
+      [Role.ADMIN_HEAD]: deptHeads.length,
+      [Role.HEAD_USHER]: ushers.length,
+      [Role.UNIT_LEAD]: unitLeads.length,
+      [Role.MEMBER]: totalProfiles,
+    };
 
     return [
-      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 6, count: countMap[Role.SUPER_ADMIN] ?? 0 },
-      { role: Role.PASTOR,      label: 'Pastor',      level: 5, count: countMap[Role.PASTOR]      ?? 0 },
-      { role: Role.ADMIN,       label: 'Admin',       level: 4, count: countMap[Role.ADMIN]        ?? 0 },
+      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 7, count: countMap[Role.SUPER_ADMIN] ?? 0 },
+      { role: Role.PASTOR,      label: 'Pastor',      level: 6, count: countMap[Role.PASTOR]      ?? 0 },
+      { role: Role.ADMIN,       label: 'Admin',       level: 5, count: countMap[Role.ADMIN]        ?? 0 },
+      { role: Role.ADMIN_HEAD,  label: 'Admin Head',  level: 4, count: countMap[Role.ADMIN_HEAD]  ?? 0 },
       { role: Role.HEAD_USHER,  label: 'Head Usher',  level: 3, count: countMap[Role.HEAD_USHER]  ?? 0 },
       { role: Role.UNIT_LEAD,   label: 'Unit Leader', level: 2, count: countMap[Role.UNIT_LEAD]   ?? 0 },
       { role: Role.MEMBER,      label: 'Member',      level: 1, count: countMap[Role.MEMBER]       ?? 0 },
@@ -147,10 +209,7 @@ export class UsersService {
   async listByRole() {
     const [profiles, visitors] = await Promise.all([
       this.prisma.profile.findMany({
-        where: {
-          tenantId: this.tenantId,
-          role: { not: Role.VISITOR },
-        },
+        where: { tenantId: this.tenantId },
         include: {
           Member: {
             select: {
@@ -169,7 +228,7 @@ export class UsersService {
             },
           },
         },
-        orderBy: [{ role: 'asc' }, { createdAt: 'asc' }],
+        orderBy: { createdAt: 'asc' },
       }),
       this.prisma.visitor.findMany({
         where: { tenantId: this.tenantId },
@@ -185,17 +244,22 @@ export class UsersService {
       }),
     ]);
 
+    // Group each profile under its highest effective role (from grants + assignments).
+    const effByProfile = await this.effectiveRoles.getEffectiveRolesBatch(profiles.map((p) => p.id));
     const grouped: Record<string, unknown[]> = {
       [Role.SUPER_ADMIN]: [],
       [Role.PASTOR]: [],
       [Role.ADMIN]: [],
+      [Role.ADMIN_HEAD]: [],
+      [Role.HEAD_USHER]: [],
       [Role.UNIT_LEAD]: [],
       [Role.MEMBER]: [],
       VISITOR: [],
     };
 
     for (const p of profiles) {
-      const role = p.role ?? Role.MEMBER;
+      const eff = effByProfile.get(p.id);
+      const role = eff?.primaryRole ?? Role.MEMBER;
       const member = p.Member
         ? {
             id: p.Member.id,
@@ -206,6 +270,7 @@ export class UsersService {
             photoUrl: p.Member.photoUrl,
             status: p.Member.status,
             joinedAt: p.Member.joinedAt,
+            roles: eff?.roles ?? [Role.MEMBER],
             ...(role === Role.UNIT_LEAD && {
               units: p.Member.UnitMember.map((um) => ({
                 unitId: um.Unit.id,
@@ -217,7 +282,7 @@ export class UsersService {
           }
         : null;
 
-      grouped[role].push({ profileId: p.id, userId: p.userId, role, member });
+      (grouped[role] ?? grouped[Role.MEMBER]).push({ profileId: p.id, userId: p.userId, role, roles: eff?.roles ?? [Role.MEMBER], member });
     }
 
     grouped['VISITOR'] = visitors.map((v) => ({
@@ -238,7 +303,6 @@ export class UsersService {
     const profiles = await this.prisma.profile.findMany({
       where: {
         tenantId: this.tenantId,
-        ...(opts.role && { role: opts.role }),
         ...(opts.search && {
           Member: {
             OR: [
@@ -266,13 +330,20 @@ export class UsersService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return profiles.map((p) => ({
-      profileId: p.id,
-      userId: p.userId,
-      role: p.role,
-      createdAt: p.createdAt,
-      member: p.Member,
-    }));
+    const eff = await this.effectiveRoles.getEffectiveRolesBatch(profiles.map((p) => p.id));
+    const mapped = profiles.map((p) => {
+      const e = eff.get(p.id);
+      return {
+        profileId: p.id,
+        userId: p.userId,
+        role: e?.primaryRole ?? Role.MEMBER,
+        roles: e?.roles ?? [Role.MEMBER],
+        createdAt: p.createdAt,
+        member: p.Member,
+      };
+    });
+    // Role filter is by effective-role membership (grants + assignments).
+    return opts.role ? mapped.filter((m) => m.roles.includes(opts.role as Role)) : mapped;
   }
 
   // ── Create ─────────────────────────────────────────────────────────────────
@@ -323,9 +394,21 @@ export class UsersService {
           id: randomUUID(),
           userId: supabaseUserId,
           tenantId: this.tenantId,
-          role: data.role,
         },
       });
+
+      // Apply the requested role under the grants + assignments model. Granted
+      // roles become a RoleGrant; HEAD_USHER an assignment. UNIT_LEAD / ADMIN_HEAD
+      // are scoped and become effective once assigned to a unit / department.
+      if (GRANTED_ROLES.includes(data.role)) {
+        await this.prisma.roleGrant.create({
+          data: { id: randomUUID(), tenantId: this.tenantId, userId: profile.id, role: data.role, grantedById: actor.profileId ?? null },
+        });
+      } else if (data.role === Role.HEAD_USHER) {
+        await this.prisma.headUsherAssignment.create({
+          data: { id: randomUUID(), tenantId: this.tenantId, userId: profile.id, assignedById: actor.profileId ?? null },
+        });
+      }
       const member = await this.prisma.member.create({
         data: {
           id: randomUUID(),
@@ -359,7 +442,7 @@ export class UsersService {
       return {
         profileId: profile.id,
         userId: supabaseUserId,
-        role: profile.role,
+        role: data.role,
         member,
       };
     } catch (dbError) {
@@ -406,36 +489,45 @@ export class UsersService {
 
   // ── Update role ────────────────────────────────────────────────────────────
 
+  /**
+   * Set a user's single granted role (backward-compatible with the People
+   * dropdown). Ends all active grants, then applies the target: a granted role
+   * becomes a RoleGrant, HEAD_USHER an assignment, MEMBER clears grants. Scoped
+   * roles (UNIT_LEAD / ADMIN_HEAD) come from unit / department assignment flows.
+   * For additive multi-role, use grantRole / revokeGrant instead.
+   */
   async updateRole(actor: AuthUser, profileId: string, data: UpdateUserRoleDto) {
     const target = await this.prisma.profile.findUnique({
       where: { id: profileId },
-      select: { id: true, role: true, tenantId: true, userId: true, Member: { select: { email: true } } },
+      select: { id: true, tenantId: true, userId: true, Member: { select: { email: true } } },
     });
     if (!target || target.tenantId !== this.tenantId) {
       throw new NotFoundException('User not found');
     }
 
-    // Actor must out-rank BOTH the current and the new role
-    this.assertCanActOn(actor, target.role);
+    // Actor must out-rank BOTH the current effective role and the new role.
+    this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
     this.assertCanActOn(actor, data.role);
 
-    if (target.role === data.role) {
-      return target; // no-op
-    }
-
-    const updated = await this.prisma.profile.update({
-      where: { id: profileId },
-      data: { role: data.role },
+    await this.prisma.$transaction(async (tx) => {
+      await tx.roleGrant.updateMany({ where: { userId: profileId, endedAt: null }, data: { endedAt: new Date() } });
+      if (GRANTED_ROLES.includes(data.role)) {
+        await tx.roleGrant.create({
+          data: { id: randomUUID(), tenantId: this.tenantId, userId: profileId, role: data.role, grantedById: actor.profileId ?? null },
+        });
+      } else if (data.role === Role.HEAD_USHER) {
+        const existing = await tx.headUsherAssignment.findFirst({ where: { userId: profileId, endedAt: null }, select: { id: true } });
+        if (!existing) {
+          await tx.headUsherAssignment.create({
+            data: { id: randomUUID(), tenantId: this.tenantId, userId: profileId, assignedById: actor.profileId ?? null },
+          });
+        }
+      }
     });
 
-    // Push the new role into the signed JWT claim (best-effort; DB is authoritative).
-    await this.syncRoleClaim(target.userId, data.role);
-
-    this.logger.log(
-      `[${actor.email}] changed ${target.Member?.email ?? target.userId} role: ${target.role} → ${data.role}`,
-    );
-
-    return updated;
+    await this.writeAudit(actor, 'SET_ROLE', profileId, { role: data.role });
+    this.logger.log(`[${actor.email}] set ${target.Member?.email ?? target.userId} role -> ${data.role}`);
+    return { profileId, role: data.role };
   }
 
   // ── Update profile (name/phone — doesn't touch role) ───────────────────────
@@ -443,12 +535,12 @@ export class UsersService {
   async updateProfile(actor: AuthUser, profileId: string, data: UpdateUserDto) {
     const target = await this.prisma.profile.findUnique({
       where: { id: profileId },
-      select: { id: true, role: true, tenantId: true, Member: { select: { id: true } } },
+      select: { id: true, tenantId: true, Member: { select: { id: true } } },
     });
     if (!target || target.tenantId !== this.tenantId) {
       throw new NotFoundException('User not found');
     }
-    this.assertCanActOn(actor, target.role);
+    this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
 
     if (!target.Member) {
       throw new BadRequestException('User has no Member record to update');
@@ -483,7 +575,6 @@ export class UsersService {
       where: { id: profileId },
       select: {
         id: true,
-        role: true,
         tenantId: true,
         userId: true,
         Member: { select: { id: true, firstName: true, lastName: true, email: true } },
@@ -492,7 +583,7 @@ export class UsersService {
     if (!target || target.tenantId !== this.tenantId) {
       throw new NotFoundException('User not found');
     }
-    this.assertCanActOn(actor, target.role);
+    this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
 
     const memberId = target.Member?.id;
 
@@ -547,12 +638,12 @@ export class UsersService {
   async deactivate(actor: AuthUser, profileId: string) {
     const target = await this.prisma.profile.findUnique({
       where: { id: profileId },
-      select: { id: true, role: true, tenantId: true, Member: { select: { id: true } } },
+      select: { id: true, tenantId: true, Member: { select: { id: true } } },
     });
     if (!target || target.tenantId !== this.tenantId) {
       throw new NotFoundException('User not found');
     }
-    this.assertCanActOn(actor, target.role);
+    this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
 
     if (!target.Member) {
       throw new BadRequestException('User has no Member record');
