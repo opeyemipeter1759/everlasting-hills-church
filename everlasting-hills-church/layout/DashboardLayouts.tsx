@@ -31,7 +31,7 @@ export default function DashboardLayouts({ children }: { children: React.ReactNo
       )}
       <div className={`flex flex-col min-h-screen transition-all duration-300 ease-in-out ${sidebarWidth}`}>
         <AppHeader />
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-4">
+        <main ref={mainRef} className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6 lg:p-4">
           <div className="mx-auto max-w-screen-2xl">
             {children}
           </div>

@@ -2,8 +2,20 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { SlidersHorizontal, Download, RefreshCw, ListFilter } from "lucide-react";
+import {
+  SlidersHorizontal,
+  Download,
+  RefreshCw,
+  ListFilter,
+  CheckCircle2,
+  XCircle,
+  CalendarCheck,
+  TrendingUp,
+} from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
+import { Pagination } from "@/components/ui/navigation/Pagination";
+
+const PAGE_SIZE = 8;
 
 interface HistoryRow {
   id: string;
@@ -45,10 +57,14 @@ export default function MyAttendanceClient() {
 
   const member = data?.member ?? null;
   const [showFilter, setShowFilter] = useState(false);
+  const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<Record<ColKey, string>>({
     id: "", name: "", email: "", phone: "", service: "", date: "", status: "", mode: "",
   });
-  const setFilter = (k: ColKey, v: string) => setFilters((f) => ({ ...f, [k]: v }));
+  const setFilter = (k: ColKey, v: string) => {
+    setFilters((f) => ({ ...f, [k]: v }));
+    setPage(1);
+  };
 
   const allRows = useMemo(() => {
     const recs = data?.records ?? [];
@@ -77,6 +93,21 @@ export default function MyAttendanceClient() {
     [allRows, filters],
   );
 
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const pagedRows = useMemo(
+    () => rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [rows, safePage],
+  );
+
+  const stats = useMemo(() => {
+    const total = allRows.length;
+    const present = allRows.filter((r) => r.status === "present").length;
+    const absent = total - present;
+    const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+    return { total, present, absent, rate };
+  }, [allRows]);
+
   function exportCsv() {
     const header = ["ID", "Name", "Email", "Phone", "Service", "Date", "Status", "Mode"];
     const body = rows.map((r) => [r.id, r.name, r.email, r.phone, r.service, r.date, r.status, r.mode]);
@@ -104,7 +135,7 @@ export default function MyAttendanceClient() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-5">
+    <div className="max-w-6xl mx-auto px-6 md:px-4   space-y-5">
       {/* Section label + heading */}
       <div>
         <p className="text-[10px] tracking-[0.25em] uppercase font-bold text-[#87102C] dark:text-[#FFB3C1]">
@@ -119,35 +150,34 @@ export default function MyAttendanceClient() {
         </p>
       </div>
 
-      {/* Filter toggle */}
-      <div className="flex items-center justify-between rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] px-5 py-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/25 text-[#87102C] dark:text-[#FFB3C1]">
-            <SlidersHorizontal size={18} />
-          </span>
-          <div>
-            <p className="text-sm font-bold text-[#111] dark:text-white">Filter</p>
-            <p className="text-xs text-[#8a7e80] dark:text-white/40">Filter attendance records</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowFilter((v) => !v)}
-          aria-pressed={showFilter}
-          aria-label="Toggle filters"
-          className={`relative h-6 w-12 rounded-full transition-colors ${
-            showFilter ? "bg-[#87102C]" : "bg-[#E7CDD3] dark:bg-white/15"
-          }`}
-        >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${showFilter ? "left-6" : "left-0.5"}`} />
-        </button>
+      {/* Stat summary */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatChip icon={CalendarCheck} label="Total Services" value={stats.total} tone="rose" />
+        <StatChip icon={CheckCircle2} label="Present" value={stats.present} tone="emerald" />
+        <StatChip icon={XCircle} label="Absent" value={stats.absent} tone="red" />
+        <StatChip icon={TrendingUp} label="Attendance Rate" value={`${stats.rate}%`} tone="sky" />
       </div>
 
       {/* Meta + actions */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-[#87102C] dark:text-[#FFB3C1]">
-          {rows.length} record{rows.length === 1 ? "" : "s"} found
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] px-5 py-3.5">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowFilter((v) => !v)}
+            aria-pressed={showFilter}
+            className={`inline-flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-bold transition-colors ${
+              showFilter
+                ? "bg-[#87102C] text-white"
+                : "bg-[#FFF4F6] dark:bg-white/5 text-[#87102C] dark:text-[#FFB3C1] hover:bg-[#FFE8ED] dark:hover:bg-white/10"
+            }`}
+          >
+            <SlidersHorizontal size={13} />
+            Filter
+          </button>
+          <p className="text-sm font-semibold text-[#87102C] dark:text-[#FFB3C1]">
+            {rows.length} record{rows.length === 1 ? "" : "s"} found
+          </p>
+        </div>
         <div className="flex items-center gap-2.5">
           <button
             type="button"
@@ -171,8 +201,8 @@ export default function MyAttendanceClient() {
       {/* Table (elevated card) */}
       <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] overflow-x-auto shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none">
         <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-[#FFF4F6] dark:bg-white/[0.02] border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
+          <thead className="sticky top-0 z-10">
+            <tr className="bg-[#FFF4F6] dark:bg-[#140b10] border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
               {COLS.map((c) => (
                 <th
                   key={c.key}
@@ -183,7 +213,7 @@ export default function MyAttendanceClient() {
               ))}
             </tr>
             {showFilter && (
-              <tr className="bg-[#FFF4F6]/50 dark:bg-white/[0.02] border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
+              <tr className="bg-[#FFF4F6]/50 dark:bg-[#140b10] border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
                 {COLS.map((c) => (
                   <th key={c.key} className="px-3 py-2">
                     <div className="relative">
@@ -202,12 +232,29 @@ export default function MyAttendanceClient() {
           </thead>
           <tbody className="divide-y divide-[#E7CDD3]/30 dark:divide-white/[0.05]">
             {isLoading ? (
-              <tr><td colSpan={COLS.length} className="px-4 py-12 text-center text-sm text-[#8a7e80] dark:text-white/40">Loading…</td></tr>
+              <SkeletonRows cols={COLS.length} />
             ) : rows.length === 0 ? (
-              <tr><td colSpan={COLS.length} className="px-4 py-12 text-center text-sm text-[#8a7e80] dark:text-white/40">No records found.</td></tr>
+              <tr>
+                <td colSpan={COLS.length} className="px-4 py-16">
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF4F6] dark:bg-white/5">
+                      <CalendarCheck size={18} className="text-[#87102C]/50 dark:text-white/30" />
+                    </span>
+                    <p className="text-sm font-semibold text-[#111] dark:text-white">No records found</p>
+                    <p className="text-xs text-[#8a7e80] dark:text-white/40">
+                      Try adjusting or clearing your filters.
+                    </p>
+                  </div>
+                </td>
+              </tr>
             ) : (
-              rows.map((r, i) => (
-                <tr key={`${r.raw.id}-${i}`} className="hover:bg-[#FFF4F6]/60 dark:hover:bg-white/[0.03] transition-colors">
+              pagedRows.map((r, i) => (
+                <tr
+                  key={`${r.raw.id}-${i}`}
+                  className={`transition-colors hover:bg-[#FFF4F6]/60 dark:hover:bg-white/[0.03] ${
+                    i % 2 === 1 ? "bg-[#FFFBFC] dark:bg-white/[0.012]" : ""
+                  }`}
+                >
                   <td className="px-4 py-3 text-[#8a7e80] dark:text-white/50 whitespace-nowrap">{r.id}</td>
                   <td className="px-4 py-3 font-semibold text-[#111] dark:text-white whitespace-nowrap">{r.name}</td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -221,11 +268,12 @@ export default function MyAttendanceClient() {
                   <td className="px-4 py-3 text-[#555] dark:text-white/70 whitespace-nowrap">{r.service}</td>
                   <td className="px-4 py-3 text-[#555] dark:text-white/60 whitespace-nowrap">{r.date}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
                       r.status === "present"
                         ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
                         : "bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400"
                     }`}>
+                      {r.status === "present" ? <CheckCircle2 size={11} /> : <XCircle size={11} />}
                       {r.status}
                     </span>
                   </td>
@@ -244,6 +292,60 @@ export default function MyAttendanceClient() {
           </tbody>
         </table>
       </div>
+
+      <Pagination page={safePage} pageCount={pageCount} onPageChange={setPage} />
     </div>
+  );
+}
+
+const STAT_TONES = {
+  rose: "bg-[#FFE8ED] dark:bg-[#87102C]/25 text-[#87102C] dark:text-[#FFB3C1]",
+  emerald: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  red: "bg-red-50 dark:bg-red-500/15 text-red-600 dark:text-red-400",
+  sky: "bg-sky-50 dark:bg-sky-500/15 text-sky-600 dark:text-sky-400",
+} as const;
+
+function StatChip({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  tone: keyof typeof STAT_TONES;
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] px-4 py-3.5">
+      <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl ${STAT_TONES[tone]}`}>
+        <Icon size={16} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-lg font-black leading-none text-[#111] dark:text-white tabular-nums">{value}</p>
+        <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-[#8a7e80] dark:text-white/40 truncate">
+          {label}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SkeletonRows({ cols }: { cols: number }) {
+  return (
+    <>
+      {[0, 1, 2, 3, 4].map((i) => (
+        <tr key={i}>
+          {Array.from({ length: cols }).map((_, j) => (
+            <td key={j} className="px-4 py-3.5">
+              <div
+                className="h-3 animate-pulse rounded bg-[#F0DCE1] dark:bg-white/[0.06]"
+                style={{ width: `${50 + ((i + j) % 4) * 10}%` }}
+              />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </>
   );
 }

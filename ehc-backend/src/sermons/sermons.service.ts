@@ -58,10 +58,18 @@ function serializeEpisode(episode: SermonEpisodeLike) {
 function serializeSermon(sermon: SermonLike) {
   const { Episodes, ...rest } = sermon;
   const episodes = (Episodes ?? []).map(serializeEpisode);
-  const isSeries = sermon.type === SermonType.SERIES || Boolean(sermon.series) || Boolean(sermon.seriesSlug) || episodes.length > 0;
+  // `series`/`seriesSlug` are just a topical label a SINGLE sermon can also carry
+  // (e.g. grouping standalone messages under a named collection) — they are NOT
+  // proof of being a multi-episode series, so only `type` and real episode count
+  // decide `isSeries`.
+  const isSeries = sermon.type === SermonType.SERIES || episodes.length > 0;
 
   return {
     ...rest,
+    // Re-derive `type` from the same signal used for `isSeries` above, instead
+    // of passing through the raw DB column — sermons with real episodes but a
+    // stale/unset `type` column were otherwise reporting as SINGLE.
+    type: isSeries ? SermonType.SERIES : SermonType.SINGLE,
     url: isSeries ? null : sermon.audioUrl ?? sermon.videoUrl ?? null,
     duration: isSeries ? null : sermon.audioDuration ?? null,
     episodes: isSeries ? episodes : [],
@@ -721,7 +729,9 @@ export class SermonsService {
       replies: (byParent.get(comment.id) ?? []).map(serialize),
     });
 
-    return (byParent.get(null) ?? []).reverse().map(serialize);
+    // Chronological, oldest first — like a normal chat feed. New comments
+    // should land at the bottom, not jump to the top.
+    return (byParent.get(null) ?? []).map(serialize);
   }
 
   async createComment(memberId: string, sermonId: string, content: string, parentId?: string) {

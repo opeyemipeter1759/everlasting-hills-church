@@ -15,7 +15,6 @@ const MotionLink = motion(Link);
 const navLinks = [
   { label: "About", href: "/about" },
   { label: "Beliefs", href: "/beliefs" },
-  // Real link to the public sermon library, not just the homepage section anchor.
   { label: "Sermons", href: "/sermons" },
   { label: "Events", href: "/events" },
   { label: "Ministries", href: "/ministries" },

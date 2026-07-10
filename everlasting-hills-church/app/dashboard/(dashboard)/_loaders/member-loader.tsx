@@ -13,12 +13,6 @@ interface MemberAttendanceOverview {
   attendance: { marked: number; total: number; percentage: number; lastMarkedAt: string | null };
 }
 
-/**
- * Personal dashboard for MEMBER (and roleless authenticated users).
- *
- * Real data: /sermons/me/{bookmarks,history,streak}, /auth/me, /overview/member (attendance).
- * Optional sections (announcements, feed, milestones) get empty defaults until endpoints are built.
- */
 export async function loadMemberDashboard(me: MeResponse) {
   const [bookmarksRaw, historyRaw, streakRaw, overviewRaw, announcementsRaw, communityFeedRaw] = await Promise.all([
     safeGet<SermonBookmark[]>("/sermons/me/bookmarks"),
@@ -50,13 +44,10 @@ export async function loadMemberDashboard(me: MeResponse) {
   })) ?? [];
 
   const sermonStreak = typeof streakRaw === "number" ? streakRaw : 0;
-
-  // Real attendance data from /overview/member
   const attendanceRate  = overviewRaw?.attendance.percentage ?? 0;
   const attendanceCount = overviewRaw?.attendance.marked     ?? 0;
   const lastServiceDate = overviewRaw?.attendance.lastMarkedAt ?? null;
 
-  // Birthday — derive days-until from DOB if within next 7 days
   let birthdayDaysUntil: number | null = null;
   if (me.member?.dateOfBirth) {
     const today = new Date();

@@ -1,0 +1,268 @@
+{
+  "Department": [
+    {
+      "id": "186dfce1-70ed-4fbd-b38b-e44501a963bc",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "code": "OSM",
+      "name": "Operations & Service Management",
+      "description": null,
+      "sortOrder": 1,
+      "createdAt": "2026-07-07T19:58:54.768Z",
+      "updatedAt": "2026-07-07T19:58:54.768Z"
+    },
+    {
+      "id": "9aa1026d-6bd1-45d5-a673-863a17f53e89",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "code": "MA",
+      "name": "Membership & Assimilation",
+      "description": null,
+      "sortOrder": 2,
+      "createdAt": "2026-07-07T19:58:56.752Z",
+      "updatedAt": "2026-07-07T19:58:56.752Z"
+    },
+    {
+      "id": "b611a0a6-5a8b-48aa-bd95-d75764d41998",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "code": "CI",
+      "name": "Communication & Information Flow",
+      "description": null,
+      "sortOrder": 3,
+      "createdAt": "2026-07-07T19:58:58.409Z",
+      "updatedAt": "2026-07-07T19:58:58.409Z"
+    },
+    {
+      "id": "9fcfbe92-3fb6-439a-a4b7-de7b471d32b5",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "code": "FIN",
+      "name": "Finance",
+      "description": null,
+      "sortOrder": 4,
+      "createdAt": "2026-07-07T19:59:00.890Z",
+      "updatedAt": "2026-07-07T19:59:00.890Z"
+    },
+    {
+      "id": "42460385-0fdc-49c8-b6d7-7a0095d14418",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "code": "DATA",
+      "name": "Data & Systems",
+      "description": null,
+      "sortOrder": 5,
+      "createdAt": "2026-07-07T19:59:02.102Z",
+      "updatedAt": "2026-07-07T19:59:02.102Z"
+    },
+    {
+      "id": "4e76e762-bed4-4d95-a48c-ac32f37dd22e",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "code": "WPC",
+      "name": "Welfare & Pastoral Care",
+      "description": null,
+      "sortOrder": 6,
+      "createdAt": "2026-07-07T19:59:03.268Z",
+      "updatedAt": "2026-07-07T19:59:03.268Z"
+    },
+    {
+      "id": "b8d529fe-3005-49d8-9785-52cd56367975",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "code": "GO",
+      "name": "Growth & Outreach",
+      "description": null,
+      "sortOrder": 7,
+      "createdAt": "2026-07-07T19:59:04.578Z",
+      "updatedAt": "2026-07-07T19:59:04.578Z"
+    }
+  ],
+  "DepartmentHead": [
+    {
+      "id": "a6986a52-b38d-45dc-b709-a54a0958a35b",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "departmentId": "186dfce1-70ed-4fbd-b38b-e44501a963bc",
+      "userId": "0315449b-2026-45bd-a513-52c02b076350",
+      "assignedById": "bd3e0842-9d1f-445f-9a66-255976aab7c1",
+      "assignedAt": "2026-07-07T20:51:42.903Z",
+      "endedAt": null
+    },
+    {
+      "id": "a390d5c2-d289-41ee-9180-1f8294981aef",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "departmentId": "9aa1026d-6bd1-45d5-a673-863a17f53e89",
+      "userId": "03c93ff4-2fed-455e-8974-01190ef1f155",
+      "assignedById": "bd3e0842-9d1f-445f-9a66-255976aab7c1",
+      "assignedAt": "2026-07-07T21:18:29.051Z",
+      "endedAt": null
+    }
+  ],
+  "HeadUsherAssignment": [],
+  "RoleGrant": [
+    {
+      "id": "bd68a697-8bbd-4228-bc3b-3d01bc4e96db",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "userId": "bd3e0842-9d1f-445f-9a66-255976aab7c1",
+      "role": "SUPER_ADMIN",
+      "grantedById": null,
+      "grantedAt": "2026-07-08T21:58:07.317Z",
+      "endedAt": null
+    },
+    {
+      "id": "c0988769-fbe7-4512-ae9a-6602982d3cb7",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "userId": "097a5a06-62ab-4ffc-a948-3d90f4e52ee0",
+      "role": "PASTOR",
+      "grantedById": null,
+      "grantedAt": "2026-07-08T21:58:07.317Z",
+      "endedAt": null
+    },
+    {
+      "id": "d2a73b72-7f5f-48fd-ae2d-d20224ec0313",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "userId": "7a25a27a-c64a-4139-b25f-d919dfb54394",
+      "role": "PASTOR",
+      "grantedById": null,
+      "grantedAt": "2026-07-08T21:58:07.317Z",
+      "endedAt": null
+    },
+    {
+      "id": "d041894b-f12b-4cb6-9e00-b974134b389f",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "userId": "105dcec5-8612-4bb4-9c25-9eb40c26515c",
+      "role": "ADMIN",
+      "grantedById": null,
+      "grantedAt": "2026-07-08T21:58:07.317Z",
+      "endedAt": null
+    },
+    {
+      "id": "b04a5635-fe24-4548-9df1-ae135be441c6",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "userId": "4a744138-8d26-41c0-9791-07286a8b42c3",
+      "role": "PASTOR",
+      "grantedById": null,
+      "grantedAt": "2026-07-08T21:58:07.317Z",
+      "endedAt": null
+    }
+  ],
+  "UnitLeadAssignment": [
+    {
+      "id": "d7193f53-7799-4101-b546-1f9b248cb8b9",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "unitId": "63095452-3c3f-4f4c-a7cf-8f7ed8066038",
+      "userId": "bd3e0842-9d1f-445f-9a66-255976aab7c1",
+      "assignedById": null,
+      "assignedAt": "2026-07-08T21:58:08.821Z",
+      "endedAt": null
+    },
+    {
+      "id": "0ac436e2-0b2d-47b6-8320-36d23ead8304",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "unitId": "25c424c1-1466-44aa-8ddd-01dafec94678",
+      "userId": "bd3e0842-9d1f-445f-9a66-255976aab7c1",
+      "assignedById": null,
+      "assignedAt": "2026-07-08T21:58:08.821Z",
+      "endedAt": null
+    },
+    {
+      "id": "3dd59162-6344-4a75-abcd-9132d8fa234d",
+      "tenantId": "ehc_9a893a15fe106fb058fc",
+      "unitId": "cb4af40d-95aa-4a7e-9c9c-9590e453e0fe",
+      "userId": "0315449b-2026-45bd-a513-52c02b076350",
+      "assignedById": null,
+      "assignedAt": "2026-07-08T21:58:08.821Z",
+      "endedAt": null
+    }
+  ],
+  "Unit_departmentId_mapping": [
+    {
+      "id": "cb4af40d-95aa-4a7e-9c9c-9590e453e0fe",
+      "name": "Production Team",
+      "departmentId": "186dfce1-70ed-4fbd-b38b-e44501a963bc"
+    },
+    {
+      "id": "6900c2fc-bc37-4833-a408-99858c185a91",
+      "name": "Worship Team",
+      "departmentId": "186dfce1-70ed-4fbd-b38b-e44501a963bc"
+    },
+    {
+      "id": "14bc0f9c-16da-44a6-9c64-a9ddaa759551",
+      "name": "Ushering",
+      "departmentId": "186dfce1-70ed-4fbd-b38b-e44501a963bc"
+    },
+    {
+      "id": "0b754786-005b-48f8-8f1d-aa8ecad83dcf",
+      "name": "Children",
+      "departmentId": "186dfce1-70ed-4fbd-b38b-e44501a963bc"
+    },
+    {
+      "id": "a3cf5bf4-c180-4cbb-acef-2b72ff78f9c1",
+      "name": "Service Coordination",
+      "departmentId": "186dfce1-70ed-4fbd-b38b-e44501a963bc"
+    },
+    {
+      "id": "458d29ab-bf44-4ff9-a997-84ede5401045",
+      "name": "Logistics & Setup",
+      "departmentId": "186dfce1-70ed-4fbd-b38b-e44501a963bc"
+    },
+    {
+      "id": "5121c039-8b66-4ba7-a4aa-d3a8efa5ea52",
+      "name": "Sanitation",
+      "departmentId": "186dfce1-70ed-4fbd-b38b-e44501a963bc"
+    },
+    {
+      "id": "448cb88c-25b1-4fe5-83c4-9ab4505c9557",
+      "name": "Follow-Up",
+      "departmentId": "9aa1026d-6bd1-45d5-a673-863a17f53e89"
+    },
+    {
+      "id": "9c9820d7-db1f-4581-9294-c790e165e2d1",
+      "name": "First-Timers",
+      "departmentId": "9aa1026d-6bd1-45d5-a673-863a17f53e89"
+    },
+    {
+      "id": "d3757705-c6e7-4918-acc6-3c459ff4bc13",
+      "name": "Integration",
+      "departmentId": "9aa1026d-6bd1-45d5-a673-863a17f53e89"
+    },
+    {
+      "id": "31301942-3f7c-474a-9eba-71e88806fd7d",
+      "name": "Discipleship",
+      "departmentId": "9aa1026d-6bd1-45d5-a673-863a17f53e89"
+    },
+    {
+      "id": "673fa097-5842-48db-931c-ad257461d824",
+      "name": "Communications",
+      "departmentId": "b611a0a6-5a8b-48aa-bd95-d75764d41998"
+    },
+    {
+      "id": "235da7f9-824f-4f82-83b1-f006930702fa",
+      "name": "Social Media & Content",
+      "departmentId": "b611a0a6-5a8b-48aa-bd95-d75764d41998"
+    },
+    {
+      "id": "3d9d3793-311d-484a-86e7-1415344f728a",
+      "name": "Design",
+      "departmentId": "b611a0a6-5a8b-48aa-bd95-d75764d41998"
+    },
+    {
+      "id": "a080dcbe-1b8a-4528-9882-7f8115c97a6b",
+      "name": "Finance",
+      "departmentId": "9fcfbe92-3fb6-439a-a4b7-de7b471d32b5"
+    },
+    {
+      "id": "ef9ecbd0-ab7d-42fd-a325-49b9a3b148e2",
+      "name": "Records & Database & Website",
+      "departmentId": "42460385-0fdc-49c8-b6d7-7a0095d14418"
+    },
+    {
+      "id": "a168047f-7932-4dce-9c8d-990ead477496",
+      "name": "Welfare",
+      "departmentId": "4e76e762-bed4-4d95-a48c-ac32f37dd22e"
+    },
+    {
+      "id": "9266473f-5a44-410b-918e-09a4755a998b",
+      "name": "Evangelism",
+      "departmentId": "b8d529fe-3005-49d8-9785-52cd56367975"
+    },
+    {
+      "id": "17483962-327f-4633-a470-b8d0bb1fd892",
+      "name": "Outreach",
+      "departmentId": "b8d529fe-3005-49d8-9785-52cd56367975"
+    }
+  ]
+}

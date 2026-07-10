@@ -75,7 +75,9 @@ function ShelfCard({
   progressPct?: number;
   badge?: React.ReactNode;
 }) {
-  const isSeries = sermon.type === 'SERIES' || !!sermon.series;
+  // `series` is just a topical label a single sermon can also carry — only
+  // `type` (already correctly derived server-side) decides Series vs Single.
+  const isSeries = sermon.type === 'SERIES';
   const duration = formatSermonDuration(sermon.audioDuration);
 
   return (
