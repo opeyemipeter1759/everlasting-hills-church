@@ -2,6 +2,20 @@
 
 This document tracks shipped platform features. It was created alongside the Usher Headcount work; earlier features are summarised from the codebase and may be backfilled over time.
 
+## Multi-role users, derived roles, and role-aware views [NEW]
+
+Every user is a MEMBER first, and can hold several roles at once from one account.
+
+- [x] Roles come from two sources: explicit grants (PASTOR, ADMIN, SUPER_ADMIN in `RoleGrant`) and roles derived from active assignments (UNIT_LEAD from `UnitLeadAssignment`, ADMIN_HEAD from `DepartmentHead`, HEAD_USHER from `HeadUsherAssignment`). MEMBER is the universal base.
+- [x] A user's effective roles = MEMBER + grants + derived roles, resolved per request. Multiple roles coexist because they come from independent rows.
+- [x] The single `Profile.role` column is retired: renamed to `legacyRole` (a frozen snapshot), never read for authorization. The whole backend (auth, guards, users, members, units) reads effective roles instead.
+- [x] Roles are never baked into the JWT (identity only). They resolve server-side on every request, so a revocation or a replaced assignment takes effect on the very next request, with no stale-token power.
+- [x] Delegated authority: an Admin Head can appoint and replace unit leads, but only for units in a department they actively head. Pastor and Admin can appoint on any unit. Appointing outside scope returns 403. Every appointment is audited with delegated attribution (acted as ADMIN_HEAD vs ADMIN or PASTOR).
+- [x] One account, one dashboard shell: the sidebar stacks Member items plus MY UNIT (when the user leads a unit), MY DEPARTMENT (when they head one), the Usher surface, and ADMINISTRATION (Pastor/Admin), all at once. No mode toggle. The profile block shows the user's effective roles as chips.
+- [x] History-preserving: revoking a grant or ending an assignment sets `endedAt`, never deletes. Partial unique indexes enforce one active grant per (user, role) and one active lead per unit.
+- [x] RLS deny-all backstop on `RoleGrant`, `UnitLeadAssignment`, `HeadUsherAssignment`; a second church cannot read the first church's rows.
+- [x] Idempotent backfill translated existing users into the new model (granted roles to grants, unit leads from `UnitMember.isLead`, head ushers to assignments), flagging any legacy UNIT_LEAD with no inferable unit for manual review. No user gained or lost access.
+
 ## Administrative Departments and the Admin Head role [NEW]
 
 The seven Administrative Structures from the Church Administration document, made operational: departments group Service Units, each led by an Admin Head, so the Pastor supervises seven heads instead of sixteen unit leads.

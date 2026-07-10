@@ -2,6 +2,53 @@
 
 Component-level inventory of what exists and where. Created alongside the Usher Headcount work.
 
+## Multi-role users + derived roles [NEW]
+
+### Backend (`ehc-backend`)
+
+| Item | Path |
+| --- | --- |
+| Prisma models `RoleGrant`, `UnitLeadAssignment`, `HeadUsherAssignment` + `Profile.legacyRole` | `prisma/schema.prisma` |
+| DDL (tables + partial unique indexes + FKs + RLS) | `prisma/manual/2026-07-multi-role.sql` |
+| Column rename (role to legacyRole) | `prisma/manual/2026-07-multi-role-rename.sql` |
+| Idempotent backfill + manual-review flags | `prisma/backfill-multi-role.cjs` |
+| Effective-role resolver (single + batch) | `src/auth/effective-roles.service.ts` |
+| JWT strategy (identity only, resolves roles per request) | `src/auth/strategies/jwt.strategy.ts` |
+| Roles guard (max effective level, hierarchy preserved) | `src/auth/guards/roles.guard.ts` |
+| `AuthUser` (effectiveRoles + scopes) | `src/auth/types/auth-user.ts` |
+| Grant / revoke + reworked role readers | `src/users/users.service.ts`, `users.controller.ts` |
+| Unit-lead appointment (scope + audit + isLead sync) | `src/units/units.service.ts`, `units.controller.ts` |
+| Directory / member readers repointed to effective roles | `src/members/members.service.ts` |
+| Login + `/auth/me` return effective roles; super-admin bootstrap grants | `src/auth/auth.service.ts` |
+
+### API endpoints
+
+| Method + path | Purpose | Access |
+| --- | --- | --- |
+| `POST /units/:unitId/lead` | Appoint / replace a unit lead | ADMIN_HEAD (scoped) or ADMIN+ |
+| `DELETE /units/:unitId/lead` | End the current unit lead | ADMIN_HEAD (scoped) or ADMIN+ |
+| `POST /users/:profileId/grants` | Grant a global role (additive) | ADMIN+ |
+| `DELETE /users/:profileId/grants/:role` | Revoke a grant | ADMIN+ |
+| `GET /auth/me` | Effective roles + scopes (drives nav) | any authed user |
+
+### Frontend (`everlasting-hills-church`)
+
+| Item | Path |
+| --- | --- |
+| Effective roles in `/auth/me` response type + `useMe` | `lib/api.ts` |
+| Stacked role-aware nav + scope-driven groups + role chips | `layout/AppSidebar.tsx`, `config/config.ts` |
+| Unit-lead appointment control (person picker) | `components/dashboard/admin/departments/UnitLeadControl.tsx` |
+| Appointment wired into Admin Head + Pastor/Admin views | `.../departments/MyDepartment.tsx`, `DepartmentDetail.tsx` |
+| Appointment + grant hooks | `lib/api/departments.ts` |
+| Coarse middleware (identity-only JWT, cookie hint) | `middleware.ts` |
+
+### Design decisions locked
+
+- "User" is `Profile`; grants + assignments are the single source of truth; `Profile.legacyRole` is a frozen deprecated snapshot, never read.
+- Effective roles are resolved per request, never in the JWT, so revocations apply on the next request.
+- `UnitMember.isLead` kept as a denormalized pointer, synced in the same transaction as `UnitLeadAssignment`.
+- Hierarchy preserved in the guard via the max effective role level (PASTOR still clears an ADMIN route); multi-role stacks in the nav.
+
 ## Administrative Departments + Admin Head [NEW]
 
 ### Backend (`ehc-backend`)
