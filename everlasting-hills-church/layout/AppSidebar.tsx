@@ -5,8 +5,9 @@ import { usePathname } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useTheme } from '@/context/ThemeContext';
-import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
+import { NAV_GROUPS, ROLE_LABELS, hasMinRole, type UserRole } from '@/config/config';
 import { normalizeRole } from '@/lib/auth/frontend-session';
+import { useMe } from '@/lib/api';
 import Image from 'next/image';
 import { useCurrentUser, useNavDropdown } from '@/hooks';
 import { getInitials, truncateText } from '@/utils/stringUtils';
@@ -60,15 +61,31 @@ const AppSidebar: React.FC = () => {
 
   const pathname = usePathname();
   const currentUser = useCurrentUser();
+  const me = useMe();
 
   const showLabels = isExpanded || isMobileOpen || isHovered;
   const isActive = buildActiveMatcher(pathname);
-  const userRole = normalizeRole(currentUser?.role);
+  // Highest effective role (from the /auth/me primary, falling back to the cookie
+  // hint before the fetch resolves) drives the hierarchy-based items.
+  const userRole = normalizeRole(me.data?.role ?? currentUser?.role);
+  // Scopes drive the per-assignment groups (My Unit / My Department / Usher).
+  const scopes = {
+    unitLead: (me.data?.unitLeadOf?.length ?? 0) > 0,
+    adminHead: (me.data?.adminHeadOf?.length ?? 0) > 0,
+    headUsher: Boolean(me.data?.headUsher),
+  };
+  // Effective role chips shown in the profile block so people see why they see what.
+  const effectiveRoleChips = ((me.data?.effectiveRoles ?? (userRole ? [userRole] : []))
+    .map((r) => normalizeRole(r))
+    .filter((r) => r !== null) as UserRole[])
+    .sort((a, b) => (hasMinRole(a, b) ? -1 : 1));
 
   const visibleGroups = userRole
     ? NAV_GROUPS.map((group) => ({
         ...group,
         items: group.items.filter((item) => {
+          // Scope items appear only when the user holds that assignment.
+          if (item.requiresScope) return scopes[item.requiresScope];
           if (!hasMinRole(userRole, item.minRole)) return false;
           if (item.maxRole && hasMinRole(userRole, item.maxRole)) return false;
           return true;
@@ -314,10 +331,17 @@ const AppSidebar: React.FC = () => {
               <p className="truncate text-[10px] font-medium text-gray-400 dark:text-gray-500">
                 {truncateText(currentUser?.email) || '-'}
               </p>
-              {userRole && (
-                <p className="mt-0.5 truncate text-[9px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">
-                  {ROLE_LABELS[userRole]}
-                </p>
+              {effectiveRoleChips.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {effectiveRoleChips.map((r) => (
+                    <span
+                      key={r}
+                      className="rounded-full bg-burgundy/10 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[0.1em] text-burgundy dark:bg-red-300/15 dark:text-red-300"
+                    >
+                      {ROLE_LABELS[r]}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
           )}

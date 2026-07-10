@@ -23,8 +23,13 @@ export async function middleware(req: NextRequest) {
   const claims = accessToken ? await verifySupabaseJwt(accessToken, { ignoreExpiration: true }) : null;
   const isAuthenticated = Boolean(claims);
 
+  // The JWT carries identity only; roles are NOT baked into it (they change when
+  // grants/assignments change and a stale token would carry stale power). This is a
+  // COARSE gate on the login role hint (the user's highest effective role at last
+  // login); the real, per-request enforcement is the API + RLS. Prefer the fresher
+  // cookie hint over any legacy app_metadata role claim.
   const verifiedRole = claims?.app_metadata?.role ?? null;
-  const effectiveRole = verifiedRole ?? roleHint;
+  const effectiveRole = roleHint ?? verifiedRole;
 
   if (AUTH_PAGES.has(pathname)) {
     if (isAuthenticated) {

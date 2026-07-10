@@ -175,3 +175,28 @@ export function useNudgeLead() {
       api.post<{ notified: number }>(`/departments/mine/units/${unitId}/nudge`, { message }),
   });
 }
+
+// ── Unit lead appointment (delegated to Admin Heads within their department) ──
+
+export function useAppointUnitLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, profileId }: { unitId: string; profileId: string }) =>
+      api.post<{ leadProfileId: string; actedAs: string }>(`/units/${unitId}/lead`, { profileId }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["units"] });
+    },
+  });
+}
+
+export function useRemoveUnitLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (unitId: string) => api.delete(`/units/${unitId}/lead`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["units"] });
+    },
+  });
+}

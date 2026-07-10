@@ -12,6 +12,7 @@ import {
   useAssignUnits, useUnassignUnit, useDeptAnnouncement,
 } from "@/lib/api/departments";
 import HeadPicker, { Avatar } from "./HeadPicker";
+import UnitLeadControl from "./UnitLeadControl";
 
 function fmt(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -106,9 +107,12 @@ export default function DepartmentDetail({ id }: { id: string }) {
                   {u.lead ? `Lead: ${u.lead.firstName} ${u.lead.lastName}` : "No lead"} · {u.memberCount} member{u.memberCount === 1 ? "" : "s"}
                 </p>
               </div>
-              <button type="button" onClick={() => unassignUnit.mutate(u.id)} disabled={unassignUnit.isPending} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600 disabled:opacity-50">
-                <X size={13} /> Unassign
-              </button>
+              <div className="flex items-center gap-2">
+                <UnitLeadControl unitId={u.id} leadName={u.lead ? `${u.lead.firstName} ${u.lead.lastName}` : null} />
+                <button type="button" onClick={() => unassignUnit.mutate(u.id)} disabled={unassignUnit.isPending} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600 disabled:opacity-50">
+                  <X size={13} /> Unassign
+                </button>
+              </div>
             </li>
           ))}
           {units.length === 0 && <p className="py-3 text-center text-sm text-gray-400">No units assigned yet.</p>}

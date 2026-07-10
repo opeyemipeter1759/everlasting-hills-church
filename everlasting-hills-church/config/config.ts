@@ -123,6 +123,13 @@ export type NavItem = {
   icon: LucideIcon;
   minRole: UserRole;
   maxRole?: UserRole;
+  /**
+   * When set, the item shows only if the user actively holds that scope
+   * (a derived role from an assignment), regardless of their other roles. This is
+   * what makes MY UNIT / MY DEPARTMENT / Usher appear per assignment, stacked with
+   * everything else the user is entitled to.
+   */
+  requiresScope?: "unitLead" | "adminHead" | "headUsher";
 };
 
 export type NavGroup = {
@@ -143,15 +150,15 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Unit",
     items: [
-      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD" },
+      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "MEMBER", requiresScope: "unitLead" },
     ],
   },
   {
-    // Admin Head surface only. maxRole caps it below ADMIN so admins (who manage
-    // departments via the Administration group) do not also see this.
+    // Shows whenever the user actively heads a department, stacked with their other
+    // roles (an ADMIN who heads a department sees both Administration and this).
     section: "My Department",
     items: [
-      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", maxRole: "ADMIN" },
+      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "MEMBER", requiresScope: "adminHead" },
     ],
   },
   {
@@ -162,7 +169,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Services",      href: "/dashboard/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/events",        icon: CalendarDays,  minRole: "ADMIN" },
-      { label: "Usher",         href: "/dashboard/usher",         icon: Tally5,        minRole: "HEAD_USHER" },
+      { label: "Usher",         href: "/dashboard/usher",         icon: Tally5,        minRole: "MEMBER", requiresScope: "headUsher" },
       { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone,     minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },

@@ -13,12 +13,14 @@ export default function HeadPicker({
   onPick,
   pending,
   currentHeadName,
+  noun = "department head",
 }: {
   open: boolean;
   onClose: () => void;
   onPick: (profileId: string) => void;
   pending: boolean;
   currentHeadName?: string | null;
+  noun?: string;
 }) {
   const [search, setSearch] = useState("");
   const q = usePeople({ search, limit: 12, sortBy: "name", sortOrder: "asc" });
@@ -27,8 +29,8 @@ export default function HeadPicker({
   return (
     <PeopleModal
       open={open}
-      title={currentHeadName ? "Replace department head" : "Assign department head"}
-      subtitle={currentHeadName ? `Replacing ${currentHeadName} ends their tenure` : "Pick the person to lead this department"}
+      title={currentHeadName ? `Replace ${noun}` : `Assign ${noun}`}
+      subtitle={currentHeadName ? `Replacing ${currentHeadName} ends their tenure` : `Pick the ${noun}`}
       onClose={onClose}
       maxWidth="max-w-lg"
     >
