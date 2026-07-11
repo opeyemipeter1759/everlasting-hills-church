@@ -211,6 +211,11 @@ export interface EventRsvp {
   attendees: number;
   message: string | null;
   createdAt: string;
+  /** Whether this email already belongs to an existing member account. */
+  isMember: boolean;
+  /** Marked at the door once this person actually shows up. */
+  checkedIn: boolean;
+  checkedInAt: string | null;
 }
 
 export interface SermonAdminOverviewData {

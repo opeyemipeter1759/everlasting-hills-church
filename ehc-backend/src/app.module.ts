@@ -32,6 +32,7 @@ import { OverviewModule } from './overview/overview.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { AdminModule } from './admin/admin.module';
 import { ReportsModule } from './reports/reports.module';
+import { InventoryModule } from './inventory/inventory.module';
 import { GivingModule } from './giving/giving.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
@@ -122,6 +123,7 @@ import type { Env } from './config/env.validation';
     SiteSettingsModule,
     UploadsModule,
     EventsModule,
+    InventoryModule,
     OverviewModule,
     SessionsModule,
     AdminModule,

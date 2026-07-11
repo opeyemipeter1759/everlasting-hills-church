@@ -21,8 +21,9 @@ export class VisitorsService {
 
   private readonly prisma: PrismaService;
 
+  /** Only unconverted visitors — once someone has a member account, they drop off this list. */
   async list(opts: { limit?: number; search?: string } = {}) {
-    const where: Record<string, unknown> = { tenantId: this.tenantId };
+    const where: Record<string, unknown> = { tenantId: this.tenantId, convertedAt: null };
     if (opts.search) {
       where.OR = [
         { firstName: { contains: opts.search, mode: 'insensitive' } },

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsEmail,
   IsInt,
   IsNotEmpty,
@@ -40,4 +41,10 @@ export class CreateEventRsvpDto {
   @IsString()
   @MaxLength(1000)
   message?: string;
+}
+
+export class SetRsvpCheckedInDto {
+  @ApiProperty({ example: true })
+  @IsBoolean()
+  checkedIn!: boolean;
 }

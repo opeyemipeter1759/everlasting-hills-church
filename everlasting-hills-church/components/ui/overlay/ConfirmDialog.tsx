@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { AlertTriangle } from "lucide-react";
+import  { Loader } from "@/components/icons";
 
 export type ConfirmDialogTone = "danger" | "warning" | "info";
 
@@ -81,7 +82,7 @@ export default function ConfirmDialog({
             {cancelLabel}
           </button>
           <button type="button" onClick={() => onConfirm()} disabled={loading} className={`px-4 py-2 rounded-lg text-sm font-bold text-white transition-colors focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed ${styles.button}`}>
-            {loading ? "Working…" : confirmLabel}
+            {loading ? <Loader/> : confirmLabel}
           </button>
         </div>
       </div>

@@ -235,6 +235,12 @@ export class MembersService {
       },
     });
 
+    // Mark this visitor converted so they drop off the first-timers list.
+    await this.prisma.visitor.update({
+      where: { id: visitor.id },
+      data: { convertedAt: new Date(), convertedToMemberId: member.id },
+    });
+
     // Fire-and-forget welcome email — sign-in link + member features they get access to.
     // Failures are logged inside NotificationsService and never block the conversion response.
     this.events.emit(

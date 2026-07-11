@@ -11,6 +11,11 @@ export async function submitEventRsvp(slug: string, payload: EventRsvpPayload): 
   await apiClient.post(`/events/${slug}/rsvp`, payload);
 }
 
+/** Logged-in members RSVP with their own account details — the backend looks these up itself. */
+export async function submitMemberEventRsvp(slug: string): Promise<void> {
+  await apiClient.post(`/events/${slug}/rsvp/me`);
+}
+
 export function getRsvpErrorMessage(err: unknown): string {
   const apiErr = err as Partial<ApiError> | undefined;
   return apiErr?.message ?? "Couldn't send your RSVP. Please try again, or call us directly.";

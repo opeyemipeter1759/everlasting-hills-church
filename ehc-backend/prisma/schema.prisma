@@ -580,6 +580,8 @@ model Tenant {
   FormSubmission     FormSubmission[]
   GivingRecord       GivingRecord[]
   Household          Household[]
+  InventoryItem      InventoryItem[]
+  InventoryHistory   InventoryHistory[]
   KnownDevice        KnownDevice[]
   ListenProgress     ListenProgress[]
   Member             Member[]
@@ -607,6 +609,53 @@ model Tenant {
   Testimonial        Testimonial[]
   Unit               Unit[]
   Visitor            Visitor[]
+}
+
+/// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
+/// facilities, instruments, kitchen and office items. History is the single
+/// chronological log of everything that's happened to an item (purchase + repairs).
+model InventoryItem {
+  id            String              @id
+  tenantId      String
+  name          String
+  category      String
+  serialNumber  String?
+  location      String?
+  status        InventoryStatus     @default(IN_USE)
+  condition     InventoryCondition  @default(NEW)
+  quantity      Int                 @default(1)
+  purchaseDate  DateTime?
+  purchaseValue Float?
+  assignedTo    String?
+  photoUrl      String?
+  notes         String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  History       InventoryHistory[]
+  Tenant        Tenant              @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, category])
+  @@index([tenantId, status])
+}
+
+/// One row per lifecycle event for an item — the first is always type NEW
+/// (created alongside the item), every repair logged afterward adds a REPAIR row.
+model InventoryHistory {
+  id           String                @id
+  tenantId     String
+  itemId       String
+  type         InventoryHistoryType
+  description  String? // NEW: optional note. REPAIR: what was wrong.
+  resolution   String? // REPAIR only: what was done to fix it.
+  cost         Float?
+  performedBy  String?
+  repairStatus RepairStatus?
+  occurredAt   DateTime              @default(now())
+  createdAt    DateTime              @default(now())
+  Item         InventoryItem         @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  Tenant       Tenant                @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, itemId, occurredAt])
 }
 
 model Event {
@@ -644,17 +693,19 @@ model Event {
 }
 
 model EventRsvp {
-  id        String   @id
-  tenantId  String
-  eventId   String
-  fullName  String
-  email     String
-  phone     String?
-  attendees Int      @default(1)
-  message   String?
-  createdAt DateTime @default(now())
-  Event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  id          String    @id
+  tenantId    String
+  eventId     String
+  fullName    String
+  email       String
+  phone       String?
+  attendees   Int       @default(1)
+  message     String?
+  createdAt   DateTime  @default(now())
+  checkedIn   Boolean   @default(false)
+  checkedInAt DateTime?
+  Event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  Tenant      Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, eventId, createdAt])
 }
@@ -863,7 +914,11 @@ model Visitor {
   whatsappInterest   Boolean?
   submittedAt        DateTime @default(now())
   attendanceType     String?
+  convertedAt         DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
+  convertedToMemberId String? // no FK; mirrors AuditLog.actorId — just an audit pointer
   Tenant             Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, convertedAt])
 }
 
 /// Featured "My Everlasting Hills Experience" stories shown on the public homepage slider.
@@ -888,18 +943,22 @@ model Testimonial {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Announcement {
-  id          String   @id
+  id          String       @id
   tenantId    String
   title       String
   body        String
-  audience    String   @default("all")
-  sendEmail   Boolean  @default(false)
+  imageUrl    String?
+  audience    String       @default("all")
+  sendEmail   Boolean      @default(false)
+  status      EventStatus  @default(PUBLISHED)
   createdById String?
-  recipients  Int      @default(0)
-  createdAt   DateTime @default(now())
-  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  recipients  Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  Tenant      Tenant       @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, createdAt])
+  @@index([tenantId, status])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -978,6 +1037,31 @@ enum ContentStatus {
   DRAFT
   PUBLISHED
   ARCHIVED
+}
+
+enum InventoryStatus {
+  IN_USE
+  IN_STORAGE
+  UNDER_REPAIR
+  RETIRED
+}
+
+enum InventoryCondition {
+  NEW
+  GOOD
+  FAIR
+  POOR
+}
+
+enum InventoryHistoryType {
+  NEW
+  REPAIR
+}
+
+enum RepairStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
 }
 
 enum Role {

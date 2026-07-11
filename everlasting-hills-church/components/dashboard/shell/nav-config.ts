@@ -67,7 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Attendance",    href: "/dashboard/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/events",        icon: CalendarDays,  minRole: "ADMIN" },
       { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone,     minRole: "ADMIN" },
-      { label: "Inventory",     href: "/dashboard/inventory",     icon: Package,       minRole: "ADMIN" },
+      { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Settings",      href: "/dashboard/settings",      icon: Settings,      minRole: "ADMIN" },
     ],
