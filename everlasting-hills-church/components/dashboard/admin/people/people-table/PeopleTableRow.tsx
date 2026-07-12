@@ -43,7 +43,7 @@ export default function PeopleTableRow({
 
   return (
     <tr
-      onClick={() => router.push(`/dashboard/members/${p.id}`)}
+      onClick={() => router.push(`/dashboard/admin/members/${p.id}`)}
       className={`group cursor-pointer transition-colors ${isSel ? "bg-[#FFF4F6]/60 dark:bg-[#87102C]/10" : "hover:bg-[#fdeef1] dark:hover:bg-[#170e12]"}`}
     >
       <td className={`${TD} ${sBg} sticky z-20`} style={{ left: COL.check.left }} onClick={(e) => e.stopPropagation()}>

@@ -555,11 +555,12 @@ export class SermonsService {
   }
 
   async getSermonAnalytics() {
+    const tenantId = this.tenantId;
+
     const [sermons, totalSubscribers, totalReactions, totalBookmarks, totalListens] = await Promise.all([
       this.prisma.sermon.findMany({
-        where: { tenantId: this.tenantId, status: SermonStatus.PUBLISHED },
+        where: { tenantId, status: SermonStatus.PUBLISHED },
         orderBy: { playCount: 'desc' },
-        take: 10,
         select: {
           id: true,
           title: true,
@@ -568,16 +569,147 @@ export class SermonsService {
           date: true,
           playCount: true,
           series: true,
-          _count: { select: { SermonReaction: true, SermonBookmark: true } },
+          _count: {
+            select: {
+              SermonReaction: true,
+              SermonBookmark: true,
+              SermonComment: true,
+              SermonNote: true,
+              ListenProgress: true,
+            },
+          },
         },
       }),
-      this.prisma.emailSubscriber.count({ where: { tenantId: this.tenantId } }),
-      this.prisma.sermonReaction.count({ where: { tenantId: this.tenantId } }),
-      this.prisma.sermonBookmark.count({ where: { tenantId: this.tenantId } }),
-      this.prisma.listenProgress.count({ where: { tenantId: this.tenantId, positionSec: { gt: 0 } } }),
+      this.prisma.emailSubscriber.count({ where: { tenantId } }),
+      this.prisma.sermonReaction.count({ where: { tenantId } }),
+      this.prisma.sermonBookmark.count({ where: { tenantId } }),
+      this.prisma.listenProgress.count({ where: { tenantId, positionSec: { gt: 0 } } }),
     ]);
 
-    return { sermons, totalSubscribers, totalReactions, totalBookmarks, totalListens };
+    const sermonIds = sermons.map((s) => s.id);
+
+    const [reactionGroups, completedGroups, discussionQuestions] = await Promise.all([
+      this.prisma.sermonReaction.groupBy({
+        by: ['sermonId', 'type'],
+        where: { tenantId, sermonId: { in: sermonIds } },
+        _count: { _all: true },
+      }),
+      this.prisma.listenProgress.groupBy({
+        by: ['sermonId'],
+        where: { tenantId, sermonId: { in: sermonIds }, completed: true },
+        _count: { _all: true },
+      }),
+      this.prisma.discussionQuestion.findMany({
+        where: { tenantId, sermonId: { in: sermonIds } },
+        select: { sermonId: true, _count: { select: { DiscussionResponse: true } } },
+      }),
+    ]);
+
+    const reactionsBySermon = new Map<string, { LIKE: number; AMEN: number; CONVICTED: number }>();
+    for (const g of reactionGroups) {
+      const entry = reactionsBySermon.get(g.sermonId) ?? { LIKE: 0, AMEN: 0, CONVICTED: 0 };
+      if (g.type === 'LIKE' || g.type === 'AMEN' || g.type === 'CONVICTED') {
+        entry[g.type] = g._count._all;
+      }
+      reactionsBySermon.set(g.sermonId, entry);
+    }
+
+    const completedBySermon = new Map<string, number>();
+    for (const g of completedGroups) {
+      completedBySermon.set(g.sermonId, g._count._all);
+    }
+
+    const discussionBySermon = new Map<string, { questionCount: number; responseCount: number; questionsWithResponses: number }>();
+    for (const q of discussionQuestions) {
+      const entry = discussionBySermon.get(q.sermonId) ?? { questionCount: 0, responseCount: 0, questionsWithResponses: 0 };
+      entry.questionCount += 1;
+      entry.responseCount += q._count.DiscussionResponse;
+      if (q._count.DiscussionResponse > 0) entry.questionsWithResponses += 1;
+      discussionBySermon.set(q.sermonId, entry);
+    }
+
+    const sermonsWithEngagement = sermons.map((s) => {
+      const listens = s._count.ListenProgress;
+      const completed = completedBySermon.get(s.id) ?? 0;
+      return {
+        ...s,
+        reactionsByType: reactionsBySermon.get(s.id) ?? { LIKE: 0, AMEN: 0, CONVICTED: 0 },
+        completedListens: completed,
+        completionRate: listens > 0 ? completed / listens : 0,
+        discussion: discussionBySermon.get(s.id) ?? { questionCount: 0, responseCount: 0, questionsWithResponses: 0 },
+      };
+    });
+
+    return { sermons: sermonsWithEngagement, totalSubscribers, totalReactions, totalBookmarks, totalListens };
+  }
+
+  /** Full per-member engagement breakdown for one sermon — backs the pastor's sermon detail-analytics page. */
+  async getSermonEngagement(id: string) {
+    const tenantId = this.tenantId;
+
+    const sermon = await this.prisma.sermon.findFirst({
+      where: { id, tenantId },
+      select: { id: true, title: true, slug: true, speaker: true, date: true, playCount: true, series: true, audioDuration: true },
+    });
+    if (!sermon) throw new NotFoundException('Sermon not found');
+
+    const memberSelect = { select: { firstName: true, lastName: true, photoUrl: true } } as const;
+
+    const [reactions, bookmarks, notes, listens, discussionQuestions] = await Promise.all([
+      this.prisma.sermonReaction.findMany({
+        where: { sermonId: id, tenantId },
+        orderBy: { createdAt: 'desc' },
+        include: { Member: memberSelect },
+      }),
+      this.prisma.sermonBookmark.findMany({
+        where: { sermonId: id, tenantId },
+        orderBy: { createdAt: 'desc' },
+        include: { Member: memberSelect },
+      }),
+      this.prisma.sermonNote.findMany({
+        where: { sermonId: id, tenantId },
+        orderBy: { createdAt: 'desc' },
+        include: { Member: memberSelect },
+      }),
+      this.prisma.listenProgress.findMany({
+        where: { sermonId: id, tenantId },
+        orderBy: { updatedAt: 'desc' },
+        include: { Member: memberSelect },
+      }),
+      this.prisma.discussionQuestion.findMany({
+        where: { sermonId: id, tenantId },
+        orderBy: { order: 'asc' },
+        include: { DiscussionResponse: { orderBy: { createdAt: 'asc' }, include: { Member: memberSelect } } },
+      }),
+    ]);
+
+    const comments = await this.getComments(id);
+
+    return {
+      sermon,
+      reactions: reactions.map((r) => ({ id: r.id, type: r.type, createdAt: r.createdAt, member: r.Member })),
+      bookmarks: bookmarks.map((b) => ({ id: b.id, createdAt: b.createdAt, member: b.Member })),
+      notes: notes.map((n) => ({ id: n.id, content: n.content, createdAt: n.createdAt, member: n.Member })),
+      comments,
+      listens: listens.map((l) => ({
+        id: l.id,
+        positionSec: l.positionSec,
+        completed: l.completed,
+        updatedAt: l.updatedAt,
+        member: l.Member,
+      })),
+      discussion: discussionQuestions.map((q) => ({
+        id: q.id,
+        question: q.question,
+        order: q.order,
+        responses: q.DiscussionResponse.map((r) => ({
+          id: r.id,
+          content: r.content,
+          createdAt: r.createdAt,
+          member: r.Member,
+        })),
+      })),
+    };
   }
 
   async getAdminSermonOverview() {

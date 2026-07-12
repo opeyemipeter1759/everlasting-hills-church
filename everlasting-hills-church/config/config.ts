@@ -146,6 +146,12 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD" },
     ],
   },
+    {
+    section: "Follow up",
+    items: [
+      { label: "Follow Up", href: "/dashboard/follow-up", icon: Users, minRole: "UNIT_LEAD" },
+    ],
+  },
   {
     // Admin Head surface only. maxRole caps it below ADMIN so admins (who manage
     // departments via the Administration group) do not also see this.
@@ -186,11 +192,11 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "Pastoral",
     items: [
       { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "PASTOR" },
-      { label: "Sermon Analytics",  href: "/dashboard/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
+      { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
       { label: "Subscribers",       href: "/dashboard/subscribers",        icon: Mail,           minRole: "PASTOR" },
-      { label: "Testimonials",      href: "/dashboard/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
+      { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
       { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },
-      { label: "Follow-ups",        href: "/dashboard/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
+      { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
       { label: "Reports",           href: "/dashboard/reports",            icon: FileText,       minRole: "PASTOR" },
     ],

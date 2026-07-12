@@ -253,15 +253,39 @@ export class FormsService {
   async submitTestimony(data: TestimonyDto) {
     const normalizedEmail = data.email?.trim();
     const normalizedName = data.name?.trim();
+    const normalizedPhone = data.phone?.trim();
+    const normalizedTitle = data.title?.trim();
 
-    const record = await this.prisma.formSubmission.create({
-      data: {
-        id: randomUUID(),
-        tenantId: this.tenantId,
-        type: 'testimony',
-        data: data as unknown as Prisma.InputJsonValue,
-      },
-    });
+    const contact = [normalizedEmail, normalizedPhone].filter(Boolean).join(' · ');
+    const content = normalizedTitle
+      ? `${normalizedTitle}\n\n${data.testimony.trim()}`
+      : data.testimony.trim();
+
+    // Land it directly in the Testimonial table (unpublished) so it shows up as a draft on
+    // the pastor's testimonials CMS page, ready for review/publish — not just a write-only
+    // FormSubmission log no admin UI ever reads.
+    const [record] = await Promise.all([
+      this.prisma.testimonial.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          authorName: normalizedName || 'Anonymous',
+          authorRole: contact || null,
+          content,
+          published: false,
+          order: 0,
+          updatedAt: new Date(),
+        },
+      }),
+      this.prisma.formSubmission.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          type: 'testimony',
+          data: data as unknown as Prisma.InputJsonValue,
+        },
+      }),
+    ]);
 
     this.dispatchEmail({
       to: this.adminEmail,

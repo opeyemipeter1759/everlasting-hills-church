@@ -23,12 +23,21 @@ type NavItem = {
 // routes don't also highlight the parent as active.
 const EXACT_MATCH_PATHS = new Set(['/dashboard', '/dashboard/admin']);
 
-function buildActiveMatcher(pathname: string | null) {
-  return (path: string): boolean => {
+/**
+ * Nav items can share a path prefix (e.g. "/dashboard/pastor/sermons" and
+ * "/dashboard/pastor/sermons/analytics"). Rather than matching each item's href
+ * independently — which lights up every ancestor of the current path — find the
+ * single longest href among all rendered items that matches, and treat only that
+ * one as active.
+ */
+function buildActiveMatcher(pathname: string | null, allPaths: string[]) {
+  const rawMatch = (path: string): boolean => {
     if (!pathname) return false;
     if (EXACT_MATCH_PATHS.has(path)) return pathname === path;
     return pathname === path || pathname.startsWith(path + '/');
   };
+  const bestMatch = allPaths.filter(rawMatch).sort((a, b) => b.length - a.length)[0];
+  return (path: string): boolean => path === bestMatch;
 }
 
 function NavIcon({ active, icon }: { active: boolean; icon: React.ReactNode }) {
@@ -62,7 +71,6 @@ const AppSidebar: React.FC = () => {
   const currentUser = useCurrentUser();
 
   const showLabels = isExpanded || isMobileOpen || isHovered;
-  const isActive = buildActiveMatcher(pathname);
   const userRole = normalizeRole(currentUser?.role);
 
   const visibleGroups = userRole
@@ -75,6 +83,14 @@ const AppSidebar: React.FC = () => {
         }),
       })).filter((group) => group.items.length > 0)
     : [];
+
+  const allPaths = visibleGroups.flatMap((group) =>
+    group.items.flatMap((item) => [
+      item.href,
+      ...((item as { children?: { href: string }[] }).children ?? []).map((c) => c.href),
+    ])
+  );
+  const isActive = buildActiveMatcher(pathname, allPaths);
 
   const { openDropdown, setOpenDropdown } = useNavDropdown(pathname, visibleGroups, isActive);
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => {

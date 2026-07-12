@@ -38,11 +38,6 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
     router.refresh();
   };
 
-  const isActive = (href: string) =>
-    href === "/dashboard"
-      ? pathname === "/dashboard"
-      : pathname === href || pathname.startsWith(href + "/");
-
   const visibleGroups = NAV_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter((item) => {
@@ -51,6 +46,16 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
       return true;
     }),
   })).filter((g) => g.items.length > 0);
+
+  // Multiple nav items can share a path prefix (e.g. "/sermons" and "/sermons/analytics").
+  // Only the single longest-matching href should light up, not every ancestor of it.
+  const matches = (href: string) =>
+    href === "/dashboard" ? pathname === "/dashboard" : pathname === href || pathname.startsWith(href + "/");
+  const bestMatch = visibleGroups
+    .flatMap((g) => g.items.map((i) => i.href))
+    .filter(matches)
+    .sort((a, b) => b.length - a.length)[0];
+  const isActive = (href: string) => href === bestMatch;
 
   return (
     <aside

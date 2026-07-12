@@ -163,6 +163,12 @@ export class MembersController {
     return this.membersService.getMembersAtRisk();
   }
 
+  @Get('follow-ups')
+  @ApiOperation({ summary: 'All open follow-up tasks org-wide, with assigned leader (ADMIN+)' })
+  getOpenFollowUps() {
+    return this.membersService.listOpenFollowUpTasks();
+  }
+
   /**
    * Self-service routes — any signed-in user can update their own profile.
    * Declared BEFORE the `:id` routes so Express does not match the literal "me" as an id.
