@@ -9,7 +9,7 @@ export function getProfileCompletion(member: MemberHomeProps["member"]): {
   const fields = [member?.bio, member?.phone, member?.dateOfBirth, member?.address, member?.photoUrl];
   const filled = fields.filter(Boolean).length;
   const pct = Math.round((filled / fields.length) * 100);
-  return { pct, complete: pct >= 60 };
+  return { pct, complete: filled === fields.length };
 }
 
 export function getDayIndex() {

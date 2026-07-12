@@ -27,11 +27,12 @@ export function JourneyBand({
   attendanceRate, attendanceCount, lastServiceDate, recentServices,
   streakWeeks, nextService, discipleshipMilestones, monthlyAttendance,
 }: JourneyBandProps) {
-  if (isNewMember) {
+/*   if (isNewMember) {
     return (
-      <OnboardingChecklist member={member} prayerCount={prayerCount} ministryUnit={ministryUnit} />
+      <div>Hell</div>
+     /// <OnboardingChecklist member={member} prayerCount={prayerCount} ministryUnit={ministryUnit} />
     );
-  }
+  } */
 
   return (
     <>
@@ -49,11 +50,6 @@ export function JourneyBand({
         />
       </div>
 
-{/*       <DiscipleshipTrackerCard milestones={discipleshipMilestones} />
- */}
-      {monthlyAttendance.some((m) => m.total > 0) && (
-        <MonthlyAttendanceChart data={monthlyAttendance} />
-      )}
     </>
   );
 }

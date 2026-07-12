@@ -94,12 +94,11 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           hasCheckedInToday={hasCheckedInToday}
           nextService={nextService}
         />
-           {(sermonStreak > 0 || bookmarks.length > 0 || listenHistory.length > 0) && (
+           {/* {(sermonStreak > 0 || bookmarks.length > 0 || listenHistory.length > 0) && ( */}
         <div className="grid grid-cols-1  gap-5">
 {/*           <SermonLibraryCard sermonStreak={sermonStreak} bookmarks={bookmarks} />
  */}          <ContinueListeningCard listenHistory={listenHistory} />
         </div>
-      )}
 {/*         
  */}        
 

@@ -24,7 +24,7 @@ export function ContinueListeningCard({ listenHistory }: {
           </span>
           <div>
             <p className="text-sm font-semibold text-[#111] dark:text-white">No listening history yet</p>
-            <Link href="/dashboard/sermons" className={`${linkCl} justify-center mt-1`}>
+            <Link href="/dashboard/sermon" className={`${linkCl} justify-center mt-1`}>
               Start listening <ChevronRight size={12} />
             </Link>
           </div>

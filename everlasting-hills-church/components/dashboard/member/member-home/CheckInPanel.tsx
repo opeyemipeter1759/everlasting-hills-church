@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Clock, MapPin, BookOpen } from "lucide-react";
 import { useCanMark, useCheckIn } from "@/lib/api";
@@ -17,6 +18,7 @@ export function CheckInPanel({
   hasCheckedInToday: boolean;
   nextService: MemberHomeProps["nextService"];
 }) {
+  const router = useRouter();
   const { data: canMarkData, isLoading: canMarkLoading } = useCanMark();
   const checkIn = useCheckIn();
   const [error, setError] = useState("");
@@ -35,6 +37,9 @@ export function CheckInPanel({
     setError("");
     try {
       await checkIn.mutateAsync();
+      // My Journey stats (attendance rate, streak, etc.) are fetched
+      // server-side, so refresh the route to pull the post-check-in values.
+      router.refresh();
     } catch (err) {
       setError((err as { message?: string }).message ?? "Check-in failed. Please try again.");
     }
