@@ -19,6 +19,7 @@ import { SermonsModule } from './sermons/sermons.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
 import { AssignmentsModule } from './assignments/assignments.module';
+import { FollowUpModule } from './follow-up/follow-up.module';
 import { CmsModule } from './cms/cms.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { UnitsModule } from './units/units.module';
@@ -114,6 +115,7 @@ import type { Env } from './config/env.validation';
     AnalyticsModule,
     MembersModule,
     AssignmentsModule,
+    FollowUpModule,
     CmsModule,
     VisitorsModule,
     UnitsModule,

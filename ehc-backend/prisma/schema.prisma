@@ -190,6 +190,9 @@ model Member {
   UnitMember         UnitMember[]
   CareAsMember       CareAssignment[]     @relation("CareMember")
   CareAsLeader       CareAssignment[]     @relation("CareLeader")
+  FollowUpAsSubject  FollowUpEntry[]      @relation("FollowUpSubjectMember")
+  FollowUpAsAssignee FollowUpEntry[]      @relation("FollowUpAssignee")
+  FollowUpLogs       FollowUpContactLog[] @relation("FollowUpLoggedBy")
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).
@@ -208,6 +211,94 @@ model CareAssignment {
 
   @@unique([tenantId, memberId, leaderId])
   @@index([tenantId, leaderId])
+}
+
+enum FollowUpStage {
+  UNASSIGNED
+  ASSIGNED
+  IN_PROGRESS
+  AWAITING_REVIEW
+  CONFIRMED
+  REOPENED
+}
+
+enum FollowUpSourceType {
+  FIRST_TIMER
+  ABSENTEE
+}
+
+enum FollowUpOutcome {
+  BECAME_MEMBER
+  RETURNED
+  NOT_INTERESTED
+  UNREACHABLE
+}
+
+enum FollowUpContactMethod {
+  CALL
+  SMS
+  WHATSAPP
+  VISIT
+  OTHER
+}
+
+enum FollowUpContactOutcome {
+  REACHED
+  NO_ANSWER
+  VOICEMAIL
+  WRONG_NUMBER
+  SCHEDULED_VISIT
+}
+
+/// A Unit's follow-up "Master List" row: a first-timer (Visitor) or absentee
+/// (Member) tracked from first contact to confirmed follow-up. See
+/// prisma/manual/2026-07-follow-up.sql for the hand-applied migration.
+model FollowUpEntry {
+  id            String                @id
+  tenantId      String
+  unitId        String
+  sourceType    FollowUpSourceType
+  memberId      String? // subject, when sourceType = ABSENTEE
+  visitorId     String? // subject, when sourceType = FIRST_TIMER
+  addedById     String // Profile.id of the usher/leader who added them
+  assigneeId    String? // Member.id of the team member currently assigned
+  stage         FollowUpStage         @default(UNASSIGNED)
+  goalContacts  Int                   @default(3)
+  contactCount  Int                   @default(0)
+  lastContactAt DateTime?
+  outcome       FollowUpOutcome?
+  reviewNote    String?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @default(now()) @updatedAt
+  Tenant        Tenant                @relation(fields: [tenantId], references: [id])
+  Unit          Unit                  @relation(fields: [unitId], references: [id])
+  Member        Member?               @relation("FollowUpSubjectMember", fields: [memberId], references: [id])
+  Visitor       Visitor?              @relation(fields: [visitorId], references: [id])
+  Assignee      Member?               @relation("FollowUpAssignee", fields: [assigneeId], references: [id])
+  AddedBy       Profile               @relation("FollowUpAddedBy", fields: [addedById], references: [id])
+  Logs          FollowUpContactLog[]
+
+  @@index([tenantId, unitId])
+  @@index([tenantId, stage])
+  @@index([assigneeId])
+}
+
+/// One logged contact attempt against a FollowUpEntry.
+model FollowUpContactLog {
+  id        String                 @id
+  tenantId  String
+  entryId   String
+  byId      String // Member.id who logged it
+  method    FollowUpContactMethod
+  outcome   FollowUpContactOutcome
+  note      String
+  createdAt DateTime               @default(now())
+  Entry     FollowUpEntry          @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  By        Member                 @relation("FollowUpLoggedBy", fields: [byId], references: [id])
+  Tenant    Tenant                 @relation(fields: [tenantId], references: [id])
+
+  @@index([entryId])
+  @@index([tenantId])
 }
 
 /// A device/browser a user has logged in from before. Used to alert on logins
@@ -298,6 +389,7 @@ model Profile {
   UnitLeadAssigned       UnitLeadAssignment[]  @relation("UnitLeadAssignedBy")
   HeadUsherOf            HeadUsherAssignment[] @relation("HeadUsherUser")
   HeadUsherAssigned      HeadUsherAssignment[] @relation("HeadUsherAssignedBy")
+  FollowUpAdded          FollowUpEntry[]       @relation("FollowUpAddedBy")
 }
 
 /// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
@@ -565,6 +657,8 @@ model Tenant {
   AttendanceRecord   AttendanceRecord[]
   AuditLog           AuditLog[]
   CareAssignment     CareAssignment[]
+  FollowUpEntry      FollowUpEntry[]
+  FollowUpContactLog FollowUpContactLog[]
   CmsPage            Page[]
   ContentVersion     ContentVersion[]
   MediaAsset         MediaAsset[]
@@ -832,6 +926,7 @@ model Unit {
   Department   Department?  @relation(fields: [departmentId], references: [id])
   UnitMember   UnitMember[]
   LeadAssignments UnitLeadAssignment[]
+  FollowUpEntry   FollowUpEntry[]
 
   @@index([departmentId])
 }
@@ -917,6 +1012,7 @@ model Visitor {
   convertedAt         DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
   convertedToMemberId String? // no FK; mirrors AuditLog.actorId — just an audit pointer
   Tenant             Tenant   @relation(fields: [tenantId], references: [id])
+  FollowUpEntry      FollowUpEntry[]
 
   @@index([tenantId, convertedAt])
 }

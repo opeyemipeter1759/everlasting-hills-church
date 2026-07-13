@@ -1,7 +1,5 @@
-import React from 'react'
+import FollowUpPipelineClient from "@/components/dashboard/follow-up/FollowUpPipelineClient";
 
-export default function page() {
-  return (
-    <div>page</div>
-  )
+export default function FollowUpPage() {
+  return <FollowUpPipelineClient />;
 }

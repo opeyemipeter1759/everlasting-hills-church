@@ -9,6 +9,8 @@ import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
 import { normalizeRole } from '@/lib/auth/frontend-session';
 import Image from 'next/image';
 import { useCurrentUser, useNavDropdown } from '@/hooks';
+import { useMyUnit } from '@/lib/api';
+import { useFollowUpAccess } from '@/lib/api/follow-up-pipeline';
 import { getInitials, truncateText } from '@/utils/stringUtils';
 import { SidebarSkeleton } from '@/components/ui/skeleton/SidebarSkeleton';
 
@@ -73,12 +75,20 @@ const AppSidebar: React.FC = () => {
   const showLabels = isExpanded || isMobileOpen || isHovered;
   const userRole = normalizeRole(currentUser?.role);
 
+  // Data-driven checks beyond the static role gate — see NavItem.requiresAccess.
+  // Undefined while loading is treated as "no access yet" so a link never flashes
+  // and then disappears.
+  const { data: myUnit } = useMyUnit();
+  const { data: followUpAccess } = useFollowUpAccess();
+
   const visibleGroups = userRole
     ? NAV_GROUPS.map((group) => ({
         ...group,
         items: group.items.filter((item) => {
           if (!hasMinRole(userRole, item.minRole)) return false;
           if (item.maxRole && hasMinRole(userRole, item.maxRole)) return false;
+          if (item.requiresAccess === 'unitLead' && !myUnit) return false;
+          if (item.requiresAccess === 'followUp' && !followUpAccess?.hasAccess) return false;
           return true;
         }),
       })).filter((group) => group.items.length > 0)

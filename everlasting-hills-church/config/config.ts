@@ -123,6 +123,10 @@ export type NavItem = {
   icon: LucideIcon;
   minRole: UserRole;
   maxRole?: UserRole;
+  /** Extra data-driven visibility check beyond the static role gate — e.g. a
+   * UNIT_LEAD-role user who doesn't actually lead a real unit shouldn't see
+   * "My Unit"; a plain MEMBER who is genuinely on a team should see "Follow Up". */
+  requiresAccess?: "unitLead" | "followUp";
 };
 
 export type NavGroup = {
@@ -143,13 +147,13 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Unit",
     items: [
-      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD" },
+      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
     ],
   },
     {
     section: "Follow up",
     items: [
-      { label: "Follow Up", href: "/dashboard/follow-up", icon: Users, minRole: "UNIT_LEAD" },
+      { label: "Follow Up", href: "/dashboard/follow-up", icon: Users, minRole: "MEMBER", requiresAccess: "followUp" },
     ],
   },
   {
