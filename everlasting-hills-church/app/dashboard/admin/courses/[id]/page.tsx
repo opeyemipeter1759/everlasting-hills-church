@@ -2,14 +2,17 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { GraduationCap } from "lucide-react";
-import { getCourseById } from "@/lib/courses-catalog";
+import { useCourseAdmin } from "@/lib/api/courses";
+import CourseEditorSkeleton from "@/components/ui/skeleton/CourseEditorSkeleton";
 import CourseEditorPage from "@/components/dashboard/admin/courses/CourseEditorPage";
 
 export default function EditCoursePage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
-  const course = getCourseById(id);
+  const { data: course, isLoading } = useCourseAdmin(id);
+
+  if (isLoading) return <CourseEditorSkeleton />;
 
   if (!course) {
     return (

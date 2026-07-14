@@ -1,22 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import toast from "react-hot-toast";
 import { ArrowLeft, CheckCircle2, GraduationCap } from "lucide-react";
-import { useCourse, useCourses, useEnrollCourse, useMyCourseProgress, getCourseStatus } from "@/lib/api/courses";
+import { useCourse, useMyCourseProgress } from "@/lib/api/courses";
 import CourseDetailSkeleton from "@/components/ui/skeleton/CourseDetailSkeleton";
 import CourseHero from "./CourseHero";
 import CourseCurriculum from "./CourseCurriculum";
-import CourseEnrollCard from "./CourseEnrollCard";
+import CourseLearnSidebar from "./CourseLearnSidebar";
 
-export default function CourseDetailClient({ slug }: { slug: string }) {
+export default function MyCourseDetailClient({ slug }: { slug: string }) {
   const router = useRouter();
-  const { data: catalog = [] } = useCourses();
-  const { data: course, isLoading } = useCourse(slug);
-  const { data: progress = {} } = useMyCourseProgress();
-  const enroll = useEnrollCourse();
+  const { data: course, isLoading: courseLoading } = useCourse(slug);
+  const { data: progress = {}, isLoading: progressLoading } = useMyCourseProgress();
 
-  if (isLoading) return <CourseDetailSkeleton />;
+  if (courseLoading || progressLoading) return <CourseDetailSkeleton />;
 
   if (!course) {
     return (
@@ -25,34 +22,39 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">This course couldn't be found.</p>
         <button
           type="button"
-          onClick={() => router.push("/dashboard/explore-courses")}
+          onClick={() => router.push("/dashboard/courses")}
           className="text-sm font-semibold text-[#87102C] hover:underline dark:text-[#e8768a]"
         >
-          ← Back to Explore Courses
+          ← Back to My Courses
         </button>
       </div>
     );
   }
 
-  const status = getCourseStatus(course, catalog, progress);
-  const prerequisite = catalog.find((c) => c.slug === course.prerequisiteSlug);
-
-  function handleEnroll() {
-    if (!course || status !== "available") return;
-    enroll.mutate(course.id, {
-      onSuccess: () => toast.success(`You're enrolled in ${course.title}!`, { icon: "🎓" }),
-      onError: (err) => toast.error((err as Error).message || "Couldn't enroll — try again"),
-    });
+  if (!progress[course.id]?.enrolled) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-24 text-center">
+        <GraduationCap size={28} className="text-gray-300 dark:text-gray-700" />
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">You haven't enrolled in this course yet.</p>
+        <button
+          type="button"
+          onClick={() => router.push(`/dashboard/explore-courses/${course.slug}`)}
+          className="text-sm font-semibold text-[#87102C] hover:underline dark:text-[#e8768a]"
+        >
+          View course details to enroll →
+        </button>
+      </div>
+    );
   }
 
   return (
     <div className="max-w-5xl space-y-6">
       <button
         type="button"
-        onClick={() => router.push("/dashboard/explore-courses")}
+        onClick={() => router.push("/dashboard/courses")}
         className="inline-flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
       >
-        <ArrowLeft size={14} /> Explore Courses
+        <ArrowLeft size={14} /> My Courses
       </button>
 
       <CourseHero course={course} />
@@ -78,18 +80,16 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
             </ul>
           </div>
 
-          <CourseCurriculum modules={course.curriculum} interactive={false} />
+          <CourseCurriculum
+            modules={course.curriculum}
+            slug={course.slug}
+            watchedLessonIds={progress[course.id]?.watchedLessonIds}
+            interactive
+          />
         </div>
 
         <div className="lg:sticky lg:top-6">
-          <CourseEnrollCard
-            course={course}
-            status={status}
-            progress={progress[course.id]}
-            prerequisiteTitle={prerequisite?.title}
-            enrolling={enroll.isPending}
-            onEnroll={handleEnroll}
-          />
+          <CourseLearnSidebar course={course} progress={progress[course.id]} />
         </div>
       </div>
     </div>

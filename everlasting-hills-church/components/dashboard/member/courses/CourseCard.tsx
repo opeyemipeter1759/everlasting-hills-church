@@ -1,30 +1,33 @@
 import Link from "next/link";
 import { CheckCircle2, Clock, Lock, PlayCircle, Users } from "lucide-react";
-import type { Course } from "@/lib/courses-data";
-import type { CourseStatus } from "@/lib/courses-store";
+import { ICON_OPTIONS } from "@/lib/courses-data";
+import { LEVEL_LABEL, type CourseListItem, type CourseStatus } from "@/lib/api/courses";
 
-const LEVEL_BADGE: Record<Course["level"], string> = {
-  Beginner: "bg-emerald-500/15 text-emerald-100",
-  Intermediate: "bg-amber-500/15 text-amber-100",
-  Advanced: "bg-rose-500/15 text-rose-100",
+const LEVEL_BADGE: Record<CourseListItem["level"], string> = {
+  BEGINNER: "bg-emerald-500/15 text-emerald-100",
+  INTERMEDIATE: "bg-amber-500/15 text-amber-100",
+  ADVANCED: "bg-rose-500/15 text-rose-100",
 };
 
 export default function CourseCard({
   course,
   status,
   prerequisiteTitle,
+  href,
 }: {
-  course: Course;
+  course: CourseListItem;
   status: CourseStatus;
   prerequisiteTitle?: string;
+  /** Defaults to the Explore Courses detail page; My Courses passes its own detail route. */
+  href?: string;
 }) {
-  const Icon = course.icon;
+  const Icon = ICON_OPTIONS[course.iconKey] ?? ICON_OPTIONS.BookOpen;
   const [from, to] = course.gradient;
   const locked = status === "locked";
 
   return (
     <Link
-      href={`/dashboard/explore-courses/${course.slug}`}
+      href={href ?? `/dashboard/explore-courses/${course.slug}`}
       className={`group flex flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] transition-all hover:shadow-lg hover:-translate-y-0.5 ${locked ? "opacity-75" : ""}`}
     >
       <div
@@ -50,7 +53,7 @@ export default function CourseCard({
         <span
           className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${LEVEL_BADGE[course.level]}`}
         >
-          {course.level}
+          {LEVEL_LABEL[course.level]}
         </span>
 
         {status === "completed" && (
