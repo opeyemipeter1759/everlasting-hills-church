@@ -2,7 +2,7 @@
 
 import { Plus } from "lucide-react";
 import type { PersonRole } from "@/lib/api/people";
-import PeopleModal, { btnGhost, btnPrimary } from "./PeopleModal";
+import FormModal, { btnGhost, btnPrimary } from "@/components/ui/overlay/FormModal";
 import { useCreatePeopleForm } from "./create-people-dialog/useCreatePeopleForm";
 import PersonRowCard from "./create-people-dialog/PersonRowCard";
 import FailuresList from "./create-people-dialog/FailuresList";
@@ -25,7 +25,7 @@ export default function CreatePeopleDialog({
   }
 
   return (
-    <PeopleModal
+    <FormModal
       open={open}
       onClose={close}
       title="Add people"
@@ -73,6 +73,6 @@ export default function CreatePeopleDialog({
           </p>
         )}
       </div>
-    </PeopleModal>
+    </FormModal>
   );
 }

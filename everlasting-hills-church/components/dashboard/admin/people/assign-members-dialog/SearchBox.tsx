@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { fieldCls } from "../PeopleModal";
+import { fieldCls } from "@/components/ui/overlay/FormModal";
 
 export default function SearchBox({
   value,
@@ -11,7 +11,7 @@ export default function SearchBox({
   placeholder: string;
 }) {
   return (
-    <div className="relative">
+    <div className="relative no-scrollbar">
       <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
       <input
         className={`${fieldCls} pl-10`}

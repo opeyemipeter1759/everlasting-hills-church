@@ -1,7 +1,7 @@
 import { Trash2 } from "lucide-react";
 import type { PersonRole } from "@/lib/api/people";
 import { ROLE_LABEL } from "../peopleShared";
-import { fieldCls } from "../PeopleModal";
+import { fieldCls } from "@/components/ui/overlay/FormModal";
 import type { Row } from "./types";
 
 export default function PersonRowCard({

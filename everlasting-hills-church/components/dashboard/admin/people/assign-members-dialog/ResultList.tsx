@@ -16,7 +16,7 @@ export default function ResultList({
   multi?: boolean;
 }) {
   return (
-    <div className="mt-2 max-h-44 overflow-y-auto rounded-xl border border-[#E7CDD3]/60 dark:border-white/10 divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06]">
+    <div className="mt-2 max-h-44 overflow-y-auto no-scrollbar rounded-xl border border-[#E7CDD3]/60 dark:border-white/10 divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06]">
       {loading ? (
         <p className="px-3 py-4 text-xs text-gray-400">Searching…</p>
       ) : rows.length === 0 ? (

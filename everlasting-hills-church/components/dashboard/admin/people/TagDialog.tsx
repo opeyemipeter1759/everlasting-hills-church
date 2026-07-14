@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 import type { PersonRow } from "@/lib/api/people";
-import PeopleModal, { btnGhost, btnPrimary, fieldCls } from "./PeopleModal";
+import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
 
 /** Replace a person's full tag set (table row "Tag" action). */
 export default function TagDialog({
@@ -41,7 +41,7 @@ export default function TagDialog({
   }
 
   return (
-    <PeopleModal
+    <FormModal
       open={person !== null}
       onClose={onClose}
       title={person ? `Tags · ${person.name}` : "Tags"}
@@ -65,6 +65,6 @@ export default function TagDialog({
         onKeyDown={(e) => e.key === "Enter" && submit()}
         placeholder="e.g. choir, youth, first-timer"
       />
-    </PeopleModal>
+    </FormModal>
   );
 }

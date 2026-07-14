@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useUpdateMember, type PersonRow } from "@/lib/api/people";
-import PeopleModal, { btnGhost, btnPrimary, fieldCls } from "./PeopleModal";
+import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
 
 export default function EditMemberDialog({
   person,
@@ -66,7 +66,7 @@ export default function EditMemberDialog({
   }
 
   return (
-    <PeopleModal
+    <FormModal
       open={person !== null}
       onClose={onClose}
       title={person ? `Edit · ${person.name}` : "Edit"}
@@ -117,7 +117,7 @@ export default function EditMemberDialog({
           {error}
         </p>
       )}
-    </PeopleModal>
+    </FormModal>
   );
 }
 

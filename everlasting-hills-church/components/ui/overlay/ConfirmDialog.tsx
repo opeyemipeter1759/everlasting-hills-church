@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AlertTriangle } from "lucide-react";
 import  { Loader } from "@/components/icons";
 
@@ -48,6 +49,8 @@ export default function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
@@ -59,11 +62,11 @@ export default function ConfirmDialog({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, loading, onCancel]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
   const styles = TONE_STYLES[tone];
 
-  return (
-    <div role="dialog" aria-modal="true" aria-labelledby="confirm-title" className="fixed inset-0 z-50 flex items-center justify-center px-4">
+  return createPortal(
+    <div role="dialog" aria-modal="true" aria-labelledby="confirm-title" className="fixed inset-0 z-[100] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !loading && onCancel()} aria-hidden="true" />
       <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden">
         <div className="p-6">
@@ -86,6 +89,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

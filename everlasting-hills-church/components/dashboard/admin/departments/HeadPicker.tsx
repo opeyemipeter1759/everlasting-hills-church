@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Search, AlertTriangle, Check } from "lucide-react";
-import PeopleModal from "@/components/dashboard/admin/people/PeopleModal";
+import FormModal from "@/components/ui/overlay/FormModal";
 import { usePeople } from "@/lib/api/people";
 import { ROLE_LABEL } from "@/components/dashboard/admin/people/peopleShared";
 
@@ -25,7 +25,7 @@ export default function HeadPicker({
   const people = (q.data?.data ?? []).filter((p) => p.profileId);
 
   return (
-    <PeopleModal
+    <FormModal
       open={open}
       title={currentHeadName ? "Replace department head" : "Assign department head"}
       subtitle={currentHeadName ? `Replacing ${currentHeadName} ends their tenure` : "Pick the person to lead this department"}
@@ -77,7 +77,7 @@ export default function HeadPicker({
           ))
         )}
       </div>
-    </PeopleModal>
+    </FormModal>
   );
 }
 

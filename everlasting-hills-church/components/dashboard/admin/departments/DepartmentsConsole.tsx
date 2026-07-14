@@ -41,7 +41,7 @@ export default function DepartmentsConsole() {
           {q.data?.departments.map((d) => (
             <Link
               key={d.id}
-              href={`/dashboard/departments/${d.id}`}
+              href={`/dashboard/admin/departments/${d.id}`}
               className="group flex flex-col rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5 transition-all hover:-translate-y-0.5 hover:border-[#87102C]/30 hover:shadow-[0_8px_30px_rgba(135,16,44,0.08)]"
             >
               <div className="mb-3 flex items-center justify-between">
