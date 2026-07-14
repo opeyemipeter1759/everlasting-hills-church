@@ -38,6 +38,7 @@ import { GivingModule } from './giving/giving.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { CommunityModule } from './community/community.module';
+import { HomeCellModule } from './home-cell/home-cell.module';
 import { JobsModule } from './jobs/jobs.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { validateEnv } from './config/env.validation';
@@ -134,6 +135,7 @@ import type { Env } from './config/env.validation';
     InboxModule,
     AnnouncementsModule,
     CommunityModule,
+    HomeCellModule,
     JobsModule.forRoot(),
     SchedulingModule,
   ],

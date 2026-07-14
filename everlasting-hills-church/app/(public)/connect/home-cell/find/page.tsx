@@ -1,0 +1,826 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft, Search, MapPin, Clock, Calendar,
+  Phone, X, AlertCircle, Plus, Minus, ChevronRight, Users,
+  CheckCircle, Loader2,
+} from "lucide-react";
+import { apiClient } from "@/lib/api/axios";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface Cell {
+  id: string;
+  name: string;
+  leaderName: string;
+  leaderPhone: string | null;
+  meetingDay: string;
+  meetingTime: string;
+  address: string;
+  state: string;
+  city: string;
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const IBADAN_AREAS = [
+  "All Areas", "Agodi", "Bodija", "Challenge", "Dugbe",
+  "Iwo Road", "Jericho", "Molete", "Oluyole", "Ring Road", "Sango",
+];
+
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+const CELL_PHOTOS = [
+  "/HeroImages/IMG_8931.jpg",
+  "/HeroImages/IMG_1080.jpg",
+  "/HeroImages/IMG_8248.jpg",
+  "/HeroImages/IMG_4667.jpg",
+  "/HeroImages/IMG_8470.jpg",
+  "/HeroImages/IMG_5684.jpg",
+  "/HeroImages/IMG_4565.jpg",
+  "/HeroImages/IMG_9014.jpg",
+];
+
+const FAQS = [
+  { q: "What exactly is a Home Cell?", a: "A Home Cell is a small, home-based gathering of believers who worship, study the Word, and grow together in close community. It's the most personal expression of church life at Everlasting Hills." },
+  { q: "Where are Home Cells located?", a: "Cells are spread across different neighbourhoods in Ibadan. We match you to a group close to where you live or work — and if there isn't one nearby yet, you could help start one." },
+  { q: "How does a Home Cell help me grow spiritually?", a: "Through weekly Scripture study, honest conversation, prayer, and real accountability, you grow faster than you ever would alone. Every Cell Leader is trained to guide and support their group." },
+  { q: "How do I join a Home Cell?", a: "Find a cell above and click 'Join Cell'. You'll be taken directly to a WhatsApp chat with the Cell Leader, who will welcome you and share all the details you need for your first visit." },
+  { q: "How is a Home Cell different from a Sunday service?", a: "Sunday is where we gather as one body. A Home Cell is where you are truly known — a smaller circle with space for questions, personal prayer, and the kind of depth a large gathering can't provide." },
+  { q: "Can I start a Home Cell in my home?", a: "Absolutely. If you feel called to host and lead, speak with the Discipleship team. We provide training, materials, and ongoing pastoral support for every Cell Leader who steps up." },
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function cellPhoto(index: number) {
+  return CELL_PHOTOS[index % CELL_PHOTOS.length];
+}
+
+function whatsappLink(cell: Cell) {
+  const phone = cell.leaderPhone?.replace(/\D/g, "") ?? "";
+  const text = encodeURIComponent(
+    `Hi ${cell.leaderName}, I saw your Home Cell (${cell.name}) on the EHC website and I'd like to join. Please let me know when I can attend.`
+  );
+  return `https://wa.me/${phone}?text=${text}`;
+}
+
+// ── FAQ item ──────────────────────────────────────────────────────────────────
+
+function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.06 }}
+      className="border-b border-white/[0.07] last:border-0"
+    >
+      <button onClick={() => setOpen((p) => !p)}
+        className="w-full flex items-start justify-between gap-6 py-6 text-left group"
+        aria-expanded={open}>
+        <span className="font-display font-black text-base sm:text-lg text-white/80 group-hover:text-white transition-colors leading-snug">{q}</span>
+        <span className="flex-shrink-0 w-7 h-7 rounded-full border border-white/15 flex items-center justify-center mt-0.5 group-hover:border-church-accent/50 group-hover:text-church-accent text-white/40 transition-all">
+          {open ? <Minus size={13} /> : <Plus size={13} />}
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <p className="pb-6 text-white/45 text-[15px] leading-relaxed max-w-2xl">{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ── Add Cell modal ────────────────────────────────────────────────────────────
+
+const EMPTY_FORM = {
+  name: "", leaderName: "", leaderPhone: "", meetingDay: "", meetingTime: "", area: "", addressDetail: "",
+};
+
+function AddCellModal({ onClose, onAdded }: { onClose: () => void; onAdded: (c: Cell) => void }) {
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  function field(key: keyof typeof form, value: string) {
+    setForm((p) => ({ ...p, [key]: value }));
+  }
+
+  const valid =
+    form.name.trim().length > 1 &&
+    form.leaderName.trim().length > 1 &&
+    form.leaderPhone.trim().length > 5 &&
+    form.meetingDay.length > 0 &&
+    form.meetingTime.trim().length > 0 &&
+    (form.area.length > 0 || form.addressDetail.trim().length > 0);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!valid || loading) return;
+    setLoading(true); setErr(null);
+    const address = [form.area !== "All Areas" ? form.area : "", form.addressDetail.trim()].filter(Boolean).join(", ");
+    try {
+      const res = await apiClient.post<Cell>("/home-cell", {
+        name: form.name.trim(),
+        leaderName: form.leaderName.trim(),
+        leaderPhone: form.leaderPhone.trim(),
+        meetingDay: form.meetingDay,
+        meetingTime: form.meetingTime.trim(),
+        address: address || "Ibadan",
+        city: "Ibadan",
+        state: "Oyo",
+      });
+      setDone(true);
+      onAdded(res.data);
+    } catch {
+      setErr("Couldn't save. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* backdrop */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 60 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 w-full sm:max-w-lg bg-[#12040c] border border-white/10 rounded-t-3xl sm:rounded-3xl overflow-hidden max-h-[90dvh] flex flex-col"
+      >
+        {/* drag handle */}
+        <div className="sm:hidden w-10 h-1 bg-white/10 rounded-full mx-auto mt-4 mb-1 flex-shrink-0" />
+
+        {/* header */}
+        <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent mb-0.5">New Home Cell</p>
+            <h3 className="text-white font-black text-lg leading-tight">Add a Cell</h3>
+            <p className="text-white/35 text-xs mt-0.5">Your cell will appear on the directory instantly.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* body */}
+        <div className="overflow-y-auto flex-1 px-6 py-5">
+          {done ? (
+            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center text-center py-10 gap-4">
+              <div className="w-16 h-16 rounded-full bg-church-maroon/20 border border-church-maroon/30 flex items-center justify-center">
+                <Users size={24} className="text-church-accent" />
+              </div>
+              <div>
+                <h4 className="text-white font-black text-xl mb-1">Cell Added!</h4>
+                <p className="text-white/40 text-sm leading-relaxed max-w-xs">
+                  {form.name} is now live on the directory. People can find and join it right away.
+                </p>
+              </div>
+              <button onClick={onClose}
+                className="mt-2 px-8 py-3 rounded-full bg-church-maroon text-white text-sm font-black hover:bg-[#6E0C24] transition-colors">
+                Done
+              </button>
+            </motion.div>
+          ) : (
+            <form onSubmit={submit} className="space-y-4">
+              <FormField label="Cell Name" required
+                input={<input value={form.name} onChange={e => field("name", e.target.value)} placeholder="Bodija Light Cell" required />}
+              />
+              <FormField label="Pastor / Leader Name" required
+                input={<input value={form.leaderName} onChange={e => field("leaderName", e.target.value)} placeholder="Pastor Kunle Adeyemi" required />}
+              />
+              <FormField label="Leader WhatsApp Phone" required
+                input={<input value={form.leaderPhone} onChange={e => field("leaderPhone", e.target.value)} placeholder="+234 801 234 5678" required />}
+              />
+
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="Meeting Day" required
+                  input={
+                    <select value={form.meetingDay} onChange={e => field("meetingDay", e.target.value)} required className="bg-transparent">
+                      <option value="" disabled>Select day</option>
+                      {DAYS.map(d => <option key={d} value={d} className="bg-[#12040c]">{d}</option>)}
+                    </select>
+                  }
+                />
+                <FormField label="Meeting Time" required
+                  input={<input value={form.meetingTime} onChange={e => field("meetingTime", e.target.value)} placeholder="6:30 PM" required />}
+                />
+              </div>
+
+              <FormField label="Area"
+                input={
+                  <select value={form.area} onChange={e => field("area", e.target.value)} className="bg-transparent">
+                    <option value="" className="bg-[#12040c]">Select area (optional)</option>
+                    {IBADAN_AREAS.filter(a => a !== "All Areas").map(a => (
+                      <option key={a} value={a} className="bg-[#12040c]">{a}</option>
+                    ))}
+                  </select>
+                }
+              />
+              <FormField label="Street / Venue Address"
+                input={<input value={form.addressDetail} onChange={e => field("addressDetail", e.target.value)} placeholder="14 University Road" />}
+              />
+
+              {err && (
+                <div className="flex items-center gap-2 text-rose-400 text-sm">
+                  <AlertCircle size={13} />{err}
+                </div>
+              )}
+
+              <button type="submit" disabled={!valid || loading}
+                className="w-full py-3.5 rounded-2xl bg-church-maroon text-white font-black text-sm tracking-wide disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#6E0C24] transition-all mt-2">
+                {loading ? "Saving…" : "Add Home Cell"}
+              </button>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function FormField({ label, required, input }: { label: string; required?: boolean; input: React.ReactElement }) {
+  return (
+    <div>
+      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-1.5">
+        {label}{required && <span className="text-church-accent ml-0.5">*</span>}
+      </label>
+      <div className="w-full border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white bg-white/[0.03] focus-within:border-church-accent/40 focus-within:bg-white/[0.05] transition-all [&_input]:w-full [&_input]:bg-transparent [&_input]:outline-none [&_input]:placeholder:text-white/20 [&_select]:w-full [&_select]:outline-none [&_select]:text-white [&_select]:appearance-none">
+        {input}
+      </div>
+    </div>
+  );
+}
+
+// ── Join modal ────────────────────────────────────────────────────────────────
+
+function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
+  const [form, setForm] = useState({ name: "", phone: "", email: "", prayerRequest: "" });
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  function handle(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+  }
+
+  const valid = form.name.trim().length > 1 && form.phone.trim().length > 5;
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!valid || loading) return;
+    setLoading(true); setErr(null);
+    try {
+      await apiClient.post(`/home-cell/${cell.id}/join`, {
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || undefined,
+        prayerRequest: form.prayerRequest.trim() || undefined,
+      });
+      setDone(true);
+    } catch {
+      setErr("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 60 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 w-full sm:max-w-md bg-[#12040c] border border-white/10 rounded-t-3xl sm:rounded-3xl overflow-hidden max-h-[90dvh] flex flex-col"
+      >
+        <div className="sm:hidden w-10 h-1 bg-white/10 rounded-full mx-auto mt-4 mb-1 flex-shrink-0" />
+
+        {/* header */}
+        <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent mb-0.5">Join Cell</p>
+            <h3 className="text-white font-black text-lg leading-tight">{cell.name}</h3>
+            <p className="text-white/35 text-xs mt-0.5">Led by {cell.leaderName}</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* body */}
+        <div className="overflow-y-auto flex-1 px-6 py-5">
+          {done ? (
+            <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center text-center py-10 gap-4">
+              <div className="w-16 h-16 rounded-full bg-church-maroon/20 border border-church-maroon/30 flex items-center justify-center">
+                <CheckCircle size={26} className="text-church-accent" />
+              </div>
+              <div>
+                <h4 className="text-white font-black text-xl mb-1">You&rsquo;re in!</h4>
+                <p className="text-white/40 text-sm leading-relaxed max-w-xs">
+                  {cell.leaderName} will reach out to welcome you before your first meeting.
+                </p>
+              </div>
+              <button onClick={onClose}
+                className="mt-2 px-8 py-3 rounded-full bg-church-maroon text-white text-sm font-black hover:bg-[#6E0C24] transition-colors">
+                Done
+              </button>
+            </motion.div>
+          ) : (
+            <form onSubmit={submit} className="space-y-4">
+              {[
+                { name: "name",  label: "Full Name",        placeholder: "Tunde Adeyemi",     required: true,  type: "text"  },
+                { name: "phone", label: "Phone Number",     placeholder: "+234 801 234 5678",  required: true,  type: "text"  },
+                { name: "email", label: "Email (optional)", placeholder: "tunde@example.com",  required: false, type: "email" },
+              ].map((f) => (
+                <div key={f.name}>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-1.5">
+                    {f.label}{f.required && <span className="text-church-accent ml-0.5">*</span>}
+                  </label>
+                  <input
+                    name={f.name} type={f.type} required={f.required}
+                    value={form[f.name as keyof typeof form]}
+                    onChange={handle} placeholder={f.placeholder}
+                    className="w-full border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white bg-white/[0.03] placeholder:text-white/20 focus:outline-none focus:border-church-accent/40 focus:bg-white/[0.05] transition-all"
+                  />
+                </div>
+              ))}
+
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-1.5">
+                  Prayer Request
+                </label>
+                <textarea
+                  name="prayerRequest" rows={3}
+                  value={form.prayerRequest} onChange={handle}
+                  placeholder="Share anything you'd like the cell to pray for…"
+                  className="w-full border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white bg-white/[0.03] placeholder:text-white/20 focus:outline-none focus:border-church-accent/40 focus:bg-white/[0.05] transition-all resize-none"
+                />
+              </div>
+
+              {err && (
+                <div className="flex items-center gap-2 text-rose-400 text-sm">
+                  <AlertCircle size={13} />{err}
+                </div>
+              )}
+
+              <button type="submit" disabled={!valid || loading}
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-church-maroon text-white font-black text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#6E0C24] transition-colors mt-1">
+                {loading ? <><Loader2 size={14} className="animate-spin" />Joining…</> : "Join this Cell"}
+              </button>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── Info row ──────────────────────────────────────────────────────────────────
+
+function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-start gap-2.5">
+      <span className="text-church-accent/50 mt-[3px] flex-shrink-0">{icon}</span>
+      <p className="text-[12px] text-white/45 leading-snug">
+        <span className="font-black text-white/20 tracking-[0.12em] mr-1.5">{label}:</span>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+// ── Cell card — new design ────────────────────────────────────────────────────
+
+function CellCard({ cell, index, onJoin }: { cell: Cell; index: number; onJoin: () => void }) {
+  const areaMatch = IBADAN_AREAS.find(
+    (a) => a !== "All Areas" && cell.address.toLowerCase().includes(a.toLowerCase())
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(index * 0.04, 0.3), ease: [0.22, 1, 0.36, 1] }}
+      className="group relative flex flex-col rounded-3xl overflow-hidden bg-white/[0.03] border border-white/[0.07] hover:border-church-maroon/40 transition-all duration-500"
+    >
+      {/* Photo */}
+      <div className="relative overflow-hidden" style={{ aspectRatio: "4/5" }}>
+        <img
+          src={cellPhoto(index)}
+          alt={cell.name}
+          className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-700"
+        />
+        {/* gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
+
+        {/* area badge top-left */}
+        {areaMatch && (
+          <div className="absolute top-3 left-3">
+            <span className="px-2.5 py-1 rounded-full bg-church-maroon/80 backdrop-blur-sm text-[9px] font-black uppercase tracking-[0.2em] text-white/90">
+              {areaMatch}
+            </span>
+          </div>
+        )}
+
+        {/* day badge top-right */}
+        <div className="absolute top-3 right-3">
+          <span className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-sm text-[9px] font-black uppercase tracking-[0.15em] text-white/70 border border-white/10">
+            {cell.meetingDay}
+          </span>
+        </div>
+
+        {/* name + leader overlay at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 p-4">
+          <h3 className="font-display font-black text-[1.05rem] text-white leading-tight mb-0.5">
+            {cell.name}
+          </h3>
+          <p className="text-[11px] text-white/55">Led by {cell.leaderName}</p>
+        </div>
+      </div>
+
+      {/* Info rows */}
+      <div className="px-4 pt-4 pb-3 space-y-2.5">
+        <InfoRow icon={<Clock size={11} />}    label="TIME"     value={cell.meetingTime} />
+        <InfoRow icon={<Calendar size={11} />} label="DAY"      value={cell.meetingDay} />
+        <InfoRow icon={<MapPin size={11} />}   label="VENUE"    value={cell.address} />
+        {cell.leaderPhone && (
+          <InfoRow icon={<Phone size={11} />}  label="CONTACT"  value={cell.leaderPhone} />
+        )}
+      </div>
+
+      {/* CTA */}
+      <div className="px-4 pb-4 pt-2 mt-auto">
+        <button
+          onClick={onJoin}
+          className="flex items-center justify-center w-full py-3 rounded-2xl bg-church-maroon text-white text-[11px] font-black tracking-widest uppercase hover:bg-[#6E0C24] hover:shadow-lg hover:shadow-church-maroon/25 transition-all duration-300 group-hover:-translate-y-0.5">
+          Join Cell
+        </button>
+      </div>
+
+      {/* hover ring */}
+      <div className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl ring-1 ring-inset ring-church-maroon/20" />
+    </motion.div>
+  );
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-3xl border border-white/[0.06] bg-white/[0.02] overflow-hidden animate-pulse">
+      <div style={{ aspectRatio: "4/5" }} className="bg-white/[0.05]" />
+      <div className="p-4 space-y-2 border-t border-white/[0.05]">
+        <div className="h-2 bg-white/[0.05] rounded-full w-3/5" />
+      </div>
+      <div className="p-4">
+        <div className="h-10 bg-white/[0.04] rounded-2xl" />
+      </div>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 8;
+
+export default function FindCellPage() {
+  const [cells, setCells]         = useState<Cell[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [apiErr, setApiErr]       = useState<string | null>(null);
+  const [query, setQuery]         = useState("");
+  const [area, setArea]           = useState("All Areas");
+  const [visible, setVisible]     = useState(PAGE_SIZE);
+  const [showAdd, setShowAdd]     = useState(false);
+  const [joining, setJoining]     = useState<Cell | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true); setApiErr(null);
+      try {
+        const res = await apiClient.get<Cell[]>("/home-cell?state=Oyo&city=Ibadan");
+        setCells(res.data);
+      } catch {
+        setApiErr("Couldn't load cells. Please refresh and try again.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return cells.filter((c) => {
+      const matchesArea = area === "All Areas" || c.address.toLowerCase().includes(area.toLowerCase()) || c.name.toLowerCase().includes(area.toLowerCase());
+      const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.leaderName.toLowerCase().includes(q) || c.address.toLowerCase().includes(q);
+      return matchesArea && matchesQuery;
+    });
+  }, [cells, area, query]);
+
+  const shown = filtered.slice(0, visible);
+  const hasMore = visible < filtered.length;
+
+  function handleAdded(newCell: Cell) {
+    setCells((prev) => [newCell, ...prev]);
+  }
+
+  return (
+    <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon selection:text-white overflow-x-hidden">
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          HERO HEADER
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden">
+        {/* Background photo */}
+        <div className="absolute inset-0 z-0">
+          <img src="/HeroImages/IMG_8931.jpg" alt=""
+            className="w-full h-full object-cover object-center scale-[1.04]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-church-dark/85 via-church-dark/70 to-church-dark" />
+          <div className="absolute inset-0 bg-gradient-to-r from-church-dark/60 via-transparent to-church-dark/60" />
+        </div>
+
+        {/* glow */}
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full bg-church-maroon/20 blur-[80px]" />
+        </div>
+
+        <div className="relative z-10 px-4 pt-28 pb-20 text-center max-w-4xl mx-auto">
+          {/* Back */}
+          <div className="mb-8">
+            <Link href="/connect/home-cell"
+              className="inline-flex items-center gap-2 text-white/30 hover:text-white/60 transition-all group">
+              <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
+              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Home Cell</span>
+            </Link>
+          </div>
+
+          {/* Location pill */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            className="inline-flex items-center gap-2 rounded-full border border-church-maroon/40 bg-church-maroon/15 backdrop-blur-sm px-4 py-1.5 mb-7">
+            <span className="w-1.5 h-1.5 rounded-full bg-church-accent animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent/90">Ibadan, Nigeria</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            className="text-[clamp(2.6rem,9vw,6rem)] font-display font-black tracking-tighter leading-[0.87] mb-5">
+            Find a Home Cell<br />
+            <span className="font-serif normal-case italic font-normal text-church-accent">near you</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
+            className="text-white/40 text-base max-w-sm mx-auto leading-relaxed mb-10">
+            Pick an area, find your group, and connect with a Cell Leader on WhatsApp.
+          </motion.p>
+
+          {/* Search + Add Cell */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
+            className="flex flex-col sm:flex-row items-stretch gap-3 max-w-2xl mx-auto">
+            <div className="relative flex-1">
+              <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+              <input
+                value={query}
+                onChange={(e) => { setQuery(e.target.value); setVisible(PAGE_SIZE); }}
+                placeholder="Search cells, leaders, areas…"
+                className="w-full pl-10 pr-10 py-4 rounded-2xl border border-white/[0.12] bg-white/[0.06] backdrop-blur-sm text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-church-accent/30 focus:border-church-accent/20 transition"
+              />
+              {query && (
+                <button onClick={() => setQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white transition-colors">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setShowAdd(true)}
+              className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-church-maroon text-white text-sm font-black tracking-wide hover:bg-[#6E0C24] hover:shadow-lg hover:shadow-church-maroon/30 transition-all whitespace-nowrap">
+              <Plus size={15} /> Add a Cell
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          AREA FILTER
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="px-4 py-6 overflow-x-auto border-b border-white/[0.05] bg-white/[0.01]">
+        <div className="flex items-center gap-2 w-max mx-auto">
+          {IBADAN_AREAS.map((a) => (
+            <button key={a}
+              onClick={() => { setArea(a); setVisible(PAGE_SIZE); }}
+              className={`px-5 py-2 rounded-full text-[11px] font-black tracking-[0.08em] border transition-all duration-200 whitespace-nowrap ${
+                area === a
+                  ? "bg-church-maroon border-church-maroon text-white shadow-md shadow-church-maroon/25"
+                  : "border-white/[0.08] text-white/30 hover:border-white/20 hover:text-white/55 bg-transparent"
+              }`}>
+              {a}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          GRID
+      ══════════════════════════════════════════════════════════════════════ */}
+      <div className="px-4 sm:px-6 py-12 max-w-7xl mx-auto">
+
+        {/* count */}
+        {!loading && !apiErr && filtered.length > 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="flex items-center justify-between mb-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
+              {filtered.length} cell{filtered.length !== 1 ? "s" : ""} · Ibadan
+            </p>
+            {query || area !== "All Areas" ? (
+              <button onClick={() => { setQuery(""); setArea("All Areas"); }}
+                className="text-[10px] font-black uppercase tracking-[0.2em] text-church-accent/60 hover:text-church-accent transition-colors">
+                Clear filters
+              </button>
+            ) : null}
+          </motion.div>
+        )}
+
+        {/* skeleton */}
+        {loading && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        )}
+
+        {/* error */}
+        {!loading && apiErr && (
+          <div className="flex flex-col items-center text-center py-24 gap-5">
+            <AlertCircle size={28} className="text-rose-400/40" />
+            <p className="text-white/35 text-sm">{apiErr}</p>
+            <button onClick={() => window.location.reload()}
+              className="px-7 py-2.5 rounded-full border border-white/10 text-white/35 text-sm font-bold hover:text-white hover:border-white/25 transition-all">
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* empty */}
+        {!loading && !apiErr && filtered.length === 0 && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="flex flex-col items-center text-center py-24 gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center">
+              <MapPin size={20} className="text-white/15" />
+            </div>
+            <div>
+              <p className="font-display font-black text-lg text-white/40 mb-1">No cells found</p>
+              <p className="text-white/25 text-sm max-w-xs leading-relaxed">
+                Try a different area, or{" "}
+                <button onClick={() => setShowAdd(true)} className="text-church-accent hover:underline">add one</button>.
+              </p>
+            </div>
+            <button onClick={() => { setQuery(""); setArea("All Areas"); }}
+              className="px-6 py-2.5 rounded-full border border-white/10 text-white/30 text-sm font-bold hover:text-white hover:border-white/25 transition-all">
+              Clear filters
+            </button>
+          </motion.div>
+        )}
+
+        {/* grid */}
+        {!loading && !apiErr && shown.length > 0 && (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+              <AnimatePresence mode="popLayout">
+                {shown.map((cell, i) => (
+                  <CellCard key={cell.id} cell={cell} index={i} onJoin={() => setJoining(cell)} />
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {hasMore && (
+              <div className="flex justify-center mt-14">
+                <button onClick={() => setVisible((v) => v + PAGE_SIZE)}
+                  className="px-10 py-3.5 rounded-full border border-white/[0.1] text-white/40 text-sm font-black tracking-wide hover:border-white/25 hover:text-white transition-all">
+                  Load More
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          ADD CELL CTA BANNER
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="mx-4 sm:mx-6 mb-16 rounded-3xl border border-white/[0.07] bg-white/[0.02] overflow-hidden relative">
+        <div className="pointer-events-none absolute inset-0">
+          <div className="absolute right-0 top-0 w-72 h-72 rounded-full bg-church-maroon/8 blur-[80px]" />
+        </div>
+        <div className="relative px-8 py-10 sm:px-12 sm:py-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-church-accent mb-2">Lead a Cell</p>
+            <h3 className="text-2xl sm:text-3xl font-display font-black tracking-tight leading-tight mb-2">
+              Host a cell<br />
+              <span className="font-serif italic font-normal text-white/40">in your home.</span>
+            </h3>
+            <p className="text-white/35 text-sm max-w-sm leading-relaxed">
+              Feel called to lead? Add your cell to the directory and start gathering.
+            </p>
+          </div>
+          <button onClick={() => setShowAdd(true)}
+            className="flex-shrink-0 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-church-maroon text-white text-sm font-black hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/30 transition-all">
+            <Plus size={14} /> Add Your Cell
+          </button>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          FAQ
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-24 md:py-28 px-4 border-t border-white/[0.06]">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-14">
+            <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-4">FAQ</p>
+            <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight leading-[1.05]">
+              Honest answers<br />
+              <span className="font-serif italic font-normal text-white/40">to honest questions.</span>
+            </h2>
+          </div>
+          <div>
+            {FAQS.map((item, i) => <FaqItem key={i} {...item} index={i} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          CLOSING BANNER
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="relative overflow-hidden py-28 px-6 text-center border-t border-white/[0.06]">
+        <div className="pointer-events-none absolute inset-0">
+          <img src="/HeroImages/IMG_1080.jpg" alt="" className="w-full h-full object-cover opacity-10 scale-105" />
+          <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/75 to-church-dark" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[250px] rounded-full bg-church-maroon/15 blur-[90px]" />
+        </div>
+        <div className="relative z-10 max-w-lg mx-auto">
+          <motion.p initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            className="text-[10px] font-black uppercase tracking-[0.5em] text-church-accent mb-5">
+            Don&rsquo;t wait
+          </motion.p>
+          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            transition={{ delay: 0.08 }}
+            className="text-4xl sm:text-5xl font-display font-black tracking-tight leading-[1.05] mb-6">
+            Your cell is<br />
+            <em className="font-serif not-italic font-normal text-church-accent">already waiting.</em>
+          </motion.h2>
+          <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
+            <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="inline-flex items-center gap-2 rounded-full bg-church-maroon px-8 py-4 font-black text-sm text-white tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/40 transition-all">
+              Browse Cells <ChevronRight size={14} />
+            </button>
+            <Link href="/connect/home-cell"
+              className="text-sm font-bold text-white/30 hover:text-white/60 transition-colors flex items-center gap-1.5">
+              <ArrowLeft size={13} /> Back to Home Cell
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ══ Add cell modal ═══════════════════════════════════════════════════ */}
+      <AnimatePresence>
+        {showAdd && (
+          <AddCellModal
+            key="add-cell"
+            onClose={() => setShowAdd(false)}
+            onAdded={(c) => { handleAdded(c); }}
+          />
+        )}
+        {joining && (
+          <JoinModal
+            key="join-cell"
+            cell={joining}
+            onClose={() => setJoining(null)}
+          />
+        )}
+      </AnimatePresence>
+    </main>
+  );
+}

@@ -11,6 +11,7 @@ import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
 import { ContactDto } from './dto/contact.dto';
 import { FirstTimerDto } from './dto/first-timer.dto';
+import { HomeCellDto } from './dto/home-cell.dto';
 import { PrayerRequestDto } from './dto/prayer-request.dto';
 import { ServeTeamDto } from './dto/serve-team.dto';
 import { TestimonyDto } from './dto/testimony.dto';
@@ -95,5 +96,19 @@ export class FormsController {
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async contact(@Body() body: ContactDto) {
     return this.formsService.submitContact(body);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('home-cell')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Register for a Home Cell',
+    description: 'Submit Home Cell registration and notify the team by email.',
+  })
+  @ApiCreatedResponse({ description: 'Home Cell registration submitted' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  async homeCell(@Body() body: HomeCellDto) {
+    return this.formsService.submitHomeCell(body);
   }
 }
