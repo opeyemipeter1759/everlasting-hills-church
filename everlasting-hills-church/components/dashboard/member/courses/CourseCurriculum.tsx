@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { ChevronDown, PlayCircle } from "lucide-react";
 import type { CourseModule } from "@/lib/courses-data";
+import { getYouTubeEmbedUrl } from "@/lib/youtube";
 
 export default function CourseCurriculum({ modules }: { modules: CourseModule[] }) {
   const [openIndex, setOpenIndex] = useState(0);
+  const [playingKey, setPlayingKey] = useState<string | null>(null);
 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] overflow-hidden">
@@ -32,18 +34,43 @@ export default function CourseCurriculum({ modules }: { modules: CourseModule[] 
 
               {open && (
                 <ul className="space-y-1 px-5 pb-4">
-                  {mod.lessons.map((lesson) => (
-                    <li
-                      key={lesson.title}
-                      className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                    >
-                      <span className="flex items-center gap-2.5 min-w-0">
-                        <PlayCircle size={14} className="flex-shrink-0 text-[#87102C]/60 dark:text-[#e8768a]/60" />
-                        <span className="truncate">{lesson.title}</span>
-                      </span>
-                      <span className="flex-shrink-0 text-xs text-gray-400 dark:text-white/40">{lesson.duration}</span>
-                    </li>
-                  ))}
+                  {mod.lessons.map((lesson, li) => {
+                    const key = `${i}-${li}`;
+                    const embedUrl = lesson.videoUrl ? getYouTubeEmbedUrl(lesson.videoUrl) : null;
+                    const playing = playingKey === key;
+
+                    return (
+                      <li key={lesson.title}>
+                        <button
+                          type="button"
+                          disabled={!embedUrl}
+                          onClick={() => setPlayingKey(playing ? null : key)}
+                          className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/[0.03] disabled:cursor-default disabled:hover:bg-transparent"
+                        >
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <PlayCircle
+                              size={14}
+                              className={`flex-shrink-0 ${embedUrl ? "text-[#87102C] dark:text-[#e8768a]" : "text-gray-300 dark:text-white/20"}`}
+                            />
+                            <span className="truncate">{lesson.title}</span>
+                          </span>
+                          <span className="flex-shrink-0 text-xs text-gray-400 dark:text-white/40">{lesson.duration}</span>
+                        </button>
+
+                        {playing && embedUrl && (
+                          <div className="mt-1.5 aspect-video overflow-hidden rounded-xl">
+                            <iframe
+                              src={embedUrl}
+                              title={lesson.title}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                              className="h-full w-full"
+                            />
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>

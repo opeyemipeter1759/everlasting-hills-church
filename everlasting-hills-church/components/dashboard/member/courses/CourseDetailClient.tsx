@@ -1,20 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ArrowLeft, CheckCircle2, GraduationCap } from "lucide-react";
-import { getCourseBySlug } from "@/lib/courses-data";
-import { enrollInCourse } from "@/lib/courses-store";
-import { useEnrolledCourses } from "@/hooks";
+import { getCatalog, getCourseBySlug } from "@/lib/courses-catalog";
+import { enrollInCourse, getCourseStatus } from "@/lib/courses-store";
+import { useCourseProgress } from "@/hooks";
 import CourseHero from "./CourseHero";
 import CourseCurriculum from "./CourseCurriculum";
 import CourseEnrollCard from "./CourseEnrollCard";
 
 export default function CourseDetailClient({ slug }: { slug: string }) {
   const router = useRouter();
+  const catalog = useMemo(getCatalog, []);
   const course = getCourseBySlug(slug);
-  const { enrolledIds, markEnrolled } = useEnrolledCourses();
+  const { progress, refresh } = useCourseProgress();
   const [enrolling, setEnrolling] = useState(false);
 
   if (!course) {
@@ -33,15 +34,16 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
     );
   }
 
-  const enrolled = enrolledIds.has(course.id);
+  const status = getCourseStatus(course, catalog, progress);
+  const prerequisite = catalog.find((c) => c.slug === course.prerequisiteSlug);
 
   function handleEnroll() {
-    if (!course) return;
+    if (!course || status !== "available") return;
     setEnrolling(true);
     // No backend yet — persist locally so the UI feels real, and note the swap point.
     setTimeout(() => {
       enrollInCourse(course.id);
-      markEnrolled(course.id);
+      refresh();
       setEnrolling(false);
       toast.success(`You're enrolled in ${course.title}!`, { icon: "🎓" });
     }, 400);
@@ -84,7 +86,14 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
         </div>
 
         <div className="lg:sticky lg:top-6">
-          <CourseEnrollCard course={course} enrolled={enrolled} enrolling={enrolling} onEnroll={handleEnroll} />
+          <CourseEnrollCard
+            course={course}
+            status={status}
+            progress={progress[course.id]}
+            prerequisiteTitle={prerequisite?.title}
+            enrolling={enrolling}
+            onEnroll={handleEnroll}
+          />
         </div>
       </div>
     </div>

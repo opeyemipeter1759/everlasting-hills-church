@@ -1,15 +1,20 @@
 import Link from "next/link";
-import { CheckCircle2, Clock, GraduationCap, PlayCircle, Users } from "lucide-react";
+import { CheckCircle2, Clock, GraduationCap, Lock, PlayCircle, Users } from "lucide-react";
 import type { Course } from "@/lib/courses-data";
+import type { CourseProgress, CourseStatus } from "@/lib/courses-store";
 
 export default function CourseEnrollCard({
   course,
-  enrolled,
+  status,
+  progress,
+  prerequisiteTitle,
   enrolling,
   onEnroll,
 }: {
   course: Course;
-  enrolled: boolean;
+  status: CourseStatus;
+  progress: CourseProgress | undefined;
+  prerequisiteTitle?: string;
   enrolling: boolean;
   onEnroll: () => void;
 }) {
@@ -34,16 +39,55 @@ export default function CourseEnrollCard({
           </span>
           <span className="font-semibold text-gray-900 dark:text-white">{course.studentsCount} members</span>
         </div>
+        {course.exam.length > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="inline-flex items-center gap-2 text-gray-500 dark:text-white/50">
+              <CheckCircle2 size={14} /> Pass mark
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-white">100%</span>
+          </div>
+        )}
       </div>
 
       <div className="border-t border-gray-100 dark:border-white/8 p-5">
-        {enrolled ? (
-          <Link
-            href="/dashboard/courses"
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-emerald-700"
-          >
-            <CheckCircle2 size={16} /> Continue Learning
-          </Link>
+        {status === "locked" ? (
+          <div className="rounded-xl bg-gray-50 dark:bg-white/5 p-4 text-center">
+            <Lock size={18} className="mx-auto mb-2 text-gray-400 dark:text-white/40" />
+            <p className="text-xs font-semibold text-gray-600 dark:text-white/60">
+              Complete {prerequisiteTitle ? `"${prerequisiteTitle}"` : "the prerequisite course"} first
+            </p>
+            {prerequisiteTitle && (
+              <p className="mt-1 text-[11px] text-gray-400 dark:text-white/40">
+                Score 100% on its exam to unlock this course.
+              </p>
+            )}
+          </div>
+        ) : status === "completed" ? (
+          <>
+            <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600/10 px-4 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+              <CheckCircle2 size={16} /> Course Completed
+            </div>
+            <Link
+              href={`/dashboard/explore-courses/${course.slug}/exam`}
+              className="mt-2 block text-center text-xs font-semibold text-gray-400 hover:text-[#87102C] dark:hover:text-[#e8768a]"
+            >
+              Retake exam
+            </Link>
+          </>
+        ) : status === "enrolled" ? (
+          <>
+            <Link
+              href={`/dashboard/explore-courses/${course.slug}/exam`}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24]"
+            >
+              <GraduationCap size={16} /> Take the Exam
+            </Link>
+            {progress?.lastScorePct != null && (
+              <p className="mt-3 text-center text-[11px] text-gray-400 dark:text-white/40">
+                Last attempt: {progress.lastScorePct}% — score 100% to complete this course.
+              </p>
+            )}
+          </>
         ) : (
           <button
             type="button"
@@ -54,9 +98,11 @@ export default function CourseEnrollCard({
             <GraduationCap size={16} /> {enrolling ? "Enrolling…" : "Take This Course"}
           </button>
         )}
-        <p className="mt-3 text-center text-[11px] text-gray-400 dark:text-white/40">
-          Free for all church members · Learn at your own pace
-        </p>
+        {status !== "locked" && status !== "completed" && (
+          <p className="mt-3 text-center text-[11px] text-gray-400 dark:text-white/40">
+            Free for all church members · Learn at your own pace
+          </p>
+        )}
       </div>
 
       <div className="border-t border-gray-100 dark:border-white/8 p-5">

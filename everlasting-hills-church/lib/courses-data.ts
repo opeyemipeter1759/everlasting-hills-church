@@ -1,5 +1,25 @@
 import {
   BookOpen,
+  Compass,
+  Cross,
+  Flame,
+  Globe,
+  GraduationCap,
+  Heart,
+  Landmark,
+  Music,
+  ScrollText,
+  Shield,
+  Sparkles,
+  Star,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
+
+// Courses are admin-authored (see /dashboard/admin/courses), so an icon can't be
+// picked freely — components can't survive JSON/localStorage. Admins instead choose
+// a key from this fixed palette, resolved back to a component at read time.
+export const ICON_OPTIONS: Record<string, LucideIcon> = {
   Cross,
   Flame,
   Heart,
@@ -7,19 +27,45 @@ import {
   ScrollText,
   Shield,
   Users,
-  type LucideIcon,
-} from "lucide-react";
+  BookOpen,
+  GraduationCap,
+  Compass,
+  Sparkles,
+  Star,
+  Globe,
+  Music,
+};
+
+export const GRADIENT_PRESETS: [string, string][] = [
+  ["#4a0819", "#87102C"],
+  ["#7c2d12", "#c2410c"],
+  ["#831843", "#be185d"],
+  ["#312e81", "#4f46e5"],
+  ["#134e4a", "#0d9488"],
+  ["#1e3a8a", "#2563eb"],
+  ["#78350f", "#b45309"],
+  ["#581c87", "#7e22ce"],
+];
 
 export type CourseLevel = "Beginner" | "Intermediate" | "Advanced";
 
 export interface CourseLesson {
   title: string;
   duration: string;
+  /** YouTube link for this lesson's video — set by admins in /dashboard/admin/courses. */
+  videoUrl?: string;
 }
 
 export interface CourseModule {
   title: string;
   lessons: CourseLesson[];
+}
+
+export interface ExamQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  correctIndex: number;
 }
 
 export interface Course {
@@ -38,10 +84,15 @@ export interface Course {
   instructor: { name: string; role: string };
   outcomes: string[];
   curriculum: CourseModule[];
+  /** Slug of the course that must be passed (100% on the exam) before this one unlocks. */
+  prerequisiteSlug: string | null;
+  /** Set by admins in /dashboard/admin/courses — a perfect score marks the course complete. */
+  exam: ExamQuestion[];
 }
 
 // Frontend-only mock catalog — swap for a real `/courses` API once the backend ships.
-export const COURSES: Course[] = [
+// Admin edits to `prerequisiteSlug`/`exam` are layered on top by lib/courses-catalog.ts.
+export const SEED_COURSES: Course[] = [
   {
     id: "c1",
     slug: "foundations-of-faith",
@@ -93,6 +144,37 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    prerequisiteSlug: null,
+    exam: [
+      {
+        id: "c1q1",
+        question: "According to the course, what is the foundation beneath everything we do?",
+        options: ["Church tradition", "The Word of God", "Personal experience", "Denominational rules"],
+        correctIndex: 1,
+      },
+      {
+        id: "c1q2",
+        question: "What are the two spiritual disciplines emphasized in Week 3?",
+        options: [
+          "Fasting and tithing",
+          "Prayer and reading Scripture",
+          "Serving and singing",
+          "Journaling and solitude",
+        ],
+        correctIndex: 1,
+      },
+      {
+        id: "c1q3",
+        question: "What does the course say church membership means?",
+        options: [
+          "Attending occasionally",
+          "Just belonging on paper",
+          "Genuinely belonging to a family, not just attending",
+          "A financial commitment",
+        ],
+        correctIndex: 2,
+      },
+    ],
   },
   {
     id: "c2",
@@ -135,6 +217,32 @@ export const COURSES: Course[] = [
           { title: "Prayer in Busy Seasons", duration: "16 min" },
           { title: "Praying With Others", duration: "14 min" },
         ],
+      },
+    ],
+    prerequisiteSlug: "foundations-of-faith",
+    exam: [
+      {
+        id: "c2q1",
+        question: "The course describes prayer primarily as:",
+        options: ["A religious duty", "A relationship", "A last resort", "A performance"],
+        correctIndex: 1,
+      },
+      {
+        id: "c2q2",
+        question: "What model prayer is studied line by line in Week 2?",
+        options: ["The Prayer of Jabez", "The Lord's Prayer", "Psalm 23", "The Aaronic Blessing"],
+        correctIndex: 1,
+      },
+      {
+        id: "c2q3",
+        question: "What does Week 3 focus on sustaining?",
+        options: [
+          "Prayer through busy seasons",
+          "Fasting habits",
+          "Memorizing verses",
+          "Church attendance",
+        ],
+        correctIndex: 0,
       },
     ],
   },
@@ -181,6 +289,32 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    prerequisiteSlug: null,
+    exam: [
+      {
+        id: "c3q1",
+        question: "The course frames marriage as:",
+        options: ["A contract", "A covenant", "A partnership of convenience", "A social custom"],
+        correctIndex: 1,
+      },
+      {
+        id: "c3q2",
+        question: "Week 2's communication principle is 'speaking the truth in ___'.",
+        options: ["Anger", "Silence", "Love", "Public"],
+        correctIndex: 2,
+      },
+      {
+        id: "c3q3",
+        question: "What does Week 3 say about roles in marriage?",
+        options: [
+          "They don't matter",
+          "Leadership and submission, rightly understood",
+          "Only the husband leads, no exceptions",
+          "Roles are culturally irrelevant today",
+        ],
+        correctIndex: 1,
+      },
+    ],
   },
   {
     id: "c4",
@@ -223,6 +357,27 @@ export const COURSES: Course[] = [
           { title: "Raising Up Others", duration: "22 min" },
           { title: "Succession and Handoff", duration: "15 min" },
         ],
+      },
+    ],
+    prerequisiteSlug: "foundations-of-faith",
+    exam: [
+      {
+        id: "c4q1",
+        question: "Week 1 uses what image of Jesus to illustrate servant leadership?",
+        options: ["The towel and basin", "The empty tomb", "The fishing boat", "The temple courts"],
+        correctIndex: 0,
+      },
+      {
+        id: "c4q2",
+        question: "What does the course say leadership should be built on first?",
+        options: ["Competence", "Popularity", "Character", "Tenure"],
+        correctIndex: 2,
+      },
+      {
+        id: "c4q3",
+        question: "Week 3 is about:",
+        options: ["Multiplying leaders", "Managing budgets", "Public speaking", "Event planning"],
+        correctIndex: 0,
       },
     ],
   },
@@ -269,6 +424,27 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    prerequisiteSlug: null,
+    exam: [
+      {
+        id: "c5q1",
+        question: "The course's central claim about money is that it belongs to:",
+        options: ["The government", "God", "The bank", "No one"],
+        correctIndex: 1,
+      },
+      {
+        id: "c5q2",
+        question: "Week 2 gives practical tools for building what?",
+        options: ["A budget", "A business", "A portfolio", "A pension"],
+        correctIndex: 0,
+      },
+      {
+        id: "c5q3",
+        question: "Week 3 focuses on:",
+        options: ["Investing", "Generosity", "Insurance", "Taxes"],
+        correctIndex: 1,
+      },
+    ],
   },
   {
     id: "c6",
@@ -311,6 +487,27 @@ export const COURSES: Course[] = [
           { title: "Discovering Your Gifts", duration: "20 min" },
           { title: "Using Gifts in Love", duration: "16 min" },
         ],
+      },
+    ],
+    prerequisiteSlug: "the-prayer-life",
+    exam: [
+      {
+        id: "c6q1",
+        question: "Week 1 traces the Spirit's presence starting from:",
+        options: ["The New Testament only", "The Old Testament", "Church history", "The Reformation"],
+        correctIndex: 1,
+      },
+      {
+        id: "c6q2",
+        question: "Week 2 studies the fruit of the Spirit, which begins with:",
+        options: ["Patience, kindness, joy", "Love, joy, peace", "Faith, hope, love", "Wisdom, knowledge, power"],
+        correctIndex: 1,
+      },
+      {
+        id: "c6q3",
+        question: "According to Week 3, spiritual gifts should be used:",
+        options: ["For personal status", "In love", "Only by leaders", "Privately, never publicly"],
+        correctIndex: 1,
       },
     ],
   },
@@ -357,6 +554,27 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    prerequisiteSlug: "understanding-the-holy-spirit",
+    exam: [
+      {
+        id: "c7q1",
+        question: "Romans 1–3 establishes what universal need?",
+        options: ["The need for community", "The need for righteousness", "The need for leadership", "The need for law"],
+        correctIndex: 1,
+      },
+      {
+        id: "c7q2",
+        question: "Romans 8 is described as life in the:",
+        options: ["Law", "Flesh", "Spirit", "Past"],
+        correctIndex: 2,
+      },
+      {
+        id: "c7q3",
+        question: "Romans 12–16 is applied to:",
+        options: ["Church history", "Everyday Christian living", "Old Testament law", "Roman politics only"],
+        correctIndex: 1,
+      },
+    ],
   },
   {
     id: "c8",
@@ -394,13 +612,26 @@ export const COURSES: Course[] = [
         ],
       },
     ],
+    prerequisiteSlug: "marriage-by-design",
+    exam: [
+      {
+        id: "c8q1",
+        question: "The course says discipline should:",
+        options: ["Only control behavior", "Disciple, not just control", "Be avoided entirely", "Be left to schools"],
+        correctIndex: 1,
+      },
+      {
+        id: "c8q2",
+        question: "Which Old Testament passage anchors Week 2's 'everyday faith' teaching?",
+        options: ["Psalm 23", "Deuteronomy 6", "Proverbs 31", "Genesis 1"],
+        correctIndex: 1,
+      },
+      {
+        id: "c8q3",
+        question: "The course encourages parents to extend grace:",
+        options: ["Never", "Only to their children", "To themselves, in messy seasons", "Only after perfection"],
+        correctIndex: 2,
+      },
+    ],
   },
 ];
-
-export function getCourseBySlug(slug: string): Course | undefined {
-  return COURSES.find((c) => c.slug === slug);
-}
-
-export function getCourseCategories(): string[] {
-  return Array.from(new Set(COURSES.map((c) => c.category)));
-}
