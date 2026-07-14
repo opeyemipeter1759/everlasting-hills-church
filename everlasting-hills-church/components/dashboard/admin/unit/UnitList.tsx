@@ -11,7 +11,7 @@ interface UnitListProps {
 
 export default function UnitList({ units, selectedId, onSelect }: UnitListProps) {
   return (
-    <div className="lg:col-span-2 space-y-2">
+    <div className="lg:col-span-2 lg:sticky lg:top-0 lg:h-[70vh] lg:overflow-y-auto space-y-2 pr-1">
       {units.map((u) => (
         <button
           key={u.id}

@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { Network, Plus } from "lucide-react";
 import { getFrontendSessionUser } from "@/lib/auth/frontend-session";
@@ -8,6 +7,7 @@ import UnitList from "./UnitList";
 import CreateUnitForm from "./CreateUnitForm";
 import UnitDetailPanel from "./UnitDetailPanel";
 import AdminUnitSkeleton from "@/components/ui/skeleton/AdminUnitSkeleton";
+import UnitDetailSkeleton from "@/components/ui/skeleton/UnitDetailSkeleton";
 import {
   useUnitsList,
   useUnitDetail,
@@ -24,7 +24,7 @@ export default function AdminUnit() {
   const [selectedUnitId, setSelectedUnitId] = useState<string | null>(null);
 
   const { data: units, isLoading: unitsLoading } = useUnitsList();
-  const { data: selectedUnit } = useUnitDetail(selectedUnitId);
+  const { data: selectedUnit, isLoading: unitDetailLoading } = useUnitDetail(selectedUnitId);
 
   const createUnit = useCreateUnit();
   const deleteUnit = useDeleteUnit();
@@ -42,7 +42,7 @@ export default function AdminUnit() {
   const unitList = units ?? [];
 
   return (
-    <div className="space-y-5 max-w-7xl">
+    <div className="space-y-5 max-w-7xl no-scrollbar">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Units</h1>
@@ -85,14 +85,14 @@ export default function AdminUnit() {
       )}
 
       {!unitsLoading && unitList.length > 0 && (
-        <div className="grid lg:grid-cols-5 gap-5">
+        <div className="grid lg:grid-cols-5 no-scrollbar gap-5">
           <UnitList
             units={unitList}
             selectedId={selectedUnitId}
             onSelect={(unitId) => setSelectedUnitId(unitId)}
           />
 
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 lg:h-[70vh] no-scrollbar lg:overflow-y-auto">
             {selectedUnit ? (
               <UnitDetailPanel
                 unit={selectedUnit}
@@ -113,6 +113,8 @@ export default function AdminUnit() {
                   if (selectedUnitId === unit.id) setSelectedUnitId(null);
                 }}
               />
+            ) : unitDetailLoading ? (
+              <UnitDetailSkeleton />
             ) : (
               <div className="h-full min-h-[300px] flex items-center justify-center bg-white dark:bg-[#1c1c1e] border border-dashed border-gray-200 dark:border-white/10 rounded-xl text-center px-6">
                 <div>

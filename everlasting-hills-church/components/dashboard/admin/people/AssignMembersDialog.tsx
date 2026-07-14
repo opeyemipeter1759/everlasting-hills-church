@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Check, UserCheck } from "lucide-react";
 import { usePeople, type PersonRow } from "@/lib/api/people";
-import PeopleModal, { btnGhost, btnPrimary, fieldCls } from "./PeopleModal";
+import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
 import { useAssignMembersForm } from "./assign-members-dialog/useAssignMembersForm";
 import MembersStep from "./assign-members-dialog/MembersStep";
 import LeaderStep from "./assign-members-dialog/LeaderStep";
@@ -36,7 +36,7 @@ export default function AssignMembersDialog({
   }
 
   return (
-    <PeopleModal
+    <FormModal
       open={open}
       onClose={close}
       title="Assign for follow-up & discipleship"
@@ -104,6 +104,6 @@ export default function AssignMembersDialog({
           </p>
         )}
       </div>
-    </PeopleModal>
+    </FormModal>
   );
 }

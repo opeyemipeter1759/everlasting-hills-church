@@ -1,4 +1,5 @@
 import { CalendarDays } from "lucide-react";
+import ServicesGridSkeleton from "@/components/ui/skeleton/ServicesGridSkeleton";
 import type { ServiceRow } from "./types";
 import type { ServicesApi } from "./useServices";
 import ServiceCard from "./ServiceCard";
@@ -18,7 +19,7 @@ export default function ServicesGrid({
   onEdit: (s: ServiceRow) => void;
   onDelete: (s: ServiceRow) => void;
 }) {
-  if (isLoading) return <p className="text-sm text-gray-400">Loading...</p>;
+  if (isLoading) return <ServicesGridSkeleton />;
 
   if (services.length === 0) {
     return (

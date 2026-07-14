@@ -1,20 +1,22 @@
 "use client";
-
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import EmptyState from "./EmptyState";
 import SkeletonList from "./SkeletonList";
 import TestimonialForm from "./TestimonialForm";
 import TestimonialRow from "./TestimonialRow";
-import type { EditingState } from "./types";
+import type { EditingState, Testimonial } from "./types";
 import { useTestimonials } from "./useTestimonials";
+
+
 export default function TestimonialsCmsClient() {
-  const { items, loadError, loadAll, remove, togglePublish } = useTestimonials();
+  const { items, loadError, loadAll, remove, deleting, togglePublish } = useTestimonials();
   const [editing, setEditing] = useState<EditingState>({ kind: "closed" });
+  const [deleteTarget, setDeleteTarget] = useState<Testimonial | null>(null);
 
   return (
     <div className="space-y-5 max-w-5xl">
-      {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -71,11 +73,30 @@ export default function TestimonialsCmsClient() {
               testimonial={t}
               onTogglePublish={togglePublish}
               onEdit={(t) => setEditing({ kind: "edit", testimonial: t })}
-              onDelete={remove}
+              onDelete={setDeleteTarget}
             />
           ))}
         </ul>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        tone="danger"
+        title="Delete testimonial?"
+        description={
+          <>
+            This permanently deletes the testimonial from{" "}
+            <span className="font-semibold">{deleteTarget?.authorName}</span>. This cannot be undone.
+          </>
+        }
+        confirmLabel="Delete testimonial"
+        loading={deleting}
+        onConfirm={async () => {
+          if (deleteTarget) await remove(deleteTarget);
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

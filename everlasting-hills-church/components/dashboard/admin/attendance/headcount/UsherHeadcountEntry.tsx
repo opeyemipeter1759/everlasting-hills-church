@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ClipboardList, Plus, Check } from "lucide-react";
-import PeopleModal from "@/components/dashboard/admin/people/PeopleModal";
+import FormModal from "@/components/ui/overlay/FormModal";
 import {
   useHeadcountByDate,
   useSaveHeadcountByDate,
@@ -90,7 +90,7 @@ export default function UsherHeadcountEntry() {
       </div>
 
       {/* Modal form */}
-      <PeopleModal
+      <FormModal
         open={modalOpen}
         title={`${hc ? "Edit" : "Record"} attendance`}
         subtitle={prettyDate(date)}
@@ -108,7 +108,7 @@ export default function UsherHeadcountEntry() {
             onSubmit={(input) => submit(input)}
           />
         )}
-      </PeopleModal>
+      </FormModal>
     </div>
   );
 }

@@ -14,7 +14,6 @@ import {
 } from "../peopleShared";
 import { COL, TD, stickyBg } from "./constants";
 import PersonCell from "./PersonCell";
-import RoleCell from "./RoleCell";
 import RowActions from "./RowActions";
 
 export default function PeopleTableRow({
@@ -46,7 +45,11 @@ export default function PeopleTableRow({
       onClick={() => router.push(`/dashboard/admin/members/${p.id}`)}
       className={`group cursor-pointer transition-colors ${isSel ? "bg-[#FFF4F6]/60 dark:bg-[#87102C]/10" : "hover:bg-[#fdeef1] dark:hover:bg-[#170e12]"}`}
     >
-      <td className={`${TD} ${sBg} sticky z-20`} style={{ left: COL.check.left }} onClick={(e) => e.stopPropagation()}>
+      <td
+        className={`${TD} ${sBg} static lg:sticky lg:z-20`}
+        style={{ left: COL.check.left }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <input
           type="checkbox"
           checked={isSel}
@@ -55,17 +58,12 @@ export default function PeopleTableRow({
           className="h-4 w-4 rounded border-gray-300 accent-[#87102C]"
         />
       </td>
-
-      <td className={`${TD} ${sBg} sticky z-20`} style={{ left: COL.id.left }}>
+      <td className={`${TD} ${sBg} static lg:sticky lg:z-20`} style={{ left: COL.id.left }}>
         <span className="font-mono text-[11px] font-semibold text-[#87102C] dark:text-[#e8768a] whitespace-nowrap">
           {displayId(p.id)}
         </span>
       </td>
-
       <PersonCell p={p} sBg={sBg} />
-
-      <RoleCell p={p} manageable={manageable} assignableRoles={assignableRoles} onChangeRole={onChangeRole} />
-
       <td className={`${TD} text-sm text-gray-600 dark:text-white/60 whitespace-nowrap`}>
         {p.phone ? (
           <span className="inline-flex items-center gap-1">

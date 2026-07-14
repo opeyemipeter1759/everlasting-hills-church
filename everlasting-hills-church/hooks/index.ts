@@ -4,6 +4,7 @@ export { useSessionReady } from './useSessionReady';
 export { useAnnouncementsFeed, type Announcement } from './useAnnouncementsFeed';
 export { useUnseenAnnouncements } from './useUnseenAnnouncements';
 export { useRegisteredEvents } from './useRegisteredEvents';
+export { useEnrolledCourses } from './useEnrolledCourses';
 
 import { useState, useEffect } from "react";
 

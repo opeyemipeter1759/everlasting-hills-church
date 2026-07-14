@@ -1,6 +1,7 @@
 "use client";
 
 import { downloadPeopleExport, useAssignableRoles, usePeople } from "@/lib/api/people";
+import PeopleConsoleSkeleton from "@/components/ui/skeleton/PeopleConsoleSkeleton";
 import PeopleTable from "./PeopleTable";
 import BulkActionBar from "./BulkActionBar";
 import PeopleHeader from "./people-console/PeopleHeader";
@@ -26,6 +27,10 @@ export default function PeopleConsole() {
 
   const { selectedRows, selectedIds, allSelected, toggleRow, toggleAll, clearSelection } = useSelection(rows);
   const actions = usePeopleActions(selectedRows, clearSelection);
+
+  if (isLoading && rows.length === 0) {
+    return <PeopleConsoleSkeleton />;
+  }
 
   function selectChip(c: Chip) {
     if (c.key === "all") patch({ role: "", hasUnit: "" });

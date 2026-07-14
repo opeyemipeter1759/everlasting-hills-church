@@ -5,6 +5,7 @@ import type { Testimonial } from "./types";
 export function useTestimonials() {
   const [items, setItems] = useState<Testimonial[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function loadAll() {
     setLoadError(null);
@@ -21,12 +22,14 @@ export function useTestimonials() {
   }, []);
 
   async function remove(t: Testimonial) {
-    if (!confirm(`Delete testimonial from ${t.authorName}? This cannot be undone.`)) return;
+    setDeleting(true);
     try {
       await apiClient.delete(`/testimonials/${t.id}`);
       await loadAll();
     } catch (err) {
       alert((err as { message?: string }).message ?? "Delete failed");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -39,5 +42,5 @@ export function useTestimonials() {
     }
   }
 
-  return { items, loadError, loadAll, remove, togglePublish };
+  return { items, loadError, loadAll, remove, deleting, togglePublish };
 }

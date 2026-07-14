@@ -7,7 +7,7 @@ import { COL, TD } from "./constants";
 export default function PersonCell({ p, sBg }: { p: PersonRow; sBg: string }) {
   return (
     <td
-      className={`${TD} ${sBg} sticky z-20 shadow-[1px_0_0_0_rgba(231,205,211,0.5)]`}
+      className={`${TD} ${sBg} static lg:sticky lg:z-20 lg:shadow-[1px_0_0_0_rgba(231,205,211,0.5)]`}
       style={{ left: COL.name.left }}
     >
       <Link

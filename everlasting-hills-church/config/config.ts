@@ -10,9 +10,6 @@ export const CHURCH = {
   whatsappUrl: "https://wa.me/2347068727719",
 };
 
-// ── SERVICE SCHEDULE ──
-// Sunday:    9:00 AM – 12:00 PM  (live window: 8:45 AM – 12:00 PM)
-// Wednesday: 5:30 PM –  8:00 PM  (live window: 5:15 PM –  8:00 PM)
 export const SERVICES = {
   sunday: {
     day: 0,
@@ -114,6 +111,8 @@ import {
   Activity,
   Tally5,
   Building2,
+  GraduationCap,
+  Compass,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -157,8 +156,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    // Admin Head surface only. maxRole caps it below ADMIN so admins (who manage
-    // departments via the Administration group) do not also see this.
     section: "My Department",
     items: [
       { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", maxRole: "ADMIN" },
@@ -176,7 +173,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
-      { label: "Departments",   href: "/dashboard/departments",   icon: Building2,     minRole: "ADMIN" },
+      { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
       { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
       { label: "Public Site (CMS)", href: "/dashboard/cms",          icon: PanelsTopLeft, minRole: "PASTOR" },
     ],
@@ -188,8 +185,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Growth",        href: "/dashboard/analytics/growth",        icon: TrendingUp,    minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/analytics/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
      //{ label: "Departments",   href: "/dashboard/analytics/departments",   icon: Network,       minRole: "UNIT_LEAD" },
-      { label: "Engagement",    href: "/dashboard/analytics/engagement",    icon: Activity,      minRole: "PASTOR" },
-      { label: "Giving",        href: "/dashboard/analytics/giving",        icon: DollarSign,    minRole: "PASTOR" },
+     // { label: "Engagement",    href: "/dashboard/analytics/engagement",    icon: Activity,      minRole: "PASTOR" },
+     // { label: "Giving",        href: "/dashboard/analytics/giving",        icon: DollarSign,    minRole: "PASTOR" },
     ],
   },
   {
@@ -215,8 +212,11 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Home",           href: "/dashboard",            icon: BookOpen,       minRole: "MEMBER" },
       { label: "Attendance",     href: "/dashboard/attendance", icon: CheckCircle,    minRole: "MEMBER" },
-      { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
+      { label: "My Course",           href: "/dashboard/courses",            icon: GraduationCap,       minRole: "MEMBER" },
+      { label: "Explore Course",           href: "/dashboard/explore-courses",            icon: Compass,       minRole: "MEMBER" },
+
+      { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
 
     ],
   },

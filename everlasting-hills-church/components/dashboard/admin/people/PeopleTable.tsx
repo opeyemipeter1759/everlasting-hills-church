@@ -40,7 +40,7 @@ export default function PeopleTable({
 }: Props) {
   return (
     <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] overflow-hidden">
-      <div className="overflow-auto max-h-[70vh]">
+      <div className="overflow-auto max-h-[70vh] no-scrollbar">
         <table className="w-full min-w-[1280px] border-separate border-spacing-0">
           <PeopleTableHead
             allSelected={allSelected}
