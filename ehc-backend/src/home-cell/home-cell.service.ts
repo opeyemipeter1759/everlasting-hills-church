@@ -63,31 +63,63 @@ export class HomeCellService {
     return cell;
   }
 
+  private buildCellData(
+    data: {
+      name: string; leaderName?: string; leaderPhone: string;
+      meetingDay: string; meetingTime: string; address: string;
+      city?: string; state?: string;
+    },
+    isActive: boolean,
+  ) {
+    return {
+      id: randomUUID(),
+      tenantId: this.tenantId,
+      name: data.name,
+      leaderName: data.leaderName ?? '',
+      leaderPhone: data.leaderPhone,
+      meetingDay: data.meetingDay,
+      meetingTime: data.meetingTime,
+      address: data.address,
+      city: data.city ?? 'Ibadan',
+      state: data.state ?? 'Oyo',
+      isActive,
+    };
+  }
+
+  /** Public submission — goes to pending (isActive: false) until admin approves */
   async create(data: {
-    name: string;
-    leaderName: string;
-    leaderPhone: string;
-    meetingDay: string;
-    meetingTime: string;
-    address: string;
-    city?: string;
-    state?: string;
+    name: string; leaderName?: string; leaderPhone: string;
+    meetingDay: string; meetingTime: string; address: string;
+    city?: string; state?: string;
   }) {
-    return this.prisma.homeCell.create({
-      data: {
-        id: randomUUID(),
-        tenantId: this.tenantId,
-        name: data.name,
-        leaderName: data.leaderName,
-        leaderPhone: data.leaderPhone,
-        meetingDay: data.meetingDay,
-        meetingTime: data.meetingTime,
-        address: data.address,
-        city: data.city ?? 'Ibadan',
-        state: data.state ?? 'Oyo',
-        isActive: true,
-      },
+    return this.prisma.homeCell.create({ data: this.buildCellData(data, false) });
+  }
+
+  /** Admin direct creation — immediately active */
+  async createByAdmin(data: {
+    name: string; leaderName?: string; leaderPhone: string;
+    meetingDay: string; meetingTime: string; address: string;
+    city?: string; state?: string;
+  }) {
+    return this.prisma.homeCell.create({ data: this.buildCellData(data, true) });
+  }
+
+  /** Admin list — all cells including pending */
+  async findAllAdmin() {
+    return this.prisma.homeCell.findMany({
+      where: { tenantId: this.tenantId },
+      orderBy: [{ isActive: 'desc' }, { createdAt: 'desc' }],
     });
+  }
+
+  async approve(id: string) {
+    const cell = await this.findOne(id);
+    return this.prisma.homeCell.update({ where: { id: cell.id }, data: { isActive: true } });
+  }
+
+  async remove(id: string) {
+    const cell = await this.findOne(id);
+    return this.prisma.homeCell.delete({ where: { id: cell.id } });
   }
 
   async join(id: string, data: { name: string; phone: string; email?: string; preferredTime?: string; prayerRequest?: string }) {

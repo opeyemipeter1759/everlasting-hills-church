@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowLeft, Search, MapPin, Clock, Calendar,
-  Phone, X, AlertCircle, Plus, Minus, ChevronRight, Users,
+  ArrowLeft, Search, MapPin, Clock, Calendar, Phone,
+  X, AlertCircle, Plus, Minus, ChevronRight,
   CheckCircle, Loader2,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
@@ -26,9 +26,12 @@ interface Cell {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const IBADAN_AREAS = [
-  "All Areas", "Agodi", "Bodija", "Challenge", "Dugbe",
-  "Iwo Road", "Jericho", "Molete", "Oluyole", "Ring Road", "Sango",
+const NIGERIAN_STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue",
+  "Borno", "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "FCT",
+  "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi",
+  "Kwara", "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo",
+  "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ];
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -105,10 +108,11 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
 // ── Add Cell modal ────────────────────────────────────────────────────────────
 
 const EMPTY_FORM = {
-  name: "", leaderName: "", leaderPhone: "", meetingDay: "", meetingTime: "", area: "", addressDetail: "",
+  name: "", leaderPhone: "", meetingDay: "", meetingTime: "",
+  state: "", city: "", addressDetail: "",
 };
 
-function AddCellModal({ onClose, onAdded }: { onClose: () => void; onAdded: (c: Cell) => void }) {
+function AddCellModal({ onClose }: { onClose: () => void }) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -120,30 +124,28 @@ function AddCellModal({ onClose, onAdded }: { onClose: () => void; onAdded: (c: 
 
   const valid =
     form.name.trim().length > 1 &&
-    form.leaderName.trim().length > 1 &&
     form.leaderPhone.trim().length > 5 &&
     form.meetingDay.length > 0 &&
     form.meetingTime.trim().length > 0 &&
-    (form.area.length > 0 || form.addressDetail.trim().length > 0);
+    form.state.length > 0;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!valid || loading) return;
     setLoading(true); setErr(null);
-    const address = [form.area !== "All Areas" ? form.area : "", form.addressDetail.trim()].filter(Boolean).join(", ");
+    const address = [form.city.trim(), form.addressDetail.trim()].filter(Boolean).join(", ");
     try {
-      const res = await apiClient.post<Cell>("/home-cell", {
+      await apiClient.post("/home-cell", {
         name: form.name.trim(),
-        leaderName: form.leaderName.trim(),
+        leaderName: "",
         leaderPhone: form.leaderPhone.trim(),
         meetingDay: form.meetingDay,
         meetingTime: form.meetingTime.trim(),
-        address: address || "Ibadan",
-        city: "Ibadan",
-        state: "Oyo",
+        address: address || form.state,
+        city: form.city.trim() || form.state,
+        state: form.state,
       });
       setDone(true);
-      onAdded(res.data);
     } catch {
       setErr("Couldn't save. Please try again.");
     } finally {
@@ -154,7 +156,6 @@ function AddCellModal({ onClose, onAdded }: { onClose: () => void; onAdded: (c: 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      {/* backdrop */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
@@ -163,33 +164,30 @@ function AddCellModal({ onClose, onAdded }: { onClose: () => void; onAdded: (c: 
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 w-full sm:max-w-lg bg-[#12040c] border border-white/10 rounded-t-3xl sm:rounded-3xl overflow-hidden max-h-[90dvh] flex flex-col"
       >
-        {/* drag handle */}
         <div className="sm:hidden w-10 h-1 bg-white/10 rounded-full mx-auto mt-4 mb-1 flex-shrink-0" />
 
-        {/* header */}
         <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
           <div>
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent mb-0.5">New Home Cell</p>
             <h3 className="text-white font-black text-lg leading-tight">Add a Cell</h3>
-            <p className="text-white/35 text-xs mt-0.5">Your cell will appear on the directory instantly.</p>
+            <p className="text-white/35 text-xs mt-0.5">A super admin will review and approve your submission.</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
             <X size={15} />
           </button>
         </div>
 
-        {/* body */}
         <div className="overflow-y-auto flex-1 px-6 py-5">
           {done ? (
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
               className="flex flex-col items-center text-center py-10 gap-4">
-              <div className="w-16 h-16 rounded-full bg-church-maroon/20 border border-church-maroon/30 flex items-center justify-center">
-                <Users size={24} className="text-church-accent" />
+              <div className="w-16 h-16 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                <Clock size={24} className="text-amber-400" />
               </div>
               <div>
-                <h4 className="text-white font-black text-xl mb-1">Cell Added!</h4>
+                <h4 className="text-white font-black text-xl mb-1">Submitted for Review</h4>
                 <p className="text-white/40 text-sm leading-relaxed max-w-xs">
-                  {form.name} is now live on the directory. People can find and join it right away.
+                  <span className="text-white/60 font-semibold">{form.name}</span> has been sent to our admin team. It will appear on the directory once approved.
                 </p>
               </div>
               <button onClick={onClose}
@@ -200,15 +198,11 @@ function AddCellModal({ onClose, onAdded }: { onClose: () => void; onAdded: (c: 
           ) : (
             <form onSubmit={submit} className="space-y-4">
               <FormField label="Cell Name" required
-                input={<input value={form.name} onChange={e => field("name", e.target.value)} placeholder="Bodija Light Cell" required />}
-              />
-              <FormField label="Pastor / Leader Name" required
-                input={<input value={form.leaderName} onChange={e => field("leaderName", e.target.value)} placeholder="Pastor Kunle Adeyemi" required />}
+                input={<input value={form.name} onChange={e => field("name", e.target.value)} placeholder="Grace Light Cell" required />}
               />
               <FormField label="Leader WhatsApp Phone" required
                 input={<input value={form.leaderPhone} onChange={e => field("leaderPhone", e.target.value)} placeholder="+234 801 234 5678" required />}
               />
-
               <div className="grid grid-cols-2 gap-3">
                 <FormField label="Meeting Day" required
                   input={
@@ -222,27 +216,29 @@ function AddCellModal({ onClose, onAdded }: { onClose: () => void; onAdded: (c: 
                   input={<input value={form.meetingTime} onChange={e => field("meetingTime", e.target.value)} placeholder="6:30 PM" required />}
                 />
               </div>
-
-              <FormField label="Area"
+              <FormField label="State" required
                 input={
-                  <select value={form.area} onChange={e => field("area", e.target.value)} className="bg-transparent">
-                    <option value="" className="bg-[#12040c]">Select area (optional)</option>
-                    {IBADAN_AREAS.filter(a => a !== "All Areas").map(a => (
-                      <option key={a} value={a} className="bg-[#12040c]">{a}</option>
+                  <select value={form.state} onChange={e => field("state", e.target.value)} required className="bg-transparent">
+                    <option value="" className="bg-[#12040c]">Select state</option>
+                    {NIGERIAN_STATES.map(s => (
+                      <option key={s} value={s} className="bg-[#12040c]">{s}</option>
                     ))}
                   </select>
                 }
               />
-              <FormField label="Street / Venue Address"
-                input={<input value={form.addressDetail} onChange={e => field("addressDetail", e.target.value)} placeholder="14 University Road" />}
-              />
-
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="City / Area"
+                  input={<input value={form.city} onChange={e => field("city", e.target.value)} placeholder="e.g. Bodija" />}
+                />
+                <FormField label="Street / Venue"
+                  input={<input value={form.addressDetail} onChange={e => field("addressDetail", e.target.value)} placeholder="14 University Road" />}
+                />
+              </div>
               {err && (
                 <div className="flex items-center gap-2 text-rose-400 text-sm">
                   <AlertCircle size={13} />{err}
                 </div>
               )}
-
               <button type="submit" disabled={!valid || loading}
                 className="w-full py-3.5 rounded-2xl bg-church-maroon text-white font-black text-sm tracking-wide disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#6E0C24] transition-all mt-2">
                 {loading ? "Saving…" : "Add Home Cell"}
@@ -412,9 +408,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 // ── Cell card — new design ────────────────────────────────────────────────────
 
 function CellCard({ cell, index, onJoin }: { cell: Cell; index: number; onJoin: () => void }) {
-  const areaMatch = IBADAN_AREAS.find(
-    (a) => a !== "All Areas" && cell.address.toLowerCase().includes(a.toLowerCase())
-  );
+  const locationLabel = cell.city && cell.city !== cell.state ? `${cell.city}, ${cell.state}` : cell.state;
 
   return (
     <motion.div
@@ -433,14 +427,12 @@ function CellCard({ cell, index, onJoin }: { cell: Cell; index: number; onJoin: 
         {/* gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
 
-        {/* area badge top-left */}
-        {areaMatch && (
-          <div className="absolute top-3 left-3">
-            <span className="px-2.5 py-1 rounded-full bg-church-maroon/80 backdrop-blur-sm text-[9px] font-black uppercase tracking-[0.2em] text-white/90">
-              {areaMatch}
-            </span>
-          </div>
-        )}
+        {/* location badge top-left */}
+        <div className="absolute top-3 left-3">
+          <span className="px-2.5 py-1 rounded-full bg-church-maroon/80 backdrop-blur-sm text-[9px] font-black uppercase tracking-[0.2em] text-white/90">
+            {locationLabel}
+          </span>
+        </div>
 
         {/* day badge top-right */}
         <div className="absolute top-3 right-3">
@@ -451,20 +443,19 @@ function CellCard({ cell, index, onJoin }: { cell: Cell; index: number; onJoin: 
 
         {/* name + leader overlay at bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-4">
-          <h3 className="font-display font-black text-[1.05rem] text-white leading-tight mb-0.5">
+          <h3 className="font-display font-black text-[1.05rem] text-white leading-tight">
             {cell.name}
           </h3>
-          <p className="text-[11px] text-white/55">Led by {cell.leaderName}</p>
         </div>
       </div>
 
       {/* Info rows */}
       <div className="px-4 pt-4 pb-3 space-y-2.5">
-        <InfoRow icon={<Clock size={11} />}    label="TIME"     value={cell.meetingTime} />
-        <InfoRow icon={<Calendar size={11} />} label="DAY"      value={cell.meetingDay} />
-        <InfoRow icon={<MapPin size={11} />}   label="VENUE"    value={cell.address} />
+        <InfoRow icon={<Clock size={11} />}    label="TIME"    value={cell.meetingTime} />
+        <InfoRow icon={<Calendar size={11} />} label="DAY"     value={cell.meetingDay} />
+        <InfoRow icon={<MapPin size={11} />}   label="VENUE"   value={cell.address} />
         {cell.leaderPhone && (
-          <InfoRow icon={<Phone size={11} />}  label="CONTACT"  value={cell.leaderPhone} />
+          <InfoRow icon={<Phone size={11} />}  label="CONTACT" value={cell.leaderPhone} />
         )}
       </div>
 
@@ -505,20 +496,25 @@ const PAGE_SIZE = 8;
 
 export default function FindCellPage() {
   const [cells, setCells]         = useState<Cell[]>([]);
+  const [states, setStates]       = useState<string[]>([]);
   const [loading, setLoading]     = useState(true);
   const [apiErr, setApiErr]       = useState<string | null>(null);
   const [query, setQuery]         = useState("");
-  const [area, setArea]           = useState("All Areas");
+  const [stateFilter, setStateFilter] = useState("All");
   const [visible, setVisible]     = useState(PAGE_SIZE);
-  const [showAdd, setShowAdd]     = useState(false);
   const [joining, setJoining]     = useState<Cell | null>(null);
+  const [showAdd, setShowAdd]     = useState(false);
 
   useEffect(() => {
     (async () => {
       setLoading(true); setApiErr(null);
       try {
-        const res = await apiClient.get<Cell[]>("/home-cell?state=Oyo&city=Ibadan");
-        setCells(res.data);
+        const [cellsRes, statesRes] = await Promise.all([
+          apiClient.get<Cell[]>("/home-cell"),
+          apiClient.get<string[]>("/home-cell/states"),
+        ]);
+        setCells(cellsRes.data);
+        setStates(statesRes.data);
       } catch {
         setApiErr("Couldn't load cells. Please refresh and try again.");
       } finally {
@@ -530,42 +526,32 @@ export default function FindCellPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return cells.filter((c) => {
-      const matchesArea = area === "All Areas" || c.address.toLowerCase().includes(area.toLowerCase()) || c.name.toLowerCase().includes(area.toLowerCase());
-      const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.leaderName.toLowerCase().includes(q) || c.address.toLowerCase().includes(q);
-      return matchesArea && matchesQuery;
+      const matchesState = stateFilter === "All" || c.state === stateFilter;
+      const matchesQuery = !q || c.name.toLowerCase().includes(q) || c.leaderName.toLowerCase().includes(q) || c.address.toLowerCase().includes(q) || c.city.toLowerCase().includes(q);
+      return matchesState && matchesQuery;
     });
-  }, [cells, area, query]);
+  }, [cells, stateFilter, query]);
 
   const shown = filtered.slice(0, visible);
   const hasMore = visible < filtered.length;
-
-  function handleAdded(newCell: Cell) {
-    setCells((prev) => [newCell, ...prev]);
-  }
 
   return (
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon selection:text-white overflow-x-hidden">
 
       {/* ══════════════════════════════════════════════════════════════════════
-          HERO HEADER
+          HERO + SEARCH + STATE FILTER
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden">
-        {/* Background photo */}
         <div className="absolute inset-0 z-0">
-          <img src="/HeroImages/IMG_8931.jpg" alt=""
+          <img src="/HeroImages/IMG_1080.jpg" alt=""
             className="w-full h-full object-cover object-center scale-[1.04]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-church-dark/85 via-church-dark/70 to-church-dark" />
-          <div className="absolute inset-0 bg-gradient-to-r from-church-dark/60 via-transparent to-church-dark/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-church-dark/90 via-church-dark/80 to-church-dark" />
         </div>
+        <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[200px] rounded-full bg-church-maroon/15 blur-[90px] z-0" />
 
-        {/* glow */}
-        <div className="pointer-events-none absolute inset-0 z-0">
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] rounded-full bg-church-maroon/20 blur-[80px]" />
-        </div>
-
-        <div className="relative z-10 px-4 pt-28 pb-20 text-center max-w-4xl mx-auto">
+        <div className="relative z-10 px-4 pt-28 pb-16 text-center max-w-3xl mx-auto">
           {/* Back */}
-          <div className="mb-8">
+          <div className="mb-10">
             <Link href="/connect/home-cell"
               className="inline-flex items-center gap-2 text-white/30 hover:text-white/60 transition-all group">
               <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -573,74 +559,61 @@ export default function FindCellPage() {
             </Link>
           </div>
 
-          {/* Location pill */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-            className="inline-flex items-center gap-2 rounded-full border border-church-maroon/40 bg-church-maroon/15 backdrop-blur-sm px-4 py-1.5 mb-7">
+          {/* Chip */}
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+            className="inline-flex items-center gap-2 rounded-full border border-church-maroon/40 bg-church-maroon/15 backdrop-blur-sm px-4 py-1.5 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-church-accent animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent/90">Ibadan, Nigeria</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent/90">Home Cell</span>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+          {/* Heading */}
+          <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            className="text-[clamp(2.6rem,9vw,6rem)] font-display font-black tracking-tighter leading-[0.87] mb-5">
+            className="text-[clamp(2.4rem,8vw,5rem)] font-display font-black tracking-tighter leading-[0.9] mb-4">
             Find a Home Cell<br />
-            <span className="font-serif normal-case italic font-normal text-church-accent">near you</span>
+            <span className="font-serif italic font-normal text-church-accent">near you</span>
           </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}
-            className="text-white/40 text-base max-w-sm mx-auto leading-relaxed mb-10">
-            Pick an area, find your group, and connect with a Cell Leader on WhatsApp.
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.18 }}
+            className="text-white/40 text-sm max-w-xs mx-auto leading-relaxed mb-8">
+            Search by state, city, or cell name
           </motion.p>
 
-          {/* Search + Add Cell */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
-            className="flex flex-col sm:flex-row items-stretch gap-3 max-w-2xl mx-auto">
-            <div className="relative flex-1">
-              <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
-              <input
-                value={query}
-                onChange={(e) => { setQuery(e.target.value); setVisible(PAGE_SIZE); }}
-                placeholder="Search cells, leaders, areas…"
-                className="w-full pl-10 pr-10 py-4 rounded-2xl border border-white/[0.12] bg-white/[0.06] backdrop-blur-sm text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-church-accent/30 focus:border-church-accent/20 transition"
-              />
-              {query && (
-                <button onClick={() => setQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white transition-colors">
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-            <button
-              onClick={() => setShowAdd(true)}
-              className="flex items-center justify-center gap-2 px-6 py-4 rounded-2xl bg-church-maroon text-white text-sm font-black tracking-wide hover:bg-[#6E0C24] hover:shadow-lg hover:shadow-church-maroon/30 transition-all whitespace-nowrap">
-              <Plus size={15} /> Add a Cell
-            </button>
+          {/* Search bar */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}
+            className="relative max-w-xl mx-auto mb-10">
+            <Search size={15} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" />
+            <input
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setVisible(PAGE_SIZE); }}
+              placeholder="Search cells, cities, states…"
+              className="w-full pl-10 pr-10 py-4 rounded-2xl border border-white/[0.12] bg-white/[0.07] backdrop-blur-sm text-sm text-white placeholder:text-white/25 focus:outline-none focus:ring-1 focus:ring-church-accent/30 focus:border-church-accent/20 transition"
+            />
+            {query && (
+              <button onClick={() => setQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/25 hover:text-white transition-colors">
+                <X size={14} />
+              </button>
+            )}
+          </motion.div>
+
+          {/* State pills — centered wrapping */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.32 }}
+            className="flex flex-wrap justify-center gap-2">
+            {["All", ...states].map((s) => (
+              <button key={s}
+                onClick={() => { setStateFilter(s); setVisible(PAGE_SIZE); }}
+                className={`px-5 py-2 rounded-full text-[11px] font-black tracking-[0.08em] border transition-all duration-200 whitespace-nowrap ${
+                  stateFilter === s
+                    ? "bg-church-maroon border-church-maroon text-white shadow-md shadow-church-maroon/25"
+                    : "border-white/[0.10] text-white/35 hover:border-white/25 hover:text-white/65 bg-white/[0.03]"
+                }`}>
+                {s === "All" ? "All States" : s}
+              </button>
+            ))}
           </motion.div>
         </div>
       </section>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          AREA FILTER
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div className="px-4 py-6 overflow-x-auto border-b border-white/[0.05] bg-white/[0.01]">
-        <div className="flex items-center gap-2 w-max mx-auto">
-          {IBADAN_AREAS.map((a) => (
-            <button key={a}
-              onClick={() => { setArea(a); setVisible(PAGE_SIZE); }}
-              className={`px-5 py-2 rounded-full text-[11px] font-black tracking-[0.08em] border transition-all duration-200 whitespace-nowrap ${
-                area === a
-                  ? "bg-church-maroon border-church-maroon text-white shadow-md shadow-church-maroon/25"
-                  : "border-white/[0.08] text-white/30 hover:border-white/20 hover:text-white/55 bg-transparent"
-              }`}>
-              {a}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
           GRID
@@ -652,10 +625,10 @@ export default function FindCellPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex items-center justify-between mb-8">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
-              {filtered.length} cell{filtered.length !== 1 ? "s" : ""} · Ibadan
+              {filtered.length} cell{filtered.length !== 1 ? "s" : ""}{stateFilter !== "All" ? ` · ${stateFilter}` : " · Nigeria"}
             </p>
-            {query || area !== "All Areas" ? (
-              <button onClick={() => { setQuery(""); setArea("All Areas"); }}
+            {query || stateFilter !== "All" ? (
+              <button onClick={() => { setQuery(""); setStateFilter("All"); }}
                 className="text-[10px] font-black uppercase tracking-[0.2em] text-church-accent/60 hover:text-church-accent transition-colors">
                 Clear filters
               </button>
@@ -692,11 +665,10 @@ export default function FindCellPage() {
             <div>
               <p className="font-display font-black text-lg text-white/40 mb-1">No cells found</p>
               <p className="text-white/25 text-sm max-w-xs leading-relaxed">
-                Try a different area, or{" "}
-                <button onClick={() => setShowAdd(true)} className="text-church-accent hover:underline">add one</button>.
+                Try a different search or filter.
               </p>
             </div>
-            <button onClick={() => { setQuery(""); setArea("All Areas"); }}
+            <button onClick={() => { setQuery(""); setStateFilter("All"); }}
               className="px-6 py-2.5 rounded-full border border-white/10 text-white/30 text-sm font-bold hover:text-white hover:border-white/25 transition-all">
               Clear filters
             </button>
@@ -725,31 +697,6 @@ export default function FindCellPage() {
           </>
         )}
       </div>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          ADD CELL CTA BANNER
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="mx-4 sm:mx-6 mb-16 rounded-3xl border border-white/[0.07] bg-white/[0.02] overflow-hidden relative">
-        <div className="pointer-events-none absolute inset-0">
-          <div className="absolute right-0 top-0 w-72 h-72 rounded-full bg-church-maroon/8 blur-[80px]" />
-        </div>
-        <div className="relative px-8 py-10 sm:px-12 sm:py-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-church-accent mb-2">Lead a Cell</p>
-            <h3 className="text-2xl sm:text-3xl font-display font-black tracking-tight leading-tight mb-2">
-              Host a cell<br />
-              <span className="font-serif italic font-normal text-white/40">in your home.</span>
-            </h3>
-            <p className="text-white/35 text-sm max-w-sm leading-relaxed">
-              Feel called to lead? Add your cell to the directory and start gathering.
-            </p>
-          </div>
-          <button onClick={() => setShowAdd(true)}
-            className="flex-shrink-0 inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-church-maroon text-white text-sm font-black hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/30 transition-all">
-            <Plus size={14} /> Add Your Cell
-          </button>
-        </div>
-      </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
           FAQ
@@ -796,29 +743,28 @@ export default function FindCellPage() {
               className="inline-flex items-center gap-2 rounded-full bg-church-maroon px-8 py-4 font-black text-sm text-white tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/40 transition-all">
               Browse Cells <ChevronRight size={14} />
             </button>
+            <button onClick={() => setShowAdd(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 px-8 py-4 font-black text-sm text-white/60 tracking-wide hover:border-white/30 hover:text-white hover:-translate-y-0.5 transition-all">
+              <Plus size={14} /> Add a Cell
+            </button>
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            transition={{ delay: 0.32 }}
+            className="mt-5">
             <Link href="/connect/home-cell"
-              className="text-sm font-bold text-white/30 hover:text-white/60 transition-colors flex items-center gap-1.5">
+              className="text-sm font-bold text-white/25 hover:text-white/50 transition-colors inline-flex items-center gap-1.5">
               <ArrowLeft size={13} /> Back to Home Cell
             </Link>
           </motion.div>
         </div>
       </section>
 
-      {/* ══ Add cell modal ═══════════════════════════════════════════════════ */}
       <AnimatePresence>
         {showAdd && (
-          <AddCellModal
-            key="add-cell"
-            onClose={() => setShowAdd(false)}
-            onAdded={(c) => { handleAdded(c); }}
-          />
+          <AddCellModal key="add-cell" onClose={() => setShowAdd(false)} />
         )}
         {joining && (
-          <JoinModal
-            key="join-cell"
-            cell={joining}
-            onClose={() => setJoining(null)}
-          />
+          <JoinModal key="join-cell" cell={joining} onClose={() => setJoining(null)} />
         )}
       </AnimatePresence>
     </main>

@@ -19,11 +19,11 @@ import {
 // ── Benefits ──────────────────────────────────────────────────────────────────
 
 const BENEFITS = [
-  { icon: BookOpen,    title: "Deep in the Word",  body: "Study Scripture in an intimate circle where questions are welcomed and truth goes root-deep." },
-  { icon: Users,       title: "Real Community",     body: "Move beyond Sunday handshakes into relationships where people actually know your name." },
-  { icon: Sprout,      title: "Discipleship",       body: "Be poured into and pour into others — growing together toward Christlikeness." },
-  { icon: ShieldCheck, title: "Accountability",     body: "Trusted voices who walk with you, pray with you, and help you stay the course." },
-  { icon: Heart,       title: "Fellowship",         body: "Share meals, carry burdens, and celebrate life — the way the early church did." },
+  { icon: ShieldCheck, title: "Power",              body: "The Holy Spirit moves in intimate spaces. When a small group gathers with open hearts, something shifts — in the room, and in every person present." },
+  { icon: Sprout,      title: "Transformation",     body: "Real change rarely happens in private. When people know your name and your story, growth stops being optional and starts becoming inevitable." },
+  { icon: Heart,       title: "Prayers",            body: "Every burden you carry, your cell carries too. Specific, fervent, consistent intercession — the kind that actually moves things — happens in small rooms." },
+  { icon: BookOpen,    title: "Word",               body: "You won't just hear Scripture — you'll wrestle with it, apply it, and be held to it. Cell study turns Sunday's sermon into Monday's reality." },
+  { icon: Users,       title: "Fellowship and Love", body: "Shared meals. Honest conversations. People who show up when life gets hard. This is the early church pattern — and it changes everything." },
 ];
 
 // ── FAQ ───────────────────────────────────────────────────────────────────────
@@ -275,9 +275,15 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
           BENEFITS
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-24 md:py-28 px-6 sm:px-10 lg:px-16 border-t border-white/[0.06] relative overflow-hidden">
-        <div className="pointer-events-none absolute -right-40 top-0 w-[600px] h-[600px] rounded-full bg-church-maroon/8 blur-[140px]" />
+        {/* background image with overlay */}
+        <div className="absolute inset-0 z-0">
+          <img src="/HeroImages/IMG_1080.jpg" alt="" className="w-full h-full object-cover object-center" />
+          <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/80 to-church-dark/75" />
+          <div className="absolute inset-0 bg-gradient-to-r from-church-dark/70 via-transparent to-church-dark/70" />
+        </div>
+        <div className="pointer-events-none absolute -right-40 top-0 w-[600px] h-[600px] rounded-full bg-church-maroon/8 blur-[140px] z-10" />
 
-        <div className="max-w-6xl mx-auto">
+        <div className="relative z-10 max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-3">Why join?</p>
@@ -286,7 +292,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
                 <span className="font-serif italic font-normal text-white/40">change when you join.</span>
               </h2>
             </div>
-            <p className="text-white/30 text-sm max-w-[18rem] leading-relaxed">
+            <p className="text-white text-sm max-w-[18rem] leading-relaxed">
               Real transformation doesn't happen in an auditorium — it happens in a living room.
             </p>
           </div>
@@ -322,7 +328,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
                 100<span className="text-4xl">%</span>
               </p>
               <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/35 mt-4">
-                Free to join.<br />No commitment needed<br />for your first visit.
+                Open to all.<br />No barriers.<br />Always.
               </p>
             </motion.div>
           </div>
@@ -447,12 +453,6 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               className="inline-flex items-center gap-2 rounded-full bg-church-maroon px-9 py-4 font-black text-sm text-white tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/40 transition-all"
             >
               Find a Cell Near You <ChevronRight size={15} />
-            </Link>
-            <Link
-              href="/connect"
-              className="text-sm font-bold text-white/35 hover:text-white/65 transition-colors flex items-center gap-1.5"
-            >
-              <ArrowLeft size={13} /> Back to Connect
             </Link>
           </motion.div>
         </div>

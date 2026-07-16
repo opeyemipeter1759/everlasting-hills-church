@@ -27,6 +27,7 @@ const footerLinks = [
   { label: "What We Believe", href: "/beliefs" },
   { label: "Ministries", href: "/ministries" },
   { label: "Sermons", href: "/sermons" },
+  { label: "Home Cell", href: "/connect/home-cell" },
   { label: "Plan a Visit", href: "/visit" },
   { label: "Give", href: "/give" },
   { label: "Contact", href: "/contact" },
@@ -101,7 +102,7 @@ export default async function Footer() {
             <p className="text-white/50 text-xs tracking-[0.2em] uppercase font-medium mb-5">
               Quick Links
             </p>
-            <ul className="space-y-3">
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-3">
               {footerLinks.map((link) => (
                 <li key={link.href}>
                   <a
