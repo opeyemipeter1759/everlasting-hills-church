@@ -13,6 +13,7 @@ import { TagsSection } from "./TagsSection";
 import { SocialSection } from "./SocialSection";
 import { MinistrySection } from "./MinistrySection";
 import { ServingSection } from "./ServingSection";
+import { CertificatesSection } from "./CertificatesSection";
 import { FooterCta } from "./FooterCta";
 import ScrollReveal from "@/components/home/ScrollReveal";
 
@@ -45,6 +46,8 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
       {ministries.length > 0 && <MinistrySection ministries={ministries} />}
 
       <ServingSection units={profile.units} />
+
+      <CertificatesSection />
 
       <FooterCta />
     </div>

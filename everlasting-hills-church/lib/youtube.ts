@@ -8,6 +8,7 @@ export function getYouTubeId(url: string): string | null {
     /(?:youtu\.be\/)([\w-]{11})/,
     /(?:youtube\.com\/embed\/)([\w-]{11})/,
     /(?:youtube\.com\/shorts\/)([\w-]{11})/,
+    /(?:youtube\.com\/live\/)([\w-]{11})/,
   ];
 
   for (const pattern of patterns) {

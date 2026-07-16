@@ -15,7 +15,6 @@ import type { CreateFollowUpEntryDto } from './dto/create-follow-up-entry.dto';
 import type { AssignFollowUpDto } from './dto/assign-follow-up.dto';
 import type { LogContactDto } from './dto/log-contact.dto';
 import type { ConfirmFollowUpDto } from './dto/confirm-follow-up.dto';
-import type { RejectFollowUpDto } from './dto/reject-follow-up.dto';
 
 const ADMIN_PLUS: Role[] = [Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN];
 
@@ -27,8 +26,19 @@ const WORKING_STAGES: FollowUpStage[] = [
 
 const ENTRY_INCLUDE = {
   Unit: { select: { name: true } },
-  Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true, phone: true, email: true } },
-  Visitor: { select: { id: true, firstName: true, lastName: true, phone: true, email: true } },
+  Member: {
+    select: {
+      id: true, firstName: true, lastName: true, photoUrl: true, phone: true, email: true, status: true,
+      gender: true, dateOfBirth: true, address: true, joinedAt: true,
+    },
+  },
+  Visitor: {
+    select: {
+      id: true, firstName: true, lastName: true, phone: true, email: true,
+      gender: true, dateOfBirth: true, address: true, occupation: true,
+      howDidYouLearn: true, invitedBy: true, submittedAt: true,
+    },
+  },
   Assignee: { select: { id: true, firstName: true, lastName: true, photoUrl: true } },
   AddedBy: { select: { id: true, Member: { select: { firstName: true, lastName: true } } } },
   Logs: {
@@ -260,8 +270,8 @@ export class FollowUpService {
     if (!actor.memberId || !this.canWork(actor, entry)) {
       throw new ForbiddenException('You are not assigned to this follow-up');
     }
-    if (entry.stage === FollowUpStage.CONFIRMED || entry.stage === FollowUpStage.AWAITING_REVIEW) {
-      throw new BadRequestException('This follow-up cannot be logged against from its current stage');
+    if (entry.stage === FollowUpStage.CONFIRMED) {
+      throw new BadRequestException('This follow-up already has a logged outcome');
     }
 
     await this.prisma.followUpContactLog.create({
@@ -293,33 +303,15 @@ export class FollowUpService {
     return this.mapEntry(updated, actor);
   }
 
-  async markReady(actor: AuthUser, id: string) {
-    const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
-    if (!entry) throw new NotFoundException('Follow-up entry not found');
-    if (!this.canWork(actor, entry)) {
-      throw new ForbiddenException('You are not assigned to this follow-up');
-    }
-    if (!WORKING_STAGES.includes(entry.stage)) {
-      throw new BadRequestException('This follow-up cannot be marked ready from its current stage');
-    }
-
-    const updated = await this.prisma.followUpEntry.update({
-      where: { id },
-      data: { stage: FollowUpStage.AWAITING_REVIEW },
-      include: ENTRY_INCLUDE,
-    });
-    await this.writeAudit({ action: 'MARK_READY', entity: 'FollowUpEntry', entityId: id, actorId: actor.userId });
-    return this.mapEntry(updated, actor);
-  }
-
+  /** Logs a final outcome (Became a Member, Returned, Not Interested, Unreachable).
+   * Follow-up is a continuous, weekly-recurring effort — not a queue with a hand-off
+   * step — so any team lead can log an outcome whenever they decide it's warranted,
+   * from any stage, without the assignee first requesting review. */
   async confirm(actor: AuthUser, id: string, dto: ConfirmFollowUpDto) {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
     if (!this.canLead(actor, entry.unitId)) {
-      throw new ForbiddenException('Only this unit\'s leader can confirm');
-    }
-    if (entry.stage !== FollowUpStage.AWAITING_REVIEW) {
-      throw new BadRequestException('Only entries awaiting review can be confirmed');
+      throw new ForbiddenException('Only this unit\'s leader can log an outcome');
     }
 
     const updated = await this.prisma.followUpEntry.update({
@@ -337,22 +329,41 @@ export class FollowUpService {
     return this.mapEntry(updated, actor);
   }
 
-  async reject(actor: AuthUser, id: string, dto: RejectFollowUpDto) {
+  /** Opts a member out: blocks their login (enforced in AuthService) until restored.
+   * Only this entry's team lead (or ADMIN+) may do this, and only for ABSENTEE
+   * entries — FIRST_TIMER entries are Visitor-backed and have no login to block. */
+  async optOutMember(actor: AuthUser, id: string) {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
     if (!this.canLead(actor, entry.unitId)) {
-      throw new ForbiddenException('Only this unit\'s leader can reopen a follow-up');
+      throw new ForbiddenException('Only this team\'s leader can opt a member out');
     }
-    if (entry.stage !== FollowUpStage.AWAITING_REVIEW) {
-      throw new BadRequestException('Only entries awaiting review can be reopened');
+    if (!entry.memberId) {
+      throw new BadRequestException('Only a follow-up entry linked to a member can be opted out');
     }
 
-    const updated = await this.prisma.followUpEntry.update({
-      where: { id },
-      data: { stage: FollowUpStage.REOPENED, reviewNote: dto.note },
-      include: ENTRY_INCLUDE,
-    });
-    await this.writeAudit({ action: 'REJECT', entity: 'FollowUpEntry', entityId: id, actorId: actor.userId, after: { note: dto.note } });
+    await this.prisma.member.update({ where: { id: entry.memberId }, data: { status: MemberStatus.OPTED_OUT } });
+    await this.writeAudit({ action: 'OPT_OUT', entity: 'Member', entityId: entry.memberId, actorId: actor.userId });
+
+    const updated = await this.prisma.followUpEntry.findFirstOrThrow({ where: { id }, include: ENTRY_INCLUDE });
+    return this.mapEntry(updated, actor);
+  }
+
+  /** Reverses optOutMember — restores login access. Same authorization as opting out. */
+  async restoreMember(actor: AuthUser, id: string) {
+    const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
+    if (!entry) throw new NotFoundException('Follow-up entry not found');
+    if (!this.canLead(actor, entry.unitId)) {
+      throw new ForbiddenException('Only this team\'s leader can restore a member');
+    }
+    if (!entry.memberId) {
+      throw new BadRequestException('Only a follow-up entry linked to a member can be restored');
+    }
+
+    await this.prisma.member.update({ where: { id: entry.memberId }, data: { status: MemberStatus.ACTIVE } });
+    await this.writeAudit({ action: 'RESTORE', entity: 'Member', entityId: entry.memberId, actorId: actor.userId });
+
+    const updated = await this.prisma.followUpEntry.findFirstOrThrow({ where: { id }, include: ENTRY_INCLUDE });
     return this.mapEntry(updated, actor);
   }
 
@@ -603,6 +614,31 @@ export class FollowUpService {
           }
         : { id: '', name: 'Unknown', photoUrl: null, phone: null, email: null };
 
+    // Extra detail for the drawer's "Contact & Details" section — shape differs by
+    // source since Member and Visitor carry different intake data (a Visitor records
+    // who invited them and how they heard about the church; a Member doesn't).
+    const personDetail = entry.Member
+      ? {
+          gender: entry.Member.gender,
+          dateOfBirth: entry.Member.dateOfBirth ? entry.Member.dateOfBirth.toISOString() : null,
+          address: entry.Member.address,
+          memberSince: entry.Member.joinedAt.toISOString() as string | null,
+          invitedBy: null as string | null,
+          howTheyHeard: null as string | null,
+          occupation: null as string | null,
+        }
+      : entry.Visitor
+        ? {
+            gender: entry.Visitor.gender,
+            dateOfBirth: entry.Visitor.dateOfBirth,
+            address: entry.Visitor.address,
+            memberSince: null as string | null,
+            invitedBy: entry.Visitor.invitedBy,
+            howTheyHeard: entry.Visitor.howDidYouLearn,
+            occupation: entry.Visitor.occupation,
+          }
+        : null;
+
     const addedByMember = entry.AddedBy.Member;
     const addedBy = {
       id: entry.AddedBy.id,
@@ -613,6 +649,7 @@ export class FollowUpService {
     return {
       id: entry.id,
       person,
+      personDetail,
       sourceType: entry.sourceType,
       unitId: entry.unitId,
       unitName: entry.Unit.name,
@@ -631,6 +668,9 @@ export class FollowUpService {
       lastContactAt: entry.lastContactAt?.toISOString() ?? null,
       outcome: entry.outcome,
       reviewNote: entry.reviewNote,
+      // Only meaningful for ABSENTEE entries (Member-backed); null for FIRST_TIMER
+      // (Visitor-backed — no login account to opt out of).
+      memberStatus: entry.Member?.status ?? null,
       logs: entry.Logs.map((l) => ({
         id: l.id,
         by: { id: l.By.id, name: `${l.By.firstName} ${l.By.lastName}`.trim(), photoUrl: l.By.photoUrl },
@@ -642,6 +682,8 @@ export class FollowUpService {
       absenteeDetail: null as {
         category: 'NEVER_ATTENDED' | 'CONSECUTIVE_ABSENCES' | 'BELOW_50_PERCENT' | null;
         missedServices: { id: string; name: string; scheduledAt: string }[];
+        attendedCount: number;
+        totalRecent: number;
       } | null,
       // Per-entry, not a blanket "is this user a leader somewhere" flag — a lead of
       // Production Team can now *see* a Follow-Up-unit entry via the shared pool,
@@ -689,7 +731,12 @@ export class FollowUpService {
     }
     const allTimeCountByMember = new Map(allTimePresent.map((a) => [a.memberId, a._count]));
 
-    const detailByMember = new Map<string, { category: 'NEVER_ATTENDED' | 'CONSECUTIVE_ABSENCES' | 'BELOW_50_PERCENT' | null; missedServices: { id: string; name: string; scheduledAt: string }[] }>();
+    const detailByMember = new Map<string, {
+      category: 'NEVER_ATTENDED' | 'CONSECUTIVE_ABSENCES' | 'BELOW_50_PERCENT' | null;
+      missedServices: { id: string; name: string; scheduledAt: string }[];
+      attendedCount: number;
+      totalRecent: number;
+    }>();
     for (const memberId of memberIds) {
       const present = presentByMember.get(memberId) ?? new Set<string>();
       const missed = recentServices.filter((s) => !present.has(s.id));
@@ -705,6 +752,8 @@ export class FollowUpService {
       detailByMember.set(memberId, {
         category,
         missedServices: missed.map((s) => ({ id: s.id, name: s.name, scheduledAt: s.scheduledAt.toISOString() })),
+        attendedCount: recentServices.length - missed.length,
+        totalRecent: recentServices.length,
       });
     }
 

@@ -41,6 +41,7 @@ import { CommunityModule } from './community/community.module';
 import { HomeCellModule } from './home-cell/home-cell.module';
 import { JobsModule } from './jobs/jobs.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
+import { CoursesModule } from './courses/courses.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 
@@ -138,6 +139,7 @@ import type { Env } from './config/env.validation';
     HomeCellModule,
     JobsModule.forRoot(),
     SchedulingModule,
+    CoursesModule,
   ],
   controllers: [AppController],
   providers: [

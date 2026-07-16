@@ -9,7 +9,6 @@ import { CreateFollowUpEntryDto } from './dto/create-follow-up-entry.dto';
 import { AssignFollowUpDto } from './dto/assign-follow-up.dto';
 import { LogContactDto } from './dto/log-contact.dto';
 import { ConfirmFollowUpDto } from './dto/confirm-follow-up.dto';
-import { RejectFollowUpDto } from './dto/reject-follow-up.dto';
 
 function parseStage(stage?: string): FollowUpStage | undefined {
   if (!stage) return undefined;
@@ -126,25 +125,25 @@ export class FollowUpController {
     return this.followUp.logContact(actor, id, body);
   }
 
-  @Patch(':id/ready')
-  @ApiOperation({ summary: 'Mark ready to close, for review (MEMBER+, must be the assignee or the unit leader)' })
-  async markReady(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
-    return this.followUp.markReady(actor, id);
-  }
-
   @Patch(':id/confirm')
   @Roles(Role.UNIT_LEAD)
-  @ApiOperation({ summary: 'Confirm and archive an awaiting-review entry (UNIT_LEAD+ of that unit)' })
+  @ApiOperation({ summary: 'Log a final outcome for this entry — available any time, not gated on a review hand-off (UNIT_LEAD+ of that unit)' })
   @ApiBody({ type: ConfirmFollowUpDto })
   async confirm(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: ConfirmFollowUpDto) {
     return this.followUp.confirm(actor, id, body);
   }
 
-  @Patch(':id/reject')
+  @Patch(':id/opt-out')
   @Roles(Role.UNIT_LEAD)
-  @ApiOperation({ summary: 'Reject and reopen an awaiting-review entry (UNIT_LEAD+ of that unit)' })
-  @ApiBody({ type: RejectFollowUpDto })
-  async reject(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: RejectFollowUpDto) {
-    return this.followUp.reject(actor, id, body);
+  @ApiOperation({ summary: "Opt this entry's member out — blocks their login until restored (UNIT_LEAD+ of that unit)" })
+  async optOut(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.followUp.optOutMember(actor, id);
+  }
+
+  @Patch(':id/restore')
+  @Roles(Role.UNIT_LEAD)
+  @ApiOperation({ summary: "Restore an opted-out member's login access (UNIT_LEAD+ of that unit)" })
+  async restore(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.followUp.restoreMember(actor, id);
   }
 }

@@ -193,6 +193,7 @@ model Member {
   FollowUpAsSubject  FollowUpEntry[]      @relation("FollowUpSubjectMember")
   FollowUpAsAssignee FollowUpEntry[]      @relation("FollowUpAssignee")
   FollowUpLogs       FollowUpContactLog[] @relation("FollowUpLoggedBy")
+  CourseEnrollment   CourseEnrollment[]
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).
@@ -232,6 +233,12 @@ enum FollowUpOutcome {
   RETURNED
   NOT_INTERESTED
   UNREACHABLE
+  /// Below: the current outcome taxonomy shown in the "Log Outcome" form.
+  REACHABLE
+  TRAVEL
+  CAME_FOR_VISITING
+  HAVE_A_CHURCH
+  WANT_TO_BE_MEMBER
 }
 
 enum FollowUpContactMethod {
@@ -653,6 +660,7 @@ model Tenant {
   slug               String               @unique
   createdAt          DateTime             @default(now())
   Announcement       Announcement[]
+  Course             Course[]
   CommunityPost      CommunityPost[]
   AttendanceRecord   AttendanceRecord[]
   AuditLog           AuditLog[]
@@ -1118,6 +1126,8 @@ enum MemberStatus {
   INACTIVE
   TRANSFERRED
   DECEASED
+  /// Set by a unit's team lead from the Follow-Up pipeline. Blocks login until restored.
+  OPTED_OUT
 }
 
 enum CareAssignmentStatus {
@@ -1202,6 +1212,109 @@ model CommunityPost {
   @@index([tenantId, createdAt])
 }
 
+/// Discipleship course catalog, managed at /dashboard/admin/courses. A course can
+/// require another course be completed (100% exam score) before it unlocks.
+model Course {
+  id             String    @id
+  tenantId       String
+  slug           String
+  title          String
+  tagline        String
+  description    String
+  category       String
+  iconKey        String
+  gradientFrom   String
+  gradientTo     String
+  duration       String
+  instructorName String
+  instructorRole String
+  outcomes       String[]
+  prerequisiteId String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  Tenant        Tenant             @relation(fields: [tenantId], references: [id])
+  Prerequisite  Course?            @relation("CoursePrerequisite", fields: [prerequisiteId], references: [id], onDelete: SetNull)
+  UnlocksFor    Course[]           @relation("CoursePrerequisite")
+  Modules       CourseModule[]
+  ExamQuestions ExamQuestion[]
+  Enrollments   CourseEnrollment[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([prerequisiteId])
+}
+
+model CourseModule {
+  id        String   @id
+  tenantId  String
+  courseId  String
+  title     String
+  sortOrder Int      @default(0)
+  /// Optional single checkpoint question gating entry into the next module.
+  /// checkCorrectIndex is never sent to members before they submit, same as ExamQuestion.
+  checkQuestion     String?
+  checkOptions      String[] @default([])
+  checkCorrectIndex Int?
+
+  Course  Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  Lessons CourseLesson[]
+
+  @@index([courseId])
+}
+
+model CourseLesson {
+  id        String  @id
+  tenantId  String
+  moduleId  String
+  title     String
+  duration  String
+  videoUrl  String?
+  sortOrder Int     @default(0)
+
+  Module CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+}
+
+/// Options + correctIndex are never sent to members before they submit — the
+/// backend grades exams server-side so the correct answer can't be read off the wire.
+model ExamQuestion {
+  id           String   @id
+  tenantId     String
+  courseId     String
+  question     String
+  options      String[]
+  correctIndex Int
+  sortOrder    Int      @default(0)
+
+  Course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
+
+model CourseEnrollment {
+  id           String    @id
+  tenantId     String
+  courseId     String
+  memberId     String
+  enrolledAt   DateTime  @default(now())
+  completed    Boolean   @default(false)
+  completedAt  DateTime?
+  lastScorePct Int?
+  attempts     Int       @default(0)
+  /// CourseLesson ids the member has watched to completion (YouTube "ended" event).
+  watchedLessonIds String[] @default([])
+  /// CourseModule ids whose checkpoint question has been answered correctly.
+  passedModuleIds  String[] @default([])
+
+  Course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  Member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, memberId])
+  @@index([tenantId])
+  @@index([memberId])
+}
 model HomeCell {
   id          String   @id
   tenantId    String

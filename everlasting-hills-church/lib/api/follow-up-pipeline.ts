@@ -108,18 +108,8 @@ export function useLogFollowUpContact() {
   });
 }
 
-export function useMarkFollowUpReady() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => api.patch<FollowUpEntry>(`/follow-up/${id}/ready`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["follow-up"] });
-      showToast.success("Marked ready to close — the unit leader will review");
-    },
-    onError: (err) => showToast.error(errorMessage(err, "Couldn't mark this ready")),
-  });
-}
-
+/** Logs a final outcome — available to a team lead any time, not gated behind the
+ * assignee requesting review (follow-up is continuous, not a queue with a hand-off). */
 export function useConfirmFollowUp() {
   const qc = useQueryClient();
   return useMutation({
@@ -127,21 +117,32 @@ export function useConfirmFollowUp() {
       api.patch<FollowUpEntry>(`/follow-up/${id}/confirm`, { outcome, note }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["follow-up"] });
-      showToast.success("Confirmed and archived");
+      showToast.success("Outcome logged");
     },
-    onError: (err) => showToast.error(errorMessage(err, "Couldn't confirm")),
+    onError: (err) => showToast.error(errorMessage(err, "Couldn't log this outcome")),
   });
 }
 
-export function useRejectFollowUp() {
+export function useOptOutFollowUpMember() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, note }: { id: string; note: string }) =>
-      api.patch<FollowUpEntry>(`/follow-up/${id}/reject`, { note }),
-    onSuccess: () => {
+    mutationFn: (id: string) => api.patch<FollowUpEntry>(`/follow-up/${id}/opt-out`),
+    onSuccess: (entry) => {
       qc.invalidateQueries({ queryKey: ["follow-up"] });
-      showToast.success("Sent back for another attempt");
+      showToast.success(`${entry.person.name} opted out — they can no longer sign in`);
     },
-    onError: (err) => showToast.error(errorMessage(err, "Couldn't reopen")),
+    onError: (err) => showToast.error(errorMessage(err, "Couldn't opt this member out")),
+  });
+}
+
+export function useRestoreFollowUpMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.patch<FollowUpEntry>(`/follow-up/${id}/restore`),
+    onSuccess: (entry) => {
+      qc.invalidateQueries({ queryKey: ["follow-up"] });
+      showToast.success(`${entry.person.name} restored — they can sign in again`);
+    },
+    onError: (err) => showToast.error(errorMessage(err, "Couldn't restore this member")),
   });
 }

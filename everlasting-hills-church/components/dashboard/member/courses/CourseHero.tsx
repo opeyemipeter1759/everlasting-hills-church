@@ -1,13 +1,8 @@
-import type { Course } from "@/lib/courses-data";
+import { ICON_OPTIONS } from "@/lib/courses-data";
+import type { CourseDetail } from "@/lib/api/courses";
 
-const LEVEL_BADGE: Record<Course["level"], string> = {
-  Beginner: "bg-emerald-500/15 text-emerald-100",
-  Intermediate: "bg-amber-500/15 text-amber-100",
-  Advanced: "bg-rose-500/15 text-rose-100",
-};
-
-export default function CourseHero({ course }: { course: Course }) {
-  const Icon = course.icon;
+export default function CourseHero({ course }: { course: CourseDetail }) {
+  const Icon = ICON_OPTIONS[course.iconKey] ?? ICON_OPTIONS.BookOpen;
   const [from, to] = course.gradient;
 
   return (
@@ -23,9 +18,6 @@ export default function CourseHero({ course }: { course: Course }) {
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/80 backdrop-blur-sm">
             {course.category}
-          </span>
-          <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm ${LEVEL_BADGE[course.level]}`}>
-            {course.level}
           </span>
         </div>
 

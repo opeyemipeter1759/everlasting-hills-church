@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, Clock, GraduationCap, Lock, PlayCircle, Users } from "lucide-react";
-import type { Course } from "@/lib/courses-data";
-import type { CourseProgress, CourseStatus } from "@/lib/courses-store";
+import type { CourseDetail, CourseProgress, CourseStatus } from "@/lib/api/courses";
 
 export default function CourseEnrollCard({
   course,
@@ -11,7 +10,7 @@ export default function CourseEnrollCard({
   enrolling,
   onEnroll,
 }: {
-  course: Course;
+  course: CourseDetail;
   status: CourseStatus;
   progress: CourseProgress | undefined;
   prerequisiteTitle?: string;
@@ -68,19 +67,22 @@ export default function CourseEnrollCard({
               <CheckCircle2 size={16} /> Course Completed
             </div>
             <Link
-              href={`/dashboard/explore-courses/${course.slug}/exam`}
+              href={`/dashboard/courses/${course.slug}`}
               className="mt-2 block text-center text-xs font-semibold text-gray-400 hover:text-[#87102C] dark:hover:text-[#e8768a]"
             >
-              Retake exam
+              View in My Courses
             </Link>
           </>
         ) : status === "enrolled" ? (
           <>
+            <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600/10 px-4 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+              <CheckCircle2 size={16} /> You're Enrolled
+            </div>
             <Link
-              href={`/dashboard/explore-courses/${course.slug}/exam`}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24]"
+              href={`/dashboard/courses/${course.slug}`}
+              className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24]"
             >
-              <GraduationCap size={16} /> Take the Exam
+              <GraduationCap size={16} /> Go to My Courses
             </Link>
             {progress?.lastScorePct != null && (
               <p className="mt-3 text-center text-[11px] text-gray-400 dark:text-white/40">
@@ -98,7 +100,7 @@ export default function CourseEnrollCard({
             <GraduationCap size={16} /> {enrolling ? "Enrolling…" : "Take This Course"}
           </button>
         )}
-        {status !== "locked" && status !== "completed" && (
+        {status === "available" && (
           <p className="mt-3 text-center text-[11px] text-gray-400 dark:text-white/40">
             Free for all church members · Learn at your own pace
           </p>

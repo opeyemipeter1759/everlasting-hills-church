@@ -1,22 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ArrowLeft, CheckCircle2, GraduationCap } from "lucide-react";
-import { getCatalog, getCourseBySlug } from "@/lib/courses-catalog";
-import { enrollInCourse, getCourseStatus } from "@/lib/courses-store";
-import { useCourseProgress } from "@/hooks";
+import { useCourse, useCourses, useEnrollCourse, useMyCourseProgress, getCourseStatus } from "@/lib/api/courses";
+import CourseDetailSkeleton from "@/components/ui/skeleton/CourseDetailSkeleton";
 import CourseHero from "./CourseHero";
 import CourseCurriculum from "./CourseCurriculum";
 import CourseEnrollCard from "./CourseEnrollCard";
 
 export default function CourseDetailClient({ slug }: { slug: string }) {
   const router = useRouter();
-  const catalog = useMemo(getCatalog, []);
-  const course = getCourseBySlug(slug);
-  const { progress, refresh } = useCourseProgress();
-  const [enrolling, setEnrolling] = useState(false);
+  const { data: catalog = [] } = useCourses();
+  const { data: course, isLoading } = useCourse(slug);
+  const { data: progress = {} } = useMyCourseProgress();
+  const enroll = useEnrollCourse();
+
+  if (isLoading) return <CourseDetailSkeleton />;
 
   if (!course) {
     return (
@@ -39,14 +39,10 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
 
   function handleEnroll() {
     if (!course || status !== "available") return;
-    setEnrolling(true);
-    // No backend yet — persist locally so the UI feels real, and note the swap point.
-    setTimeout(() => {
-      enrollInCourse(course.id);
-      refresh();
-      setEnrolling(false);
-      toast.success(`You're enrolled in ${course.title}!`, { icon: "🎓" });
-    }, 400);
+    enroll.mutate(course.id, {
+      onSuccess: () => toast.success(`You're enrolled in ${course.title}!`, { icon: "🎓" }),
+      onError: (err) => toast.error((err as Error).message || "Couldn't enroll — try again"),
+    });
   }
 
   return (
@@ -82,7 +78,7 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
             </ul>
           </div>
 
-          <CourseCurriculum modules={course.curriculum} />
+          <CourseCurriculum modules={course.curriculum} interactive={false} />
         </div>
 
         <div className="lg:sticky lg:top-6">
@@ -91,7 +87,7 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
             status={status}
             progress={progress[course.id]}
             prerequisiteTitle={prerequisite?.title}
-            enrolling={enrolling}
+            enrolling={enroll.isPending}
             onEnroll={handleEnroll}
           />
         </div>
