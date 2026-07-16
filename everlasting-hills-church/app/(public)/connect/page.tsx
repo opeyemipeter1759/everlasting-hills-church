@@ -67,11 +67,11 @@ const INVOLVEMENT_CARDS = [
     size: "small",
     color: "bg-church-maroon/10"
   },
-  { 
-    title: "Groups", 
-    description: "Better together in community.",
-    icon: <Handshake className="w-5 h-5" />, 
-    href: "#form-community",
+  {
+    title: "Home Cell",
+    description: "Life happens in small groups.",
+    icon: <Handshake className="w-5 h-5" />,
+    href: "/connect/home-cell",
     size: "small",
     color: "bg-white/5"
   },
@@ -145,12 +145,12 @@ export default function GetInvolvedPage() {
             featured
           />
 
-          {/* Medium: Community Groups */}
-          <BentoCard 
-            title="Life Groups" 
-            desc="Better together."
+          {/* Medium: Home Cell */}
+          <BentoCard
+            title="Home Cell"
+            desc="Life happens in small groups."
             icon={<Users className="w-6 h-6" />}
-            href="#groups"
+            href="/connect/home-cell"
             className="md:col-span-2 md:row-span-1 bg-white/5"
           />
 

@@ -20,6 +20,7 @@ const navLinks = [
   { label: "Ministries", href: "/ministries" },
   { label: "Visit", href: "/visit" },
   { label: "Connect", href: "/connect" },
+  { label: "Home Cell", href: "/connect/home-cell" },
   { label: "Give", href: "/give" },
 ];
 
