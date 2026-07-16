@@ -122,7 +122,7 @@ export class HomeCellService {
     return this.prisma.homeCell.delete({ where: { id: cell.id } });
   }
 
-  async join(id: string, data: { name: string; phone: string; email?: string; preferredTime?: string; prayerRequest?: string }) {
+  async join(id: string, data: { name: string; phone: string; email: string }) {
     const cell = await this.findOne(id);
 
     const record = await this.prisma.formSubmission.create({
@@ -140,32 +140,36 @@ export class HomeCellService {
       text: [
         `Cell: ${cell.name}`,
         `Leader: ${cell.leaderName}`,
+        `Meeting: ${cell.meetingDay}s at ${cell.meetingTime}`,
+        `Location: ${cell.address}, ${cell.city}, ${cell.state}`,
+        `Contact: ${cell.leaderPhone ?? '—'}`,
         '',
         `Name: ${data.name}`,
         `Phone: ${data.phone}`,
         `Email: ${data.email ?? '—'}`,
-        `Preferred Time: ${data.preferredTime ?? '—'}`,
-        `Prayer Request: ${data.prayerRequest ?? '—'}`,
       ].join('\n'),
       tag: 'home-cell-join-admin',
     });
 
-    if (data.email) {
-      this.events.emit(NotificationEvents.SendEmail, {
+    this.events.emit(NotificationEvents.SendEmail, {
         to: data.email,
-        subject: `Your Home Cell request — Everlasting Hills Church`,
+        subject: `You're joining ${cell.name} — Everlasting Hills Church`,
         text: [
           `Dear ${data.name.split(/\s+/)[0]},`,
           '',
-          `Thank you for requesting to join the ${cell.name} Home Cell.`,
-          `The Cell Leader, ${cell.leaderName}, will reach out to you soon.`,
+          `You've requested to join the ${cell.name} Home Cell. Here are your details:`,
+          '',
+          `📍 Location:  ${cell.address}, ${cell.city}, ${cell.state}`,
+          `📞 Contact:   ${cell.leaderPhone ?? '—'}`,
+          `🗓  Meets:     ${cell.meetingDay}s at ${cell.meetingTime}`,
+          '',
+          'Someone from the cell will be in touch with you shortly to welcome you.',
           '',
           'God bless you,',
           'Everlasting Hills Church',
         ].join('\n'),
         tag: 'home-cell-join-visitor',
       });
-    }
 
     return { success: true, message: 'Request submitted', data: record };
   }

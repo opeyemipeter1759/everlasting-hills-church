@@ -21,9 +21,7 @@ class CreateCellDto {
 class JoinDto {
   @IsString() @IsNotEmpty() @MaxLength(120) name!: string;
   @IsString() @IsNotEmpty() @MaxLength(40)  phone!: string;
-  @IsOptional() @IsEmail() @MaxLength(254)  email?: string;
-  @IsOptional() @IsString() @MaxLength(80)  preferredTime?: string;
-  @IsOptional() @IsString() @MaxLength(500) prayerRequest?: string;
+  @IsEmail() @IsNotEmpty() @MaxLength(254)  email!: string;
 }
 
 @ApiTags('home-cell')

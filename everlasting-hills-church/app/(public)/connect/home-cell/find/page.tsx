@@ -267,7 +267,7 @@ function FormField({ label, required, input }: { label: string; required?: boole
 // ── Join modal ────────────────────────────────────────────────────────────────
 
 function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
-  const [form, setForm] = useState({ name: "", phone: "", email: "", prayerRequest: "" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "" });
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -276,7 +276,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
     setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
   }
 
-  const valid = form.name.trim().length > 1 && form.phone.trim().length > 5;
+  const valid = form.name.trim().length > 1 && form.phone.trim().length > 5 && form.email.trim().length > 3;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -286,8 +286,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
       await apiClient.post(`/home-cell/${cell.id}/join`, {
         name: form.name.trim(),
         phone: form.phone.trim(),
-        email: form.email.trim() || undefined,
-        prayerRequest: form.prayerRequest.trim() || undefined,
+        email: form.email.trim(),
       });
       setDone(true);
     } catch {
@@ -346,7 +345,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
               {[
                 { name: "name",  label: "Full Name",        placeholder: "Tunde Adeyemi",     required: true,  type: "text"  },
                 { name: "phone", label: "Phone Number",     placeholder: "+234 801 234 5678",  required: true,  type: "text"  },
-                { name: "email", label: "Email (optional)", placeholder: "tunde@example.com",  required: false, type: "email" },
+                { name: "email", label: "Email", placeholder: "tunde@example.com", required: true, type: "email" },
               ].map((f) => (
                 <div key={f.name}>
                   <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-1.5">
@@ -360,18 +359,6 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
                   />
                 </div>
               ))}
-
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-1.5">
-                  Prayer Request
-                </label>
-                <textarea
-                  name="prayerRequest" rows={3}
-                  value={form.prayerRequest} onChange={handle}
-                  placeholder="Share anything you'd like the cell to pray for…"
-                  className="w-full border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white bg-white/[0.03] placeholder:text-white/20 focus:outline-none focus:border-church-accent/40 focus:bg-white/[0.05] transition-all resize-none"
-                />
-              </div>
 
               {err && (
                 <div className="flex items-center gap-2 text-rose-400 text-sm">
