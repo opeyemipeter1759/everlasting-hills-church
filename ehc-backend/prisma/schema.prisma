@@ -233,6 +233,12 @@ enum FollowUpOutcome {
   RETURNED
   NOT_INTERESTED
   UNREACHABLE
+  /// Below: the current outcome taxonomy shown in the "Log Outcome" form.
+  REACHABLE
+  TRAVEL
+  CAME_FOR_VISITING
+  HAVE_A_CHURCH
+  WANT_TO_BE_MEMBER
 }
 
 enum FollowUpContactMethod {
@@ -1119,6 +1125,8 @@ enum MemberStatus {
   INACTIVE
   TRANSFERRED
   DECEASED
+  /// Set by a unit's team lead from the Follow-Up pipeline. Blocks login until restored.
+  OPTED_OUT
 }
 
 enum CareAssignmentStatus {
@@ -1213,7 +1221,6 @@ model Course {
   tagline        String
   description    String
   category       String
-  level          CourseLevel @default(BEGINNER)
   iconKey        String
   gradientFrom   String
   gradientTo     String
@@ -1243,6 +1250,11 @@ model CourseModule {
   courseId  String
   title     String
   sortOrder Int      @default(0)
+  /// Optional single checkpoint question gating entry into the next module.
+  /// checkCorrectIndex is never sent to members before they submit, same as ExamQuestion.
+  checkQuestion     String?
+  checkOptions      String[] @default([])
+  checkCorrectIndex Int?
 
   Course  Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
   Lessons CourseLesson[]
@@ -1292,6 +1304,8 @@ model CourseEnrollment {
   attempts     Int       @default(0)
   /// CourseLesson ids the member has watched to completion (YouTube "ended" event).
   watchedLessonIds String[] @default([])
+  /// CourseModule ids whose checkpoint question has been answered correctly.
+  passedModuleIds  String[] @default([])
 
   Course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   Member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
@@ -1299,10 +1313,4 @@ model CourseEnrollment {
   @@unique([courseId, memberId])
   @@index([tenantId])
   @@index([memberId])
-}
-
-enum CourseLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
 }

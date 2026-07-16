@@ -90,4 +90,15 @@ export class CoursesController {
   markLessonWatched(@CurrentUser() user: AuthUser, @Param('id') id: string, @Param('lessonId') lessonId: string) {
     return this.courses.markLessonWatched(user, id, lessonId);
   }
+
+  @Post(':id/modules/:moduleId/check/submit')
+  @ApiOperation({ summary: "Submit a module's checkpoint answer; graded server-side, gates the next module" })
+  submitModuleCheck(
+    @CurrentUser() user: AuthUser,
+    @Param('id') id: string,
+    @Param('moduleId') moduleId: string,
+    @Body() body: unknown,
+  ) {
+    return this.courses.submitModuleCheck(user, id, moduleId, body);
+  }
 }

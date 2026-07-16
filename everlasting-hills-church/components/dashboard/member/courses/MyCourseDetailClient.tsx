@@ -84,6 +84,7 @@ export default function MyCourseDetailClient({ slug }: { slug: string }) {
             modules={course.curriculum}
             slug={course.slug}
             watchedLessonIds={progress[course.id]?.watchedLessonIds}
+            passedModuleIds={progress[course.id]?.passedModuleIds}
             interactive
           />
         </div>

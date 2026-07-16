@@ -1,14 +1,10 @@
 import { fieldCls } from "@/components/ui/overlay/FormModal";
-import { LEVEL_LABEL, type CourseLevel } from "@/lib/api/courses";
-
-const LEVELS: CourseLevel[] = ["BEGINNER", "INTERMEDIATE", "ADVANCED"];
 
 export interface CourseFormFields {
   title: string;
   tagline: string;
   description: string;
   category: string;
-  level: CourseLevel;
   duration: string;
   instructor: { name: string; role: string };
 }
@@ -48,17 +44,6 @@ export default function CourseDetailsFields({
       <div>
         <label className={LABEL}>Category</label>
         <input value={values.category} onChange={(e) => onChange({ category: e.target.value })} placeholder="e.g. Bible Study" className={fieldCls} />
-      </div>
-
-      <div>
-        <label className={LABEL}>Level</label>
-        <select value={values.level} onChange={(e) => onChange({ level: e.target.value as CourseLevel })} className={fieldCls}>
-          {LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {LEVEL_LABEL[l]}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div>

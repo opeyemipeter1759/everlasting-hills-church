@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, Loader2, Lock, PlayCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, GraduationCap, Loader2, Lock, PlayCircle, ShieldQuestion } from "lucide-react";
 import { getModuleWatchStatus, isLessonUnlocked, useCourse, useMarkLessonWatched, useMyCourseProgress } from "@/lib/api/courses";
 import YouTubePlayer from "./YouTubePlayer";
 import CourseWatchSkeleton from "@/components/ui/skeleton/CourseWatchSkeleton";
@@ -56,6 +56,7 @@ export default function CourseWatchClient({ slug, lessonParam }: { slug: string;
   }
 
   const watchedLessonIds = courseProgress.watchedLessonIds;
+  const passedModuleIds = courseProgress.passedModuleIds;
   const current = flat.find((l) => l.moduleIndex === moduleIndex && l.lessonIndex === lessonIndex);
 
   if (!current || !current.videoUrl) {
@@ -64,7 +65,7 @@ export default function CourseWatchClient({ slug, lessonParam }: { slug: string;
 
   // Route-level guard so a direct link can't skip ahead of the sequential lock —
   // mirrors the sidebar/curriculum lock below.
-  if (!watchedLessonIds.includes(current.id) && !isLessonUnlocked(course, current.id, watchedLessonIds)) {
+  if (!watchedLessonIds.includes(current.id) && !isLessonUnlocked(course, current.id, watchedLessonIds, passedModuleIds)) {
     return <NotFound label="Complete the previous lesson first to unlock this one." backHref={`/dashboard/courses/${slug}`} />;
   }
 
@@ -79,13 +80,19 @@ export default function CourseWatchClient({ slug, lessonParam }: { slug: string;
   }
 
   const currentId = current.id;
+  const currentModule = course.curriculum[moduleIndex];
+  const moduleVideoIds = currentModule.lessons.filter((l) => l.videoUrl).map((l) => l.id);
+  const isLastVideoInModule = moduleVideoIds[moduleVideoIds.length - 1] === currentId;
+  const needsCheckpoint = isLastVideoInModule && !!currentModule.check && !passedModuleIds.includes(currentModule.id);
+  const checkpointHref = `/dashboard/courses/${slug}/module/${currentModule.id}/check`;
 
   function handleEnded() {
     // Wait for the watch-status mutation (and its cache invalidation) to finish before
-    // navigating, so the next lesson's unlock guard sees fresh, not stale, progress.
+    // navigating, so the next step's unlock guard sees fresh, not stale, progress.
     markWatched.mutate(currentId, {
       onSuccess: () => {
-        if (nextLesson) router.push(hrefFor(nextLesson));
+        if (needsCheckpoint) router.push(checkpointHref);
+        else if (nextLesson) router.push(hrefFor(nextLesson));
       },
     });
   }
@@ -107,7 +114,11 @@ export default function CourseWatchClient({ slug, lessonParam }: { slug: string;
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80">
                 <Loader2 size={26} className="animate-spin text-white/70" />
                 <p className="text-sm font-semibold text-white/70">
-                  {nextLesson ? `Loading next lesson: ${nextLesson.title}…` : "Marking lesson complete…"}
+                  {needsCheckpoint
+                    ? "Loading checkpoint question…"
+                    : nextLesson
+                      ? `Loading next lesson: ${nextLesson.title}…`
+                      : "Marking lesson complete…"}
                 </p>
               </div>
             )}
@@ -188,6 +199,10 @@ export default function CourseWatchClient({ slug, lessonParam }: { slug: string;
           <div className="max-h-[70vh] overflow-y-auto no-scrollbar">
             {course.curriculum.map((mod, mi) => {
               const moduleStatus = getModuleWatchStatus(mod, watchedLessonIds);
+              const modVideoIds = mod.lessons.filter((l) => l.videoUrl).map((l) => l.id);
+              const modAllWatched = modVideoIds.length === 0 || modVideoIds.every((id) => watchedLessonIds.includes(id));
+              const modCheckPassed = passedModuleIds.includes(mod.id);
+              const showCheckpoint = !!mod.check;
               return (
                 <div key={mod.title}>
                   <div className="sticky top-0 flex items-center justify-between gap-2 bg-gray-50 dark:bg-white/[0.03] px-4 py-2">
@@ -204,7 +219,7 @@ export default function CourseWatchClient({ slug, lessonParam }: { slug: string;
                     const isCurrent = mi === moduleIndex && li === lessonIndex;
                     const hasVideo = !!l.videoUrl;
                     const watched = watchedLessonIds.includes(l.id);
-                    const unlocked = watched || isLessonUnlocked(course, l.id, watchedLessonIds);
+                    const unlocked = watched || isLessonUnlocked(course, l.id, watchedLessonIds, passedModuleIds);
                     const locked = hasVideo && !unlocked;
                     const rowCls = `flex items-center gap-3 border-l-2 px-4 py-2.5 text-sm transition-colors ${
                       isCurrent
@@ -243,6 +258,30 @@ export default function CourseWatchClient({ slug, lessonParam }: { slug: string;
                       </div>
                     );
                   })}
+
+                  {showCheckpoint &&
+                    (modCheckPassed ? (
+                      <div className="flex items-center gap-3 border-l-2 border-transparent px-4 py-2.5 text-sm text-emerald-600 dark:text-emerald-400">
+                        <CheckCircle2 size={14} className="flex-shrink-0" />
+                        <span className="min-w-0 flex-1 truncate font-semibold">Checkpoint passed</span>
+                      </div>
+                    ) : modAllWatched ? (
+                      <Link
+                        href={`/dashboard/courses/${slug}/module/${mod.id}/check`}
+                        className="flex items-center gap-3 border-l-2 border-transparent bg-[#87102C]/5 px-4 py-2.5 text-sm font-semibold text-[#87102C] hover:bg-[#87102C]/10 dark:bg-[#87102C]/15 dark:text-[#e8768a] dark:hover:bg-[#87102C]/25 transition-colors"
+                      >
+                        <ShieldQuestion size={14} className="flex-shrink-0" />
+                        <span className="min-w-0 flex-1 truncate">Answer checkpoint question</span>
+                      </Link>
+                    ) : (
+                      <div
+                        className="flex cursor-not-allowed items-center gap-3 border-l-2 border-transparent px-4 py-2.5 text-sm text-gray-400 dark:text-white/30"
+                        title="Watch every lesson in this module first"
+                      >
+                        <Lock size={13} className="flex-shrink-0" />
+                        <span className="min-w-0 flex-1 truncate">Checkpoint question</span>
+                      </div>
+                    ))}
                 </div>
               );
             })}

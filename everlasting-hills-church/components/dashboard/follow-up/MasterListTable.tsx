@@ -1,11 +1,11 @@
 "use client";
 
-import { ChevronRight, Phone, UserPlus } from "lucide-react";
+import { ChevronRight, Phone, ShieldOff, UserPlus } from "lucide-react";
 import type { FollowUpEntry } from "@/types/follow-up";
 import { EmptyState } from "@/components/ui/display/EmptyState";
 import { timeAgo } from "@/lib/utils/time";
 import { PersonAvatar } from "./PersonAvatar";
-import { RiskCategoryPill, SourceTypePill, StagePill } from "./StagePill";
+import { OutcomePill, RiskCategoryPill, SourceTypePill, StagePill } from "./StagePill";
 
 interface MasterListTableProps {
   entries: FollowUpEntry[];
@@ -45,12 +45,13 @@ export function MasterListTable({ entries, viewerId, onSelect, onAssign }: Maste
       <ul className="divide-y divide-[#E7CDD3]/30 dark:divide-white/[0.06]">
         {entries.map((entry) => {
           const isMine = entry.assignee?.id === viewerId;
+          const isOptedOut = entry.memberStatus === "OPTED_OUT";
           return (
-            <li key={entry.id}>
+            <li key={entry.id} className={isOptedOut ? "border-l-2 border-rose-400 dark:border-rose-500/50" : ""}>
               <button
                 type="button"
                 onClick={() => onSelect(entry)}
-                className="w-full flex items-center gap-4 px-6 py-3.5 text-left hover:bg-[#FFF4F6]/50 dark:hover:bg-white/[0.03] transition-colors"
+                className={`w-full flex items-center gap-4 px-6 py-3.5 text-left hover:bg-[#FFF4F6]/50 dark:hover:bg-white/[0.03] transition-colors ${isOptedOut ? "opacity-70" : ""}`}
               >
                 <PersonAvatar person={entry.person} />
 
@@ -59,6 +60,11 @@ export function MasterListTable({ entries, viewerId, onSelect, onAssign }: Maste
                     <p className="text-sm font-semibold text-[#111] dark:text-white truncate">{entry.person.name}</p>
                     <SourceTypePill type={entry.sourceType} />
                     {entry.absenteeDetail?.category && <RiskCategoryPill category={entry.absenteeDetail.category} />}
+                    {isOptedOut && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/20">
+                        <ShieldOff size={9} aria-hidden="true" /> Opted Out
+                      </span>
+                    )}
                     <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap bg-gray-100 dark:bg-white/[0.06] text-gray-500 dark:text-white/40 border-gray-200 dark:border-white/[0.09]">
                       {entry.unitName}
                     </span>
@@ -104,9 +110,10 @@ export function MasterListTable({ entries, viewerId, onSelect, onAssign }: Maste
                   )}
                 </div>
 
-                {/* Stage */}
+                {/* Stage — once an outcome's been logged, that's more useful to scan
+                    than the generic "Confirmed" stage label */}
                 <div className="hidden md:block w-28 flex-shrink-0">
-                  <StagePill stage={entry.stage} />
+                  {entry.outcome ? <OutcomePill outcome={entry.outcome} /> : <StagePill stage={entry.stage} />}
                 </div>
 
                 {/* Progress */}

@@ -8,15 +8,19 @@ const LessonSchema = z.object({
   videoUrl: z.string().trim().max(500).nullish(),
 });
 
-const ModuleSchema = z.object({
-  title: text(200),
-  lessons: z.array(LessonSchema).max(60).default([]),
-});
-
 const ExamQuestionSchema = z.object({
   question: text(500),
   options: z.array(text(300)).length(4),
   correctIndex: z.number().int().min(0).max(3),
+});
+
+/** A module's optional single checkpoint question, gating entry into the next module. */
+const ModuleCheckSchema = ExamQuestionSchema.nullish();
+
+const ModuleSchema = z.object({
+  title: text(200),
+  lessons: z.array(LessonSchema).max(60).default([]),
+  check: ModuleCheckSchema,
 });
 
 export const CourseInputSchema = z.object({
@@ -24,7 +28,6 @@ export const CourseInputSchema = z.object({
   tagline: text(300),
   description: z.string().trim().max(4000).default(''),
   category: text(80),
-  level: z.enum(['BEGINNER', 'INTERMEDIATE', 'ADVANCED']),
   iconKey: text(60),
   gradient: z.tuple([z.string().trim().min(1), z.string().trim().min(1)]),
   duration: text(40),
@@ -40,3 +43,8 @@ export const SubmitExamSchema = z.object({
   answers: z.record(z.string(), z.number().int().min(0)),
 });
 export type SubmitExamInput = z.infer<typeof SubmitExamSchema>;
+
+export const SubmitModuleCheckSchema = z.object({
+  answer: z.number().int().min(0),
+});
+export type SubmitModuleCheckInput = z.infer<typeof SubmitModuleCheckSchema>;

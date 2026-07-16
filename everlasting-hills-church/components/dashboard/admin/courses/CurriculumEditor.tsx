@@ -2,7 +2,8 @@
 
 import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { fieldCls } from "@/components/ui/overlay/FormModal";
-import type { CourseLesson, CourseModule } from "@/lib/api/courses";
+import ModuleCheckEditor from "./ModuleCheckEditor";
+import type { CourseLesson, CourseModuleAdmin, ModuleCheckAdmin } from "@/lib/api/courses";
 
 function emptyLesson(): CourseLesson {
   // Client-only placeholder id, just for a stable React key — the backend always
@@ -10,18 +11,18 @@ function emptyLesson(): CourseLesson {
   return { id: `l-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: "", duration: "", videoUrl: null };
 }
 
-function emptyModule(): CourseModule {
-  return { title: "", lessons: [emptyLesson()] };
+function emptyModule(): CourseModuleAdmin {
+  return { id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: "", lessons: [emptyLesson()], check: null };
 }
 
 export default function CurriculumEditor({
   curriculum,
   onChange,
 }: {
-  curriculum: CourseModule[];
-  onChange: (curriculum: CourseModule[]) => void;
+  curriculum: CourseModuleAdmin[];
+  onChange: (curriculum: CourseModuleAdmin[]) => void;
 }) {
-  function updateModule(i: number, patch: Partial<CourseModule>) {
+  function updateModule(i: number, patch: Partial<CourseModuleAdmin>) {
     onChange(curriculum.map((m, idx) => (idx === i ? { ...m, ...patch } : m)));
   }
 
@@ -31,6 +32,10 @@ export default function CurriculumEditor({
         idx === mi ? { ...m, lessons: m.lessons.map((l, lidx) => (lidx === li ? { ...l, ...patch } : l)) } : m,
       ),
     );
+  }
+
+  function updateCheck(mi: number, check: ModuleCheckAdmin | null) {
+    updateModule(mi, { check });
   }
 
   // Only lessons with an actual title survive to the saved course — count those, not
@@ -62,8 +67,9 @@ export default function CurriculumEditor({
 
       <div className="space-y-4">
         {curriculum.map((mod, mi) => (
-          <div key={mi} className="rounded-xl border border-gray-200 dark:border-white/10 p-4">
+          <div key={mod.id} className="rounded-xl border border-gray-200 dark:border-white/10 p-4">
             <div className="mb-2.5 flex items-start gap-2">
+              <span className="mt-2.5 flex-shrink-0 text-xs font-bold text-gray-300 dark:text-white/20">{mi + 1}</span>
               <input
                 value={mod.title}
                 onChange={(e) => updateModule(mi, { title: e.target.value })}
@@ -120,6 +126,10 @@ export default function CurriculumEditor({
               >
                 <Plus size={12} /> Add lesson
               </button>
+            </div>
+
+            <div className="mt-3 border-t border-gray-100 dark:border-white/[0.06] pt-3">
+              <ModuleCheckEditor check={mod.check} onChange={(check) => updateCheck(mi, check)} />
             </div>
           </div>
         ))}

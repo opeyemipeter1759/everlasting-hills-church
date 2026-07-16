@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
-import { CourseInputSchema, SubmitExamSchema, type CourseInput } from './dto/course.schema';
+import { CourseInputSchema, SubmitExamSchema, SubmitModuleCheckSchema, type CourseInput } from './dto/course.schema';
 
 const courseListInclude = {
   Prerequisite: { select: { slug: true, title: true } },
@@ -66,7 +66,6 @@ export class CoursesService {
       title: c.title,
       tagline: c.tagline,
       category: c.category,
-      level: c.level,
       iconKey: c.iconKey,
       gradient: [c.gradientFrom, c.gradientTo] as [string, string],
       duration: c.duration,
@@ -133,7 +132,6 @@ export class CoursesService {
       tagline: course.tagline,
       description: course.description,
       category: course.category,
-      level: course.level,
       iconKey: course.iconKey,
       gradient: [course.gradientFrom, course.gradientTo] as [string, string],
       duration: course.duration,
@@ -142,8 +140,10 @@ export class CoursesService {
       lessonsCount: course.Modules.reduce((n, m) => n + m.Lessons.length, 0),
       studentsCount: course._count.Enrollments,
       curriculum: course.Modules.map((m) => ({
+        id: m.id,
         title: m.title,
         lessons: m.Lessons.map((l) => ({ id: l.id, title: l.title, duration: l.duration, videoUrl: l.videoUrl })),
+        check: m.checkQuestion ? { question: m.checkQuestion, options: m.checkOptions } : null,
       })),
       prerequisiteSlug: course.Prerequisite?.slug ?? null,
       exam: course.ExamQuestions.map((q) => ({ id: q.id, question: q.question, options: q.options })),
@@ -168,15 +168,19 @@ export class CoursesService {
       tagline: course.tagline,
       description: course.description,
       category: course.category,
-      level: course.level,
       iconKey: course.iconKey,
       gradient: [course.gradientFrom, course.gradientTo] as [string, string],
       duration: course.duration,
       instructor: { name: course.instructorName, role: course.instructorRole },
       outcomes: course.outcomes,
       curriculum: course.Modules.map((m) => ({
+        id: m.id,
         title: m.title,
         lessons: m.Lessons.map((l) => ({ id: l.id, title: l.title, duration: l.duration, videoUrl: l.videoUrl })),
+        check:
+          m.checkQuestion && m.checkCorrectIndex !== null
+            ? { question: m.checkQuestion, options: m.checkOptions, correctIndex: m.checkCorrectIndex }
+            : null,
       })),
       prerequisiteId: course.prerequisiteId,
       exam: course.ExamQuestions.map((q) => ({ id: q.id, question: q.question, options: q.options, correctIndex: q.correctIndex })),
@@ -192,7 +196,16 @@ export class CoursesService {
     for (const [mi, mod] of dto.curriculum.entries()) {
       const moduleId = randomUUID();
       await tx.courseModule.create({
-        data: { id: moduleId, tenantId: this.tenantId, courseId, title: mod.title, sortOrder: mi },
+        data: {
+          id: moduleId,
+          tenantId: this.tenantId,
+          courseId,
+          title: mod.title,
+          sortOrder: mi,
+          checkQuestion: mod.check?.question ?? null,
+          checkOptions: mod.check?.options ?? [],
+          checkCorrectIndex: mod.check?.correctIndex ?? null,
+        },
       });
       for (const [li, lesson] of mod.lessons.entries()) {
         await tx.courseLesson.create({
@@ -239,7 +252,6 @@ export class CoursesService {
           tagline: dto.tagline,
           description: dto.description,
           category: dto.category,
-          level: dto.level,
           iconKey: dto.iconKey,
           gradientFrom: dto.gradient[0],
           gradientTo: dto.gradient[1],
@@ -277,7 +289,6 @@ export class CoursesService {
           tagline: dto.tagline,
           description: dto.description,
           category: dto.category,
-          level: dto.level,
           iconKey: dto.iconKey,
           gradientFrom: dto.gradient[0],
           gradientTo: dto.gradient[1],
@@ -313,15 +324,25 @@ export class CoursesService {
     const rows = await this.prisma.courseEnrollment.findMany({ where: { tenantId: this.tenantId, memberId } });
     const map: Record<
       string,
-      { enrolled: boolean; completed: boolean; lastScorePct: number | null; attempts: number; watchedLessonIds: string[] }
+      {
+        enrolled: boolean;
+        completed: boolean;
+        completedAt: string | null;
+        lastScorePct: number | null;
+        attempts: number;
+        watchedLessonIds: string[];
+        passedModuleIds: string[];
+      }
     > = {};
     for (const r of rows) {
       map[r.courseId] = {
         enrolled: true,
         completed: r.completed,
+        completedAt: r.completedAt?.toISOString() ?? null,
         lastScorePct: r.lastScorePct,
         attempts: r.attempts,
         watchedLessonIds: r.watchedLessonIds,
+        passedModuleIds: r.passedModuleIds,
       };
     }
     return map;
@@ -350,6 +371,39 @@ export class CoursesService {
     }
 
     return { lessonId, watched: true };
+  }
+
+  /**
+   * Grades a module's checkpoint question server-side, same non-reveal contract as
+   * submitExam — checkCorrectIndex is never sent to the client, only whether the
+   * submitted answer was right.
+   */
+  async submitModuleCheck(actor: AuthUser, courseId: string, moduleId: string, raw: unknown) {
+    const dto = this.parse(SubmitModuleCheckSchema, raw);
+    const memberId = await this.resolveMemberId(actor);
+
+    const mod = await this.prisma.courseModule.findFirst({
+      where: { id: moduleId, tenantId: this.tenantId, courseId },
+      select: { checkCorrectIndex: true },
+    });
+    if (!mod) throw new NotFoundException('Module not found on this course');
+    if (mod.checkCorrectIndex === null) throw new BadRequestException('This module has no checkpoint question');
+
+    const enrollment = await this.prisma.courseEnrollment.findUnique({
+      where: { courseId_memberId: { courseId, memberId } },
+    });
+    if (!enrollment) throw new BadRequestException('Enroll in this course first');
+
+    const correct = dto.answer === mod.checkCorrectIndex;
+    const alreadyPassed = enrollment.passedModuleIds.includes(moduleId);
+    if (correct && !alreadyPassed) {
+      await this.prisma.courseEnrollment.update({
+        where: { id: enrollment.id },
+        data: { passedModuleIds: { push: moduleId } },
+      });
+    }
+
+    return { correct, passed: correct || alreadyPassed };
   }
 
   async enroll(actor: AuthUser, courseId: string) {

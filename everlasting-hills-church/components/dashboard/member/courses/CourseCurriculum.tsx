@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, ChevronDown, Lock, PlayCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, Lock, PlayCircle, ShieldQuestion } from "lucide-react";
 import { getModuleWatchStatus, isLessonUnlocked, type CourseModule } from "@/lib/api/courses";
 
 const MODULE_BADGE: Record<string, string> = {
@@ -14,6 +14,7 @@ export default function CourseCurriculum({
   modules,
   slug,
   watchedLessonIds = [],
+  passedModuleIds = [],
   interactive = true,
 }: {
   modules: CourseModule[];
@@ -21,6 +22,8 @@ export default function CourseCurriculum({
   slug?: string;
   /** Lesson ids the member has watched to completion — drives the module badges. */
   watchedLessonIds?: string[];
+  /** Module ids whose checkpoint question has been passed. */
+  passedModuleIds?: string[];
   /** Explore Courses shows the syllabus read-only; My Courses lets you actually watch. */
   interactive?: boolean;
 }) {
@@ -36,6 +39,10 @@ export default function CourseCurriculum({
         {modules.map((mod, i) => {
           const open = openIndex === i;
           const moduleStatus = interactive ? getModuleWatchStatus(mod, watchedLessonIds) : "not-started";
+          const checkVideoIds = mod.lessons.filter((l) => l.videoUrl).map((l) => l.id);
+          const checkModuleWatched = checkVideoIds.length === 0 || checkVideoIds.every((id) => watchedLessonIds.includes(id));
+          const checkPassed = passedModuleIds.includes(mod.id);
+          const showCheckpoint = interactive && !!slug && !!mod.check;
           return (
             <div key={mod.title}>
               <button
@@ -61,7 +68,8 @@ export default function CourseCurriculum({
                 <ul className="space-y-1 px-5 pb-4">
                   {mod.lessons.map((lesson, li) => {
                     const watched = watchedLessonIds.includes(lesson.id);
-                    const unlocked = watched || isLessonUnlocked({ curriculum: modules }, lesson.id, watchedLessonIds);
+                    const unlocked =
+                      watched || isLessonUnlocked({ curriculum: modules }, lesson.id, watchedLessonIds, passedModuleIds);
                     const watchable = interactive && !!lesson.videoUrl && !!slug && unlocked;
                     const locked = interactive && !!lesson.videoUrl && !!slug && !unlocked;
                     const rowCls =
@@ -99,6 +107,33 @@ export default function CourseCurriculum({
                       </li>
                     );
                   })}
+
+                  {showCheckpoint && (
+                    <li>
+                      {checkPassed ? (
+                        <div className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 size={14} className="flex-shrink-0" />
+                          <span className="truncate font-semibold">Checkpoint passed</span>
+                        </div>
+                      ) : checkModuleWatched ? (
+                        <Link
+                          href={`/dashboard/courses/${slug}/module/${mod.id}/check`}
+                          className="flex w-full items-center gap-2.5 rounded-lg bg-[#87102C]/5 px-3 py-2.5 text-left text-sm font-semibold text-[#87102C] hover:bg-[#87102C]/10 dark:bg-[#87102C]/15 dark:text-[#e8768a] dark:hover:bg-[#87102C]/25 transition-colors"
+                        >
+                          <ShieldQuestion size={14} className="flex-shrink-0" />
+                          <span className="truncate">Answer checkpoint question</span>
+                        </Link>
+                      ) : (
+                        <div
+                          className="flex w-full cursor-not-allowed items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-gray-400 dark:text-white/30"
+                          title="Watch every lesson in this module first"
+                        >
+                          <Lock size={13} className="flex-shrink-0" />
+                          <span className="truncate">Checkpoint question</span>
+                        </div>
+                      )}
+                    </li>
+                  )}
                 </ul>
               )}
             </div>

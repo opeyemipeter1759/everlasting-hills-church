@@ -10,6 +10,7 @@ import {
   useSubmitExam,
   getCourseStatus,
   getVideoLessonIds,
+  hasPassedAllModuleChecks,
   hasWatchedAllVideos,
   type ExamResult,
 } from "@/lib/api/courses";
@@ -77,7 +78,11 @@ export default function CourseExamClient({ slug }: { slug: string }) {
   }
 
   const videoLessonIds = getVideoLessonIds(course);
-  const examUnlocked = videoLessonIds.length === 0 || hasWatchedAllVideos(course, progress[course.id]?.watchedLessonIds ?? []);
+  const watchedLessonIds = progress[course.id]?.watchedLessonIds ?? [];
+  const passedModuleIds = progress[course.id]?.passedModuleIds ?? [];
+  const allWatched = videoLessonIds.length === 0 || hasWatchedAllVideos(course, watchedLessonIds);
+  const allChecksPassed = hasPassedAllModuleChecks(course, passedModuleIds);
+  const examUnlocked = allWatched && allChecksPassed;
 
   if (!examUnlocked) {
     return (
@@ -85,7 +90,9 @@ export default function CourseExamClient({ slug }: { slug: string }) {
         <BackLink href={backHref} label={course.title} />
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-16 text-center">
           <GraduationCap size={28} className="text-gray-300 dark:text-gray-700" />
-          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Watch all the lessons first to unlock this exam.</p>
+          <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {!allWatched ? "Watch all the lessons first to unlock this exam." : "Pass every module checkpoint first to unlock this exam."}
+          </p>
         </div>
       </div>
     );

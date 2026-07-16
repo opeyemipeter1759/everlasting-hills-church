@@ -1,6 +1,16 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Clock, GraduationCap, Lock, PlayCircle, RotateCcw } from "lucide-react";
-import { getVideoLessonIds, hasWatchedAllVideos, type CourseDetail, type CourseProgress } from "@/lib/api/courses";
+import { Award, CheckCircle2, Clock, GraduationCap, Lock, PlayCircle, RotateCcw } from "lucide-react";
+import {
+  getVideoLessonIds,
+  hasPassedAllModuleChecks,
+  hasWatchedAllVideos,
+  type CourseDetail,
+  type CourseProgress,
+} from "@/lib/api/courses";
+import CourseCertificateModal from "./CourseCertificateModal";
 
 export default function CourseLearnSidebar({
   course,
@@ -9,13 +19,19 @@ export default function CourseLearnSidebar({
   course: CourseDetail;
   progress: CourseProgress | undefined;
 }) {
+  const [certificateOpen, setCertificateOpen] = useState(false);
   const completed = !!progress?.completed;
   const watchedLessonIds = progress?.watchedLessonIds ?? [];
+  const passedModuleIds = progress?.passedModuleIds ?? [];
   const videoLessonIds = getVideoLessonIds(course);
   const watchedCount = videoLessonIds.filter((id) => watchedLessonIds.includes(id)).length;
+  const modulesWithChecks = course.curriculum.filter((m) => m.check).length;
+  const checksPassedCount = course.curriculum.filter((m) => m.check && passedModuleIds.includes(m.id)).length;
   // No videos to gate on (text-only curriculum) — don't block the exam on something
   // that can't be watched.
-  const examUnlocked = videoLessonIds.length === 0 || hasWatchedAllVideos(course, watchedLessonIds);
+  const allWatched = videoLessonIds.length === 0 || hasWatchedAllVideos(course, watchedLessonIds);
+  const allChecksPassed = hasPassedAllModuleChecks(course, passedModuleIds);
+  const examUnlocked = allWatched && allChecksPassed;
 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] overflow-hidden">
@@ -42,6 +58,16 @@ export default function CourseLearnSidebar({
             </span>
           </div>
         )}
+        {modulesWithChecks > 0 && !completed && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="inline-flex items-center gap-2 text-gray-500 dark:text-white/50">
+              <CheckCircle2 size={14} /> Checkpoints
+            </span>
+            <span className="font-semibold text-gray-900 dark:text-white">
+              {checksPassedCount}/{modulesWithChecks}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="border-t border-gray-100 dark:border-white/8 p-5">
@@ -50,14 +76,30 @@ export default function CourseLearnSidebar({
             <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600/10 px-4 py-3 text-sm font-bold text-emerald-700 dark:text-emerald-400">
               <CheckCircle2 size={16} /> Course Completed
             </div>
+            <button
+              type="button"
+              onClick={() => setCertificateOpen(true)}
+              className="mt-2.5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24]"
+            >
+              <Award size={15} /> View Certificate
+            </button>
             {course.exam.length > 0 && (
               <Link
                 href={`/dashboard/courses/${course.slug}/exam`}
-                className="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-[#87102C] dark:hover:text-[#e8768a]"
+                className="mt-2.5 flex items-center justify-center gap-1.5 text-xs font-semibold text-gray-400 hover:text-[#87102C] dark:hover:text-[#e8768a]"
               >
                 <RotateCcw size={12} /> Retake exam
               </Link>
             )}
+
+            <CourseCertificateModal
+              open={certificateOpen}
+              onClose={() => setCertificateOpen(false)}
+              courseId={course.id}
+              courseSlug={course.slug}
+              courseTitle={course.title}
+              completedAt={progress?.completedAt ?? null}
+            />
           </>
         ) : course.exam.length === 0 ? (
           <p className="text-center text-xs text-gray-400 dark:text-white/40">
@@ -80,9 +122,13 @@ export default function CourseLearnSidebar({
         ) : (
           <div className="rounded-xl bg-gray-50 dark:bg-white/5 p-4 text-center">
             <Lock size={18} className="mx-auto mb-2 text-gray-400 dark:text-white/40" />
-            <p className="text-xs font-semibold text-gray-600 dark:text-white/60">Watch all lessons to unlock the exam</p>
+            <p className="text-xs font-semibold text-gray-600 dark:text-white/60">
+              {!allWatched ? "Watch all lessons to unlock the exam" : "Pass every module checkpoint to unlock the exam"}
+            </p>
             <p className="mt-1 text-[11px] text-gray-400 dark:text-white/40">
-              {watchedCount}/{videoLessonIds.length} watched so far
+              {!allWatched
+                ? `${watchedCount}/${videoLessonIds.length} watched so far`
+                : `${checksPassedCount}/${modulesWithChecks} checkpoints passed`}
             </p>
           </div>
         )}

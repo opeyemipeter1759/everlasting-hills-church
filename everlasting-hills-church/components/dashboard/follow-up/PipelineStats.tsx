@@ -1,4 +1,4 @@
-import { ClipboardList, UserPlus, PhoneCall, Hourglass } from "lucide-react";
+import { ClipboardList, UserPlus, PhoneCall, ShieldOff } from "lucide-react";
 import type { FollowUpEntry } from "@/types/follow-up";
 
 interface PipelineStatsProps {
@@ -6,11 +6,13 @@ interface PipelineStatsProps {
 }
 
 // Church-wide totals — the same numbers for every viewer, team member through admin.
+// Follow-up is continuous, so nothing here gets excluded for being "done" — only an
+// opted-out member leaves the active count, tracked in its own tile.
 export function PipelineStats({ entries }: PipelineStatsProps) {
-  const active = entries.filter((e) => e.stage !== "CONFIRMED");
+  const active = entries.filter((e) => e.memberStatus !== "OPTED_OUT");
   const unassigned = active.filter((e) => e.stage === "UNASSIGNED").length;
-  const inProgress = active.filter((e) => e.stage === "ASSIGNED" || e.stage === "IN_PROGRESS" || e.stage === "REOPENED").length;
-  const awaitingReview = active.filter((e) => e.stage === "AWAITING_REVIEW").length;
+  const inProgress = active.filter((e) => e.stage !== "UNASSIGNED").length;
+  const optedOut = entries.filter((e) => e.memberStatus === "OPTED_OUT").length;
 
   const stats = [
     {
@@ -35,11 +37,11 @@ export function PipelineStats({ entries }: PipelineStatsProps) {
       iconColor: "text-amber-600 dark:text-amber-400",
     },
     {
-      label: "Awaiting Review",
-      value: awaitingReview,
-      icon: Hourglass,
-      iconBg: "bg-violet-50 dark:bg-violet-500/20",
-      iconColor: "text-violet-600 dark:text-violet-400",
+      label: "Opted Out",
+      value: optedOut,
+      icon: ShieldOff,
+      iconBg: "bg-rose-50 dark:bg-rose-500/20",
+      iconColor: "text-rose-600 dark:text-rose-400",
     },
   ] as const;
 

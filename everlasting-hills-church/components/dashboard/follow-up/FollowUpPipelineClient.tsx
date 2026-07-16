@@ -7,22 +7,29 @@ import { hasMinRole } from "@/lib/auth/frontend-session";
 import { useMe, useMyUnit } from "@/lib/api";
 import { useFollowUpEntries } from "@/lib/api/follow-up-pipeline";
 import type { ApiError } from "@/lib/api/axios";
-import type { FollowUpEntry } from "@/types/follow-up";
+import type { FollowUpEntry, FollowUpSourceType } from "@/types/follow-up";
 import { PipelineStats } from "./PipelineStats";
 import { MasterListTable } from "./MasterListTable";
 import { FollowUpDetailDrawer } from "./FollowUpDetailDrawer";
 import { AddToMasterListModal } from "./AddToMasterListModal";
 import { AssignFollowUpModal } from "./AssignFollowUpModal";
 import { PersonAvatar } from "./PersonAvatar";
+import FollowUpPipelineSkeleton from "@/components/ui/skeleton/FollowUpPipelineSkeleton";
 
-type StageTab = "all" | "unassigned" | "in_progress" | "awaiting_review" | "archive";
+type StageTab = "all" | "unassigned" | "in_progress" | "archive";
+type SourceFilter = "all" | FollowUpSourceType;
 
 const STAGE_TABS: { id: StageTab; label: string }[] = [
   { id: "all", label: "All" },
   { id: "unassigned", label: "Unassigned" },
   { id: "in_progress", label: "In Progress" },
-  { id: "awaiting_review", label: "Awaiting Review" },
   { id: "archive", label: "Archive" },
+];
+
+const SOURCE_FILTERS: { id: SourceFilter; label: string }[] = [
+  { id: "all", label: "All Types" },
+  { id: "FIRST_TIMER", label: "First-Timers" },
+  { id: "ABSENTEE", label: "Absentees" },
 ];
 
 export default function FollowUpPipelineClient() {
@@ -33,6 +40,7 @@ export default function FollowUpPipelineClient() {
   const accessDenied = (error as ApiError | null)?.status === 403;
 
   const [activeTab, setActiveTab] = useState<StageTab>("all");
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
   const [myAssignedOnly, setMyAssignedOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -47,12 +55,20 @@ export default function FollowUpPipelineClient() {
 
   const filtered = useMemo(() => {
     return entries.filter((e) => {
-      if (activeTab === "unassigned" && e.stage !== "UNASSIGNED") return false;
-      if (activeTab === "in_progress" && !["ASSIGNED", "IN_PROGRESS", "REOPENED"].includes(e.stage)) return false;
-      if (activeTab === "awaiting_review" && e.stage !== "AWAITING_REVIEW") return false;
-      if (activeTab === "archive" && e.stage !== "CONFIRMED") return false;
-      if (activeTab === "all" && e.stage === "CONFIRMED") return false;
+      const isOptedOut = e.memberStatus === "OPTED_OUT";
+      // Follow-up is continuous — nothing gets archived away for being "done". The
+      // only thing that leaves the active views is an opted-out member, and Archive
+      // is the only place they show up.
+      if (activeTab === "archive") {
+        if (!isOptedOut) return false;
+      } else if (isOptedOut) {
+        return false;
+      } else {
+        if (activeTab === "unassigned" && e.stage !== "UNASSIGNED") return false;
+        if (activeTab === "in_progress" && e.stage === "UNASSIGNED") return false;
+      }
 
+      if (sourceFilter !== "all" && e.sourceType !== sourceFilter) return false;
       if (myAssignedOnly && e.assignee?.id !== viewerId) return false;
 
       if (search.trim()) {
@@ -63,9 +79,11 @@ export default function FollowUpPipelineClient() {
 
       return true;
     });
-  }, [entries, activeTab, myAssignedOnly, search, viewerId]);
+  }, [entries, activeTab, sourceFilter, myAssignedOnly, search, viewerId]);
 
   const selectedEntry = entries.find((e) => e.id === selectedEntryId) ?? null;
+
+  if (isLoading) return <FollowUpPipelineSkeleton />;
 
   if (accessDenied) {
     return (
@@ -137,6 +155,16 @@ export default function FollowUpPipelineClient() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value as SourceFilter)}
+            className="px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer"
+          >
+            {SOURCE_FILTERS.map((f) => (
+              <option key={f.id} value={f.id}>{f.label}</option>
+            ))}
+          </select>
+
           <button
             type="button"
             onClick={() => setMyAssignedOnly((v) => !v)}
@@ -164,18 +192,12 @@ export default function FollowUpPipelineClient() {
       </div>
 
       {/* Master list */}
-      {isLoading ? (
-        <div className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-12 text-center text-sm text-[#8a7e80] dark:text-white/40">
-          Loading…
-        </div>
-      ) : (
-        <MasterListTable
-          entries={filtered}
-          viewerId={viewerId}
-          onSelect={(entry) => setSelectedEntryId(entry.id)}
-          onAssign={(entry) => setAssignTarget(entry)}
-        />
-      )}
+      <MasterListTable
+        entries={filtered}
+        viewerId={viewerId}
+        onSelect={(entry) => setSelectedEntryId(entry.id)}
+        onAssign={(entry) => setAssignTarget(entry)}
+      />
 
       <FollowUpDetailDrawer
         entry={selectedEntry}

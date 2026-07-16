@@ -3,7 +3,7 @@ import { FollowUpOutcome } from '@prisma/client';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class ConfirmFollowUpDto {
-  @ApiProperty({ enum: FollowUpOutcome, example: FollowUpOutcome.BECAME_MEMBER })
+  @ApiProperty({ enum: FollowUpOutcome, example: FollowUpOutcome.WANT_TO_BE_MEMBER })
   @IsEnum(FollowUpOutcome)
   outcome!: FollowUpOutcome;
 

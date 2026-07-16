@@ -1,18 +1,10 @@
-import { Clock, Layers, Lock, PlayCircle } from "lucide-react";
+import { Clock, Layers, Loader2, Lock, PlayCircle } from "lucide-react";
 import { ICON_OPTIONS } from "@/lib/courses-data";
-import { LEVEL_LABEL, type CourseLevel } from "@/lib/api/courses";
-
-const LEVEL_BADGE: Record<CourseLevel, string> = {
-  BEGINNER: "bg-emerald-500/15 text-emerald-100",
-  INTERMEDIATE: "bg-amber-500/15 text-amber-100",
-  ADVANCED: "bg-rose-500/15 text-rose-100",
-};
 
 export default function CourseEditorPreview({
   title,
   tagline,
   category,
-  level,
   duration,
   lessonsCount,
   iconKey,
@@ -20,14 +12,15 @@ export default function CourseEditorPreview({
   questionCount,
   prerequisiteTitle,
   mode,
+  progress,
   canSave,
+  saving,
   onSave,
   onCancel,
 }: {
   title: string;
   tagline: string;
   category: string;
-  level: CourseLevel;
   duration: string;
   lessonsCount: number;
   iconKey: string;
@@ -35,24 +28,35 @@ export default function CourseEditorPreview({
   questionCount: number;
   prerequisiteTitle: string | null;
   mode: "create" | "edit";
+  progress: { done: number; total: number };
   canSave: boolean;
+  saving: boolean;
   onSave: () => void;
   onCancel: () => void;
 }) {
   const Icon = ICON_OPTIONS[iconKey] ?? ICON_OPTIONS.BookOpen;
+  const pct = progress.total === 0 ? 0 : Math.round((progress.done / progress.total) * 100);
 
   return (
     <div className="space-y-4 lg:sticky lg:top-6">
-      <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618]">
+      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-4">
+        <div className="flex items-center justify-between text-xs font-semibold text-gray-500 dark:text-white/50">
+          <span>Ready to publish</span>
+          <span className="tabular-nums text-gray-900 dark:text-white">{progress.done}/{progress.total}</span>
+        </div>
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+          <div className="h-full rounded-full bg-[#87102C] transition-all duration-300" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] shadow-sm">
         <div
           className="relative flex h-32 items-center justify-center overflow-hidden"
           style={{ background: `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})` }}
         >
           <div aria-hidden="true" className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+          <div aria-hidden="true" className="absolute -bottom-8 -left-6 h-24 w-24 rounded-full bg-black/10 blur-2xl" />
           <Icon size={38} className="relative text-white/85" strokeWidth={1.5} />
-          <span className={`absolute right-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm ${LEVEL_BADGE[level]}`}>
-            {LEVEL_LABEL[level]}
-          </span>
         </div>
 
         <div className="p-4">
@@ -92,7 +96,8 @@ export default function CourseEditorPreview({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+          disabled={saving}
+          className="flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
@@ -100,9 +105,10 @@ export default function CourseEditorPreview({
           type="button"
           onClick={onSave}
           disabled={!canSave}
-          className="flex-1 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#6E0C24] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#6E0C24] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {mode === "create" ? "Create Course" : "Save Changes"}
+          {saving && <Loader2 size={14} className="animate-spin" />}
+          {saving ? "Saving…" : mode === "create" ? "Create Course" : "Save Changes"}
         </button>
       </div>
     </div>
