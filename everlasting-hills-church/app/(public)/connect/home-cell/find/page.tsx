@@ -332,7 +332,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
               <div>
                 <h4 className="text-white font-black text-xl mb-1">You&rsquo;re in!</h4>
                 <p className="text-white/40 text-sm leading-relaxed max-w-xs">
-                  {cell.leaderName} will reach out to welcome you before your first meeting.
+                  Someone from the {cell.name} Home Cell will reach out to welcome you before your first meeting.
                 </p>
               </div>
               <button onClick={onClose}

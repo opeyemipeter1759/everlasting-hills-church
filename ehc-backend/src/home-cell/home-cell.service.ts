@@ -152,24 +152,30 @@ export class HomeCellService {
     });
 
     this.events.emit(NotificationEvents.SendEmail, {
-        to: data.email,
-        subject: `You're joining ${cell.name} — Everlasting Hills Church`,
-        text: [
-          `Dear ${data.name.split(/\s+/)[0]},`,
-          '',
-          `You've requested to join the ${cell.name} Home Cell. Here are your details:`,
-          '',
-          `📍 Location:  ${cell.address}, ${cell.city}, ${cell.state}`,
-          `📞 Contact:   ${cell.leaderPhone ?? '—'}`,
-          `🗓  Meets:     ${cell.meetingDay}s at ${cell.meetingTime}`,
-          '',
-          'Someone from the cell will be in touch with you shortly to welcome you.',
-          '',
-          'God bless you,',
-          'Everlasting Hills Church',
-        ].join('\n'),
-        tag: 'home-cell-join-visitor',
-      });
+      to: data.email,
+      subject: `Welcome to ${cell.name} — You're now part of something special`,
+      text: [
+        `Hi ${data.name.split(/\s+/)[0]},`,
+        '',
+        `We're so glad you're here.`,
+        '',
+        `You've just taken a step that many people wish they had taken sooner — and we believe it's going to make a real difference in your life. The ${cell.name} Home Cell is a warm, welcoming community of believers, and they're expecting you.`,
+        '',
+        `Here's everything you need to show up:`,
+        '',
+        `  📍 Location   ${cell.address}, ${cell.city}, ${cell.state}`,
+        `  📞 Contact    ${cell.leaderPhone ?? 'The cell leader will reach out to you soon'}`,
+        `  🗓  Meets      Every ${cell.meetingDay} at ${cell.meetingTime}`,
+        '',
+        `Feel free to reach out to the cell contact above if you have any questions before your first visit. There's no dress code, no pressure — just come as you are.`,
+        '',
+        `We'll be praying for you this week.`,
+        '',
+        `With love,`,
+        `Everlasting Hills Church`,
+      ].join('\n'),
+      tag: 'home-cell-join-visitor',
+    });
 
     return { success: true, message: 'Request submitted', data: record };
   }
