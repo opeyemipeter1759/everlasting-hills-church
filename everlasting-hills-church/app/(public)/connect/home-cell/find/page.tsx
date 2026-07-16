@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Search, MapPin, Clock, Calendar, Phone,
-  X, AlertCircle, Plus, Minus, ChevronRight,
+  X, AlertCircle, Plus, Minus,
   CheckCircle, Loader2,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
@@ -60,14 +60,6 @@ const FAQS = [
 
 function cellPhoto(index: number) {
   return CELL_PHOTOS[index % CELL_PHOTOS.length];
-}
-
-function whatsappLink(cell: Cell) {
-  const phone = cell.leaderPhone?.replace(/\D/g, "") ?? "";
-  const text = encodeURIComponent(
-    `Hi ${cell.leaderName}, I saw your Home Cell (${cell.name}) on the EHC website and I'd like to join. Please let me know when I can attend.`
-  );
-  return `https://wa.me/${phone}?text=${text}`;
 }
 
 // ── FAQ item ──────────────────────────────────────────────────────────────────
@@ -686,6 +678,38 @@ export default function FindCellPage() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
+          ADD A CELL CTA
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-24 md:py-28 px-6 border-t border-white/[0.06] relative overflow-hidden">
+        <div className="pointer-events-none absolute -left-40 top-0 w-[500px] h-[500px] rounded-full bg-church-maroon/6 blur-[120px]" />
+        <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+            <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-4">Lead a Cell</p>
+            <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight leading-[1.05] mb-6">
+              Don&rsquo;t just find one.<br />
+              <span className="font-serif italic font-normal text-white/40">Start one.</span>
+            </h2>
+            <p className="text-white/50 text-[15px] leading-relaxed max-w-md">
+              If you feel called to open your home and gather people around the Word, we want to hear from you. Adding your cell takes two minutes — our team will review it and reach out to support you.
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="lg:flex lg:justify-end">
+            <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-8 sm:p-10 max-w-sm w-full">
+              <button
+                onClick={() => setShowAdd(true)}
+                className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-church-maroon text-white text-sm font-black tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/30 transition-all">
+                <Plus size={15} /> Add Your Cell
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
           FAQ
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="py-24 md:py-28 px-4 border-t border-white/[0.06]">
@@ -700,49 +724,6 @@ export default function FindCellPage() {
           <div>
             {FAQS.map((item, i) => <FaqItem key={i} {...item} index={i} />)}
           </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          CLOSING BANNER
-      ══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden py-28 px-6 text-center border-t border-white/[0.06]">
-        <div className="pointer-events-none absolute inset-0">
-          <img src="/HeroImages/IMG_1080.jpg" alt="" className="w-full h-full object-cover opacity-10 scale-105" />
-          <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/75 to-church-dark" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[250px] rounded-full bg-church-maroon/15 blur-[90px]" />
-        </div>
-        <div className="relative z-10 max-w-lg mx-auto">
-          <motion.p initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            className="text-[10px] font-black uppercase tracking-[0.5em] text-church-accent mb-5">
-            Don&rsquo;t wait
-          </motion.p>
-          <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            transition={{ delay: 0.08 }}
-            className="text-4xl sm:text-5xl font-display font-black tracking-tight leading-[1.05] mb-6">
-            Your cell is<br />
-            <em className="font-serif not-italic font-normal text-church-accent">already waiting.</em>
-          </motion.h2>
-          <motion.div initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-            <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="inline-flex items-center gap-2 rounded-full bg-church-maroon px-8 py-4 font-black text-sm text-white tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/40 transition-all">
-              Browse Cells <ChevronRight size={14} />
-            </button>
-            <button onClick={() => setShowAdd(true)}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 px-8 py-4 font-black text-sm text-white/60 tracking-wide hover:border-white/30 hover:text-white hover:-translate-y-0.5 transition-all">
-              <Plus size={14} /> Add a Cell
-            </button>
-          </motion.div>
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
-            transition={{ delay: 0.32 }}
-            className="mt-5">
-            <Link href="/connect/home-cell"
-              className="text-sm font-bold text-white/25 hover:text-white/50 transition-colors inline-flex items-center gap-1.5">
-              <ArrowLeft size={13} /> Back to Home Cell
-            </Link>
-          </motion.div>
         </div>
       </section>
 
