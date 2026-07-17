@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
@@ -8,6 +9,12 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+
+/** Optional text fields sometimes arrive as "" (a field mounted-then-hidden by
+ * a conditional form still submits its last value) — treat that the same as
+ * absent so @IsOptional() actually skips validation instead of e.g. @IsEmail
+ * rejecting an empty string. */
+const blankToUndefined = ({ value }: { value: unknown }) => (value === '' ? undefined : value);
 
 export class PrayerRequestDto {
   @ApiProperty({ example: 'Please pray for my family and my job.' })
@@ -19,18 +26,21 @@ export class PrayerRequestDto {
 
   @ApiProperty({ example: 'John Doe', required: false })
   @IsOptional()
+  @Transform(blankToUndefined)
   @IsString()
   @MaxLength(120)
   name?: string;
 
   @ApiProperty({ example: 'john@example.com', required: false })
   @IsOptional()
+  @Transform(blankToUndefined)
   @IsEmail()
   @MaxLength(254)
   email?: string;
 
   @ApiProperty({ example: '+1 (555) 123-4567', required: false })
   @IsOptional()
+  @Transform(blankToUndefined)
   @IsString()
   @MaxLength(40)
   phone?: string;

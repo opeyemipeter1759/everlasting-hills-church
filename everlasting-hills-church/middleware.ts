@@ -23,11 +23,14 @@ export async function middleware(req: NextRequest) {
   const claims = accessToken ? await verifySupabaseJwt(accessToken, { ignoreExpiration: true }) : null;
   const isAuthenticated = Boolean(claims);
 
-  // The JWT carries identity only; roles are NOT baked into it (they change when
-  // grants/assignments change and a stale token would carry stale power). This is a
-  // COARSE gate on the login role hint (the user's highest effective role at last
-  // login); the real, per-request enforcement is the API + RLS. Prefer the fresher
-  // cookie hint over any legacy app_metadata role claim.
+  // app_metadata.role is only set when the Supabase auth user is first created and
+  // is never re-synced when a role is later granted/assigned/revoked (grants,
+  // DepartmentHead/DepartmentHod, UnitLeadAssignment, HeadUsherAssignment all skip
+  // it), so it goes stale the moment someone is promoted after account creation.
+  // The hint cookie is set fresh at every login/refresh from the DB-computed
+  // effective role, so it — not the signed-but-stale claim — is the current
+  // signal here. This is only a routing convenience: real authorization is
+  // enforced per-request server-side via RolesGuard, independent of this cookie.
   const verifiedRole = claims?.app_metadata?.role ?? null;
   const effectiveRole = roleHint ?? verifiedRole;
 

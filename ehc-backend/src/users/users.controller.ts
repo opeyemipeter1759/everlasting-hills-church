@@ -23,14 +23,17 @@ import { UsersService } from './users.service';
 /**
  * User management.
  *
- * Class-gate at ADMIN — that's the minimum to even SEE this endpoint. The actual
- * authorization for any specific role action (create PASTOR vs MEMBER, etc.) is
- * enforced per-call in the service via `canActOnRole`. The gate just keeps
- * UNIT_LEAD and MEMBER out entirely.
+ * Class-gate at HOD — that's the minimum to even SEE this controller (role info +
+ * the grant/revoke endpoints HOD needs to reach for the Roles page). The actual
+ * authorization for any specific role action (create PASTOR vs MEMBER, grant HOD
+ * vs grant ADMIN_HEAD, etc.) is enforced per-call in the service via
+ * `canActOnRole` — a HOD can only ever act on HEAD_USHER and below. Routes that
+ * touch arbitrary users directly (list/create/edit/delete) are overridden back
+ * up to @Roles(ADMIN) individually below.
  */
 @ApiTags('users')
 @Controller('users')
-@Roles(Role.ADMIN)
+@Roles(Role.HOD)
 @ApiBearerAuth('access-token')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -69,6 +72,7 @@ export class UsersController {
   }
 
   @Get()
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'List all users (profile + member)' })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'role', required: false, enum: Role })
@@ -77,6 +81,7 @@ export class UsersController {
   }
 
   @Post()
+  @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Create a new user with a role',
     description:
@@ -89,6 +94,7 @@ export class UsersController {
   }
 
   @Post('bulk')
+  @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Create one or many people at once',
     description:
@@ -101,6 +107,7 @@ export class UsersController {
   }
 
   @Patch(':profileId/role')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Set a user single granted role (People dropdown)' })
   @ApiBody({ type: UpdateUserRoleDto })
   async updateRole(
@@ -132,7 +139,20 @@ export class UsersController {
     return this.usersService.revokeGrant(actor, profileId, role);
   }
 
+  @Post(':profileId/head-usher')
+  @ApiOperation({ summary: 'Assign Head Usher — global, unscoped, additive' })
+  async assignHeadUsher(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.usersService.assignHeadUsher(actor, profileId);
+  }
+
+  @Delete(':profileId/head-usher')
+  @ApiOperation({ summary: 'End an active Head Usher assignment' })
+  async removeHeadUsher(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.usersService.removeHeadUsher(actor, profileId);
+  }
+
   @Patch(':profileId')
+  @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update user profile (name/phone)' })
   @ApiBody({ type: UpdateUserDto })
   async updateProfile(
@@ -144,6 +164,7 @@ export class UsersController {
   }
 
   @Delete(':profileId')
+  @Roles(Role.ADMIN)
   @ApiOperation({
     summary: 'Permanently delete a user',
     description:

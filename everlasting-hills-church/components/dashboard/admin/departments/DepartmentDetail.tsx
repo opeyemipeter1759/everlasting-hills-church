@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import DepartmentDetailSkeleton from "@/components/ui/skeleton/DepartmentDetailSkeleton";
+import { showToast } from "@/components/ui/toast/toast";
+import type { ApiError } from "@/lib/api/axios";
 import {
   useDepartment, useDepartments, useAssignHead, useRemoveHead,
   useAssignUnits, useUnassignUnit, useDeptAnnouncement,
@@ -17,6 +19,10 @@ import UnitLeadControl from "./UnitLeadControl";
 
 function fmt(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function errorMessage(err: unknown, fallback: string): string {
+  return (err as ApiError)?.message || fallback;
 }
 
 export default function DepartmentDetail({ id }: { id: string }) {
@@ -36,6 +42,44 @@ export default function DepartmentDetail({ id }: { id: string }) {
 
   const { department: d, currentHead, units, history, memberCount } = q.data;
   const unassigned = index.data?.unassignedUnits ?? [];
+
+  async function handlePickHead(profileId: string, name: string) {
+    try {
+      await assignHead.mutateAsync(profileId);
+      showToast.success(`${name} assigned as department head`);
+      setPickerOpen(false);
+    } catch (err) {
+      showToast.error(errorMessage(err, "Couldn't assign department head"));
+    }
+  }
+
+  async function handleRemoveHead() {
+    try {
+      await removeHead.mutateAsync();
+      showToast.success(`${currentHead?.name ?? "Head"} removed`);
+      setConfirmRemove(false);
+    } catch (err) {
+      showToast.error(errorMessage(err, "Couldn't remove department head"));
+    }
+  }
+
+  async function handleAssignUnit(unitId: string, unitName: string) {
+    try {
+      await assignUnits.mutateAsync([unitId]);
+      showToast.success(`${unitName} added to ${d.name}`);
+    } catch (err) {
+      showToast.error(errorMessage(err, "Couldn't assign unit"));
+    }
+  }
+
+  async function handleUnassignUnit(unitId: string, unitName: string) {
+    try {
+      await unassignUnit.mutateAsync(unitId);
+      showToast.success(`${unitName} unassigned`);
+    } catch (err) {
+      showToast.error(errorMessage(err, "Couldn't unassign unit"));
+    }
+  }
 
   return (
     <div className="max-w-4xl space-y-5">
@@ -108,12 +152,9 @@ export default function DepartmentDetail({ id }: { id: string }) {
                   {u.lead ? `Lead: ${u.lead.firstName} ${u.lead.lastName}` : "No lead"} · {u.memberCount} member{u.memberCount === 1 ? "" : "s"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <UnitLeadControl unitId={u.id} leadName={u.lead ? `${u.lead.firstName} ${u.lead.lastName}` : null} />
-                <button type="button" onClick={() => unassignUnit.mutate(u.id)} disabled={unassignUnit.isPending} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600 disabled:opacity-50">
-                  <X size={13} /> Unassign
-                </button>
-              </div>
+              <button type="button" onClick={() => handleUnassignUnit(u.id, u.name)} disabled={unassignUnit.isPending} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600 disabled:opacity-50">
+                <X size={13} /> Unassign
+              </button>
             </li>
           ))}
           {units.length === 0 && <p className="py-3 text-center text-sm text-gray-400">No units assigned yet.</p>}
@@ -124,7 +165,7 @@ export default function DepartmentDetail({ id }: { id: string }) {
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">Add unassigned units</p>
             <div className="flex flex-wrap gap-2">
               {unassigned.map((u) => (
-                <button key={u.id} type="button" onClick={() => assignUnits.mutate([u.id])} disabled={assignUnits.isPending} className="inline-flex items-center gap-1.5 rounded-full border border-[#E7CDD3] dark:border-white/10 bg-[#FFF4F6]/60 dark:bg-white/5 px-3 py-1.5 text-xs font-semibold text-[#87102C] dark:text-[#e8768a] hover:bg-[#FFE8ED] disabled:opacity-50">
+                <button key={u.id} type="button" onClick={() => handleAssignUnit(u.id, u.name)} disabled={assignUnits.isPending} className="inline-flex items-center gap-1.5 rounded-full border border-[#E7CDD3] dark:border-white/10 bg-[#FFF4F6]/60 dark:bg-white/5 px-3 py-1.5 text-xs font-semibold text-[#87102C] dark:text-[#e8768a] hover:bg-[#FFE8ED] disabled:opacity-50">
                   <Plus size={12} /> {u.name}
                 </button>
               ))}
@@ -170,7 +211,7 @@ export default function DepartmentDetail({ id }: { id: string }) {
         onClose={() => setPickerOpen(false)}
         pending={assignHead.isPending}
         currentHeadName={currentHead?.name ?? null}
-        onPick={async (profileId) => { await assignHead.mutateAsync(profileId); setPickerOpen(false); }}
+        onPick={handlePickHead}
       />
 
       <ConfirmDialog
@@ -180,7 +221,7 @@ export default function DepartmentDetail({ id }: { id: string }) {
         confirmLabel="Yes, remove"
         tone="warning"
         loading={removeHead.isPending}
-        onConfirm={async () => { await removeHead.mutateAsync(); setConfirmRemove(false); }}
+        onConfirm={handleRemoveHead}
         onCancel={() => setConfirmRemove(false)}
       />
     </div>
@@ -195,10 +236,14 @@ function DeptAnnouncementComposer({ id }: { id: string }) {
 
   async function submit() {
     if (!title.trim() || !body.trim()) return;
-    const res = await post.mutateAsync({ title: title.trim(), body: body.trim() });
-    setSent(res.recipients);
-    setTitle("");
-    setBody("");
+    try {
+      const res = await post.mutateAsync({ title: title.trim(), body: body.trim() });
+      setSent(res.recipients);
+      setTitle("");
+      setBody("");
+    } catch (err) {
+      showToast.error(errorMessage(err, "Couldn't send announcement"));
+    }
   }
 
   return (

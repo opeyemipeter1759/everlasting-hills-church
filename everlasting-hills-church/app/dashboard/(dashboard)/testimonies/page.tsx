@@ -1,12 +1,7 @@
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { MessageSquare } from "lucide-react";
+import TestimoniesAdminClient from "@/components/dashboard/admin/testimonies/TestimoniesAdminClient";
+
+export const metadata = { title: "Testimonies · Dashboard" };
 
 export default function TestimoniesPage() {
-  return (
-    <ComingSoon
-      title="Testimonies"
-      description="Review submitted testimonies. Approve for public display and feature on the website."
-      icon={MessageSquare}
-    />
-  );
+  return <TestimoniesAdminClient />;
 }

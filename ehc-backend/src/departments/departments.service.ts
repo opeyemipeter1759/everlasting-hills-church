@@ -22,7 +22,10 @@ import {
   UpdateDepartmentSchema,
 } from './dto/department.schema';
 
-const MANAGE_ROLES: Role[] = [Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN];
+// ADMIN_HEAD is merged with ADMIN (same level) — full church-wide access, not
+// scoped to a specific department. Department-scoping still applies to anyone
+// whose ADMIN_HEAD comes only from heading one department (myHeadDeptIds below).
+const MANAGE_ROLES: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN];
 
 type ProfileWithMember = {
   id: string;
@@ -108,16 +111,44 @@ export class DepartmentsService {
     }
   }
 
-  // ── Scope resolution (Admin Head) ────────────────────────────────────────────
+  // ── Scope resolution (Admin Head / HOD) ──────────────────────────────────────
 
-  /** Department ids the actor actively heads (endedAt IS NULL). Empty if none. */
+  /**
+   * Department ids the actor leads in any capacity — either as the full Admin
+   * Head (DepartmentHead) or as an HOD (DepartmentHod). Both endedAt IS NULL.
+   */
   private async myActiveDeptIds(actor: AuthUser): Promise<string[]> {
+    if (!actor.profileId) return [];
+    const [heads, hods] = await Promise.all([
+      this.prisma.departmentHead.findMany({
+        where: { tenantId: this.tenantId, userId: actor.profileId, endedAt: null },
+        select: { departmentId: true },
+      }),
+      this.prisma.departmentHod.findMany({
+        where: { tenantId: this.tenantId, userId: actor.profileId, endedAt: null },
+        select: { departmentId: true },
+      }),
+    ]);
+    return [...new Set([...heads.map((r) => r.departmentId), ...hods.map((r) => r.departmentId)])];
+  }
+
+  /** Department ids the actor is currently the full Admin Head of. */
+  private async myHeadDeptIds(actor: AuthUser): Promise<string[]> {
     if (!actor.profileId) return [];
     const rows = await this.prisma.departmentHead.findMany({
       where: { tenantId: this.tenantId, userId: actor.profileId, endedAt: null },
       select: { departmentId: true },
     });
     return rows.map((r) => r.departmentId);
+  }
+
+  /** Admins target any department; an Admin Head only the departments they head. */
+  private async assertCanAssignHod(actor: AuthUser, deptId: string) {
+    if (actor.role && MANAGE_ROLES.includes(actor.role)) return;
+    const mine = await this.myHeadDeptIds(actor);
+    if (!mine.includes(deptId)) {
+      throw new ForbiddenException('This department is not one you head');
+    }
   }
 
   /** Unit ids inside the departments the actor actively heads. */
@@ -190,7 +221,7 @@ export class DepartmentsService {
   async getOne(id: string) {
     const dept = await this.deptOrThrow(id);
     const memberSelect = { id: true, firstName: true, lastName: true, email: true, photoUrl: true, status: true };
-    const [units, heads, memberCounts] = await Promise.all([
+    const [units, heads, hods, memberCounts] = await Promise.all([
       this.prisma.unit.findMany({
         where: { tenantId: this.tenantId, departmentId: id },
         include: {
@@ -207,6 +238,7 @@ export class DepartmentsService {
           AssignedBy: { select: { id: true, Member: { select: { firstName: true, lastName: true, photoUrl: true } } } },
         },
       }),
+      this.listHods(id),
       this.deptMemberCounts(),
     ]);
 
@@ -221,6 +253,7 @@ export class DepartmentsService {
       },
       memberCount: memberCounts.get(id) ?? 0,
       currentHead: current ? { ...this.personLabel(current.User), assignedAt: current.assignedAt.toISOString() } : null,
+      hods,
       units: units.map((u) => ({
         id: u.id,
         name: u.name,
@@ -347,6 +380,67 @@ export class DepartmentsService {
     return this.getOne(deptId);
   }
 
+  // ── HOD assignment (many active per department; assigned by Admin Head+) ──────
+
+  private async listHods(deptId: string) {
+    const rows = await this.prisma.departmentHod.findMany({
+      where: { tenantId: this.tenantId, departmentId: deptId, endedAt: null },
+      orderBy: { assignedAt: 'desc' },
+      include: {
+        User: { select: { id: true, Member: { select: { firstName: true, lastName: true, photoUrl: true } } } },
+      },
+    });
+    return rows.map((r) => ({ ...this.personLabel(r.User), assignedAt: r.assignedAt.toISOString() }));
+  }
+
+  async assignHod(actor: AuthUser, deptId: string, raw: unknown) {
+    const dto = this.parse(AssignHeadSchema, raw); // same shape: { profileId }
+    await this.deptOrThrow(deptId);
+    await this.assertCanAssignHod(actor, deptId);
+
+    const profile = await this.prisma.profile.findFirst({
+      where: { id: dto.profileId, tenantId: this.tenantId },
+      select: { id: true },
+    });
+    if (!profile) throw new NotFoundException('Person not found');
+
+    const existing = await this.prisma.departmentHod.findFirst({
+      where: { tenantId: this.tenantId, departmentId: deptId, userId: dto.profileId, endedAt: null },
+    });
+    if (!existing) {
+      const row = await this.prisma.departmentHod.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          departmentId: deptId,
+          userId: dto.profileId,
+          assignedById: actor.profileId ?? null,
+        },
+      });
+      await this.writeAudit({
+        action: 'ASSIGN_HOD',
+        entity: 'DepartmentHod',
+        entityId: row.id,
+        actorId: actor.userId,
+        after: { departmentId: deptId, hodProfileId: dto.profileId },
+      });
+    }
+    return { hods: await this.listHods(deptId) };
+  }
+
+  async removeHod(actor: AuthUser, deptId: string, profileId: string) {
+    await this.deptOrThrow(deptId);
+    await this.assertCanAssignHod(actor, deptId);
+
+    const current = await this.prisma.departmentHod.findFirst({
+      where: { tenantId: this.tenantId, departmentId: deptId, userId: profileId, endedAt: null },
+    });
+    if (!current) throw new BadRequestException('This person is not an active HOD of this department');
+    await this.prisma.departmentHod.update({ where: { id: current.id }, data: { endedAt: new Date() } });
+    await this.writeAudit({ action: 'REMOVE_HOD', entity: 'DepartmentHod', entityId: current.id, actorId: actor.userId, before: { hodProfileId: profileId } });
+    return { hods: await this.listHods(deptId) };
+  }
+
   // ── Admin: unit assignment ───────────────────────────────────────────────────
 
   async assignUnits(actor: AuthUser, deptId: string, raw: unknown) {
@@ -373,10 +467,11 @@ export class DepartmentsService {
   // ── Admin Head: scoped read ──────────────────────────────────────────────────
 
   async getMine(actor: AuthUser) {
-    const deptIds = await this.myActiveDeptIds(actor);
+    const [deptIds, headDeptIds] = await Promise.all([this.myActiveDeptIds(actor), this.myHeadDeptIds(actor)]);
     if (!deptIds.length) return { departments: [] };
+    const headSet = new Set(headDeptIds);
     const memberSelect = { id: true, firstName: true, lastName: true, photoUrl: true };
-    const [departments, memberCounts] = await Promise.all([
+    const [departments, memberCounts, hodsByDept] = await Promise.all([
       this.prisma.department.findMany({
         where: { tenantId: this.tenantId, id: { in: deptIds } },
         orderBy: { sortOrder: 'asc' },
@@ -391,7 +486,9 @@ export class DepartmentsService {
         },
       }),
       this.deptMemberCounts(),
+      Promise.all(deptIds.map(async (id) => [id, await this.listHods(id)] as const)),
     ]);
+    const hodMap = new Map(hodsByDept);
     return {
       departments: departments.map((d) => ({
         id: d.id,
@@ -399,6 +496,10 @@ export class DepartmentsService {
         name: d.name,
         description: d.description,
         memberCount: memberCounts.get(d.id) ?? 0,
+        // "ADMIN_HEAD" if the actor fully heads this department, else they're
+        // reaching it as an HOD (scoped to appointing unit leads only).
+        myRole: headSet.has(d.id) ? 'ADMIN_HEAD' : 'HOD',
+        hods: hodMap.get(d.id) ?? [],
         units: d.Units.map((u) => ({
           id: u.id,
           name: u.name,

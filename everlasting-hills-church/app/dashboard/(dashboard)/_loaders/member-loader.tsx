@@ -11,6 +11,8 @@ interface ListenHistoryItem {
 }
 interface MemberAttendanceOverview {
   attendance: { marked: number; total: number; percentage: number; lastMarkedAt: string | null };
+  streakWeeks: number;
+  coursesCompleted: number;
 }
 
 export async function loadMemberDashboard(me: MeResponse) {
@@ -47,6 +49,8 @@ export async function loadMemberDashboard(me: MeResponse) {
   const attendanceRate  = overviewRaw?.attendance.percentage ?? 0;
   const attendanceCount = overviewRaw?.attendance.marked     ?? 0;
   const lastServiceDate = overviewRaw?.attendance.lastMarkedAt ?? null;
+  const streakWeeks = overviewRaw?.streakWeeks ?? 0;
+  const coursesCompleted = overviewRaw?.coursesCompleted ?? 0;
 
   let birthdayDaysUntil: number | null = null;
   if (me.member?.dateOfBirth) {
@@ -83,7 +87,8 @@ export async function loadMemberDashboard(me: MeResponse) {
       attendanceRate={attendanceRate}
       attendanceCount={attendanceCount}
       lastServiceDate={lastServiceDate}
-      streakWeeks={0}
+      streakWeeks={streakWeeks}
+      coursesCompleted={coursesCompleted}
       nextService={null}
       hasCheckedInToday={false}
       todayService={null}

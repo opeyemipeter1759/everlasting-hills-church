@@ -46,20 +46,20 @@ export class TestimonialsController {
     return this.testimonialsService.listPublished(limit ? Number(limit) : 20);
   }
 
-  // ── Admin (PASTOR+) ────────────────────────────────────────────────────────
+  // ── Admin (ADMIN+ can view/moderate/delete; PASTOR+ can also create/edit) ───
 
-  @Roles(Role.PASTOR)
+  @Roles(Role.ADMIN)
   @Get()
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'List all testimonials including drafts (PASTOR+)' })
+  @ApiOperation({ summary: 'List all testimonials including drafts (ADMIN+)' })
   async listAll() {
     return this.testimonialsService.listAll();
   }
 
-  @Roles(Role.PASTOR)
+  @Roles(Role.ADMIN)
   @Get(':id')
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Get testimonial by id (PASTOR+)' })
+  @ApiOperation({ summary: 'Get testimonial by id (ADMIN+)' })
   async getById(@Param('id') id: string) {
     return this.testimonialsService.getById(id);
   }
@@ -83,10 +83,10 @@ export class TestimonialsController {
     return this.testimonialsService.update(id, body);
   }
 
-  @Roles(Role.PASTOR)
+  @Roles(Role.ADMIN)
   @Delete(':id')
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Delete testimonial (PASTOR+)' })
+  @ApiOperation({ summary: 'Delete testimonial (ADMIN+)' })
   async delete(@Param('id') id: string) {
     return this.testimonialsService.delete(id);
   }

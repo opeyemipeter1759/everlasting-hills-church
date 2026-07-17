@@ -16,7 +16,8 @@ import type { AssignFollowUpDto } from './dto/assign-follow-up.dto';
 import type { LogContactDto } from './dto/log-contact.dto';
 import type { ConfirmFollowUpDto } from './dto/confirm-follow-up.dto';
 
-const ADMIN_PLUS: Role[] = [Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN];
+// ADMIN_HEAD is merged with ADMIN (same level) — full church-wide access.
+const ADMIN_PLUS: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN];
 
 const WORKING_STAGES: FollowUpStage[] = [
   FollowUpStage.ASSIGNED,

@@ -6,6 +6,7 @@ import {
   useMyDepartments, useMyDeptAnnouncement, useNudgeLead, type MyDepartment as MyDept,
 } from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
+import ReportsSection from "@/components/dashboard/reports/ReportsSection";
 import UnitLeadControl from "./UnitLeadControl";
 
 export default function MyDepartment() {
@@ -18,7 +19,7 @@ export default function MyDepartment() {
   const departments = q.data?.departments ?? [];
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="max-w-3xl mx-auto space-y-5">
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-[#87102C]/10 dark:bg-[#87102C]/15">
           <Building2 size={16} className="text-[#87102C] dark:text-[#e8768a]" />
@@ -40,7 +41,12 @@ export default function MyDepartment() {
           </p>
         </div>
       ) : (
-        departments.map((d) => <DepartmentPanel key={d.id} dept={d} />)
+        departments.map((d) => (
+          <div key={d.id} className="space-y-5">
+            <DepartmentPanel dept={d} />
+            <ReportsSection scope="DEPARTMENT" id={d.id} label="department" />
+          </div>
+        ))
       )}
     </div>
   );

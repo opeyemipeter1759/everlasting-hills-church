@@ -12,6 +12,7 @@ export interface AuthUser {
   /** Scopes for the derived roles. */
   unitLeadOf: string[];
   adminHeadOf: string[];
+  hodOf: string[];
   headUsher: boolean;
   profileId: string | null;
   memberId: string | null;

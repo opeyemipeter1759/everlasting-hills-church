@@ -39,6 +39,10 @@ export interface DepartmentListItem {
   head: DeptPerson | null;
 }
 
+export interface DeptHod extends DeptPerson {
+  assignedAt: string;
+}
+
 export interface UnassignedUnit {
   id: string;
   name: string;
@@ -62,6 +66,7 @@ export interface DepartmentDetail {
   department: { id: string; code: string; name: string; description: string | null; sortOrder: number };
   memberCount: number;
   currentHead: DeptPerson | null;
+  hods: DeptHod[];
   units: DeptUnit[];
   history: HistoryEntry[];
 }
@@ -72,6 +77,10 @@ export interface MyDepartment {
   name: string;
   description: string | null;
   memberCount: number;
+  /** "ADMIN_HEAD" if the viewer fully heads this department, else "HOD" (scoped
+   * to appointing unit leads only). */
+  myRole: "ADMIN_HEAD" | "HOD";
+  hods: DeptHod[];
   units: DeptUnit[];
 }
 
@@ -105,6 +114,47 @@ export function useMyDepartments() {
   });
 }
 
+export interface UnitRosterMember {
+  memberId: string;
+  isLead: boolean;
+  isAssistant: boolean;
+  Member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null; status: string };
+}
+
+export interface UnitRoster {
+  id: string;
+  name: string;
+  members: UnitRosterMember[];
+}
+
+export function useMyUnitRoster(unitId: string | null | undefined) {
+  return useQuery({
+    queryKey: [...KEY, "mine", "roster", unitId],
+    queryFn: () => api.get<UnitRoster>(`/departments/mine/units/${unitId}/roster`),
+    enabled: Boolean(unitId),
+  });
+}
+
+interface RawUnitDetail {
+  id: string;
+  name: string;
+  UnitMember: UnitRosterMember[];
+}
+
+/** ADMIN+/PASTOR/SUPER_ADMIN roster for ANY unit (not scoped to "mine") — used
+ * when managing a department the viewer doesn't personally head. */
+export function useAnyUnitRoster(unitId: string | null | undefined) {
+  return useQuery({
+    queryKey: [...KEY, "any", "roster", unitId],
+    queryFn: async () => {
+      const raw = await api.get<RawUnitDetail>(`/units/${unitId}`);
+      const roster: UnitRoster = { id: raw.id, name: raw.name, members: raw.UnitMember };
+      return roster;
+    },
+    enabled: Boolean(unitId),
+  });
+}
+
 // ── Mutations ────────────────────────────────────────────────────────────────
 
 function useInvalidate() {
@@ -112,8 +162,19 @@ function useInvalidate() {
   return () => qc.invalidateQueries({ queryKey: KEY });
 }
 
+/** Head/HOD/unit-lead assignment also changes the "users" query namespace —
+ * the Roles page's rollup (["users","roles"]) and by-role groups
+ * (["users","by-role"]) are derived from these same assignments. */
+function useInvalidateDeptAndUsers() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: KEY });
+    qc.invalidateQueries({ queryKey: ["users"] });
+  };
+}
+
 export function useAssignHead(id: string) {
-  const invalidate = useInvalidate();
+  const invalidate = useInvalidateDeptAndUsers();
   return useMutation({
     mutationFn: (profileId: string) => api.post<DepartmentDetail>(`/departments/${id}/head`, { profileId }),
     onSuccess: invalidate,
@@ -121,9 +182,25 @@ export function useAssignHead(id: string) {
 }
 
 export function useRemoveHead(id: string) {
-  const invalidate = useInvalidate();
+  const invalidate = useInvalidateDeptAndUsers();
   return useMutation({
     mutationFn: () => api.delete<DepartmentDetail>(`/departments/${id}/head`),
+    onSuccess: invalidate,
+  });
+}
+
+export function useAssignHod(id: string) {
+  const invalidate = useInvalidateDeptAndUsers();
+  return useMutation({
+    mutationFn: (profileId: string) => api.post<{ hods: DeptHod[] }>(`/departments/${id}/hods`, { profileId }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemoveHod(id: string) {
+  const invalidate = useInvalidateDeptAndUsers();
+  return useMutation({
+    mutationFn: (profileId: string) => api.delete<{ hods: DeptHod[] }>(`/departments/${id}/hods/${profileId}`),
     onSuccess: invalidate,
   });
 }

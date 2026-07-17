@@ -15,6 +15,7 @@ import {
   type FrontendSessionUser,
 } from "@/lib/auth/frontend-session";
 import { ROLE_LABELS } from "@/config/config";
+import { useMe } from "@/lib/api";
 
 type LoggedOutMode = "both" | "login-only" | "none";
 
@@ -66,7 +67,16 @@ export default function SessionActionMenu({
     window.addEventListener(SESSION_CHANGED_EVENT, refresh);
     return () => window.removeEventListener(SESSION_CHANGED_EVENT, refresh);
   }, []);
-  const role = normalizeRole(session?.role ?? null);
+  // The cookie's role is a snapshot from login — if an admin promotes/demotes
+  // this user mid-session, it goes stale until they log in again. /auth/me
+  // computes the role fresh from the DB on every request, so prefer it once it
+  // has loaded; fall back to the cookie so the badge doesn't flash empty first.
+  const { data: me } = useMe({ enabled: !!session?.loggedIn });
+  const role = normalizeRole(me?.role ?? session?.role ?? null);
+  // "Worker" is a display-only distinction, not a real role: a plain MEMBER who
+  // also belongs to a unit (but isn't its lead — that's UNIT_LEAD, a real role).
+  const isWorker = role === "MEMBER" && (me?.member?.units?.length ?? 0) > 0;
+  const roleLabel = isWorker ? "Worker" : role ? ROLE_LABELS[role] : session?.email;
   const dashboardLabel = pathname?.startsWith("/dashboard") ? "Home" : "Dashboard";
   const dashboardTargetHref = pathname?.startsWith("/dashboard") ? "/" : dashboardHref;
 
@@ -140,7 +150,7 @@ export default function SessionActionMenu({
             {displayName}
           </span>
           <span className="truncate text-[10px] font-medium uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500">
-            {role ? ROLE_LABELS[role] : session.email}
+            {roleLabel}
           </span>
         </span>
 

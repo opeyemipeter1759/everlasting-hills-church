@@ -5,6 +5,7 @@ export const ROLE_LABEL: Record<PersonRole, string> = {
   PASTOR: "Pastor",
   ADMIN: "Admin",
   ADMIN_HEAD: "Admin Head",
+  HOD: "Head of Department",
   HEAD_USHER: "Head Usher",
   UNIT_LEAD: "Unit Lead",
   MEMBER: "Member",
@@ -19,6 +20,8 @@ export const ROLE_BADGE: Record<PersonRole, string> = {
   ADMIN:
     "bg-[#FFF4F6] text-[#87102C] border-[#E7CDD3] dark:bg-[#87102C]/15 dark:text-[#e8768a] dark:border-white/10",
   ADMIN_HEAD:
+    "bg-[#FFF4F6] text-[#9b3050] border-[#E7CDD3] dark:bg-white/5 dark:text-[#e8a3b3] dark:border-white/10",
+  HOD:
     "bg-[#FFF4F6] text-[#9b3050] border-[#E7CDD3] dark:bg-white/5 dark:text-[#e8a3b3] dark:border-white/10",
   HEAD_USHER:
     "bg-[#FFF4F6] text-[#9b3050] border-[#E7CDD3] dark:bg-white/5 dark:text-[#e8a3b3] dark:border-white/10",

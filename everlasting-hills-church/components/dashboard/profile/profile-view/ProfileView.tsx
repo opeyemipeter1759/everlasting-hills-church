@@ -20,7 +20,10 @@ import ScrollReveal from "@/components/home/ScrollReveal";
 export default function ProfileView({ profile }: { profile: ProfileViewModel }) {
   const displayName = `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || "Member";
   const initials = initialsOf(profile.firstName, profile.lastName);
-  const role = profile.role ? (ROLE_LABEL[profile.role] ?? profile.role) : "Member";
+  // "Worker" is a display-only distinction, not a real role: a plain MEMBER who
+  // also belongs to a unit (but isn't its lead — that's UNIT_LEAD, a real role).
+  const isWorker = profile.role === "MEMBER" && profile.units.length > 0;
+  const role = isWorker ? "Worker" : profile.role ? (ROLE_LABEL[profile.role] ?? profile.role) : "Member";
   const tenure = tenureFrom(profile.joinedAt);
   const isMarried = !!profile.weddingAnniversary;
   const ministries = getMyMinistries(profile.dateOfBirth, profile.gender, isMarried);

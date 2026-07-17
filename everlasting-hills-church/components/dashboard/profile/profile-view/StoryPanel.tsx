@@ -1,5 +1,8 @@
-import { Calendar, ShieldCheck, Sparkles, MessageSquare, Star, TrendingUp, Headphones, Bookmark } from "lucide-react";
+"use client";
+
+import { Calendar, ShieldCheck, Sparkles, MessageSquare, Star, TrendingUp, Headphones, Bookmark, GraduationCap } from "lucide-react";
 import type { ProfileViewModel } from "@/components/dashboard/profile/profile-view-model";
+import { useCourses, useMyCourseProgress } from "@/lib/api/courses";
 import { DarkInsightChip } from "./InsightChips";
 
 interface StoryPanelProps {
@@ -16,13 +19,19 @@ interface StoryPanelProps {
 export function StoryPanel({ profile, tenure, role }: StoryPanelProps) {
   const prayers = profile.prayerCount ?? 0;
   const testimonies = profile.testimonyCount ?? 0;
+  // Fetched client-side (not part of the server-rendered profile model) — same
+  // completed-course count shown in the "Certificates & Badges" section below.
+  const { data: catalog = [] } = useCourses();
+  const { data: courseProgress = {} } = useMyCourseProgress();
+  const completedCourses = catalog.filter((c) => courseProgress[c.id]?.completed).length;
   const hasEngagementStats =
     prayers > 0 ||
     testimonies > 0 ||
     profile.attendanceRate != null ||
     profile.totalServicesAttended != null ||
     profile.sermonListenStreak != null ||
-    profile.bookmarkCount != null;
+    profile.bookmarkCount != null ||
+    completedCourses > 0;
 
   return (
     <section
@@ -68,6 +77,13 @@ export function StoryPanel({ profile, tenure, role }: StoryPanelProps) {
                 icon={Headphones}
                 label="Sermon streak"
                 value={`${profile.sermonListenStreak} day${profile.sermonListenStreak === 1 ? "" : "s"}`}
+              />
+            )}
+            {completedCourses > 0 && (
+              <DarkInsightChip
+                icon={GraduationCap}
+                label="Courses completed"
+                value={`${completedCourses}`}
               />
             )}
             {profile.bookmarkCount != null && (

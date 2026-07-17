@@ -85,6 +85,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       effectiveRoles: profile ? eff.roles : [],
       unitLeadOf: eff.unitLeadOf,
       adminHeadOf: eff.adminHeadOf,
+      hodOf: eff.hodOf,
       headUsher: eff.headUsher,
       profileId: profile?.id ?? null,
       memberId: profile?.Member?.id ?? null,

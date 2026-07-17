@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
@@ -212,7 +212,10 @@ export class FormsService {
     };
   }
 
-  async submitPrayerRequest(data: PrayerRequestDto) {
+  /** memberId is populated only when the submitter is signed in (optional auth
+   * on this public route) — kept even when is_anonymous, so admins can always
+   * see who a signed-in member really is; anonymous only hides the free-text name. */
+  async submitPrayerRequest(data: PrayerRequestDto, memberId: string | null = null) {
     const normalizedEmail = data.email?.trim();
     const normalizedPhone = data.phone?.trim();
     const displayName = data.is_anonymous ? 'Anonymous' : data.name?.trim() || 'Anonymous';
@@ -226,6 +229,7 @@ export class FormsService {
         email: normalizedEmail ?? null,
         phone: normalizedPhone ?? null,
         isAnonymous: data.is_anonymous ?? false,
+        memberId,
       },
     });
 
@@ -249,6 +253,38 @@ export class FormsService {
       message: 'Prayer request submitted successfully',
       data: record,
     };
+  }
+
+  /** Admin list, newest first. The linked member (if the submitter was signed
+   * in) is always included regardless of isAnonymous — see submitPrayerRequest. */
+  async listPrayerRequests() {
+    const rows = await this.prisma.prayerRequest.findMany({
+      where: { tenantId: this.tenantId },
+      orderBy: { submittedAt: 'desc' },
+      include: {
+        Member: {
+          select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true },
+        },
+      },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      request: r.request,
+      name: r.name,
+      email: r.email,
+      phone: r.phone,
+      isAnonymous: r.isAnonymous,
+      submittedAt: r.submittedAt.toISOString(),
+      member: r.Member,
+    }));
+  }
+
+  async deletePrayerRequest(id: string) {
+    const result = await this.prisma.prayerRequest.deleteMany({
+      where: { id, tenantId: this.tenantId },
+    });
+    if (result.count === 0) throw new NotFoundException('Prayer request not found');
+    return { id, deleted: true };
   }
 
   async submitTestimony(data: TestimonyDto) {

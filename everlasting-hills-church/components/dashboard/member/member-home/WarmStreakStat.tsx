@@ -1,11 +1,15 @@
 import { motion } from "framer-motion";
-import { Zap, Award, Star } from "lucide-react";
+import { Zap, Award, Star, GraduationCap } from "lucide-react";
 import type { MemberHomeProps } from "./types";
 import { card, hdrBdr, kicker, cardTitle, muted } from "./tokens";
 import { streakLabel, fmtDate, fmtTime } from "./helpers";
 
-export function WarmStreakStat({ streakWeeks, nextService, ministryUnit }: {
+export function WarmStreakStat({ streakWeeks, coursesCompleted, nextService, ministryUnit }: {
   streakWeeks: number;
+  /** Course completions are a separate learning milestone, surfaced inside the same
+   * card rather than folded into the attendance-weeks number itself (that number
+   * feeds leaderboards/consistency analytics elsewhere and shouldn't change meaning). */
+  coursesCompleted: number;
   nextService: MemberHomeProps["nextService"];
   ministryUnit?: MemberHomeProps["ministryUnit"];
 }) {
@@ -30,6 +34,7 @@ export function WarmStreakStat({ streakWeeks, nextService, ministryUnit }: {
             <p className="text-3xl font-black text-[#111] dark:text-white leading-none">
               {streakWeeks}<span className="text-base font-bold ml-1">Wk{streakWeeks !== 1 ? "s" : ""}</span>
             </p>
+            <p className={`text-[10px] mt-1 ${muted}`}>Consecutive weeks you've attended a service</p>
             <div className="flex items-center gap-1.5 mt-2">
               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${streak.dot}`} />
               <p className={`text-[11px] font-semibold ${muted}`}>{streak.text}</p>
@@ -49,6 +54,20 @@ export function WarmStreakStat({ streakWeeks, nextService, ministryUnit }: {
             <Award size={16} className={earnedMilestone.color} />
             <p className={`text-[11px] font-bold ${earnedMilestone.color}`}>{earnedMilestone.label}</p>
             <Star size={10} className={`ml-auto ${earnedMilestone.color} opacity-60`} fill="currentColor" />
+          </motion.div>
+        )}
+
+        {coursesCompleted > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2.5 p-3 rounded-xl border bg-[#FFE8ED] dark:bg-[#87102C]/15 border-[#E7CDD3] dark:border-[#87102C]/25"
+          >
+            <GraduationCap size={16} className="text-[#87102C] dark:text-[#e8768a]" />
+            <p className="text-[11px] font-bold text-[#87102C] dark:text-[#e8768a]">
+              {coursesCompleted} Course{coursesCompleted === 1 ? "" : "s"} Completed
+            </p>
+            <Star size={10} className="ml-auto text-[#87102C] dark:text-[#e8768a] opacity-60" fill="currentColor" />
           </motion.div>
         )}
 

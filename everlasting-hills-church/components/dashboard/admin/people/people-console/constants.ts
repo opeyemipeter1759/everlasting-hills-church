@@ -24,7 +24,8 @@ export type Chip =
 export const ROLE_CHIPS: Chip[] = [
   { key: "all", label: "All" },
   { key: "role", label: "Pastors", role: "PASTOR" },
-  { key: "role", label: "Admins", role: "ADMIN" },
+  { key: "role", label: "Admin Heads", role: "ADMIN_HEAD" },
+  { key: "role", label: "HODs", role: "HOD" },
   { key: "role", label: "Head Ushers", role: "HEAD_USHER" },
   { key: "role", label: "Unit Leads", role: "UNIT_LEAD" },
   { key: "role", label: "Members", role: "MEMBER" },

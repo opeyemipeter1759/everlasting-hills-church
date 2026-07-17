@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, AlertTriangle, Check } from "lucide-react";
+import { Search, AlertTriangle, Loader2 } from "lucide-react";
 import FormModal from "@/components/ui/overlay/FormModal";
 import { usePeople } from "@/lib/api/people";
 import { ROLE_LABEL } from "@/components/dashboard/admin/people/peopleShared";
@@ -13,24 +13,41 @@ export default function HeadPicker({
   onPick,
   pending,
   currentHeadName,
-  noun = "department head",
+  title,
+  subtitle,
+  excludeProfileIds,
 }: {
   open: boolean;
   onClose: () => void;
-  onPick: (profileId: string) => void;
+  onPick: (profileId: string, name: string) => void | Promise<void>;
   pending: boolean;
   currentHeadName?: string | null;
-  noun?: string;
+  /** Overrides the default "Assign/Replace department head" copy. */
+  title?: string;
+  subtitle?: string;
+  /** Profile ids to hide from the results (e.g. people already holding this seat). */
+  excludeProfileIds?: string[];
 }) {
   const [search, setSearch] = useState("");
+  const [pickingId, setPickingId] = useState<string | null>(null);
   const q = usePeople({ search, limit: 12, sortBy: "name", sortOrder: "asc" });
-  const people = (q.data?.data ?? []).filter((p) => p.profileId);
+  const excluded = new Set(excludeProfileIds ?? []);
+  const people = (q.data?.data ?? []).filter((p) => p.profileId && !excluded.has(p.profileId));
+
+  async function pick(profileId: string, name: string) {
+    setPickingId(profileId);
+    try {
+      await onPick(profileId, name);
+    } finally {
+      setPickingId(null);
+    }
+  }
 
   return (
     <FormModal
       open={open}
-      title={currentHeadName ? `Replace ${noun}` : `Assign ${noun}`}
-      subtitle={currentHeadName ? `Replacing ${currentHeadName} ends their tenure` : `Pick the ${noun}`}
+      title={title ?? (currentHeadName ? "Replace department head" : "Assign department head")}
+      subtitle={subtitle ?? (currentHeadName ? `Replacing ${currentHeadName} ends their tenure` : "Pick the person to lead this department")}
       onClose={onClose}
       maxWidth="max-w-lg"
     >
@@ -58,25 +75,31 @@ export default function HeadPicker({
         ) : people.length === 0 ? (
           <p className="py-8 text-center text-sm text-gray-400">No people found.</p>
         ) : (
-          people.map((p) => (
-            <button
-              key={p.profileId}
-              type="button"
-              disabled={pending}
-              onClick={() => onPick(p.profileId as string)}
-              className="flex w-full items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] px-3.5 py-2.5 text-left transition-colors hover:border-[#87102C]/30 hover:bg-[#FFF4F6]/50 dark:hover:bg-white/[0.06] disabled:opacity-50"
-            >
-              <Avatar name={p.name} photoUrl={p.photoUrl} />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-gray-900 dark:text-white">{p.name}</p>
-                <p className="truncate text-[11px] text-gray-400">{p.email ?? "No email"}</p>
-              </div>
-              <span className="shrink-0 rounded-full bg-gray-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">
-                {ROLE_LABEL[p.role]}
-              </span>
-              <Check size={16} className="shrink-0 text-[#87102C] opacity-0 group-hover:opacity-100" />
-            </button>
-          ))
+          people.map((p) => {
+            const isPicking = pending && pickingId === p.profileId;
+            return (
+              <button
+                key={p.profileId}
+                type="button"
+                disabled={pending}
+                onClick={() => pick(p.profileId as string, p.name)}
+                className="flex w-full items-center gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] px-3.5 py-2.5 text-left transition-colors hover:border-[#87102C]/30 hover:bg-[#FFF4F6]/50 dark:hover:bg-white/[0.06] disabled:opacity-50"
+              >
+                <Avatar name={p.name} photoUrl={p.photoUrl} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-gray-900 dark:text-white">{p.name}</p>
+                  <p className="truncate text-[11px] text-gray-400">{p.email ?? "No email"}</p>
+                </div>
+                {isPicking ? (
+                  <Loader2 size={14} className="shrink-0 animate-spin text-[#87102C] dark:text-[#e8768a]" />
+                ) : (
+                  <span className="shrink-0 rounded-full bg-gray-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">
+                    {ROLE_LABEL[p.role]}
+                  </span>
+                )}
+              </button>
+            );
+          })
         )}
       </div>
     </FormModal>
