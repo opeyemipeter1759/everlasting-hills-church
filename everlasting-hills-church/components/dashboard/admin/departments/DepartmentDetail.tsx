@@ -15,6 +15,7 @@ import {
   useAssignUnits, useUnassignUnit, useDeptAnnouncement,
 } from "@/lib/api/departments";
 import HeadPicker, { Avatar } from "./HeadPicker";
+import UnitLeadControl from "./UnitLeadControl";
 
 function fmt(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });

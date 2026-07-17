@@ -20,6 +20,14 @@ import type {
 export interface MeResponse {
   profileId: string | null;
   role: string | null;
+  /** Full effective role set (MEMBER + grants + roles derived from assignments). */
+  effectiveRoles?: string[];
+  /** Unit ids the user actively leads. */
+  unitLeadOf?: string[];
+  /** Department ids the user actively heads. */
+  adminHeadOf?: string[];
+  /** Whether the user has an active head-usher assignment. */
+  headUsher?: boolean;
   tenantId: string | null;
   member: {
     id: string;

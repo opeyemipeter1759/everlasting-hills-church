@@ -28,8 +28,13 @@ function makeStrategy(profileFinder: jest.Mock) {
   const prisma = {
     profile: { findUnique: profileFinder },
   } as unknown as PrismaService;
+  const effectiveRoles = {
+    getEffectiveRoles: jest.fn().mockResolvedValue({
+      roles: ['MEMBER'], unitLeadOf: [], adminHeadOf: [], headUsher: false, primaryRole: 'MEMBER',
+    }),
+  };
   // Cast through unknown so we don't need to construct the full Passport machinery for tests.
-  return new JwtStrategy(config as never, prisma);
+  return new JwtStrategy(config as never, prisma, effectiveRoles as never);
 }
 
 describe('JwtStrategy.validate', () => {

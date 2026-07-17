@@ -728,6 +728,7 @@ model Tenant {
   Visitor            Visitor[]
   Report             Report[]
   ReportComment      ReportComment[]
+  HomeCell           HomeCell[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1415,4 +1416,21 @@ model CourseEnrollment {
   @@unique([courseId, memberId])
   @@index([tenantId])
   @@index([memberId])
+}
+model HomeCell {
+  id          String   @id
+  tenantId    String
+  name        String
+  leaderName  String
+  leaderPhone String?
+  meetingDay  String
+  meetingTime String
+  address     String
+  state       String
+  city        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, state, city])
 }

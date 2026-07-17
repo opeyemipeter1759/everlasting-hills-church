@@ -83,6 +83,26 @@ export class UnitsController {
     return this.unitsService.delete(unitId);
   }
 
+  // ── Unit lead appointment (ADMIN_HEAD within their department, or ADMIN+) ────
+
+  @Post(':unitId/lead')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiOperation({ summary: 'Appoint/replace a unit lead. ADMIN_HEAD limited to units in a department they head; ADMIN+ any unit.' })
+  async appointLead(
+    @CurrentUser() actor: AuthUser,
+    @Param('unitId') unitId: string,
+    @Body() body: { profileId?: string },
+  ) {
+    return this.unitsService.appointLead(actor, unitId, body?.profileId ?? '');
+  }
+
+  @Delete(':unitId/lead')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiOperation({ summary: 'End the current unit lead assignment (same scope rules as appoint)' })
+  async removeLead(@CurrentUser() actor: AuthUser, @Param('unitId') unitId: string) {
+    return this.unitsService.removeLead(actor, unitId);
+  }
+
   // ── Member assignment (LEAD / ASSISTANT or ADMIN+) ──────────────────────────
 
   @Post(':unitId/members')

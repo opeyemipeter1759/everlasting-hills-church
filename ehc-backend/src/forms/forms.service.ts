@@ -6,6 +6,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { ContactDto } from './dto/contact.dto';
 import { FirstTimerDto } from './dto/first-timer.dto';
+import { HomeCellDto } from './dto/home-cell.dto';
 import { PrayerRequestDto } from './dto/prayer-request.dto';
 import { ServeTeamDto } from './dto/serve-team.dto';
 import { TestimonyDto } from './dto/testimony.dto';
@@ -443,6 +444,54 @@ export class FormsService {
     return {
       success: true,
       message: 'Contact message submitted successfully',
+      data: record,
+    };
+  }
+
+  async submitHomeCell(data: HomeCellDto) {
+    const normalizedEmail = data.email.trim();
+    const normalizedName = data.name.trim();
+
+    const record = await this.prisma.formSubmission.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        type: 'home_cell',
+        data: data as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    this.dispatchEmail({
+      to: this.adminEmail,
+      subject: `New Home Cell Registration: ${normalizedName}`,
+      text: [
+        `Name: ${normalizedName}`,
+        `Email: ${normalizedEmail}`,
+        `Phone: ${data.phone.trim()}`,
+        `Address: ${data.address?.trim() ?? '—'}`,
+        `Preferred Area: ${data.preferredArea?.trim() ?? '—'}`,
+      ].join('\n'),
+      tag: 'home-cell-admin',
+    });
+
+    this.dispatchEmail({
+      to: normalizedEmail,
+      subject: 'Welcome to Home Cell — Everlasting Hills Church',
+      text: [
+        `Dear ${normalizedName.split(/\s+/)[0]},`,
+        '',
+        'Thank you for registering to join a Home Cell at Everlasting Hills Church.',
+        'A Cell Leader will reach out to you shortly to connect you with a group near you.',
+        '',
+        'God bless you,',
+        'Everlasting Hills Church',
+      ].join('\n'),
+      tag: 'home-cell-visitor',
+    });
+
+    return {
+      success: true,
+      message: 'Home Cell registration submitted successfully',
       data: record,
     };
   }

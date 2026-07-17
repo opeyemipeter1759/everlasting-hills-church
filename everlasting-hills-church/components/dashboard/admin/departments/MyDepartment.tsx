@@ -99,15 +99,21 @@ function DepartmentPanel({ dept }: { dept: MyDept }) {
                 <p className="text-[11px] text-gray-400">{u.lead ? `Lead: ${u.lead.firstName} ${u.lead.lastName}` : "No lead"} · {u.memberCount} member{u.memberCount === 1 ? "" : "s"}</p>
               </div>
             </div>
-            {u.lead && (
-              nudged === u.id ? (
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400"><Check size={13} /> Nudged</span>
-              ) : (
-                <button type="button" onClick={() => doNudge(u.id)} disabled={nudge.isPending} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-2.5 py-1.5 text-xs font-semibold text-gray-600 dark:text-white/70 hover:text-[#87102C] hover:border-[#87102C]/30 disabled:opacity-50">
-                  <Bell size={13} /> Nudge lead
-                </button>
-              )
-            )}
+            <div className="flex items-center gap-2">
+              <UnitLeadControl
+                unitId={u.id}
+                leadName={u.lead ? `${u.lead.firstName} ${u.lead.lastName}` : null}
+              />
+              {u.lead && (
+                nudged === u.id ? (
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400"><Check size={13} /> Nudged</span>
+                ) : (
+                  <button type="button" onClick={() => doNudge(u.id)} disabled={nudge.isPending} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-2.5 py-1.5 text-xs font-semibold text-gray-600 dark:text-white/70 hover:text-[#87102C] hover:border-[#87102C]/30 disabled:opacity-50">
+                    <Bell size={13} /> Nudge lead
+                  </button>
+                )
+              )}
+            </div>
           </li>
         ))}
         {dept.units.length === 0 && <p className="py-3 text-center text-sm text-gray-400">No units in this department yet.</p>}
