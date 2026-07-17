@@ -141,3 +141,19 @@ export class CreateEventDto {
 }
 
 export class UpdateEventDto extends PartialType(CreateEventDto) {}
+
+/**
+ * Window for the calendar grid. `from`/`to` are the first and last instant the
+ * visible grid covers — for a month view that is the leading/trailing days of the
+ * adjacent months too, not just the 1st to the 31st, so events on those spill-over
+ * cells still render.
+ */
+export class CalendarQueryDto {
+  @ApiProperty({ description: 'Window start, ISO 8601.', example: '2026-06-28T00:00:00.000Z' })
+  @IsISO8601()
+  from!: string;
+
+  @ApiProperty({ description: 'Window end, ISO 8601.', example: '2026-08-09T23:59:59.999Z' })
+  @IsISO8601()
+  to!: string;
+}

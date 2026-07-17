@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -21,7 +22,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
+import { CalendarQueryDto, CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import { CreateEventRsvpDto, SetRsvpCheckedInDto } from './dto/event-rsvp.dto';
 import { EventsService } from './events.service';
 
@@ -47,6 +48,25 @@ export class EventsController {
   @ApiOperation({ summary: 'List all events including drafts (ADMIN+)' })
   listAll() {
     return this.eventsService.listAll();
+  }
+
+  // `admin/calendar*` MUST stay above `admin/:id` — declared the other way round,
+  // `:id` matches the literal string "calendar" and the grid 404s.
+
+  @Roles(Role.ADMIN)
+  @Get('admin/calendar/summary')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Next published events + week/month/draft counts (ADMIN+)' })
+  calendarSummary() {
+    return this.eventsService.calendarSummary();
+  }
+
+  @Roles(Role.ADMIN)
+  @Get('admin/calendar')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Events overlapping a date window, drafts included (ADMIN+)' })
+  listForCalendar(@Query() query: CalendarQueryDto) {
+    return this.eventsService.listForCalendar(new Date(query.from), new Date(query.to));
   }
 
   @Roles(Role.ADMIN)

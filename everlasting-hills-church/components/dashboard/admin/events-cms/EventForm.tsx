@@ -14,12 +14,15 @@ export default function EventForm({
   initial,
   onCancel,
   onSaved,
+  defaultStartAt,
 }: {
   initial: EventDetail | null;
   onCancel: () => void;
   onSaved: () => Promise<void>;
+  /** Seeds startAt when the calendar deep-links "add event on this day". */
+  defaultStartAt?: string;
 }) {
-  const { data, set, saving, error, isEdit, submit } = useEventForm(initial, onSaved);
+  const { data, set, saving, error, isEdit, submit } = useEventForm(initial, onSaved, defaultStartAt);
 
   return (
     <form

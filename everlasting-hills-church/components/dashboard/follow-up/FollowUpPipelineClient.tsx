@@ -15,6 +15,7 @@ import { AddToMasterListModal } from "./AddToMasterListModal";
 import { AssignFollowUpModal } from "./AssignFollowUpModal";
 import { PersonAvatar } from "./PersonAvatar";
 import FollowUpPipelineSkeleton from "@/components/ui/skeleton/FollowUpPipelineSkeleton";
+import { Select } from "@/components/ui/select";
 
 type StageTab = "all" | "unassigned" | "in_progress" | "archive";
 type SourceFilter = "all" | FollowUpSourceType;
@@ -155,15 +156,13 @@ export default function FollowUpPipelineClient() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <select
+          <Select
+            aria-label="Filter by source"
             value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value as SourceFilter)}
+            onChange={(v) => setSourceFilter(v as SourceFilter)}
             className="px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer"
-          >
-            {SOURCE_FILTERS.map((f) => (
-              <option key={f.id} value={f.id}>{f.label}</option>
-            ))}
-          </select>
+            options={SOURCE_FILTERS.map((f) => ({ value: f.id, label: f.label }))}
+          />
 
           <button
             type="button"

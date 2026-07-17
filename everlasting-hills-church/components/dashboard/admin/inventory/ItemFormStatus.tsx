@@ -2,6 +2,7 @@ import Field, { inputCls } from "./Field";
 import { CONDITION_LABEL, STATUS_LABEL } from "./types";
 import { useDepartmentOptions } from "./useDepartmentOptions";
 import type { ItemFormData, SetItemField } from "./useAddItemForm";
+import { Select } from "@/components/ui/select";
 
 export default function ItemFormStatus({ data, set }: { data: ItemFormData; set: SetItemField }) {
   const departments = useDepartmentOptions();
@@ -9,26 +10,22 @@ export default function ItemFormStatus({ data, set }: { data: ItemFormData; set:
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <Field label="Status">
-        <select value={data.status} onChange={(e) => set("status", e.target.value as ItemFormData["status"])} className={inputCls}>
-          {Object.entries(STATUS_LABEL).map(([k, label]) => (
-            <option key={k} value={k}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <Select
+          aria-label="Status"
+          value={data.status}
+          onChange={(v) => set("status", v as ItemFormData["status"])}
+          className={inputCls}
+          options={Object.entries(STATUS_LABEL).map(([k, label]) => ({ value: k, label }))}
+        />
       </Field>
       <Field label="Condition">
-        <select
+        <Select
+          aria-label="Condition"
           value={data.condition}
-          onChange={(e) => set("condition", e.target.value as ItemFormData["condition"])}
+          onChange={(v) => set("condition", v as ItemFormData["condition"])}
           className={inputCls}
-        >
-          {Object.entries(CONDITION_LABEL).map(([k, label]) => (
-            <option key={k} value={k}>
-              {label}
-            </option>
-          ))}
-        </select>
+          options={Object.entries(CONDITION_LABEL).map(([k, label]) => ({ value: k, label }))}
+        />
       </Field>
       <Field label="Quantity">
         <input
@@ -40,14 +37,16 @@ export default function ItemFormStatus({ data, set }: { data: ItemFormData; set:
         />
       </Field>
       <Field label="Assigned to (department)">
-        <select value={data.assignedTo} onChange={(e) => set("assignedTo", e.target.value)} className={inputCls}>
-          <option value="">Unassigned</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.name}>
-              {d.name}
-            </option>
-          ))}
-        </select>
+        <Select
+          aria-label="Assigned to (department)"
+          value={data.assignedTo}
+          onChange={(v) => set("assignedTo", v)}
+          className={inputCls}
+          options={[
+            { value: "", label: "Unassigned" },
+            ...departments.map((d) => ({ value: d.name, label: d.name })),
+          ]}
+        />
       </Field>
     </div>
   );

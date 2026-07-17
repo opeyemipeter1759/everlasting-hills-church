@@ -5,6 +5,7 @@ import { RotateCcw } from "lucide-react";
 import { useUnitOptions, type DirectoryParams } from "@/lib/api/people";
 import { STATUS_OPTIONS } from "./peopleShared";
 import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
+import { Select } from "@/components/ui/select";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -82,38 +83,56 @@ export default function PeopleFilterPanel({
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Status">
-          <select className={fieldCls} value={draft.status ?? ""} onChange={(e) => set({ status: e.target.value })}>
-            <option value="">Any status</option>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
-            ))}
-          </select>
+          <Select
+            className={fieldCls}
+            aria-label="Status"
+            value={draft.status ?? ""}
+            onChange={(v) => set({ status: v })}
+            options={[
+              { value: "", label: "Any status" },
+              ...STATUS_OPTIONS.map((s) => ({ value: s, label: s.charAt(0) + s.slice(1).toLowerCase() })),
+            ]}
+          />
         </Field>
 
         <Field label="Gender">
-          <select className={fieldCls} value={draft.gender ?? ""} onChange={(e) => set({ gender: e.target.value })}>
-            <option value="">Any gender</option>
-            <option value="MALE">Male</option>
-            <option value="FEMALE">Female</option>
-          </select>
+          <Select
+            className={fieldCls}
+            aria-label="Gender"
+            value={draft.gender ?? ""}
+            onChange={(v) => set({ gender: v })}
+            options={[
+              { value: "", label: "Any gender" },
+              { value: "MALE", label: "Male" },
+              { value: "FEMALE", label: "Female" },
+            ]}
+          />
         </Field>
 
         <Field label="EHC Service Team">
-          <select className={fieldCls} value={draft.unit ?? ""} onChange={(e) => set({ unit: e.target.value })}>
-            <option value="">Any team</option>
-            {(units.data ?? []).map((u) => (
-              <option key={u.id} value={u.id}>{u.name}</option>
-            ))}
-          </select>
+          <Select
+            className={fieldCls}
+            aria-label="EHC Service Team"
+            value={draft.unit ?? ""}
+            onChange={(v) => set({ unit: v })}
+            options={[
+              { value: "", label: "Any team" },
+              ...(units.data ?? []).map((u) => ({ value: u.id, label: u.name })),
+            ]}
+          />
         </Field>
 
         <Field label="Birth month">
-          <select className={fieldCls} value={draft.birthMonth ?? ""} onChange={(e) => set({ birthMonth: e.target.value })}>
-            <option value="">Any month</option>
-            {MONTHS.map((m, i) => (
-              <option key={m} value={String(i + 1)}>{m}</option>
-            ))}
-          </select>
+          <Select
+            className={fieldCls}
+            aria-label="Birth month"
+            value={draft.birthMonth ?? ""}
+            onChange={(v) => set({ birthMonth: v })}
+            options={[
+              { value: "", label: "Any month" },
+              ...MONTHS.map((m, i) => ({ value: String(i + 1), label: m })),
+            ]}
+          />
         </Field>
 
         <Field label="Joined from">

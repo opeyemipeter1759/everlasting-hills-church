@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Link, Upload } from 'lucide-react';
 import { useCreateSermon, useUpdateSermon, useSermon } from '@/lib/api';
 import FileUpload from '@/components/ui/form/FileUpload';
+import { Select } from '@/components/ui/select';
 import type {
   CreateSermonPayload,
   SermonEpisodeInput,
@@ -653,25 +654,29 @@ export default function SermonForm({ mode }: SermonFormProps) {
             <div className="rounded-2xl border border-gray-100 dark:border-white/[0.07] bg-gray-50/60 dark:bg-white/[0.02] p-5">
               <Section title="Publishing">
                 <Field label="Type">
-                  <select
+                  <Select
+                    aria-label="Type"
                     value={form.type}
-                    onChange={(e) => set('type', e.target.value as SermonType)}
+                    onChange={(v) => set('type', v as SermonType)}
                     className={INPUT}
-                  >
-                    <option value="SINGLE">Single</option>
-                    <option value="SERIES">Series</option>
-                  </select>
+                    options={[
+                      { value: 'SINGLE', label: 'Single' },
+                      { value: 'SERIES', label: 'Series' },
+                    ]}
+                  />
                 </Field>
                 <Field label="Status">
-                  <select
+                  <Select
+                    aria-label="Status"
                     value={form.status}
-                    onChange={(e) => set('status', e.target.value as SermonStatus)}
+                    onChange={(v) => set('status', v as SermonStatus)}
                     className={INPUT}
-                  >
-                    <option value="DRAFT">Draft</option>
-                    <option value="PUBLISHED">Published</option>
-                    <option value="SCHEDULED">Scheduled</option>
-                  </select>
+                    options={[
+                      { value: 'DRAFT', label: 'Draft' },
+                      { value: 'PUBLISHED', label: 'Published' },
+                      { value: 'SCHEDULED', label: 'Scheduled' },
+                    ]}
+                  />
                 </Field>
 
                 {form.status === 'SCHEDULED' && (

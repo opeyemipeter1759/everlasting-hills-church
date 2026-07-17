@@ -2,6 +2,7 @@ import { Trash2 } from "lucide-react";
 import type { PersonRole } from "@/lib/api/people";
 import { ROLE_LABEL } from "../peopleShared";
 import { fieldCls } from "@/components/ui/overlay/FormModal";
+import { Select } from "@/components/ui/select";
 import type { Row } from "./types";
 
 export default function PersonRowCard({
@@ -67,18 +68,24 @@ export default function PersonRowCard({
           value={row.phone}
           onChange={(e) => onChange({ phone: e.target.value })}
         />
-        <select className={fieldCls} value={row.gender} onChange={(e) => onChange({ gender: e.target.value as Row["gender"] })}>
-          <option value="">Gender (optional)</option>
-          <option value="MALE">Male</option>
-          <option value="FEMALE">Female</option>
-        </select>
-        <select className={fieldCls} value={row.role} onChange={(e) => onChange({ role: e.target.value as PersonRole })}>
-          {assignableRoles.map((role) => (
-            <option key={role} value={role}>
-              {ROLE_LABEL[role]}
-            </option>
-          ))}
-        </select>
+        <Select
+          className={fieldCls}
+          aria-label="Gender"
+          value={row.gender}
+          onChange={(v) => onChange({ gender: v as Row["gender"] })}
+          options={[
+            { value: "", label: "Gender (optional)" },
+            { value: "MALE", label: "Male" },
+            { value: "FEMALE", label: "Female" },
+          ]}
+        />
+        <Select
+          className={fieldCls}
+          aria-label="Role"
+          value={row.role}
+          onChange={(v) => onChange({ role: v as PersonRole })}
+          options={assignableRoles.map((role) => ({ value: role, label: ROLE_LABEL[role] }))}
+        />
       </div>
     </div>
   );

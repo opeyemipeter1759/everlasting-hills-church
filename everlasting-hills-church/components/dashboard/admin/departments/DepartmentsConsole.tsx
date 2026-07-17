@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Building2, Users, ChevronRight, UserCog, RefreshCw, Layers } from "lucide-react";
 import { useDepartments, useAssignUnits, type UnassignedUnit } from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
+import { Select } from "@/components/ui/select";
 
 export default function DepartmentsConsole() {
   const q = useDepartments();
@@ -115,16 +116,16 @@ function QuickAssignRow({
         <p className="text-[11px] text-gray-400">{unit.memberCount} member{unit.memberCount === 1 ? "" : "s"}</p>
       </div>
       <div className="flex items-center gap-2">
-        <select
+        <Select
+          aria-label="Assign to department"
           value={deptId}
-          onChange={(e) => setDeptId(e.target.value)}
+          onChange={setDeptId}
           className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 text-xs font-semibold text-gray-700 dark:text-white/80 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20"
-        >
-          <option value="">Assign to…</option>
-          {departments.map((d) => (
-            <option key={d.id} value={d.id}>{d.code}: {d.name}</option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "Assign to…" },
+            ...departments.map((d) => ({ value: d.id, label: `${d.code}: ${d.name}` })),
+          ]}
+        />
         <button
           type="button"
           disabled={!deptId || assign.isPending}

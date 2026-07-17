@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { showToast } from "@/components/ui/toast/toast";
@@ -24,12 +24,28 @@ type EditingState = { kind: "closed" } | { kind: "create" } | { kind: "edit"; ev
 
 export default function EventsCmsClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // The calendar deep-links here to create: ?new=1 opens the form, &date=<local
+  // datetime-local value> seeds the start time with the day that was clicked.
+  const createFromCalendar = searchParams.get("new") === "1";
+  const dateFromCalendar = searchParams.get("date") ?? undefined;
+
   const [items, setItems] = useState<EventDetail[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [editing, setEditing] = useState<EditingState>({ kind: "closed" });
+  const [editing, setEditing] = useState<EditingState>(
+    createFromCalendar ? { kind: "create" } : { kind: "closed" },
+  );
   const [toDelete, setToDelete] = useState<EventDetail | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  /** Drop ?new/&date once the form is done so a reload doesn't reopen it. */
+  function clearCalendarParams() {
+    if (createFromCalendar || dateFromCalendar) {
+      router.replace("/dashboard/admin/events");
+    }
+  }
 
   async function loadAll() {
     setLoadError(null);
@@ -114,9 +130,14 @@ export default function EventsCmsClient() {
       {editing.kind !== "closed" && (
         <EventForm
           initial={editing.kind === "edit" ? editing.event : null}
-          onCancel={() => setEditing({ kind: "closed" })}
+          defaultStartAt={editing.kind === "create" ? dateFromCalendar : undefined}
+          onCancel={() => {
+            setEditing({ kind: "closed" });
+            clearCalendarParams();
+          }}
           onSaved={async () => {
             setEditing({ kind: "closed" });
+            clearCalendarParams();
             await loadAll();
           }}
         />

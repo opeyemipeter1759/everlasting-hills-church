@@ -41,6 +41,7 @@ export default function FirstTimerPage() {
     watch,
     setValue,
     trigger,
+    control,
     formState: { errors },
   } = useForm<FormValues>({ mode: "onBlur" });
 
@@ -118,17 +119,18 @@ export default function FirstTimerPage() {
   }
 
   const stepComponents = [
-    <Step1PersonalInfo key="s1" register={register} errors={errors} />,
+    <Step1PersonalInfo key="s1" register={register} errors={errors} control={control} />,
     <Step2FriendFamilyLocation
       key="s2"
       register={register}
       errors={errors}
+      control={control}
       watch={watch}
       setValue={setValue}
     />,
-    <Step3Interest key="s3" register={register} errors={errors} isOnline={isOnline} firstName={firstName} lastName={lastName} />,
-    <Step5Details key="s4" register={register} errors={errors} />,
-    <Step6Experience key="s5" register={register} errors={errors} />,
+    <Step3Interest key="s3" register={register} errors={errors} control={control} isOnline={isOnline} firstName={firstName} lastName={lastName} />,
+    <Step5Details key="s4" register={register} errors={errors} control={control} />,
+    <Step6Experience key="s5" register={register} errors={errors} control={control} />,
   ];
 
   const progress = Math.round(((currentStep + 1) / STEP_LABELS.length) * 100);

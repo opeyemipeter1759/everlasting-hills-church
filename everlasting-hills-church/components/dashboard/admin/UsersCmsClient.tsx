@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Mail, Phone, Plus, ShieldCheck, Trash2, UserPlus, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { Select } from "@/components/ui/select";
 
 /**
  * User management CMS.
@@ -326,21 +327,19 @@ export default function UsersCmsClient() {
                   {/* Role + actions */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {canManage(u.role) ? (
-                      <select
+                      <Select
+                        aria-label="Change role"
                         value={u.role}
-                        onChange={(e) => requestRoleChange(u, e.target.value as Role)}
+                        onChange={(v) => requestRoleChange(u, v as Role)}
                         className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded border cursor-pointer ${ROLE_BADGE[u.role]}`}
-                      >
-                        {/* Current role at top so it shows even if not in the assignable list */}
-                        <option value={u.role}>{ROLE_LABELS[u.role]}</option>
-                        {assignableRoles
-                          .filter((r) => r !== u.role)
-                          .map((r) => (
-                            <option key={r} value={r}>
-                              {ROLE_LABELS[r]}
-                            </option>
-                          ))}
-                      </select>
+                        options={[
+                          // Current role first so it shows even if not in the assignable list.
+                          { value: u.role, label: ROLE_LABELS[u.role] },
+                          ...assignableRoles
+                            .filter((r) => r !== u.role)
+                            .map((r) => ({ value: r, label: ROLE_LABELS[r] })),
+                        ]}
+                      />
                     ) : (
                       <span
                         className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded border ${ROLE_BADGE[u.role]}`}
@@ -480,17 +479,13 @@ function CreateUserForm({ assignableRoles, onCancel, onCreated }: CreateFormProp
       </Field>
 
       <Field label="Role">
-        <select
+        <Select
+          aria-label="Role"
           value={data.role}
-          onChange={(e) => setData({ ...data, role: e.target.value as Role })}
+          onChange={(v) => setData({ ...data, role: v as Role })}
           className={inputCls}
-        >
-          {assignableRoles.map((r) => (
-            <option key={r} value={r}>
-              {ROLE_LABELS[r]}
-            </option>
-          ))}
-        </select>
+          options={assignableRoles.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+        />
         <p className="text-[11px] text-gray-500 dark:text-gray-500 mt-1.5">
           You can only assign roles below yours.
         </p>

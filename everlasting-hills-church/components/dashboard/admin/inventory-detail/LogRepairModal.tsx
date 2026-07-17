@@ -5,6 +5,7 @@ import Loader from "@/components/ui/feedback/Loader";
 import Field, { inputCls } from "../inventory/Field";
 import { useRepairForm } from "./useRepairForm";
 import type { InventoryDetailApi } from "./useInventoryDetail";
+import { Select } from "@/components/ui/select";
 
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Pending" },
@@ -67,13 +68,13 @@ export default function LogRepairModal({
           </Field>
         </div>
         <Field label="Status">
-          <select value={data.status} onChange={(e) => set("status", e.target.value as typeof data.status)} className={inputCls}>
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
+          <Select
+            aria-label="Status"
+            value={data.status}
+            onChange={(v) => set("status", v as typeof data.status)}
+            className={inputCls}
+            options={STATUS_OPTIONS.map((s) => ({ value: s.value, label: s.label }))}
+          />
         </Field>
 
         <div className="flex items-center gap-3 pt-2">

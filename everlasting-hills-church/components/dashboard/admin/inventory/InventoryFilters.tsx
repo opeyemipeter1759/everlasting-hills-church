@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import type { InventoryFiltersData } from "./types";
 import { CONDITION_LABEL, STATUS_LABEL } from "./types";
 import type { InventoryQuery } from "./useInventory";
+import { Select } from "@/components/ui/select";
 
 const selectCls =
   "text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40 transition-all";
@@ -27,53 +28,49 @@ export default function InventoryFilters({
         />
       </div>
 
-      <select
+      <Select
+        aria-label="Category"
         value={query.category ?? ""}
-        onChange={(e) => onChange({ category: e.target.value })}
+        onChange={(v) => onChange({ category: v })}
         className={selectCls}
-      >
-        <option value="">All categories</option>
-        {filters?.categories.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
+        options={[
+          { value: "", label: "All categories" },
+          ...(filters?.categories ?? []).map((c) => ({ value: c, label: c })),
+        ]}
+      />
 
-      <select value={query.status ?? ""} onChange={(e) => onChange({ status: e.target.value as InventoryQuery["status"] })} className={selectCls}>
-        <option value="">All statuses</option>
-        {Object.entries(STATUS_LABEL).map(([k, label]) => (
-          <option key={k} value={k}>
-            {label}
-          </option>
-        ))}
-      </select>
+      <Select
+        aria-label="Status"
+        value={query.status ?? ""}
+        onChange={(v) => onChange({ status: v as InventoryQuery["status"] })}
+        className={selectCls}
+        options={[
+          { value: "", label: "All statuses" },
+          ...Object.entries(STATUS_LABEL).map(([k, label]) => ({ value: k, label })),
+        ]}
+      />
 
-      <select
+      <Select
+        aria-label="Condition"
         value={query.condition ?? ""}
-        onChange={(e) => onChange({ condition: e.target.value as InventoryQuery["condition"] })}
+        onChange={(v) => onChange({ condition: v as InventoryQuery["condition"] })}
         className={selectCls}
-      >
-        <option value="">All conditions</option>
-        {Object.entries(CONDITION_LABEL).map(([k, label]) => (
-          <option key={k} value={k}>
-            {label}
-          </option>
-        ))}
-      </select>
+        options={[
+          { value: "", label: "All conditions" },
+          ...Object.entries(CONDITION_LABEL).map(([k, label]) => ({ value: k, label })),
+        ]}
+      />
 
-      <select
+      <Select
+        aria-label="Location"
         value={query.location ?? ""}
-        onChange={(e) => onChange({ location: e.target.value })}
+        onChange={(v) => onChange({ location: v })}
         className={selectCls}
-      >
-        <option value="">All locations</option>
-        {filters?.locations.map((l) => (
-          <option key={l} value={l}>
-            {l}
-          </option>
-        ))}
-      </select>
+        options={[
+          { value: "", label: "All locations" },
+          ...(filters?.locations ?? []).map((l) => ({ value: l, label: l })),
+        ]}
+      />
     </div>
   );
 }

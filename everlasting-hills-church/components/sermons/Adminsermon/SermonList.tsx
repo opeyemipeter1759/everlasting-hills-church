@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAdminSermons, useDeleteSermon, useUpdateSermon } from '@/lib/api';
 import { showToast } from '@/components/ui/toast/toast';
+import { Select } from '@/components/ui/select';
 import type { LatestSermon, SermonStatus, SermonType } from '@/types';
 
 const STATUS_OPTIONS: SermonStatus[] = ['DRAFT', 'PUBLISHED', 'SCHEDULED'];
@@ -132,27 +133,29 @@ export default function SermonList() {
             className="w-full pl-8 pr-3 py-2 text-xs rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#87102C]/25"
           />
         </div>
-        <select
+        <Select
           aria-label="Filter by type"
           value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value as SermonType | '')}
+          onChange={(v) => setTypeFilter(v as SermonType | '')}
           className="text-xs rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2.5 py-2 outline-none"
-        >
-          <option value="">All Types</option>
-          <option value="SINGLE">Single</option>
-          <option value="SERIES">Series</option>
-        </select>
-        <select
+          options={[
+            { value: '', label: 'All Types' },
+            { value: 'SINGLE', label: 'Single' },
+            { value: 'SERIES', label: 'Series' },
+          ]}
+        />
+        <Select
           aria-label="Filter by status"
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as SermonStatus | '')}
+          onChange={(v) => setStatusFilter(v as SermonStatus | '')}
           className="text-xs rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2.5 py-2 outline-none"
-        >
-          <option value="">All Status</option>
-          <option value="PUBLISHED">Published</option>
-          <option value="DRAFT">Draft</option>
-          <option value="SCHEDULED">Scheduled</option>
-        </select>
+          options={[
+            { value: '', label: 'All Status' },
+            { value: 'PUBLISHED', label: 'Published' },
+            { value: 'DRAFT', label: 'Draft' },
+            { value: 'SCHEDULED', label: 'Scheduled' },
+          ]}
+        />
       </div>
 
       {/* ── Table ──────────────────────────────────────────────────── */}

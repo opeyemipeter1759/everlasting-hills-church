@@ -1,20 +1,23 @@
 import Field from "./Field";
 import { inputCls } from "./helpers";
 import type { EventFormData, SetField } from "./useEventForm";
+import { Select } from "@/components/ui/select";
 
 export default function EventFormSettings({ data, set }: { data: EventFormData; set: SetField }) {
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Field label="Status">
-          <select
+          <Select
+            aria-label="Status"
             value={data.status}
-            onChange={(e) => set("status", e.target.value as "DRAFT" | "PUBLISHED")}
+            onChange={(v) => set("status", v as "DRAFT" | "PUBLISHED")}
             className={inputCls}
-          >
-            <option value="DRAFT">Draft</option>
-            <option value="PUBLISHED">Published</option>
-          </select>
+            options={[
+              { value: "DRAFT", label: "Draft" },
+              { value: "PUBLISHED", label: "Published" },
+            ]}
+          />
         </Field>
         <Field label="Capacity (optional)">
           <input

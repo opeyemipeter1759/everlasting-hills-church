@@ -6,6 +6,7 @@ import { SkeletonLines } from "@/components/ui/display/SkeletonBlock";
 import { GitCompare, CalendarDays } from "lucide-react";
 import { RangeDatePicker, type DateRange } from "@/components/ui/form/DatePicker";
 import { useAnalyticsCompare } from "@/lib/api/analytics";
+import { Select } from "@/components/ui/select";
 
 const QUICK = [
   { label: "This week",  period: "week"  },
@@ -70,13 +71,16 @@ function PanelSelector({ label, color, sel, onSel }: { label: string; color: str
         ))}
       </div>
       {/* Month picker */}
-      <select
+      <Select
+        aria-label="Pick a month"
         value={sel.type === "month" ? sel.month : ""}
-        onChange={(e) => { if (e.target.value) { onSel({ type: "month", month: e.target.value }); setShowCustom(false); } }}
-        className="w-full text-[10px] rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2.5 py-1.5 outline-none">
-        <option value="">— Pick a month —</option>
-        {MONTHS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-      </select>
+        onChange={(v) => { if (v) { onSel({ type: "month", month: v }); setShowCustom(false); } }}
+        className="w-full text-[10px] rounded-lg bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2.5 py-1.5 outline-none"
+        options={[
+          { value: "", label: "— Pick a month —" },
+          ...MONTHS.map((m) => ({ value: m.value, label: m.label })),
+        ]}
+      />
       {/* Custom range toggle */}
       <button type="button" onClick={() => setShowCustom((v) => !v)}
         className="inline-flex items-center gap-1.5 text-[10px] font-bold text-gray-500 hover:text-[#87102C] transition-colors">
