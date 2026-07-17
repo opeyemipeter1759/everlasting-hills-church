@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { EventSummary } from "@/types";
 import { showToast } from "@/components/ui/toast/toast";
-import { submitEventRsvp, getRsvpErrorMessage } from "@/lib/api/events";
+import { submitMemberEventRsvp, getRsvpErrorMessage } from "@/lib/api/events";
 import { useCurrentUser } from "@/hooks";
 
 export interface RegisteredEvents {
@@ -22,8 +22,8 @@ export function useEventRegistration(
 
   const registered = registeredEvents.isRegistered(event.id);
 
-  // Logged-in members are registered immediately using their session details
-  // — no navigation, no form. Signed-out visitors get the RSVP modal instead.
+  // Logged-in members are registered immediately — the backend looks up their name/email/phone
+  // from their own Member record, no form. Signed-out visitors get the RSVP modal instead.
   async function handleRegisterClick() {
     if (registered) return;
     if (!isLoggedIn) {
@@ -32,10 +32,7 @@ export function useEventRegistration(
     }
     setRegistering(true);
     try {
-      await submitEventRsvp(event.slug, {
-        fullName: user?.fullName?.trim() || "Member",
-        email: user?.email?.trim() || "",
-      });
+      await submitMemberEventRsvp(event.slug);
       showToast.success("You're registered! See you there.");
       registeredEvents.markRegistered(event.id);
     } catch (err) {

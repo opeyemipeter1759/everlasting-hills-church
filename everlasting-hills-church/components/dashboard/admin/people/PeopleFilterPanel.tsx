@@ -4,7 +4,7 @@ import { useState } from "react";
 import { RotateCcw } from "lucide-react";
 import { useUnitOptions, type DirectoryParams } from "@/lib/api/people";
 import { STATUS_OPTIONS } from "./peopleShared";
-import PeopleModal, { btnGhost, btnPrimary, fieldCls } from "./PeopleModal";
+import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -57,7 +57,7 @@ export default function PeopleFilterPanel({
   }
 
   return (
-    <PeopleModal
+    <FormModal
       open={open}
       onClose={onClose}
       title="Filter people"
@@ -124,7 +124,7 @@ export default function PeopleFilterPanel({
           <input className={fieldCls} type="date" value={draft.joinedTo ?? ""} onChange={(e) => set({ joinedTo: e.target.value })} />
         </Field>
       </div>
-    </PeopleModal>
+    </FormModal>
   );
 }
 

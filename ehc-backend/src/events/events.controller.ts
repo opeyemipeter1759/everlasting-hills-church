@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -16,10 +17,12 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import type { AuthUser } from '../auth/types/auth-user';
 import { CreateEventDto, UpdateEventDto } from './dto/event.dto';
-import { CreateEventRsvpDto } from './dto/event-rsvp.dto';
+import { CreateEventRsvpDto, SetRsvpCheckedInDto } from './dto/event-rsvp.dto';
 import { EventsService } from './events.service';
 
 /**
@@ -60,6 +63,19 @@ export class EventsController {
   @ApiOperation({ summary: 'List RSVPs for an event (ADMIN+)' })
   listRsvps(@Param('id') id: string) {
     return this.eventsService.listRsvps(id);
+  }
+
+  @Roles(Role.ADMIN)
+  @Patch('admin/:id/rsvps/:rsvpId/check-in')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Mark an RSVP checked in / not checked in at the door (ADMIN+)' })
+  @ApiBody({ type: SetRsvpCheckedInDto })
+  setRsvpCheckedIn(
+    @Param('id') id: string,
+    @Param('rsvpId') rsvpId: string,
+    @Body() body: SetRsvpCheckedInDto,
+  ) {
+    return this.eventsService.setRsvpCheckedIn(id, rsvpId, body.checkedIn);
   }
 
   @Roles(Role.ADMIN)
@@ -113,5 +129,16 @@ export class EventsController {
   @ApiCreatedResponse({ description: 'RSVP received' })
   rsvp(@Param('slug') slug: string, @Body() body: CreateEventRsvpDto) {
     return this.eventsService.createRsvp(slug, body);
+  }
+
+  @Post(':slug/rsvp/me')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: "RSVP as the signed-in member — uses their own record, no form" })
+  @ApiCreatedResponse({ description: 'RSVP received' })
+  rsvpAsMember(@Param('slug') slug: string, @CurrentUser() user: AuthUser) {
+    if (!user.profileId) {
+      throw new BadRequestException('No member profile found for this account');
+    }
+    return this.eventsService.createRsvpAsMember(slug, user.profileId);
   }
 }

@@ -28,7 +28,9 @@ function Stat({ icon: Icon, label, value }: { icon: typeof Clock; label: string;
 /** Sidebar card — puts the extra width freed up on a wide dashboard screen to good use. */
 function SermonInfoCard({ sermon }: { sermon: WatchSermon }) {
   const duration = formatSermonDuration(sermon.audioDuration);
-  const isSeries = sermon.type === 'SERIES' || !!sermon.series;
+  // `series` is just a topical label a single sermon can also carry — only
+  // `type` (already correctly derived server-side) decides Series vs Single.
+  const isSeries = sermon.type === 'SERIES';
 
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] overflow-hidden">

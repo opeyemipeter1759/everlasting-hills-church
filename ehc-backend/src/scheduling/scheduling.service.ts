@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
+import { FollowUpService } from '../follow-up/follow-up.service';
 import { buildBirthdayEmail } from '../notifications/templates/birthday.email';
 import { buildAnniversaryEmail } from '../notifications/templates/anniversary.email';
 import type { Env } from '../config/env.validation';
@@ -23,6 +24,7 @@ export class SchedulingService {
     private readonly prisma: PrismaService,
     private readonly mail: MailDispatcher,
     private readonly config: ConfigService<Env, true>,
+    private readonly followUp: FollowUpService,
   ) {}
 
   /**
@@ -118,5 +120,23 @@ export class SchedulingService {
   @Cron(CronExpression.EVERY_WEEK, { name: 'weekly-digest' })
   async sendWeeklyDigest(): Promise<void> {
     this.logger.debug('weekly-digest: not yet implemented');
+  }
+
+  /**
+   * Daily follow-up auto-surface. Fires at 09:00 server time (after the 08:00
+   * greeting jobs). Creates Master List entries for at-risk absentees (every unit
+   * they belong to) and new visitors (routed to the "Follow-Up" unit) that don't
+   * already have one — see FollowUpService.autoSurfaceEntries for the dedup rule.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_9AM, { name: 'follow-up-auto-surface' })
+  async autoSurfaceFollowUps(): Promise<void> {
+    const { absenteesCreated, firstTimersCreated } = await this.followUp.autoSurfaceEntries();
+    if (absenteesCreated === 0 && firstTimersCreated === 0) {
+      this.logger.debug('follow-up-auto-surface: nothing new to surface');
+      return;
+    }
+    this.logger.log(
+      `follow-up-auto-surface: created ${absenteesCreated} absentee + ${firstTimersCreated} first-timer entries`,
+    );
   }
 }

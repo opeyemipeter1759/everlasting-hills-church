@@ -485,6 +485,38 @@ export class AttendanceService {
     });
   }
 
+  /** Edits name/date/type only — open/close state is managed via openService/closeService. */
+  async updateService(
+    serviceId: string,
+    input: { name?: string; scheduledAt?: string; serviceType?: ServiceType },
+  ) {
+    const service = await this.prisma.service.findFirst({
+      where: { id: serviceId, tenantId: this.tenantId },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+    return this.prisma.service.update({
+      where: { id: serviceId },
+      data: {
+        ...(input.name !== undefined && { name: input.name.trim() }),
+        ...(input.scheduledAt !== undefined && { scheduledAt: new Date(input.scheduledAt) }),
+        ...(input.serviceType !== undefined && { serviceType: input.serviceType }),
+      },
+    });
+  }
+
+  /** Deletes a service and its check-in records (ServiceHeadcount cascades at the DB level). */
+  async removeService(serviceId: string) {
+    const service = await this.prisma.service.findFirst({
+      where: { id: serviceId, tenantId: this.tenantId },
+    });
+    if (!service) throw new NotFoundException('Service not found');
+    await this.prisma.$transaction([
+      this.prisma.attendanceRecord.deleteMany({ where: { serviceId, tenantId: this.tenantId } }),
+      this.prisma.service.delete({ where: { id: serviceId } }),
+    ]);
+    return { id: serviceId, deleted: true };
+  }
+
   /** Open a session for check-in. Stamps openAt the first time it opens. */
   async openService(serviceId: string) {
     const service = await this.prisma.service.findFirst({

@@ -14,7 +14,9 @@ interface ScrollRevealProps {
 export default function ScrollReveal({
   children,
   delay = 0,
-  direction = "up",
+  // `direction` is accepted for API compatibility with existing call sites
+  // but no longer affects the animation — see note below.
+  direction: _direction = "up",
   className = "",
   once = true,
 }: ScrollRevealProps) {
@@ -37,17 +39,13 @@ export default function ScrollReveal({
     return () => observer.disconnect();
   }, [once]);
 
+  // Fade-only — no x/y transform. A transformed element's hidden-state offset
+  // still counts toward its container's scrollable area even before it's
+  // revealed, which was producing phantom horizontal/vertical overflow on
+  // pages with many stacked reveals.
   const variants = {
-    hidden: {
-      opacity: 0,
-      y: direction === "up" ? 28 : 0,
-      x: direction === "left" ? -28 : direction === "right" ? 28 : 0,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      x: 0,
-    },
+    hidden: { opacity: 0 },
+    visible: { opacity: 1 },
   };
 
   return (

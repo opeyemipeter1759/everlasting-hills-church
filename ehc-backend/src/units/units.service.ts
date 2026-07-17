@@ -172,7 +172,7 @@ export class UnitsService {
 
     const member = await this.prisma.member.findFirst({
       where: { id: data.memberId, tenantId: this.tenantId },
-      select: { id: true },
+      select: { id: true, profileId: true },
     });
     if (!member) throw new NotFoundException('Member not found');
 
@@ -196,6 +196,9 @@ export class UnitsService {
           },
         },
       });
+      if (data.isLead) {
+        await this.syncUnitLeadAssignment(actor, unitId, member.profileId, true);
+      }
       return {
         id: um.id,
         memberId: um.memberId,
@@ -218,10 +221,17 @@ export class UnitsService {
   async removeMember(actor: AuthUser, unitId: string, memberId: string) {
     await this.assertCanManageUnit(actor, unitId);
 
+    const member = await this.prisma.member.findFirst({
+      where: { id: memberId, tenantId: this.tenantId },
+      select: { profileId: true },
+    });
+
     const result = await this.prisma.unitMember.deleteMany({
       where: { unitId, memberId, tenantId: this.tenantId },
     });
     if (result.count === 0) throw new NotFoundException('Member not in this unit');
+
+    if (member) await this.syncUnitLeadAssignment(actor, unitId, member.profileId, false);
     return { unitId, memberId, removed: true };
   }
 
@@ -244,13 +254,48 @@ export class UnitsService {
     });
     if (!link) throw new NotFoundException('Member not in this unit');
 
-    return this.prisma.unitMember.update({
+    const updated = await this.prisma.unitMember.update({
       where: { id: link.id },
       data: {
         ...(dto.isLead !== undefined && { isLead: dto.isLead }),
         ...(dto.isAssistant !== undefined && { isAssistant: dto.isAssistant }),
       },
     });
+
+    // Keep UnitLeadAssignment (the real source of the UNIT_LEAD effective role —
+    // see EffectiveRolesService) in sync with the denormalized isLead flag. Without
+    // this, toggling isLead here changes what the UI shows but grants no actual
+    // authorization.
+    if (dto.isLead !== undefined) {
+      const member = await this.prisma.member.findUnique({ where: { id: memberId }, select: { profileId: true } });
+      if (member) await this.syncUnitLeadAssignment(actor, unitId, member.profileId, dto.isLead);
+    }
+
+    return updated;
+  }
+
+  private async syncUnitLeadAssignment(actor: AuthUser, unitId: string, profileId: string, isLead: boolean) {
+    const current = await this.prisma.unitLeadAssignment.findFirst({
+      where: { tenantId: this.tenantId, unitId, endedAt: null },
+    });
+
+    if (isLead) {
+      if (current?.userId === profileId) return; // already the active lead
+      if (current) {
+        await this.prisma.unitLeadAssignment.update({ where: { id: current.id }, data: { endedAt: new Date() } });
+      }
+      await this.prisma.unitLeadAssignment.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          unitId,
+          userId: profileId,
+          assignedById: actor.profileId ?? null,
+        },
+      });
+    } else if (current?.userId === profileId) {
+      await this.prisma.unitLeadAssignment.update({ where: { id: current.id }, data: { endedAt: new Date() } });
+    }
   }
 
   // ── Directory ───────────────────────────────────────────────────────────────

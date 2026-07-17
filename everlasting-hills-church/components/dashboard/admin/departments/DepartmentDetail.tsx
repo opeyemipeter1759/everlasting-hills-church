@@ -7,6 +7,7 @@ import {
   Layers, Plus, X, History, Megaphone, Check, Send,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import DepartmentDetailSkeleton from "@/components/ui/skeleton/DepartmentDetailSkeleton";
 import {
   useDepartment, useDepartments, useAssignHead, useRemoveHead,
   useAssignUnits, useUnassignUnit, useDeptAnnouncement,
@@ -30,7 +31,7 @@ export default function DepartmentDetail({ id }: { id: string }) {
   const [confirmRemove, setConfirmRemove] = useState(false);
 
   if (q.isLoading || !q.data) {
-    return <div className="max-w-4xl space-y-4"><div className="h-24 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" /><div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" /></div>;
+    return <DepartmentDetailSkeleton />;
   }
 
   const { department: d, currentHead, units, history, memberCount } = q.data;
@@ -40,7 +41,7 @@ export default function DepartmentDetail({ id }: { id: string }) {
     <div className="max-w-4xl space-y-5">
       {/* Header */}
       <div className="flex items-start gap-3">
-        <Link href="/dashboard/departments" className="mt-0.5 rounded-lg p-2 text-gray-400 hover:bg-[#87102C]/5 hover:text-[#87102C]" aria-label="Back to departments">
+        <Link href="/dashboard/admin/departments" className="mt-0.5 rounded-lg p-2 text-gray-400 hover:bg-[#87102C]/5 hover:text-[#87102C]" aria-label="Back to departments">
           <ArrowLeft size={18} />
         </Link>
         <div className="min-w-0">

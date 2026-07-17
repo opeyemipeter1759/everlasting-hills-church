@@ -6,11 +6,11 @@ import type { Env } from '../config/env.validation';
 import type { CreateTestimonialDto, UpdateTestimonialDto } from './dto/testimonial.dto';
 
 /**
- * Testimonials curated by admin for the homepage slider.
+ * Testimonials for the homepage slider — both admin-authored and visitor-submitted.
  *
- * Distinct from form-submission testimonies (those are user-submitted via /forms/testimony
- * and stored in FormSubmission, awaiting moderation). Items in THIS table have been
- * approved/edited for public display.
+ * Visitor submissions (POST /forms/testimony) land here unpublished via
+ * FormsService.submitTestimony, so they show up as drafts on the pastor's testimonials
+ * page for review before `published` is flipped to true.
  *
  * Tenant scope applied everywhere — same defense-in-depth as the sermons module.
  */

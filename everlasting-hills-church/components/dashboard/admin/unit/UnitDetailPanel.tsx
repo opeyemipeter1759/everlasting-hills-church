@@ -29,7 +29,7 @@ export default function UnitDetailPanel({
   const lead = unit.UnitMember.find((m) => m.isLead);
 
   return (
-    <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
+    <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl no-scrollbar overflow-hidden">
       <div className="p-5 border-b border-gray-100 dark:border-white/8 flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h2 className="text-base font-bold text-gray-900 dark:text-white truncate">{unit.name}</h2>

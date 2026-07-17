@@ -7,11 +7,6 @@ import { ThemeProvider } from '@/context/ThemeContext';
 import DashboardLayouts from '@/layout/DashboardLayouts';
 import { GlobalAuthGuard } from '@/components/auth/GlobalAuthGuard';
 
-/**
- * The sermon player (SermonPlayerProvider) is mounted once at the app root (app/layout.tsx),
- * not here — a provider scoped to just the dashboard would unmount (killing playback) the
- * moment a visitor navigates to the public site, and vice versa.
- */
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <GlobalAuthGuard>

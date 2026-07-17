@@ -695,6 +695,24 @@ export function useUnitsList() {
   });
 }
 
+export interface MyUnit {
+  id: string;
+  name: string;
+  description: string | null;
+  totalMembers: number;
+  isLead: boolean;
+  isAssistant: boolean;
+}
+
+/** The unit the current user leads, assists, or otherwise belongs to (or null). */
+export function useMyUnit() {
+  return useQuery({
+    queryKey: ["units", "me"],
+    queryFn: () => api.get<MyUnit | null>("/units/me"),
+    enabled: typeof window !== "undefined",
+  });
+}
+
 export function useUnitDetail(unitId: string | null) {
   return useQuery({
     queryKey: ["units", unitId],

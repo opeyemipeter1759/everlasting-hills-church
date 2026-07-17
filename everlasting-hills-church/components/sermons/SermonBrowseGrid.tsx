@@ -13,7 +13,9 @@ function fmtDate(iso: string) {
 
 /** Series vs Single badge — shown on every card so members know if there's more to a message. */
 function TypeBadge({ s }: { s: LatestSermon }) {
-  const isSeries = s.type === 'SERIES' || !!s.series;
+  // `series` is just a topical label a single sermon can also carry — only
+  // `type` (already correctly derived server-side) decides Series vs Single.
+  const isSeries = s.type === 'SERIES';
   return (
     <span
       className={`absolute top-2 right-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ${
@@ -253,7 +255,9 @@ export default function SermonBrowseGrid({
     const singles: LatestSermon[] = [];
     const map = new Map<string, SeriesGroup>();
     (sermons ?? []).forEach((s) => {
-      if (s.series && s.seriesSlug) {
+      // `series`/`seriesSlug` are just a topical label a SINGLE sermon can also
+      // carry — only `type` decides whether it belongs in a series group.
+      if (s.type === 'SERIES' && s.series && s.seriesSlug) {
         const g = map.get(s.seriesSlug) ?? { name: s.series, slug: s.seriesSlug, items: [] };
         g.items.push(s);
         map.set(s.seriesSlug, g);

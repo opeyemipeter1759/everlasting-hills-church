@@ -10,9 +10,6 @@ export const CHURCH = {
   whatsappUrl: "https://wa.me/2347068727719",
 };
 
-// ── SERVICE SCHEDULE ──
-// Sunday:    9:00 AM – 12:00 PM  (live window: 8:45 AM – 12:00 PM)
-// Wednesday: 5:30 PM –  8:00 PM  (live window: 5:15 PM –  8:00 PM)
 export const SERVICES = {
   sunday: {
     day: 0,
@@ -114,6 +111,8 @@ import {
   Activity,
   Tally5,
   Building2,
+  GraduationCap,
+  Compass,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -123,13 +122,10 @@ export type NavItem = {
   icon: LucideIcon;
   minRole: UserRole;
   maxRole?: UserRole;
-  /**
-   * When set, the item shows only if the user actively holds that scope
-   * (a derived role from an assignment), regardless of their other roles. This is
-   * what makes MY UNIT / MY DEPARTMENT / Usher appear per assignment, stacked with
-   * everything else the user is entitled to.
-   */
-  requiresScope?: "unitLead" | "adminHead" | "headUsher";
+  /** Extra data-driven visibility check beyond the static role gate — e.g. a
+   * UNIT_LEAD-role user who doesn't actually lead a real unit shouldn't see
+   * "My Unit"; a plain MEMBER who is genuinely on a team should see "Follow Up". */
+  requiresAccess?: "unitLead" | "followUp";
 };
 
 export type NavGroup = {
@@ -150,30 +146,36 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Unit",
     items: [
-      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "MEMBER", requiresScope: "unitLead" },
+      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
+    ],
+  },
+    {
+    section: "Follow up",
+    items: [
+      { label: "Follow Up", href: "/dashboard/follow-up", icon: Users, minRole: "MEMBER", requiresAccess: "followUp" },
     ],
   },
   {
-    // Shows whenever the user actively heads a department, stacked with their other
-    // roles (an ADMIN who heads a department sees both Administration and this).
     section: "My Department",
     items: [
-      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "MEMBER", requiresScope: "adminHead" },
+      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", maxRole: "ADMIN" },
     ],
   },
   {
     section: "Administration",
     items: [
-      { label: "People",        href: "/dashboard/members",       icon: Users,         minRole: "ADMIN" },
-      { label: "First Timers",  href: "/dashboard/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
-      { label: "Services",      href: "/dashboard/services",      icon: Calendar,      minRole: "ADMIN" },
+      { label: "People",        href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
+      { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
+      { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
-      { label: "Events",        href: "/dashboard/events",        icon: CalendarDays,  minRole: "ADMIN" },
-      { label: "Usher",         href: "/dashboard/usher",         icon: Tally5,        minRole: "MEMBER", requiresScope: "headUsher" },
-      { label: "Announcements", href: "/dashboard/announcements", icon: Megaphone,     minRole: "ADMIN" },
-      { label: "Inventory",     href: "/dashboard/inventory",     icon: Package,       minRole: "ADMIN" },
+      { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
+      { label: "Usher",         href: "/dashboard/admin/usher",         icon: Tally5,        minRole: "HEAD_USHER" },
+      { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
+      { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
-      { label: "Departments",   href: "/dashboard/departments",   icon: Building2,     minRole: "ADMIN" },
+      { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
+      { label: "Courses",       href: "/dashboard/admin/courses",       icon: GraduationCap, minRole: "ADMIN" },
+      { label: "Home Cell",     href: "/dashboard/admin/home-cell",     icon: Compass,       minRole: "ADMIN" },
       { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
       { label: "Public Site (CMS)", href: "/dashboard/cms",          icon: PanelsTopLeft, minRole: "PASTOR" },
     ],
@@ -184,20 +186,20 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Attendance",    href: "/dashboard/analytics/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Growth",        href: "/dashboard/analytics/growth",        icon: TrendingUp,    minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/analytics/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
-     // { label: "Departments",   href: "/dashboard/analytics/departments",   icon: Network,       minRole: "UNIT_LEAD" },
-      { label: "Engagement",    href: "/dashboard/analytics/engagement",    icon: Activity,      minRole: "PASTOR" },
-      { label: "Giving",        href: "/dashboard/analytics/giving",        icon: DollarSign,    minRole: "PASTOR" },
+     //{ label: "Departments",   href: "/dashboard/analytics/departments",   icon: Network,       minRole: "UNIT_LEAD" },
+     // { label: "Engagement",    href: "/dashboard/analytics/engagement",    icon: Activity,      minRole: "PASTOR" },
+     // { label: "Giving",        href: "/dashboard/analytics/giving",        icon: DollarSign,    minRole: "PASTOR" },
     ],
   },
   {
     section: "Pastoral",
     items: [
       { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "PASTOR" },
-      { label: "Sermon Analytics",  href: "/dashboard/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
+      { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
       { label: "Subscribers",       href: "/dashboard/subscribers",        icon: Mail,           minRole: "PASTOR" },
-      { label: "Testimonials",      href: "/dashboard/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
+      { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
       { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },
-      { label: "Follow-ups",        href: "/dashboard/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
+      { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
       { label: "Reports",           href: "/dashboard/reports",            icon: FileText,       minRole: "PASTOR" },
     ],
@@ -212,8 +214,11 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Home",           href: "/dashboard",            icon: BookOpen,       minRole: "MEMBER" },
       { label: "Attendance",     href: "/dashboard/attendance", icon: CheckCircle,    minRole: "MEMBER" },
-      { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
+      { label: "My Course",           href: "/dashboard/courses",            icon: GraduationCap,       minRole: "MEMBER" },
+      { label: "Explore Course",           href: "/dashboard/explore-courses",            icon: Compass,       minRole: "MEMBER" },
+
+      { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
 
     ],
   },

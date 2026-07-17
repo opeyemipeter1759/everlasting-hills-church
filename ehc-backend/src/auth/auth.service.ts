@@ -55,6 +55,7 @@ interface UserProfileSummary {
   firstName: string | null;
   lastName: string | null;
   photoUrl: string | null;
+  memberStatus: string | null;
 }
 
 @Injectable()
@@ -237,7 +238,7 @@ export class AuthService implements OnModuleInit {
       where: { userId },
       select: {
         id: true,
-        Member: { select: { firstName: true, lastName: true, photoUrl: true } },
+        Member: { select: { firstName: true, lastName: true, photoUrl: true, status: true } },
       },
     });
     // Role is the highest effective role (grants + assignments), not the legacy column.
@@ -247,6 +248,7 @@ export class AuthService implements OnModuleInit {
       firstName: profile?.Member?.firstName ?? null,
       lastName: profile?.Member?.lastName ?? null,
       photoUrl: profile?.Member?.photoUrl ?? null,
+      memberStatus: profile?.Member?.status ?? null,
     };
   }
 
@@ -278,6 +280,10 @@ export class AuthService implements OnModuleInit {
     }
 
     const summary = await this.getProfileSummary(data.user.id);
+    if (summary.memberStatus === 'OPTED_OUT') {
+      this.logger.warn(`Login blocked for opted-out member: ${email}`);
+      throw new UnauthorizedException('This account has been opted out. Contact your team leader to be restored.');
+    }
     const fullName =
       summary.firstName || summary.lastName
         ? `${summary.firstName ?? ''} ${summary.lastName ?? ''}`.trim()
@@ -387,6 +393,10 @@ export class AuthService implements OnModuleInit {
     }
 
     const summary = await this.getProfileSummary(data.user.id);
+    if (summary.memberStatus === 'OPTED_OUT') {
+      this.logger.warn(`Session refresh blocked for opted-out member: ${data.user.email}`);
+      throw new UnauthorizedException('This account has been opted out. Contact your team leader to be restored.');
+    }
     const fullName =
       summary.firstName || summary.lastName
         ? `${summary.firstName ?? ''} ${summary.lastName ?? ''}`.trim()

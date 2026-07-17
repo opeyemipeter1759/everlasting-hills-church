@@ -19,6 +19,7 @@ import { SermonsModule } from './sermons/sermons.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
 import { AssignmentsModule } from './assignments/assignments.module';
+import { FollowUpModule } from './follow-up/follow-up.module';
 import { CmsModule } from './cms/cms.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { UnitsModule } from './units/units.module';
@@ -32,12 +33,15 @@ import { OverviewModule } from './overview/overview.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { AdminModule } from './admin/admin.module';
 import { ReportsModule } from './reports/reports.module';
+import { InventoryModule } from './inventory/inventory.module';
 import { GivingModule } from './giving/giving.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { CommunityModule } from './community/community.module';
+import { HomeCellModule } from './home-cell/home-cell.module';
 import { JobsModule } from './jobs/jobs.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
+import { CoursesModule } from './courses/courses.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 
@@ -113,6 +117,7 @@ import type { Env } from './config/env.validation';
     AnalyticsModule,
     MembersModule,
     AssignmentsModule,
+    FollowUpModule,
     CmsModule,
     VisitorsModule,
     UnitsModule,
@@ -122,6 +127,7 @@ import type { Env } from './config/env.validation';
     SiteSettingsModule,
     UploadsModule,
     EventsModule,
+    InventoryModule,
     OverviewModule,
     SessionsModule,
     AdminModule,
@@ -130,8 +136,10 @@ import type { Env } from './config/env.validation';
     InboxModule,
     AnnouncementsModule,
     CommunityModule,
+    HomeCellModule,
     JobsModule.forRoot(),
     SchedulingModule,
+    CoursesModule,
   ],
   controllers: [AppController],
   providers: [

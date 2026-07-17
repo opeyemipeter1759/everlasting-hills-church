@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
+import { FollowUpModule } from '../follow-up/follow-up.module';
 import { SchedulingService } from './scheduling.service';
 
 /**
@@ -7,7 +8,7 @@ import { SchedulingService } from './scheduling.service';
  * MailDispatcher and PrismaService are resolved from their global modules.
  */
 @Module({
-  imports: [ScheduleModule.forRoot()],
+  imports: [ScheduleModule.forRoot(), FollowUpModule],
   providers: [SchedulingService],
 })
 export class SchedulingModule {}

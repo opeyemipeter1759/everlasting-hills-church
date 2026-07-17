@@ -83,6 +83,14 @@ export class SermonsController {
   }
 
   @Roles(Role.PASTOR)
+  @Get('admin/:id/engagement')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get full per-member engagement detail for a sermon (admin)' })
+  getSermonEngagement(@Param('id') id: string) {
+    return this.sermonsService.getSermonEngagement(id);
+  }
+
+  @Roles(Role.PASTOR)
   @Get('admin/:id/episodes/:episodeId')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get sermon episode by sermon id (admin)' })

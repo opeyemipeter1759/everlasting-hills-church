@@ -235,6 +235,12 @@ export class MembersService {
       },
     });
 
+    // Mark this visitor converted so they drop off the first-timers list.
+    await this.prisma.visitor.update({
+      where: { id: visitor.id },
+      data: { convertedAt: new Date(), convertedToMemberId: member.id },
+    });
+
     // Fire-and-forget welcome email — sign-in link + member features they get access to.
     // Failures are logged inside NotificationsService and never block the conversion response.
     this.events.emit(
@@ -1249,6 +1255,42 @@ export class MembersService {
 
   async deleteFollowUpTask(taskId: string) {
     return this.prisma.followUpTask.delete({ where: { id: taskId } });
+  }
+
+  /** GET /members/follow-ups — every open task org-wide, with who's assigned to shepherd
+   * each member (if anyone). Backs the pastor's follow-ups oversight page. */
+  async listOpenFollowUpTasks() {
+    const tasks = await this.prisma.followUpTask.findMany({
+      where: { tenantId: this.tenantId, done: false },
+      orderBy: [{ dueDate: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true, phone: true } },
+      },
+    });
+    if (tasks.length === 0) return [];
+
+    const memberIds = [...new Set(tasks.map((t) => t.memberId))];
+    const assignments = await this.prisma.careAssignment.findMany({
+      where: { tenantId: this.tenantId, memberId: { in: memberIds }, status: 'ACTIVE' },
+      include: { Leader: { select: { firstName: true, lastName: true } } },
+    });
+    const leaderByMember = new Map(
+      assignments.map((a) => [a.memberId, `${a.Leader.firstName} ${a.Leader.lastName}`.trim()]),
+    );
+
+    return tasks.map((t) => ({
+      id: t.id,
+      title: t.title,
+      dueDate: t.dueDate?.toISOString() ?? null,
+      createdAt: t.createdAt.toISOString(),
+      member: {
+        id: t.Member.id,
+        name: `${t.Member.firstName} ${t.Member.lastName}`.trim(),
+        photoUrl: t.Member.photoUrl,
+        phone: t.Member.phone,
+      },
+      assignedLeaderName: leaderByMember.get(t.memberId) ?? null,
+    }));
   }
 
   /** GET /members/at-risk — three risk categories */

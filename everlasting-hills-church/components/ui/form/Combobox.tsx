@@ -16,6 +16,9 @@ interface ComboboxProps {
   loading?: boolean;
   disabled?: boolean;
   emptyText?: string;
+  /** Called with the raw typed query, for callers that search server-side
+   * (in addition to the built-in client-side filter over `options`). */
+  onQueryChange?: (query: string) => void;
 }
 
 export function Combobox({
@@ -27,6 +30,7 @@ export function Combobox({
   loading = false,
   disabled = false,
   emptyText = "No results found.",
+  onQueryChange,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -95,7 +99,10 @@ export function Combobox({
               ref={inputRef}
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                onQueryChange?.(e.target.value);
+              }}
               placeholder={searchPlaceholder}
               className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
             />

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, Res } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiForbiddenResponse,
@@ -19,6 +19,7 @@ import { AttendanceService, type ListAttendanceQuery } from './attendance.servic
 import { BulkMarkAttendanceDto } from './dto/bulk-mark-attendance.dto';
 import { OverrideAttendanceDto } from './dto/override-attendance.dto';
 import { CreateServiceDto } from './dto/create-service.dto';
+import { UpdateServiceDto } from './dto/update-service.dto';
 
 /**
  * Attendance module.
@@ -116,6 +117,20 @@ export class AttendanceController {
   @ApiOperation({ summary: 'Create a service session (ADMIN+)' })
   async createService(@Body() body: CreateServiceDto) {
     return this.attendanceService.createService(body);
+  }
+
+  @Patch('services/:serviceId')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: "Edit a service's name/date/type (ADMIN+)" })
+  async updateService(@Param('serviceId') serviceId: string, @Body() body: UpdateServiceDto) {
+    return this.attendanceService.updateService(serviceId, body);
+  }
+
+  @Delete('services/:serviceId')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Delete a service and its check-in records (ADMIN+)' })
+  async removeService(@Param('serviceId') serviceId: string) {
+    return this.attendanceService.removeService(serviceId);
   }
 
   @Patch('services/:serviceId/open')

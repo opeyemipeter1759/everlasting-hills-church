@@ -7,6 +7,36 @@ import { showToast } from '@/components/ui/toast/toast';
 import type { SermonComment } from '@/lib/api/sermon-types';
 import { timeAgo, Avatar } from './chatUi';
 
+/** Skeleton bubble — mirrors the real Bubble's shape/alignment so the loading state doesn't jump around. */
+function BubbleSkeleton({ isMine, width }: { isMine: boolean; width: string }) {
+  return (
+    <div className={`flex gap-2 animate-pulse ${isMine ? 'flex-row-reverse' : ''}`}>
+      <div className="h-8 w-8 shrink-0 rounded-full bg-gray-200 dark:bg-white/10" />
+      <div className={`flex flex-col gap-1.5 max-w-[78%] ${isMine ? 'items-end' : 'items-start'}`}>
+        {!isMine && <div className="h-2.5 w-20 rounded bg-gray-200 dark:bg-white/10" />}
+        <div className={`h-9 rounded-2xl bg-gray-100 dark:bg-white/[0.06] ${isMine ? 'rounded-tr-sm' : 'rounded-tl-sm'} ${width}`} />
+        <div className="h-2 w-10 rounded bg-gray-100 dark:bg-white/[0.06]" />
+      </div>
+    </div>
+  );
+}
+
+function CommentsSkeleton() {
+  const rows: Array<{ isMine: boolean; width: string }> = [
+    { isMine: false, width: 'w-48' },
+    { isMine: false, width: 'w-36' },
+    { isMine: true, width: 'w-40' },
+    { isMine: false, width: 'w-52' },
+  ];
+  return (
+    <div className="space-y-4">
+      {rows.map((r, i) => (
+        <BubbleSkeleton key={i} isMine={r.isMine} width={r.width} />
+      ))}
+    </div>
+  );
+}
+
 /** One chat bubble — right-aligned for the current member, left-aligned for everyone else. */
 function Bubble({
   comment,
@@ -110,9 +140,7 @@ export default function CommentsPanel({
       )}
 
       {isLoading ? (
-        <div className="flex justify-center py-6">
-          <Loader2 size={18} className="animate-spin text-gray-300" />
-        </div>
+        <CommentsSkeleton />
       ) : total === 0 ? (
         <div className="flex flex-col items-center gap-2 py-10 text-center">
           <MessageCircle size={20} className="text-gray-300 dark:text-gray-600" />
