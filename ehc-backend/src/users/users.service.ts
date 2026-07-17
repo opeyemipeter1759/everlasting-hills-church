@@ -19,8 +19,15 @@ import { canActOnRole, assignableRoles } from './role-hierarchy';
 import { EffectiveRolesService } from '../auth/effective-roles.service';
 import type { CreateUserDto, UpdateUserDto, UpdateUserRoleDto } from './dto/user.dto';
 
-/** Roles stored as explicit grants (everything else is derived from assignments). */
-const GRANTED_ROLES: Role[] = [Role.PASTOR, Role.ADMIN, Role.SUPER_ADMIN];
+/** Roles stored as explicit grants (everything else is derived from assignments).
+ * ADMIN_HEAD is grantable here for a church-wide appointment (independent of
+ * heading any specific department — that's the separate DepartmentHead scope,
+ * which additionally derives ADMIN_HEAD for that person once assigned to a
+ * department). ADMIN is legacy — merged into ADMIN_HEAD (same level) — kept
+ * only so existing grants still work. HOD is deliberately NOT grantable here:
+ * it's only ever assigned scoped to a specific department, via
+ * DepartmentsService.assignHod (POST /departments/:id/hods). */
+const GRANTED_ROLES: Role[] = [Role.PASTOR, Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
 
 /**
  * Admin-only user management. Creates Supabase auth users + their Profile + Member rows
@@ -124,7 +131,8 @@ export class UsersService {
     return { granted: role };
   }
 
-  /** End an active grant (history-preserving). */
+  /** End an active grant (history-preserving). Revoking ADMIN_HEAD also ends a
+   * legacy ADMIN grant if present (same merged role, different underlying row). */
   async revokeGrant(actor: AuthUser, profileId: string, role: Role) {
     const target = await this.prisma.profile.findUnique({
       where: { id: profileId },
@@ -134,12 +142,55 @@ export class UsersService {
     this.assertCanActOn(actor, role);
     this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
 
+    const roleValues = role === Role.ADMIN_HEAD ? [Role.ADMIN_HEAD, Role.ADMIN] : [role];
     await this.prisma.roleGrant.updateMany({
-      where: { userId: profileId, role, endedAt: null },
+      where: { userId: profileId, role: { in: roleValues }, endedAt: null },
       data: { endedAt: new Date() },
     });
     await this.writeAudit(actor, 'REVOKE_ROLE', profileId, { role });
     return { revoked: role };
+  }
+
+  /** Assign Head Usher — global, unscoped (unlike ADMIN_HEAD/HOD/UNIT_LEAD, no
+   * department or unit target), so it's additive like a grant even though it's
+   * backed by HeadUsherAssignment rather than RoleGrant. History-preserving. */
+  async assignHeadUsher(actor: AuthUser, profileId: string) {
+    const target = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+      select: { id: true, tenantId: true },
+    });
+    if (!target || target.tenantId !== this.tenantId) throw new NotFoundException('User not found');
+    this.assertCanActOn(actor, Role.HEAD_USHER);
+    this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
+
+    const existing = await this.prisma.headUsherAssignment.findFirst({
+      where: { userId: profileId, endedAt: null },
+      select: { id: true },
+    });
+    if (!existing) {
+      await this.prisma.headUsherAssignment.create({
+        data: { id: randomUUID(), tenantId: this.tenantId, userId: profileId, assignedById: actor.profileId ?? null },
+      });
+      await this.writeAudit(actor, 'ASSIGN_HEAD_USHER', profileId, { role: Role.HEAD_USHER });
+    }
+    return { assigned: Role.HEAD_USHER };
+  }
+
+  async removeHeadUsher(actor: AuthUser, profileId: string) {
+    const target = await this.prisma.profile.findUnique({
+      where: { id: profileId },
+      select: { id: true, tenantId: true },
+    });
+    if (!target || target.tenantId !== this.tenantId) throw new NotFoundException('User not found');
+    this.assertCanActOn(actor, Role.HEAD_USHER);
+    this.assertCanActOn(actor, await this.targetPrimaryRole(profileId));
+
+    await this.prisma.headUsherAssignment.updateMany({
+      where: { userId: profileId, endedAt: null },
+      data: { endedAt: new Date() },
+    });
+    await this.writeAudit(actor, 'REMOVE_HEAD_USHER', profileId, { role: Role.HEAD_USHER });
+    return { removed: Role.HEAD_USHER };
   }
 
   private async writeAudit(actor: AuthUser, action: string, entityId: string, after: Prisma.InputJsonValue) {
@@ -161,38 +212,49 @@ export class UsersService {
   }
 
   /** Returns every role with its display label, level, and count.
-   *  Visitors are counted from the Visitor table (form submissions),
-   *  all other roles are counted from the Profile table.
+   *  ADMIN merged into ADMIN_HEAD (same level) — one combined row, counting the
+   *  distinct union of legacy ADMIN grants, ADMIN_HEAD grants, and active
+   *  DepartmentHead rows, so no one is double-counted across the two paths.
+   *  Visitors are counted from the Visitor table (form submissions) that haven't
+   *  converted to a Member yet — once convertedAt is set, that person is a
+   *  Member (and counts there instead), not still a Visitor.
+   *  All other roles are counted from the Profile table.
    */
   async getAllRoles() {
     // Counts come from grants + active assignments (the new source of truth), not
     // the legacy column. MEMBER is the universal base = every profile.
     const t = this.tenantId;
-    const [totalProfiles, grantRows, unitLeads, deptHeads, ushers, visitorCount] = await Promise.all([
+    const [totalProfiles, grantRows, unitLeads, deptHeads, deptHods, ushers, visitorCount] = await Promise.all([
       this.prisma.profile.count({ where: { tenantId: t } }),
-      this.prisma.roleGrant.groupBy({ by: ['role'], where: { tenantId: t, endedAt: null }, _count: { role: true } }),
+      this.prisma.roleGrant.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true, role: true } }),
       this.prisma.unitLeadAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.departmentHead.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.departmentHod.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.headUsherAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
-      this.prisma.visitor.count({ where: { tenantId: t } }),
+      this.prisma.visitor.count({ where: { tenantId: t, convertedAt: null } }),
     ]);
 
-    const grantCount = Object.fromEntries(grantRows.map((g) => [g.role, g._count.role])) as Record<string, number>;
+    const distinctGrantCount = (role: Role) =>
+      new Set(grantRows.filter((g) => g.role === role).map((g) => g.userId)).size;
+    const adminHeadUserIds = new Set<string>([
+      ...grantRows.filter((g) => g.role === Role.ADMIN || g.role === Role.ADMIN_HEAD).map((g) => g.userId),
+      ...deptHeads.map((d) => d.userId),
+    ]);
     const countMap: Record<string, number> = {
-      [Role.SUPER_ADMIN]: grantCount[Role.SUPER_ADMIN] ?? 0,
-      [Role.PASTOR]: grantCount[Role.PASTOR] ?? 0,
-      [Role.ADMIN]: grantCount[Role.ADMIN] ?? 0,
-      [Role.ADMIN_HEAD]: deptHeads.length,
+      [Role.SUPER_ADMIN]: distinctGrantCount(Role.SUPER_ADMIN),
+      [Role.PASTOR]: distinctGrantCount(Role.PASTOR),
+      [Role.ADMIN_HEAD]: adminHeadUserIds.size,
+      [Role.HOD]: deptHods.length,
       [Role.HEAD_USHER]: ushers.length,
       [Role.UNIT_LEAD]: unitLeads.length,
       [Role.MEMBER]: totalProfiles,
     };
 
     return [
-      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 7, count: countMap[Role.SUPER_ADMIN] ?? 0 },
-      { role: Role.PASTOR,      label: 'Pastor',      level: 6, count: countMap[Role.PASTOR]      ?? 0 },
-      { role: Role.ADMIN,       label: 'Admin',       level: 5, count: countMap[Role.ADMIN]        ?? 0 },
-      { role: Role.ADMIN_HEAD,  label: 'Admin Head',  level: 4, count: countMap[Role.ADMIN_HEAD]  ?? 0 },
+      { role: Role.SUPER_ADMIN, label: 'Super Admin', level: 8, count: countMap[Role.SUPER_ADMIN] ?? 0 },
+      { role: Role.PASTOR,      label: 'Pastor',      level: 7, count: countMap[Role.PASTOR]      ?? 0 },
+      { role: Role.ADMIN_HEAD,  label: 'Admin Head',  level: 6, count: countMap[Role.ADMIN_HEAD]  ?? 0 },
+      { role: Role.HOD,         label: 'Head of Department', level: 4, count: countMap[Role.HOD]  ?? 0 },
       { role: Role.HEAD_USHER,  label: 'Head Usher',  level: 3, count: countMap[Role.HEAD_USHER]  ?? 0 },
       { role: Role.UNIT_LEAD,   label: 'Unit Leader', level: 2, count: countMap[Role.UNIT_LEAD]   ?? 0 },
       { role: Role.MEMBER,      label: 'Member',      level: 1, count: countMap[Role.MEMBER]       ?? 0 },
@@ -203,7 +265,8 @@ export class UsersService {
   /**
    * Returns all members grouped by role.
    * - SUPER_ADMIN / PASTOR / ADMIN / UNIT_LEAD / MEMBER come from Profile + Member.
-   * - VISITOR comes from the Visitor table (form submissions — no auth account).
+   * - VISITOR comes from the Visitor table (form submissions — no auth account),
+   *   excluding rows that have already converted to a Member (convertedAt set).
    * - UNIT_LEAD entries include which units they lead or assist.
    */
   async listByRole() {
@@ -231,7 +294,7 @@ export class UsersService {
         orderBy: { createdAt: 'asc' },
       }),
       this.prisma.visitor.findMany({
-        where: { tenantId: this.tenantId },
+        where: { tenantId: this.tenantId, convertedAt: null },
         orderBy: { submittedAt: 'desc' },
         select: {
           id: true,
@@ -245,12 +308,13 @@ export class UsersService {
     ]);
 
     // Group each profile under its highest effective role (from grants + assignments).
+    // ADMIN merges into ADMIN_HEAD (same level) — no separate ADMIN bucket.
     const effByProfile = await this.effectiveRoles.getEffectiveRolesBatch(profiles.map((p) => p.id));
     const grouped: Record<string, unknown[]> = {
       [Role.SUPER_ADMIN]: [],
       [Role.PASTOR]: [],
-      [Role.ADMIN]: [],
       [Role.ADMIN_HEAD]: [],
+      [Role.HOD]: [],
       [Role.HEAD_USHER]: [],
       [Role.UNIT_LEAD]: [],
       [Role.MEMBER]: [],
@@ -259,7 +323,8 @@ export class UsersService {
 
     for (const p of profiles) {
       const eff = effByProfile.get(p.id);
-      const role = eff?.primaryRole ?? Role.MEMBER;
+      const primaryRole = eff?.primaryRole ?? Role.MEMBER;
+      const role = primaryRole === Role.ADMIN ? Role.ADMIN_HEAD : primaryRole;
       const member = p.Member
         ? {
             id: p.Member.id,
@@ -342,8 +407,11 @@ export class UsersService {
         member: p.Member,
       };
     });
-    // Role filter is by effective-role membership (grants + assignments).
-    return opts.role ? mapped.filter((m) => m.roles.includes(opts.role as Role)) : mapped;
+    // Role filter is by effective-role membership (grants + assignments). ADMIN_HEAD
+    // also matches legacy ADMIN holders (merged, same level).
+    if (!opts.role) return mapped;
+    const wanted = opts.role === Role.ADMIN_HEAD ? [Role.ADMIN_HEAD, Role.ADMIN] : [opts.role];
+    return mapped.filter((m) => wanted.some((r) => m.roles.includes(r)));
   }
 
   // ── Create ─────────────────────────────────────────────────────────────────

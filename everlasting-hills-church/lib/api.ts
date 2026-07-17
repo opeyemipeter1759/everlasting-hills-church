@@ -36,14 +36,15 @@ export interface MeResponse {
     facebookLink: string | null;
     instagramLink: string | null;
     tiktokLink: string | null;
+    units: { id: string; name: string; description: string | null; isLead: boolean; isAssistant: boolean }[];
   } | null;
 }
 
-export function useMe() {
+export function useMe(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["auth", "me"],
     queryFn: () => api.get<MeResponse>("/auth/me"),
-    enabled: typeof window !== "undefined",
+    enabled: typeof window !== "undefined" && options.enabled !== false,
   });
 }
 
@@ -624,6 +625,9 @@ export interface UsersByRole {
   SUPER_ADMIN: { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
   PASTOR:      { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
   ADMIN:       { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
+  ADMIN_HEAD:  { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
+  HOD:         { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
+  HEAD_USHER:  { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
   UNIT_LEAD:   { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null; units?: { unitId: string; unitName: string; isLead: boolean; isAssistant: boolean }[] } | null }[];
   MEMBER:      { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
   VISITOR:     { id: string; firstName: string; lastName: string; email: string | null; phone: string | null }[];

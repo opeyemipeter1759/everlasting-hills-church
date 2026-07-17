@@ -15,6 +15,7 @@ interface JourneyBandProps {
   lastServiceDate: string | null;
   recentServices: MemberHomeProps["recentServices"];
   streakWeeks: number;
+  coursesCompleted: number;
   nextService: MemberHomeProps["nextService"];
   discipleshipMilestones?: MemberHomeProps["discipleshipMilestones"];
   monthlyAttendance: MemberHomeProps["monthlyAttendance"];
@@ -25,7 +26,7 @@ interface JourneyBandProps {
 export function JourneyBand({
   isNewMember, member, prayerCount, ministryUnit,
   attendanceRate, attendanceCount, lastServiceDate, recentServices,
-  streakWeeks, nextService, discipleshipMilestones, monthlyAttendance,
+  streakWeeks, coursesCompleted, nextService, discipleshipMilestones, monthlyAttendance,
 }: JourneyBandProps) {
 /*   if (isNewMember) {
     return (
@@ -45,6 +46,7 @@ export function JourneyBand({
         />
         <WarmStreakStat
           streakWeeks={streakWeeks}
+          coursesCompleted={coursesCompleted}
           nextService={nextService}
           ministryUnit={ministryUnit}
         />

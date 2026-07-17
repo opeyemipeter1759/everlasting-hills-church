@@ -13,7 +13,10 @@ import type { AuthUser } from '../auth/types/auth-user';
 import type { AssignUnitMemberDto, CreateUnitDto, SetMemberRoleDto, UpdateUnitDto } from './dto/unit.dto';
 import { EffectiveRolesService } from '../auth/effective-roles.service';
 
-const ADMIN_ROLES: Role[] = [Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN];
+// ADMIN_HEAD is merged with ADMIN (same level) — full, unscoped unit management,
+// not limited to units inside a department they personally head (that narrower
+// path is assertCanAssignUnitLeadScoped below, for HOD / department-only heads).
+const ADMIN_ROLES: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN];
 
 @Injectable()
 export class UnitsService {
@@ -235,11 +238,14 @@ export class UnitsService {
 
   /**
    * Set the lead/assistant role for an existing unit member.
-   * Only ADMIN+ can change roles — leads/assistants cannot self-promote peers.
+   * ADMIN+ may change any unit. HOD / ADMIN_HEAD may only appoint a LEAD (not an
+   * assistant), and only within a unit whose department they actively head/HOD —
+   * "HOD are the one that can create unit Head".
    */
   async setMemberRole(actor: AuthUser, unitId: string, memberId: string, dto: SetMemberRoleDto) {
-    if (!actor.role || !ADMIN_ROLES.includes(actor.role)) {
-      throw new ForbiddenException('Only ADMIN+ can change unit roles');
+    const isFullAdmin = Boolean(actor.role && ADMIN_ROLES.includes(actor.role));
+    if (!isFullAdmin) {
+      await this.assertCanAssignUnitLeadScoped(actor, unitId, dto);
     }
 
     if (dto.isLead && dto.isAssistant) {
@@ -270,6 +276,39 @@ export class UnitsService {
     }
 
     return updated;
+  }
+
+  /**
+   * HOD / ADMIN_HEAD scoped path into setMemberRole: only within a unit whose
+   * department they actively head/HOD, and only for isLead (never isAssistant).
+   */
+  private async assertCanAssignUnitLeadScoped(actor: AuthUser, unitId: string, dto: SetMemberRoleDto) {
+    if (dto.isAssistant) {
+      throw new ForbiddenException('Only ADMIN+ can assign assistants');
+    }
+    if (!actor.profileId) {
+      throw new ForbiddenException('No profile on your account');
+    }
+    const unit = await this.prisma.unit.findFirst({
+      where: { id: unitId, tenantId: this.tenantId },
+      select: { departmentId: true },
+    });
+    if (!unit?.departmentId) {
+      throw new ForbiddenException('This unit is not part of a department you head');
+    }
+    const [head, hod] = await Promise.all([
+      this.prisma.departmentHead.findFirst({
+        where: { tenantId: this.tenantId, departmentId: unit.departmentId, userId: actor.profileId, endedAt: null },
+        select: { id: true },
+      }),
+      this.prisma.departmentHod.findFirst({
+        where: { tenantId: this.tenantId, departmentId: unit.departmentId, userId: actor.profileId, endedAt: null },
+        select: { id: true },
+      }),
+    ]);
+    if (!head && !hod) {
+      throw new ForbiddenException('This unit is not part of a department you head');
+    }
   }
 
   private async syncUnitLeadAssignment(actor: AuthUser, unitId: string, profileId: string, isLead: boolean) {

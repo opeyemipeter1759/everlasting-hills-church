@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
@@ -8,7 +8,12 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import { Role } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import type { AuthUser } from '../auth/types/auth-user';
 import { ContactDto } from './dto/contact.dto';
 import { FirstTimerDto } from './dto/first-timer.dto';
 import { PrayerRequestDto } from './dto/prayer-request.dto';
@@ -42,17 +47,35 @@ export class FormsController {
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('prayer-request')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Submit Prayer Request',
-    description: 'Create a prayer request record and notify the church team by email.',
+    description:
+      'Create a prayer request record and notify the church team by email. Public — works with no session. ' +
+      'If the submitter is signed in, their member is linked on the record even when marked anonymous (anonymous ' +
+      'only hides the name shown around the request; admins can always see who a signed-in submitter really is).',
   })
   @ApiCreatedResponse({ description: 'Prayer request submitted successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
-  async prayerRequest(@Body() body: PrayerRequestDto) {
-    return this.formsService.submitPrayerRequest(body);
+  async prayerRequest(@Body() body: PrayerRequestDto, @CurrentUser() user?: AuthUser) {
+    return this.formsService.submitPrayerRequest(body, user?.memberId ?? null);
+  }
+
+  @Get('prayer-requests')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'List all prayer requests, newest first (ADMIN+)' })
+  async listPrayerRequests() {
+    return this.formsService.listPrayerRequests();
+  }
+
+  @Delete('prayer-requests/:id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Delete a prayer request (ADMIN+)' })
+  async deletePrayerRequest(@Param('id') id: string) {
+    return this.formsService.deletePrayerRequest(id);
   }
 
   @Public()

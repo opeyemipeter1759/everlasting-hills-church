@@ -72,10 +72,19 @@ export default function PrayerForm() {
     setServerError("");
 
     try {
-      // POST /forms/prayer-request is @Public — coerce the radio's string "true" to boolean.
+      const anonymous = String(data.is_anonymous) === "true";
+      // Contact fields stay mounted-then-hidden when switching to anonymous, so
+      // react-hook-form still carries their last value (often "") — never send
+      // them at all for an anonymous submission, and drop empty strings
+      // otherwise (an empty "email" fails @IsEmail on the backend).
       await apiClient.post("/forms/prayer-request", {
-        ...data,
-        is_anonymous: String(data.is_anonymous) === "true",
+        request: data.request,
+        is_anonymous: anonymous,
+        ...(!anonymous && {
+          name: data.name?.trim() || undefined,
+          email: data.email?.trim() || undefined,
+          phone: data.phone?.trim() || undefined,
+        }),
       });
 
       setSubmitted(true);

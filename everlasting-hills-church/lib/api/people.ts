@@ -16,6 +16,7 @@ export type PersonRole =
   | "PASTOR"
   | "ADMIN"
   | "ADMIN_HEAD"
+  | "HOD"
   | "HEAD_USHER"
   | "UNIT_LEAD"
   | "MEMBER"
@@ -157,6 +158,17 @@ function useInvalidatePeople() {
   return () => qc.invalidateQueries({ queryKey: PEOPLE_KEY });
 }
 
+/** Role changes affect more than the directory list — the Roles page's rollup
+ * (["users","roles"]), by-role groups (["users","by-role"]), and the viewer's
+ * own assignable-roles all read from the same "users" query namespace. */
+function useInvalidateUsers() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: PEOPLE_KEY });
+    qc.invalidateQueries({ queryKey: ["users"] });
+  };
+}
+
 export function useBulkCreatePeople() {
   const invalidate = useInvalidatePeople();
   return useMutation({
@@ -176,10 +188,47 @@ export function useUpdateMember() {
 }
 
 export function useChangeRole() {
-  const invalidate = useInvalidatePeople();
+  const invalidate = useInvalidateUsers();
   return useMutation({
     mutationFn: ({ profileId, role }: { profileId: string; role: PersonRole }) =>
       api.patch(`/users/${profileId}/role`, { role }),
+    onSuccess: invalidate,
+  });
+}
+
+/** Additive global-role grant (PASTOR / ADMIN / SUPER_ADMIN) — doesn't end other grants. */
+export function useGrantRole() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: ({ profileId, role }: { profileId: string; role: PersonRole }) =>
+      api.post(`/users/${profileId}/grants`, { role }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRevokeGrant() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: ({ profileId, role }: { profileId: string; role: PersonRole }) =>
+      api.delete(`/users/${profileId}/grants/${role}`),
+    onSuccess: invalidate,
+  });
+}
+
+/** Head Usher is global/unscoped like a grant, but backed by HeadUsherAssignment
+ * rather than RoleGrant, so it has its own endpoint. */
+export function useAssignHeadUsher() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: (profileId: string) => api.post(`/users/${profileId}/head-usher`),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemoveHeadUsher() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: (profileId: string) => api.delete(`/users/${profileId}/head-usher`),
     onSuccess: invalidate,
   });
 }

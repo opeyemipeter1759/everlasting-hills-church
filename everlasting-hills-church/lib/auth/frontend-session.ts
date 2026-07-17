@@ -3,18 +3,21 @@ export type UserRole =
   | "PASTOR"
   | "ADMIN"
   | "ADMIN_HEAD"
+  | "HOD"
   | "HEAD_USHER"
   | "UNIT_LEAD"
   | "MEMBER";
 
+// Admin merged into Admin Head — same level, full church-wide access.
 const ROLE_LEVELS: Record<UserRole, number> = {
   MEMBER: 1,
   UNIT_LEAD: 2,
   HEAD_USHER: 3,
-  ADMIN_HEAD: 4,
-  ADMIN: 5,
-  PASTOR: 6,
-  SUPER_ADMIN: 7,
+  HOD: 4,
+  ADMIN_HEAD: 6,
+  ADMIN: 6,
+  PASTOR: 7,
+  SUPER_ADMIN: 8,
 };
 
 export const ACCESS_TOKEN_COOKIE = "ehc_access_token";
@@ -78,6 +81,9 @@ export function getLandingPage(role: string | null | undefined): string {
 
 export function getRequiredRole(pathname: string): UserRole | null {
   if (pathname.startsWith("/admin")) return "SUPER_ADMIN";
+  // Reachable by HOD/ADMIN_HEAD too (their own scoped view), not just ADMIN+ —
+  // must be checked before the generic /dashboard/admin prefix rule below.
+  if (pathname.startsWith("/dashboard/admin/roles")) return "HOD";
   if (pathname.startsWith("/dashboard/admin")) return "ADMIN";
   if (pathname.startsWith("/dashboard/pastor")) return "PASTOR";
   if (pathname.startsWith("/dashboard/unit-lead")) return "UNIT_LEAD";

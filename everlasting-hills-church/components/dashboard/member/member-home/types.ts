@@ -14,6 +14,7 @@ export interface MemberHomeProps {
   attendanceRate: number;
   attendanceCount: number;
   streakWeeks: number;
+  coursesCompleted: number;
   lastServiceDate: string | null;
   nextService: { name: string; scheduledAt: string } | null;
   hasCheckedInToday: boolean;

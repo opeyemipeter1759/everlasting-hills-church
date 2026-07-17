@@ -4,6 +4,9 @@ import type { MemberDetail } from "./types";
 
 export default function MemberHero({ member: m, completionPct }: { member: MemberDetail; completionPct: number }) {
   const role = m.Profile?.role ?? "MEMBER";
+  // "Worker" is a display-only distinction, not a real role: a plain MEMBER who
+  // also belongs to a unit (but isn't its lead — that's UNIT_LEAD, a real role).
+  const isWorker = role === "MEMBER" && m.UnitMember.length > 0;
   const name = `${m.firstName} ${m.lastName}`.trim();
 
   return (
@@ -14,7 +17,7 @@ export default function MemberHero({ member: m, completionPct }: { member: Membe
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">{name}</h1>
             <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${ROLE_BADGE[role]}`}>
-              {ROLE_LABEL[role]}
+              {isWorker ? "Worker" : ROLE_LABEL[role]}
             </span>
             <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${STATUS_BADGE[m.status] ?? STATUS_BADGE.INACTIVE}`}>
               {m.status}

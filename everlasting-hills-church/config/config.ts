@@ -41,20 +41,25 @@ export type UserRole =
   | "PASTOR"
   | "ADMIN"
   | "ADMIN_HEAD"
+  | "HOD"
   | "HEAD_USHER"
   | "UNIT_LEAD"
   | "MEMBER"
   | "VISITOR";
 
+// Admin merged into Admin Head — same level, full church-wide access. ADMIN is
+// legacy (kept only so existing grants keep working); ADMIN_HEAD is the name
+// used going forward.
 const LEVELS: Record<UserRole, number> = {
   VISITOR: 0,
   MEMBER: 1,
   UNIT_LEAD: 2,
   HEAD_USHER: 3,
-  ADMIN_HEAD: 4,
-  ADMIN: 5,
-  PASTOR: 6,
-  SUPER_ADMIN: 7,
+  HOD: 4,
+  ADMIN_HEAD: 6,
+  ADMIN: 6,
+  PASTOR: 7,
+  SUPER_ADMIN: 8,
 };
 
 export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
@@ -64,8 +69,9 @@ export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
 export const ROLE_LABELS: Record<UserRole, string> = {
   SUPER_ADMIN: "Super Admin",
   PASTOR: "Pastor",
-  ADMIN: "Admin",
+  ADMIN: "Admin Head",
   ADMIN_HEAD: "Admin Head",
+  HOD: "Head of Department",
   HEAD_USHER: "Head Usher",
   UNIT_LEAD: "Unit Lead",
   MEMBER: "Member",
@@ -75,8 +81,9 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
   SUPER_ADMIN: "bg-purple-500/20 text-purple-300 border border-purple-500/30",
   PASTOR: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
-  ADMIN: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
+  ADMIN: "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30",
   ADMIN_HEAD: "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30",
+  HOD: "bg-teal-500/20 text-teal-300 border border-teal-500/30",
   HEAD_USHER: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
   UNIT_LEAD: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
   MEMBER: "bg-white/10 text-white/50 border border-white/10",
@@ -137,10 +144,10 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: null,
     items: [
-      { label: "Home",            href: "/dashboard/admin",                  icon: LayoutDashboard, minRole: "ADMIN" },
-      { label: "Attendance",      href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "ADMIN" },
-      { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "ADMIN" },
-      { label: "Testimonies",     href: "/dashboard/testimonies",      icon: MessageSquare,   minRole: "ADMIN" },
+      { label: "Home",            href: "/dashboard/admin",                  icon: LayoutDashboard, minRole: "SUPER_ADMIN" },
+      { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "SUPER_ADMIN" },
+      { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "SUPER_ADMIN" },
+      { label: "Questions",     href: "/dashboard/questions",      icon: MessageSquare,   minRole: "SUPER_ADMIN" },
     ],
   },
   {
@@ -158,7 +165,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Department",
     items: [
-      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", maxRole: "ADMIN" },
+      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", },
     ],
   },
   {
@@ -174,6 +181,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
+      { label: "Roles",         href: "/dashboard/admin/roles",         icon: Shield,        minRole: "HOD" },
       { label: "Courses",       href: "/dashboard/admin/courses",       icon: GraduationCap, minRole: "ADMIN" },
       { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
       { label: "Public Site (CMS)", href: "/dashboard/cms",          icon: PanelsTopLeft, minRole: "PASTOR" },
@@ -195,8 +203,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "PASTOR" },
       { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
-      { label: "Subscribers",       href: "/dashboard/subscribers",        icon: Mail,           minRole: "PASTOR" },
-      { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
       { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },
       { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },

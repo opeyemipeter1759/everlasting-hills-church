@@ -85,7 +85,7 @@ export default function PeopleTableRow({
             {p.units.map((u) => (
               <span
                 key={u.id}
-                title={u.isLead ? "Team lead" : u.isAssistant ? "Assistant" : "Member"}
+                title={u.isLead ? "Team lead" : u.isAssistant ? "Assistant" : "Worker"}
                 className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FFF4F6] text-[#9b3050] border border-[#E7CDD3] dark:bg-white/5 dark:text-[#e8a3b3] dark:border-white/10"
               >
                 {u.name}

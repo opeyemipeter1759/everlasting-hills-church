@@ -5,7 +5,6 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsEmail,
-  IsEnum,
   IsIn,
   IsNotEmpty,
   IsOptional,
@@ -24,6 +23,7 @@ const MANAGEABLE_ROLES = [
   Role.MEMBER,
   Role.UNIT_LEAD,
   Role.HEAD_USHER,
+  Role.HOD,
   Role.ADMIN_HEAD,
   Role.ADMIN,
   Role.PASTOR,
@@ -56,7 +56,7 @@ export class CreateUserDto {
   lastName!: string;
 
   @ApiProperty({ example: 'MEMBER', enum: MANAGEABLE_ROLES })
-  @IsEnum(MANAGEABLE_ROLES)
+  @IsIn(MANAGEABLE_ROLES)
   role!: (typeof MANAGEABLE_ROLES)[number];
 
   @ApiProperty({ required: false, enum: ['MALE', 'FEMALE'] })
@@ -78,7 +78,7 @@ export class BulkCreateUsersDto {
 
 export class UpdateUserRoleDto {
   @ApiProperty({ example: 'ADMIN', enum: MANAGEABLE_ROLES })
-  @IsEnum(MANAGEABLE_ROLES)
+  @IsIn(MANAGEABLE_ROLES)
   role!: (typeof MANAGEABLE_ROLES)[number];
 }
 

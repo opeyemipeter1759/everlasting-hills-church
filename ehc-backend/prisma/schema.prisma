@@ -194,6 +194,7 @@ model Member {
   FollowUpAsAssignee FollowUpEntry[]      @relation("FollowUpAssignee")
   FollowUpLogs       FollowUpContactLog[] @relation("FollowUpLoggedBy")
   CourseEnrollment   CourseEnrollment[]
+  PrayerRequest      PrayerRequest[]
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).
@@ -371,7 +372,15 @@ model PrayerRequest {
   request     String
   isAnonymous Boolean  @default(false)
   submittedAt DateTime @default(now())
+  /// Set only when a signed-in member submits (optional auth on the public form).
+  /// "Anonymous" only hides identity from the free-text name field shown around
+  /// the request — admins can always see the linked member, anonymous or not.
+  memberId    String?
   Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  Member      Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([memberId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -390,6 +399,8 @@ model Profile {
   CommunityPost  CommunityPost[]
   DepartmentHeadOf       DepartmentHead[] @relation("DepartmentHeadUser")
   DepartmentHeadAssigned DepartmentHead[] @relation("DepartmentHeadAssignedBy")
+  DepartmentHodOf        DepartmentHod[]  @relation("DepartmentHodUser")
+  DepartmentHodAssigned  DepartmentHod[]  @relation("DepartmentHodAssignedBy")
   RoleGrantOf            RoleGrant[]           @relation("RoleGrantUser")
   RoleGrantGranted       RoleGrant[]           @relation("RoleGrantGrantedBy")
   UnitLeadOf             UnitLeadAssignment[]  @relation("UnitLeadUser")
@@ -397,6 +408,9 @@ model Profile {
   HeadUsherOf            HeadUsherAssignment[] @relation("HeadUsherUser")
   HeadUsherAssigned      HeadUsherAssignment[] @relation("HeadUsherAssignedBy")
   FollowUpAdded          FollowUpEntry[]       @relation("FollowUpAddedBy")
+  ReportSubmitted        Report[]              @relation("ReportSubmittedBy")
+  ReportReviewed         Report[]              @relation("ReportReviewedBy")
+  ReportComment          ReportComment[]
 }
 
 /// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
@@ -704,6 +718,7 @@ model Tenant {
   ServiceHeadcount   ServiceHeadcount[]
   Department         Department[]
   DepartmentHead     DepartmentHead[]
+  DepartmentHod      DepartmentHod[]
   RoleGrant          RoleGrant[]
   UnitLeadAssignment UnitLeadAssignment[]
   HeadUsherAssignment HeadUsherAssignment[]
@@ -711,6 +726,8 @@ model Tenant {
   Testimonial        Testimonial[]
   Unit               Unit[]
   Visitor            Visitor[]
+  Report             Report[]
+  ReportComment      ReportComment[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -935,8 +952,68 @@ model Unit {
   UnitMember   UnitMember[]
   LeadAssignments UnitLeadAssignment[]
   FollowUpEntry   FollowUpEntry[]
+  Report          Report[]
 
   @@index([departmentId])
+}
+
+enum ReportScope {
+  DEPARTMENT
+  UNIT
+}
+
+enum ReportStatus {
+  SUBMITTED
+  APPROVED
+  NEEDS_CORRECTION
+}
+
+/// A status report a Unit Lead or Department Head logs about what's going on in
+/// their unit/department. Reviewed by a Super Admin on the Audit Log page —
+/// approved, or sent back with a correction request (comment).
+model Report {
+  id             String          @id
+  tenantId       String
+  scope          ReportScope
+  departmentId   String? // set when scope = DEPARTMENT
+  unitId         String? // set when scope = UNIT
+  submittedById  String // Profile.id of the author
+  title          String
+  content        String
+  attachmentUrl  String? // .docx (or similar) attachment, uploaded via /uploads/document
+  attachmentName String? // original filename, for display
+  status         ReportStatus    @default(SUBMITTED)
+  reviewedById   String? // Profile.id of the Super Admin who last acted on it
+  reviewedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @default(now())
+  Tenant         Tenant          @relation(fields: [tenantId], references: [id])
+  Department     Department?     @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  Unit           Unit?           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  SubmittedBy    Profile         @relation("ReportSubmittedBy", fields: [submittedById], references: [id])
+  ReviewedBy     Profile?        @relation("ReportReviewedBy", fields: [reviewedById], references: [id])
+  Comments       ReportComment[]
+
+  @@index([tenantId, status])
+  @@index([departmentId])
+  @@index([unitId])
+  @@index([submittedById])
+}
+
+/// A comment on a Report — visible to both the report's author and reviewers.
+/// Flat (no threading): a running log of back-and-forth on one report.
+model ReportComment {
+  id        String   @id
+  tenantId  String
+  reportId  String
+  authorId  String // Profile.id — either the report's author or a reviewer
+  content   String
+  createdAt DateTime @default(now())
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  Author    Profile  @relation(fields: [authorId], references: [id])
+
+  @@index([reportId])
 }
 
 /// A church Administrative Structure (department). Service Units are grouped under
@@ -954,6 +1031,8 @@ model Department {
   Tenant      Tenant           @relation(fields: [tenantId], references: [id])
   Units       Unit[]
   Heads       DepartmentHead[]
+  Hods        DepartmentHod[]
+  Reports     Report[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -974,6 +1053,28 @@ model DepartmentHead {
   Department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
   User         Profile    @relation("DepartmentHeadUser", fields: [userId], references: [id], onDelete: Cascade)
   AssignedBy   Profile?   @relation("DepartmentHeadAssignedBy", fields: [assignedById], references: [id])
+
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([userId])
+}
+
+/// History-preserving assignment of a user (Profile) as an HOD (Head of Department)
+/// under a department. Distinct from DepartmentHead: a department may have several
+/// active HODs at once, appointed by its Admin Head (or Pastor/Super Admin). An
+/// HOD's own capability is appointing Unit Leads within that department's units.
+model DepartmentHod {
+  id           String     @id
+  tenantId     String
+  departmentId String
+  userId       String // Profile.id of the HOD
+  assignedById String? // Profile.id of the actor who assigned them
+  assignedAt   DateTime   @default(now())
+  endedAt      DateTime? // null = currently active
+  Tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  Department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  User         Profile    @relation("DepartmentHodUser", fields: [userId], references: [id], onDelete: Cascade)
+  AssignedBy   Profile?   @relation("DepartmentHodAssignedBy", fields: [assignedById], references: [id])
 
   @@index([tenantId])
   @@index([departmentId])
@@ -1175,6 +1276,7 @@ enum Role {
   PASTOR
   ADMIN
   ADMIN_HEAD
+  HOD
   HEAD_USHER
   UNIT_LEAD
   MEMBER

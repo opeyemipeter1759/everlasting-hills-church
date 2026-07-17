@@ -108,8 +108,8 @@ export class UnitsController {
   }
 
   @Patch(':unitId/members/:memberId')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Set lead or assistant role for a unit member (ADMIN+ only)' })
+  @Roles(Role.HOD)
+  @ApiOperation({ summary: 'Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only)' })
   @ApiBody({ type: SetMemberRoleDto })
   async setMemberRoleShort(
     @CurrentUser() actor: AuthUser,
@@ -121,8 +121,8 @@ export class UnitsController {
   }
 
   @Patch(':unitId/members/:memberId/role')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Set lead or assistant role for a unit member (ADMIN+ only)' })
+  @Roles(Role.HOD)
+  @ApiOperation({ summary: 'Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only)' })
   @ApiBody({ type: SetMemberRoleDto })
   async setMemberRole(
     @CurrentUser() actor: AuthUser,

@@ -27,6 +27,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     attendanceRate = 0,
     attendanceCount = 0,
     streakWeeks = 0,
+    coursesCompleted = 0,
     lastServiceDate = null,
     nextService = null,
     hasCheckedInToday = false,
@@ -119,6 +120,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         lastServiceDate={lastServiceDate}
         recentServices={recentServices}
         streakWeeks={streakWeeks}
+        coursesCompleted={coursesCompleted}
         nextService={nextService}
         discipleshipMilestones={discipleshipMilestones}
         monthlyAttendance={monthlyAttendance}

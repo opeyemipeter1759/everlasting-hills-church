@@ -1,12 +1,7 @@
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { Heart } from "lucide-react";
+import PrayerRequestsClient from "@/components/dashboard/admin/prayer-requests/PrayerRequestsClient";
+
+export const metadata = { title: "Prayer Requests · Dashboard" };
 
 export default function PrayerRequestsPage() {
-  return (
-    <ComingSoon
-      title="Prayer Requests"
-      description="View and respond to prayer requests. Assign to pastoral team and track follow-ups."
-      icon={Heart}
-    />
-  );
+  return <PrayerRequestsClient />;
 }

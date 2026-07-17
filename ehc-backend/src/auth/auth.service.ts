@@ -587,7 +587,7 @@ export class AuthService implements OnModuleInit {
       // Return enough for the UI to render a "complete your profile" state.
       return {
         profileId: null, role: null, tenantId: null, member: null,
-        effectiveRoles: [], unitLeadOf: [], adminHeadOf: [], headUsher: false,
+        effectiveRoles: [], unitLeadOf: [], adminHeadOf: [], hodOf: [], headUsher: false,
       };
     }
 
@@ -629,6 +629,7 @@ export class AuthService implements OnModuleInit {
       effectiveRoles: eff.roles,
       unitLeadOf: eff.unitLeadOf,
       adminHeadOf: eff.adminHeadOf,
+      hodOf: eff.hodOf,
       headUsher: eff.headUsher,
       tenantId: profile.tenantId,
       member: profile.Member

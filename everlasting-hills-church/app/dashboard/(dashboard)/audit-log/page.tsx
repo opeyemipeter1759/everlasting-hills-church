@@ -1,12 +1,7 @@
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { Shield } from "lucide-react";
+import AuditLogClient from "@/components/dashboard/admin/audit-log/AuditLogClient";
+
+export const metadata = { title: "Audit Log · Dashboard" };
 
 export default function AuditLogPage() {
-  return (
-    <ComingSoon
-      title="Audit Log"
-      description="Append-only log of all admin actions. Search by actor, action type, and date range."
-      icon={Shield}
-    />
-  );
+  return <AuditLogClient />;
 }

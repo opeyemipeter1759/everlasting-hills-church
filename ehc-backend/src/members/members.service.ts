@@ -768,13 +768,23 @@ export class MembersService {
   private roleFilter(role: Role): Prisma.ProfileWhereInput {
     switch (role) {
       case Role.PASTOR:
-      case Role.ADMIN:
       case Role.SUPER_ADMIN:
         return { RoleGrantOf: { some: { role, endedAt: null } } };
+      case Role.ADMIN:
+      case Role.ADMIN_HEAD:
+        // ADMIN merged into ADMIN_HEAD (same level) — match either grant, or an
+        // active DepartmentHead row (department-scoped admin heads).
+        return {
+          OR: [
+            { RoleGrantOf: { some: { role: Role.ADMIN_HEAD, endedAt: null } } },
+            { RoleGrantOf: { some: { role: Role.ADMIN, endedAt: null } } },
+            { DepartmentHeadOf: { some: { endedAt: null } } },
+          ],
+        };
+      case Role.HOD:
+        return { DepartmentHodOf: { some: { endedAt: null } } };
       case Role.UNIT_LEAD:
         return { UnitLeadOf: { some: { endedAt: null } } };
-      case Role.ADMIN_HEAD:
-        return { DepartmentHeadOf: { some: { endedAt: null } } };
       case Role.HEAD_USHER:
         return { HeadUsherOf: { some: { endedAt: null } } };
       case Role.MEMBER:
@@ -784,6 +794,7 @@ export class MembersService {
           RoleGrantOf: { none: { endedAt: null } },
           UnitLeadOf: { none: { endedAt: null } },
           DepartmentHeadOf: { none: { endedAt: null } },
+          DepartmentHodOf: { none: { endedAt: null } },
           HeadUsherOf: { none: { endedAt: null } },
         };
     }
@@ -814,10 +825,11 @@ export class MembersService {
     monthStart.setUTCHours(0, 0, 0, 0);
 
     const t = this.tenantId;
-    const [grantRows, unitLeads, deptHeads, ushers, active, withUnit, thisMonth, total] = await Promise.all([
-      this.prisma.roleGrant.groupBy({ by: ['role'], where: { tenantId: t, endedAt: null }, _count: { role: true } }),
+    const [grantRows, unitLeads, deptHeads, deptHods, ushers, active, withUnit, thisMonth, total] = await Promise.all([
+      this.prisma.roleGrant.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true, role: true } }),
       this.prisma.unitLeadAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.departmentHead.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.departmentHod.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.headUsherAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.member.count({ where: { tenantId: t, status: 'ACTIVE' } }),
       this.prisma.member.count({ where: { tenantId: t, UnitMember: { some: {} } } }),
@@ -826,12 +838,18 @@ export class MembersService {
     ]);
 
     // Counts by effective role (grants + assignments). MEMBER is the base = total.
-    const grant = Object.fromEntries(grantRows.map((g) => [g.role, g._count.role])) as Record<string, number>;
+    // ADMIN merged into ADMIN_HEAD (same level) — one combined, deduplicated count.
+    const distinctGrantCount = (role: Role) =>
+      new Set(grantRows.filter((g) => g.role === role).map((g) => g.userId)).size;
+    const adminHeadUserIds = new Set<string>([
+      ...grantRows.filter((g) => g.role === Role.ADMIN || g.role === Role.ADMIN_HEAD).map((g) => g.userId),
+      ...deptHeads.map((d) => d.userId),
+    ]);
     const byRole: Record<string, number> = {
-      SUPER_ADMIN: grant.SUPER_ADMIN ?? 0,
-      PASTOR: grant.PASTOR ?? 0,
-      ADMIN: grant.ADMIN ?? 0,
-      ADMIN_HEAD: deptHeads.length,
+      SUPER_ADMIN: distinctGrantCount(Role.SUPER_ADMIN),
+      PASTOR: distinctGrantCount(Role.PASTOR),
+      ADMIN_HEAD: adminHeadUserIds.size,
+      HOD: deptHods.length,
       HEAD_USHER: ushers.length,
       UNIT_LEAD: unitLeads.length,
       MEMBER: total,

@@ -14,12 +14,15 @@ const ROLE_LEVEL: Record<Role, number> = {
   UNIT_LEAD: 2,
   // Head usher: records congregation headcounts. Lateral specialist above unit lead.
   HEAD_USHER: 3,
-  // Admin head: oversees one or more departments. Above the specialist/lead tier,
-  // below admin. @Roles(ADMIN_HEAD) admits admins; @Roles(ADMIN) excludes heads.
-  ADMIN_HEAD: 4,
-  ADMIN: 5,
-  PASTOR: 6,
-  SUPER_ADMIN: 7,
+  // HOD: appointed under a department by its Admin Head (or Pastor/Super Admin).
+  HOD: 4,
+  // Admin merged into Admin Head — one tier, same level. ADMIN is legacy (kept
+  // only so existing grants keep working); ADMIN_HEAD is the name used going
+  // forward and is fully interchangeable with it for every @Roles(...) gate.
+  ADMIN_HEAD: 6,
+  ADMIN: 6,
+  PASTOR: 7,
+  SUPER_ADMIN: 8,
 };
 
 /**

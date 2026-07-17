@@ -17,4 +17,10 @@ export class AttendanceOverviewDto {
 export class MemberOverviewResponseDto {
   @ApiProperty({ type: AttendanceOverviewDto })
   attendance: AttendanceOverviewDto;
+
+  @ApiProperty({ type: Number, example: 3, description: 'Consecutive weeks (counting back from the most recent past service) with at least one service attended' })
+  streakWeeks: number;
+
+  @ApiProperty({ type: Number, example: 2, description: 'Number of courses this member has completed (scored 100% on the exam)' })
+  coursesCompleted: number;
 }
