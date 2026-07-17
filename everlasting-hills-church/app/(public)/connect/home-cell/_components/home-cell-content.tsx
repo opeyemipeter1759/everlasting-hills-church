@@ -7,6 +7,10 @@ import {
   ArrowLeft,
   Users,
   BookOpen,
+  BookOpenCheck,
+  Flame,
+  HeartHandshake,
+  Home,
   Heart,
   ShieldCheck,
   Sprout,
@@ -24,6 +28,32 @@ const BENEFITS = [
   { icon: Heart,       title: "Prayers",            body: "Every burden you carry, your cell carries too. Specific, fervent, consistent intercession — the kind that actually moves things — happens in small rooms." },
   { icon: BookOpen,    title: "Word",               body: "You won't just hear Scripture — you'll wrestle with it, apply it, and be held to it. Cell study turns Sunday's sermon into Monday's reality." },
   { icon: Users,       title: "Fellowship and Love", body: "Shared meals. Honest conversations. People who show up when life gets hard. This is the early church pattern — and it changes everything." },
+];
+
+// ── The four pillars — the classic EHC explanation of Home Cell ────────────────
+
+const PILLARS = [
+  {
+    icon: BookOpenCheck,
+    title: "Truth Application",
+    body: "We do not gather only to learn the truth. We gather to learn how to live it. Every study moves from the page to the practice, from what the Word says to what it means for your Monday morning.",
+  },
+  {
+    icon: Flame,
+    title: "Power Centre",
+    body: "“Is any among you afflicted? Let him pray.” The cell is where burdens are laid down and lifted in prayer. It is an avenue for the power of God to meet the weight every member carries.",
+    verse: "James 5 : 13",
+  },
+  {
+    icon: HeartHandshake,
+    title: "Welfare",
+    body: "No one falls through the cracks. The cell is pastoral care up close, a place where needs are seen, carried, and met by people who genuinely know your name and your story.",
+  },
+  {
+    icon: Home,
+    title: "Family",
+    body: "This is where the crowd becomes kin. Sunday service members become family members, bound together not by a building but by shared life, shared meals, and shared faith.",
+  },
 ];
 
 // ── FAQ ───────────────────────────────────────────────────────────────────────
@@ -268,6 +298,76 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               </cite>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          THE FOUR PILLARS — the classic EHC explanation
+      ══════════════════════════════════════════════════════════════════════ */}
+      <section className="py-24 md:py-32 px-6 sm:px-10 lg:px-16 border-t border-white/[0.06]">
+        <div className="max-w-6xl mx-auto">
+          <div className="max-w-2xl mb-16">
+            <motion.p
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-5"
+            >
+              The classic explanation
+            </motion.p>
+            <motion.h2
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-3xl sm:text-5xl font-display font-black tracking-tight leading-[1.05] mb-6"
+            >
+              Four pillars hold up<br />
+              <span className="font-serif italic font-normal text-white/45">every Home Cell.</span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-white/50 text-[15px] leading-relaxed"
+            >
+              At Everlasting Hills, a cell is more than a meeting. It stands on four things
+              we return to, week after week.
+            </motion.p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[0.06] rounded-3xl overflow-hidden">
+            {PILLARS.map((p, i) => (
+              <motion.div
+                key={p.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="bg-church-dark p-8 sm:p-12 group hover:bg-[#110208] transition-colors duration-300"
+              >
+                <div className="flex items-start gap-5">
+                  <span className="font-serif text-4xl sm:text-5xl leading-none text-church-maroon/40 group-hover:text-church-accent/60 transition-colors duration-300 select-none">
+                    0{i + 1}
+                  </span>
+                  <div>
+                    <div className="w-11 h-11 rounded-2xl bg-church-maroon/15 flex items-center justify-center mb-5 text-church-accent group-hover:bg-church-maroon group-hover:scale-110 transition-all duration-300">
+                      <p.icon size={19} strokeWidth={1.8} />
+                    </div>
+                    <h3 className="font-display font-black text-xl sm:text-2xl tracking-tight text-white mb-3 group-hover:text-church-accent transition-colors duration-300">
+                      {p.title}
+                    </h3>
+                    <p className="text-white/45 text-[14px] leading-relaxed">{p.body}</p>
+                    {p.verse && (
+                      <cite className="mt-4 block text-[11px] font-black uppercase tracking-[0.3em] text-church-accent/60 not-italic">
+                        {p.verse}
+                      </cite>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
