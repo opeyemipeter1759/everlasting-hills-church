@@ -205,24 +205,6 @@ export function useRemoveHod(id: string) {
   });
 }
 
-/** Appoint (or replace) the lead of a unit — reachable by ADMIN+, or by an
- * HOD/ADMIN_HEAD scoped to a unit inside a department they lead. */
-export function useAssignUnitLead(unitId: string) {
-  const invalidate = useInvalidateDeptAndUsers();
-  return useMutation({
-    mutationFn: (memberId: string) => api.patch(`/units/${unitId}/members/${memberId}/role`, { isLead: true }),
-    onSuccess: invalidate,
-  });
-}
-
-export function useRemoveUnitLead(unitId: string) {
-  const invalidate = useInvalidateDeptAndUsers();
-  return useMutation({
-    mutationFn: (memberId: string) => api.patch(`/units/${unitId}/members/${memberId}/role`, { isLead: false }),
-    onSuccess: invalidate,
-  });
-}
-
 export function useAssignUnits(id: string) {
   const invalidate = useInvalidate();
   return useMutation({

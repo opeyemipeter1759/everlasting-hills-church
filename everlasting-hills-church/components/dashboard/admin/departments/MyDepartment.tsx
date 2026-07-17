@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
 import ReportsSection from "@/components/dashboard/reports/ReportsSection";
+import UnitLeadControl from "./UnitLeadControl";
 
 export default function MyDepartment() {
   const q = useMyDepartments();

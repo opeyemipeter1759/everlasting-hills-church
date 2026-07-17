@@ -45,7 +45,8 @@ export default function UnitLeadControl({
         onClose={() => setOpen(false)}
         pending={appoint.isPending}
         currentHeadName={leadName}
-        noun="unit lead"
+        title={leadName ? "Replace unit lead" : "Assign unit lead"}
+        subtitle={leadName ? `Replacing ${leadName} ends their tenure` : "Pick the person to lead this unit"}
         onPick={async (profileId) => {
           await appoint.mutateAsync({ unitId, profileId });
           setOpen(false);
