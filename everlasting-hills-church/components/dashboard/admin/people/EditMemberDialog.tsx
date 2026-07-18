@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useUpdateMember, type PersonRow } from "@/lib/api/people";
 import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
+import { Select } from "@/components/ui/select";
 
 export default function EditMemberDialog({
   person,
@@ -96,11 +97,17 @@ export default function EditMemberDialog({
           <input className={fieldCls} type="tel" value={form.phone} onChange={(e) => set({ phone: e.target.value })} />
         </Labeled>
         <Labeled label="Gender">
-          <select className={fieldCls} value={form.gender} onChange={(e) => set({ gender: e.target.value as typeof form.gender })}>
-            <option value="">—</option>
-            <option value="MALE">Male</option>
-            <option value="FEMALE">Female</option>
-          </select>
+          <Select
+            className={fieldCls}
+            aria-label="Gender"
+            value={form.gender}
+            onChange={(v) => set({ gender: v as typeof form.gender })}
+            options={[
+              { value: "", label: "—" },
+              { value: "MALE", label: "Male" },
+              { value: "FEMALE", label: "Female" },
+            ]}
+          />
         </Labeled>
         <Labeled label="Birthday">
           <input className={fieldCls} type="date" value={form.dateOfBirth} onChange={(e) => set({ dateOfBirth: e.target.value })} />

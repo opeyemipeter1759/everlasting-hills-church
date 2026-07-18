@@ -9,6 +9,7 @@ import {
   CheckCircle, Loader2,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
+import { Select } from "@/components/ui/select";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -198,10 +199,14 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
               <div className="grid grid-cols-2 gap-3">
                 <FormField label="Meeting Day" required
                   input={
-                    <select value={form.meetingDay} onChange={e => field("meetingDay", e.target.value)} required className="bg-transparent">
-                      <option value="" disabled>Select day</option>
-                      {DAYS.map(d => <option key={d} value={d} className="bg-[#12040c]">{d}</option>)}
-                    </select>
+                    <Select
+                      aria-label="Meeting Day"
+                      value={form.meetingDay}
+                      onChange={v => field("meetingDay", v)}
+                      placeholder="Select day"
+                      className="w-full bg-transparent text-white"
+                      options={DAYS.map(d => ({ value: d, label: d }))}
+                    />
                   }
                 />
                 <FormField label="Meeting Time" required
@@ -210,12 +215,14 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
               </div>
               <FormField label="State" required
                 input={
-                  <select value={form.state} onChange={e => field("state", e.target.value)} required className="bg-transparent">
-                    <option value="" className="bg-[#12040c]">Select state</option>
-                    {NIGERIAN_STATES.map(s => (
-                      <option key={s} value={s} className="bg-[#12040c]">{s}</option>
-                    ))}
-                  </select>
+                  <Select
+                    aria-label="State"
+                    value={form.state}
+                    onChange={v => field("state", v)}
+                    placeholder="Select state"
+                    className="w-full bg-transparent text-white"
+                    options={NIGERIAN_STATES.map(s => ({ value: s, label: s }))}
+                  />
                 }
               />
               <div className="grid grid-cols-2 gap-3">

@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, LayoutDashboard, LogOut, UserRound } from "lucide-react";
+import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
+import { DropdownDivider } from "@/components/ui/dropdown/DropdownDivider";
 import {
   clearFrontendSession,
   getFrontendSessionUser,
@@ -78,27 +80,9 @@ export default function SessionActionMenu({
   const dashboardLabel = pathname?.startsWith("/dashboard") ? "Home" : "Dashboard";
   const dashboardTargetHref = pathname?.startsWith("/dashboard") ? "/" : dashboardHref;
 
-  useEffect(() => {
-    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("touchstart", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("touchstart", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
+  // Dismissal (outside click / Escape) is handled by the shared Dropdown; the trigger
+  // carries `.dropdown-toggle` so its own click toggles rather than being treated as
+  // an outside click.
 
   const closeMenu = () => setOpen(false);
   const handleNavigate = () => {
@@ -150,7 +134,8 @@ export default function SessionActionMenu({
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        className={loggedInTriggerClassName}
+        aria-haspopup="menu"
+        className={`dropdown-toggle ${loggedInTriggerClassName}`}
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-md text-[12px] font-bold text-[#87102C] dark:bg-[#87102C]/20 dark:text-red-200">
           {session.picture ? (
@@ -176,46 +161,30 @@ export default function SessionActionMenu({
         />
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ duration: 0.16, ease: "easeOut" }}
-            className={`absolute right-0 top-[calc(100%+10px)] z-50  overflow-hidden rounded-lg border border-gray-200 bg-white p-2 shadow-[0_16px_40px_rgba(15,23,42,0.12)] dark:border-gray-800 dark:bg-gray-950 ${menuClassName}`}
-          >
-         
+      <Dropdown isOpen={open} onClose={closeMenu} className={menuClassName || "w-56"}>
+        {/* Identity header — name + role, matching the "dropdown with divider" pattern. */}
+        <div className="px-3 py-2">
+          <p className="truncate text-sm font-semibold text-[#111] dark:text-white">{displayName}</p>
+          <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-[#8a7e80] dark:text-white/40">
+            {role ? ROLE_LABELS[role] : session.email}
+          </p>
+        </div>
 
-            <div className="mt-2 space-y-1.5">
-              <Link
-                href={dashboardTargetHref}
-                onClick={handleNavigate}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-              >
-                <LayoutDashboard size={16} />
-                <span>{dashboardLabel}</span>
-              </Link>
-              <Link
-                href={profileHref}
-                onClick={handleNavigate}
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
-              >
-                <UserRound size={16} />
-                <span>Profile</span>
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-500/10"
-              >
-                <LogOut size={16} />
-                <span>Logout</span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <DropdownDivider />
+
+        <DropdownItem tag="a" href={dashboardTargetHref} icon={LayoutDashboard} onItemClick={handleNavigate}>
+          {dashboardLabel}
+        </DropdownItem>
+        <DropdownItem tag="a" href={profileHref} icon={UserRound} onItemClick={handleNavigate}>
+          Profile
+        </DropdownItem>
+
+        <DropdownDivider />
+
+        <DropdownItem icon={LogOut} danger onClick={handleLogout}>
+          Logout
+        </DropdownItem>
+      </Dropdown>
     </div>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { X, Compass, Loader2 } from "lucide-react";
 import type { HomeCellFormValues } from "./useHomeCells";
+import { Select } from "@/components/ui/select";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -36,7 +37,7 @@ export default function HomeCellModal({
   onSubmit: (v: HomeCellFormValues) => void;
   saving: boolean;
 }) {
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<HomeCellFormValues>({
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<HomeCellFormValues>({
     defaultValues: { name: "", leaderPhone: "", meetingDay: "", meetingTime: "", state: "", city: "", addressDetail: "" },
   });
 
@@ -99,13 +100,24 @@ export default function HomeCellModal({
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Meeting Day *" error={errors.meetingDay?.message}>
-              <select
-                {...register("meetingDay", { required: "Required" })}
-                className={inputCls}
-              >
-                <option value="">Select day</option>
-                {DAYS.map((d) => <option key={d} value={d}>{d}</option>)}
-              </select>
+              <Controller
+                control={control}
+                name="meetingDay"
+                rules={{ required: "Required" }}
+                render={({ field }) => (
+                  <Select
+                    aria-label="Meeting Day"
+                    value={field.value}
+                    onChange={field.onChange}
+                    className={inputCls}
+                    placeholder="Select day"
+                    options={[
+                      { value: "", label: "Select day" },
+                      ...DAYS.map((d) => ({ value: d, label: d })),
+                    ]}
+                  />
+                )}
+              />
             </Field>
 
             <Field label="Meeting Time *" error={errors.meetingTime?.message}>
@@ -118,13 +130,24 @@ export default function HomeCellModal({
           </div>
 
           <Field label="State *" error={errors.state?.message}>
-            <select
-              {...register("state", { required: "Required" })}
-              className={inputCls}
-            >
-              <option value="">Select state</option>
-              {NIGERIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Controller
+              control={control}
+              name="state"
+              rules={{ required: "Required" }}
+              render={({ field }) => (
+                <Select
+                  aria-label="State"
+                  value={field.value}
+                  onChange={field.onChange}
+                  className={inputCls}
+                  placeholder="Select state"
+                  options={[
+                    { value: "", label: "Select state" },
+                    ...NIGERIAN_STATES.map((s) => ({ value: s, label: s })),
+                  ]}
+                />
+              )}
+            />
           </Field>
 
           <div className="grid grid-cols-2 gap-4">

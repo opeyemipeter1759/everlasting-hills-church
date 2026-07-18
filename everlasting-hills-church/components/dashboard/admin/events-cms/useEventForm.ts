@@ -30,13 +30,19 @@ export interface EventFormData {
 
 export type SetField = <K extends keyof EventFormData>(key: K, value: EventFormData[K]) => void;
 
-export function useEventForm(initial: EventDetail | null, onSaved: () => Promise<void>) {
+export function useEventForm(
+  initial: EventDetail | null,
+  onSaved: () => Promise<void>,
+  /** Local `datetime-local` value to seed startAt with when creating from the calendar. */
+  defaultStartAt?: string,
+) {
   const [data, setData] = useState<EventFormData>({
     title: initial?.title ?? "",
     slug: initial?.slug ?? "",
     tagline: initial?.tagline ?? "",
     description: initial?.description ?? "",
-    startAt: toLocalInput(initial?.startAt ?? null),
+    // An existing event always wins; the calendar default only seeds a fresh create.
+    startAt: initial ? toLocalInput(initial.startAt) : (defaultStartAt ?? ""),
     endAt: toLocalInput(initial?.endAt ?? null),
     venueName: initial?.venueName ?? "",
     venueAddress: initial?.venueAddress ?? "",

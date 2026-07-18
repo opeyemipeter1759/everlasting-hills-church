@@ -5,6 +5,7 @@ import { Search, ChevronUp, ChevronDown, Check, X, Download, Loader2 } from "luc
 import { useAttendanceList, useOverrideAttendance, useBulkMarkAttendance, downloadAttendanceCsv, type AttendanceListQuery } from "@/lib/api";
 import { showToast } from "@/components/ui/toast/toast";
 import { SingleDatePicker } from "@/components/ui/form/DatePicker";
+import { Select } from "@/components/ui/select";
 
 type Col = "name" | "service" | "date" | "markedBy" | "status";
 
@@ -85,18 +86,22 @@ export function AttendanceTable() {
           <input value={q} onChange={(e) => { setQ(e.target.value); setPage(1); }} placeholder="Search member…"
             className="w-full pl-8 pr-3 py-2 text-xs rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#87102C]/25" />
         </div>
-        <select aria-label="Filter by status" value={status ?? ""} onChange={(e) => { setStatus((e.target.value as "PRESENT" | "ABSENT") || undefined); setPage(1); }}
-          className="text-xs rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2.5 py-2 outline-none">
-          <option value="">All Status</option>
-          <option value="PRESENT">Present</option>
-          <option value="ABSENT">Absent</option>
-        </select>
-        <select aria-label="Filter by service" value={serviceKey ?? ""} onChange={(e) => { setServiceKey(e.target.value || undefined); setPage(1); }}
-          className="text-xs rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2.5 py-2 outline-none">
-          <option value="">All Services</option>
-          <option value="sunday">Sunday</option>
-          <option value="wednesday">Wednesday</option>
-        </select>
+        <Select aria-label="Filter by status" value={status ?? ""} onChange={(v) => { setStatus((v as "PRESENT" | "ABSENT") || undefined); setPage(1); }}
+          className="text-xs rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2.5 py-2 outline-none"
+          options={[
+            { value: "", label: "All Status" },
+            { value: "PRESENT", label: "Present" },
+            { value: "ABSENT", label: "Absent" },
+          ]}
+        />
+        <Select aria-label="Filter by service" value={serviceKey ?? ""} onChange={(v) => { setServiceKey(v || undefined); setPage(1); }}
+          className="text-xs rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-300 px-2.5 py-2 outline-none"
+          options={[
+            { value: "", label: "All Services" },
+            { value: "sunday", label: "Sunday" },
+            { value: "wednesday", label: "Wednesday" },
+          ]}
+        />
         <SingleDatePicker
           value={dateFilter}
           onChange={(d) => { setDateFilter(d); setPage(1); }}

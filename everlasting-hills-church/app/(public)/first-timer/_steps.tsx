@@ -1,11 +1,14 @@
 "use client";
 
 import {
+  Control,
+  Controller,
   FieldErrors,
   UseFormRegister,
   UseFormSetValue,
   UseFormWatch,
 } from "react-hook-form";
+import { Select } from "@/components/ui/select";
 
 export type FormValues = {
   first_name: string;
@@ -31,6 +34,7 @@ export type FormValues = {
 export type StepProps = {
   register: UseFormRegister<FormValues>;
   errors: FieldErrors<FormValues>;
+  control: Control<FormValues>;
 };
 
 export type Step2Props = StepProps & {
@@ -446,7 +450,7 @@ export function Step3Interest({ register, errors, isOnline, firstName, lastName 
 
 // ── Step 4 — Details ─────────────────────────────────────────────────────────
 
-export function Step5Details({ register, errors }: StepProps) {
+export function Step5Details({ register, errors, control }: StepProps) {
   return (
     <div className="space-y-5">
       <StepHeader
@@ -469,28 +473,38 @@ export function Step5Details({ register, errors }: StepProps) {
       <div>
         <GroupLabel required>Date of Birth</GroupLabel>
         <div className="grid grid-cols-2 gap-3">
-          <select
-            id="birth_month"
-            className={ic(!!errors.birth_month)}
+          <Controller
+            control={control}
+            name="birth_month"
             defaultValue=""
-            {...register("birth_month", { required: "Month is required" })}
-          >
-            <option value="" disabled>Month</option>
-            {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-          <select
-            id="birth_day"
-            className={ic(!!errors.birth_day)}
+            rules={{ required: "Month is required" }}
+            render={({ field }) => (
+              <Select
+                aria-label="Birth month"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                placeholder="Month"
+                className={ic(!!errors.birth_month)}
+                options={["January","February","March","April","May","June","July","August","September","October","November","December"].map((m) => ({ value: m, label: m }))}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name="birth_day"
             defaultValue=""
-            {...register("birth_day", { required: "Day is required" })}
-          >
-            <option value="" disabled>Day</option>
-            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
-              <option key={d} value={String(d)}>{d}</option>
-            ))}
-          </select>
+            rules={{ required: "Day is required" }}
+            render={({ field }) => (
+              <Select
+                aria-label="Birth day"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                placeholder="Day"
+                className={ic(!!errors.birth_day)}
+                options={Array.from({ length: 31 }, (_, i) => i + 1).map((d) => ({ value: String(d), label: String(d) }))}
+              />
+            )}
+          />
         </div>
         <FieldError message={errors.birth_month?.message ?? errors.birth_day?.message} />
       </div>

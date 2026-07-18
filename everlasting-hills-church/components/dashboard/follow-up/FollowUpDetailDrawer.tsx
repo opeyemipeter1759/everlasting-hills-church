@@ -17,6 +17,7 @@ import {
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { PersonAvatar } from "./PersonAvatar";
 import { RiskCategoryPill, SourceTypePill } from "./StagePill";
+import { Select } from "@/components/ui/select";
 
 interface FollowUpDetailDrawerProps {
   entry: FollowUpEntry | null;
@@ -424,24 +425,20 @@ export function FollowUpDetailDrawer({
             <form onSubmit={submitLog} className="space-y-3 rounded-xl border border-[#E7CDD3]/60 dark:border-white/[0.09] p-4">
               <p className="text-xs font-bold text-[#111] dark:text-white">Log a contact</p>
               <div className="grid grid-cols-2 gap-2">
-                <select
+                <Select
+                  aria-label="Contact method"
                   value={method}
-                  onChange={(e) => setMethod(e.target.value as ContactMethod)}
+                  onChange={(v) => setMethod(v as ContactMethod)}
                   className="rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs px-2.5 py-2 outline-none focus:ring-2 focus:ring-[#87102C]/25"
-                >
-                  {METHOD_OPTIONS.map((m) => (
-                    <option key={m.value} value={m.value}>{m.label}</option>
-                  ))}
-                </select>
-                <select
+                  options={METHOD_OPTIONS.map((m) => ({ value: m.value, label: m.label }))}
+                />
+                <Select
+                  aria-label="Contact outcome"
                   value={outcome}
-                  onChange={(e) => setOutcome(e.target.value as ContactOutcome)}
+                  onChange={(v) => setOutcome(v as ContactOutcome)}
                   className="rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs px-2.5 py-2 outline-none focus:ring-2 focus:ring-[#87102C]/25"
-                >
-                  {OUTCOME_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
+                  options={OUTCOME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                />
               </div>
               <textarea
                 value={note}
@@ -511,15 +508,13 @@ export function FollowUpDetailDrawer({
                 </button>
               ) : (
                 <div className="space-y-2.5">
-                  <select
+                  <Select
+                    aria-label="Confirmation outcome"
                     value={confirmOutcome}
-                    onChange={(e) => setConfirmOutcome(e.target.value as FollowUpOutcome)}
+                    onChange={(v) => setConfirmOutcome(v as FollowUpOutcome)}
                     className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-xs px-3 py-2 outline-none focus:ring-2 focus:ring-[#87102C]/25"
-                  >
-                    {CONFIRM_OUTCOME_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
+                    options={CONFIRM_OUTCOME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  />
                   <textarea
                     value={reviewNote}
                     onChange={(e) => setReviewNote(e.target.value)}

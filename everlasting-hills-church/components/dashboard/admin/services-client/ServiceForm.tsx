@@ -1,3 +1,4 @@
+import { Select } from "@/components/ui/select";
 import { TYPES } from "./types";
 
 const inputCls =
@@ -33,13 +34,13 @@ export default function ServiceForm({
           onChange={(e) => onScheduledAtChange(e.target.value)}
           className={inputCls}
         />
-        <select value={serviceType} onChange={(e) => onServiceTypeChange(e.target.value)} className={inputCls}>
-          {TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t.charAt(0) + t.slice(1).toLowerCase()}
-            </option>
-          ))}
-        </select>
+        <Select
+          value={serviceType}
+          onChange={onServiceTypeChange}
+          className={inputCls}
+          aria-label="Service type"
+          options={TYPES.map((t) => ({ value: t, label: t.charAt(0) + t.slice(1).toLowerCase() }))}
+        />
       </div>
     </div>
   );

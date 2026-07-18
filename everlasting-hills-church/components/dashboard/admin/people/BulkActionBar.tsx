@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Download, Tag, Trash2, UserCheck, X } from "lucide-react";
 import { STATUS_OPTIONS } from "./peopleShared";
+import { Select } from "@/components/ui/select";
 
 /**
  * Sticky bottom bar shown when one or more people are selected. Provides
@@ -57,18 +58,17 @@ export default function BulkActionBar({
             </button>
 
             <div className="relative">
-              <select
+              <Select
                 aria-label="Set status"
                 disabled={busy}
-                defaultValue=""
-                onChange={(e) => { if (e.target.value) { onSetStatus(e.target.value); e.target.value = ""; } }}
-                className={`${chip} appearance-none pr-7 cursor-pointer`}
-              >
-                <option value="" disabled>Set status…</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</option>
-                ))}
-              </select>
+                value=""
+                onChange={(v) => { if (v) onSetStatus(v); }}
+                className={`${chip} cursor-pointer`}
+                options={[
+                  { value: "", label: "Set status…", disabled: true },
+                  ...STATUS_OPTIONS.map((s) => ({ value: s, label: s.charAt(0) + s.slice(1).toLowerCase() })),
+                ]}
+              />
             </div>
 
             <button type="button" onClick={() => setTagOpen((v) => !v)} disabled={busy} className={chip}>

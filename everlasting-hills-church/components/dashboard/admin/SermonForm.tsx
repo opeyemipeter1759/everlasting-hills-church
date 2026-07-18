@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, X, Loader2, Plus, Trash2, Lightbulb } from "lucide-react";
+import { Select } from "@/components/ui/select";
 
 type SermonFormData = {
   id?: string;
@@ -226,11 +227,17 @@ export default function SermonForm({
       {/* Status + Publish */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field label="Status">
-          <select value={form.status} onChange={(e) => set("status", e.target.value)} className={inputCls}>
-            <option value="DRAFT">Draft</option>
-            <option value="PUBLISHED">Published</option>
-            <option value="SCHEDULED">Scheduled</option>
-          </select>
+          <Select
+            aria-label="Status"
+            value={form.status}
+            onChange={(v) => set("status", v)}
+            className={inputCls}
+            options={[
+              { value: "DRAFT", label: "Draft" },
+              { value: "PUBLISHED", label: "Published" },
+              { value: "SCHEDULED", label: "Scheduled" },
+            ]}
+          />
         </Field>
         {form.status === "SCHEDULED" && (
           <Field label="Publish At">
