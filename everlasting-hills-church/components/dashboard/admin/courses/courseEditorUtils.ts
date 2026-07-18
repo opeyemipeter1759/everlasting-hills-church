@@ -7,7 +7,7 @@ export function initialFields(course?: CourseAdminDetail): CourseFormFields {
     title: course?.title ?? "",
     tagline: course?.tagline ?? "",
     description: course?.description ?? "",
-    category: course?.category ?? "",
+    categoryId: course?.category.id ?? "",
     duration: course?.duration ?? "",
     instructor: { name: course?.instructor.name ?? "", role: course?.instructor.role ?? "" },
   };

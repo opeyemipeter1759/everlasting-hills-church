@@ -63,7 +63,7 @@ export default function CourseAdminDetailClient({ id }: { id: string }) {
         <div className="space-y-5 p-6">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-[#87102C] dark:text-[#e8768a]">
-              {course.category}
+              {course.category.name}
             </p>
             <h1 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">{course.title}</h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-white/50">{course.tagline}</p>

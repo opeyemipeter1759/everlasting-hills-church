@@ -27,7 +27,7 @@ export const CourseInputSchema = z.object({
   title: text(160),
   tagline: text(300),
   description: z.string().trim().max(4000).default(''),
-  category: text(80),
+  categoryId: text(80),
   iconKey: text(60),
   gradient: z.tuple([z.string().trim().min(1), z.string().trim().min(1)]),
   duration: text(40),
@@ -38,6 +38,12 @@ export const CourseInputSchema = z.object({
   exam: z.array(ExamQuestionSchema).max(50).default([]),
 });
 export type CourseInput = z.infer<typeof CourseInputSchema>;
+
+export const CourseCategoryInputSchema = z.object({
+  name: text(80),
+  parentId: z.string().trim().min(1).nullish(),
+});
+export type CourseCategoryInput = z.infer<typeof CourseCategoryInputSchema>;
 
 export const SubmitExamSchema = z.object({
   answers: z.record(z.string(), z.number().int().min(0)),

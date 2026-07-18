@@ -729,6 +729,7 @@ model Tenant {
   Report             Report[]
   ReportComment      ReportComment[]
   HomeCell           HomeCell[]
+  CourseCategory     CourseCategory[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1323,7 +1324,7 @@ model Course {
   title          String
   tagline        String
   description    String
-  category       String
+  categoryId     String?
   iconKey        String
   gradientFrom   String
   gradientTo     String
@@ -1336,6 +1337,7 @@ model Course {
   updatedAt      DateTime  @default(now()) @updatedAt
 
   Tenant        Tenant             @relation(fields: [tenantId], references: [id])
+  CategoryRef   CourseCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   Prerequisite  Course?            @relation("CoursePrerequisite", fields: [prerequisiteId], references: [id], onDelete: SetNull)
   UnlocksFor    Course[]           @relation("CoursePrerequisite")
   Modules       CourseModule[]
@@ -1345,6 +1347,26 @@ model Course {
   @@unique([tenantId, slug])
   @@index([tenantId])
   @@index([prerequisiteId])
+  @@index([categoryId])
+}
+
+model CourseCategory {
+  id        String   @id
+  tenantId  String
+  name      String
+  slug      String
+  parentId  String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  Tenant   Tenant           @relation(fields: [tenantId], references: [id])
+  Parent   CourseCategory?  @relation("CourseCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  Children CourseCategory[] @relation("CourseCategoryTree")
+  Courses  Course[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([parentId])
 }
 
 model CourseModule {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ArrowLeft, ClipboardList, Info, Layers, ListChecks, Lock, Palette } from "lucide-react";
-import { useCourses, useCreateCourse, useUpdateCourse, type CourseAdminDetail, type CourseInput, type ExamQuestionAdmin } from "@/lib/api/courses";
+import { useCourses, useCourseCategories, useCreateCourse, useUpdateCourse, type CourseAdminDetail, type CourseInput, type ExamQuestionAdmin } from "@/lib/api/courses";
 import { GRADIENT_PRESETS } from "@/lib/courses-data";
 import CourseDetailsFields, { type CourseFormFields } from "./CourseDetailsFields";
 import CourseIconColorPicker from "./CourseIconColorPicker";
@@ -19,6 +19,7 @@ import { gradientIndexFor, initialFields } from "./courseEditorUtils";
 export default function CourseEditorPage({ mode, course }: { mode: "create" | "edit"; course?: CourseAdminDetail }) {
   const router = useRouter();
   const { data: allCourses = [] } = useCourses();
+  const { data: categories = [] } = useCourseCategories();
   const createCourse = useCreateCourse();
   const updateCourse = useUpdateCourse(course?.id ?? "");
   // Edit mode backs out to that course's detail page; create mode has no detail page yet.
@@ -36,7 +37,7 @@ export default function CourseEditorPage({ mode, course }: { mode: "create" | "e
     setFields((f) => ({ ...f, ...patch }));
   }
 
-  const coreValid = !!(fields.title.trim() && fields.tagline.trim() && fields.category.trim() && fields.duration.trim() && fields.instructor.name.trim());
+  const coreValid = !!(fields.title.trim() && fields.tagline.trim() && fields.categoryId && fields.duration.trim() && fields.instructor.name.trim());
   const examValid = !questions.some((q) => !q.question.trim() || q.options.some((o) => !o.trim()));
   const outcomesDone = outcomes.some((o) => o.trim());
   const examDone = questions.length > 0 && examValid;
@@ -79,7 +80,7 @@ export default function CourseEditorPage({ mode, course }: { mode: "create" | "e
       title: fields.title.trim(),
       tagline: fields.tagline.trim(),
       description: fields.description.trim(),
-      category: fields.category.trim(),
+      categoryId: fields.categoryId,
       duration: fields.duration.trim(),
       instructor: { name: fields.instructor.name.trim(), role: fields.instructor.role.trim() },
       iconKey,
@@ -155,7 +156,7 @@ export default function CourseEditorPage({ mode, course }: { mode: "create" | "e
         <CourseEditorPreview
           title={fields.title}
           tagline={fields.tagline}
-          category={fields.category}
+          category={categories.find((c) => c.id === fields.categoryId)?.name ?? ""}
           duration={fields.duration}
           lessonsCount={cleanCurriculum.reduce((n, m) => n + m.lessons.length, 0)}
           iconKey={iconKey}

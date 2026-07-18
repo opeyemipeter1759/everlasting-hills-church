@@ -17,7 +17,7 @@ export default function CourseHero({ course }: { course: CourseDetail }) {
       <div className="relative z-10 max-w-2xl">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/80 backdrop-blur-sm">
-            {course.category}
+            {course.category.name}
           </span>
         </div>
 

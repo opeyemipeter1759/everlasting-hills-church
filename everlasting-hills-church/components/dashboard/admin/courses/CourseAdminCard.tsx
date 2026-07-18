@@ -39,7 +39,7 @@ export default function CourseAdminCard({
 
       <div className="flex flex-1 flex-col p-4">
         <p className="text-[11px] font-bold uppercase tracking-wider text-[#87102C] dark:text-[#e8768a]">
-          {course.category}
+          {course.category.name}
         </p>
         <h3 className="mt-1 text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{course.title}</h3>
         <p className="mt-1 flex-1 text-xs leading-relaxed text-gray-500 dark:text-white/50 line-clamp-2">

@@ -10,12 +10,19 @@ export interface CourseInstructor {
   role: string;
 }
 
+export interface CourseCategoryRef {
+  id: string;
+  name: string;
+  parentId: string | null;
+  parentName: string | null;
+}
+
 export interface CourseListItem {
   id: string;
   slug: string;
   title: string;
   tagline: string;
-  category: string;
+  category: CourseCategoryRef;
   iconKey: string;
   gradient: [string, string];
   duration: string;
@@ -81,7 +88,7 @@ export interface CourseAdminDetail {
   title: string;
   tagline: string;
   description: string;
-  category: string;
+  category: CourseCategoryRef;
   iconKey: string;
   gradient: [string, string];
   duration: string;
@@ -96,7 +103,7 @@ export interface CourseInput {
   title: string;
   tagline: string;
   description: string;
-  category: string;
+  categoryId: string;
   iconKey: string;
   gradient: [string, string];
   duration: string;
@@ -227,6 +234,21 @@ export function useCourseAdmin(id: string | null | undefined) {
   });
 }
 
+export interface CourseCategory {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  courseCount: number;
+}
+
+export function useCourseCategories() {
+  return useQuery({
+    queryKey: [...KEY, "categories"],
+    queryFn: () => api.get<CourseCategory[]>("/courses/categories"),
+  });
+}
+
 export function useMyCourseProgress() {
   return useQuery({
     queryKey: [...KEY, "progress", "me"],
@@ -261,6 +283,32 @@ export function useDeleteCourse() {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (id: string) => api.delete<{ id: string; deleted: boolean }>(`/courses/${id}`),
+    onSuccess: invalidate,
+  });
+}
+
+export function useCreateCategory() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { name: string; parentId?: string | null }) =>
+      api.post<CourseCategory[]>("/courses/categories", body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateCategory(id: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { name: string; parentId?: string | null }) =>
+      api.patch<CourseCategory[]>(`/courses/categories/${id}`, body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteCategory() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<{ id: string; deleted: boolean }>(`/courses/categories/${id}`),
     onSuccess: invalidate,
   });
 }

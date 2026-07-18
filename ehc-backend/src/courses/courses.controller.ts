@@ -42,6 +42,12 @@ export class CoursesController {
     return this.courses.getForAdmin(id);
   }
 
+  @Get('categories')
+  @ApiOperation({ summary: 'List the course category tree (any authenticated user)' })
+  listCategories() {
+    return this.courses.listCategories();
+  }
+
   @Get(':slug')
   @ApiOperation({ summary: 'Course detail by slug — exam options only, no correct answers' })
   getBySlug(@Param('slug') slug: string) {
@@ -69,6 +75,29 @@ export class CoursesController {
   @ApiOperation({ summary: 'Delete a course; dependents lose it as a prerequisite (ADMIN+)' })
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string) {
     return this.courses.remove(user, id);
+  }
+
+  // ── Admin: category CRUD ─────────────────────────────────────────────────────
+
+  @Post('categories')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Create a course category, optionally nested under a parent (ADMIN+)' })
+  createCategory(@CurrentUser() user: AuthUser, @Body() body: unknown) {
+    return this.courses.createCategory(user, body);
+  }
+
+  @Patch('categories/:id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Rename or reparent a course category (ADMIN+)' })
+  updateCategory(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() body: unknown) {
+    return this.courses.updateCategory(user, id, body);
+  }
+
+  @Delete('categories/:id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Delete an empty course category (no subcategories or courses) (ADMIN+)' })
+  removeCategory(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.courses.removeCategory(user, id);
   }
 
   // ── Member: enrollment + exam ────────────────────────────────────────────────
