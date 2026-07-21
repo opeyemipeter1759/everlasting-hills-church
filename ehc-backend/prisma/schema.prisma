@@ -1456,3 +1456,22 @@ model HomeCell {
 
   @@index([tenantId, state, city])
 }
+
+/// Online Audience attendance tracker — YouTube and Telegram channels.
+/// Tracks a visitor's journey from First Timer → Second Timer → Online Member.
+model OnlineCheckIn {
+  id            String   @id
+  tenantId      String
+  email         String
+  name          String?
+  channel       String   // "YOUTUBE" | "TELEGRAM"
+  stage         String   @default("FIRST_TIMER") // "FIRST_TIMER" | "SECOND_TIMER" | "ONLINE_MEMBER"
+  visitCount    Int      @default(1)
+  lastCheckedIn DateTime @default(now())
+  supabaseUserId String? // set when Supabase account is created on 2nd visit
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([tenantId, email, channel])
+  @@index([tenantId, channel, stage])
+}

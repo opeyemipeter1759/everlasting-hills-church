@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ReportScope } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+
+const REPORT_SCOPES = ['UNIT', 'DEPARTMENT', 'CHURCH'] as const;
+type ReportScope = typeof REPORT_SCOPES[number];
 
 export class CreateReportDto {
-  @ApiProperty({ enum: ReportScope, example: 'UNIT' })
-  @IsEnum(ReportScope)
+  @ApiProperty({ enum: REPORT_SCOPES, example: 'UNIT' })
+  @IsIn(REPORT_SCOPES)
   scope!: ReportScope;
 
   @ApiProperty({ required: false, description: 'Required when scope = DEPARTMENT' })

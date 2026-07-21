@@ -43,6 +43,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { CoursesModule } from './courses/courses.module';
 import { StatusReportsModule } from './status-reports/status-reports.module';
+import { OnlineAttendanceModule } from './online-attendance/online-attendance.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 
@@ -142,6 +143,7 @@ import type { Env } from './config/env.validation';
     SchedulingModule,
     CoursesModule,
     StatusReportsModule,
+    OnlineAttendanceModule,
   ],
   controllers: [AppController],
   providers: [
