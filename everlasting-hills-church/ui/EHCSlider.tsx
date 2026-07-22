@@ -38,6 +38,21 @@ const LW = 5;
 const LH = 5;
 const GAP = 3;
 
+/**
+ * Routes a background-image URL through Next's built-in image optimizer
+ * instead of loading the raw source. CSS `background-image` can't use the
+ * `<Image>` component (there's no element to attach it to — each tile paints
+ * the same photo as a positioned background slice), so this hits the same
+ * `/_next/image` endpoint `<Image>` itself uses to get a resized/compressed
+ * (WebP where supported) version. Source photos here are multi-megabyte
+ * camera originals; this is the difference between shipping ~2MB and ~150KB
+ * per photo. No-op for already-absolute optimizer/data URLs.
+ */
+function optimizedSrc(src: string, width = 1200, quality = 75): string {
+  if (src.startsWith("/_next/image") || src.startsWith("data:")) return src;
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
+}
+
 function buildTextTargets(word: string): Target[] {
   const letters = word
     .toUpperCase()
@@ -228,14 +243,13 @@ export default function EhcSlider({
 
   const paint = useCallback((i: number) => {
     const img = images[i];
-    const value = img.src
-      ? `url("${img.src}")`
-      : (img.gradient ?? "none");
+    const src = img.src ? optimizedSrc(img.src) : undefined;
+    const value = src ? `url("${src}")` : (img.gradient ?? "none");
     pieceRefs.current.forEach((el) => {
       el.style.backgroundImage = value;
     });
-    if (img.src) {
-      getNaturalSize(img.src).then(applyCoverSizing);
+    if (src) {
+      getNaturalSize(src).then(applyCoverSizing);
     } else {
       applyCoverSizing(null);
     }
@@ -245,7 +259,7 @@ export default function EhcSlider({
   useEffect(() => {
     const onResize = () => {
       const current = images[idxRef.current];
-      const cached = current?.src ? naturalSizeCache.current.get(current.src) ?? null : null;
+      const cached = current?.src ? naturalSizeCache.current.get(optimizedSrc(current.src)) ?? null : null;
       applyCoverSizing(cached);
     };
     window.addEventListener("resize", onResize);

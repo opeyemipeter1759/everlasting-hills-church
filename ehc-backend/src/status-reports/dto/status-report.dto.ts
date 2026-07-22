@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ReportScope } from '@prisma/client';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEnum, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+
+/** A create/update caller only ever chooses between these two — NEEDS_CORRECTION
+ * and APPROVED are review-side transitions (request-correction / approve routes),
+ * never set directly by the author. */
+const WRITABLE_STATUSES = ['DRAFT', 'SUBMITTED'] as const;
+export type WritableReportStatus = (typeof WRITABLE_STATUSES)[number];
 
 export class CreateReportDto {
   @ApiProperty({ enum: ReportScope, example: 'UNIT' })
@@ -27,7 +33,7 @@ export class CreateReportDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
-  @MaxLength(10_000)
+  @MaxLength(20_000)
   content!: string;
 
   @ApiProperty({ required: false })
@@ -40,6 +46,11 @@ export class CreateReportDto {
   @IsString()
   @MaxLength(255)
   attachmentName?: string;
+
+  @ApiProperty({ required: false, enum: WRITABLE_STATUSES, description: 'Omit to send immediately (back-compat); DRAFT to save without sending' })
+  @IsOptional()
+  @IsIn(WRITABLE_STATUSES)
+  status?: WritableReportStatus;
 }
 
 export class UpdateReportDto {
@@ -53,7 +64,7 @@ export class UpdateReportDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
-  @MaxLength(10_000)
+  @MaxLength(20_000)
   content!: string;
 
   @ApiProperty({ required: false })
@@ -66,6 +77,11 @@ export class UpdateReportDto {
   @IsString()
   @MaxLength(255)
   attachmentName?: string;
+
+  @ApiProperty({ required: false, enum: WRITABLE_STATUSES, description: 'DRAFT to keep saving as a draft; SUBMITTED to send (from DRAFT or after a correction). Omit to preserve current resubmit/plain-edit behavior.' })
+  @IsOptional()
+  @IsIn(WRITABLE_STATUSES)
+  status?: WritableReportStatus;
 }
 
 export class RequestCorrectionDto {

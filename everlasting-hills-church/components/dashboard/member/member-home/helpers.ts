@@ -2,11 +2,16 @@ import { muted } from "./tokens";
 import { DAILY_SCRIPTURES } from "./content";
 import type { MemberHomeProps } from "./types";
 
+/** Same fields as CompletionCard on the /dashboard/profile page (photo, bio,
+ * phone, address). dateOfBirth is deliberately excluded — it isn't self-editable
+ * from Settings (it comes from the first-timer form or admin records), so
+ * counting it here would make this toast disagree with the page it links to,
+ * and could leave it stuck below 100% forever for members who can't fix it. */
 export function getProfileCompletion(member: MemberHomeProps["member"]): {
   pct: number;
   complete: boolean;
 } {
-  const fields = [member?.bio, member?.phone, member?.dateOfBirth, member?.address, member?.photoUrl];
+  const fields = [member?.photoUrl, member?.bio, member?.phone, member?.address];
   const filled = fields.filter(Boolean).length;
   const pct = Math.round((filled / fields.length) * 100);
   return { pct, complete: filled === fields.length };
@@ -52,20 +57,15 @@ export function getGreeting() {
   return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 }
 
-export function standingLabel(rate: number): { text: string; color: string } {
-  if (rate >= 90) return { text: "Excellent Standing", color: "text-emerald-600 dark:text-emerald-400" };
-  if (rate >= 70) return { text: "Good Standing", color: "text-sky-600 dark:text-sky-400" };
-  if (rate >= 50) return { text: "Fair Standing", color: "text-amber-600 dark:text-amber-400" };
-  if (rate > 0) return { text: "Needs Improvement", color: "text-red-500 dark:text-red-400" };
-  return { text: "No records yet", color: `${muted}` };
-}
-
-export function streakLabel(weeks: number): { text: string; dot: string } {
-  if (weeks >= 8) return { text: "Consistent level", dot: "bg-purple-500" };
-  if (weeks >= 4) return { text: "Firm level", dot: "bg-emerald-500" };
-  if (weeks >= 2) return { text: "Building level", dot: "bg-sky-500" };
-  if (weeks === 1) return { text: "Starting level", dot: "bg-amber-500" };
-  return { text: "No streak yet", dot: "bg-gray-300 dark:bg-white/20" };
+// Brand-first: the common/good case stays inside the church's maroon/pink
+// identity (matches every other ring, badge, and button on this page); amber
+// and red are reserved for genuinely-worth-flagging standings, same as the
+// app's other status usages elsewhere — not a full rainbow per tier.
+export function standingLabel(rate: number): { text: string; color: string; bg: string; ring: string } {
+  if (rate >= 70) return { text: rate >= 90 ? "Excellent standing" : "Good standing", color: "text-[#87102C] dark:text-[#e8768a]", bg: "bg-[#FFE8ED] dark:bg-[#87102C]/15", ring: "#87102C" };
+  if (rate >= 50) return { text: "Fair standing", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-500/10", ring: "#f59e0b" };
+  if (rate > 0) return { text: "Needs improvement", color: "text-red-500 dark:text-red-400", bg: "bg-red-50 dark:bg-red-500/10", ring: "#ef4444" };
+  return { text: "No records yet", color: muted, bg: "bg-gray-50 dark:bg-white/5", ring: "#9ca3af" };
 }
 
 export function getServiceCountdown(scheduledAt: string): string {

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiConflictResponse,
@@ -17,7 +17,8 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { ContactDto } from './dto/contact.dto';
 import { FirstTimerDto } from './dto/first-timer.dto';
 import { HomeCellDto } from './dto/home-cell.dto';
-import { PrayerRequestDto } from './dto/prayer-request.dto';
+import { PrayerRequestDto, UpdatePrayerRequestStatusDto } from './dto/prayer-request.dto';
+import { QuestionDto, UpdateQuestionStatusDto } from './dto/question.dto';
 import { ServeTeamDto } from './dto/serve-team.dto';
 import { TestimonyDto } from './dto/testimony.dto';
 import { FormsService } from './forms.service';
@@ -77,6 +78,51 @@ export class FormsController {
   @ApiOperation({ summary: 'Delete a prayer request (ADMIN+)' })
   async deletePrayerRequest(@Param('id') id: string) {
     return this.formsService.deletePrayerRequest(id);
+  }
+
+  @Patch('prayer-requests/:id/status')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Mark a prayer request prayed-for/pending (ADMIN+)' })
+  async updatePrayerRequestStatus(@Param('id') id: string, @Body() body: UpdatePrayerRequestStatusDto) {
+    return this.formsService.updatePrayerRequestStatus(id, body.status);
+  }
+
+  @Public()
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('question')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Submit a Question',
+    description:
+      'Create a question record and notify the church team by email. Public — works with no session. ' +
+      'Same optional-auth semantics as prayer-request: signed-in submitters are always linked, even when anonymous.',
+  })
+  @ApiCreatedResponse({ description: 'Question submitted successfully' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  async question(@Body() body: QuestionDto, @CurrentUser() user?: AuthUser) {
+    return this.formsService.submitQuestion(body, user?.memberId ?? null);
+  }
+
+  @Get('questions')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'List all questions, newest first (ADMIN+)' })
+  async listQuestions() {
+    return this.formsService.listQuestions();
+  }
+
+  @Delete('questions/:id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Delete a question (ADMIN+)' })
+  async deleteQuestion(@Param('id') id: string) {
+    return this.formsService.deleteQuestion(id);
+  }
+
+  @Patch('questions/:id/status')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Mark a question answered/pending (ADMIN+)' })
+  async updateQuestionStatus(@Param('id') id: string, @Body() body: UpdateQuestionStatusDto) {
+    return this.formsService.updateQuestionStatus(id, body.status);
   }
 
   @Public()

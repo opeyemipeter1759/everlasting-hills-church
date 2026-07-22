@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -49,9 +49,15 @@ export class StatusReportsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Resubmit a report after a correction request (author only)' })
+  @ApiOperation({ summary: 'Edit your report, or resubmit after a correction request (author only; locked once approved)' })
   async update(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: UpdateReportDto) {
     return this.reports.update(actor, id, body);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete your report (author only; locked once approved)' })
+  async remove(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.reports.remove(actor, id);
   }
 
   @Patch(':id/approve')

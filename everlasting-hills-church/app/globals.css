@@ -1,14 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&family=Dancing+Script:wght@600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Plus Jakarta Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-serif: 'Playfair Display', serif;
+  /* --nf-* are set by next/font (app/layout.tsx) on <html> — self-hosted,
+     no external fonts.googleapis.com request. */
+  --font-sans: var(--nf-jakarta), var(--nf-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-ui: var(--nf-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--nf-space-grotesk), sans-serif;
+  --font-serif: var(--nf-playfair), serif;
+  --font-dancing: var(--nf-dancing), cursive;
 
   --color-church-maroon: #87102c;
   --color-church-dark: #0a0a0a;

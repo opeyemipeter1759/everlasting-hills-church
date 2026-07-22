@@ -12,6 +12,8 @@ export interface PrayerRequestMember {
   photoUrl: string | null;
 }
 
+export type PrayerRequestStatus = "PENDING" | "PRAYED";
+
 export interface PrayerRequestRow {
   id: string;
   request: string;
@@ -20,6 +22,7 @@ export interface PrayerRequestRow {
   phone: string | null;
   isAnonymous: boolean;
   submittedAt: string;
+  status: PrayerRequestStatus;
   /** Set only when the submitter was signed in — present even if isAnonymous,
    * since anonymous only hides the free-text name, never the linked member. */
   member: PrayerRequestMember | null;
@@ -36,6 +39,15 @@ export function useDeletePrayerRequest() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.delete(`/forms/prayer-requests/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["prayer-requests"] }),
+  });
+}
+
+export function useUpdatePrayerRequestStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: PrayerRequestStatus }) =>
+      api.patch(`/forms/prayer-requests/${id}/status`, { status }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["prayer-requests"] }),
   });
 }

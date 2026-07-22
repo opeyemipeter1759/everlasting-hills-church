@@ -1,7 +1,12 @@
-import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, PenLine } from "lucide-react";
 import type { ReportStatus } from "@/lib/api/status-reports";
 
 const CONFIG: Record<ReportStatus, { label: string; cls: string; Icon: typeof Clock }> = {
+  DRAFT: {
+    label: "Draft",
+    cls: "bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-white/60 border-gray-200 dark:border-white/15",
+    Icon: PenLine,
+  },
   SUBMITTED: {
     label: "Submitted",
     cls: "bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-200/60 dark:border-sky-500/20",

@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { TrendingUp, Zap, Clock, QrCode } from "lucide-react";
-import type { MemberHomeProps } from "./types";
+import type { MemberHomeProps, StreakState } from "./types";
 import { getGreeting, getServiceCountdown } from "./helpers";
 import { QRModal } from "./QRModal";
 
-export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, attendanceRate, streakWeeks, nextService }: {
+export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, attendanceRate, streak, nextService }: {
   firstName: string;
   initials: string;
   photoUrl: string | null;
   memberDisplayId: string;
   attendanceRate: number;
-  streakWeeks: number;
+  streak: StreakState;
   nextService: MemberHomeProps["nextService"];
 }) {
   const [showQR, setShowQR] = useState(false);
@@ -72,12 +72,10 @@ export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, at
               {attendanceRate}% attendance
             </span>
           )}
-          {streakWeeks > 0 && (
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-sm">
-              <Zap size={14} aria-hidden="true" />
-              {streakWeeks}-week streak
-            </span>
-          )}
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-sm">
+            <Zap size={14} aria-hidden="true" />
+            Level {streak.level} · {streak.title}
+          </span>
           {nextService && (
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-sm">
               <Clock size={14} aria-hidden="true" />

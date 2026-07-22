@@ -1,3 +1,26 @@
+export interface TaskRequirement {
+  attendance: number;
+  course: number;
+  sermon: number;
+}
+
+export interface PassedLevel {
+  level: number;
+  title: string;
+  task: TaskRequirement;
+}
+
+/** 2go-style leveling ladder — see OverviewService.getMemberOverview / streak-ladder.ts
+ * on the backend. Endless: level N's task is generated, not read from a fixed table. */
+export interface StreakState {
+  level: number;
+  title: string;
+  task: TaskRequirement;
+  progress: TaskRequirement;
+  /** Every level already cleared, oldest first. */
+  history: PassedLevel[];
+}
+
 export interface MemberHomeProps {
   member: {
     firstName: string;
@@ -13,8 +36,11 @@ export interface MemberHomeProps {
   memberDisplayId: string;
   attendanceRate: number;
   attendanceCount: number;
-  streakWeeks: number;
+  /** Total service days (Sundays + Wednesdays) in the current month. */
+  attendanceTotal: number;
+  streak: StreakState;
   coursesCompleted: number;
+  sermonsCompleted: number;
   lastServiceDate: string | null;
   nextService: { name: string; scheduledAt: string } | null;
   hasCheckedInToday: boolean;

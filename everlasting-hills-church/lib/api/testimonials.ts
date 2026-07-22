@@ -34,3 +34,15 @@ export function useDeleteTestimonial() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+/** Backend gates this at PASTOR+ (see TestimonialsController) — only render
+ * the toggle for users who actually clear that bar, an ADMIN-only user will
+ * get a 403 if they call it. */
+export function useTogglePublishTestimonial() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, published }: { id: string; published: boolean }) =>
+      api.patch(`/testimonials/${id}`, { published }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}

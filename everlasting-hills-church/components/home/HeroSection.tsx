@@ -1,5 +1,6 @@
 "use client";
 import {  useEffect, useRef } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
 import { HERO_FALLBACK, type HeroContent } from "@/lib/site-settings";
@@ -34,49 +35,41 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           {/* Left Content */}
           <div className="md:col-span-12 lg:col-span-7 flex flex-col items-start justify-center  text-left mb-16 lg:mb-0">
             {c.scriptureBadge.visible && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.9 }}
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-church-maroon/30 border border-church-maroon/50 mb-4"
+              <div
+                style={{ animationDelay: "0ms" }}
+                className="opacity-0 animate-fade-in inline-flex items-center gap-2 px-3 py-1 rounded-full bg-church-maroon/30 border border-church-maroon/50 mb-4"
               >
                 <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-black text-church-accent">
                   {c.scriptureBadge.text}
                 </span>
-              </motion.div>
+              </div>
             )}
 
-            <motion.h1
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="text-[48px] sm:text-[64px] text-white lg:text-[84px] leading-[0.95] font-bold font-display tracking-tight mb-5"
+            {/* Headline is critical above-the-fold content — it renders and animates
+                in via pure CSS (not Framer Motion's initial/animate) so it never sits
+                invisible waiting on JS hydration behind an already-painted background. */}
+            <h1
+              style={{ animationDelay: "80ms" }}
+              className="opacity-0 animate-fade-up text-[48px] sm:text-[64px] text-white lg:text-[84px] leading-[0.95] font-bold font-display tracking-tight mb-5"
             >
               {c.headline} <br/>
-              <motion.span
-                className="text-transparent bg-clip-text bg-gradient-to-r from-church-accent to-church-maroon font-serif italic font-normal"
-                animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
-                style={{ backgroundSize: "200% 100%" }}
+              <span
+                className="text-transparent bg-clip-text bg-gradient-to-r from-church-accent to-church-maroon font-serif italic font-normal bg-[length:200%_100%] animate-gradient-x"
               >
                 {c.headlineAccent}
-              </motion.span>
-            </motion.h1>
+              </span>
+            </h1>
 
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-white/60 text-lg sm:text-xl max-w-xl leading-relaxed mb-5 font-sans font-medium"
+            <p
+              style={{ animationDelay: "160ms" }}
+              className="opacity-0 animate-fade-up text-white/60 text-lg sm:text-xl max-w-xl leading-relaxed mb-5 font-sans font-medium"
             >
               {c.subtext}
-            </motion.p>
+            </p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
+            <div
+              style={{ animationDelay: "240ms" }}
+              className="opacity-0 animate-fade-up flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
             >
               <motion.a
                 href={c.ctaPrimary.href}
@@ -98,7 +91,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
                 </div>
                 {c.ctaSecondary.label}
               </motion.a>
-            </motion.div>
+            </div>
           </div>
 
           {/* Right Visual (Interactive Media) */}
@@ -200,12 +193,14 @@ function PhotoFan({ images }: { images: string[] }) {
             className="absolute mt-16 md:mt-0 rounded-2xl p-1.5 sm:p-2 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden cursor-pointer w-[160px] h-[250px] sm:w-[200px] sm:h-[260px] lg:w-[240px] lg:h-[280px]"
           >
             <div className="relative w-full h-full rounded-xl overflow-hidden group/image">
-              <img
+              <Image
                 src={img}
                 alt="Church Community"
-                className="w-full h-full object-cover grayscale-[0.2] group-hover/image:grayscale-0 transition-all duration-500"
+                fill
+                sizes="(max-width: 640px) 160px, (max-width: 1024px) 200px, 240px"
+                className="object-cover grayscale-[0.2] group-hover/image:grayscale-0 transition-all duration-500"
                 referrerPolicy="no-referrer"
-                loading="lazy"
+                priority={zIndex === 20}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-church-dark/40 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity" />
             </div>

@@ -3,8 +3,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 
-export type ReportScope = "DEPARTMENT" | "UNIT";
-export type ReportStatus = "SUBMITTED" | "APPROVED" | "NEEDS_CORRECTION";
+export type ReportScope = "DEPARTMENT" | "UNIT" | "PASTOR";
+export type ReportStatus = "DRAFT" | "SUBMITTED" | "APPROVED" | "NEEDS_CORRECTION";
+/** What an author can explicitly set — NEEDS_CORRECTION/APPROVED are review-side
+ * transitions (request-correction / approve routes), never chosen directly. */
+export type WritableReportStatus = "DRAFT" | "SUBMITTED";
 
 export interface ReportPerson {
   profileId: string;
@@ -50,6 +53,7 @@ export interface CreateReportInput {
   content: string;
   attachmentUrl?: string;
   attachmentName?: string;
+  status?: WritableReportStatus;
 }
 
 const KEY = ["status-reports"] as const;
@@ -92,8 +96,16 @@ export function useCreateReport() {
 export function useUpdateReport(id: string) {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (body: { title: string; content: string; attachmentUrl?: string; attachmentName?: string }) =>
+    mutationFn: (body: { title: string; content: string; attachmentUrl?: string; attachmentName?: string; status?: WritableReportStatus }) =>
       api.patch<ReportRow>(`/status-reports/${id}`, body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteReport() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<{ id: string; deleted: boolean }>(`/status-reports/${id}`),
     onSuccess: invalidate,
   });
 }

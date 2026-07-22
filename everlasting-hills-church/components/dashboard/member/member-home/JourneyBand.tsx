@@ -1,4 +1,4 @@
-import type { MemberHomeProps } from "./types";
+import type { MemberHomeProps, StreakState } from "./types";
 import { OnboardingChecklist } from "./OnboardingChecklist";
 import { WarmAttendanceStat } from "./WarmAttendanceStat";
 import { WarmStreakStat } from "./WarmStreakStat";
@@ -8,14 +8,17 @@ import { DiscipleshipTrackerCard } from "./DiscipleshipTrackerCard";
 interface JourneyBandProps {
   isNewMember: boolean;
   member: MemberHomeProps["member"];
+  memberDisplayId: string;
   prayerCount: number;
   ministryUnit?: MemberHomeProps["ministryUnit"];
   attendanceRate: number;
   attendanceCount: number;
+  attendanceTotal: number;
   lastServiceDate: string | null;
   recentServices: MemberHomeProps["recentServices"];
-  streakWeeks: number;
+  streak: StreakState;
   coursesCompleted: number;
+  sermonsCompleted: number;
   nextService: MemberHomeProps["nextService"];
   discipleshipMilestones?: MemberHomeProps["discipleshipMilestones"];
   monthlyAttendance: MemberHomeProps["monthlyAttendance"];
@@ -24,9 +27,9 @@ interface JourneyBandProps {
 /** Band 3 — "My Journey": onboarding checklist for new members, or their
  *  attendance/streak/discipleship stats once they have some history. */
 export function JourneyBand({
-  isNewMember, member, prayerCount, ministryUnit,
-  attendanceRate, attendanceCount, lastServiceDate, recentServices,
-  streakWeeks, coursesCompleted, nextService, discipleshipMilestones, monthlyAttendance,
+  isNewMember, member, memberDisplayId, prayerCount, ministryUnit,
+  attendanceRate, attendanceCount, attendanceTotal, lastServiceDate, recentServices,
+  streak, coursesCompleted, sermonsCompleted, nextService, discipleshipMilestones, monthlyAttendance,
 }: JourneyBandProps) {
 /*   if (isNewMember) {
     return (
@@ -41,12 +44,15 @@ export function JourneyBand({
         <WarmAttendanceStat
           attendanceRate={attendanceRate}
           attendanceCount={attendanceCount}
+          attendanceTotal={attendanceTotal}
           lastServiceDate={lastServiceDate}
           recentServices={recentServices}
         />
         <WarmStreakStat
-          streakWeeks={streakWeeks}
+          memberDisplayId={memberDisplayId}
+          streak={streak}
           coursesCompleted={coursesCompleted}
+          sermonsCompleted={sermonsCompleted}
           nextService={nextService}
           ministryUnit={ministryUnit}
         />

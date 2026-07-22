@@ -3,12 +3,15 @@ import { Transform } from 'class-transformer';
 import {
   IsBoolean,
   IsEmail,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
+
+const PRAYER_REQUEST_STATUSES = ['PENDING', 'PRAYED'] as const;
 
 /** Optional text fields sometimes arrive as "" (a field mounted-then-hidden by
  * a conditional form still submits its last value) — treat that the same as
@@ -49,4 +52,10 @@ export class PrayerRequestDto {
   @IsOptional()
   @IsBoolean()
   is_anonymous?: boolean;
+}
+
+export class UpdatePrayerRequestStatusDto {
+  @ApiProperty({ enum: PRAYER_REQUEST_STATUSES, example: 'PRAYED' })
+  @IsIn(PRAYER_REQUEST_STATUSES)
+  status!: (typeof PRAYER_REQUEST_STATUSES)[number];
 }

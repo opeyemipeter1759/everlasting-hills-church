@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ChevronRight,
   MessageSquare,
+  HelpCircle,
   Heart,
   Users,
   Scroll,
@@ -143,6 +144,15 @@ export default function GetInvolvedPage() {
             href="/prayer-request"
             className="md:col-span-2 md:row-span-2 bg-church-maroon/20 border-church-maroon/40"
             featured
+          />
+
+          {/* Medium: Questions */}
+          <BentoCard
+            title="Ask a Question"
+            desc="Bible, life — ask us anything."
+            icon={<HelpCircle className="w-6 h-6" />}
+            href="/questions"
+            className="md:col-span-2 md:row-span-1 bg-white/5"
           />
 
           {/* Medium: Home Cell */}

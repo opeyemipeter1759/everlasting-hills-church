@@ -8,6 +8,7 @@ import { ContactDto } from './dto/contact.dto';
 import { FirstTimerDto } from './dto/first-timer.dto';
 import { HomeCellDto } from './dto/home-cell.dto';
 import { PrayerRequestDto } from './dto/prayer-request.dto';
+import { QuestionDto } from './dto/question.dto';
 import { ServeTeamDto } from './dto/serve-team.dto';
 import { TestimonyDto } from './dto/testimony.dto';
 import {
@@ -89,6 +90,30 @@ export class FormsService {
       '',
       'We have received your prayer request and will be praying with you.',
       'Our team will follow up if needed.',
+      '',
+      'God bless you,',
+      'Everlasting Hills Church',
+    ].join('\n');
+  }
+
+  private buildQuestionAdminText(d: QuestionDto): string {
+    const displayName = d.is_anonymous ? 'Anonymous' : d.name?.trim() || 'Anonymous';
+    return [
+      `Name: ${displayName}`,
+      `Email: ${d.email ?? '—'}`,
+      `Phone: ${d.phone ?? '—'}`,
+      '',
+      'Question:',
+      d.question,
+    ].join('\n');
+  }
+
+  private buildQuestionVisitorText(d: QuestionDto): string {
+    const displayName = d.is_anonymous ? 'Anonymous' : d.name?.trim() || 'Anonymous';
+    return [
+      `Dear ${displayName},`,
+      '',
+      'We have received your question and our team will get back to you shortly.',
       '',
       'God bless you,',
       'Everlasting Hills Church',
@@ -275,6 +300,7 @@ export class FormsService {
       phone: r.phone,
       isAnonymous: r.isAnonymous,
       submittedAt: r.submittedAt.toISOString(),
+      status: r.status,
       member: r.Member,
     }));
   }
@@ -285,6 +311,99 @@ export class FormsService {
     });
     if (result.count === 0) throw new NotFoundException('Prayer request not found');
     return { id, deleted: true };
+  }
+
+  async updatePrayerRequestStatus(id: string, status: 'PENDING' | 'PRAYED') {
+    const result = await this.prisma.prayerRequest.updateMany({
+      where: { id, tenantId: this.tenantId },
+      data: { status },
+    });
+    if (result.count === 0) throw new NotFoundException('Prayer request not found');
+    return { id, status };
+  }
+
+  /** Same shape/semantics as submitPrayerRequest — memberId is populated only when
+   * the submitter is signed in (optional auth), kept even when is_anonymous. */
+  async submitQuestion(data: QuestionDto, memberId: string | null = null) {
+    const normalizedEmail = data.email?.trim();
+    const normalizedPhone = data.phone?.trim();
+    const displayName = data.is_anonymous ? 'Anonymous' : data.name?.trim() || 'Anonymous';
+
+    const record = await this.prisma.question.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        question: data.question.trim(),
+        name: data.name ? data.name.trim() : null,
+        email: normalizedEmail ?? null,
+        phone: normalizedPhone ?? null,
+        isAnonymous: data.is_anonymous ?? false,
+        memberId,
+      },
+    });
+
+    this.dispatchEmail({
+      to: this.adminEmail,
+      subject: `New Question from ${displayName}`,
+      text: this.buildQuestionAdminText(data),
+      tag: 'question-admin',
+    });
+    if (normalizedEmail) {
+      this.dispatchEmail({
+        to: normalizedEmail,
+        subject: 'We received your question',
+        text: this.buildQuestionVisitorText(data),
+        tag: 'question-visitor',
+      });
+    }
+
+    return {
+      success: true,
+      message: 'Question submitted successfully',
+      data: record,
+    };
+  }
+
+  /** Admin list, newest first. The linked member (if the submitter was signed
+   * in) is always included regardless of isAnonymous — see submitQuestion. */
+  async listQuestions() {
+    const rows = await this.prisma.question.findMany({
+      where: { tenantId: this.tenantId },
+      orderBy: { submittedAt: 'desc' },
+      include: {
+        Member: {
+          select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true },
+        },
+      },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      question: r.question,
+      name: r.name,
+      email: r.email,
+      phone: r.phone,
+      isAnonymous: r.isAnonymous,
+      submittedAt: r.submittedAt.toISOString(),
+      status: r.status,
+      member: r.Member,
+    }));
+  }
+
+  async deleteQuestion(id: string) {
+    const result = await this.prisma.question.deleteMany({
+      where: { id, tenantId: this.tenantId },
+    });
+    if (result.count === 0) throw new NotFoundException('Question not found');
+    return { id, deleted: true };
+  }
+
+  async updateQuestionStatus(id: string, status: 'PENDING' | 'ANSWERED') {
+    const result = await this.prisma.question.updateMany({
+      where: { id, tenantId: this.tenantId },
+      data: { status },
+    });
+    if (result.count === 0) throw new NotFoundException('Question not found');
+    return { id, status };
   }
 
   async submitTestimony(data: TestimonyDto) {
