@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
-import { FollowUpService } from '../follow-up/follow-up.service';
+import { FollowUpAutoSurfaceService } from '../follow-up/services/follow-up-auto-surface.service';
 import { buildBirthdayEmail } from '../notifications/templates/birthday.email';
 import { buildAnniversaryEmail } from '../notifications/templates/anniversary.email';
 import type { Env } from '../config/env.validation';
@@ -24,7 +24,7 @@ export class SchedulingService {
     private readonly prisma: PrismaService,
     private readonly mail: MailDispatcher,
     private readonly config: ConfigService<Env, true>,
-    private readonly followUp: FollowUpService,
+    private readonly followUp: FollowUpAutoSurfaceService,
   ) {}
 
   /**

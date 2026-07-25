@@ -1,7 +1,8 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { AttendanceService } from '../attendance/attendance.service';
+import { AttendanceAbsenceService } from '../attendance/services/attendance-absence.service';
+import { AttendanceSessionWindowService } from '../attendance/services/attendance-session-window.service';
 import type { Env } from '../config/env.validation';
 
 const WAT = 60 * 60 * 1000;
@@ -37,7 +38,8 @@ export class SessionsService implements OnModuleInit {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<Env, true>,
-    private readonly attendanceService: AttendanceService,
+    private readonly attendanceAbsence: AttendanceAbsenceService,
+    private readonly attendanceSessionWindow: AttendanceSessionWindowService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -90,7 +92,7 @@ export class SessionsService implements OnModuleInit {
       if (presentCount === 0) return;
 
       this.lastAutoClosedServiceId = service.id;
-      const { marked } = await this.attendanceService.markMissingAsAbsent(service.id);
+      const { marked } = await this.attendanceAbsence.markMissingAsAbsent(service.id);
       this.logger.log(`Session closed: marked ${marked} members absent for service ${service.id}`);
     } catch (err) {
       this.logger.warn(`Auto-close failed: ${(err as Error).message}`);
@@ -106,7 +108,7 @@ export class SessionsService implements OnModuleInit {
     if (!service) return { serviceId: null, marked: 0 };
 
     this.lastAutoClosedServiceId = service.id;
-    const { marked } = await this.attendanceService.markMissingAsAbsent(service.id);
+    const { marked } = await this.attendanceAbsence.markMissingAsAbsent(service.id);
     return { serviceId: service.id, marked };
   }
 
@@ -154,7 +156,7 @@ export class SessionsService implements OnModuleInit {
     // When force-open, create the service row if it doesn't exist yet (e.g. non-service day).
     const service =
       forceOpen === true
-        ? await this.attendanceService.findOrCreateTodayService()
+        ? await this.attendanceSessionWindow.findOrCreateTodayService()
         : await this.prisma.service.findFirst({
             where: { tenantId: this.tenantId, scheduledAt: { gte: startUtc, lt: endUtc } },
           });

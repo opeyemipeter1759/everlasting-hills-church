@@ -22,6 +22,8 @@ model AttendanceRecord {
   Tenant      Tenant   @relation(fields: [tenantId], references: [id])
 
   @@unique([memberId, serviceId])
+  @@index([tenantId, serviceId])
+  @@index([serviceId, present])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -87,6 +89,8 @@ model EngagementScore {
   computedAt      DateTime @default(now())
   Member          Member   @relation(fields: [memberId], references: [id])
   Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, score])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -127,6 +131,10 @@ model GivingRecord {
   verifiedAt     DateTime?
   createdAt      DateTime  @default(now())
   Tenant         Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, paystackStatus, createdAt])
+  @@index([tenantId, category])
+  @@index([donorEmail])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -196,6 +204,10 @@ model Member {
   CourseEnrollment   CourseEnrollment[]
   PrayerRequest      PrayerRequest[]
   Question           Question[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, joinedAt])
+  @@index([tenantId, email])
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).
@@ -670,6 +682,9 @@ model Service {
   AttendanceRecord AttendanceRecord[]
   ServiceHeadcount ServiceHeadcount?
   Tenant           Tenant             @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, scheduledAt])
+  @@index([tenantId, serviceType, scheduledAt])
 }
 
 /// Authoritative usher headcount: one aggregate count per service. Source of

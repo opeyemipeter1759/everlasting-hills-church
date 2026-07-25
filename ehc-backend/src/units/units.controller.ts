@@ -4,27 +4,27 @@ import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import { AssignUnitMemberDto, CreateUnitDto, SetMemberRoleDto, UpdateUnitDto } from './dto/unit.dto';
-import { UnitsService } from './units.service';
+import { CreateUnitDto, UpdateUnitDto } from './dto/unit.dto';
+import { UnitsDirectoryService } from './services/units-directory.service';
+import { UnitsSelfService } from './services/units-self.service';
+import { UnitsCrudService } from './services/units-crud.service';
 
 /**
- * Units endpoints.
+ * Units: directory, self, and CRUD. See units-members.controller.ts for member/lead
+ * assignment routes.
  *
- * Authorization:
- *   GET  /units/directory                               → ADMIN+
- *   GET  /units/me                                      → any authed user
- *   GET  /units, GET /units/:id, POST/PATCH/DELETE      → ADMIN+
- *   POST /units/:id/members (add)                       → LEAD or ASSISTANT of that unit, OR ADMIN+
- *   DELETE /units/:id/members/:memberId (remove)        → LEAD or ASSISTANT of that unit, OR ADMIN+
- *   PATCH /units/:id/members/:memberId/role             → ADMIN+ only
+ * 'directory' and 'me' are declared before the generic :unitId route — they share
+ * its 1-segment GET shape, so this order is load-bearing.
  */
 @ApiTags('units')
 @Controller('units')
 @ApiBearerAuth('access-token')
 export class UnitsController {
-  constructor(private readonly unitsService: UnitsService) {}
-
-  // ── Directory ───────────────────────────────────────────────────────────────
+  constructor(
+    private readonly directory: UnitsDirectoryService,
+    private readonly self: UnitsSelfService,
+    private readonly crud: UnitsCrudService,
+  ) {}
 
   @Get('directory')
   @Roles(Role.ADMIN)
@@ -33,31 +33,27 @@ export class UnitsController {
     description: 'Units with lead/assistant, plus all UNIT_LEAD / ADMIN / PASTOR / SUPER_ADMIN profiles',
   })
   async getDirectory() {
-    return this.unitsService.getDirectory();
+    return this.directory.getDirectory();
   }
-
-  // ── Self ────────────────────────────────────────────────────────────────────
 
   @Get('me')
   @ApiOperation({ summary: 'Get the unit the current user leads or assists (or null)' })
   async getMyUnit(@CurrentUser() user: AuthUser) {
-    return this.unitsService.findMyUnit(user.userId);
+    return this.self.findMyUnit(user.userId);
   }
-
-  // ── Admin CRUD ──────────────────────────────────────────────────────────────
 
   @Get()
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'List all units with lead + assistant (ADMIN+)' })
   async list() {
-    return this.unitsService.listAll();
+    return this.crud.listAll();
   }
 
   @Get(':unitId')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Get one unit with full member list including roles (ADMIN+)' })
   async getById(@Param('unitId') unitId: string) {
-    return this.unitsService.getById(unitId);
+    return this.crud.getById(unitId);
   }
 
   @Post()
@@ -65,7 +61,7 @@ export class UnitsController {
   @ApiOperation({ summary: 'Create a new unit (ADMIN+)' })
   @ApiBody({ type: CreateUnitDto })
   async create(@Body() body: CreateUnitDto) {
-    return this.unitsService.create(body);
+    return this.crud.create(body);
   }
 
   @Patch(':unitId')
@@ -73,83 +69,13 @@ export class UnitsController {
   @ApiOperation({ summary: 'Update a unit name/description (ADMIN+)' })
   @ApiBody({ type: UpdateUnitDto })
   async update(@Param('unitId') unitId: string, @Body() body: UpdateUnitDto) {
-    return this.unitsService.update(unitId, body);
+    return this.crud.update(unitId, body);
   }
 
   @Delete(':unitId')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Delete a unit (ADMIN+)' })
   async delete(@Param('unitId') unitId: string) {
-    return this.unitsService.delete(unitId);
-  }
-
-  // ── Unit lead appointment (ADMIN_HEAD within their department, or ADMIN+) ────
-
-  @Post(':unitId/lead')
-  @Roles(Role.ADMIN_HEAD)
-  @ApiOperation({ summary: 'Appoint/replace a unit lead. ADMIN_HEAD limited to units in a department they head; ADMIN+ any unit.' })
-  async appointLead(
-    @CurrentUser() actor: AuthUser,
-    @Param('unitId') unitId: string,
-    @Body() body: { profileId?: string },
-  ) {
-    return this.unitsService.appointLead(actor, unitId, body?.profileId ?? '');
-  }
-
-  @Delete(':unitId/lead')
-  @Roles(Role.ADMIN_HEAD)
-  @ApiOperation({ summary: 'End the current unit lead assignment (same scope rules as appoint)' })
-  async removeLead(@CurrentUser() actor: AuthUser, @Param('unitId') unitId: string) {
-    return this.unitsService.removeLead(actor, unitId);
-  }
-
-  // ── Member assignment (LEAD / ASSISTANT or ADMIN+) ──────────────────────────
-
-  @Post(':unitId/members')
-  @ApiOperation({ summary: 'Add a member to a unit (lead or assistant of unit, or ADMIN+)' })
-  @ApiBody({ type: AssignUnitMemberDto })
-  @ApiOkResponse({ description: 'Member added to unit' })
-  async addMember(
-    @CurrentUser() actor: AuthUser,
-    @Param('unitId') unitId: string,
-    @Body() body: AssignUnitMemberDto,
-  ) {
-    return this.unitsService.addMember(actor, unitId, body);
-  }
-
-  @Delete(':unitId/members/:memberId')
-  @ApiOperation({ summary: 'Remove a member from a unit (lead or assistant of unit, or ADMIN+)' })
-  async removeMember(
-    @CurrentUser() actor: AuthUser,
-    @Param('unitId') unitId: string,
-    @Param('memberId') memberId: string,
-  ) {
-    return this.unitsService.removeMember(actor, unitId, memberId);
-  }
-
-  @Patch(':unitId/members/:memberId')
-  @Roles(Role.HOD)
-  @ApiOperation({ summary: 'Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only)' })
-  @ApiBody({ type: SetMemberRoleDto })
-  async setMemberRoleShort(
-    @CurrentUser() actor: AuthUser,
-    @Param('unitId') unitId: string,
-    @Param('memberId') memberId: string,
-    @Body() body: SetMemberRoleDto,
-  ) {
-    return this.unitsService.setMemberRole(actor, unitId, memberId, body);
-  }
-
-  @Patch(':unitId/members/:memberId/role')
-  @Roles(Role.HOD)
-  @ApiOperation({ summary: 'Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only)' })
-  @ApiBody({ type: SetMemberRoleDto })
-  async setMemberRole(
-    @CurrentUser() actor: AuthUser,
-    @Param('unitId') unitId: string,
-    @Param('memberId') memberId: string,
-    @Body() body: SetMemberRoleDto,
-  ) {
-    return this.unitsService.setMemberRole(actor, unitId, memberId, body);
+    return this.crud.delete(unitId);
   }
 }

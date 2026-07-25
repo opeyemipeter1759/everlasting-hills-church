@@ -17,7 +17,7 @@ export class AnalyticsService {
   }
 
   async getAdminAnalytics(): Promise<AdminAnalyticsData> {
-    return fetchAdminAnalytics();
+    return fetchAdminAnalytics(this.prisma, this.tenantId);
   }
 
   async getDepartmentStats(unitId?: string) {

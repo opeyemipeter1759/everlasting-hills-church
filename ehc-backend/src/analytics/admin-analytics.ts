@@ -1,8 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-import { createClient } from '@supabase/supabase-js';
-
-const db = new PrismaClient();
-const TENANT_ID = process.env.DEFAULT_TENANT_ID ?? '';
+import { PrismaService } from '../prisma/prisma.service';
 
 export function getLast6Months() {
   return Array.from({ length: 6 }, (_, i) => {
@@ -21,19 +17,17 @@ export function getLast6Months() {
   });
 }
 
-function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
-  if (!url || !key) {
-    throw new Error('Missing Supabase URL or service role key in env variables');
-  }
-  return createClient(url, key);
-}
-
-export async function fetchAdminAnalytics() {
-  const supabase = createAdminClient();
+/**
+ * Was previously fetching this data via 17 separate Supabase PostgREST calls
+ * through a module-level `new PrismaClient()` (leaked, never disconnected, and
+ * outside Nest's connection pool) — even though every one of these tables is
+ * already queried directly via Prisma everywhere else in the app. Now a single
+ * batch of parallel Prisma queries against the same connection pool the rest
+ * of the app uses.
+ */
+export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: string) {
   const months = getLast6Months();
-  const sixMonthsAgo = months[0].start.toISOString();
+  const sixMonthsAgo = months[0].start;
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -45,73 +39,63 @@ export async function fetchAdminAnalytics() {
   yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
   const [
-    { count: totalMembers },
-    { count: totalVisitors },
-    { count: totalPrayers },
-    { data: recentMembersData },
-    { data: allVisitorsData },
-    { data: prayerChartData },
-    { data: givingData },
+    totalMembers,
+    totalVisitors,
+    totalPrayers,
+    recentMembers,
+    visitors,
+    prayers,
+    givingAgg,
     recentServices,
-    { count: newMembersThisMonthRaw },
-    { count: newMembersLastMonthRaw },
-    { count: newMembersThisYearRaw },
-    { count: newMembersLastYearRaw },
-    { count: visitorsTodayRaw },
-    { count: visitorsYesterdayRaw },
-    { count: visitorsThisMonthRaw },
-    { count: visitorsLastMonthRaw },
-    { count: visitorsThisYearRaw },
-    { count: visitorsLastYearRaw },
+    newMembersThisMonth,
+    newMembersLastMonth,
+    newMembersThisYear,
+    newMembersLastYear,
+    visitorsToday,
+    visitorsYesterday,
+    visitorsThisMonth,
+    visitorsLastMonth,
+    visitorsThisYear,
+    visitorsLastYear,
   ] = await Promise.all([
-    supabase.from('Member').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID),
-    supabase.from('Visitor').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID),
-    supabase.from('PrayerRequest').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID),
-    supabase.from('Member').select('joinedAt').eq('tenantId', TENANT_ID).gte('joinedAt', sixMonthsAgo),
-    supabase.from('Visitor').select('membershipInterest, howDidYouLearn, attendanceType').eq('tenantId', TENANT_ID),
-    supabase.from('PrayerRequest').select('submittedAt').eq('tenantId', TENANT_ID).gte('submittedAt', sixMonthsAgo),
-    supabase.from('GivingRecord').select('amount').eq('tenantId', TENANT_ID).eq('paystackStatus', 'success'),
-    db.service.findMany({
-      where: { tenantId: TENANT_ID },
+    prisma.member.count({ where: { tenantId } }),
+    prisma.visitor.count({ where: { tenantId } }),
+    prisma.prayerRequest.count({ where: { tenantId } }),
+    prisma.member.findMany({ where: { tenantId, joinedAt: { gte: sixMonthsAgo } }, select: { joinedAt: true } }),
+    prisma.visitor.findMany({ where: { tenantId }, select: { membershipInterest: true, howDidYouLearn: true, attendanceType: true } }),
+    prisma.prayerRequest.findMany({ where: { tenantId, submittedAt: { gte: sixMonthsAgo } }, select: { submittedAt: true } }),
+    prisma.givingRecord.aggregate({ where: { tenantId, paystackStatus: 'success' }, _sum: { amount: true } }),
+    prisma.service.findMany({
+      where: { tenantId },
       orderBy: { scheduledAt: 'desc' },
       take: 8,
       include: { _count: { select: { AttendanceRecord: true } } },
     }),
-    // Member period counts
-    supabase.from('Member').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('joinedAt', monthStart.toISOString()),
-    supabase.from('Member').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('joinedAt', lastMonthStart.toISOString()).lt('joinedAt', monthStart.toISOString()),
-    supabase.from('Member').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('joinedAt', yearStart.toISOString()),
-    supabase.from('Member').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('joinedAt', lastYearStart.toISOString()).lt('joinedAt', yearStart.toISOString()),
-    // Visitor period counts
-    supabase.from('Visitor').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('submittedAt', todayStart.toISOString()),
-    supabase.from('Visitor').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('submittedAt', yesterdayStart.toISOString()).lt('submittedAt', todayStart.toISOString()),
-    supabase.from('Visitor').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('submittedAt', monthStart.toISOString()),
-    supabase.from('Visitor').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('submittedAt', lastMonthStart.toISOString()).lt('submittedAt', monthStart.toISOString()),
-    supabase.from('Visitor').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('submittedAt', yearStart.toISOString()),
-    supabase.from('Visitor').select('*', { count: 'exact', head: true }).eq('tenantId', TENANT_ID).gte('submittedAt', lastYearStart.toISOString()).lt('submittedAt', yearStart.toISOString()),
+    prisma.member.count({ where: { tenantId, joinedAt: { gte: monthStart } } }),
+    prisma.member.count({ where: { tenantId, joinedAt: { gte: lastMonthStart, lt: monthStart } } }),
+    prisma.member.count({ where: { tenantId, joinedAt: { gte: yearStart } } }),
+    prisma.member.count({ where: { tenantId, joinedAt: { gte: lastYearStart, lt: yearStart } } }),
+    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: todayStart } } }),
+    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: yesterdayStart, lt: todayStart } } }),
+    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: monthStart } } }),
+    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: lastMonthStart, lt: monthStart } } }),
+    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: yearStart } } }),
+    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: lastYearStart, lt: yearStart } } }),
   ]);
-
-  const members = recentMembersData ?? [];
-  const visitors = allVisitorsData ?? [];
-  const prayers = prayerChartData ?? [];
-  const giving = givingData ?? [];
 
   const memberGrowth = months.map((m) => ({
     label: m.label,
-    value: members.filter((mem: any) => {
-      const d = new Date(mem.joinedAt as string);
-      return d >= m.start && d < m.end;
-    }).length,
+    value: recentMembers.filter((mem) => mem.joinedAt >= m.start && mem.joinedAt < m.end).length,
   }));
 
-  const attendanceTrend = [...recentServices].reverse().map((s: any) => ({
-    label: new Date(s.scheduledAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+  const attendanceTrend = [...recentServices].reverse().map((s) => ({
+    label: s.scheduledAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
     value: s._count?.AttendanceRecord ?? 0,
   }));
 
   const sourceMap: Record<string, number> = {};
-  visitors.forEach((v: any) => {
-    const key = (v.howDidYouLearn as string | null)?.trim() || 'Not specified';
+  visitors.forEach((v) => {
+    const key = v.howDidYouLearn?.trim() || 'Not specified';
     sourceMap[key] = (sourceMap[key] ?? 0) + 1;
   });
   const visitorSources = Object.entries(sourceMap)
@@ -119,44 +103,32 @@ export async function fetchAdminAnalytics() {
     .slice(0, 6)
     .map(([label, value]) => ({ label, value }));
 
-  const inPerson = visitors.filter((v: any) => (v.attendanceType as string | null)?.toLowerCase().includes('person')).length;
-  const online = visitors.filter((v: any) => (v.attendanceType as string | null)?.toLowerCase().includes('online')).length;
+  const inPerson = visitors.filter((v) => v.attendanceType?.toLowerCase().includes('person')).length;
+  const online = visitors.filter((v) => v.attendanceType?.toLowerCase().includes('online')).length;
   const unspecified = visitors.length - inPerson - online;
 
-  const interested = visitors.filter((v: any) => v.membershipInterest === 'Yes').length;
+  const interested = visitors.filter((v) => v.membershipInterest === 'Yes').length;
   const notInterested = visitors.length - interested;
 
   const prayersByMonth = months.map((m) => ({
     label: m.label,
-    value: prayers.filter((p: any) => {
-      const d = new Date(p.submittedAt as string);
-      return d >= m.start && d < m.end;
-    }).length,
+    value: prayers.filter((p) => p.submittedAt >= m.start && p.submittedAt < m.end).length,
   }));
 
-  const totalGivingNaira = Math.round(giving.reduce((s: number, g: any) => s + (g.amount as number), 0) / 100);
+  const totalGivingNaira = Math.round((givingAgg._sum.amount ?? 0) / 100);
 
   const thisMonthGrowth = memberGrowth[5]?.value ?? 0;
   const lastMonthGrowth = memberGrowth[4]?.value ?? 0;
   const memberTrend = lastMonthGrowth === 0 ? 0 : Math.round(((thisMonthGrowth - lastMonthGrowth) / lastMonthGrowth) * 100);
 
-  const avgAttendance = recentServices.length === 0 ? 0 : Math.round(recentServices.reduce((s: number, sv: any) => s + (sv._count?.AttendanceRecord ?? 0), 0) / recentServices.length);
-
-  const newMembersThisMonth = newMembersThisMonthRaw ?? 0;
-  const newMembersLastMonth = newMembersLastMonthRaw ?? 0;
-  const newMembersThisYear = newMembersThisYearRaw ?? 0;
-  const newMembersLastYear = newMembersLastYearRaw ?? 0;
-  const visitorsToday = visitorsTodayRaw ?? 0;
-  const visitorsYesterday = visitorsYesterdayRaw ?? 0;
-  const visitorsThisMonth = visitorsThisMonthRaw ?? 0;
-  const visitorsLastMonth = visitorsLastMonthRaw ?? 0;
-  const visitorsThisYear = visitorsThisYearRaw ?? 0;
-  const visitorsLastYear = visitorsLastYearRaw ?? 0;
+  const avgAttendance = recentServices.length === 0
+    ? 0
+    : Math.round(recentServices.reduce((s, sv) => s + (sv._count?.AttendanceRecord ?? 0), 0) / recentServices.length);
 
   return {
-    totalMembers: totalMembers ?? 0,
-    totalVisitors: totalVisitors ?? 0,
-    totalPrayers: totalPrayers ?? 0,
+    totalMembers,
+    totalVisitors,
+    totalPrayers,
     totalGivingNaira,
     avgAttendance,
     memberGrowth,

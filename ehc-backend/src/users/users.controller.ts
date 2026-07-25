@@ -1,75 +1,32 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import {
-  BulkCreateUsersDto,
-  CreateUserDto,
-  UpdateUserDto,
-  UpdateUserRoleDto,
-} from './dto/user.dto';
-import { UsersService } from './users.service';
+import { BulkCreateUsersDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { UsersListService } from './services/users-list.service';
+import { UsersCreateService } from './services/users-create.service';
+import { UsersBulkCreateService } from './services/users-bulk-create.service';
+import { UsersUpdateService } from './services/users-update.service';
+import { UsersDeletionService } from './services/users-deletion.service';
 
 /**
- * User management.
- *
- * Class-gate at HOD — that's the minimum to even SEE this controller (role info +
- * the grant/revoke endpoints HOD needs to reach for the Roles page). The actual
- * authorization for any specific role action (create PASTOR vs MEMBER, grant HOD
- * vs grant ADMIN_HEAD, etc.) is enforced per-call in the service via
- * `canActOnRole` — a HOD can only ever act on HEAD_USHER and below. Routes that
- * touch arbitrary users directly (list/create/edit/delete) are overridden back
- * up to @Roles(ADMIN) individually below.
+ * Core user CRUD. Class-gate at HOD (see users.module.ts sibling controllers for
+ * the roles/grants split); individual routes here are overridden back up to ADMIN.
  */
 @ApiTags('users')
 @Controller('users')
 @Roles(Role.HOD)
 @ApiBearerAuth('access-token')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
-
-  @Get('roles')
-  @ApiOperation({ summary: 'All roles in the system with label and hierarchy level' })
-  @ApiOkResponse({
-    schema: {
-      example: [
-        { role: 'SUPER_ADMIN', label: 'Super Admin', level: 5 },
-        { role: 'PASTOR', label: 'Pastor', level: 4 },
-      ],
-    },
-  })
-  async getAllRoles() {
-    return this.usersService.getAllRoles();
-  }
-
-  @Get('by-role')
-  @ApiOperation({
-    summary: 'All members grouped by role',
-    description: 'Returns every profile organised by role. UNIT_LEAD entries include which units they lead or assist.',
-  })
-  async listByRole() {
-    return this.usersService.listByRole();
-  }
-
-  @Get('assignable-roles')
-  @ApiOperation({ summary: 'Roles the current user can create/assign' })
-  @ApiOkResponse({
-    description: 'Array of roles the actor can assign',
-    schema: { example: ['MEMBER', 'UNIT_LEAD'] },
-  })
-  async assignableRoles(@CurrentUser() user: AuthUser) {
-    return this.usersService.assignableRolesFor(user);
-  }
+  constructor(
+    private readonly usersList: UsersListService,
+    private readonly usersCreate: UsersCreateService,
+    private readonly usersBulkCreate: UsersBulkCreateService,
+    private readonly usersUpdate: UsersUpdateService,
+    private readonly usersDeletion: UsersDeletionService,
+  ) {}
 
   @Get()
   @Roles(Role.ADMIN)
@@ -77,7 +34,7 @@ export class UsersController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'role', required: false, enum: Role })
   async list(@Query('search') search?: string, @Query('role') role?: Role) {
-    return this.usersService.list({ search, role });
+    return this.usersList.list({ search, role });
   }
 
   @Post()
@@ -90,7 +47,7 @@ export class UsersController {
   @ApiBody({ type: CreateUserDto })
   @ApiCreatedResponse({ description: 'User created' })
   async create(@CurrentUser() actor: AuthUser, @Body() body: CreateUserDto) {
-    return this.usersService.create(actor, body);
+    return this.usersCreate.create(actor, body);
   }
 
   @Post('bulk')
@@ -103,52 +60,7 @@ export class UsersController {
   @ApiBody({ type: BulkCreateUsersDto })
   @ApiCreatedResponse({ description: 'Batch result: { created[], failed[], total }' })
   async bulkCreate(@CurrentUser() actor: AuthUser, @Body() body: BulkCreateUsersDto) {
-    return this.usersService.bulkCreate(actor, body.members);
-  }
-
-  @Patch(':profileId/role')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Set a user single granted role (People dropdown)' })
-  @ApiBody({ type: UpdateUserRoleDto })
-  async updateRole(
-    @CurrentUser() actor: AuthUser,
-    @Param('profileId') profileId: string,
-    @Body() body: UpdateUserRoleDto,
-  ) {
-    return this.usersService.updateRole(actor, profileId, body);
-  }
-
-  @Post(':profileId/grants')
-  @ApiOperation({ summary: 'Grant a global role (PASTOR / ADMIN / SUPER_ADMIN), additive' })
-  @ApiBody({ type: UpdateUserRoleDto })
-  async grantRole(
-    @CurrentUser() actor: AuthUser,
-    @Param('profileId') profileId: string,
-    @Body() body: UpdateUserRoleDto,
-  ) {
-    return this.usersService.grantRole(actor, profileId, body.role);
-  }
-
-  @Delete(':profileId/grants/:role')
-  @ApiOperation({ summary: 'Revoke a global role grant' })
-  async revokeGrant(
-    @CurrentUser() actor: AuthUser,
-    @Param('profileId') profileId: string,
-    @Param('role') role: Role,
-  ) {
-    return this.usersService.revokeGrant(actor, profileId, role);
-  }
-
-  @Post(':profileId/head-usher')
-  @ApiOperation({ summary: 'Assign Head Usher — global, unscoped, additive' })
-  async assignHeadUsher(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
-    return this.usersService.assignHeadUsher(actor, profileId);
-  }
-
-  @Delete(':profileId/head-usher')
-  @ApiOperation({ summary: 'End an active Head Usher assignment' })
-  async removeHeadUsher(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
-    return this.usersService.removeHeadUsher(actor, profileId);
+    return this.usersBulkCreate.bulkCreate(actor, body.members);
   }
 
   @Patch(':profileId')
@@ -160,7 +72,7 @@ export class UsersController {
     @Param('profileId') profileId: string,
     @Body() body: UpdateUserDto,
   ) {
-    return this.usersService.updateProfile(actor, profileId, body);
+    return this.usersUpdate.updateProfile(actor, profileId, body);
   }
 
   @Delete(':profileId')
@@ -170,10 +82,7 @@ export class UsersController {
     description:
       'Removes the Profile, Member, all member-related records, and the Supabase auth user. Cannot be undone.',
   })
-  async deleteUser(
-    @CurrentUser() actor: AuthUser,
-    @Param('profileId') profileId: string,
-  ) {
-    return this.usersService.deleteUser(actor, profileId);
+  async deleteUser(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.usersDeletion.deleteUser(actor, profileId);
   }
 }
