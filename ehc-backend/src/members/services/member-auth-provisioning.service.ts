@@ -6,13 +6,6 @@ import { createAdminClient } from '../members-supabase-admin.util';
 @Injectable()
 export class MemberAuthProvisioningService {
   constructor(private readonly prisma: PrismaService) {}
-
-  /**
-   * Create a Supabase auth user with `phone` as the initial password. If Supabase
-   * reports the email as already registered, reuse that auth user instead of
-   * failing — this makes visitor conversion idempotent against a prior attempt
-   * that got past Supabase but failed before we wrote the Profile.
-   */
   async createOrReuseAuthUser(email: string, phone: string): Promise<string> {
     const supabase = createAdminClient();
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({

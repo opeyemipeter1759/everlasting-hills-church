@@ -29,6 +29,10 @@ export default function Drawer({ open, onClose, children, maxWidth = "lg" }: Dra
     };
   }, [open, onClose]);
 
+  // Client components are still rendered once while Next.js prerenders the
+  // route. A portal needs a browser document, so defer it until hydration.
+  if (typeof document === "undefined") return null;
+
   return createPortal(
     <AnimatePresence>
       {open && (
