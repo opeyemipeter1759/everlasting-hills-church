@@ -1,23 +1,23 @@
 "use client";
 
-import type { MemberHomePropsOptional } from "./types";
+import type { MemberHomePropsOptional, StreakState } from "./types";
 import { QrCheckinBanner } from "./QrCheckinBanner";
 import { WelcomeHero } from "./WelcomeHero";
-import { BirthdayBanner, AnniversaryBanner } from "./MilestoneBanners";
-import { ScriptureCard } from "./ScriptureCard";
-import { PastorWordCard } from "./PastorWordCard";
 import { QuickActionsStrip } from "./QuickActionsStrip";
 import { CheckInPanel } from "./CheckInPanel";
-import { TodayInfoPanel } from "./TodayInfoPanel";
 import { JourneyBand } from "./JourneyBand";
-import { CommunityBirthdayPanel } from "./CommunityBirthdayPanel";
-import { CommunityFeedPanel } from "./CommunityFeedPanel";
 import { FeaturedSermonCard } from "./FeaturedSermonCard";
-import { SermonLibraryCard } from "./SermonLibraryCard";
 import { ContinueListeningCard } from "./ContinueListeningCard";
-import AttendanceSection from "@/components/home/attendance-section";
 import { AnnouncementsPanel } from "../AnnouncementsPanel";
 import { ProfileCompletionToast } from "./ProfileCompletionToast";
+
+const DEFAULT_STREAK: StreakState = {
+  level: 1,
+  title: "Seeker",
+  task: { attendance: 1, course: 0, sermon: 0 },
+  progress: { attendance: 0, course: 0, sermon: 0 },
+  history: [],
+};
 
 export default function MemberHome(props: MemberHomePropsOptional) {
   const {
@@ -26,8 +26,10 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     memberDisplayId = "EHC-NEW",
     attendanceRate = 0,
     attendanceCount = 0,
-    streakWeeks = 0,
+    attendanceTotal = 0,
+    streak = DEFAULT_STREAK,
     coursesCompleted = 0,
+    sermonsCompleted = 0,
     lastServiceDate = null,
     nextService = null,
     hasCheckedInToday = false,
@@ -35,20 +37,11 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     prayerCount = 0,
     recentServices = [],
     monthlyAttendance = [],
-    birthdayDaysUntil = null,
-    sermonStreak = 0,
-    bookmarks = [],
     listenHistory = [],
     announcements = [],
-    communityBirthdays = [],
     ministryUnit = null,
     featuredSermon = null,
-    pastorWord = null,
-    communityFeed = [],
-    onlineCount = null,
     discipleshipMilestones = [],
-    memberSince = null,
-    anniversaryDaysUntil = null,
   } = props;
 
   const displayName = member ? `${member.firstName} ${member.lastName}` : userEmail;
@@ -57,7 +50,6 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     ? `${member.firstName[0]}${member.lastName[0]}`.toUpperCase()
     : (userEmail[0] ?? "M").toUpperCase();
 
-  const isServiceDay = !!todayService;
   const isNewMember = attendanceCount === 0 && prayerCount === 0;
 
   return (
@@ -70,20 +62,11 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         photoUrl={member?.photoUrl ?? null}
         memberDisplayId={memberDisplayId}
         attendanceRate={attendanceRate}
-        streakWeeks={streakWeeks}
+        streak={streak}
         nextService={nextService}
       />
 
- {/*      {birthdayDaysUntil !== null && (
-        <BirthdayBanner firstName={firstName} daysUntil={birthdayDaysUntil} />
-      )}
-
-      {anniversaryDaysUntil !== null && memberSince && (
-        <AnniversaryBanner firstName={firstName} memberSince={memberSince} daysUntil={anniversaryDaysUntil} />
-      )} */}
-
-
-       <QuickActionsStrip />
+      <QuickActionsStrip />
 
       {/* ═══════════════════════════════════════════════════════════
           BAND 2 — TODAY
@@ -95,15 +78,9 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           hasCheckedInToday={hasCheckedInToday}
           nextService={nextService}
         />
-           {/* {(sermonStreak > 0 || bookmarks.length > 0 || listenHistory.length > 0) && ( */}
-        <div className="grid grid-cols-1  gap-5">
-{/*           <SermonLibraryCard sermonStreak={sermonStreak} bookmarks={bookmarks} />
- */}          <ContinueListeningCard listenHistory={listenHistory} />
+        <div className="grid grid-cols-1 gap-5">
+          <ContinueListeningCard listenHistory={listenHistory} />
         </div>
-{/*         
- */}        
-
-
       </div>
 
       {/* ═══════════════════════════════════════════════════════════
@@ -113,33 +90,28 @@ export default function MemberHome(props: MemberHomePropsOptional) {
       <JourneyBand
         isNewMember={isNewMember}
         member={member}
+        memberDisplayId={memberDisplayId}
         prayerCount={prayerCount}
         ministryUnit={ministryUnit}
         attendanceRate={attendanceRate}
         attendanceCount={attendanceCount}
+        attendanceTotal={attendanceTotal}
         lastServiceDate={lastServiceDate}
         recentServices={recentServices}
-        streakWeeks={streakWeeks}
+        streak={streak}
         coursesCompleted={coursesCompleted}
+        sermonsCompleted={sermonsCompleted}
         nextService={nextService}
         discipleshipMilestones={discipleshipMilestones}
         monthlyAttendance={monthlyAttendance}
       />
 
       {/* ═══════════════════════════════════════════════════════════
-          BAND 4 — COMMUNITY
-          ═══════════════════════════════════════════════════════════ */}
-
-   {/*    <CommunityBirthdayPanel communityBirthdays={communityBirthdays} />
-
-      <CommunityFeedPanel feed={communityFeed} onlineCount={onlineCount} />
- */}
-      {/* ═══════════════════════════════════════════════════════════
           BAND 5 — CONTENT
           ═══════════════════════════════════════════════════════════ */}
 
       {featuredSermon && <FeaturedSermonCard sermon={featuredSermon} />}
-      <AnnouncementsPanel announcements={announcements}  />
+      <AnnouncementsPanel announcements={announcements} />
     </div>
   );
 }

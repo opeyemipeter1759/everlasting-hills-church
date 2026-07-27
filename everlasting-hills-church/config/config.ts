@@ -148,7 +148,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Home",            href: "/dashboard/admin",                  icon: LayoutDashboard, minRole: "SUPER_ADMIN" },
       { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "SUPER_ADMIN" },
-      { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "SUPER_ADMIN" },
+      { label: "Testimonials",      href: "/dashboard/testimonies",       icon: MessageSquare,  minRole: "SUPER_ADMIN" },
       { label: "Questions",     href: "/dashboard/questions",      icon: MessageSquare,   minRole: "SUPER_ADMIN" },
     ],
   },
@@ -156,6 +156,7 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "My Unit",
     items: [
       { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
+      { label: "Reports", href: "/dashboard/unit-lead/reports", icon: FileText, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
     ],
   },
     {
@@ -168,6 +169,7 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "My Department",
     items: [
       { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", },
+      { label: "Reports", href: "/dashboard/my-department/reports", icon: FileText, minRole: "ADMIN_HEAD" },
     ],
   },
   {
@@ -207,11 +209,11 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "Pastoral",
     items: [
       { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "PASTOR" },
-      { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },
+      { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },/* 
       { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },
       { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
-      { label: "Reports",           href: "/dashboard/reports",            icon: FileText,       minRole: "PASTOR" },
+     */  { label: "Reports",           href: "/dashboard/pastor/reports",            icon: FileText,       minRole: "PASTOR" },
     ],
   },
   {

@@ -6,7 +6,6 @@ import {
   useMyDepartments, useMyDeptAnnouncement, useNudgeLead, type MyDepartment as MyDept,
 } from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
-import ReportsSection from "@/components/dashboard/reports/ReportsSection";
 import UnitLeadControl from "./UnitLeadControl";
 
 export default function MyDepartment() {
@@ -44,7 +43,6 @@ export default function MyDepartment() {
         departments.map((d) => (
           <div key={d.id} className="space-y-5">
             <DepartmentPanel dept={d} />
-            <ReportsSection scope="DEPARTMENT" id={d.id} label="department" />
           </div>
         ))
       )}

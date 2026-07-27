@@ -1,4 +1,5 @@
 import MemberHome from "@/components/dashboard/member/MemberHome";
+import type { StreakState } from "@/components/dashboard/member/member-home/types";
 import { getMemberDisplayId, safeGet, type MeResponse } from "./shared";
 
 interface SermonBookmark {
@@ -11,9 +12,18 @@ interface ListenHistoryItem {
 }
 interface MemberAttendanceOverview {
   attendance: { marked: number; total: number; percentage: number; lastMarkedAt: string | null };
-  streakWeeks: number;
+  streak: StreakState;
   coursesCompleted: number;
+  sermonsCompleted: number;
 }
+
+const DEFAULT_STREAK: StreakState = {
+  level: 1,
+  title: "Seeker",
+  task: { attendance: 1, course: 0, sermon: 0 },
+  progress: { attendance: 0, course: 0, sermon: 0 },
+  history: [],
+};
 
 export async function loadMemberDashboard(me: MeResponse) {
   const [bookmarksRaw, historyRaw, streakRaw, overviewRaw, announcementsRaw, communityFeedRaw] = await Promise.all([
@@ -48,9 +58,11 @@ export async function loadMemberDashboard(me: MeResponse) {
   const sermonStreak = typeof streakRaw === "number" ? streakRaw : 0;
   const attendanceRate  = overviewRaw?.attendance.percentage ?? 0;
   const attendanceCount = overviewRaw?.attendance.marked     ?? 0;
+  const attendanceTotal = overviewRaw?.attendance.total       ?? 0;
   const lastServiceDate = overviewRaw?.attendance.lastMarkedAt ?? null;
-  const streakWeeks = overviewRaw?.streakWeeks ?? 0;
+  const streak = overviewRaw?.streak ?? DEFAULT_STREAK;
   const coursesCompleted = overviewRaw?.coursesCompleted ?? 0;
+  const sermonsCompleted = overviewRaw?.sermonsCompleted ?? 0;
 
   let birthdayDaysUntil: number | null = null;
   if (me.member?.dateOfBirth) {
@@ -86,9 +98,11 @@ export async function loadMemberDashboard(me: MeResponse) {
       birthdayDaysUntil={birthdayDaysUntil}
       attendanceRate={attendanceRate}
       attendanceCount={attendanceCount}
+      attendanceTotal={attendanceTotal}
       lastServiceDate={lastServiceDate}
-      streakWeeks={streakWeeks}
+      streak={streak}
       coursesCompleted={coursesCompleted}
+      sermonsCompleted={sermonsCompleted}
       nextService={null}
       hasCheckedInToday={false}
       todayService={null}

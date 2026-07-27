@@ -60,7 +60,7 @@ export function ProfileCompletionToast({ member }: { member: MemberHomeProps["me
     // Deliberately no cleanup/dismiss here — it should persist across
     // remounts and only go away when the member dismisses it themselves.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [member?.bio, member?.phone, member?.dateOfBirth, member?.address, member?.photoUrl]);
+  }, [member?.bio, member?.phone, member?.address, member?.photoUrl]);
 
   return null;
 }

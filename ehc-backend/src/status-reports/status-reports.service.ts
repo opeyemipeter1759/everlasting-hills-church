@@ -40,10 +40,15 @@ export class StatusReportsService {
       if (!actor.adminHeadOf?.includes(dto.departmentId)) {
         throw new ForbiddenException('You do not head this department');
       }
-    } else {
+    } else if (dto.scope === 'UNIT') {
       if (!dto.unitId) throw new BadRequestException('unitId is required for a unit report');
       if (!actor.unitLeadOf?.includes(dto.unitId)) {
         throw new ForbiddenException('You do not lead this unit');
+      }
+    } else {
+      // PASTOR — a personal report, not tied to any department/unit.
+      if (actor.role !== Role.PASTOR) {
+        throw new ForbiddenException('Only a Pastor can submit a pastoral report');
       }
     }
   }
@@ -92,13 +97,15 @@ export class StatusReportsService {
         content: dto.content.trim(),
         attachmentUrl: dto.attachmentUrl ?? null,
         attachmentName: dto.attachmentName ?? null,
+        status: dto.status ?? 'SUBMITTED',
       },
       include: this.listInclude,
     });
     return this.mapRow(row);
   }
 
-  /** Reports the actor themself submitted — for the My Department / My Unit pages. */
+  /** Reports the actor themself submitted, including their own drafts — for
+   * the My Department / My Unit / Pastoral Reports pages. */
   async listMine(actor: AuthUser) {
     if (!actor.profileId) return [];
     const rows = await this.prisma.report.findMany({
@@ -109,10 +116,11 @@ export class StatusReportsService {
     return rows.map((r) => this.mapRow(r));
   }
 
-  /** Every report — the Audit Log page. SUPER_ADMIN only (route-gated). */
+  /** Every sent report — the Audit Log page. SUPER_ADMIN only (route-gated).
+   * Unsent drafts never appear here regardless of the status filter. */
   async listAll(status?: string) {
     const rows = await this.prisma.report.findMany({
-      where: { tenantId: this.tenantId, ...(status ? { status: status as any } : {}) },
+      where: { tenantId: this.tenantId, status: { not: 'DRAFT', ...(status ? { equals: status as any } : {}) } },
       orderBy: { createdAt: 'desc' },
       include: this.listInclude,
     });
@@ -145,14 +153,21 @@ export class StatusReportsService {
     };
   }
 
-  /** Resubmit after a correction request — only the author, only while NEEDS_CORRECTION. */
+  /** Edit your own report. `dto.status` (when given) is how the author drives
+   * DRAFT/SUBMITTED transitions — "Save as draft" sends 'DRAFT', "Send" sends
+   * 'SUBMITTED'. Omitted, it preserves the existing behavior: a plain SUBMITTED
+   * report is a silent edit-in-place, and resubmitting a NEEDS_CORRECTION report
+   * clears the correction flag back to SUBMITTED. An APPROVED report is locked
+   * (the review is final, preserving the audit trail). */
   async update(actor: AuthUser, id: string, dto: UpdateReportDto) {
     const row = await this.prisma.report.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!row) throw new NotFoundException('Report not found');
     if (row.submittedById !== actor.profileId) throw new ForbiddenException('This is not your report');
-    if (row.status !== 'NEEDS_CORRECTION') {
-      throw new BadRequestException('Only a report awaiting correction can be edited');
+    if (row.status === 'APPROVED') {
+      throw new BadRequestException('An approved report cannot be edited');
     }
+
+    const nextStatus = dto.status ?? (row.status === 'NEEDS_CORRECTION' ? 'SUBMITTED' : row.status);
 
     const updated = await this.prisma.report.update({
       where: { id },
@@ -161,12 +176,24 @@ export class StatusReportsService {
         content: dto.content.trim(),
         attachmentUrl: dto.attachmentUrl ?? row.attachmentUrl,
         attachmentName: dto.attachmentName ?? row.attachmentName,
-        status: 'SUBMITTED',
+        status: nextStatus,
         updatedAt: new Date(),
       },
       include: this.listInclude,
     });
     return this.mapRow(updated);
+  }
+
+  /** Delete your own report — blocked once APPROVED for the same reason edits are. */
+  async remove(actor: AuthUser, id: string) {
+    const row = await this.prisma.report.findFirst({ where: { id, tenantId: this.tenantId } });
+    if (!row) throw new NotFoundException('Report not found');
+    if (row.submittedById !== actor.profileId) throw new ForbiddenException('This is not your report');
+    if (row.status === 'APPROVED') {
+      throw new BadRequestException('An approved report cannot be deleted');
+    }
+    await this.prisma.report.delete({ where: { id } });
+    return { id, deleted: true };
   }
 
   async approve(actor: AuthUser, id: string) {

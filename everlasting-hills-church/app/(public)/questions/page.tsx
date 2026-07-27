@@ -1,6 +1,6 @@
 import QuestionForm from "@/components/Formpage/QuestionForm";
 
-export default function TestimonyPage() {
+export default function QuestionsPage() {
   return (
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden py-12 px-4 sm:px-5">
       

@@ -1,7 +1,6 @@
-import { Body, Controller, Get, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiBearerAuth,
   ApiBody,
   ApiOkResponse,
   ApiOperation,
@@ -9,19 +8,20 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './decorators/public.decorator';
-import { CurrentUser } from './decorators/current-user.decorator';
-import type { AuthUser } from './types/auth-user';
+import { AuthLoginService } from './services/auth-login.service';
+import { AuthSessionService } from './services/auth-session.service';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly loginSvc: AuthLoginService,
+    private readonly session: AuthSessionService,
+  ) {}
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
@@ -56,7 +56,7 @@ export class AuthController {
     const ip =
       request.headers?.['x-forwarded-for']?.split(',')[0]?.trim() || request.ip;
     const userAgent = request.headers?.['user-agent'];
-    return this.authService.login(body.email, body.password, { ip, userAgent });
+    return this.loginSvc.login(body.email, body.password, { ip, userAgent });
   }
 
   @Public()
@@ -71,7 +71,7 @@ export class AuthController {
   @ApiOkResponse({ description: 'New session issued' })
   @ApiUnauthorizedResponse({ description: 'Refresh token missing, invalid, or expired' })
   async refresh(@Body() body: RefreshTokenDto) {
-    return this.authService.refresh(body.refresh_token);
+    return this.session.refresh(body.refresh_token);
   }
 
   @Public()
@@ -87,72 +87,6 @@ export class AuthController {
     schema: { example: { success: true, message: 'If an account exists for that email, a reset link has been sent.' } },
   })
   async forgotPassword(@Body() body: ForgotPasswordDto) {
-    return this.authService.requestPasswordReset(body.email);
-  }
-
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  @Post('change-password')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth('access-token')
-  @ApiOperation({
-    summary: 'Change Password',
-    description: 'Update the signed-in user\'s password. Caller must already have a valid JWT (normal login or recovery-link session).',
-  })
-  @ApiOkResponse({
-    description: 'Password updated',
-    schema: { example: { success: true, message: 'Password updated successfully' } },
-  })
-  @ApiUnauthorizedResponse({ description: 'Access token missing, invalid, or update rejected' })
-  @ApiBadRequestResponse({ description: 'Validation failed' })
-  async changePassword(
-    @Body() body: ChangePasswordDto,
-    @Req() request: { headers?: { authorization?: string }; ip?: string },
-  ) {
-    const ip =
-      (request.headers as Record<string, string> | undefined)?.['x-forwarded-for']?.split(',')[0]?.trim() ||
-      request.ip;
-    return this.authService.changePassword(request.headers?.authorization, body.password, ip);
-  }
-
-  @Post('logout')
-  @HttpCode(HttpStatus.OK)
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'User Logout', description: 'Invalidate the current user session' })
-  @ApiOkResponse({
-    description: 'User logged out',
-    schema: { example: { success: true, message: 'Logged out successfully' } },
-  })
-  @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
-  async logout(@Req() request: { headers?: { authorization?: string } }) {
-    return this.authService.logout(request.headers?.authorization);
-  }
-  @Get('me')
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Get current user dashboard payload' })
-  @ApiOkResponse({
-    description: 'Current user profile + member data',
-    schema: {
-      example: {
-        profileId: 'profile-uuid',
-        role: 'MEMBER',
-        tenantId: 'ehc_...',
-        member: {
-          id: 'member-uuid',
-          firstName: 'Jane',
-          lastName: 'Doe',
-          email: 'jane@example.com',
-          phone: '+234...',
-          address: 'Ibadan',
-          dateOfBirth: '1990-01-01T00:00:00.000Z',
-          bio: null,
-          photoUrl: null,
-          joinedAt: '2026-01-01T00:00:00.000Z',
-        },
-      },
-    },
-  })
-  @ApiUnauthorizedResponse({ description: 'Access token missing or invalid' })
-  async me(@CurrentUser() user: AuthUser) {
-    return this.authService.getMe(user.userId);
+    return this.session.requestPasswordReset(body.email);
   }
 }

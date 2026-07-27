@@ -1,12 +1,5 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
-import {
-  ApiBadRequestResponse,
-  ApiConflictResponse,
-  ApiCreatedResponse,
-  ApiInternalServerErrorResponse,
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiConflictResponse, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
@@ -14,22 +7,27 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import type { AuthUser } from '../auth/types/auth-user';
-import { ContactDto } from './dto/contact.dto';
 import { FirstTimerDto } from './dto/first-timer.dto';
-import { HomeCellDto } from './dto/home-cell.dto';
-import { PrayerRequestDto } from './dto/prayer-request.dto';
-import { ServeTeamDto } from './dto/serve-team.dto';
-import { TestimonyDto } from './dto/testimony.dto';
-import { FormsService } from './forms.service';
+import { PrayerRequestDto, UpdatePrayerRequestStatusDto } from './dto/prayer-request.dto';
+import { QuestionDto, UpdateQuestionStatusDto } from './dto/question.dto';
+import { FirstTimerFormService } from './services/first-timer-form.service';
+import { PrayerRequestFormService } from './services/prayer-request-form.service';
+import { QuestionFormService } from './services/question-form.service';
 
 /**
- * Public-facing intake forms. All endpoints are @Public — they are submitted by
- * unauthenticated visitors. Each is throttled tightly to slow spam/abuse.
+ * Public-facing intake forms: first-timer registration, prayer requests, questions.
+ * All submit endpoints are @Public — submitted by unauthenticated visitors and
+ * throttled tightly to slow spam/abuse. See forms-misc.controller.ts for the
+ * remaining form types (testimony/serve-team/contact/home-cell).
  */
 @ApiTags('forms')
 @Controller('forms')
 export class FormsController {
-  constructor(private readonly formsService: FormsService) {}
+  constructor(
+    private readonly firstTimer: FirstTimerFormService,
+    private readonly prayerRequestSvc: PrayerRequestFormService,
+    private readonly questionSvc: QuestionFormService,
+  ) {}
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
@@ -44,7 +42,7 @@ export class FormsController {
   @ApiConflictResponse({ description: 'Email or phone already registered' })
   @ApiInternalServerErrorResponse({ description: 'Server error during form submission' })
   async register(@Body() body: FirstTimerDto) {
-    return this.formsService.submitFirstTimer(body);
+    return this.firstTimer.submitFirstTimer(body);
   }
 
   @Public()
@@ -62,76 +60,65 @@ export class FormsController {
   @ApiCreatedResponse({ description: 'Prayer request submitted successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async prayerRequest(@Body() body: PrayerRequestDto, @CurrentUser() user?: AuthUser) {
-    return this.formsService.submitPrayerRequest(body, user?.memberId ?? null);
+    return this.prayerRequestSvc.submitPrayerRequest(body, user?.memberId ?? null);
   }
 
   @Get('prayer-requests')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'List all prayer requests, newest first (ADMIN+)' })
   async listPrayerRequests() {
-    return this.formsService.listPrayerRequests();
+    return this.prayerRequestSvc.listPrayerRequests();
   }
 
   @Delete('prayer-requests/:id')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Delete a prayer request (ADMIN+)' })
   async deletePrayerRequest(@Param('id') id: string) {
-    return this.formsService.deletePrayerRequest(id);
+    return this.prayerRequestSvc.deletePrayerRequest(id);
+  }
+
+  @Patch('prayer-requests/:id/status')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Mark a prayer request prayed-for/pending (ADMIN+)' })
+  async updatePrayerRequestStatus(@Param('id') id: string, @Body() body: UpdatePrayerRequestStatusDto) {
+    return this.prayerRequestSvc.updatePrayerRequestStatus(id, body.status);
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
-  @Post('testimony')
+  @Post('question')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: 'Submit Testimony',
-    description: 'Save a testimony submission and notify the church team by email.',
+    summary: 'Submit a Question',
+    description:
+      'Create a question record and notify the church team by email. Public — works with no session. ' +
+      'Same optional-auth semantics as prayer-request: signed-in submitters are always linked, even when anonymous.',
   })
-  @ApiCreatedResponse({ description: 'Testimony submitted successfully' })
+  @ApiCreatedResponse({ description: 'Question submitted successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
-  async testimony(@Body() body: TestimonyDto) {
-    return this.formsService.submitTestimony(body);
+  async question(@Body() body: QuestionDto, @CurrentUser() user?: AuthUser) {
+    return this.questionSvc.submitQuestion(body, user?.memberId ?? null);
   }
 
-  @Public()
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
-  @Post('serve-team')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Submit Serve Team Interest',
-    description: 'Record interest in joining a service unit and notify the team by email.',
-  })
-  @ApiCreatedResponse({ description: 'Serve team interest submitted' })
-  @ApiBadRequestResponse({ description: 'Validation failed' })
-  async serveTeam(@Body() body: ServeTeamDto) {
-    return this.formsService.submitServeTeam(body);
+  @Get('questions')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'List all questions, newest first (ADMIN+)' })
+  async listQuestions() {
+    return this.questionSvc.listQuestions();
   }
 
-  @Public()
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
-  @Post('contact')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Submit Contact Message',
-    description: 'Store a contact message and notify the church team by email.',
-  })
-  @ApiCreatedResponse({ description: 'Contact message submitted' })
-  @ApiBadRequestResponse({ description: 'Validation failed' })
-  async contact(@Body() body: ContactDto) {
-    return this.formsService.submitContact(body);
+  @Delete('questions/:id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Delete a question (ADMIN+)' })
+  async deleteQuestion(@Param('id') id: string) {
+    return this.questionSvc.deleteQuestion(id);
   }
 
-  @Public()
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  @Post('home-cell')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Register for a Home Cell',
-    description: 'Submit Home Cell registration and notify the team by email.',
-  })
-  @ApiCreatedResponse({ description: 'Home Cell registration submitted' })
-  @ApiBadRequestResponse({ description: 'Validation failed' })
-  async homeCell(@Body() body: HomeCellDto) {
-    return this.formsService.submitHomeCell(body);
+  @Patch('questions/:id/status')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Mark a question answered/pending (ADMIN+)' })
+  async updateQuestionStatus(@Param('id') id: string, @Body() body: UpdateQuestionStatusDto) {
+    return this.questionSvc.updateQuestionStatus(id, body.status);
   }
 }

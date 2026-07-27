@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
+import { computeLevel } from './streak-ladder';
 
 const WAT_OFFSET_MS = 60 * 60 * 1000;
 
@@ -57,12 +58,13 @@ export class OverviewService {
     if (!member) {
       return {
         attendance: { marked: 0, total, percentage: 0, lastMarkedAt: null },
-        streakWeeks: 0,
+        streak: computeLevel({ attendance: 0, course: 0, sermon: 0 }),
         coursesCompleted: 0,
+        sermonsCompleted: 0,
       };
     }
 
-    const [records, streakWeeks, coursesCompleted] = await Promise.all([
+    const [records, lifetimeAttendance, coursesCompleted, sermonsCompleted] = await Promise.all([
       this.prisma.attendanceRecord.findMany({
         where: {
           memberId: member.id,
@@ -73,8 +75,13 @@ export class OverviewService {
         include: { Service: { select: { scheduledAt: true } } },
         orderBy: { Service: { scheduledAt: 'desc' } },
       }),
-      this.computeStreakWeeks(member.id),
+      this.prisma.attendanceRecord.count({
+        where: { tenantId: this.tenantId, memberId: member.id, present: true },
+      }),
       this.prisma.courseEnrollment.count({
+        where: { tenantId: this.tenantId, memberId: member.id, completed: true },
+      }),
+      this.prisma.listenProgress.count({
         where: { tenantId: this.tenantId, memberId: member.id, completed: true },
       }),
     ]);
@@ -83,55 +90,16 @@ export class OverviewService {
     const percentage = total > 0 ? Math.round((marked / total) * 100) : 0;
     const lastMarkedAt = records[0]?.Service?.scheduledAt ?? null;
 
+    // "Streak" is a 2go-style level ladder, not a raw count: the member's lifetime
+    // {services attended, courses completed, sermons completed} are consumed
+    // level-by-level against an endless, escalating task sequence (see streak-ladder.ts).
+    const streak = computeLevel({ attendance: lifetimeAttendance, course: coursesCompleted, sermon: sermonsCompleted });
+
     return {
       attendance: { marked, total, percentage, lastMarkedAt },
-      streakWeeks,
+      streak,
       coursesCompleted,
+      sermonsCompleted,
     };
-  }
-
-  /** Consecutive WAT-calendar weeks (counting back from the most recent past
-   * service) in which the member attended at least one service. Stops at the
-   * first week that had a scheduled service but no attendance — a relatable
-   * "how many weeks in a row have I shown up" number, not tied to any one
-   * service type. */
-  private async computeStreakWeeks(memberId: string): Promise<number> {
-    const services = await this.prisma.service.findMany({
-      where: { tenantId: this.tenantId, scheduledAt: { lte: new Date() } },
-      orderBy: { scheduledAt: 'desc' },
-      select: { id: true, scheduledAt: true },
-    });
-    if (services.length === 0) return 0;
-
-    const attended = await this.prisma.attendanceRecord.findMany({
-      where: { tenantId: this.tenantId, memberId, present: true, serviceId: { in: services.map((s) => s.id) } },
-      select: { serviceId: true },
-    });
-    const attendedIds = new Set(attended.map((a) => a.serviceId));
-
-    const weekKey = (d: Date): string => {
-      const wat = new Date(d.getTime() + WAT_OFFSET_MS);
-      const dayMs = 24 * 60 * 60 * 1000;
-      const startOfYear = Date.UTC(wat.getUTCFullYear(), 0, 1);
-      const daysSinceYearStart = Math.floor(
-        (Date.UTC(wat.getUTCFullYear(), wat.getUTCMonth(), wat.getUTCDate()) - startOfYear) / dayMs,
-      );
-      const week = Math.floor((daysSinceYearStart + new Date(startOfYear).getUTCDay()) / 7);
-      return `${wat.getUTCFullYear()}-${week}`;
-    };
-
-    // Most-recent-first map of weekKey -> "attended at least one service that week".
-    const weeks = new Map<string, boolean>();
-    for (const s of services) {
-      const key = weekKey(s.scheduledAt);
-      weeks.set(key, (weeks.get(key) ?? false) || attendedIds.has(s.id));
-    }
-
-    let streak = 0;
-    for (const attendedThatWeek of weeks.values()) {
-      if (!attendedThatWeek) break;
-      streak++;
-    }
-    return streak;
   }
 }

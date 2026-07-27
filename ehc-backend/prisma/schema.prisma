@@ -22,6 +22,8 @@ model AttendanceRecord {
   Tenant      Tenant   @relation(fields: [tenantId], references: [id])
 
   @@unique([memberId, serviceId])
+  @@index([tenantId, serviceId])
+  @@index([serviceId, present])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -87,6 +89,8 @@ model EngagementScore {
   computedAt      DateTime @default(now())
   Member          Member   @relation(fields: [memberId], references: [id])
   Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, score])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -127,6 +131,10 @@ model GivingRecord {
   verifiedAt     DateTime?
   createdAt      DateTime  @default(now())
   Tenant         Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, paystackStatus, createdAt])
+  @@index([tenantId, category])
+  @@index([donorEmail])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -195,6 +203,11 @@ model Member {
   FollowUpLogs       FollowUpContactLog[] @relation("FollowUpLoggedBy")
   CourseEnrollment   CourseEnrollment[]
   PrayerRequest      PrayerRequest[]
+  Question           Question[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, joinedAt])
+  @@index([tenantId, email])
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).
@@ -364,23 +377,54 @@ model PaystackWebhookLog {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model PrayerRequest {
-  id          String   @id
+  id          String              @id
   tenantId    String
   name        String?
   email       String?
   phone       String?
   request     String
-  isAnonymous Boolean  @default(false)
-  submittedAt DateTime @default(now())
+  isAnonymous Boolean             @default(false)
+  submittedAt DateTime            @default(now())
+  status      PrayerRequestStatus @default(PENDING)
   /// Set only when a signed-in member submits (optional auth on the public form).
   /// "Anonymous" only hides identity from the free-text name field shown around
   /// the request — admins can always see the linked member, anonymous or not.
   memberId    String?
-  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  Member      Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  Tenant      Tenant              @relation(fields: [tenantId], references: [id])
+  Member      Member?             @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
   @@index([tenantId])
   @@index([memberId])
+}
+
+enum PrayerRequestStatus {
+  PENDING
+  PRAYED
+}
+
+/// Public "Ask a Question" submissions — same shape and semantics as PrayerRequest
+/// (optional auth, anonymous-name-only, admin list/delete), just a different intake.
+model Question {
+  id          String         @id
+  tenantId    String
+  name        String?
+  email       String?
+  phone       String?
+  question    String
+  isAnonymous Boolean        @default(false)
+  submittedAt DateTime       @default(now())
+  status      QuestionStatus @default(PENDING)
+  memberId    String?
+  Tenant      Tenant         @relation(fields: [tenantId], references: [id])
+  Member      Member?        @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([memberId])
+}
+
+enum QuestionStatus {
+  PENDING
+  ANSWERED
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -638,6 +682,9 @@ model Service {
   AttendanceRecord AttendanceRecord[]
   ServiceHeadcount ServiceHeadcount?
   Tenant           Tenant             @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, scheduledAt])
+  @@index([tenantId, serviceType, scheduledAt])
 }
 
 /// Authoritative usher headcount: one aggregate count per service. Source of
@@ -730,6 +777,7 @@ model Tenant {
   ReportComment      ReportComment[]
   HomeCell           HomeCell[]
   CourseCategory     CourseCategory[]
+  Question           Question[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -962,9 +1010,11 @@ model Unit {
 enum ReportScope {
   DEPARTMENT
   UNIT
+  PASTOR
 }
 
 enum ReportStatus {
+  DRAFT
   SUBMITTED
   APPROVED
   NEEDS_CORRECTION

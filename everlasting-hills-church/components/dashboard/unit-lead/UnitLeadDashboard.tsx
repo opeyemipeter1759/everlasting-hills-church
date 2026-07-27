@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Crown, Shield, UserMinus, UserPlus, Users } from "lucide-react";
 import { useMyUnit } from "./useMyUnit";
 import AddMemberForm from "@/components/dashboard/admin/unit/AddMemberForm";
-import ReportsSection from "@/components/dashboard/reports/ReportsSection";
 
 export default function UnitLeadDashboard() {
   const { summary, unit, addMember, removeMember } = useMyUnit();
@@ -161,8 +160,6 @@ export default function UnitLeadDashboard() {
           )}
         </div>
       </div>
-
-      <ReportsSection scope="UNIT" id={summary.id} label="unit" />
     </div>
   );
 }

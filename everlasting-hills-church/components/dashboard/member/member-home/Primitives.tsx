@@ -2,19 +2,21 @@ import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle } from "./tokens";
 
 // ── Circular Progress ─────────────────────────────────────────────────────────
 
-export function CircleProgress({ value, size = 40 }: { value: number; size?: number }) {
-  const r = size * 0.375;
+export function CircleProgress({
+  value, size = 40, stroke = "#87102C", strokeWidth = 4,
+}: { value: number; size?: number; stroke?: string; strokeWidth?: number }) {
+  const r = (size - strokeWidth) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (Math.min(100, value) / 100) * circ;
   const cx = size / 2;
   const cy = size / 2;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="flex-shrink-0 -rotate-90">
-      <circle cx={cx} cy={cy} r={r} fill="none" strokeWidth="4"
+      <circle cx={cx} cy={cy} r={r} fill="none" strokeWidth={strokeWidth}
         className="stroke-[#E7CDD3]/60 dark:stroke-white/10" />
-      <circle cx={cx} cy={cy} r={r} fill="none" strokeWidth="4"
-        stroke="#87102C" strokeDasharray={circ} strokeDashoffset={offset}
-        strokeLinecap="round" />
+      <circle cx={cx} cy={cy} r={r} fill="none" strokeWidth={strokeWidth}
+        stroke={stroke} strokeDasharray={circ} strokeDashoffset={offset}
+        strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.6s ease, stroke 0.3s ease" }} />
     </svg>
   );
 }

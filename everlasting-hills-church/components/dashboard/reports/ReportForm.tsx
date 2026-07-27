@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import ReportAttachmentUpload from "./ReportAttachmentUpload";
+import ReportEditor, { textLength } from "./ReportEditor";
 
 export interface ReportFormValues {
   title: string;
@@ -31,12 +32,13 @@ export default function ReportForm({
   const [attachmentUrl, setAttachmentUrl] = useState(initial?.attachmentUrl ?? "");
   const [attachmentName, setAttachmentName] = useState(initial?.attachmentName ?? "");
 
-  const canSubmit = title.trim().length > 0 && content.trim().length >= 5 && !pending;
+  const contentTextLength = textLength(content);
+  const canSubmit = title.trim().length > 0 && contentTextLength >= 5 && !pending;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
-    onSubmit({ title: title.trim(), content: content.trim(), attachmentUrl, attachmentName });
+    onSubmit({ title: title.trim(), content, attachmentUrl, attachmentName });
   }
 
   return (
@@ -52,14 +54,18 @@ export default function ReportForm({
       </div>
 
       <div>
-        <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">What&apos;s going on</label>
-        <textarea
+        <div className="mb-1.5 flex items-center justify-between">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">What&apos;s going on</label>
+          <span className="text-[10px] font-medium text-gray-400 dark:text-white/30">{contentTextLength} chars</span>
+        </div>
+        <ReportEditor
           value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={5}
+          onChange={setContent}
           placeholder="Attendance, activities, needs, wins, concerns…"
-          className="w-full resize-none rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20"
         />
+        {contentTextLength > 0 && contentTextLength < 5 && (
+          <p className="mt-1 text-[11px] text-amber-600 dark:text-amber-400">At least 5 characters</p>
+        )}
       </div>
 
       <div>

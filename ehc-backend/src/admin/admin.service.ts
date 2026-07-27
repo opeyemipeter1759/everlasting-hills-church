@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import { HeadcountService } from '../headcount/headcount.service';
+import { HeadcountReadService } from '../headcount/services/headcount-read.service';
 import type { Env } from '../config/env.validation';
 
 const WAT = 60 * 60 * 1000;
@@ -21,7 +21,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<Env, true>,
-    private readonly headcount: HeadcountService,
+    private readonly headcount: HeadcountReadService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }

@@ -85,7 +85,7 @@ const CourseCertificate = forwardRef<HTMLDivElement, CourseCertificateProps>(
           <p className="mt-9 font-serif text-lg italic text-[#5c4a4f]">Proudly Presented to</p>
           <p
             className="mt-2 text-6xl font-bold text-[#87102C]"
-            style={{ fontFamily: "'Dancing Script', cursive" }}
+            style={{ fontFamily: "var(--font-dancing)" }}
           >
             {memberName}
           </p>
