@@ -21,3 +21,6 @@ Thumbs.db
 
 # Prisma generated
 prisma/migrations/dev.db
+
+# TypeScript incremental build cache (generated; caused recurring merge conflicts)
+*.tsbuildinfo
