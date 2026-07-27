@@ -121,6 +121,7 @@ import {
   Building2,
   GraduationCap,
   Compass,
+  Wifi,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -174,6 +175,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "People",        href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
+      { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },

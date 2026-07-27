@@ -20,8 +20,12 @@ const navLinks = [
   { label: "Ministries", href: "/ministries" },
   { label: "Visit", href: "/visit" },
   { label: "Connect", href: "/connect" },
-  { label: "Home Cell", href: "/connect/home-cell" },
   { label: "Give", href: "/give" },
+];
+
+// Home Cell is accessible via Connect — only show in mobile menu to keep desktop nav lean
+const mobileOnlyLinks = [
+  { label: "Home Cell", href: "/connect/home-cell" },
 ];
 
 export default function Navbar() {
@@ -86,12 +90,12 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop nav */}
-            <nav className="hidden lg:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center gap-6">
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors duration-200 hover:text-burgundy ${
+                  className={`text-[13px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${
                     scrolled || !darkHero ? "text-[#333]" : "text-white/90"
                   }`}
                 >
@@ -146,7 +150,7 @@ export default function Navbar() {
             className="fixed top-16 inset-x-0 z-40 bg-white border-b border-brand-rose shadow-xl lg:hidden"
           >
             <nav className="flex flex-col py-4 px-5">
-              {navLinks.map((link, i) => (
+              {[...navLinks, ...mobileOnlyLinks].map((link, i) => (
                 <MotionLink
                   key={link.href}
                   href={link.href}

@@ -1,18 +1,14 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { IsEmail, IsIn, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
 import { Role } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { OnlineAttendanceService } from './online-attendance.service';
 
-const CHANNELS = ['YOUTUBE', 'TELEGRAM'] as const;
-
 class CheckInDto {
-  @IsEmail() @IsNotEmpty() @MaxLength(254)   email!: string;
-  @IsIn(CHANNELS)                             channel!: typeof CHANNELS[number];
-  @IsOptional() @IsString() @MaxLength(120)  name?: string;
+  @IsEmail() @IsNotEmpty() @MaxLength(254) email!: string;
 }
 
 @ApiTags('online-attendance')
@@ -26,7 +22,7 @@ export class OnlineAttendanceController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Record an online attendance check-in (YouTube or Telegram)' })
   checkIn(@Body() dto: CheckInDto) {
-    return this.svc.checkIn(dto.email, dto.channel, dto.name);
+    return this.svc.checkIn(dto.email);
   }
 
   @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.PASTOR)

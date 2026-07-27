@@ -3,103 +3,73 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api/axios";
-import { Youtube, Send, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, CheckCircle2, ChevronLeft } from "lucide-react";
+import Image from "next/image";
 
-type Channel = "YOUTUBE" | "TELEGRAM";
-type Stage = "FIRST_TIMER" | "SECOND_TIMER" | "ONLINE_MEMBER";
-type Action = "redirect_first_timer" | "account_created" | "checked_in";
+type VisitorType = "first" | "second" | "third";
+type Phase = "select" | "email" | "done";
 
-interface CheckInResponse {
-  action: Action;
-  stage: Stage;
-  visitCount?: number;
-}
-
-const CHANNELS: { id: Channel; label: string; icon: React.ReactNode; description: string }[] = [
+const CARDS: {
+  id: VisitorType;
+  num: string;
+  title: string;
+  subtitle: string;
+  badge: string;
+  badgeColor: string;
+}[] = [
   {
-    id: "YOUTUBE",
-    label: "YouTube",
-    icon: <Youtube size={22} />,
-    description: "Watching on Everlasting Hills YouTube",
+    id: "first",
+    num: "01",
+    title: "First Time Visitor",
+    subtitle: "Welcome! Fill a quick form so we can get to know you.",
+    badge: "New Here",
+    badgeColor: "bg-church-accent/20 text-church-accent",
   },
   {
-    id: "TELEGRAM",
-    label: "Telegram",
-    icon: <Send size={18} />,
-    description: "Joining via the Telegram channel",
+    id: "second",
+    num: "02",
+    title: "Second Time Visitor",
+    subtitle: "Great to have you back. Just enter your email.",
+    badge: "Returning",
+    badgeColor: "bg-amber-400/15 text-amber-300",
+  },
+  {
+    id: "third",
+    num: "03",
+    title: "I Have an Account",
+    subtitle: "You're family! Log in to mark your attendance.",
+    badge: "Member",
+    badgeColor: "bg-emerald-400/15 text-emerald-300",
   },
 ];
 
-function SuccessCard({ action, name, channel }: { action: Action; name: string; channel: Channel }) {
-  const channelLabel = channel === "YOUTUBE" ? "YouTube" : "Telegram";
-  const firstName = name.split(" ")[0] || "Friend";
-
-  if (action === "checked_in") {
-    return (
-      <div className="text-center">
-        <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-5">
-          <CheckCircle2 size={32} className="text-green-400" />
-        </div>
-        <h2 className="text-white text-2xl font-bold mb-2">Welcome back, {firstName}!</h2>
-        <p className="text-white/50 text-sm leading-relaxed max-w-xs mx-auto">
-          Your check-in has been recorded. We're glad you're joining us online on {channelLabel} today.
-        </p>
-      </div>
-    );
-  }
-
-  if (action === "account_created") {
-    return (
-      <div className="text-center">
-        <div className="w-16 h-16 rounded-full bg-church-maroon/20 flex items-center justify-center mx-auto mb-5">
-          <CheckCircle2 size={32} className="text-church-accent" />
-        </div>
-        <h2 className="text-white text-2xl font-bold mb-2">Great to see you again, {firstName}!</h2>
-        <p className="text-white/50 text-sm leading-relaxed max-w-xs mx-auto">
-          We've created an account for you. Check your email — we've sent a link to set your password and access the full EHC community.
-        </p>
-      </div>
-    );
-  }
-
-  // redirect_first_timer — handled in the component, but fallback:
-  return null;
-}
-
 export default function OnlineAttendancePage() {
   const router = useRouter();
-  const [channel, setChannel] = useState<Channel | null>(null);
+  const [phase, setPhase] = useState<Phase>("select");
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<CheckInResponse | null>(null);
 
-  const canSubmit = channel && email.includes("@") && !loading;
+  const handleCardClick = (type: VisitorType) => {
+    if (type === "first") { router.push("/first-timer"); return; }
+    if (type === "second") { setPhase("email"); return; }
+    router.push("/login");
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!email.includes("@") || loading) return;
     setLoading(true);
     setError("");
     try {
-      const res = await apiClient.post<CheckInResponse>("/online-attendance/check-in", {
+      const { data: res } = await apiClient.post<{ action: string }>("/online-attendance/check-in", {
         email: email.trim().toLowerCase(),
-        channel,
-        name: name.trim() || undefined,
       });
-
       if (res.action === "redirect_first_timer") {
-        const params = new URLSearchParams({
-          email: email.trim().toLowerCase(),
-          attendance_type: "Online",
-          ...(name.trim() ? { name: name.trim() } : {}),
-        });
-        router.push(`/first-timer?${params.toString()}`);
+        router.push("/first-timer");
         return;
       }
-
-      setResult(res);
+      setPhase("done");
     } catch (err: any) {
       setError(err?.message ?? "Something went wrong. Please try again.");
     } finally {
@@ -108,124 +78,172 @@ export default function OnlineAttendancePage() {
   };
 
   return (
-    <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden flex items-center justify-center px-5 py-12">
-      {/* Ambient background */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-15%] right-[-10%] w-[55%] h-[55%] bg-church-maroon/15 blur-[140px] rounded-full" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[45%] h-[45%] bg-church-maroon/10 blur-[120px] rounded-full" />
+    <main className="min-h-screen bg-church-dark text-white relative overflow-x-hidden flex flex-col">
+      {/* Background image layer */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <Image
+          src="/images/church_congregation_3_1779193624434.png"
+          alt=""
+          fill
+          className="object-cover opacity-20 scale-105"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-church-dark/70 via-church-dark/80 to-church-dark" />
+        <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-transparent to-church-dark/50" />
+        {/* Maroon glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-church-maroon/20 blur-[120px] rounded-full" />
       </div>
 
-      <div className="relative z-10 w-full max-w-md">
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-5 py-20">
+        {/* Church mark */}
+        <div className="mb-8 flex items-center gap-2.5 opacity-70">
+          <Image src="/logo.png" alt="EHC" width={32} height={32} />
+          <span className="text-white/60 text-xs font-semibold uppercase tracking-[0.3em]">Everlasting Hills</span>
+        </div>
+
         {/* Header */}
-        <div className="text-center mb-10">
-          <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-3">
-            Online Attendance
-          </p>
-          <h1 className="text-white text-3xl sm:text-4xl font-bold mb-3 leading-tight">
-            Checking in?<br />
-            <span className="text-white/40 font-normal italic font-serif text-2xl sm:text-3xl">
-              We see you.
+        <div className="text-center mb-12 max-w-lg">
+          <div className="inline-flex items-center gap-2 bg-church-maroon/20 border border-church-maroon/30 rounded-full px-4 py-1.5 mb-5">
+            <span className="w-1.5 h-1.5 rounded-full bg-church-accent animate-pulse" />
+            <span className="text-[11px] font-bold uppercase tracking-[0.35em] text-church-accent">
+              Live Online · Check In
             </span>
+          </div>
+          <h1 className="text-white text-4xl sm:text-5xl font-bold leading-[1.15] mb-4">
+            Good to have you<br />
+            <em className="not-italic text-white/35 font-light font-serif">joining us online.</em>
           </h1>
-          <p className="text-white/45 text-sm">
-            Let us know you're here — it only takes a moment.
+          <p className="text-white/45 text-base leading-relaxed">
+            Select how you're joining us today and we'll take care of the rest.
           </p>
         </div>
 
-        {result ? (
-          <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-8 sm:p-10">
-            <SuccessCard action={result.action} name={name} channel={channel!} />
-            <button
-              onClick={() => { setResult(null); setEmail(""); setName(""); setChannel(null); }}
-              className="mt-8 w-full rounded-2xl border border-white/[0.08] py-3 text-sm font-semibold text-white/40 hover:text-white/70 hover:border-white/20 transition-all"
-            >
-              Check in another person
-            </button>
+        {/* Phase: Cards */}
+        {phase === "select" && (
+          <div className="w-full max-w-md space-y-3">
+            {CARDS.map((card, i) => (
+              <button
+                key={card.id}
+                type="button"
+                onClick={() => handleCardClick(card.id)}
+                className="w-full group relative flex items-center gap-5 rounded-2xl border border-white/[0.07] bg-white/[0.04] backdrop-blur-sm p-5 text-left
+                  hover:bg-church-maroon/10 hover:border-church-maroon/50 hover:shadow-[0_0_40px_rgba(135,16,44,0.15)]
+                  transition-all duration-300"
+              >
+                {/* Number */}
+                <div className="w-12 h-12 flex-shrink-0 rounded-xl bg-church-maroon/20 group-hover:bg-church-maroon/35 transition-colors flex items-center justify-center">
+                  <span className="text-church-accent font-black text-lg leading-none">{card.num}</span>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-white font-semibold text-[15px]">{card.title}</span>
+                    <span className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full ${card.badgeColor}`}>
+                      {card.badge}
+                    </span>
+                  </div>
+                  <p className="text-white/40 text-[13px] leading-snug">{card.subtitle}</p>
+                </div>
+
+                <ArrowRight
+                  size={16}
+                  className="text-white/20 flex-shrink-0 group-hover:text-church-accent group-hover:translate-x-1 transition-all duration-300"
+                />
+              </button>
+            ))}
+
+            <p className="text-center text-white/25 text-xs pt-4 pb-2">
+              Not sure which to pick? Choose the one that best describes your visit.
+            </p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-8 sm:p-10 space-y-6">
-            {/* Channel picker */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/35 mb-3">
-                Where are you watching?
+        )}
+
+        {/* Phase: Email input */}
+        {phase === "email" && (
+          <div className="w-full max-w-md">
+            <div className="rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm p-8 sm:p-10">
+              <button
+                type="button"
+                onClick={() => { setPhase("select"); setError(""); setEmail(""); }}
+                className="flex items-center gap-1.5 text-xs text-white/35 hover:text-white/60 mb-8 transition-colors"
+              >
+                <ChevronLeft size={14} />
+                Back
+              </button>
+
+              <div className="mb-8">
+                <div className="w-10 h-10 rounded-xl bg-amber-400/15 flex items-center justify-center mb-4">
+                  <span className="text-amber-300 font-black text-base">02</span>
+                </div>
+                <h2 className="text-white text-2xl font-bold mb-2">Welcome back!</h2>
+                <p className="text-white/45 text-sm leading-relaxed">
+                  Enter your email and we'll look you up. If we don't have your details yet, we'll direct you to a quick form.
+                </p>
+              </div>
+
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.35em] text-white/30 mb-2">
+                    Email address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    autoFocus
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="w-full rounded-xl border border-white/[0.08] bg-white/[0.05] px-4 py-3.5 text-sm text-white placeholder-white/20
+                      focus:outline-none focus:ring-2 focus:ring-church-maroon/50 focus:border-church-maroon/40 transition-all"
+                  />
+                </div>
+
+                {error && (
+                  <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={!email.includes("@") || loading}
+                  className="w-full flex items-center justify-center gap-2.5 rounded-xl bg-church-maroon py-4 text-sm font-bold tracking-wide text-white
+                    hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/30
+                    transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none"
+                >
+                  {loading ? (
+                    <><Loader2 size={15} className="animate-spin" /> Checking…</>
+                  ) : (
+                    <>Continue <ArrowRight size={15} /></>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Phase: Done */}
+        {phase === "done" && (
+          <div className="w-full max-w-md">
+            <div className="rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm p-8 sm:p-10 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-church-maroon/20 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 size={32} className="text-church-accent" />
+              </div>
+              <h2 className="text-white text-2xl font-bold mb-3">You're checked in!</h2>
+              <p className="text-white/45 text-sm leading-relaxed max-w-xs mx-auto">
+                We've noted your second visit. Our team will set up your account shortly — keep an eye on your email.
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                {CHANNELS.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setChannel(c.id)}
-                    className={`
-                      flex flex-col items-center gap-2 rounded-2xl border p-4 text-center transition-all
-                      ${channel === c.id
-                        ? "border-church-maroon bg-church-maroon/10 text-white"
-                        : "border-white/[0.08] bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/70"
-                      }
-                    `}
-                  >
-                    <span className={channel === c.id ? "text-church-accent" : ""}>{c.icon}</span>
-                    <span className="text-xs font-semibold tracking-wide">{c.label}</span>
-                  </button>
-                ))}
+              <div className="mt-8 pt-6 border-t border-white/[0.06]">
+                <button
+                  onClick={() => { setPhase("select"); setEmail(""); setError(""); }}
+                  className="text-sm text-white/30 hover:text-white/60 transition-colors"
+                >
+                  Back to home
+                </button>
               </div>
             </div>
-
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-[0.3em] text-white/35">
-                Email address *
-              </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-church-maroon/40 transition-shadow"
-              />
-              <p className="text-white/25 text-[11px]">
-                We use this to track your attendance across visits.
-              </p>
-            </div>
-
-            {/* Name (optional on first visit) */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-semibold uppercase tracking-[0.3em] text-white/35">
-                Your name <span className="normal-case font-normal tracking-normal text-white/20">(first visit only)</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Ayo Adekoya"
-                className="w-full rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none focus:ring-2 focus:ring-church-maroon/40 transition-shadow"
-              />
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={!canSubmit}
-              className="w-full flex items-center justify-center gap-2 rounded-2xl bg-church-maroon py-4 text-sm font-black tracking-wide text-white hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-none"
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={15} className="animate-spin" />
-                  Checking in…
-                </>
-              ) : (
-                <>
-                  Check In
-                  <ArrowRight size={15} />
-                </>
-              )}
-            </button>
-          </form>
+          </div>
         )}
       </div>
     </main>

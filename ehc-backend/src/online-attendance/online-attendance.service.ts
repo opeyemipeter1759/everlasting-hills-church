@@ -2,26 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
-import { createClient } from '@supabase/supabase-js';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationEvents, type SendEmailPayload } from '../notifications/notification-events';
 import type { Env } from '../config/env.validation';
-
-type Channel = 'YOUTUBE' | 'TELEGRAM';
-
-const CHANNEL_LABEL: Record<Channel, string> = {
-  YOUTUBE: 'YouTube',
-  TELEGRAM: 'Telegram',
-};
 
 @Injectable()
 export class OnlineAttendanceService {
   private readonly logger = new Logger(OnlineAttendanceService.name);
   private readonly tenantId: string;
   private readonly adminEmail: string;
-  private readonly supabaseUrl: string;
-  private readonly supabaseServiceRoleKey: string;
-  private readonly publicSiteUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -32,80 +21,61 @@ export class OnlineAttendanceService {
     this.adminEmail =
       (config.get('RESEND_ADMIN_EMAIL' as any, { infer: true }) as string | undefined) ??
       'hello@everlastinghills.org';
-    this.supabaseUrl = config.get('SUPABASE_URL', { infer: true });
-    this.supabaseServiceRoleKey = config.get('SUPABASE_SERVICE_ROLE_KEY' as any, { infer: true }) ?? '';
-    this.publicSiteUrl =
-      (config.get('FRONTEND_URL' as any, { infer: true }) as string | undefined) ??
-      'http://localhost:3000';
   }
 
-  async checkIn(email: string, channel: Channel, name?: string) {
+  /**
+   * Called when a second-time visitor submits their email.
+   * - Email not in Visitor table → they're actually a first-timer, redirect to form
+   * - Email found → record as SECOND_TIMER, send them a holding email, notify admin
+   */
+  async checkIn(email: string) {
     const normEmail = email.trim().toLowerCase();
+
+    const visitor = await this.prisma.visitor.findFirst({
+      where: { tenantId: this.tenantId, email: normEmail },
+      select: { firstName: true, lastName: true },
+    });
+
+    if (!visitor) {
+      return { action: 'redirect_first_timer' };
+    }
+
+    const displayName = `${visitor.firstName} ${visitor.lastName}`.trim();
+
+    // Use a fixed channel key since online check-ins aren't channel-specific here
+    const channel = 'YOUTUBE' as const;
+
     const existing = await this.prisma.onlineCheckIn.findUnique({
       where: { tenantId_email_channel: { tenantId: this.tenantId, email: normEmail, channel } },
     });
 
-    if (!existing) {
-      // First visit — create record, redirect to first-timer form
-      await this.prisma.onlineCheckIn.create({
-        data: {
-          id: randomUUID(),
-          tenantId: this.tenantId,
-          email: normEmail,
-          name: name?.trim() || null,
-          channel,
-          stage: 'FIRST_TIMER',
-          visitCount: 1,
-          lastCheckedIn: new Date(),
-        },
-      });
-
-      this.logger.log(`Online first-timer: ${normEmail} via ${channel}`);
-      this.notifyAdmin(normEmail, name, channel, 'FIRST_TIMER');
-
-      return { action: 'redirect_first_timer', stage: 'FIRST_TIMER' };
-    }
-
-    if (existing.stage === 'FIRST_TIMER') {
-      // Second visit — create Supabase account, send password setup email
-      let supabaseUserId: string | null = existing.supabaseUserId;
-
-      if (!supabaseUserId && this.supabaseServiceRoleKey) {
-        supabaseUserId = await this.createSupabaseAccount(normEmail, name ?? existing.name ?? '');
-      }
-
-      const updated = await this.prisma.onlineCheckIn.update({
+    if (existing) {
+      await this.prisma.onlineCheckIn.update({
         where: { id: existing.id },
-        data: {
-          stage: 'SECOND_TIMER',
-          visitCount: existing.visitCount + 1,
-          lastCheckedIn: new Date(),
-          name: name?.trim() || existing.name,
-          supabaseUserId,
-        },
+        data: { visitCount: existing.visitCount + 1, lastCheckedIn: new Date() },
       });
-
-      this.logger.log(`Online second-timer: ${normEmail} via ${channel}`);
-      this.sendSecondTimerEmail(normEmail, name ?? existing.name ?? '', channel);
-      this.notifyAdmin(normEmail, name ?? existing.name ?? '', channel, 'SECOND_TIMER');
-
-      return { action: 'account_created', stage: 'SECOND_TIMER', visitCount: updated.visitCount };
+      this.logger.log(`Online returning check-in: ${normEmail} (visit #${existing.visitCount + 1})`);
+      return { action: 'checked_in', stage: existing.stage, visitCount: existing.visitCount + 1 };
     }
 
-    // Third visit and beyond — online member check-in
-    const updated = await this.prisma.onlineCheckIn.update({
-      where: { id: existing.id },
+    await this.prisma.onlineCheckIn.create({
       data: {
-        stage: 'ONLINE_MEMBER',
-        visitCount: existing.visitCount + 1,
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        email: normEmail,
+        name: displayName,
+        channel,
+        stage: 'SECOND_TIMER',
+        visitCount: 2,
         lastCheckedIn: new Date(),
-        name: name?.trim() || existing.name,
       },
     });
 
-    this.logger.log(`Online member check-in: ${normEmail} via ${channel} (visit #${updated.visitCount})`);
+    this.logger.log(`Online second-timer: ${normEmail}`);
+    this.sendSecondTimerEmail(normEmail, displayName);
+    this.notifyAdmin(normEmail, displayName);
 
-    return { action: 'checked_in', stage: 'ONLINE_MEMBER', visitCount: updated.visitCount };
+    return { action: 'checked_in', stage: 'SECOND_TIMER', visitCount: 1 };
   }
 
   async list(opts: { channel?: string; stage?: string; take: number; skip: number }) {
@@ -128,67 +98,23 @@ export class OnlineAttendanceService {
     return { data: records, meta: { total, take: opts.take, skip: opts.skip } };
   }
 
-  private async createSupabaseAccount(email: string, name: string): Promise<string | null> {
-    try {
-      const admin = createClient(this.supabaseUrl, this.supabaseServiceRoleKey, {
-        auth: { autoRefreshToken: false, persistSession: false },
-      });
-
-      const { data, error } = await admin.auth.admin.createUser({
-        email,
-        email_confirm: true,
-        user_metadata: { full_name: name, role: 'ONLINE_MEMBER' },
-      });
-
-      if (error || !data.user) {
-        this.logger.warn(`Supabase createUser failed for ${email}: ${error?.message}`);
-        return null;
-      }
-
-      // Send password setup link via resetPasswordForEmail
-      const siteUrl = this.publicSiteUrl.replace(/\/$/, '');
-      const { error: resetErr } = await admin.auth.admin.generateLink({
-        type: 'recovery',
-        email,
-        options: { redirectTo: `${siteUrl}/set-password` },
-      });
-
-      if (resetErr) {
-        this.logger.warn(`generateLink failed for ${email}: ${resetErr.message}`);
-      }
-
-      return data.user.id;
-    } catch (err) {
-      this.logger.error(`createSupabaseAccount error for ${email}`, err);
-      return null;
-    }
-  }
-
-  private sendSecondTimerEmail(email: string, name: string, channel: Channel) {
+  private sendSecondTimerEmail(email: string, name: string) {
     const firstName = name.split(/\s+/)[0] || 'Friend';
-    const channelLabel = CHANNEL_LABEL[channel];
-    const loginUrl = `${this.publicSiteUrl.replace(/\/$/, '')}/login`;
 
     const payload: SendEmailPayload = {
       to: email,
-      subject: `Welcome back — your Everlasting Hills account is ready`,
+      tag: 'online-second-timer',
+      subject: `We see you — welcome back to Everlasting Hills`,
       text: [
         `Hi ${firstName},`,
         '',
-        `We noticed you've been joining us online on ${channelLabel} — and we're really glad you're here.`,
+        `We're so glad you joined us online for the second time.`,
         '',
-        `We've created an account for you so you can stay connected with everything happening at Everlasting Hills Church.`,
+        `Our team has noted your attendance and will be setting up a personal account for you shortly. Once it's ready, you'll receive another email with your login details.`,
         '',
-        `  👉 Set your password and log in here: ${loginUrl}`,
+        `Your account will give you access to sermon notes, events, and the full Everlasting Hills community online.`,
         '',
-        `Your account gives you access to:`,
-        `  • Sermon notes and resources`,
-        `  • Events and updates`,
-        `  • Community features`,
-        '',
-        `If you have any questions, simply reply to this email.`,
-        '',
-        `We'll see you online!`,
+        `If you have any questions in the meantime, just reply to this email.`,
         '',
         `With love,`,
         `Everlasting Hills Church`,
@@ -198,22 +124,18 @@ export class OnlineAttendanceService {
     this.events.emit(NotificationEvents.SendEmail, payload);
   }
 
-  private notifyAdmin(email: string, name: string | undefined, channel: Channel, stage: string) {
-    const channelLabel = CHANNEL_LABEL[channel];
-    const stageLabel = stage === 'FIRST_TIMER' ? 'First Timer' : 'Second Timer';
-
+  private notifyAdmin(email: string, name: string) {
     const payload: SendEmailPayload = {
       to: this.adminEmail,
-      subject: `[Online ${stageLabel}] ${name ?? email} joined via ${channelLabel}`,
+      tag: 'online-attendance-admin',
+      subject: `[Online Second Timer] ${name} — account needed`,
       text: [
-        `A new online ${stageLabel.toLowerCase()} just checked in.`,
+        `${name} has joined the online service for the second time.`,
         '',
-        `  Name:    ${name ?? '—'}`,
-        `  Email:   ${email}`,
-        `  Channel: ${channelLabel}`,
-        `  Stage:   ${stageLabel}`,
+        `  Name:  ${name}`,
+        `  Email: ${email}`,
         '',
-        `Log in to the admin dashboard to view their record.`,
+        `Please create an account for them from the admin dashboard → First Timers.`,
       ].join('\n'),
     };
 
