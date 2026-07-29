@@ -22,7 +22,7 @@ function buildSocialLinks(cfg: SiteIdentity) {
   ].filter((l) => l.href);
 }
 
-const footerLinks = [
+const quickLinks = [
   { label: "About", href: "/about" },
   { label: "What We Believe", href: "/beliefs" },
   { label: "Ministries", href: "/ministries" },
@@ -31,6 +31,13 @@ const footerLinks = [
   { label: "Plan a Visit", href: "/visit" },
   { label: "Give", href: "/give" },
   { label: "Contact", href: "/contact" },
+];
+
+const connectLinks = [
+  { label: "First Timers", href: "/first-timer" },
+  { label: "Prayer Request", href: "/prayer-request" },
+  { label: "Testimony", href: "/testimony" },
+  { label: "Questions", href: "/questions" },
 ];
 
 export default async function Footer() {
@@ -55,60 +62,43 @@ export default async function Footer() {
       </div>
 
       <div className="relative  max-w-6xl mx-auto px-5 sm:px-8 pt-32 pb-10">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10 mb-12">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+
           {/* Brand block */}
           <div className="lg:col-span-1">
-            {/* Logo */}
             <div className="flex items-center gap-2.5 mb-5">
               <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={48} height={48} className="flex-shrink-0" />
               <div>
-                <p className="text-white font-bold text-sm leading-none">
-                  Everlasting Hills
-                </p>
-                <p className="text-white/40 text-[10px] tracking-[0.15em] uppercase mt-0.5">
-                  Church
-                </p>
+                <p className="text-white font-bold text-sm leading-none">Everlasting Hills</p>
+                <p className="text-white/40 text-[10px] tracking-[0.15em] uppercase mt-0.5">Church</p>
               </div>
             </div>
 
-            {/* Tagline */}
             <p className="text-white/60 text-sm leading-relaxed mb-4 max-w-[230px]">
-              {/* ── Church tagline (CMS site settings) ── */}
               {cfg.footerTagline}
             </p>
 
-            {/* Pillars */}
             <div className="flex items-center gap-0 mb-6">
               {["Word", "Spirit", "Community"].map((p, i) => (
                 <span key={p} className="flex items-center">
-                  <span className="text-white/30 text-xs tracking-[0.12em] uppercase">
-                    {p}
-                  </span>
-                  {i < 2 && (
-                    <span className="w-px h-2.5 bg-white/15 mx-3" />
-                  )}
+                  <span className="text-white/30 text-xs tracking-[0.12em] uppercase">{p}</span>
+                  {i < 2 && <span className="w-px h-2.5 bg-white/15 mx-3" />}
                 </span>
               ))}
             </div>
 
-            {/* Location */}
-            <p className="text-white/35 text-xs tracking-wide">
-              {cfg.address}
-            </p>
+            <p className="text-white/35 text-xs tracking-wide">{cfg.address}</p>
           </div>
 
-          {/* Quick links */}
+          {/* Quick Links — original 2-column grid */}
           <div>
             <p className="text-white/50 text-xs tracking-[0.2em] uppercase font-medium mb-5">
               Quick Links
             </p>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-3">
-              {footerLinks.map((link) => (
+              {quickLinks.map((link) => (
                 <li key={link.href}>
-                  <a
-                    href={link.href}
-                    className="text-white/55 text-sm hover:text-white transition-colors duration-200"
-                  >
+                  <a href={link.href} className="text-white/55 text-sm hover:text-white transition-colors duration-200">
                     {link.label}
                   </a>
                 </li>
@@ -116,10 +106,26 @@ export default async function Footer() {
             </ul>
           </div>
 
-          {/* Connect */}
+          {/* Connect — page links from Connect page */}
           <div>
             <p className="text-white/50 text-xs tracking-[0.2em] uppercase font-medium mb-5">
               Connect
+            </p>
+            <ul className="space-y-3">
+              {connectLinks.map((link) => (
+                <li key={link.label}>
+                  <a href={link.href} className="text-white/55 text-sm hover:text-white transition-colors duration-200">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Follow Us — social icons, same as original */}
+          <div>
+            <p className="text-white/50 text-xs tracking-[0.2em] uppercase font-medium mb-5">
+              Follow Us
             </p>
             <div className="flex gap-3 mb-6">
               {socialLinks.map((social) => (
@@ -136,15 +142,14 @@ export default async function Footer() {
               ))}
             </div>
             <p className="text-white/35 text-xs leading-relaxed">
-              {/* ── Small note in footer ── */}
-              Follow us for updates, sermons, and encouragement throughout the
-              week.
+              Follow us for updates, sermons, and encouragement throughout the week.
             </p>
           </div>
+
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="border-t border-white/[0.08] pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-white/25 text-xs">
             &copy; {new Date().getFullYear()} Everlasting Hills Church. All
             rights reserved.

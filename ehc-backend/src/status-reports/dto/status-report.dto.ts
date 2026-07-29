@@ -9,8 +9,8 @@ const WRITABLE_STATUSES = ['DRAFT', 'SUBMITTED'] as const;
 export type WritableReportStatus = (typeof WRITABLE_STATUSES)[number];
 
 export class CreateReportDto {
-  @ApiProperty({ enum: REPORT_SCOPES, example: 'UNIT' })
-  @IsIn(REPORT_SCOPES)
+  @ApiProperty({ enum: ReportScope, example: 'UNIT' })
+  // @IsIn(ReportScope)
   scope!: ReportScope;
 
   @ApiProperty({ required: false, description: 'Required when scope = DEPARTMENT' })

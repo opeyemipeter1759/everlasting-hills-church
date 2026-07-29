@@ -19,12 +19,12 @@ const navLinks = [
   { label: "Events", href: "/events" },
   { label: "Ministries", href: "/ministries" },
   { label: "Visit", href: "/visit" },
-  { label: "Connect", href: "/connect" },
   { label: "Give", href: "/give" },
 ];
 
-// Home Cell is accessible via Connect — only show in mobile menu to keep desktop nav lean
+// Connect is in the footer on desktop — keep accessible in mobile menu
 const mobileOnlyLinks = [
+  { label: "Connect", href: "/connect" },
   { label: "Home Cell", href: "/connect/home-cell" },
 ];
 

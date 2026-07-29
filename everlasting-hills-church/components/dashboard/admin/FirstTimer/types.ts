@@ -12,4 +12,5 @@ export interface VisitorRow {
   bornAgain: string | null;
   occupation: string | null;
   submittedAt: string;
+  hasOnlineCheckIn?: boolean;
 }
