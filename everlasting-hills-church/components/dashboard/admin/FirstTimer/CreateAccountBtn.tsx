@@ -19,6 +19,15 @@ export default function CreateAccountBtn({
     return <span className="text-xs text-[#b8a8ac] dark:text-white/30">No email/phone</span>;
   }
 
+  const isOnline = visitor.attendanceType === "Online";
+  if (isOnline && !visitor.hasOnlineCheckIn) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap">
+        Awaiting 2nd visit
+      </span>
+    );
+  }
+
   async function handleCreate() {
     setLoading(true);
     try {
