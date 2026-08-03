@@ -31,8 +31,14 @@ async function safeGet<T>(path: string): Promise<T | null> {
 }
 
 export default async function FirstTimersPage() {
-  // The backend already excludes visitors who've been converted to a member account.
-  const visitorsRaw = await safeGet<VisitorApi[]>("/visitors?limit=200");
+  const [visitorsRaw, onlineRaw] = await Promise.all([
+    safeGet<VisitorApi[]>("/visitors?limit=200"),
+    safeGet<{ data: { email: string }[] }>("/online-attendance?take=500"),
+  ]);
+
+  const onlineEmails = new Set(
+    (onlineRaw?.data ?? []).map((r) => r.email.toLowerCase()),
+  );
 
   const visitors: VisitorRow[] = (visitorsRaw ?? []).map((v) => ({
     id: v.id,
@@ -48,6 +54,7 @@ export default async function FirstTimersPage() {
     bornAgain: v.bornAgain,
     occupation: v.occupation,
     submittedAt: v.submittedAt,
+    hasOnlineCheckIn: v.email ? onlineEmails.has(v.email.toLowerCase()) : false,
   }));
 
   return <FirstTimersClient visitors={visitors} />;

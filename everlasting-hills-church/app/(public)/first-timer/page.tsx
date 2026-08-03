@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { apiClient } from "@/lib/api/axios";
 import {
   FormValues,
@@ -30,7 +31,18 @@ const STEP_FIELDS: (keyof FormValues)[][] = [
   ["service_experience", "whatsapp_interest"],
 ];
 
-export default function FirstTimerPage() {
+export default function FirstTimerPageWrapper() {
+  return (
+    <Suspense>
+      <FirstTimerPage />
+    </Suspense>
+  );
+}
+
+function FirstTimerPage() {
+  const searchParams = useSearchParams();
+  const isOnlineSource = searchParams.get("source") === "online";
+
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -45,6 +57,11 @@ export default function FirstTimerPage() {
     control,
     formState: { errors },
   } = useForm<FormValues>({ mode: "onBlur" });
+
+  useEffect(() => {
+    if (isOnlineSource) setValue("attendance_type", "Online");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isOnline = watch("attendance_type") === "Online";
   const firstName = watch("first_name") ?? "";
@@ -120,7 +137,7 @@ export default function FirstTimerPage() {
   }
 
   const stepComponents = [
-    <Step1PersonalInfo key="s1" register={register} errors={errors} control={control} />,
+    <Step1PersonalInfo key="s1" register={register} errors={errors} control={control} isOnlineSource={isOnlineSource} />,
     <Step2FriendFamilyLocation
       key="s2"
       register={register}

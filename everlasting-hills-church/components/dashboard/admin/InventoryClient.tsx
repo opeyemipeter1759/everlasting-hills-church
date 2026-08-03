@@ -6,8 +6,8 @@ import { Plus } from "lucide-react";
 import { useInventory, type InventoryQuery } from "./inventory/useInventory";
 import InventoryStats from "./inventory/InventoryStats";
 import InventoryFilters from "./inventory/InventoryFilters";
-import InventoryGrid from "./inventory/InventoryGrid";
-import SkeletonGrid from "./inventory/SkeletonGrid";
+import InventoryTable from "./inventory/InventoryTable";
+import SkeletonTable from "./inventory/SkeletonTable";
 import EmptyState from "./inventory/EmptyState";
 import AddItemModal from "./inventory/AddItemModal";
 
@@ -45,11 +45,11 @@ export default function InventoryClient() {
       <InventoryFilters query={query} onChange={patch} filters={filters} />
 
       {isLoading ? (
-        <SkeletonGrid />
+        <SkeletonTable />
       ) : items.length === 0 ? (
         <EmptyState hasAny={Object.values(query).some(Boolean)} />
       ) : (
-        <InventoryGrid items={items} onOpen={(item) => router.push(`/dashboard/admin/inventory/${item.id}`)} />
+        <InventoryTable items={items} onOpen={(item) => router.push(`/dashboard/admin/inventory/${item.id}`)} />
       )}
 
       <AddItemModal open={showAdd} onClose={() => setShowAdd(false)} create={create} />

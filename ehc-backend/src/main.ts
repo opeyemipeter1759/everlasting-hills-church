@@ -77,7 +77,7 @@ async function bootstrap() {
   const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS !== 'false';
 
   const staticAllowed = new Set<string>(
-    [frontendUrl, ...extraOrigins, !isProd && 'http://localhost:3000', !isProd && 'http://localhost:3001']
+    [frontendUrl, ...extraOrigins, !isProd && 'http://localhost:3000', !isProd && 'http://localhost:3001', !isProd && 'http://localhost:3002']
       .filter(Boolean) as string[],
   );
 

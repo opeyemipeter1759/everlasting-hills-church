@@ -35,6 +35,7 @@ export type StepProps = {
   register: UseFormRegister<FormValues>;
   errors: FieldErrors<FormValues>;
   control: Control<FormValues>;
+  isOnlineSource?: boolean;
 };
 
 export type Step2Props = StepProps & {
@@ -147,6 +148,7 @@ function RadioCard({
   register: reg,
   validation,
   hasError,
+  disabled,
 }: {
   value: string;
   label: string;
@@ -155,22 +157,24 @@ function RadioCard({
   register: UseFormRegister<FormValues>;
   validation?: object;
   hasError?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <label
       className={
-        "relative flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer select-none " +
-        "transition-all duration-150 " +
-        "has-[:checked]:border-church-maroon has-[:checked]:bg-[#FFF4F6] " +
-        "hover:border-gray-300 " +
-        (hasError ? "border-red-300 bg-red-50/30" : "border-gray-200 bg-white")
+        "relative flex items-center gap-3 p-3.5 rounded-xl border-2 select-none transition-all duration-150 " +
+        (disabled
+          ? "opacity-40 cursor-not-allowed bg-gray-50 border-gray-100"
+          : "cursor-pointer has-[:checked]:border-church-maroon has-[:checked]:bg-[#FFF4F6] hover:border-gray-300 " +
+            (hasError ? "border-red-300 bg-red-50/30" : "border-gray-200 bg-white"))
       }
     >
       <input
         type="radio"
         value={value}
-        className="w-4 h-4 accent-church-maroon flex-shrink-0 cursor-pointer"
-        {...reg(fieldName as any, validation)}
+        disabled={disabled}
+        className="w-4 h-4 accent-church-maroon flex-shrink-0 cursor-pointer disabled:cursor-not-allowed"
+        {...reg(fieldName as any, disabled ? {} : validation)}
       />
       <div className="min-w-0">
         <p className="text-sm font-medium text-gray-800 leading-snug">{label}</p>
@@ -184,7 +188,7 @@ function RadioCard({
 
 // ── Step 1 — Personal Info ────────────────────────────────────────────────────
 
-export function Step1PersonalInfo({ register, errors }: StepProps) {
+export function Step1PersonalInfo({ register, errors, isOnlineSource }: StepProps) {
   return (
     <div className="space-y-5">
       <StepHeader
@@ -272,6 +276,7 @@ export function Step1PersonalInfo({ register, errors }: StepProps) {
             register={register}
             validation={{ required: "Please select how you're attending" }}
             hasError={!!errors.attendance_type}
+            disabled={isOnlineSource}
           />
           <RadioCard
             value="Online"
