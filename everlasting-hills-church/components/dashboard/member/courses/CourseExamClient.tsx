@@ -7,6 +7,7 @@ import {
   useCourse,
   useCourses,
   useMyCourseProgress,
+  useMyCategoryEnrollments,
   useSubmitExam,
   getCourseStatus,
   getVideoLessonIds,
@@ -30,6 +31,7 @@ export default function CourseExamClient({ slug }: { slug: string }) {
   const { data: catalog = [] } = useCourses();
   const { data: course, isLoading } = useCourse(slug);
   const { data: progress = {} } = useMyCourseProgress();
+  const { data: enrolledCategoryIds = [] } = useMyCategoryEnrollments();
   const submitExam = useSubmitExam(course?.id ?? "");
 
   const [answers, setAnswers] = useState<Record<string, number>>({});
@@ -60,17 +62,19 @@ export default function CourseExamClient({ slug }: { slug: string }) {
     );
   }
 
-  const status = getCourseStatus(course, catalog, progress);
+  const status = getCourseStatus(course, catalog, progress, enrolledCategoryIds);
   const backHref = `/dashboard/courses/${course.slug}`;
 
-  if (status === "locked") {
+  if (status === "locked" || status === "category-locked") {
     return (
       <div className="max-w-2xl space-y-4">
         <BackLink href={backHref} label={course.title} />
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-16 text-center">
           <GraduationCap size={28} className="text-gray-300 dark:text-gray-700" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Complete the prerequisite course first to unlock this exam.
+            {status === "category-locked"
+              ? "Enroll in this course's category first to unlock this exam."
+              : "Complete the prerequisite course first to unlock this exam."}
           </p>
         </div>
       </div>

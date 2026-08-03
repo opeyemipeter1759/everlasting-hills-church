@@ -32,6 +32,11 @@ const DOCUMENT_MIME = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
   'application/msword', // legacy .doc
   'application/pdf',
+  // Receipts are often a phone photo rather than a scanned document — accepted
+  // here too so unit expense logging can reuse this same endpoint.
+  'image/jpeg',
+  'image/png',
+  'image/webp',
 ];
 const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024; // 15 MB
 
@@ -98,7 +103,7 @@ export class UploadsController {
   @ApiOperation({
     summary: 'Upload a document',
     description:
-      'Uploads a document (docx/doc/pdf) to R2 and returns its public URL. Used by Report attachments.',
+      'Uploads a document or photo (docx/doc/pdf/jpg/png/webp) to R2 and returns its public URL. Used by Report attachments and unit expense receipts.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -108,7 +113,7 @@ export class UploadsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Document file (DOCX, DOC, or PDF — max 15 MB)',
+          description: 'Document or photo (DOCX, DOC, PDF, JPG, PNG, or WebP — max 15 MB)',
         },
       },
     },
@@ -127,7 +132,7 @@ export class UploadsController {
       throw new BadRequestException('Document must be under 15 MB');
     }
     if (!DOCUMENT_MIME.includes(file.mimetype)) {
-      throw new BadRequestException('Unsupported document format (use DOCX, DOC, or PDF)');
+      throw new BadRequestException('Unsupported format (use DOCX, DOC, PDF, JPG, PNG, or WebP)');
     }
 
     const result = await this.uploads.uploadObject(file, 'documents');

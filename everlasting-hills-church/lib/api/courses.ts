@@ -126,7 +126,7 @@ export interface CourseProgress {
 
 export type ProgressMap = Record<string, CourseProgress>;
 
-export type CourseStatus = "locked" | "available" | "enrolled" | "completed";
+export type CourseStatus = "category-locked" | "locked" | "available" | "enrolled" | "completed";
 export type ModuleWatchStatus = "completed" | "in-progress" | "not-started";
 
 /** Every lesson id in the course that actually has a video ("necessary" for exam gating). */
@@ -196,10 +196,15 @@ export function isCourseUnlocked(
 }
 
 export function getCourseStatus(
-  course: { id: string; prerequisiteSlug: string | null },
+  course: { id: string; prerequisiteSlug: string | null; category: { id: string } },
   allCourses: { slug: string; id: string }[],
   progress: ProgressMap,
+  enrolledCategoryIds: string[] = [],
 ): CourseStatus {
+  // Category access is the outermost gate — checked before the prerequisite chain,
+  // since there's no point telling a member about a prerequisite course they can't
+  // even reach yet.
+  if (!enrolledCategoryIds.includes(course.category.id)) return "category-locked";
   if (!isCourseUnlocked(course, allCourses, progress)) return "locked";
   const p = progress[course.id];
   if (p?.completed) return "completed";
@@ -238,6 +243,7 @@ export interface CourseCategory {
   id: string;
   name: string;
   slug: string;
+  description: string | null;
   parentId: string | null;
   courseCount: number;
 }
@@ -253,6 +259,15 @@ export function useMyCourseProgress() {
   return useQuery({
     queryKey: [...KEY, "progress", "me"],
     queryFn: () => api.get<ProgressMap>("/courses/progress/me"),
+  });
+}
+
+/** Category ids the current member has enrolled in (reason + agreement form submitted).
+ * Gates access to every course directly inside that category — see getCourseStatus. */
+export function useMyCategoryEnrollments() {
+  return useQuery({
+    queryKey: [...KEY, "categories", "enrolled", "me"],
+    queryFn: () => api.get<string[]>("/courses/categories/enrolled/me"),
   });
 }
 
@@ -287,29 +302,47 @@ export function useDeleteCourse() {
   });
 }
 
+// Category create/update/delete all return the full fresh category list from the
+// backend (course-category.service.ts's create/update return listCategories()) —
+// write it straight into the cache instead of only invalidating-and-waiting-for-a-
+// refetch, so the UI updates the instant the mutation resolves rather than depending
+// on a second round trip that (for reasons still being tracked down) wasn't
+// reliably firing. invalidateQueries stays as a background correctness net.
 export function useCreateCategory() {
+  const qc = useQueryClient();
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (body: { name: string; parentId?: string | null }) =>
+    mutationFn: (body: { name: string; description?: string | null; parentId?: string | null }) =>
       api.post<CourseCategory[]>("/courses/categories", body),
-    onSuccess: invalidate,
+    onSuccess: (data) => {
+      qc.setQueryData([...KEY, "categories"], data);
+      invalidate();
+    },
   });
 }
 
 export function useUpdateCategory(id: string) {
+  const qc = useQueryClient();
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (body: { name: string; parentId?: string | null }) =>
+    mutationFn: (body: { name: string; description?: string | null; parentId?: string | null }) =>
       api.patch<CourseCategory[]>(`/courses/categories/${id}`, body),
-    onSuccess: invalidate,
+    onSuccess: (data) => {
+      qc.setQueryData([...KEY, "categories"], data);
+      invalidate();
+    },
   });
 }
 
 export function useDeleteCategory() {
+  const qc = useQueryClient();
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (id: string) => api.delete<{ id: string; deleted: boolean }>(`/courses/categories/${id}`),
-    onSuccess: invalidate,
+    onSuccess: (_data, id) => {
+      qc.setQueryData([...KEY, "categories"], (old: CourseCategory[] | undefined) => old?.filter((c) => c.id !== id));
+      invalidate();
+    },
   });
 }
 
@@ -317,6 +350,21 @@ export function useEnrollCourse() {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (id: string) => api.post<{ courseId: string; enrolled: boolean }>(`/courses/${id}/enroll`),
+    onSuccess: invalidate,
+  });
+}
+
+export interface CourseCategoryEnrollInput {
+  reason: string;
+  commitmentConfirmed: true;
+  agreedToRules: true;
+}
+
+export function useEnrollCategory() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: ({ categoryId, body }: { categoryId: string; body: CourseCategoryEnrollInput }) =>
+      api.post<{ categoryId: string; enrolled: boolean }>(`/courses/categories/${categoryId}/enroll`, body),
     onSuccess: invalidate,
   });
 }

@@ -1,9 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { Send } from "lucide-react";
 import ReportAttachmentUpload from "./ReportAttachmentUpload";
-import ReportEditor, { textLength } from "./ReportEditor";
+import { textLength } from "./report-text-utils";
+import { SkeletonBlock } from "@/components/ui/display/SkeletonBlock";
+
+const ReportEditor = dynamic(() => import("./ReportEditor"), {
+  ssr: false,
+  loading: () => <SkeletonBlock className="h-[220px] w-full rounded-xl" />,
+});
 
 export interface ReportFormValues {
   title: string;

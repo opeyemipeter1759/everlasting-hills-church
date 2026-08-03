@@ -22,6 +22,7 @@ export default function CategoryManagerModal({ open, onClose }: { open: boolean;
   const { data: categories = [] } = useCourseCategories();
   const createCategory = useCreateCategory();
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [parentId, setParentId] = useState<string>("");
 
   const topLevel = categories.filter((c) => !c.parentId);
@@ -30,9 +31,14 @@ export default function CategoryManagerModal({ open, onClose }: { open: boolean;
   async function handleAdd() {
     if (!name.trim()) return;
     try {
-      await createCategory.mutateAsync({ name: name.trim(), parentId: parentId || null });
+      await createCategory.mutateAsync({
+        name: name.trim(),
+        description: description.trim() || null,
+        parentId: parentId || null,
+      });
       showToast.success(`"${name.trim()}" added`);
       setName("");
+      setDescription("");
       setParentId("");
     } catch (err) {
       showToast.error(errorMessage(err, "Couldn't create category"));
@@ -48,6 +54,14 @@ export default function CategoryManagerModal({ open, onClose }: { open: boolean;
             onChange={(e) => setName(e.target.value)}
             placeholder="New category name"
             className={fieldCls}
+          />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Short description members will see on this category's page (optional)"
+            rows={2}
+            maxLength={600}
+            className={`${fieldCls} resize-none`}
           />
           <div className="flex items-center gap-2">
             <select value={parentId} onChange={(e) => setParentId(e.target.value)} className={fieldCls}>
@@ -99,21 +113,29 @@ function CategoryRow({ category }: { category: CourseCategory }) {
   const deleteCategory = useDeleteCategory();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(category.name);
+  const [descriptionDraft, setDescriptionDraft] = useState(category.description ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   async function saveRename() {
     const trimmed = draft.trim();
-    if (!trimmed || trimmed === category.name) {
+    const trimmedDescription = descriptionDraft.trim();
+    const unchanged = trimmed === category.name && trimmedDescription === (category.description ?? "");
+    if (!trimmed || unchanged) {
       setEditing(false);
       setDraft(category.name);
+      setDescriptionDraft(category.description ?? "");
       return;
     }
     try {
-      await updateCategory.mutateAsync({ name: trimmed, parentId: category.parentId });
-      showToast.success("Category renamed");
+      await updateCategory.mutateAsync({
+        name: trimmed,
+        description: trimmedDescription || null,
+        parentId: category.parentId,
+      });
+      showToast.success("Category updated");
       setEditing(false);
     } catch (err) {
-      showToast.error(errorMessage(err, "Couldn't rename category"));
+      showToast.error(errorMessage(err, "Couldn't update category"));
     }
   }
 
@@ -128,27 +150,43 @@ function CategoryRow({ category }: { category: CourseCategory }) {
     }
   }
 
+  function cancelEditing() {
+    setEditing(false);
+    setDraft(category.name);
+    setDescriptionDraft(category.description ?? "");
+  }
+
   return (
     <>
-      <div className="flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] px-3 py-2">
+      <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/[0.03] px-3 py-2 space-y-2">
         {editing ? (
           <>
-            <input
-              autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && saveRename()}
-              className={`${fieldCls} py-1.5`}
+            <div className="flex items-center gap-2">
+              <input
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && saveRename()}
+                className={`${fieldCls} py-1.5`}
+              />
+              <button type="button" onClick={saveRename} disabled={updateCategory.isPending} className="shrink-0 p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10">
+                <Check size={15} />
+              </button>
+              <button type="button" onClick={cancelEditing} className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5">
+                <X size={15} />
+              </button>
+            </div>
+            <textarea
+              value={descriptionDraft}
+              onChange={(e) => setDescriptionDraft(e.target.value)}
+              placeholder="Short description members will see on this category's page (optional)"
+              rows={2}
+              maxLength={600}
+              className={`${fieldCls} resize-none py-1.5`}
             />
-            <button type="button" onClick={saveRename} disabled={updateCategory.isPending} className="shrink-0 p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10">
-              <Check size={15} />
-            </button>
-            <button type="button" onClick={() => { setEditing(false); setDraft(category.name); }} className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5">
-              <X size={15} />
-            </button>
           </>
         ) : (
-          <>
+          <div className="flex items-center gap-2">
             <span className="flex-1 min-w-0 truncate text-sm font-semibold text-gray-900 dark:text-white">{category.name}</span>
             <span className="shrink-0 text-[11px] font-semibold text-gray-400">{category.courseCount} course{category.courseCount === 1 ? "" : "s"}</span>
             <button type="button" onClick={() => setEditing(true)} className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-[#87102C] hover:bg-[#87102C]/5">
@@ -157,7 +195,7 @@ function CategoryRow({ category }: { category: CourseCategory }) {
             <button type="button" onClick={() => setConfirmDelete(true)} className="shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10">
               <Trash2 size={14} />
             </button>
-          </>
+          </div>
         )}
       </div>
 

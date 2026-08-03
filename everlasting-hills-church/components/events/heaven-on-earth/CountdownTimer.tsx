@@ -175,7 +175,7 @@ function CountCard({
             </motion.span>
           </AnimatePresence>
         ) : (
-          <span className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight tabular-nums text-white/40">
+          <span className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight tabular-nums text-white/60">
             {display}
           </span>
         )}

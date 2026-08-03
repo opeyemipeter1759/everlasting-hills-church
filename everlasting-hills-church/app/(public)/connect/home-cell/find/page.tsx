@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -165,7 +166,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
             <h3 className="text-white font-black text-lg leading-tight">Add a Cell</h3>
             <p className="text-white/35 text-xs mt-0.5">A super admin will review and approve your submission.</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
+          <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
             <X size={15} />
           </button>
         </div>
@@ -315,7 +316,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
             <h3 className="text-white font-black text-lg leading-tight">{cell.name}</h3>
             <p className="text-white/35 text-xs mt-0.5">Led by {cell.leaderName}</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
+          <button onClick={onClose} aria-label="Close" className="w-8 h-8 rounded-full flex items-center justify-center text-white/30 hover:text-white hover:bg-white/[0.06] transition-all">
             <X size={15} />
           </button>
         </div>
@@ -405,10 +406,12 @@ function CellCard({ cell, index, onJoin }: { cell: Cell; index: number; onJoin: 
     >
       {/* Photo */}
       <div className="relative overflow-hidden" style={{ aspectRatio: "4/5" }}>
-        <img
+        <Image
           src={cellPhoto(index)}
           alt={cell.name}
-          className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-700"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          className="object-cover group-hover:scale-[1.06] transition-transform duration-700"
         />
         {/* gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
@@ -529,8 +532,11 @@ export default function FindCellPage() {
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src="/HeroImages/IMG_1080.jpg" alt=""
-            className="w-full h-full object-cover object-center scale-[1.04]" />
+          <Image src="/HeroImages/IMG_1080.jpg" alt=""
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover object-center scale-[1.04]" />
           <div className="absolute inset-0 bg-gradient-to-b from-church-dark/90 via-church-dark/80 to-church-dark" />
         </div>
         <div className="pointer-events-none absolute bottom-0 left-1/2 -translate-x-1/2 w-[700px] h-[200px] rounded-full bg-church-maroon/15 blur-[90px] z-0" />

@@ -115,7 +115,7 @@ function MemberSidebar({ memberDisplayId: _id, displayName, initials, email: _em
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-semibold truncate leading-tight">{displayName}</p>
-            <p className="text-white/30 text-[10px] uppercase tracking-wide font-medium">Member</p>
+            <p className="text-white/50 text-[10px] uppercase tracking-wide font-medium">Member</p>
           </div>
           <button
             onClick={handleLogout}

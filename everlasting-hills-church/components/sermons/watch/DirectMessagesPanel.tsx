@@ -32,7 +32,7 @@ function RecipientPicker({
         <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 flex-1">
           {selected.firstName} {selected.lastName}
         </span>
-        <button type="button" onClick={onClear} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        <button type="button" onClick={onClear} aria-label="Clear selected recipient" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
           <X size={14} />
         </button>
       </div>

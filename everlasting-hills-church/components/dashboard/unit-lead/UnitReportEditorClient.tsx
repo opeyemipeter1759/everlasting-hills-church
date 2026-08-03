@@ -1,12 +1,20 @@
 "use client";
 
 import { Users } from "lucide-react";
-import { useMyUnit } from "./useMyUnit";
+import { useUnitLeadContext } from "./useUnitLeadContext";
 import ReportEditorPage from "@/components/dashboard/reports/ReportEditorPage";
 import ReportEditorSkeleton from "@/components/ui/skeleton/ReportEditorSkeleton";
 
-export default function UnitReportEditorClient({ mode, reportId }: { mode: "create" | "edit"; reportId?: string }) {
-  const { summary } = useMyUnit();
+export default function UnitReportEditorClient({
+  unitId,
+  mode,
+  reportId,
+}: {
+  unitId: string;
+  mode: "create" | "edit";
+  reportId?: string;
+}) {
+  const { summary } = useUnitLeadContext(unitId);
 
   if (summary === undefined) {
     return <ReportEditorSkeleton />;
@@ -30,7 +38,7 @@ export default function UnitReportEditorClient({ mode, reportId }: { mode: "crea
       scope="UNIT"
       targets={[{ id: summary.id, name: summary.name }]}
       reportId={reportId}
-      backHref="/dashboard/unit-lead/reports"
+      backHref={`/dashboard/unit-lead/${unitId}/reports`}
     />
   );
 }

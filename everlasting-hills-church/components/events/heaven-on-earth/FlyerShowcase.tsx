@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Expand, Sparkles, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import NextImage from "next/image";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import { HEAVEN_ON_EARTH } from "./event-constants";
 
@@ -90,11 +91,12 @@ export default function FlyerShowcase() {
               <div className="relative rounded-2xl bg-gradient-to-br from-[#87102C] via-[#6E0C24] to-[#2a0410] p-1.5 shadow-2xl shadow-[#87102C]/30 group-hover:-translate-y-1 group-hover:shadow-[#87102C]/50 transition-all duration-500">
                 <div className="relative rounded-[14px] overflow-hidden aspect-[3/4] bg-[#1a0610]">
                   {imageOk === true ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <NextImage
                       src={HEAVEN_ON_EARTH.flyerImagePath}
                       alt={`${HEAVEN_ON_EARTH.title} event flyer`}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 448px"
+                      className="object-cover"
                     />
                   ) : (
                     <FlyerPlaceholder loading={imageOk === null} />
@@ -146,13 +148,14 @@ export default function FlyerShowcase() {
               onClick={(e) => e.stopPropagation()}
               className="relative max-w-[min(90vw,560px)] max-h-[90vh] cursor-default"
             >
-              <div className="rounded-2xl overflow-hidden shadow-2xl bg-[#1a0610] aspect-[3/4]">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-[#1a0610] aspect-[3/4]">
                 {imageOk === true ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
+                  <NextImage
                     src={HEAVEN_ON_EARTH.flyerImagePath}
                     alt={`${HEAVEN_ON_EARTH.title} event flyer enlarged`}
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="(max-width: 768px) 90vw, 560px"
+                    className="object-cover"
                   />
                 ) : (
                   <FlyerPlaceholder />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { CheckInPanel } from "./member/CheckInPanel";
 import {
@@ -321,8 +322,7 @@ export default function AdminOverview({
                 {birthdayFeed.map((b) => (
                   <li key={b.id} className="flex items-center gap-3 px-6 py-3.5 hover:bg-[#FFF4F6]/50 dark:hover:bg-white/[0.03] transition-colors">
                     {b.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={b.photoUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                      <Image src={b.photoUrl} alt="" width={32} height={32} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
                     ) : (
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${avatarColor(`${b.firstName} ${b.lastName}`)}`}>
                         {b.firstName[0]}{b.lastName[0]}

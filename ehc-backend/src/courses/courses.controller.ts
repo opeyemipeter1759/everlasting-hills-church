@@ -110,6 +110,20 @@ export class CoursesController {
     return this.category.removeCategory(user, id);
   }
 
+  // ── Member: category enrollment (gates per-course enrollment below) ─────────
+
+  @Get('categories/enrolled/me')
+  @ApiOperation({ summary: 'Category ids the current user has enrolled in' })
+  myEnrolledCategoryIds(@CurrentUser() user: AuthUser) {
+    return this.enrollment.myEnrolledCategoryIds(user);
+  }
+
+  @Post('categories/:id/enroll')
+  @ApiOperation({ summary: 'Enroll the current user in a course category (reason + agreement form)' })
+  enrollInCategory(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() body: unknown) {
+    return this.enrollment.enrollInCategory(user, id, body);
+  }
+
   // ── Member: enrollment + exam ────────────────────────────────────────────────
 
   @Post(':id/enroll')

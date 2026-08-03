@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowDown, ChevronDown, Sparkles } from "lucide-react";
 import { HEAVEN_ON_EARTH } from "./event-constants";
@@ -15,7 +16,7 @@ import { HEAVEN_ON_EARTH } from "./event-constants";
  */
 export default function HeroExperience() {
   // The flyer doubles as the hero backdrop. If the artwork isn't present yet,
-  // we hide the <img> and the brand gradient below stands in on its own.
+  // we hide the image and the brand gradient below stands in on its own.
   const [flyerVisible, setFlyerVisible] = useState(true);
 
   return (
@@ -31,13 +32,15 @@ export default function HeroExperience() {
       {/* Flyer artwork, fitted to cover the hero. Sits on the gradient so a
           missing/loading flyer still renders the branded backdrop. */}
       {flyerVisible && (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
+        <Image
           src={HEAVEN_ON_EARTH.flyerImagePath}
           alt=""
           aria-hidden="true"
           onError={() => setFlyerVisible(false)}
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover"
         />
       )}
 

@@ -42,6 +42,32 @@ export class UnitsController {
     return this.self.findMyUnit(user.userId);
   }
 
+  @Get('mine')
+  @ApiOperation({ summary: 'Get every unit the current user leads or assists' })
+  async getMyUnits(@CurrentUser() user: AuthUser) {
+    return this.self.findMyUnits(user.userId);
+  }
+
+  @Get('mine/:unitId')
+  @ApiOperation({
+    summary: 'Get full detail for one unit the current user leads or assists (or ADMIN+)',
+  })
+  async getMyUnitDetail(@CurrentUser() user: AuthUser, @Param('unitId') unitId: string) {
+    return this.self.findMyUnitDetail(user, unitId);
+  }
+
+  @Get('my-memberships')
+  @ApiOperation({ summary: 'Get every unit the current user is a plain member of (excludes units they lead/assist)' })
+  async getMyMemberships(@CurrentUser() user: AuthUser) {
+    return this.self.findMyMemberships(user.userId);
+  }
+
+  @Get('my-memberships/:unitId')
+  @ApiOperation({ summary: 'Get full detail for one unit the current user belongs to, in any capacity' })
+  async getMyMembershipDetail(@CurrentUser() user: AuthUser, @Param('unitId') unitId: string) {
+    return this.self.findMyMembershipDetail(user, unitId);
+  }
+
   @Get()
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'List all units with lead + assistant (ADMIN+)' })

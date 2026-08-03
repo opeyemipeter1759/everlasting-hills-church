@@ -62,7 +62,7 @@ export default function FinalInvitation() {
               Reserve My Seat
               <ArrowUpRight size={18} />
             </a>
-            <p className="mt-6 text-xs uppercase tracking-[0.3em] text-white/40 font-semibold">
+            <p className="mt-6 text-xs uppercase tracking-[0.3em] text-white/60 font-semibold">
               {HEAVEN_ON_EARTH.dateDisplay} · {HEAVEN_ON_EARTH.venue.name}
             </p>
           </div>

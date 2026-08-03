@@ -25,8 +25,9 @@ const DEFAULT_STREAK: StreakState = {
   history: [],
 };
 
-export async function loadMemberDashboard(me: MeResponse) {
-  const [bookmarksRaw, historyRaw, streakRaw, overviewRaw, announcementsRaw, communityFeedRaw] = await Promise.all([
+export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
+  const [me, bookmarksRaw, historyRaw, streakRaw, overviewRaw, announcementsRaw, communityFeedRaw] = await Promise.all([
+    mePromise,
     safeGet<SermonBookmark[]>("/sermons/me/bookmarks"),
     safeGet<ListenHistoryItem[]>("/sermons/me/history"),
     safeGet<number>("/sermons/me/streak"),

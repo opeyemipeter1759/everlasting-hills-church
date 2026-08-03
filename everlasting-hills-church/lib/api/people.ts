@@ -187,6 +187,26 @@ export function useUpdateMember() {
   });
 }
 
+/** Add a member to a unit from the People screens (ADMIN+, via the same
+ * endpoint the unit lead's own "Add member" form uses). */
+export function useAddMemberToUnit() {
+  const invalidate = useInvalidatePeople();
+  return useMutation({
+    mutationFn: ({ unitId, memberId }: { unitId: string; memberId: string }) =>
+      api.post(`/units/${unitId}/members`, { memberId }),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemoveMemberFromUnit() {
+  const invalidate = useInvalidatePeople();
+  return useMutation({
+    mutationFn: ({ unitId, memberId }: { unitId: string; memberId: string }) =>
+      api.delete(`/units/${unitId}/members/${memberId}`),
+    onSuccess: invalidate,
+  });
+}
+
 export function useChangeRole() {
   const invalidate = useInvalidateUsers();
   return useMutation({

@@ -20,7 +20,8 @@ export default function CourseCard({
 }) {
   const Icon = ICON_OPTIONS[course.iconKey] ?? ICON_OPTIONS.BookOpen;
   const [from, to] = course.gradient;
-  const locked = status === "locked";
+  const categoryLocked = status === "category-locked";
+  const locked = status === "locked" || categoryLocked;
 
   return (
     <Link
@@ -37,9 +38,9 @@ export default function CourseCard({
         {locked ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-black/50 backdrop-blur-[2px]">
             <Lock size={26} className="text-white/90" />
-            {prerequisiteTitle && (
+            {(categoryLocked || prerequisiteTitle) && (
               <p className="max-w-[85%] text-center text-[11px] font-semibold text-white/80">
-                Complete "{prerequisiteTitle}" first
+                {categoryLocked ? "Enroll in this category first" : `Complete "${prerequisiteTitle}" first`}
               </p>
             )}
           </div>

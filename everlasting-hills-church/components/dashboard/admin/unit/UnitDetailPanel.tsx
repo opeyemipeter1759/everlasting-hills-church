@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Crown, Trash2, UserMinus, UserPlus } from "lucide-react";
 import { Role, Unit, UnitDetail } from "@/types";
 import AddMemberForm from "./AddMemberForm";
@@ -97,9 +98,11 @@ export default function UnitDetailPanel({
               >
                 <span className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center">
                   {m.Member.photoUrl ? (
-                    <img
+                    <Image
                       src={m.Member.photoUrl}
                       alt={`${m.Member.firstName} ${m.Member.lastName}`}
+                      width={32}
+                      height={32}
                       className="w-full h-full object-cover"
                     />
                   ) : (

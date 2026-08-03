@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { CheckCircle2, RefreshCw } from "lucide-react";
 import { useTodayFeed } from "@/lib/api";
 
@@ -51,8 +52,7 @@ export function TodayFeed() {
           checkins.map((c) => (
             <div key={c.userId} className="flex items-center gap-3 px-5 py-3 hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
               {c.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={c.photoUrl} alt={c.userName} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                <Image src={c.photoUrl} alt={c.userName} width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center shrink-0 text-[11px] font-black text-[#87102C] dark:text-[#e8768a] uppercase">
                   {c.userName.charAt(0)}

@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, CheckCircle2, Clock, FileText, Layers, Plus, type LucideIcon } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, CheckCircle2, Clock, FileText, Layers, Plus, type LucideIcon } from "lucide-react";
 import { useMyReports, type ReportScope } from "@/lib/api/status-reports";
 import ReportCard from "./ReportCard";
 import ReportsListSkeleton from "@/components/ui/skeleton/ReportsListSkeleton";
+import Link from "next/link";
 
 interface Target {
   id: string;
@@ -23,12 +24,6 @@ function StatTile({ icon: Icon, count, label, tone }: { icon: LucideIcon; count:
     </div>
   );
 }
-
-/** "Reports" list page — Total/Drafted/Sent/Approved/Rejected stat tiles, an
- * optional department/unit switcher, and each report as a row. Create and
- * view/edit live on their own routes (see ReportEditorPage) — this page never
- * composes or opens a report inline. Shared by the Department, Unit, and
- * Pastoral report sections. */
 export default function ReportsPageShell({
   scope,
   targets = [],
@@ -36,6 +31,7 @@ export default function ReportsPageShell({
   title,
   subtitle,
   basePath,
+  backHref = "/dashboard/my-department",
 }: {
   scope: ReportScope;
   /** Department(s)/unit this page covers. Empty for scope="PASTOR". */
@@ -45,6 +41,8 @@ export default function ReportsPageShell({
   subtitle: string;
   /** e.g. "/dashboard/unit-lead/reports" — "New report" and each row's View link build off this. */
   basePath: string;
+  /** Where the "Back" link above the header goes. */
+  backHref?: string;
 }) {
   const router = useRouter();
   const q = useMyReports();
@@ -78,7 +76,12 @@ export default function ReportsPageShell({
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Header */}
+      <div className="flex items-center gap-1">
+      <ArrowLeft size={16} className="text-[#87102C] dark:text-[#e8768a]" />
+      <Link href={backHref} className='flex text-[#6E0C24]  font-medium text-sm rounded-md  items-center'>Back</Link>
+      </div>
       <div className="flex flex-wrap items-start justify-between gap-4">
+        
         <div className="flex items-start gap-3">
           <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#87102C]/10 dark:bg-[#87102C]/15">
             <HeaderIcon size={16} className="text-[#87102C] dark:text-[#e8768a]" />

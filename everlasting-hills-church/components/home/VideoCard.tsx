@@ -1,6 +1,7 @@
 "use client";
 
 import type { YouTubeVideo, VideoCategory } from "@/types";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Eye, Play, Share2, ThumbsUp, MessageCircle } from "lucide-react";
 
@@ -43,10 +44,12 @@ export default function VideoCard({ video, onOpen }: VideoCardProps) {
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-[#14070b]">
         {video.thumbnail ? (
-          <img
+          <Image
             src={video.thumbnail}
             alt={video.title}
-            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            className="object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
           <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#271015] via-[#14070b] to-[#0a0a0a]">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { ArrowLeft, Download, FileText, Lock, Pencil, Send, Trash2 } from "lucide-react";
 import {
@@ -17,10 +18,18 @@ import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import ReportStatusBadge from "./ReportStatusBadge";
-import ReportEditor, { textLength, PROSE_CLASSES } from "./ReportEditor";
+import { textLength, PROSE_CLASSES } from "./report-text-utils";
 import ReportAttachmentUpload from "./ReportAttachmentUpload";
-import { exportReportDocx } from "./exportReportDocx";
 import ReportEditorSkeleton from "@/components/ui/skeleton/ReportEditorSkeleton";
+import { SkeletonBlock } from "@/components/ui/display/SkeletonBlock";
+
+// Both tiptap (editor) and docx (export) are only needed once a user actually
+// edits or exports a report — split out of the initial bundle so viewing a
+// report (the common case) doesn't ship either library.
+const ReportEditor = dynamic(() => import("./ReportEditor"), {
+  ssr: false,
+  loading: () => <SkeletonBlock className="h-[480px] w-full rounded-xl" />,
+});
 
 interface Target {
   id: string;
@@ -155,6 +164,12 @@ export default function ReportEditorPage({
     }
   }
 
+  async function handleExportDocx() {
+    if (!report) return;
+    const { exportReportDocx } = await import("./exportReportDocx");
+    exportReportDocx(report);
+  }
+
   async function handleComment() {
     if (!comment.trim()) return;
     try {
@@ -218,7 +233,7 @@ export default function ReportEditorPage({
 
             {mode === "edit" && report && !editing && (
               <div className="flex flex-shrink-0 items-center gap-1">
-                <button type="button" onClick={() => exportReportDocx(report)} title="Export as Word document" className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-white">
+                <button type="button" onClick={handleExportDocx} title="Export as Word document" aria-label="Export as Word document" className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-white">
                   <Download size={15} />
                 </button>
                 {report.status === "DRAFT" && (
@@ -362,6 +377,7 @@ export default function ReportEditorPage({
                 type="button"
                 onClick={handleComment}
                 disabled={!comment.trim() || addComment.isPending}
+                aria-label="Post reply"
                 className="inline-flex items-center gap-1 rounded-lg bg-[#87102C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#6E0C24] disabled:opacity-40"
               >
                 <Send size={12} />

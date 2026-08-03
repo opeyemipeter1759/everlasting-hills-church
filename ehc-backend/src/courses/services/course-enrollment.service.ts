@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { parseSchema } from '../../common/zod-parse.util';
-import { SubmitExamSchema } from '../dto/course.schema';
+import { SubmitExamSchema, CourseCategoryEnrollInputSchema } from '../dto/course.schema';
 import { CoursesSharedService } from './courses-shared.service';
 
 @Injectable()
@@ -24,6 +24,17 @@ export class CourseEnrollmentService {
     const course = await this.prisma.course.findFirst({ where: { tenantId: this.tenantId, id: courseId } });
     if (!course) throw new NotFoundException('Course not found');
     const memberId = await this.shared.resolveMemberId(actor);
+
+    // Category access is the outermost gate — a member must have already enrolled
+    // in the course's category (reason + agreement form) before enrolling in any
+    // individual course inside it. Enforced here (not just in the UI) so hitting
+    // POST /courses/:id/enroll directly can't bypass the category form.
+    if (course.categoryId) {
+      const categoryEnrollment = await this.prisma.courseCategoryEnrollment.findUnique({
+        where: { categoryId_memberId: { categoryId: course.categoryId, memberId } },
+      });
+      if (!categoryEnrollment) throw new BadRequestException('Enroll in this course\'s category first');
+    }
 
     if (course.prerequisiteId) {
       const prereq = await this.prisma.courseEnrollment.findFirst({
@@ -82,5 +93,35 @@ export class CourseEnrollmentService {
       total: questions.length,
       completed: enrollment.completed,
     };
+  }
+
+  async enrollInCategory(actor: AuthUser, categoryId: string, raw: unknown) {
+    const dto = parseSchema(CourseCategoryEnrollInputSchema, raw);
+    await this.shared.assertCategoryExists(categoryId);
+    const memberId = await this.shared.resolveMemberId(actor);
+
+    await this.prisma.courseCategoryEnrollment.upsert({
+      where: { categoryId_memberId: { categoryId, memberId } },
+      create: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        categoryId,
+        memberId,
+        reason: dto.reason,
+        commitmentConfirmed: dto.commitmentConfirmed,
+        agreedToRules: dto.agreedToRules,
+      },
+      update: {},
+    });
+    return { categoryId, enrolled: true };
+  }
+
+  async myEnrolledCategoryIds(actor: AuthUser): Promise<string[]> {
+    const memberId = await this.shared.resolveMemberId(actor);
+    const rows = await this.prisma.courseCategoryEnrollment.findMany({
+      where: { memberId },
+      select: { categoryId: true },
+    });
+    return rows.map((r) => r.categoryId);
   }
 }

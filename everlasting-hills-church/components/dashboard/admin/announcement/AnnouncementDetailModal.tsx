@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Calendar, Globe, Mail, Pencil, Users } from "lucide-react";
 import Modal from "@/components/ui/overlay/Modal";
 import StatusBadge from "./StatusBadge";
@@ -24,8 +25,8 @@ export default function AnnouncementDetailModal({
           </div>
 
           {a.imageUrl && (
-            <div className="rounded-xl overflow-hidden border border-gray-100 dark:border-white/8">
-              <img src={a.imageUrl} alt="" className="w-full max-h-64 object-cover" />
+            <div className="relative w-full h-64 rounded-xl overflow-hidden border border-gray-100 dark:border-white/8">
+              <Image src={a.imageUrl} alt="" fill sizes="(max-width: 640px) 100vw, 512px" className="object-cover" />
             </div>
           )}
 

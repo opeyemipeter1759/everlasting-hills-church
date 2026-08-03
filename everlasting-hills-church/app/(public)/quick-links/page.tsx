@@ -79,7 +79,7 @@ export default function QuickLinksPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-white text-sm">{label}</p>
-                  <p className="text-white/40 text-xs mt-0.5 leading-relaxed">{description}</p>
+                  <p className="text-white/60 text-xs mt-0.5 leading-relaxed">{description}</p>
                 </div>
               </div>
               <ArrowRight

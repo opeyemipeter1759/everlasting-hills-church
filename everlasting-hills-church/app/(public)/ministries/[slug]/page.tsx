@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { Crown, Heart, Zap, Users, ArrowLeft, ArrowRight } from "lucide-react";
 import ScrollReveal from "@/components/home/ScrollReveal";
@@ -262,12 +263,14 @@ export default async function MinistryDetailPage({
       <section className="relative overflow-hidden py-24 md:py-32 bg-church-dark text-white">
         {/* Background image */}
         <div className="pointer-events-none absolute inset-0 z-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={m.heroImage}
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover object-center"
             style={{ opacity: 0.40 }}
           />
           {/* Dark scrim — heavier on the left so white text stays legible */}

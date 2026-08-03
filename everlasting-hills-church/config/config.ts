@@ -86,8 +86,8 @@ export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
   HOD: "bg-teal-500/20 text-teal-300 border border-teal-500/30",
   HEAD_USHER: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
   UNIT_LEAD: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
-  MEMBER: "bg-white/10 text-white/50 border border-white/10",
-  VISITOR: "bg-white/10 text-white/50 border border-white/10",
+  MEMBER: "bg-white/10 text-white/70 border border-white/10",
+  VISITOR: "bg-white/10 text-white/70 border border-white/10",
 };
 
 import {
@@ -121,6 +121,7 @@ import {
   Building2,
   GraduationCap,
   Compass,
+  Users2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -133,7 +134,12 @@ export type NavItem = {
   /** Extra data-driven visibility check beyond the static role gate — e.g. a
    * UNIT_LEAD-role user who doesn't actually lead a real unit shouldn't see
    * "My Unit"; a plain MEMBER who is genuinely on a team should see "Follow Up". */
-  requiresAccess?: "unitLead" | "followUp";
+  requiresAccess?: "unitLead" | "unitMember" | "followUp";
+  /** Expanded into one nav item per unit (label = unit name, href =
+   * `${href}/${unit.id}`) instead of rendered as a single static link — see
+   * AppSidebar.tsx. "lead" sources from units the user leads/assists, "member"
+   * from units they're a plain member of. */
+  dynamicUnits?: "lead" | "member";
 };
 
 export type NavGroup = {
@@ -154,8 +160,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Unit",
     items: [
-      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
-      { label: "Reports", href: "/dashboard/unit-lead/reports", icon: FileText, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
+      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead", dynamicUnits: "lead" },
     ],
   },
     {
@@ -168,7 +173,6 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "My Department",
     items: [
       { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", },
-      { label: "Reports", href: "/dashboard/my-department/reports", icon: FileText, minRole: "ADMIN_HEAD" },
     ],
   },
   {
@@ -227,6 +231,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
       { label: "My Course",           href: "/dashboard/courses",            icon: GraduationCap,       minRole: "MEMBER" },
       { label: "Explore Course",           href: "/dashboard/explore-courses",            icon: Compass,       minRole: "MEMBER" },
+      { label: "Unit", href: "/dashboard/unit", icon: Users2, minRole: "MEMBER", requiresAccess: "unitMember", dynamicUnits: "member" },
 
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
 

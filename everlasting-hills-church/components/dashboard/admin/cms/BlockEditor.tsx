@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ChevronDown, ChevronUp, GripVertical, Trash2 } from "lucide-react";
 import { blockLabel, type Block } from "./cms-blocks";
 import MediaPickerModal from "./MediaPickerModal";
@@ -63,8 +64,7 @@ export default function BlockEditor({
         <div className="space-y-3">
           <div className="flex items-start gap-3">
             {block.url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={block.url} alt={block.alt} className="h-20 w-20 rounded-xl object-cover border border-[#E7CDD3]" />
+              <Image src={block.url} alt={block.alt} width={80} height={80} className="h-20 w-20 rounded-xl object-cover border border-[#E7CDD3]" />
             ) : (
               <div className="h-20 w-20 rounded-xl border border-dashed border-[#E7CDD3] flex items-center justify-center text-[10px] text-gray-400 text-center">No image</div>
             )}

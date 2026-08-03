@@ -53,6 +53,11 @@ export default function CourseCategoryAdminClient({ categoryId }: { categoryId: 
             <span>{category.name}</span>
           </div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">{category.name}</h1>
+          {category.description && (
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600 dark:text-white/60">
+              {category.description}
+            </p>
+          )}
           <p className="text-sm text-gray-500 dark:text-white/50 mt-1">
             {courses.length} course{courses.length === 1 ? "" : "s"}
           </p>

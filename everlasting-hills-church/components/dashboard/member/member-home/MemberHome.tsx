@@ -68,10 +68,6 @@ export default function MemberHome(props: MemberHomePropsOptional) {
 
       <QuickActionsStrip />
 
-      {/* ═══════════════════════════════════════════════════════════
-          BAND 2 — TODAY
-          ═══════════════════════════════════════════════════════════ */}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CheckInPanel
           todayService={todayService}
@@ -82,11 +78,6 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           <ContinueListeningCard listenHistory={listenHistory} />
         </div>
       </div>
-
-      {/* ═══════════════════════════════════════════════════════════
-          BAND 3 — MY JOURNEY
-          ═══════════════════════════════════════════════════════════ */}
-
       <JourneyBand
         isNewMember={isNewMember}
         member={member}
@@ -105,11 +96,6 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         discipleshipMilestones={discipleshipMilestones}
         monthlyAttendance={monthlyAttendance}
       />
-
-      {/* ═══════════════════════════════════════════════════════════
-          BAND 5 — CONTENT
-          ═══════════════════════════════════════════════════════════ */}
-
       {featuredSermon && <FeaturedSermonCard sermon={featuredSermon} />}
       <AnnouncementsPanel announcements={announcements} />
     </div>

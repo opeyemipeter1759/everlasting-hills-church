@@ -6,7 +6,7 @@ import { useApproveReport, type ReportRow } from "@/lib/api/status-reports";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import ReportStatusBadge from "@/components/dashboard/reports/ReportStatusBadge";
-import { toPlainText } from "@/components/dashboard/reports/ReportEditor";
+import { toPlainText } from "@/components/dashboard/reports/report-text-utils";
 import { Avatar } from "@/components/dashboard/admin/departments/HeadPicker";
 
 function fmt(d: string) {

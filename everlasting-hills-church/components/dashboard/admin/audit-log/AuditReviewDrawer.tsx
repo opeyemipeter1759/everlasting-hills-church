@@ -7,7 +7,7 @@ import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import Drawer from "@/components/ui/overlay/Drawer";
 import ReportStatusBadge from "@/components/dashboard/reports/ReportStatusBadge";
-import { PROSE_CLASSES } from "@/components/dashboard/reports/ReportEditor";
+import { PROSE_CLASSES } from "@/components/dashboard/reports/report-text-utils";
 import { Avatar } from "@/components/dashboard/admin/departments/HeadPicker";
 
 function fmt(d: string) {
@@ -191,6 +191,7 @@ export default function AuditReviewDrawer({ report, onClose }: { report: ReportR
               type="button"
               onClick={handleComment}
               disabled={!comment.trim() || addComment.isPending}
+              aria-label="Post comment"
               className="inline-flex items-center gap-1 rounded-lg bg-[#87102C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#6E0C24] disabled:opacity-40"
             >
               <Send size={12} />

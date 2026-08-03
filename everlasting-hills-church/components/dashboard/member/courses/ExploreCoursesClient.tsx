@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { GraduationCap, SearchX } from "lucide-react";
-import { useCourses, useCourseCategories, useMyCourseProgress, getCourseStatus } from "@/lib/api/courses";
+import { useCourses, useCourseCategories, useMyCourseProgress, useMyCategoryEnrollments, getCourseStatus } from "@/lib/api/courses";
 import ExploreCoursesSkeleton from "@/components/ui/skeleton/ExploreCoursesSkeleton";
 import ExploreCoursesHero from "./ExploreCoursesHero";
 import CourseFilters from "./CourseFilters";
@@ -14,6 +14,7 @@ export default function ExploreCoursesClient() {
   const { data: catalog = [], isLoading: coursesLoading } = useCourses();
   const { data: categories = [], isLoading: categoriesLoading } = useCourseCategories();
   const { data: progress = {} } = useMyCourseProgress();
+  const { data: enrolledCategoryIds = [] } = useMyCategoryEnrollments();
 
   const searching = search.trim().length > 0;
   const filtered = useMemo(() => {
@@ -58,7 +59,7 @@ export default function ExploreCoursesClient() {
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((course) => {
-              const status = getCourseStatus(course, catalog, progress);
+              const status = getCourseStatus(course, catalog, progress, enrolledCategoryIds);
               const prerequisite = catalog.find((c) => c.slug === course.prerequisiteSlug);
               return (
                 <CourseCard key={course.id} course={course} status={status} prerequisiteTitle={prerequisite?.title} />

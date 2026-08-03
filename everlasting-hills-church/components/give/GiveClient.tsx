@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check, Search, Building2, Info } from "lucide-react";
 import ScrollReveal from "@/components/home/ScrollReveal";
@@ -261,11 +262,12 @@ function AccountCard({
         <div className="mb-5 flex items-start justify-between">
           {showLogo ? (
             <span className="inline-flex h-11 items-center rounded-xl border border-[#E7CDD3]/70 bg-white px-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={acc.logo}
+              <Image
+                src={acc.logo!}
                 alt={acc.bank}
                 onError={() => setLogoErr(true)}
+                width={96}
+                height={24}
                 className="h-6 w-auto object-contain"
               />
             </span>

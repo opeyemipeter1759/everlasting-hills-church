@@ -1,5 +1,7 @@
 import { UnitsSelfService } from './units-self.service';
 import type { PrismaService } from '../../prisma/prisma.service';
+import type { UnitsMembershipService } from './units-membership.service';
+import type { UnitsCrudService } from './units-crud.service';
 
 describe('UnitsSelfService.findMyUnit', () => {
   function makeService(profileResult: unknown, unitMemberResult: unknown) {
@@ -7,7 +9,9 @@ describe('UnitsSelfService.findMyUnit', () => {
       profile: { findUnique: jest.fn().mockResolvedValue(profileResult) },
       unitMember: { findFirst: jest.fn().mockResolvedValue(unitMemberResult) },
     } as unknown as PrismaService;
-    return { service: new UnitsSelfService(prisma), prisma };
+    const membership = {} as unknown as UnitsMembershipService;
+    const crud = {} as unknown as UnitsCrudService;
+    return { service: new UnitsSelfService(prisma, membership, crud), prisma };
   }
 
   it('returns null when the user has no Profile', async () => {

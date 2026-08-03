@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
@@ -9,7 +9,7 @@ import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
 import { normalizeRole } from '@/lib/auth/frontend-session';
 import Image from 'next/image';
 import { useCurrentUser, useNavDropdown } from '@/hooks';
-import { useMyUnit } from '@/lib/api';
+import { useMe, useMyUnits, useMyMemberships } from '@/lib/api';
 import { useFollowUpAccess } from '@/lib/api/follow-up-pipeline';
 import { getInitials, truncateText } from '@/utils/stringUtils';
 import { SidebarSkeleton } from '@/components/ui/skeleton/SidebarSkeleton';
@@ -71,6 +71,14 @@ const AppSidebar: React.FC = () => {
 
   const pathname = usePathname();
   const currentUser = useCurrentUser();
+  // The cookie's picture is a snapshot from last login — if the member's photo
+  // changes afterward (e.g. an admin updates it, or it's edited from the profile
+  // page directly) it goes stale until the next login. /auth/me reflects the DB
+  // photoUrl fresh on every request, so prefer it once loaded; fall back to the
+  // cookie so the avatar doesn't flash empty first. Mirrors the same pattern
+  // already used for `role` in SessionActionMenu.tsx.
+  const { data: me } = useMe({ enabled: !!currentUser?.loggedIn });
+  const currentPicture = me?.member?.photoUrl ?? currentUser?.picture ?? null;
 
   const showLabels = isExpanded || isMobileOpen || isHovered;
   const userRole = normalizeRole(currentUser?.role);
@@ -78,19 +86,33 @@ const AppSidebar: React.FC = () => {
   // Data-driven checks beyond the static role gate — see NavItem.requiresAccess.
   // Undefined while loading is treated as "no access yet" so a link never flashes
   // and then disappears.
-  const { data: myUnit } = useMyUnit();
+  const { data: myUnits } = useMyUnits();
+  const { data: myMemberships } = useMyMemberships();
   const { data: followUpAccess } = useFollowUpAccess();
 
   const visibleGroups = userRole
     ? NAV_GROUPS.map((group) => ({
         ...group,
-        items: group.items.filter((item) => {
-          if (!hasMinRole(userRole, item.minRole)) return false;
-          if (item.maxRole && hasMinRole(userRole, item.maxRole)) return false;
-          if (item.requiresAccess === 'unitLead' && !myUnit) return false;
-          if (item.requiresAccess === 'followUp' && !followUpAccess?.hasAccess) return false;
-          return true;
-        }),
+        items: group.items
+          .filter((item) => {
+            if (!hasMinRole(userRole, item.minRole)) return false;
+            if (item.maxRole && hasMinRole(userRole, item.maxRole)) return false;
+            if (item.requiresAccess === 'unitLead' && !myUnits?.length) return false;
+            if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
+            if (item.requiresAccess === 'followUp' && !followUpAccess?.hasAccess) return false;
+            return true;
+          })
+          // A person can lead/belong to more than one unit — expand into one
+          // link per unit instead of a single generic link (see NavItem.dynamicUnits).
+          .flatMap((item) => {
+            if (!item.dynamicUnits) return [item];
+            const units = item.dynamicUnits === 'lead' ? myUnits : myMemberships;
+            return (units ?? []).map((unit) => ({
+              ...item,
+              label: unit.name,
+              href: `${item.href}/${unit.id}`,
+            }));
+          }),
       })).filter((group) => group.items.length > 0)
     : [];
 
@@ -103,18 +125,33 @@ const AppSidebar: React.FC = () => {
   const isActive = buildActiveMatcher(pathname, allPaths);
 
   const { openDropdown, setOpenDropdown } = useNavDropdown(pathname, visibleGroups, isActive);
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => {
-    const allSections = new Set(NAV_GROUPS.map((g) => g.section).filter(Boolean) as string[]);
-    for (const group of NAV_GROUPS) {
-      if (group.section && group.items.some((item) => {
-        if (isActive(item.href)) return true;
-        return (item as { children?: { href: string }[] }).children?.some((c) => isActive(c.href)) ?? false;
-      })) {
-        allSections.delete(group.section);
-      }
-    }
-    return allSections;
-  });
+  // Every section starts collapsed; the effect below opens whichever one holds
+  // the active route. Manual toggles after that are left alone — navigating
+  // elsewhere doesn't re-collapse a section the user opened.
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    () => new Set(NAV_GROUPS.map((g) => g.section).filter(Boolean) as string[]),
+  );
+
+  useEffect(() => {
+    const activeSection = visibleGroups.find(
+      (group) =>
+        group.section &&
+        group.items.some((item) => {
+          if (isActive(item.href)) return true;
+          return (item as { children?: { href: string }[] }).children?.some((c) => isActive(c.href)) ?? false;
+        }),
+    )?.section;
+    if (!activeSection) return;
+    setCollapsedSections((prev) => {
+      if (!prev.has(activeSection)) return prev;
+      const next = new Set(prev);
+      next.delete(activeSection);
+      return next;
+    });
+    // Re-run when the route changes, or when access-gated groups (My Unit,
+    // Unit, Follow Up) resolve and change which section the active item lives in.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, myUnits, myMemberships, followUpAccess?.hasAccess]);
 
   const toggleSection = (section: string) => {
     setCollapsedSections((prev) => {
@@ -319,10 +356,12 @@ const AppSidebar: React.FC = () => {
           }`}
         >
           <span className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-burgundy/10 dark:bg-burgundy/20">
-            {currentUser?.picture ? (
-              <img
-                src={currentUser.picture}
-                alt={currentUser.fullName ?? currentUser.email ?? 'User avatar'}
+            {currentPicture ? (
+              <Image
+                src={currentPicture}
+                alt={currentUser?.fullName ?? currentUser?.email ?? 'User avatar'}
+                width={32}
+                height={32}
                 className="h-full w-full object-cover"
               />
             ) : (

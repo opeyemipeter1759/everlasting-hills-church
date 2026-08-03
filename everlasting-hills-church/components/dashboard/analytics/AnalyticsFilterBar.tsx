@@ -76,7 +76,7 @@ export function AnalyticsFilterBar({ value, onChange }: Props) {
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#87102C]/10 dark:bg-[#87102C]/20 border border-[#87102C]/20">
           <CalendarDays size={11} className="text-[#87102C]" />
           <span className="text-[11px] font-bold text-[#87102C]">{rangeLabel}</span>
-          <button type="button" onClick={clearCustom} className="ml-0.5 text-[#87102C]/60 hover:text-[#87102C]">
+          <button type="button" onClick={clearCustom} aria-label="Clear custom date range" className="ml-0.5 text-[#87102C]/60 hover:text-[#87102C]">
             <X size={11} />
           </button>
         </div>

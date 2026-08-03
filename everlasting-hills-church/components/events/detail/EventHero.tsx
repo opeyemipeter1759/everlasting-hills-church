@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowDown, CalendarDays, MapPin } from "lucide-react";
 import type { EventDetail } from "@/types";
@@ -27,13 +28,15 @@ export default function EventHero({ event }: { event: EventDetail }) {
 
       {/* ── Background ──────────────────────────────────────────────────── */}
       {flyerOk && event.flyerImageUrl ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img
+        <Image
           src={event.flyerImageUrl}
           alt=""
           aria-hidden="true"
           onError={() => setFlyerOk(false)}
-          className="absolute inset-0 h-full w-full object-cover object-top"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover object-top"
         />
       ) : (
         <FallbackCanvas />

@@ -202,8 +202,10 @@ model Member {
   FollowUpAsAssignee FollowUpEntry[]      @relation("FollowUpAssignee")
   FollowUpLogs       FollowUpContactLog[] @relation("FollowUpLoggedBy")
   CourseEnrollment   CourseEnrollment[]
+  CourseCategoryEnrollment CourseCategoryEnrollment[]
   PrayerRequest      PrayerRequest[]
   Question           Question[]
+  UnitTaskAssigned   UnitTask[]
 
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
@@ -455,6 +457,9 @@ model Profile {
   ReportSubmitted        Report[]              @relation("ReportSubmittedBy")
   ReportReviewed         Report[]              @relation("ReportReviewedBy")
   ReportComment          ReportComment[]
+  UnitTaskCreated        UnitTask[]
+  UnitExpenseCreated     UnitExpense[]
+  UnitTaskCommentAuthor  UnitTaskComment[]
 }
 
 /// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
@@ -749,6 +754,7 @@ model Tenant {
   ListenProgress     ListenProgress[]
   Member             Member[]
   Notification       Notification[]
+  OnlineCheckIn      OnlineCheckIn[]
   PastorNote         PastorNote[]
   PastoralAlert      PastoralAlert[]
   PaystackWebhookLog PaystackWebhookLog[]
@@ -778,6 +784,10 @@ model Tenant {
   HomeCell           HomeCell[]
   CourseCategory     CourseCategory[]
   Question           Question[]
+  UnitPosition       UnitPosition[]
+  UnitTask           UnitTask[]
+  UnitExpense        UnitExpense[]
+  UnitTaskComment    UnitTaskComment[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1003,6 +1013,9 @@ model Unit {
   LeadAssignments UnitLeadAssignment[]
   FollowUpEntry   FollowUpEntry[]
   Report          Report[]
+  UnitPosition    UnitPosition[]
+  UnitTask        UnitTask[]
+  UnitExpense     UnitExpense[]
 
   @@index([departmentId])
 }
@@ -1141,11 +1154,97 @@ model UnitMember {
   memberId    String
   isLead      Boolean  @default(false)
   isAssistant Boolean  @default(false)
+  positionId  String?
   joinedAt    DateTime @default(now())
-  Member   Member   @relation(fields: [memberId], references: [id])
-  Unit     Unit     @relation(fields: [unitId], references: [id])
+  Member   Member       @relation(fields: [memberId], references: [id])
+  Unit     Unit         @relation(fields: [unitId], references: [id])
+  Position UnitPosition? @relation(fields: [positionId], references: [id], onDelete: SetNull)
 
   @@unique([unitId, memberId])
+  @@index([positionId])
+}
+
+/// A custom named title a unit lead can assign members to (e.g. "Secretary",
+/// "Treasurer"), independent of the Lead/Assistant flags above.
+model UnitPosition {
+  id        String       @id
+  tenantId  String
+  unitId    String
+  name      String
+  createdAt DateTime     @default(now())
+  Tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  Unit      Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  Members   UnitMember[]
+
+  @@unique([unitId, name])
+  @@index([unitId])
+}
+
+enum UnitTaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+/// A task a unit lead assigns to a member of their unit (or leaves unassigned,
+/// meaning it applies to the whole unit).
+model UnitTask {
+  id           String         @id
+  tenantId     String
+  unitId       String
+  title        String
+  description  String?
+  assignedToId String? // Member.id — null = whole-unit task
+  status       UnitTaskStatus @default(TODO)
+  dueDate      DateTime?
+  createdById  String // Profile.id
+  createdAt    DateTime       @default(now())
+  completedAt  DateTime?
+  Tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  Unit         Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  AssignedTo   Member?        @relation(fields: [assignedToId], references: [id])
+  CreatedBy    Profile        @relation(fields: [createdById], references: [id])
+  Comments     UnitTaskComment[]
+
+  @@index([unitId])
+  @@index([assignedToId])
+}
+
+/// A comment on a UnitTask — any member of the unit can discuss a task here
+/// (e.g. the assignee asking a question, the lead following up).
+model UnitTaskComment {
+  id        String   @id
+  tenantId  String
+  taskId    String
+  authorId  String // Profile.id
+  content   String
+  createdAt DateTime @default(now())
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Task      UnitTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  Author    Profile  @relation(fields: [authorId], references: [id])
+
+  @@index([taskId])
+}
+
+/// A simple expense record a unit lead logs for their unit — no approval
+/// workflow, just a running, admin-visible log.
+model UnitExpense {
+  id          String    @id
+  tenantId    String
+  unitId      String
+  title       String
+  amount      Float
+  category    String?
+  date        DateTime
+  description String?
+  receiptUrl  String? // uploaded via /uploads/document
+  createdById String // Profile.id
+  createdAt   DateTime  @default(now())
+  Tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  Unit        Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  CreatedBy   Profile   @relation(fields: [createdById], references: [id])
+
+  @@index([unitId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -1176,6 +1275,28 @@ model Visitor {
   FollowUpEntry      FollowUpEntry[]
 
   @@index([tenantId, convertedAt])
+}
+
+/// Online-engagement check-ins (e.g. watching the livestream on YouTube) — tracks
+/// an email through FIRST_TIMER -> SECOND_TIMER -> ONLINE_MEMBER stages, distinct
+/// from the in-person Visitor first-timer form.
+model OnlineCheckIn {
+  id             String   @id
+  tenantId       String
+  email          String
+  name           String?
+  channel        String
+  stage          String   @default("FIRST_TIMER")
+  visitCount     Int      @default(1)
+  lastCheckedIn  DateTime @default(now())
+  supabaseUserId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  Tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, email, channel])
+  @@index([tenantId, channel, stage])
 }
 
 /// Featured "My Everlasting Hills Experience" stories shown on the public homepage slider.
@@ -1401,18 +1522,20 @@ model Course {
 }
 
 model CourseCategory {
-  id        String   @id
-  tenantId  String
-  name      String
-  slug      String
-  parentId  String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  id          String   @id
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  parentId    String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
 
-  Tenant   Tenant           @relation(fields: [tenantId], references: [id])
-  Parent   CourseCategory?  @relation("CourseCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
-  Children CourseCategory[] @relation("CourseCategoryTree")
-  Courses  Course[]
+  Tenant      Tenant                      @relation(fields: [tenantId], references: [id])
+  Parent      CourseCategory?             @relation("CourseCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  Children    CourseCategory[]            @relation("CourseCategoryTree")
+  Courses     Course[]
+  Enrollments CourseCategoryEnrollment[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -1486,6 +1609,28 @@ model CourseEnrollment {
   Member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@unique([courseId, memberId])
+  @@index([tenantId])
+  @@index([memberId])
+}
+
+/// A member's one-time enrollment into a course CATEGORY — the reason/commitment/
+/// agreement they submit gates access to every course directly in that category
+/// (see CourseEnrollmentService.enroll, which checks for this row before allowing
+/// the underlying per-course CourseEnrollment).
+model CourseCategoryEnrollment {
+  id                  String   @id
+  tenantId            String
+  categoryId          String
+  memberId            String
+  reason              String
+  commitmentConfirmed Boolean  @default(false)
+  agreedToRules       Boolean  @default(false)
+  enrolledAt          DateTime @default(now())
+
+  Category CourseCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Member   Member         @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, memberId])
   @@index([tenantId])
   @@index([memberId])
 }

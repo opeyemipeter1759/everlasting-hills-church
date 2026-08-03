@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -153,10 +154,13 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
       <section className="relative min-h-screen flex flex-col justify-end overflow-hidden">
 
         <div className="absolute inset-0 z-0">
-          <img
+          <Image
             src={heroImageUrl}
             alt="Everlasting Hills church family"
-            className="w-full h-full object-cover object-center scale-[1.03]"
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover object-center scale-[1.03]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/60 to-church-dark/70" />
           <div className="absolute inset-0 bg-gradient-to-r from-church-dark/80 via-transparent to-transparent" />
@@ -377,7 +381,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
       <section className="py-24 md:py-28 px-6 sm:px-10 lg:px-16 border-t border-white/[0.06] relative overflow-hidden">
         {/* background image with overlay */}
         <div className="absolute inset-0 z-0">
-          <img src="/HeroImages/IMG_1080.jpg" alt="" className="w-full h-full object-cover object-center" />
+          <Image src="/HeroImages/IMG_1080.jpg" alt="" fill sizes="100vw" className="object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/80 to-church-dark/75" />
           <div className="absolute inset-0 bg-gradient-to-r from-church-dark/70 via-transparent to-church-dark/70" />
         </div>
@@ -448,17 +452,17 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               viewport={{ once: true }}
               className="grid grid-cols-3 grid-rows-2 gap-3 h-[420px] sm:h-[500px]"
             >
-              <div className="col-span-1 row-span-2 rounded-2xl overflow-hidden">
-                <img src={PEOPLE_IMAGES[0]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <div className="relative col-span-1 row-span-2 rounded-2xl overflow-hidden">
+                <Image src={PEOPLE_IMAGES[0]} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover hover:scale-105 transition-transform duration-700" />
               </div>
-              <div className="col-span-2 rounded-2xl overflow-hidden">
-                <img src={PEOPLE_IMAGES[1]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <div className="relative col-span-2 rounded-2xl overflow-hidden">
+                <Image src={PEOPLE_IMAGES[1]} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover hover:scale-105 transition-transform duration-700" />
               </div>
-              <div className="col-span-1 rounded-2xl overflow-hidden">
-                <img src={PEOPLE_IMAGES[2]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <div className="relative col-span-1 rounded-2xl overflow-hidden">
+                <Image src={PEOPLE_IMAGES[2]} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover hover:scale-105 transition-transform duration-700" />
               </div>
-              <div className="col-span-1 rounded-2xl overflow-hidden">
-                <img src={PEOPLE_IMAGES[3]} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+              <div className="relative col-span-1 rounded-2xl overflow-hidden">
+                <Image src={PEOPLE_IMAGES[3]} alt="" fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover hover:scale-105 transition-transform duration-700" />
               </div>
             </motion.div>
 
@@ -510,7 +514,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
       ══════════════════════════════════════════════════════════════════════ */}
       <section className="relative overflow-hidden py-32 px-6 text-center border-t border-white/[0.06]">
         <div className="pointer-events-none absolute inset-0">
-          <img src="/HeroImages/IMG_4565.jpg" alt="" className="w-full h-full object-cover opacity-15 scale-110" />
+          <Image src="/HeroImages/IMG_4565.jpg" alt="" fill sizes="100vw" className="object-cover opacity-15 scale-110" />
           <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/70 to-church-dark" />
         </div>
         <div className="relative z-10 max-w-2xl mx-auto">

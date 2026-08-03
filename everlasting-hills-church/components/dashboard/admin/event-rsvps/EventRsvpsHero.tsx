@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, CalendarDays, MapPin } from "lucide-react";
 import type { EventDetail } from "@/types";
 import { formatRange } from "../events-cms/helpers";
@@ -8,8 +9,7 @@ export default function EventRsvpsHero({ event }: { event: EventDetail }) {
     <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] overflow-hidden">
       <div className="relative h-40 sm:h-48 bg-[#FFE8ED] dark:bg-[#87102C]/20">
         {event.flyerImageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={event.flyerImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <Image src={event.flyerImageUrl} alt="" fill sizes="100vw" className="object-cover" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 

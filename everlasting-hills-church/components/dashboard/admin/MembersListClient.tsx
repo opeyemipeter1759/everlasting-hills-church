@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Mail, Phone, Trash2, Users, Tag, X } from "lucide-react";
@@ -240,10 +241,11 @@ export default function MembersListClient({ initialMembers, searchQuery }: Props
                 className="flex items-center gap-4 px-5 py-4 overflow-hidden hover:bg-gray-50 dark:hover:bg-white/[0.03] transition-colors group will-change-[filter,transform,opacity]"
               >
                 {m.photoUrl ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
+                  <Image
                     src={m.photoUrl}
                     alt=""
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                   />
                 ) : (

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Headphones, ChevronRight, Play } from "lucide-react";
 import type { MemberHomeProps } from "./types";
 import { iconBg, iconCl, muted, linkCl } from "./tokens";
@@ -39,7 +40,9 @@ export function ContinueListeningCard({ listenHistory }: {
               <Link key={p.slug} href={`/dashboard/sermon/${p.slug}`}
                 className="flex gap-3 hover:bg-gray-50 dark:hover:bg-white/[0.03] rounded-xl p-2 -mx-2 transition-colors group">
                 {p.thumbnailUrl ? (
-                  <img src={p.thumbnailUrl} alt={p.title} className="w-12 aspect-video rounded-lg object-cover flex-shrink-0" />
+                  <div className="relative w-12 aspect-video rounded-lg overflow-hidden flex-shrink-0">
+                    <Image src={p.thumbnailUrl} alt={p.title} fill sizes="48px" className="object-cover" />
+                  </div>
                 ) : (
                   <div className="w-12 aspect-video rounded-lg bg-[#FFE8ED] dark:bg-[#87102C]/20 flex items-center justify-center flex-shrink-0">
                     <Play size={12} className={iconCl} />

@@ -74,6 +74,7 @@ export default function HomeCellModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close"
             className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 dark:text-white/30 hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-colors"
           >
             <X size={16} />

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Search, Play, BookOpen, Headphones, Video, Layers, Mic2, ArrowLeft, Clock, Heart, MessageCircle } from 'lucide-react';
 import { usePublishedSermons } from '@/lib/api';
 import { formatSermonDuration } from '@/lib/api/sermon-types';
@@ -70,8 +71,13 @@ function SermonCard({
         aria-label={`Play ${s.title}`}
       >
         {s.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={s.thumbnailUrl} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <Image
+            src={s.thumbnailUrl}
+            alt={s.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center">
             <BookOpen size={32} className="text-[#87102C]/30 dark:text-[#87102C]/40" />
@@ -130,8 +136,13 @@ function SermonRow({ s, onPlay }: { s: LatestSermon; onPlay: (slug: string) => v
     >
       {s.thumbnailUrl ? (
         <div className="relative w-24 sm:w-32 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-white/5 flex-shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={s.thumbnailUrl} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <Image
+            src={s.thumbnailUrl}
+            alt={s.title}
+            fill
+            sizes="(max-width: 640px) 96px, 128px"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center">
             <Play size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" fill="currentColor" />
           </div>
@@ -172,8 +183,13 @@ function SeriesCard({ g, onOpen }: { g: SeriesGroup; onOpen: (g: SeriesGroup) =>
     >
       <div className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-white/5">
         {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={cover} alt={g.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <Image
+            src={cover}
+            alt={g.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center">
             <Layers size={32} className="text-[#87102C]/30 dark:text-[#87102C]/40" />

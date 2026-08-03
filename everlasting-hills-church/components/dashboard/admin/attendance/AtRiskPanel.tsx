@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { AlertTriangle, MoreVertical, Phone, UserX, Users } from "lucide-react";
 import { useMembersAtRisk } from "@/lib/api";
 import { AssignMemberModal } from "./AssignMemberModal";
@@ -98,8 +99,7 @@ function Section({ type, rows, onAssign }: { type: RiskType; rows: RiskRow[]; on
           <div key={r.userId} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-white/[0.03] border border-gray-100 dark:border-white/8 hover:border-gray-200 dark:hover:border-white/15 transition-colors">
             <div className="flex items-center gap-2.5 min-w-0">
               {r.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={r.photoUrl} alt={r.userName} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                <Image src={r.photoUrl} alt={r.userName} width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
               ) : (
                 <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center shrink-0 text-[11px] font-black text-gray-500 dark:text-gray-400 uppercase">
                   {r.userName.charAt(0)}

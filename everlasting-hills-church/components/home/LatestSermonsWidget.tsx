@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Play, BookOpen, Headphones, ArrowRight } from "lucide-react";
 
 type Sermon = {
@@ -57,10 +58,12 @@ export default function LatestSermonsWidget({
               className="group lg:col-span-2 relative rounded-2xl overflow-hidden bg-[#87102C] text-white hover:shadow-xl transition-all"
             >
               {featured.thumbnailUrl ? (
-                <img
+                <Image
                   src={featured.thumbnailUrl}
                   alt={featured.title}
-                  className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 66vw"
+                  className="object-cover opacity-30 group-hover:opacity-40 group-hover:scale-105 transition-all duration-500"
                 />
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-[#6E0C24] to-[#87102C]" />
@@ -94,8 +97,14 @@ export default function LatestSermonsWidget({
                   className="group flex gap-3 bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-3.5 hover:border-[#87102C]/30 hover:shadow-sm transition-all"
                 >
                   {s.thumbnailUrl ? (
-                    <div className="w-16 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-white/5 flex-shrink-0">
-                      <img src={s.thumbnailUrl} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <div className="relative w-16 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-white/5 flex-shrink-0">
+                      <Image
+                        src={s.thumbnailUrl}
+                        alt={s.title}
+                        fill
+                        sizes="64px"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
                     </div>
                   ) : (
                     <div className="w-16 aspect-video rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center flex-shrink-0">

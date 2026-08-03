@@ -37,7 +37,7 @@ export default function Error({
           An unexpected error occurred. You can try again, or head back home.
         </p>
         {error.digest ? (
-          <p className="mt-3 text-xs text-white/30">Reference: {error.digest}</p>
+          <p className="mt-3 text-xs text-white/50">Reference: {error.digest}</p>
         ) : null}
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <button

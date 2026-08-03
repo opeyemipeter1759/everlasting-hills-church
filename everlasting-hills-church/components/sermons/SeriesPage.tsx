@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, BookOpen, Headphones, Heart, Play, Search } from "lucide-react";
 import { useSermonPlayer } from "@/context/SermonPlayerContext";
 
@@ -35,8 +36,14 @@ function SermonRow({ s, onPlay }: { s: Sermon; onPlay: (slug: string) => void })
       className="group w-full flex gap-4 bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-4 hover:border-[#87102C]/30 hover:shadow-sm transition-all text-left"
     >
       {s.thumbnailUrl ? (
-        <div className="w-24 sm:w-32 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-white/5 flex-shrink-0">
-          <img src={s.thumbnailUrl} alt={s.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div className="relative w-24 sm:w-32 aspect-video rounded-lg overflow-hidden bg-gray-100 dark:bg-white/5 flex-shrink-0">
+          <Image
+            src={s.thumbnailUrl}
+            alt={s.title}
+            fill
+            sizes="(max-width: 640px) 96px, 128px"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
         </div>
       ) : (
         <div className="w-24 sm:w-32 aspect-video rounded-lg bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center flex-shrink-0">
