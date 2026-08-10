@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
+import type { WebSocketLikeConstructor } from '@supabase/realtime-js';
+import ws from 'ws';
 
 /** Service-role Supabase client for admin-only operations (create/delete auth users). */
 export function createAdminClient() {
@@ -10,7 +12,7 @@ export function createAdminClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
     '';
   if (!url || !key) throw new Error('Missing Supabase admin credentials');
-  return createClient(url, key);
+  return createClient(url, key, { realtime: { transport: ws as unknown as WebSocketLikeConstructor } });
 }
 
 /** Normalize a free-text visitor gender ("Male"/"f"/"FEMALE") to MALE|FEMALE|null. */

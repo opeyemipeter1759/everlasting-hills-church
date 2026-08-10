@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { WebSocketLikeConstructor } from '@supabase/realtime-js';
+import ws from 'ws';
 import type { Env } from '../../config/env.validation';
 
 /** Supabase client factory shared across the auth module: anon client, admin client, and
@@ -21,6 +23,7 @@ export class AuthSupabaseService {
       | undefined;
     this.anonClient = createClient(this.supabaseUrl, this.supabaseAnonKey, {
       auth: { persistSession: false, autoRefreshToken: false },
+      realtime: { transport: ws as unknown as WebSocketLikeConstructor },
     });
   }
 
@@ -30,6 +33,7 @@ export class AuthSupabaseService {
     }
     return createClient(this.supabaseUrl, this.supabaseServiceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
+      realtime: { transport: ws as unknown as WebSocketLikeConstructor },
     });
   }
 
@@ -37,6 +41,7 @@ export class AuthSupabaseService {
     return createClient(this.supabaseUrl, this.supabaseAnonKey, {
       global: { headers: { Authorization: `Bearer ${accessToken}` } },
       auth: { persistSession: false, autoRefreshToken: false },
+      realtime: { transport: ws as unknown as WebSocketLikeConstructor },
     });
   }
 }
