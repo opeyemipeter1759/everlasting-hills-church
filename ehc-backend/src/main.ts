@@ -151,8 +151,8 @@ async function bootstrap() {
    */
   app.enableShutdownHooks();
 
-  const port = config.get('PORT', { infer: true });
-  await app.listen(port);
+  const port = config.get('PORT', { infer: true }) || 8080;
+  await app.listen(port, '0.0.0.0');
   logger.log(`church-api running on http://localhost:${port}`);
   logger.log(`Swagger docs at http://localhost:${port}/docs`);
 }
