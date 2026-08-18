@@ -20,7 +20,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/everlasting-hills-church-git']
 
-  - name: 'gcr.io/google-cloud-sdk/cloud-sdk'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:slim'
     entrypoint: gcloud
     args:
       - 'run'
