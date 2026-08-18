@@ -18,6 +18,9 @@ const nextConfig = {
 
   // Don't generate browser source maps for production — smaller bundle, faster cold start.
   productionBrowserSourceMaps: false,
+
+  // Standalone output — smaller Docker image, faster cold starts on Cloud Run.
+  output: 'standalone',
 };
 
 export default nextConfig;
