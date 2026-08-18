@@ -6,8 +6,9 @@
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
   process.env.API_BASE_URL?.trim() ||
-  "http://localhost:4000";
+  "https://ehc-backend-api-886498964135.europe-west1.run.app";
 
+  
 export async function getStructuredContent<T>(
   key: string,
   opts: { preview?: string; fallback: T; valid: (c: unknown) => c is T },
