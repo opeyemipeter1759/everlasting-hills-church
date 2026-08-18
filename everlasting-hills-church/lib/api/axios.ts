@@ -8,7 +8,8 @@ import {
   setFrontendSession,
 } from "../auth/frontend-session";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "/api";
+// const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "/api";
+const BASE_URL = 'https://ehc-backend-886498964135.us-central1.run.app/';
 
 let refreshPromise: Promise<string | null> | null = null;
 
