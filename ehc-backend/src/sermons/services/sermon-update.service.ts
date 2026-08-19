@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConfigService } from '@nestjs/config';
 import { SermonStatus, SermonType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import slugify from 'slugify';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
+import { PushEvents, type SermonPublishedPayload } from '../../push/push.events';
 import {
   SERMON_COUNTS_INCLUDE,
   SERMON_EPISODES_INCLUDE,
@@ -23,6 +25,7 @@ export class SermonUpdateService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sermonRead: SermonAdminReadService,
+    private readonly emitter: EventEmitter2,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -105,6 +108,19 @@ export class SermonUpdateService {
         ...SERMON_COUNTS_INCLUDE,
       },
     });
+
+    // Emitted here rather than at each return: updateSermon has three exit
+    // points and only the DRAFT-to-PUBLISHED transition should notify, so
+    // hanging this off `nowPublishing` keeps a later edit from re-notifying.
+    if (nowPublishing) {
+      this.emitter.emit(PushEvents.SermonPublished, {
+        tenantId: this.tenantId,
+        sermonId: sermon.id,
+        title: sermon.title,
+        slug: sermon.slug,
+        preacher: sermon.speaker,
+      } satisfies SermonPublishedPayload);
+    }
 
     const hasEpisodeChanges = sermonType === SermonType.SERIES && !!data.episodes;
     const isConvertingToSingle = sermonType === SermonType.SINGLE && current.type === SermonType.SERIES;

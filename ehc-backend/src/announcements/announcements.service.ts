@@ -1,4 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConfigService } from '@nestjs/config';
 import { EventStatus } from '@prisma/client';
 import { randomUUID } from 'crypto';
@@ -7,6 +8,7 @@ import { InboxService } from '../inbox/inbox.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
 import { buildAnnouncementEmail } from '../notifications/templates/announcement.email';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
+import { PushEvents, type AnnouncementPublishedPayload } from '../push/push.events';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import type { Env } from '../config/env.validation';
 
@@ -24,6 +26,7 @@ export class AnnouncementsService {
     private readonly prisma: PrismaService,
     private readonly inbox: InboxService,
     private readonly mail: MailDispatcher,
+    private readonly emitter: EventEmitter2,
     private readonly config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -85,7 +88,7 @@ export class AnnouncementsService {
 
     const recipients = shouldFanOut ? await this.fanOut(dto.title, dto.body, sendEmail) : 0;
 
-    return this.prisma.announcement.create({
+    const created = await this.prisma.announcement.create({
       data: {
         id: randomUUID(),
         tenantId: this.tenantId,
@@ -99,6 +102,25 @@ export class AnnouncementsService {
         recipients,
       },
     });
+
+    // Emitted after the row exists so the notification can carry a real id for
+    // its collapse tag. Push sits beside the in-app fan-out and the optional
+    // email rather than replacing either: they are separate channels with
+    // separate opt-outs.
+    if (shouldFanOut) this.emitPush(created);
+
+    return created;
+  }
+
+  /** Fire-and-forget push fan-out. Never awaited, never allowed to fail a request. */
+  private emitPush(announcement: { id: string; title: string; body: string; audience: string }) {
+    this.emitter.emit(PushEvents.AnnouncementPublished, {
+      tenantId: this.tenantId,
+      announcementId: announcement.id,
+      title: announcement.title,
+      body: announcement.body,
+      audience: announcement.audience,
+    } satisfies AnnouncementPublishedPayload);
   }
 
   async list() {
@@ -149,10 +171,12 @@ export class AnnouncementsService {
       return announcement;
     }
     const recipients = await this.fanOut(announcement.title, announcement.body, announcement.sendEmail);
-    return this.prisma.announcement.update({
+    const published = await this.prisma.announcement.update({
       where: { id },
       data: { status: EventStatus.PUBLISHED, recipients },
     });
+    this.emitPush(published);
+    return published;
   }
 
   async remove(id: string) {

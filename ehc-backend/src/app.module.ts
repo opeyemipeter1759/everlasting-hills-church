@@ -46,6 +46,7 @@ import { StatusReportsModule } from './status-reports/status-reports.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 import { CalendarModule } from './calendar/calendar.module';
+import { PushModule } from './push/push.module';
 
 @Module({
   imports: [
@@ -142,6 +143,7 @@ import { CalendarModule } from './calendar/calendar.module';
     JobsModule.forRoot(),
     SchedulingModule,
     CalendarModule,
+    PushModule,
     CoursesModule,
     StatusReportsModule,
   ],

@@ -81,6 +81,26 @@ export const envSchema = z.object({
   R2_BUCKET: z.string().min(1).optional(),
   R2_ENDPOINT: z.url().optional(),
   R2_PUBLIC_URL: z.url().optional(),
+
+  /**
+   * Web Push (VAPID). Absent → push endpoints return 503 and scheduled dispatch
+   * is skipped, following the same optional-integration pattern as Resend,
+   * Paystack and R2 above.
+   *
+   * Generate with:
+   *   node -e "console.log(require('web-push').generateVAPIDKeys())"
+   *
+   * The public key is also needed by the browser as NEXT_PUBLIC_VAPID_PUBLIC_KEY.
+   * Rotating the keypair silently invalidates every stored PushSubscription, so
+   * rotate only alongside a prune of that table.
+   */
+  VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+  VAPID_PRIVATE_KEY: z.string().min(1).optional(),
+  /** Contact URI the push service can reach the operator at. */
+  VAPID_SUBJECT: z
+    .string()
+    .regex(/^(mailto:|https:\/\/)/, 'VAPID_SUBJECT must start with mailto: or https://')
+    .optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

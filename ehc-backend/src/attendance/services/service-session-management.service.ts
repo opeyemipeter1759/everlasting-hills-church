@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { ServiceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
+import { PushEvents, type ServiceLivePayload } from '../../push/push.events';
 
 /** ADMIN CRUD + open/close lifecycle for a Service session. */
 @Injectable()
@@ -12,6 +14,7 @@ export class ServiceSessionManagementService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly emitter: EventEmitter2,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -67,10 +70,23 @@ export class ServiceSessionManagementService {
       where: { id: serviceId, tenantId: this.tenantId },
     });
     if (!service) throw new NotFoundException('Service not found');
-    return this.prisma.service.update({
+
+    const updated = await this.prisma.service.update({
       where: { id: serviceId },
       data: { isOpen: true, openAt: service.openAt ?? new Date() },
     });
+
+    // Only on the transition into open. Re-opening an already-open service (a
+    // double tap, or a close and re-open) must not notify the church twice.
+    if (!service.isOpen) {
+      this.emitter.emit(PushEvents.ServiceLive, {
+        tenantId: this.tenantId,
+        serviceId: updated.id,
+        serviceName: updated.name,
+      } satisfies ServiceLivePayload);
+    }
+
+    return updated;
   }
 
   /** Close a session. Stamps closeAt. */
