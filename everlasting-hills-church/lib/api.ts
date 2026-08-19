@@ -5,6 +5,7 @@ import {
   clearFrontendSession,
   setFrontendSession,
 } from "@/lib/auth/frontend-session";
+import { clearServiceWorkerCaches, setServiceWorkerUser } from "@/lib/pwa/service-worker";
 import { LoginPayload, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry } from "@/types";
 import type { UserRole } from "@/config/config";
 import type {
@@ -86,6 +87,11 @@ export const auth = {
       expiresInSeconds: response.expires_in,
     });
 
+    // Namespaces the service worker's API cache to this member, so a second
+    // person signing in on the same device cannot be served the first one's
+    // cached dashboard from disk. Shared phones are common here.
+    setServiceWorkerUser(response.user.id);
+
     return response;
   },
 
@@ -94,6 +100,11 @@ export const auth = {
       await api.post("/auth/logout");
     } finally {
       clearFrontendSession();
+      // Drops every cached response that can contain member data. Sits beside
+      // clearFrontendSession in the same finally so it runs even when the
+      // logout request itself fails: a failed network call must not leave the
+      // previous member's data readable offline.
+      clearServiceWorkerCaches();
     }
   },
 }
