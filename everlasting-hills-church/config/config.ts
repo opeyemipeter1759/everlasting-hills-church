@@ -194,7 +194,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Roles",         href: "/dashboard/admin/roles",         icon: Shield,        minRole: "HOD" },
       { label: "Courses",       href: "/dashboard/admin/courses",       icon: GraduationCap, minRole: "ADMIN" },
       { label: "Home Cell",     href: "/dashboard/admin/home-cell",     icon: Compass,       minRole: "ADMIN" },
-      { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
+      // { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
       { label: "Public Site (CMS)", href: "/dashboard/cms",          icon: PanelsTopLeft, minRole: "PASTOR" },
     ],
   },
