@@ -266,7 +266,7 @@ function FirstTimerPage() {
             ) : (
               <button
                 type="submit"
-                disabled={!isSubmitting}
+                disabled={isSubmitting}
                 className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-church-maroon to-burgundy-light
                   text-white text-sm font-semibold hover:from-burgundy-dark hover:to-church-maroon
                   transition-all duration-200 active:scale-95 shadow-lg hover:shadow-xl
