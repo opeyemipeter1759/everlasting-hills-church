@@ -45,6 +45,7 @@ import { CoursesModule } from './courses/courses.module';
 import { StatusReportsModule } from './status-reports/status-reports.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
+import { CalendarModule } from './calendar/calendar.module';
 
 @Module({
   imports: [
@@ -140,6 +141,7 @@ import type { Env } from './config/env.validation';
     HomeCellModule,
     JobsModule.forRoot(),
     SchedulingModule,
+    CalendarModule,
     CoursesModule,
     StatusReportsModule,
   ],

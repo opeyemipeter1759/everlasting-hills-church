@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, CalendarDays, MapPin } from "lucide-react";
+import { ArrowDown, CalendarDays, MapPin, CalendarPlus } from "lucide-react";
 import type { EventDetail } from "@/types";
 import { formatEventDate, formatEventTimeRange } from "./event-format";
 
@@ -129,6 +129,17 @@ export default function EventHero({ event }: { event: EventDetail }) {
             className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 backdrop-blur-md px-7 py-3.5 text-sm font-semibold text-white/85 transition-all duration-200 hover:border-white/35 hover:bg-white/10"
           >
             Event Details
+          </a>
+          {/* Plain anchor with the API's Content-Disposition doing the work, so
+              the browser hands the file to the member's calendar app. A fetched
+              blob URL opens a blank preview on iOS instead of handing off. */}
+          <a
+            href={`${(process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "")}/calendar/event/${encodeURIComponent(event.slug)}.ics`}
+            download
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 backdrop-blur-md px-7 py-3.5 text-sm font-semibold text-white/85 transition-all duration-200 hover:border-white/35 hover:bg-white/10"
+          >
+            <CalendarPlus size={14} />
+            Add to Calendar
           </a>
         </motion.div>
       </div>
