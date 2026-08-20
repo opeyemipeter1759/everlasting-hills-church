@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { BarChart3 } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
-import type { AttendancePoint, ServiceTypeKey } from "@/lib/mock/admin-dashboard.mock";
+import type { AttendancePoint, ServiceTypeKey } from "@/lib/types/admin-dashboard";
 
 type FilterKey = "ALL" | "SUNDAY" | "WEDNESDAY";
 

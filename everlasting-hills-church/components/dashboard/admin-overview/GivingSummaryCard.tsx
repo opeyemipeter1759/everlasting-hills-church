@@ -1,7 +1,7 @@
 import { Wallet } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
 import { TrendPill } from "./DashboardStatCard";
-import type { AdminDashboardData } from "@/lib/mock/admin-dashboard.mock";
+import type { AdminDashboardData } from "@/lib/types/admin-dashboard";
 
 /**
  * Giving (This Month) — executive financial metric that replaces the health score.

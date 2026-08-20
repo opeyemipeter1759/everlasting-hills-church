@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Sparkles, TrendingDown, TrendingUp, UserCheck } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
-import type { AdminDashboardData } from "@/lib/mock/admin-dashboard.mock";
+import type { AdminDashboardData } from "@/lib/types/admin-dashboard";
 
 /**
  * AI-style executive insights — directional metrics + a follow-up call to action.

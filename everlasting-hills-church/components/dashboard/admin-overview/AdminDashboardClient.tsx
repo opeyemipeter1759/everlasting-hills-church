@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { getFrontendSessionUser } from "@/lib/auth/frontend-session";
 import { useAdminDashboardData } from "./useAdminDashboardData";
-import type { StatKey } from "@/lib/mock/admin-dashboard.mock";
+import type { StatKey } from "@/lib/types/admin-dashboard";
 import DashboardStatCard from "./DashboardStatCard";
 import GivingSummaryCard from "./GivingSummaryCard";
 import AIInsightsCard from "./AIInsightsCard";
@@ -110,7 +110,7 @@ export default function AdminDashboardClient() {
             {visible("funnel") && (
               <FirstTimerFunnelCard
                 stages={data.firstTimerFunnel}
-                viewMoreHref="/dashboard/first-timers"
+                viewMoreHref="/dashboard/admin/first-timers"
                 onDismiss={() => dismiss("funnel")}
               />
             )}
@@ -134,7 +134,7 @@ export default function AdminDashboardClient() {
             {visible("birthdays") && (
               <BirthdayAnniversaryCard
                 celebrations={data.celebrations}
-                viewMoreHref="/dashboard/members"
+                viewMoreHref="/dashboard/admin/members"
                 onDismiss={() => dismiss("birthdays")}
               />
             )}
@@ -149,7 +149,7 @@ export default function AdminDashboardClient() {
           {visible("units") && (
             <MinistryUnitsOverview
               units={data.ministryUnits}
-              viewMoreHref="/dashboard/units"
+              viewMoreHref="/dashboard/admin/units"
               onDismiss={() => dismiss("units")}
             />
           )}
