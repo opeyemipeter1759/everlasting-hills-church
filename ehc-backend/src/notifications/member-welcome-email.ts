@@ -3,8 +3,6 @@ import type { SendEmailPayload } from './notification-events';
 interface BuildArgs {
   firstName: string;
   email: string;
-  /** Used as the initial password (church convention). */
-  phone: string;
   /** Public site URL (e.g. https://everlasting-hills-church.vercel.app). No trailing slash. */
   appUrl: string;
   /** "admin-created" or "visitor-converted" — only used as a logging tag, not visible to recipient. */
@@ -29,8 +27,9 @@ export function memberCode(id: string): string {
  *   - Single CTA: log in. Don't dilute it with a second button.
  */
 export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
-  const { firstName, email, phone, appUrl, source, memberId } = args;
+  const { firstName, email, appUrl, source, memberId } = args;
   const loginUrl = `${appUrl.replace(/\/$/, '')}/login`;
+  const setupUrl = `${appUrl.replace(/\/$/, '')}/forgot-password`;
   const code = memberId ? memberCode(memberId) : null;
 
   const subject = `Welcome to Everlasting Hills, ${firstName} — your member account is ready`;
@@ -38,12 +37,12 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
   const text = [
     `Welcome, ${firstName} — you are now part of the Everlasting Hills family.`,
     '',
-    'Your member portal is ready. Use the credentials below to sign in for the first time.',
+    'Your member portal is ready. For security, choose your own password using the setup email sent separately.',
     '',
     `  Login URL:  ${loginUrl}`,
     ...(code ? [`  Member ID:  ${code}`] : []),
     `  Email:      ${email}`,
-    `  Password:   ${phone}   (your phone number — change it on first login)`,
+    `  Set password: ${setupUrl}`,
     '',
     'Inside the portal you can:',
     '  • Listen to the latest sermons (audio, video, transcripts)',
@@ -55,7 +54,7 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
     '  • Give online and view your giving history',
     '  • Update your profile, photo, and notification preferences',
     '',
-    'You will be asked to set a new password on your first sign-in.',
+    'Your phone number is never used as your password.',
     '',
     'Welcome home.',
     '— Everlasting Hills Church · Ibadan',
@@ -81,7 +80,7 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
         <p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Login URL:</strong> <a href="${loginUrl}" style="color:#87102C;text-decoration:none">${loginUrl}</a></p>
         ${code ? `<p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Member ID:</strong> <span style="font-family:monospace;color:#87102C;font-weight:700">${code}</span></p>` : ''}
         <p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Email:</strong> ${escapeHtml(email)}</p>
-        <p style="margin:0;font-size:14px;color:#111"><strong>Temporary password:</strong> ${escapeHtml(phone)} <span style="color:#6B7280">(your phone number)</span></p>
+        <p style="margin:0;font-size:14px;color:#111"><strong>Set your password:</strong> <a href="${setupUrl}" style="color:#87102C;text-decoration:none">Use the secure password setup page</a></p>
       </div>
 
       <p style="margin:0 0 12px;font-size:13px;color:#6B7280;text-transform:uppercase;letter-spacing:2px;font-weight:800">What's waiting inside</p>
@@ -101,7 +100,7 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
       </div>
 
       <p style="font-size:13px;color:#6B7280;line-height:1.6;margin:0 0 24px">
-        For your security, you will be asked to set a new password on your first sign-in.
+        For your security, choose your own password from the signed setup email. Your phone number is never used as a password.
       </p>
 
       <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0"/>

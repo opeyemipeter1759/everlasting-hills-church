@@ -19,6 +19,10 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { CmsMediaService } from './services/cms-media.service';
 import { CmsAuditService } from './services/cms-audit.service';
+import { hasValidFileSignature } from '../uploads/file-signature.util';
+
+const MAX_CMS_MEDIA_BYTES = 8 * 1024 * 1024;
+const CMS_MEDIA_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
 
 @ApiTags('cms')
 @Controller('cms')
@@ -39,7 +43,12 @@ export class CmsMediaController {
   @Roles(Role.PASTOR)
   @ApiBearerAuth('access-token')
   @Post('media')
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_CMS_MEDIA_BYTES, files: 1 },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a media asset to R2 (alt text required) (PASTOR+)' })
   @ApiBody({
@@ -60,6 +69,9 @@ export class CmsMediaController {
     @Body() body: { alt?: string; width?: string; height?: string },
   ) {
     if (!file) throw new BadRequestException('No file provided');
+    if (!CMS_MEDIA_MIME.includes(file.mimetype) || !hasValidFileSignature(file)) {
+      throw new BadRequestException('Media must be a valid JPG, PNG, WebP, GIF, or AVIF image');
+    }
     return this.media.uploadMedia(
       file,
       {

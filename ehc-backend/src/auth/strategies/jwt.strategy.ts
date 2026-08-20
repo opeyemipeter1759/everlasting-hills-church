@@ -40,7 +40,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const supabaseUrl = config.get('SUPABASE_URL', { infer: true });
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: true,
+      // Token expiry is part of the credential boundary even though roles are
+      // resolved live on every request.
+      ignoreExpiration: false,
       secretOrKeyProvider: passportJwtSecret({
         cache: true,
         rateLimit: true,

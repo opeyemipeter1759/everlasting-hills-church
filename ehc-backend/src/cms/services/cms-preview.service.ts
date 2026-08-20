@@ -1,5 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { createHmac, timingSafeEqual } from 'crypto';
+import type { Env } from '../../config/env.validation';
 import { pageDef } from '../page-registry';
 import { CmsPageCoreService } from './cms-page-core.service';
 
@@ -8,13 +10,11 @@ import { CmsPageCoreService } from './cms-page-core.service';
 export class CmsPreviewService {
   private readonly previewSecret: string;
 
-  constructor(private readonly pageCore: CmsPageCoreService) {
-    // Read infra secrets from process.env directly (same pattern as UploadsService),
-    // so the CMS doesn't require additions to the typed Env schema.
-    this.previewSecret =
-      process.env.CMS_PREVIEW_SECRET ??
-      process.env.SUPABASE_JWT_SECRET ??
-      'ehc-cms-preview-secret';
+  constructor(
+    private readonly pageCore: CmsPageCoreService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.previewSecret = config.get('CMS_PREVIEW_SECRET', { infer: true });
   }
 
   createPreviewToken(key: string) {

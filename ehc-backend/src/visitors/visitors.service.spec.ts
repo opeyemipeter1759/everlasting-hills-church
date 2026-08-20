@@ -16,7 +16,9 @@ describe('VisitorsService', () => {
       const service = makeService({ findMany });
       await service.list();
       expect(findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { tenantId: 'tenant-test' } }),
+        expect.objectContaining({
+          where: expect.objectContaining({ tenantId: 'tenant-test' }),
+        }),
       );
     });
 

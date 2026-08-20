@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { Env } from '../../config/env.validation';
 
 /**
  * Asks the Next.js site to revalidate ISR cache tags / paths after a publish.
@@ -11,12 +13,9 @@ export class CmsRevalidateService {
   private readonly appUrl: string;
   private readonly revalidateSecret: string;
 
-  constructor() {
-    this.appUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
-    this.revalidateSecret =
-      process.env.CMS_REVALIDATE_SECRET ??
-      process.env.SUPABASE_JWT_SECRET ??
-      'ehc-cms-revalidate';
+  constructor(config: ConfigService<Env, true>) {
+    this.appUrl = (config.get('FRONTEND_URL', { infer: true }) ?? 'http://localhost:3000').replace(/\/$/, '');
+    this.revalidateSecret = config.get('CMS_REVALIDATE_SECRET', { infer: true });
   }
 
   trigger(tags: string[] = [], paths: string[] = []) {

@@ -42,6 +42,18 @@ export const envSchema = z.object({
   CONTACT_EMAIL: z.email().optional(),
 
   FRONTEND_URL: z.url().optional(),
+  // Used in account invitation/deactivation links. The historical name is
+  // retained because the frontend also consumes it at build time.
+  NEXT_PUBLIC_APP_URL: z.url().optional(),
+
+  // Read directly by the CORS origin callback in main.ts.
+  CORS_EXTRA_ORIGINS: z.string().optional(),
+  CORS_ALLOW_VERCEL_PREVIEWS: z.enum(['true', 'false']).optional(),
+
+  // Public CMS signatures require independent, rotatable secrets. Deliberately
+  // no literal or JWT-secret fallback is accepted.
+  CMS_PREVIEW_SECRET: z.string().min(32),
+  CMS_REVALIDATE_SECRET: z.string().min(32),
 
   THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(100),
@@ -79,6 +91,8 @@ export const envSchema = z.object({
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),
   R2_SECRET_ACCESS_KEY: z.string().min(1).optional(),
   R2_BUCKET: z.string().min(1).optional(),
+  // Deprecated runtime alias. Prefer R2_BUCKET; do not set both differently.
+  R2_BUCKET_NAME: z.string().min(1).optional(),
   R2_ENDPOINT: z.url().optional(),
   R2_PUBLIC_URL: z.url().optional(),
 

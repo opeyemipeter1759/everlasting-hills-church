@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
+import { timingSafeEqual } from "node:crypto";
 
 /**
  * On-publish ISR revalidation, called server-to-server by the NestJS CMS after a
@@ -8,33 +9,48 @@ import { revalidatePath, revalidateTag } from "next/cache";
  *
  * Body: { tags?: string[]; paths?: string[] }
  */
-const SECRET =
-  process.env.CMS_REVALIDATE_SECRET ??
-  process.env.SUPABASE_JWT_SECRET ??
-  "ehc-cms-revalidate";
+function hasValidSecret(provided: string | null, expected: string): boolean {
+  if (!provided) return false;
+  const providedBytes = Buffer.from(provided);
+  const expectedBytes = Buffer.from(expected);
+  return (
+    providedBytes.length === expectedBytes.length &&
+    timingSafeEqual(providedBytes, expectedBytes)
+  );
+}
 
 export async function POST(req: NextRequest) {
+  const secret = process.env.CMS_REVALIDATE_SECRET?.trim();
+  if (!secret) {
+    return NextResponse.json(
+      { ok: false, error: "revalidation unavailable" },
+      { status: 503 },
+    );
+  }
+
   const provided = req.headers.get("x-revalidate-secret");
-  if (!provided || provided !== SECRET) {
+  if (!hasValidSecret(provided, secret)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
-  let body: { tags?: string[]; paths?: string[] } = {};
+  let body: { tags?: unknown; paths?: unknown };
   try {
-    body = (await req.json()) as { tags?: string[]; paths?: string[] };
+    body = (await req.json()) as { tags?: unknown; paths?: unknown };
   } catch {
-    // empty / invalid body → nothing to revalidate
+    return NextResponse.json({ ok: false, error: "invalid JSON body" }, { status: 400 });
   }
 
-  const tags = Array.isArray(body.tags) ? body.tags : [];
-  const paths = Array.isArray(body.paths) ? body.paths : [];
+  const tags = (Array.isArray(body.tags) ? body.tags : [])
+    .filter((tag): tag is string => typeof tag === "string" && tag.length > 0 && tag.length <= 128)
+    .slice(0, 100);
+  const paths = (Array.isArray(body.paths) ? body.paths : [])
+    .filter((path): path is string => (
+      typeof path === "string" && path.startsWith("/") && !path.startsWith("//") && path.length <= 2048
+    ))
+    .slice(0, 100);
 
-  for (const t of tags) {
-    if (typeof t === "string" && t) revalidateTag(t);
-  }
-  for (const p of paths) {
-    if (typeof p === "string" && p) revalidatePath(p);
-  }
+  for (const tag of tags) revalidateTag(tag);
+  for (const path of paths) revalidatePath(path);
 
   return NextResponse.json({ ok: true, revalidated: { tags, paths } });
 }

@@ -42,7 +42,7 @@ export class UsersController {
   @ApiOperation({
     summary: 'Create a new user with a role',
     description:
-      'Creates a Supabase auth user, Profile, and Member in one flow. Phone number is the initial password.',
+      'Creates a Supabase auth user, Profile, and Member, then sends a secure password-setup link.',
   })
   @ApiBody({ type: CreateUserDto })
   @ApiCreatedResponse({ description: 'User created' })
@@ -55,7 +55,7 @@ export class UsersController {
   @ApiOperation({
     summary: 'Create one or many people at once',
     description:
-      'Each row creates a Supabase auth user + Profile + Member (phone = initial password). A failed row does not abort the batch; failures are returned.',
+      'Each row creates a Supabase auth user + Profile + Member and sends a secure password-setup link. A failed row does not abort the batch.',
   })
   @ApiBody({ type: BulkCreateUsersDto })
   @ApiCreatedResponse({ description: 'Batch result: { created[], failed[], total }' })

@@ -12,13 +12,29 @@ import { memoryStorage } from 'multer';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { hasValidFileSignature } from '../../uploads/file-signature.util';
+
+const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
+const AUDIO_MIME = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg', 'audio/aac'];
+const AUDIO_EXT: Record<string, string> = {
+  'audio/mpeg': 'mp3',
+  'audio/mp4': 'm4a',
+  'audio/wav': 'wav',
+  'audio/ogg': 'ogg',
+  'audio/aac': 'aac',
+};
 
 @ApiTags('sermons')
 @Controller('sermons')
 export class SermonsUploadController {
   @Post('upload-audio')
   @Roles(Role.PASTOR)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_AUDIO_BYTES, files: 1 },
+    }),
+  )
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Upload sermon audio', description: 'Uploads an audio file to R2 and returns a public URL.' })
   @ApiConsumes('multipart/form-data')
@@ -38,21 +54,22 @@ export class SermonsUploadController {
       throw new BadRequestException('No file provided');
     }
 
-    const maxBytes = 100 * 1024 * 1024; // 100 MB
-    if (file.size > maxBytes) {
+    if (file.size > MAX_AUDIO_BYTES) {
       throw new BadRequestException('File must be under 100 MB');
     }
 
-    const allowed = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg', 'audio/aac'];
-    if (!allowed.includes(file.mimetype)) {
+    if (!AUDIO_MIME.includes(file.mimetype)) {
       throw new BadRequestException('Unsupported audio format');
+    }
+    if (!hasValidFileSignature(file)) {
+      throw new BadRequestException('Audio content does not match its declared format');
     }
 
     if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
       throw new ServiceUnavailableException('R2 storage is not configured. Add R2_* env vars.');
     }
 
-    const ext = (file.originalname || '').split('.').pop() ?? 'mp3';
+    const ext = AUDIO_EXT[file.mimetype] ?? 'bin';
     const key = `sermons/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     try {

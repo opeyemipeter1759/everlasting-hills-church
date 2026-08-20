@@ -12,7 +12,9 @@ import { UsersUpdateService } from './services/users-update.service';
 
 @ApiTags('users')
 @Controller('users')
-@Roles(Role.HOD)
+// Role rollups and grouped user lists are church-wide administration data.
+// Scoped HOD work is exposed through /departments/mine instead.
+@Roles(Role.ADMIN)
 @ApiBearerAuth('access-token')
 export class UsersRolesController {
   constructor(

@@ -56,11 +56,8 @@ export class SiteSettingsService implements OnModuleInit {
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
-    this.appUrl = (process.env.FRONTEND_URL ?? 'http://localhost:3000').replace(/\/$/, '');
-    this.revalidateSecret =
-      process.env.CMS_REVALIDATE_SECRET ??
-      process.env.SUPABASE_JWT_SECRET ??
-      'ehc-cms-revalidate';
+    this.appUrl = (config.get('FRONTEND_URL', { infer: true }) ?? 'http://localhost:3000').replace(/\/$/, '');
+    this.revalidateSecret = config.get('CMS_REVALIDATE_SECRET', { infer: true });
   }
 
   /**

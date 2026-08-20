@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { SermonStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { serializeEpisode } from '../sermon-serialization.util';
@@ -30,7 +31,7 @@ export class SermonEpisodeService {
 
   async getEpisodeBySlug(slug: string, episodeId: string) {
     const sermon = await this.prisma.sermon.findFirst({
-      where: { slug, tenantId: this.tenantId },
+      where: { slug, tenantId: this.tenantId, status: SermonStatus.PUBLISHED },
       include: { Episodes: { orderBy: { order: 'asc' } } },
     });
     if (!sermon) throw new NotFoundException('Sermon not found');

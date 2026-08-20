@@ -35,6 +35,12 @@ export const ROLE_LEVELS: Record<Role, number> = {
 
 export function canActOnRole(actorRole: Role | null | undefined, targetRole: Role): boolean {
   if (!actorRole) return false;
+  // Global grants and the unscoped Head Usher assignment are never managed by
+  // lateral/scoped roles. HOD unit-lead appointments go through the separately
+  // scope-checked UnitsRoleService.
+  if (actorRole === Role.HOD || actorRole === Role.HEAD_USHER || actorRole === Role.UNIT_LEAD) {
+    return false;
+  }
   if (actorRole === Role.SUPER_ADMIN && targetRole === Role.SUPER_ADMIN) return true;
   return ROLE_LEVELS[actorRole] > ROLE_LEVELS[targetRole];
 }
@@ -46,6 +52,9 @@ export function canActOnRole(actorRole: Role | null | undefined, targetRole: Rol
  */
 export function assignableRoles(actorRole: Role | null | undefined): Role[] {
   if (!actorRole) return [];
+  if (actorRole === Role.HOD || actorRole === Role.HEAD_USHER || actorRole === Role.UNIT_LEAD) {
+    return [];
+  }
   const actorLevel = ROLE_LEVELS[actorRole];
   const roles = (Object.keys(ROLE_LEVELS) as Role[]).filter(
     // ADMIN is legacy (merged into ADMIN_HEAD) — never offered for new assignment.
