@@ -52,8 +52,8 @@ async function post(message: Record<string, unknown>): Promise<void> {
  * namespace and the second could be served the first one's dashboard from disk.
  * Shared devices are common in this congregation, so this is not hypothetical.
  */
-export function setServiceWorkerUser(userKey: string): void {
-  void post({ type: "SET_USER", userKey });
+export function setServiceWorkerUser(userKey: string): Promise<void> {
+  return post({ type: "SET_USER", userKey });
 }
 
 /**
@@ -63,6 +63,6 @@ export function setServiceWorkerUser(userKey: string): void {
  * member-specific, and re-downloading them on a slow connection would cost the
  * next user real time and data for no privacy benefit.
  */
-export function clearServiceWorkerCaches(): void {
-  void post({ type: "CLEAR_CACHES" });
+export function clearServiceWorkerCaches(): Promise<void> {
+  return post({ type: "CLEAR_CACHES" });
 }

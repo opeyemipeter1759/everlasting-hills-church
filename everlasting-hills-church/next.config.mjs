@@ -14,6 +14,15 @@ const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
   disable: process.env.NODE_ENV === "development",
+  // Only install the small, app-shell assets needed to launch the PWA. Without
+  // an allow-list Serwist sweeps every file under public/, which currently
+  // includes tens of megabytes of gallery photography.
+  globPublicPatterns: [
+    "favicon/**/*.{ico,png,webmanifest}",
+    "icons/**/*.{png,svg}",
+    "log.png",
+    "logo*.png",
+  ],
   // Sermon audio/video are large and must never enter the precache manifest.
   // The runtime NetworkOnly rule in app/sw.ts covers requests; this covers the
   // build-time manifest, which would otherwise sweep in anything under public/.

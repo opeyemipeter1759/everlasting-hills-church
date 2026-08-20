@@ -17,7 +17,9 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 /** Bumped when the caching rules change, to orphan old caches deliberately. */
-const V = "ehc-v1";
+const V = "ehc-v3";
+const MEMBER_API_CACHE = `${V}-member-api`;
+const IMAGE_CACHE = `${V}-images`;
 
 /**
  * Sermons the member explicitly chose to save. Deliberately NOT versioned with
@@ -67,7 +69,10 @@ const runtimeCaching: RuntimeCaching[] = [
   // how one member's identity ends up rendered for the next person on a shared
   // phone, which is common here.
   {
-    matcher: ({ url }) => /^\/(api\/)?(auth|login|logout|session)/.test(url.pathname),
+    matcher: ({ url }) =>
+      /^\/(?:api\/(?:backend\/)?)?(?:auth|login|logout|session)(?:\/|$)/.test(
+        url.pathname,
+      ),
     handler: new NetworkOnly(),
   },
 
@@ -88,15 +93,19 @@ const runtimeCaching: RuntimeCaching[] = [
   // on logout (see the CLEAR_CACHES message handler).
   {
     matcher: ({ url, request }) =>
+      currentUserKey !== null &&
       request.method === "GET" &&
       request.destination === "" &&
       /^\/api\//.test(url.pathname) &&
-      !/^\/api\/(auth|login|logout|session)/.test(url.pathname),
+      !/^\/api\/(?:backend\/)?(?:auth|login|logout|session)(?:\/|$)/.test(
+        url.pathname,
+      ),
     handler: new StaleWhileRevalidate({
-      cacheName: `${V}-member-api`,
+      cacheName: MEMBER_API_CACHE,
       plugins: [
         {
           cacheKeyWillBeUsed: async ({ request }) => {
+            if (!currentUserKey) return request;
             const url = new URL(request.url);
             url.searchParams.set("__u", currentUserKey);
             return url.toString();
@@ -137,17 +146,27 @@ const runtimeCaching: RuntimeCaching[] = [
   // Images, excluding the media already excluded above.
   {
     matcher: ({ request }) => request.destination === "image",
-    handler: new StaleWhileRevalidate({ cacheName: `${V}-images` }),
+    handler: new StaleWhileRevalidate({
+      cacheName: IMAGE_CACHE,
+      plugins: [
+        new CacheableResponsePlugin({ statuses: [0, 200] }),
+        new ExpirationPlugin({
+          maxAgeSeconds: 30 * 24 * 60 * 60,
+          maxEntries: 100,
+          purgeOnQuotaError: true,
+        }),
+      ],
+    }),
   },
 ];
 
 /**
  * Identifies whose cached API responses these are. Set by the app after login
- * via a postMessage; "anon" until then. Folded into the API cache key so a
- * second member signing in on the same device cannot read the first one's
- * cached dashboard.
+ * via a postMessage. It is deliberately null after every worker restart: until
+ * the authenticated app rehydrates the key, member API traffic stays on the
+ * network and cannot be written to a shared anonymous cache.
  */
-let currentUserKey = "anon";
+let currentUserKey: string | null = null;
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
@@ -167,13 +186,31 @@ const serwist = new Serwist({
 
 serwist.addEventListeners();
 
+// A worker update must not leave obsolete, member-specific response caches on
+// disk. They are never read by the new worker, and retaining them serves no
+// offline purpose while increasing shared-device privacy risk.
+self.addEventListener("activate", (event: ExtendableEvent) => {
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => (
+            (key.includes("member-api") && key !== MEMBER_API_CACHE) ||
+            (key.endsWith("-images") && key !== IMAGE_CACHE)
+          ))
+          .map((key) => caches.delete(key)),
+      ),
+    ),
+  );
+});
+
 self.addEventListener("message", (event: ExtendableMessageEvent) => {
   const data = event.data;
   if (!data || typeof data !== "object") return;
 
   // Sent on login. Scopes the API cache to this member.
   if (data.type === "SET_USER") {
-    currentUserKey = typeof data.userKey === "string" && data.userKey ? data.userKey : "anon";
+    currentUserKey = typeof data.userKey === "string" && data.userKey ? data.userKey : null;
     return;
   }
 
@@ -182,7 +219,7 @@ self.addEventListener("message", (event: ExtendableMessageEvent) => {
   // hold nothing member-specific and re-downloading them on a slow connection
   // would be a real cost for no privacy gain.
   if (data.type === "CLEAR_CACHES") {
-    currentUserKey = "anon";
+    currentUserKey = null;
     event.waitUntil(
       caches.keys().then((keys) =>
         Promise.all(
