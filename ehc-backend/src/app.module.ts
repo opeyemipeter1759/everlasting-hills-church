@@ -47,6 +47,7 @@ import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 import { CalendarModule } from './calendar/calendar.module';
 import { PushModule } from './push/push.module';
+import { GatheringsModule } from './gatherings/gatherings.module';
 
 @Module({
   imports: [
@@ -144,6 +145,7 @@ import { PushModule } from './push/push.module';
     SchedulingModule,
     CalendarModule,
     PushModule,
+    GatheringsModule,
     CoursesModule,
     StatusReportsModule,
   ],

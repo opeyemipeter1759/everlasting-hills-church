@@ -1,4 +1,9 @@
-import { buildGatheringOccurrenceStart } from './recurrence.util';
+import {
+  buildGatheringOccurrenceStart,
+  isSupportedRecurrenceRule,
+  localCalendarDate,
+  ruleOccursOn,
+} from './recurrence.util';
 
 /**
  * These cover the bug this helper exists to prevent: a recurring gathering
@@ -48,5 +53,96 @@ describe('buildGatheringOccurrenceStart', () => {
   it('handles midnight without rolling the day forward', () => {
     const start = buildGatheringOccurrenceStart(dateCol('2026-03-10'), '00:00');
     expect(start.toISOString()).toBe('2026-03-09T23:00:00.000Z');
+  });
+});
+
+describe('isSupportedRecurrenceRule', () => {
+  it('accepts the rules the dispatcher can evaluate', () => {
+    expect(isSupportedRecurrenceRule('FREQ=DAILY')).toBe(true);
+    expect(isSupportedRecurrenceRule('FREQ=WEEKLY')).toBe(true);
+    expect(isSupportedRecurrenceRule('FREQ=WEEKLY;BYDAY=TU,TH')).toBe(true);
+  });
+
+  it('is case-insensitive, as RFC 5545 property names are', () => {
+    expect(isSupportedRecurrenceRule('freq=weekly;byday=su')).toBe(true);
+  });
+
+  it('rejects a frequency nothing downstream can expand', () => {
+    // The point of the whole predicate: a monthly rule renders fine in the .ics
+    // feed but would never fire a reminder, so it must not be storable.
+    expect(isSupportedRecurrenceRule('FREQ=MONTHLY')).toBe(false);
+    expect(isSupportedRecurrenceRule('FREQ=YEARLY')).toBe(false);
+    expect(isSupportedRecurrenceRule('')).toBe(false);
+  });
+
+  it('rejects a malformed weekday', () => {
+    expect(isSupportedRecurrenceRule('FREQ=WEEKLY;BYDAY=TU,XX')).toBe(false);
+  });
+});
+
+describe('ruleOccursOn', () => {
+  const date = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
+  const anchor = date('2026-08-19'); // a Wednesday
+
+  it('matches every day for a daily rule', () => {
+    expect(ruleOccursOn('FREQ=DAILY', anchor, date('2026-08-19'))).toBe('yes');
+    expect(ruleOccursOn('FREQ=DAILY', anchor, date('2026-08-20'))).toBe('yes');
+  });
+
+  it('never matches before the anchor date', () => {
+    // A gathering that starts next month must not show up as live today.
+    expect(ruleOccursOn('FREQ=DAILY', anchor, date('2026-08-18'))).toBe('no');
+  });
+
+  it('includes the anchor date itself', () => {
+    expect(ruleOccursOn('FREQ=WEEKLY', anchor, anchor)).toBe('yes');
+  });
+
+  it('falls back to the anchor weekday when BYDAY is absent', () => {
+    expect(ruleOccursOn('FREQ=WEEKLY', anchor, date('2026-08-26'))).toBe('yes'); // Wed
+    expect(ruleOccursOn('FREQ=WEEKLY', anchor, date('2026-08-27'))).toBe('no'); // Thu
+  });
+
+  it('honours BYDAY over the anchor weekday', () => {
+    const rule = 'FREQ=WEEKLY;BYDAY=TU,TH';
+    expect(ruleOccursOn(rule, anchor, date('2026-08-20'))).toBe('yes'); // Thu
+    expect(ruleOccursOn(rule, anchor, date('2026-08-25'))).toBe('yes'); // Tue
+    expect(ruleOccursOn(rule, anchor, date('2026-08-26'))).toBe('no'); // Wed, the anchor day
+  });
+
+  it('reports an unreadable rule as unsupported rather than as a miss', () => {
+    // Callers apply opposite policies to this, so it must not collapse to 'no'.
+    expect(ruleOccursOn('FREQ=MONTHLY;BYMONTHDAY=1', anchor, date('2026-09-01'))).toBe(
+      'unsupported',
+    );
+  });
+
+  it('still refuses an unsupported rule before its anchor', () => {
+    expect(ruleOccursOn('FREQ=MONTHLY', anchor, date('2026-08-01'))).toBe('no');
+  });
+});
+
+describe('localCalendarDate', () => {
+  it('returns the calendar date in the target timezone, not in UTC', () => {
+    // 23:30Z is already the next day in Lagos. Walking UTC dates instead would
+    // look at the wrong day for the last hour of every day.
+    const instant = new Date('2026-08-19T23:30:00.000Z');
+    expect(localCalendarDate(instant, 'Africa/Lagos').toISOString()).toBe(
+      '2026-08-20T00:00:00.000Z',
+    );
+  });
+
+  it('rolls backwards for a timezone west of UTC', () => {
+    const instant = new Date('2026-08-20T02:00:00.000Z');
+    expect(localCalendarDate(instant, 'America/New_York').toISOString()).toBe(
+      '2026-08-19T00:00:00.000Z',
+    );
+  });
+
+  it('normalises to midnight so the result is a pure calendar date', () => {
+    const instant = new Date('2026-08-19T14:07:33.123Z');
+    const result = localCalendarDate(instant, 'Africa/Lagos');
+    expect(result.getUTCHours()).toBe(0);
+    expect(result.getUTCMinutes()).toBe(0);
   });
 });

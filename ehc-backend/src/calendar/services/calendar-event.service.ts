@@ -113,7 +113,7 @@ export class CalendarEventService {
     });
     if (!gathering) throw new NotFoundException('Gathering not found');
 
-    const start = buildGatheringOccurrenceStart(gathering.startDate, gathering.startTime);
+    const start = buildGatheringOccurrenceStart(gathering.startDate, gathering.startTime, gathering.timezone);
     const calendar = this.ics.createCalendar({ name: gathering.title });
 
     this.ics.addEvent(calendar, {

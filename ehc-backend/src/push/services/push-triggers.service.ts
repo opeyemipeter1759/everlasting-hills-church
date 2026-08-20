@@ -6,7 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { PushDispatchService } from './push-dispatch.service';
 import { localMinutes } from './quiet-hours.util';
-import { buildGatheringOccurrenceStart } from '../../calendar/services/recurrence.util';
+import { localCalendarDate, ruleOccursOn } from '../../calendar/services/recurrence.util';
 import {
   PushEvents,
   type AnnouncementPublishedPayload,
@@ -285,50 +285,15 @@ export class PushTriggersService {
 }
 
 /**
- * Whether an RRULE occurs on the local date of `now`.
+ * Whether an RRULE occurs on the local date of `now` in the gathering's timezone.
  *
- * Supports the subset actually used by gatherings here: FREQ=DAILY and
- * FREQ=WEEKLY with optional BYDAY. Anything else returns true rather than
- * silently never firing, so an unrecognised rule is loud instead of dead.
+ * An unrecognised rule fires rather than being skipped, so a rule this codebase
+ * cannot read is loud instead of silently dead. Writes are validated against
+ * `isSupportedRecurrenceRule`, so reaching that branch means a row predates the
+ * validation or was written directly to the database.
  */
 function occursToday(rule: string, startDate: Date, now: Date, timezone: string): boolean {
-  const parts = Object.fromEntries(
-    rule
-      .split(';')
-      .map((p) => p.split('='))
-      .filter((p) => p.length === 2)
-      .map(([k, v]) => [k.toUpperCase(), v.toUpperCase()]),
-  );
-
-  // Not started yet.
-  const firstOccurrence = buildGatheringOccurrenceStart(startDate, '00:00', timezone);
-  if (now < firstOccurrence) return false;
-
-  if (parts.FREQ === 'DAILY') return true;
-
-  if (parts.FREQ === 'WEEKLY') {
-    const today = localWeekdayCode(now, timezone);
-    if (!parts.BYDAY) {
-      // No BYDAY means "the same weekday as DTSTART".
-      const WEEKDAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-      return WEEKDAYS[startDate.getUTCDay()] === today;
-    }
-    return parts.BYDAY.split(',').includes(today);
-  }
-
-  return true;
-}
-
-/** The RFC 5545 weekday code (SU..SA) for the local date of `instant`. */
-function localWeekdayCode(instant: Date, timezone: string): string {
-  // Ask Intl for the weekday directly rather than formatting a date string and
-  // re-parsing it, which is locale-dependent and breaks on non-US formats.
-  const short = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    weekday: 'short',
-  }).format(instant);
-
-  return short.slice(0, 2).toUpperCase();
+  return ruleOccursOn(rule, startDate, localCalendarDate(now, timezone)) !== 'no';
 }
 
 function formatLagosTime(date: Date): string {

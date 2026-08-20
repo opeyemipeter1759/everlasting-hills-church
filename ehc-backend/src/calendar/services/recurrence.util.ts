@@ -75,3 +75,103 @@ function timezoneOffsetMs(instant: Date, timezone: string): number {
 
   return asIfUtc - instant.getTime();
 }
+
+/** RFC 5545 weekday codes, indexed to line up with `Date#getUTCDay()`. */
+const WEEKDAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'] as const;
+
+/**
+ * Whether a rule covers a given date.
+ *
+ * `unsupported` is a distinct answer rather than a `false`, because the two
+ * callers want opposite things from it: the dispatcher fires anyway so a rule
+ * it cannot read is loud instead of silently dead, while the gatherings view
+ * shows nothing so it never advertises an occurrence it cannot place.
+ */
+export type RuleMatch = 'yes' | 'no' | 'unsupported';
+
+/** Splits an RRULE into upper-cased key/value pairs. Unknown parts are ignored. */
+export function parseRecurrenceRule(rule: string): Record<string, string> {
+  return Object.fromEntries(
+    rule
+      .split(';')
+      .map((part) => part.split('='))
+      .filter((part) => part.length === 2)
+      .map(([key, value]) => [key.toUpperCase(), value.toUpperCase()]),
+  );
+}
+
+/**
+ * Whether the rule is one this codebase can actually evaluate.
+ *
+ * Used to reject a rule at write time. A monthly rule would render correctly in
+ * the calendar feed — ical-generator passes it through verbatim — but would
+ * never fire a reminder and would never resolve to a next occurrence, so it is
+ * better refused than accepted into a state only half the system understands.
+ */
+export function isSupportedRecurrenceRule(rule: string): boolean {
+  const parts = parseRecurrenceRule(rule);
+  if (parts.FREQ === 'DAILY') return true;
+  if (parts.FREQ !== 'WEEKLY') return false;
+  if (!parts.BYDAY) return true;
+  return parts.BYDAY.split(',').every((day) => WEEKDAY_CODES.includes(day as never));
+}
+
+/**
+ * Whether `date` is an occurrence of `rule` anchored at `anchor`.
+ *
+ * Both dates are UTC-midnight `Date`s standing for a calendar date — the same
+ * convention Prisma uses for a DATE column and the one
+ * `buildGatheringOccurrenceStart` consumes. Keeping every date in that one
+ * shape is what lets the weekday be read with `getUTCDay()` without a timezone
+ * argument: the caller has already resolved which calendar day it is asking
+ * about.
+ */
+export function ruleOccursOn(rule: string, anchor: Date, date: Date): RuleMatch {
+  // The recurrence has not started yet.
+  if (date.getTime() < startOfUtcDay(anchor).getTime()) return 'no';
+
+  const parts = parseRecurrenceRule(rule);
+  if (parts.FREQ === 'DAILY') return 'yes';
+
+  if (parts.FREQ === 'WEEKLY') {
+    const code = WEEKDAY_CODES[date.getUTCDay()];
+    // No BYDAY means "the same weekday as DTSTART".
+    if (!parts.BYDAY) return code === WEEKDAY_CODES[anchor.getUTCDay()] ? 'yes' : 'no';
+    return parts.BYDAY.split(',').includes(code) ? 'yes' : 'no';
+  }
+
+  return 'unsupported';
+}
+
+/**
+ * The calendar date `instant` falls on in `timezone`, as a UTC-midnight `Date`.
+ *
+ * Needed because "today" is a question about a place, not about UTC: at 23:30Z
+ * it is already tomorrow in Lagos, and a loop over UTC dates would look at the
+ * wrong day for the last hour of every day.
+ */
+export function localCalendarDate(instant: Date, timezone: string = CHURCH_TIMEZONE): Date {
+  const parts: Record<string, number> = {};
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  for (const part of formatter.formatToParts(instant)) {
+    if (part.type !== 'literal') parts[part.type] = Number(part.value);
+  }
+
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+}
+
+/** Strips the time off a UTC-midnight-convention date, defensively. */
+export function startOfUtcDay(date: Date): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+/** Shifts a calendar date by whole days, staying on the UTC-midnight convention. */
+export function addDays(date: Date, days: number): Date {
+  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + days));
+}

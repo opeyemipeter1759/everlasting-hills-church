@@ -160,7 +160,7 @@ export class CalendarFeedService {
     }
 
     for (const gathering of gatherings) {
-      const start = buildGatheringOccurrenceStart(gathering.startDate, gathering.startTime);
+      const start = buildGatheringOccurrenceStart(gathering.startDate, gathering.startTime, gathering.timezone);
       this.ics.addEvent(calendar, {
         uid: `gathering-${gathering.id}@everlastinghills`,
         summary: gathering.title,
