@@ -20,674 +20,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * User Login
-         * @description Authenticate user with email and password
-         */
-        post: operations["AuthController_login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * User Logout
-         * @description Invalidate the current user session
-         */
-        post: operations["AuthController_logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get current user dashboard payload */
-        get: operations["AuthController_me"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register First Timer
-         * @description Submit first timer registration. Creates a Visitor and FormSubmission and notifies the team.
-         */
-        post: operations["FormsController_register"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/prayer-request": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Submit Prayer Request
-         * @description Create a prayer request record and notify the church team by email.
-         */
-        post: operations["FormsController_prayerRequest"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/forms/testimony": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Submit Testimony
-         * @description Save a testimony submission and notify the church team by email.
-         */
-        post: operations["FormsController_testimony"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/check-in": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Check in for today service */
-        post: operations["AttendanceController_checkIn"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/services/{serviceId}/check-in": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Check in for a specific service */
-        post: operations["AttendanceController_checkInByServiceId"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get current member attendance history */
-        get: operations["AttendanceController_getMyAttendance"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/today": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get today service attendance with members (ADMIN+) */
-        get: operations["AttendanceController_getTodayAttendance"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/services": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get services with attendance counts (ADMIN+) */
-        get: operations["AttendanceController_getServices"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/services/next": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get next scheduled service */
-        get: operations["AttendanceController_getNextService"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get attendance dashboard stats (ADMIN+) */
-        get: operations["AttendanceController_getStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/trend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get attendance trend (ADMIN+) */
-        get: operations["AttendanceController_getAttendanceTrend"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/day-of-week": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Attendance by day of week (ADMIN+) */
-        get: operations["AttendanceController_getAttendanceByDayOfWeek"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/top-attendees": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Top attendees (ADMIN+) */
-        get: operations["AttendanceController_getTopAttendees"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Attendance summary metrics (ADMIN+) */
-        get: operations["AttendanceController_getAttendanceSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/admin": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List all sermons (admin) */
-        get: operations["SermonsController_getAllSermons"];
-        put?: never;
-        /** Create sermon */
-        post: operations["SermonsController_createSermon"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/admin/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get sermon by id (admin) */
-        get: operations["SermonsController_getSermonById"];
-        put?: never;
-        post?: never;
-        /** Delete sermon */
-        delete: operations["SermonsController_deleteSermon"];
-        options?: never;
-        head?: never;
-        /** Update sermon */
-        patch: operations["SermonsController_updateSermon"];
-        trace?: never;
-    };
-    "/sermons/admin/{id}/featured": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Set featured sermon */
-        post: operations["SermonsController_setFeatured"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/published": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get published sermons (public) */
-        get: operations["SermonsController_getPublishedSermons"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/slug/{slug}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get sermon by slug (public) */
-        get: operations["SermonsController_getSermonBySlug"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/featured": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get featured sermon (public) */
-        get: operations["SermonsController_getFeaturedSermon"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/latest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get latest sermons (public) */
-        get: operations["SermonsController_getLatestSermons"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/series": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get sermon series list (public) */
-        get: operations["SermonsController_getSeriesList"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/{id}/play": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Increment play count (public) */
-        post: operations["SermonsController_incrementPlayCount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/analytics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get sermon analytics */
-        get: operations["SermonsController_getAnalytics"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/subscribers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List subscribers */
-        get: operations["SermonsController_getSubscribers"];
-        put?: never;
-        /** Subscribe email (public) */
-        post: operations["SermonsController_subscribe"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/publish-scheduled": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Publish scheduled sermons (cron) */
-        post: operations["SermonsController_publishScheduledSermons"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/{sermonId}/context": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** My context for a sermon (reaction/bookmark/note/progress) */
-        get: operations["SermonsController_getMyContext"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/{sermonId}/reaction": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Set my reaction on a sermon */
-        post: operations["SermonsController_upsertReaction"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/{sermonId}/bookmark": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Toggle my bookmark on a sermon */
-        post: operations["SermonsController_toggleBookmark"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/{sermonId}/note": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Save my note on a sermon */
-        post: operations["SermonsController_upsertNote"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/{sermonId}/progress": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Save my playback progress */
-        post: operations["SermonsController_saveProgress"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/bookmarks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** My bookmarked sermons */
-        get: operations["SermonsController_getMyBookmarks"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** My listen history */
-        get: operations["SermonsController_getMyListenHistory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/streak": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** My weekly sermon streak */
-        get: operations["SermonsController_getMySermonStreak"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/upload-audio": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload sermon audio
-         * @description Uploads an audio file to R2 and returns a public URL.
-         */
-        post: operations["SermonsController_uploadAudio"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/analytics": {
         parameters: {
             query?: never;
@@ -705,15 +37,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/units": {
+    "/admin/attendance-trend": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get department/unit stats */
-        get: operations["AnalyticsController_getUnits"];
+        /** Attendance trend points tagged by service type for Sunday/Wednesday filtering (ADMIN+) */
+        get: operations["AdminController_getAttendanceTrend"];
         put?: never;
         post?: never;
         delete?: never;
@@ -722,15 +54,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/units/{unitId}/attendance": {
+    "/admin/dashboard-summary": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get unit member attendance */
-        get: operations["AnalyticsController_getUnitAttendance"];
+        /** Live stat cards (members, attendance, visitors, volunteers, events, sermons) with MoM trends (ADMIN+) */
+        get: operations["AdminController_getDashboardSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/engagement/at-risk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Members at risk (PASTOR+) */
+        get: operations["AnalyticsController_engagementAtRisk"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/engagement/distribution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Engagement distribution (PASTOR+) */
+        get: operations["AnalyticsController_engagementDistribution"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/engagement/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Engagement leaderboard (PASTOR+) */
+        get: operations["AnalyticsController_engagementLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/engagement/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh engagement scores (PASTOR+) */
+        post: operations["AnalyticsController_refreshEngagement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/engagement/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Engagement summary (PASTOR+) */
+        get: operations["AnalyticsController_engagementSummary"];
         put?: never;
         post?: never;
         delete?: never;
@@ -790,23 +207,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/giving/trend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Giving trend (PASTOR+) */
-        get: operations["AnalyticsController_getGivingTrend"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/giving/categories": {
         parameters: {
             query?: never;
@@ -858,7 +258,365 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/engagement/refresh": {
+    "/admin/giving/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Giving trend (PASTOR+) */
+        get: operations["AnalyticsController_getGivingTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/stats/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operational stat cards for the admin dashboard (ADMIN+) */
+        get: operations["AdminController_getStatsOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get department/unit stats */
+        get: operations["AnalyticsController_getUnits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/units/{unitId}/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get unit member attendance */
+        get: operations["AnalyticsController_getUnitAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/absentee-trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Absentee count trend */
+        get: operations["AttendanceAnalyticsController_getAbsenteeTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/alerts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** At-risk, low-turnout, and milestone alerts */
+        get: operations["AttendanceAnalyticsController_getAlerts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Compare two date ranges — period or dateFrom+dateTo per side */
+        get: operations["AttendanceAnalyticsController_getCompare"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/consistency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Member consistency scores and streaks */
+        get: operations["AttendanceAnalyticsController_getConsistency"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/first-timers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Members attending for the first time in the period */
+        get: operations["AttendanceAnalyticsController_getFirstTimers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/heatmap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Full-year attendance heatmap */
+        get: operations["AttendanceAnalyticsController_getHeatmap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Top attendees ranked by rate */
+        get: operations["AttendanceAnalyticsController_getLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/member-growth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** New member growth over time */
+        get: operations["AttendanceAnalyticsController_getMemberGrowth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stat cards — supports period OR dateFrom+dateTo+serviceType */
+        get: operations["AttendanceAnalyticsController_getOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/peak-hours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Peak check-in hours */
+        get: operations["AttendanceAnalyticsController_getPeakHours"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/rate-trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Attendance rate over time */
+        get: operations["AttendanceAnalyticsController_getRateTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/retention": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Member retention vs previous period */
+        get: operations["AttendanceAnalyticsController_getRetention"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/service-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sunday vs Wednesday comparison */
+        get: operations["AttendanceAnalyticsController_getServiceComparison"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/service-health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health scores per service type */
+        get: operations["AttendanceAnalyticsController_getServiceHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/split": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Present vs absent totals (donut) */
+        get: operations["AttendanceAnalyticsController_getSplit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/analytics/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-service attendance trend */
+        get: operations["AttendanceAnalyticsController_getTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List announcements */
+        get: operations["AnnouncementsController_list"];
+        put?: never;
+        /** Create an announcement — PUBLISHED fans out immediately, DRAFT saves quietly */
+        post: operations["AnnouncementsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/announcements/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -867,83 +625,16 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Refresh engagement scores (PASTOR+) */
-        post: operations["AnalyticsController_refreshEngagement"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/engagement/leaderboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Engagement leaderboard (PASTOR+) */
-        get: operations["AnalyticsController_engagementLeaderboard"];
-        put?: never;
         post?: never;
-        delete?: never;
+        /** Delete an announcement */
+        delete: operations["AnnouncementsController_remove"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Edit an announcement's title/body/email flag */
+        patch: operations["AnnouncementsController_update"];
         trace?: never;
     };
-    "/admin/engagement/at-risk": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Members at risk (PASTOR+) */
-        get: operations["AnalyticsController_engagementAtRisk"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/engagement/distribution": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Engagement distribution (PASTOR+) */
-        get: operations["AnalyticsController_engagementDistribution"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/engagement/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Engagement summary (PASTOR+) */
-        get: operations["AnalyticsController_engagementSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/convert-visitor/{visitorId}": {
+    "/announcements/{id}/publish": {
         parameters: {
             query?: never;
             header?: never;
@@ -952,8 +643,2467 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Convert a visitor to a member */
-        post: operations["MembersController_convertVisitor"];
+        /** Publish a saved draft — fans out to members now */
+        post: operations["AnnouncementsController_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/announcements/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent published announcements for the member dashboard (max 5) */
+        get: operations["AnnouncementsController_feed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List assignments, filterable by leader or member (ADMIN+) */
+        get: operations["AssignmentsController_list"];
+        put?: never;
+        /** Assign members to a care/discipleship leader (ADMIN+) */
+        post: operations["AssignmentsController_assign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assignments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove an assignment (ADMIN+) */
+        delete: operations["AssignmentsController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assignments/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the people I shepherd, with their follow-up tasks (UNIT_LEAD+) */
+        get: operations["AssignmentsController_listMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assignments/me/{memberId}/follow-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a follow-up task for someone I shepherd (UNIT_LEAD+) */
+        post: operations["AssignmentsController_addFollowUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/assignments/me/follow-up/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Toggle a follow-up task done, for someone I shepherd (UNIT_LEAD+) */
+        patch: operations["AssignmentsController_toggleFollowUp"];
+        trace?: never;
+    };
+    "/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Paginated attendance list with filters and sorting (ADMIN+) */
+        get: operations["AttendanceController_listAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/can-mark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Check whether the current user can mark attendance now */
+        get: operations["AttendanceSelfServiceController_canMark"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check in for today service */
+        post: operations["AttendanceSelfServiceController_checkIn_"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/day-of-week": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Attendance by day of week (ADMIN+) */
+        get: operations["AttendanceStatsController_getAttendanceByDayOfWeek"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export attendance as Excel (ADMIN+) */
+        get: operations["AttendanceController_exportCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/feed/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's live check-in feed (ADMIN+). Poll every 30s. */
+        get: operations["AttendanceController_getTodayFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current member attendance history */
+        get: operations["AttendanceSelfServiceController_getMyAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/me/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-service present/absent tracking for the current member */
+        get: operations["AttendanceSelfServiceController_getMyHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get services with attendance counts (ADMIN+) */
+        get: operations["ServiceSessionController_getServices"];
+        put?: never;
+        /** Create a service session (ADMIN+) */
+        post: operations["ServiceSessionController_createService"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/services/{serviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a service and its check-in records (ADMIN+) */
+        delete: operations["ServiceSessionController_removeService"];
+        options?: never;
+        head?: never;
+        /** Edit a service's name/date/type (ADMIN+) */
+        patch: operations["ServiceSessionController_updateService"];
+        trace?: never;
+    };
+    "/attendance/services/{serviceId}/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Check in for a specific service */
+        post: operations["AttendanceSelfServiceController_checkInByServiceId"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/services/{serviceId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Close a service (ADMIN+) */
+        patch: operations["ServiceSessionController_closeService"];
+        trace?: never;
+    };
+    "/attendance/services/{serviceId}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export a service attendance as CSV (ADMIN+) */
+        get: operations["ServiceSessionController_exportService"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/services/{serviceId}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Open a service for check-in (ADMIN+) */
+        patch: operations["ServiceSessionController_openService"];
+        trace?: never;
+    };
+    "/attendance/services/next": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get next scheduled service */
+        get: operations["ServiceSessionController_getNextService"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/session/{sessionId}/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Bulk mark attendance PRESENT or ABSENT (ADMIN+) */
+        patch: operations["AttendanceController_bulkMark"];
+        trace?: never;
+    };
+    "/attendance/session/{sessionId}/member/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Override a single member attendance status (ADMIN+) */
+        patch: operations["AttendanceController_overrideAttendance"];
+        trace?: never;
+    };
+    "/attendance/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance dashboard stats (ADMIN+) */
+        get: operations["AttendanceStatsController_getStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Attendance summary metrics (ADMIN+) */
+        get: operations["AttendanceStatsController_getAttendanceSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get today service attendance with members (ADMIN+) */
+        get: operations["AttendanceStatsController_getTodayAttendance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/top-attendees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Top attendees (ADMIN+) */
+        get: operations["AttendanceStatsController_getTopAttendees"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/attendance/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get attendance trend (ADMIN+) */
+        get: operations["AttendanceStatsController_getAttendanceTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Change Password
+         * @description Update the signed-in user's password. Caller must already have a valid JWT (normal login or recovery-link session).
+         */
+        post: operations["AuthAccountController_changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Password Reset
+         * @description Send a Supabase recovery email. Always returns success to avoid leaking which emails exist.
+         */
+        post: operations["AuthController_forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * User Login
+         * @description Authenticate user with email and password
+         */
+        post: operations["AuthController_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * User Logout
+         * @description Invalidate the current user session
+         */
+        post: operations["AuthAccountController_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get current user dashboard payload */
+        get: operations["AuthAccountController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Refresh Access Token
+         * @description Exchange a valid refresh token for a fresh access token (+ rotated refresh token).
+         */
+        post: operations["AuthController_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar/{token}.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Personal calendar subscription feed */
+        get: operations["CalendarController_memberFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar/event/{idOrSlug}.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download a single event as .ics */
+        get: operations["CalendarController_eventIcs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar/gathering/{id}.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download a recurring gathering as .ics */
+        get: operations["CalendarController_gatheringIcs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar/me/feed-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get (or create) my calendar feed token */
+        get: operations["CalendarController_myToken"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar/me/feed-token/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke my calendar feed link and issue a new one */
+        post: operations["CalendarController_regenerate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/calendar/service/{id}.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download a single service as .ics */
+        get: operations["CalendarController_serviceIcs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent CMS audit-log entries (PASTOR+) */
+        get: operations["CmsMediaController_listAudit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List media assets (PASTOR+) */
+        get: operations["CmsMediaController_listMedia"];
+        put?: never;
+        /** Upload a media asset to R2 (alt text required) (PASTOR+) */
+        post: operations["CmsMediaController_uploadMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/media/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a media asset (PASTOR+) */
+        delete: operations["CmsMediaController_deleteMedia"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List every editable page + its status (PASTOR+) */
+        get: operations["CmsController_listPages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Editor view: page + working draft content (PASTOR+) */
+        get: operations["CmsController_getEditorPage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages/{key}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save the working draft (validated, not live) (PASTOR+) */
+        post: operations["CmsController_saveDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages/{key}/preview-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mint a signed 1-hour preview token (PASTOR+) */
+        post: operations["CmsController_previewToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages/{key}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish the working draft to the live site (PASTOR+) */
+        post: operations["CmsController_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages/{key}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Take the page offline (PASTOR+) */
+        post: operations["CmsController_unpublish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages/{key}/versions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Version history for a page (PASTOR+) */
+        get: operations["CmsVersionsController_listVersions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages/{key}/versions/{version}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A single historical version snapshot (PASTOR+) */
+        get: operations["CmsVersionsController_getVersion"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/pages/{key}/versions/{version}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore (republish) a prior version (PASTOR+) */
+        post: operations["CmsVersionsController_rollback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Resolve a signed preview token to draft content */
+        get: operations["CmsController_previewGet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/public/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Published content for a page (public site read) */
+        get: operations["CmsController_getPublished"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/cms/site-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Site-wide settings (identity, contact, socials, footer) */
+        get: operations["CmsController_getSiteConfig"];
+        /** Update site-wide settings (PASTOR+) */
+        put: operations["CmsController_updateSiteConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/community/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Latest 20 community posts */
+        get: operations["CommunityController_feed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/community/posts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a new community post */
+        post: operations["CommunityController_createPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/community/posts/{id}/react": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a heart reaction to a post */
+        post: operations["CommunityController_react"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the course catalog (any authenticated user) */
+        get: operations["CoursesController_list"];
+        put?: never;
+        /** Create a course (ADMIN+) */
+        post: operations["CoursesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a course; dependents lose it as a prerequisite (ADMIN+) */
+        delete: operations["CoursesController_remove"];
+        options?: never;
+        head?: never;
+        /** Update a course, incl. curriculum and exam (ADMIN+) */
+        patch: operations["CoursesController_update"];
+        trace?: never;
+    };
+    "/courses/{id}/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enroll the current user in a course */
+        post: operations["CoursesController_enroll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{id}/exam/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit exam answers; graded server-side, 100% completes the course */
+        post: operations["CoursesController_submitExam"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{id}/lessons/{lessonId}/watched": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a lesson watched to completion for the current user */
+        post: operations["CoursesController_markLessonWatched"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{id}/modules/{moduleId}/check/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a module's checkpoint answer; graded server-side, gates the next module */
+        post: operations["CoursesController_submitModuleCheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Course detail by slug — exam options only, no correct answers */
+        get: operations["CoursesController_getBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/admin/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Full course detail incl. exam answers, for the admin editor (ADMIN+) */
+        get: operations["CoursesController_getForAdmin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the course category tree (any authenticated user) */
+        get: operations["CoursesController_listCategories"];
+        put?: never;
+        /** Create a course category, optionally nested under a parent (ADMIN+) */
+        post: operations["CoursesController_createCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an empty course category (no subcategories or courses) (ADMIN+) */
+        delete: operations["CoursesController_removeCategory"];
+        options?: never;
+        head?: never;
+        /** Rename or reparent a course category (ADMIN+) */
+        patch: operations["CoursesController_updateCategory"];
+        trace?: never;
+    };
+    "/courses/progress/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current user's enrollment/exam progress across all courses */
+        get: operations["CoursesController_myProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All departments with head, unit + member counts, and unassigned units (ADMIN+) */
+        get: operations["DepartmentsController_list"];
+        put?: never;
+        /** Create a department (ADMIN+) */
+        post: operations["DepartmentsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Department detail: units, current head, succession history (ADMIN+) */
+        get: operations["DepartmentsController_getOne"];
+        put?: never;
+        post?: never;
+        /** Delete a department; its units become unassigned (ADMIN+) */
+        delete: operations["DepartmentsController_remove"];
+        options?: never;
+        head?: never;
+        /** Update a department (ADMIN+) */
+        patch: operations["DepartmentsController_update"];
+        trace?: never;
+    };
+    "/departments/{id}/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post an announcement scoped to a department (ADMIN+) */
+        post: operations["DepartmentsController_postAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/{id}/head": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign a department head (ends the current tenure, starts a new one) (ADMIN+) */
+        post: operations["DepartmentsController_assignHead"];
+        /** End the current department head tenure (ADMIN+) */
+        delete: operations["DepartmentsController_removeHead"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/{id}/hods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Appoint an HOD under this department (ADMIN_HEAD+, scoped to a department they head) */
+        post: operations["DepartmentsController_assignHod"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/{id}/hods/{profileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** End an HOD tenure under this department (ADMIN_HEAD+, scoped to a department they head) */
+        delete: operations["DepartmentsController_removeHod"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/{id}/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign units to a department (ADMIN+) */
+        post: operations["DepartmentsController_assignUnits"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/{id}/units/{unitId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unassign a unit from its department (ADMIN+) */
+        delete: operations["DepartmentsController_unassignUnit"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Departments the current Admin Head/HOD oversees, with units + counts (HOD+) */
+        get: operations["DepartmentsMineController_getMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/mine/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post an announcement scoped to a department the actor leads (HOD+) */
+        post: operations["DepartmentsMineController_postMyAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/mine/units/{unitId}/nudge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Nudge a unit lead within the actor's department (HOD+) */
+        post: operations["DepartmentsMineController_nudge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/mine/units/{unitId}/roster": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Roster of a unit within the actor's department (403 outside scope) (HOD+) */
+        get: operations["DepartmentsMineController_getMyUnitRoster"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published events (public) */
+        get: operations["EventsController_listPublished"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a published event by slug (public) */
+        get: operations["EventsController_getBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/rsvp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RSVP to an event (public) */
+        post: operations["EventsController_rsvp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{slug}/rsvp/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** RSVP as the signed-in member — uses their own record, no form */
+        post: operations["EventsController_rsvpAsMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all events including drafts (ADMIN+) */
+        get: operations["EventsController_listAll"];
+        put?: never;
+        /** Create event (ADMIN+) */
+        post: operations["EventsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/admin/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get event by id (ADMIN+) */
+        get: operations["EventsController_getById"];
+        put?: never;
+        post?: never;
+        /** Delete event (ADMIN+) */
+        delete: operations["EventsController_delete"];
+        options?: never;
+        head?: never;
+        /** Update event (ADMIN+) */
+        patch: operations["EventsController_update"];
+        trace?: never;
+    };
+    "/events/admin/{id}/rsvps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List RSVPs for an event (ADMIN+) */
+        get: operations["EventsController_listRsvps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/admin/{id}/rsvps/{rsvpId}/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark an RSVP checked in / not checked in at the door (ADMIN+) */
+        patch: operations["EventsController_setRsvpCheckedIn"];
+        trace?: never;
+    };
+    "/events/admin/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Events overlapping a date window, drafts included (ADMIN+) */
+        get: operations["EventsController_listForCalendar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/admin/calendar/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Next published events + week/month/draft counts (ADMIN+) */
+        get: operations["EventsController_calendarSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the follow-up Master List (MEMBER+). Church-wide by default — every unit member sees the same entries and totals; pass unitId to narrow to one team. */
+        get: operations["FollowUpController_list"];
+        put?: never;
+        /** Add a first-timer or absentee to the Master List (UNIT_LEAD+) */
+        post: operations["FollowUpController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one follow-up entry with its full contact log (MEMBER+, visible church-wide) */
+        get: operations["FollowUpController_getOne"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Assign or reassign a team member (UNIT_LEAD+ of that unit) */
+        patch: operations["FollowUpController_assign"];
+        trace?: never;
+    };
+    "/follow-up/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Log a final outcome for this entry — available any time, not gated on a review hand-off (UNIT_LEAD+ of that unit) */
+        patch: operations["FollowUpController_confirm"];
+        trace?: never;
+    };
+    "/follow-up/{id}/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log a contact attempt (MEMBER+, must be the assignee or the unit leader) */
+        post: operations["FollowUpController_logContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/{id}/opt-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Opt this entry's member out — blocks their login until restored (UNIT_LEAD+ of that unit) */
+        patch: operations["FollowUpMemberStatusController_optOut"];
+        trace?: never;
+    };
+    "/follow-up/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Restore an opted-out member's login access (UNIT_LEAD+ of that unit) */
+        patch: operations["FollowUpMemberStatusController_restore"];
+        trace?: never;
+    };
+    "/follow-up/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the caller can view the Follow-Up pipeline (MEMBER+ auth, but real access requires being on a team or ADMIN+) — used to decide whether to show the nav link. */
+        get: operations["FollowUpController_checkAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/auto-surface/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manually run the daily auto-surface job now (ADMIN+): creates Master List entries for at-risk absentees and new visitors that don't have one yet. Safe to re-run — already-surfaced pairs are skipped permanently. */
+        post: operations["FollowUpController_runAutoSurface"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search first-timers (Visitor) or absentees (Member) to add to the Master List (UNIT_LEAD+) */
+        get: operations["FollowUpController_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** This unit's roster, for the assignee picker (MEMBER+, defaults to caller's own unit) */
+        get: operations["FollowUpController_team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Contact Message
+         * @description Store a contact message and notify the church team by email.
+         */
+        post: operations["FormsMiscController_contact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/home-cell": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register for a Home Cell
+         * @description Submit Home Cell registration and notify the team by email.
+         */
+        post: operations["FormsMiscController_homeCell"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/prayer-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Prayer Request
+         * @description Create a prayer request record and notify the church team by email. Public — works with no session. If the submitter is signed in, their member is linked on the record even when marked anonymous (anonymous only hides the name shown around the request; admins can always see who a signed-in submitter really is).
+         */
+        post: operations["FormsController_prayerRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/prayer-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all prayer requests, newest first (ADMIN+) */
+        get: operations["FormsController_listPrayerRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/prayer-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a prayer request (ADMIN+) */
+        delete: operations["FormsController_deletePrayerRequest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/prayer-requests/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark a prayer request prayed-for/pending (ADMIN+) */
+        patch: operations["FormsController_updatePrayerRequestStatus"];
+        trace?: never;
+    };
+    "/forms/question": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a Question
+         * @description Create a question record and notify the church team by email. Public — works with no session. Same optional-auth semantics as prayer-request: signed-in submitters are always linked, even when anonymous.
+         */
+        post: operations["FormsController_question"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all questions, newest first (ADMIN+) */
+        get: operations["FormsController_listQuestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/questions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a question (ADMIN+) */
+        delete: operations["FormsController_deleteQuestion"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/questions/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark a question answered/pending (ADMIN+) */
+        patch: operations["FormsController_updateQuestionStatus"];
+        trace?: never;
+    };
+    "/forms/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register First Timer
+         * @description Submit first timer registration. Creates a Visitor and FormSubmission and notifies the team.
+         */
+        post: operations["FormsController_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/serve-team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Serve Team Interest
+         * @description Record interest in joining a service unit and notify the team by email.
+         */
+        post: operations["FormsMiscController_serveTeam"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/testimony": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Testimony
+         * @description Save a testimony submission and notify the church team by email.
+         */
+        post: operations["FormsMiscController_testimony"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gatherings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active gatherings with next occurrence and live state */
+        get: operations["GatheringsController_list"];
+        put?: never;
+        /** Create a recurring gathering */
+        post: operations["GatheringsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/gatherings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a recurring gathering */
+        delete: operations["GatheringsController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit a recurring gathering */
+        patch: operations["GatheringsController_update"];
+        trace?: never;
+    };
+    "/gatherings/manage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All gatherings including inactive — admin view */
+        get: operations["GatheringsController_listAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/giving/initialize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start an online gift (returns Paystack checkout URL) */
+        post: operations["GivingController_initialize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/giving/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My giving history */
+        get: operations["GivingController_myGiving"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/giving/verify/{reference}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Verify a transaction by reference */
+        get: operations["GivingController_verify"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/giving/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Paystack webhook (HMAC-verified) */
+        post: operations["GivingController_webhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/headcount/by-date": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Service + headcount for a chosen calendar date (HEAD_USHER+) */
+        get: operations["HeadcountController_getForDate"];
+        /** Record the headcount for a chosen date; finds or creates that day's service (HEAD_USHER+) */
+        put: operations["HeadcountController_upsertByDate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/headcount/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent headcounts across services, newest first (HEAD_USHER+) */
+        get: operations["HeadcountController_getHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/headcount/service/{serviceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Headcount for a service + whether it can be recorded now (HEAD_USHER+) */
+        get: operations["HeadcountController_getForService"];
+        /** Create or update the authoritative headcount for a service (HEAD_USHER+) */
+        put: operations["HeadcountController_upsert"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/headcount/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's congregation headcount total (HEAD_USHER+) */
+        get: operations["HeadcountController_getToday"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/headcount/trend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Headcount attendance trend + category breakdown, tagged by service type (HEAD_USHER+) */
+        get: operations["HeadcountController_getTrend"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/home-cell": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search active cells by state and/or city */
+        get: operations["HomeCellController_search"];
+        put?: never;
+        /** Add a new Home Cell */
+        post: operations["HomeCellController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/home-cell/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a single cell by id */
+        get: operations["HomeCellController_findOne"];
+        put?: never;
+        post?: never;
+        /** Delete / reject a cell (ADMIN+) */
+        delete: operations["HomeCellController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/home-cell/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Approve a pending cell (ADMIN+) */
+        patch: operations["HomeCellController_approve"];
+        trace?: never;
+    };
+    "/home-cell/{id}/join": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request to join a Home Cell */
+        post: operations["HomeCellController_join"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/home-cell/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin creates a cell — immediately active (ADMIN+) */
+        post: operations["HomeCellController_adminCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/home-cell/admin/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all cells including pending (ADMIN+) */
+        get: operations["HomeCellController_adminAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/home-cell/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Distinct cities for a given state */
+        get: operations["HomeCellController_cities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/home-cell/states": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Distinct states that have active cells */
+        get: operations["HomeCellController_states"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List inventory items, with optional filters/search (ADMIN+) */
+        get: operations["InventoryController_list"];
+        put?: never;
+        /** Add an inventory item — creates its opening "New" history entry (ADMIN+) */
+        post: operations["InventoryController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/inventory/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an item with its full history timeline (ADMIN+) */
+        get: operations["InventoryController_getById"];
+        put?: never;
+        post?: never;
+        /** Delete an item and its history (ADMIN+) */
+        delete: operations["InventoryController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit an item's details (ADMIN+) */
+        patch: operations["InventoryController_update"];
+        trace?: never;
+    };
+    "/inventory/{id}/repairs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log a repair against an item (ADMIN+) */
+        post: operations["InventoryController_logRepair"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/inventory/{id}/repairs/{historyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit a logged repair — e.g. mark it completed (ADMIN+) */
+        patch: operations["InventoryController_updateRepair"];
+        trace?: never;
+    };
+    "/inventory/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Distinct categories/locations in use, for filter dropdowns (ADMIN+) */
+        get: operations["InventoryController_filters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/inventory/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Inventory summary stats (ADMIN+) */
+        get: operations["InventoryController_stats"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -977,57 +3127,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/members/birthdays/upcoming": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Upcoming birthdays */
-        get: operations["MembersController_upcomingBirthdays"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/birthdays/today": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Today birthdays */
-        get: operations["MembersController_todayBirthdays"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/absent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Absent members */
-        get: operations["MembersController_absent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/members/{id}": {
         parameters: {
             query?: never;
@@ -1039,6 +3138,45 @@ export interface paths {
         get: operations["MembersController_getById"];
         put?: never;
         post?: never;
+        /**
+         * Permanently delete a member
+         * @description Removes the Member, their Profile, all related records (attendance, notes, follow-ups, etc.), and their Supabase auth user. Actor role must out-rank the target.
+         */
+        delete: operations["MembersController_deleteMember"];
+        options?: never;
+        head?: never;
+        /** Admin edit of a member's core fields (ADMIN+) */
+        patch: operations["MembersController_updateMember"];
+        trace?: never;
+    };
+    "/members/{id}/follow-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add follow-up task for a member */
+        post: operations["MembersPastoralController_addFollowUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/{id}/pastor-note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add pastor note for a member (PASTOR+) */
+        post: operations["MembersPastoralController_addPastorNote"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1062,24 +3200,7 @@ export interface paths {
         patch: operations["MembersController_updateStatus"];
         trace?: never;
     };
-    "/members/{id}/pastor-note": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add pastor note for a member (PASTOR+) */
-        post: operations["MembersController_addPastorNote"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/pastor-note/{noteId}": {
+    "/members/{id}/tags": {
         parameters: {
             query?: never;
             header?: never;
@@ -1089,14 +3210,82 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete pastor note (PASTOR+) */
-        delete: operations["MembersController_deletePastorNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replace a member's tags */
+        patch: operations["MembersController_setTags"];
+        trace?: never;
+    };
+    "/members/absent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Absent members */
+        get: operations["MembersPastoralController_absent"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/members/{id}/follow-up": {
+    "/members/at-risk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Members at risk — consecutive absences, never attended, below 50% rate (ADMIN+) */
+        get: operations["MembersPastoralController_getAtRisk"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/birthdays/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today birthdays */
+        get: operations["MembersPastoralController_todayBirthdays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/birthdays/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Upcoming birthdays */
+        get: operations["MembersPastoralController_upcomingBirthdays"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/bulk": {
         parameters: {
             query?: never;
             header?: never;
@@ -1105,8 +3294,59 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Add follow-up task for a member */
-        post: operations["MembersController_addFollowUp"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Bulk status / tag operation on member ids (ADMIN+) */
+        patch: operations["MembersController_bulkOp"];
+        trace?: never;
+    };
+    "/members/convert-visitor/{visitorId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Convert a visitor to a member */
+        post: operations["MembersOnboardingController_convertVisitor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/directory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unified People directory — paginated, filtered, sorted (ADMIN+) */
+        get: operations["MembersController_directoryList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export the filtered People directory as Excel (ADMIN+) */
+        get: operations["MembersController_exportDirectory"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1124,172 +3364,2193 @@ export interface paths {
         put?: never;
         post?: never;
         /** Delete follow-up task */
-        delete: operations["MembersController_deleteFollowUp"];
+        delete: operations["MembersPastoralController_deleteFollowUp"];
         options?: never;
         head?: never;
         /** Toggle follow-up task done */
-        patch: operations["MembersController_toggleFollowUp"];
+        patch: operations["MembersPastoralController_toggleFollowUp"];
+        trace?: never;
+    };
+    "/members/follow-ups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All open follow-up tasks org-wide, with assigned leader (ADMIN+) */
+        get: operations["MembersPastoralController_getOpenFollowUps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk-import members from CSV rows */
+        post: operations["MembersOnboardingController_bulkImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update my profile */
+        patch: operations["MembersSelfServiceController_updateMyProfile"];
+        trace?: never;
+    };
+    "/members/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload my profile photo (PNG/JPG/JPEG, ≤ 1 MB) */
+        post: operations["MembersSelfServiceController_uploadMyAvatar"];
+        /** Remove my profile photo */
+        delete: operations["MembersSelfServiceController_clearMyAvatar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request deactivation of my own account */
+        post: operations["MembersSelfServiceController_deactivateMe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivate my own (self-deactivated) account */
+        post: operations["MembersSelfServiceController_reactivateMe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/pastor-note/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete pastor note (PASTOR+) */
+        delete: operations["MembersPastoralController_deletePastorNote"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search active members by name — for "pick a person" pickers (MEMBER+) */
+        get: operations["MembersSelfServiceController_search_"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List my notifications (latest 50) */
+        get: operations["InboxController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark one notification read */
+        patch: operations["InboxController_markRead"];
+        trace?: never;
+    };
+    "/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark all my notifications read */
+        post: operations["InboxController_markAllRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Count my unread notifications */
+        get: operations["InboxController_unreadCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/overview/member": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get member overview */
+        get: operations["OverviewController_getMemberOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My notification preferences */
+        get: operations["PushController_getPreferences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update my notification preferences */
+        patch: operations["PushController_updatePreferences"];
+        trace?: never;
+    };
+    "/push/public-key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** VAPID public key for browser subscription */
+        get: operations["PushController_publicKey"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register this device for push notifications */
+        post: operations["PushController_subscribe"];
+        /** Remove this device */
+        delete: operations["PushController_unsubscribe"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/push/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send myself a test notification */
+        post: operations["PushController_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/member/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Full member attendance history — Excel (ADMIN+) */
+        get: operations["ReportsController_memberHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/monthly": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Monthly attendance summary — Excel (ADMIN+) */
+        get: operations["ReportsController_monthly"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/range": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Attendance in a date range — Excel (ADMIN+) */
+        get: operations["ReportsController_range"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/service-comparison": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Service comparison — JSON or Excel download (ADMIN+) */
+        get: operations["ReportsController_serviceComparison"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/{id}/play": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Increment play count (public) */
+        post: operations["SermonsPublicController_incrementPlayCount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/{sermonId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List comments on a sermon (public) */
+        get: operations["SermonsCommentsController_getComments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all sermons (admin) */
+        get: operations["SermonsAdminController_getAllSermons"];
+        put?: never;
+        /** Create sermon */
+        post: operations["SermonsAdminController_createSermon"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/admin/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get sermon by id (admin) */
+        get: operations["SermonsAdminController_getSermonById"];
+        put?: never;
+        post?: never;
+        /** Delete sermon */
+        delete: operations["SermonsAdminController_deleteSermon"];
+        options?: never;
+        head?: never;
+        /** Update sermon */
+        patch: operations["SermonsAdminController_updateSermon"];
+        trace?: never;
+    };
+    "/sermons/admin/{id}/engagement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get full per-member engagement detail for a sermon (admin) */
+        get: operations["SermonsAdminController_getSermonEngagement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/admin/{id}/episodes/{episodeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get sermon episode by sermon id (admin) */
+        get: operations["SermonsAdminController_getEpisodeBySermonId"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/admin/{id}/featured": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set featured sermon */
+        post: operations["SermonsAdminController_setFeatured"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get sermon overview totals (admin) */
+        get: operations["SermonsAdminController_getAdminOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get sermon analytics */
+        get: operations["SermonsAdminController_getAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/featured": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get featured sermon (public) */
+        get: operations["SermonsPublicController_getFeaturedSermon"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cursor-paginated published sermons (public) */
+        get: operations["SermonsPublicController_getSermonFeed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get latest sermons (public) */
+        get: operations["SermonsPublicController_getLatestSermons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/{sermonId}/bookmark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Toggle my bookmark on a sermon */
+        post: operations["SermonsInteractionsController_toggleBookmark"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/{sermonId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post a comment (or reply) on a sermon */
+        post: operations["SermonsCommentsController_createComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/{sermonId}/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My context for a sermon (reaction/bookmark/note/progress) */
+        get: operations["SermonsInteractionsController_getMyContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/{sermonId}/direct-messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My private notes/questions (sent + received) for a sermon */
+        get: operations["SermonsDirectMessageController_getMyDirectMessages"];
+        put?: never;
+        /** Send a private note or question about a sermon to another member */
+        post: operations["SermonsDirectMessageController_sendDirectMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/{sermonId}/note": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save my note on a sermon */
+        post: operations["SermonsInteractionsController_upsertNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/{sermonId}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save my playback progress */
+        post: operations["SermonsInteractionsController_saveProgress"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/{sermonId}/reaction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set my reaction on a sermon */
+        post: operations["SermonsInteractionsController_upsertReaction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/bookmarks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My bookmarked sermons */
+        get: operations["SermonsMemberStatsController_getMyBookmarks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete my comment (or any comment, if PASTOR+) */
+        delete: operations["SermonsCommentsController_deleteComment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My listen history */
+        get: operations["SermonsMemberStatsController_getMyListenHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/questions/{questionId}/response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer a reflection question (upserts my response) */
+        post: operations["SermonsInteractionsController_answerDiscussionQuestion"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My sermon stats — completed / in progress / bookmarked counts */
+        get: operations["SermonsMemberStatsController_getMySermonStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/me/streak": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My weekly sermon streak */
+        get: operations["SermonsMemberStatsController_getMySermonStreak"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/publish-scheduled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish scheduled sermons (cron) */
+        post: operations["SermonsSubscribersController_publishScheduledSermons"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/published": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get published sermons (public) */
+        get: operations["SermonsPublicController_getPublishedSermons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent published sermons, newest first (public) */
+        get: operations["SermonsPublicController_getRecentSermons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/series": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get sermon series list (public) */
+        get: operations["SermonsPublicController_getSeriesList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/slug/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get sermon by slug (public) */
+        get: operations["SermonsPublicController_getSermonBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/slug/{slug}/episodes/{episodeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get sermon episode by sermon slug (public) */
+        get: operations["SermonsPublicController_getEpisodeBySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/subscribers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List subscribers */
+        get: operations["SermonsSubscribersController_getSubscribers"];
+        put?: never;
+        /** Subscribe email (public) */
+        post: operations["SermonsSubscribersController_subscribe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sermons/upload-audio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload sermon audio
+         * @description Uploads an audio file to R2 and returns a public URL.
+         */
+        post: operations["SermonsUploadController_uploadAudio"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/banner": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Live session banner for admin — open/closed status, countdown, check-in count (ADMIN+) */
+        get: operations["SessionsController_getBanner"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close today's session and mark all non-present members absent (ADMIN+) */
+        post: operations["SessionsController_closeSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/site-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * All homepage sections
+         * @description Returns every section keyed by name. Cached for 5 minutes.
+         */
+        get: operations["SiteSettingsController_getAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/site-settings/{section}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One homepage section */
+        get: operations["SiteSettingsController_getOne"];
+        /**
+         * Update one homepage section
+         * @description Replaces the content blob for this section. Body is validated server-side by the section-specific Zod schema; mismatch returns 400 with field-level details.
+         */
+        put: operations["SiteSettingsController_putOne"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/status-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All status reports, newest first — Audit Log (SUPER_ADMIN) */
+        get: operations["StatusReportsController_listAll"];
+        put?: never;
+        /** Submit a status report for a department or unit you lead */
+        post: operations["StatusReportsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/status-reports/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Report detail with comments (author or SUPER_ADMIN) */
+        get: operations["StatusReportsController_getById"];
+        put?: never;
+        post?: never;
+        /** Delete your report (author only; locked once approved) */
+        delete: operations["StatusReportsController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit your report, or resubmit after a correction request (author only; locked once approved) */
+        patch: operations["StatusReportsController_update"];
+        trace?: never;
+    };
+    "/status-reports/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Approve a report (SUPER_ADMIN) */
+        patch: operations["StatusReportsController_approve"];
+        trace?: never;
+    };
+    "/status-reports/{id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Comment on a report (author or SUPER_ADMIN) */
+        post: operations["StatusReportsController_addComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/status-reports/{id}/request-correction": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Send a report back for correction, with a required comment (SUPER_ADMIN) */
+        patch: operations["StatusReportsController_requestCorrection"];
+        trace?: never;
+    };
+    "/status-reports/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reports you submitted */
+        get: operations["StatusReportsController_listMine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/testimonials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all testimonials including drafts (ADMIN+) */
+        get: operations["TestimonialsController_listAll"];
+        put?: never;
+        /** Create testimonial (PASTOR+) */
+        post: operations["TestimonialsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/testimonials/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get testimonial by id (ADMIN+) */
+        get: operations["TestimonialsController_getById"];
+        put?: never;
+        post?: never;
+        /** Delete testimonial (ADMIN+) */
+        delete: operations["TestimonialsController_delete"];
+        options?: never;
+        head?: never;
+        /** Update testimonial (PASTOR+) */
+        patch: operations["TestimonialsController_update"];
+        trace?: never;
+    };
+    "/testimonials/published": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List published testimonials (public) */
+        get: operations["TestimonialsController_listPublished"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all units with lead + assistant (ADMIN+) */
+        get: operations["UnitsController_list"];
+        put?: never;
+        /** Create a new unit (ADMIN+) */
+        post: operations["UnitsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one unit with full member list including roles (ADMIN+) */
+        get: operations["UnitsController_getById"];
+        put?: never;
+        post?: never;
+        /** Delete a unit (ADMIN+) */
+        delete: operations["UnitsController_delete"];
+        options?: never;
+        head?: never;
+        /** Update a unit name/description (ADMIN+) */
+        patch: operations["UnitsController_update"];
+        trace?: never;
+    };
+    "/units/{unitId}/lead": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Appoint/replace a unit lead. ADMIN_HEAD limited to units in a department they head; ADMIN+ any unit. */
+        post: operations["UnitsMembersController_appointLead"];
+        /** End the current unit lead assignment (same scope rules as appoint) */
+        delete: operations["UnitsMembersController_removeLead"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a member to a unit (lead or assistant of unit, or ADMIN+) */
+        post: operations["UnitsMembersController_addMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}/members/{memberId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a member from a unit (lead or assistant of unit, or ADMIN+) */
+        delete: operations["UnitsMembersController_removeMember"];
+        options?: never;
+        head?: never;
+        /** Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only) */
+        patch: operations["UnitsMembersController_setMemberRoleShort"];
+        trace?: never;
+    };
+    "/units/{unitId}/members/{memberId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only) */
+        patch: operations["UnitsMembersController_setMemberRole"];
+        trace?: never;
+    };
+    "/units/directory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All units with leads/assistants + all leadership profiles (ADMIN+) */
+        get: operations["UnitsController_getDirectory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the unit the current user leads or assists (or null) */
+        get: operations["UnitsController_getMyUnit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/uploads/document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a document
+         * @description Uploads a document (docx/doc/pdf) to R2 and returns its public URL. Used by Report attachments.
+         */
+        post: operations["UploadsController_uploadDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/uploads/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload an image
+         * @description Uploads an image to R2 and returns its public URL. Used by the homepage CMS and sermon thumbnails.
+         */
+        post: operations["UploadsController_uploadImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all users (profile + member) */
+        get: operations["UsersController_list"];
+        put?: never;
+        /**
+         * Create a new user with a role
+         * @description Creates a Supabase auth user, Profile, and Member, then sends a secure password-setup link.
+         */
+        post: operations["UsersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{profileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Permanently delete a user
+         * @description Removes the Profile, Member, all member-related records, and the Supabase auth user. Cannot be undone.
+         */
+        delete: operations["UsersController_deleteUser"];
+        options?: never;
+        head?: never;
+        /** Update user profile (name/phone) */
+        patch: operations["UsersController_updateProfile"];
+        trace?: never;
+    };
+    "/users/{profileId}/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Grant a global role (PASTOR / ADMIN / SUPER_ADMIN), additive */
+        post: operations["UsersGrantsController_grantRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{profileId}/grants/{role}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke a global role grant */
+        delete: operations["UsersGrantsController_revokeGrant"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{profileId}/head-usher": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign Head Usher — global, unscoped, additive */
+        post: operations["UsersGrantsController_assignHeadUsher"];
+        /** End an active Head Usher assignment */
+        delete: operations["UsersGrantsController_removeHeadUsher"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{profileId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set a user single granted role (People dropdown) */
+        patch: operations["UsersRolesController_updateRole"];
+        trace?: never;
+    };
+    "/users/assignable-roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Roles the current user can create/assign */
+        get: operations["UsersRolesController_assignableRoles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create one or many people at once
+         * @description Each row creates a Supabase auth user + Profile + Member and sends a secure password-setup link. A failed row does not abort the batch.
+         */
+        post: operations["UsersController_bulkCreate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/by-role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * All members grouped by role
+         * @description Returns every profile organised by role. UNIT_LEAD entries include which units they lead or assist.
+         */
+        get: operations["UsersRolesController_listByRole_"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All roles in the system with label and hierarchy level */
+        get: operations["UsersRolesController_getAllRoles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/visitors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List visitors */
+        get: operations["VisitorsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/visitors/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get visitor by id */
+        get: operations["VisitorsController_getById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/visitors/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Total visitor count */
+        get: operations["VisitorsController_count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AddCommentDto: {
+            /** @example Thanks — updated with attendance numbers. */
+            content: string;
+        };
+        ApiError: {
+            /** @example BAD_REQUEST */
+            code: string;
+            details?: unknown;
+            message: string;
+            requestId: string;
+            /** @description Present only outside production. */
+            stack?: string;
+            /** @example 400 */
+            statusCode: number;
+        };
+        ApiErrorEnvelope: {
+            error: components["schemas"]["ApiError"];
+        };
+        ApiResponseMeta: {
+            /** Format: date-time */
+            timestamp: string;
+        };
+        AssignFollowUpDto: {
+            /** @description Member id of the team member to assign */
+            assigneeId: string;
+        };
+        AssignUnitMemberDto: {
+            /**
+             * @description Make this member an assistant
+             * @example false
+             */
+            isAssistant?: boolean;
+            /**
+             * @description Make this member the unit lead
+             * @example false
+             */
+            isLead?: boolean;
+            /** @example member-uuid */
+            memberId: string;
+        };
+        AttendanceOverviewDto: {
+            /**
+             * Format: date-time
+             * @description Last service the member attended
+             * @example 2026-06-15T07:30:00.000Z
+             */
+            lastMarkedAt: string | null;
+            /**
+             * @description Services attended this month
+             * @example 2
+             */
+            marked: number;
+            /**
+             * @description Attendance percentage for the month
+             * @example 25
+             */
+            percentage: number;
+            /**
+             * @description Total service days (Sundays + Wednesdays) this month
+             * @example 8
+             */
+            total: number;
+        };
+        BulkCreateUsersDto: {
+            members: components["schemas"]["CreateUserDto"][];
+        };
+        BulkImportDto: {
+            rows: components["schemas"]["ImportRowDto"][];
+            /**
+             * @description Send each imported member a welcome email with login details
+             * @example false
+             */
+            sendWelcome?: boolean;
+        };
+        BulkMarkAttendanceDto: {
+            /**
+             * @example ABSENT
+             * @enum {string}
+             */
+            status: "PRESENT" | "ABSENT";
+            /**
+             * @description Member user IDs to mark
+             * @example [
+             *       "member-1",
+             *       "member-2"
+             *     ]
+             */
+            userIds: string[];
+        };
+        BulkMemberOpDto: {
+            ids: string[];
+            /** @enum {string} */
+            op: "status" | "addTag" | "removeTag";
+            /** @description For op=status: ACTIVE|INACTIVE|TRANSFERRED|DECEASED. For tags: the tag string. */
+            value: string;
+        };
+        ChangePasswordDto: {
+            /** @example newpassword123 */
+            password: string;
+        };
+        ConfirmFollowUpDto: {
+            /** @example Great work — she joined the membership class. */
+            note?: string;
+            /**
+             * @example WANT_TO_BE_MEMBER
+             * @enum {string}
+             */
+            outcome: "BECAME_MEMBER" | "RETURNED" | "NOT_INTERESTED" | "UNREACHABLE" | "REACHABLE" | "TRAVEL" | "CAME_FOR_VISITING" | "HAVE_A_CHURCH" | "WANT_TO_BE_MEMBER";
+        };
+        ContactDto: {
+            /** @example jane@example.com */
+            email: string;
+            /** @example I would like to know more about... */
+            message: string;
+            /** @example Jane Doe */
+            name: string;
+            /** @example +234... */
+            phone?: string;
+            /** @example Question */
+            subject?: string;
+        };
+        CreateAnnouncementDto: {
+            /**
+             * @description Target audience: "all" | "members" (free-form for now)
+             * @example all
+             */
+            audience?: string;
+            /** @example Join us this Sunday for a special time of worship. */
+            body: string;
+            /** @description Image to show alongside the announcement (from /uploads/image) */
+            imageUrl?: string;
+            /**
+             * @description Also send as email
+             * @example false
+             */
+            sendEmail?: boolean;
+            /**
+             * @description PUBLISHED fans out immediately; DRAFT saves without notifying anyone yet.
+             * @default PUBLISHED
+             * @enum {string}
+             */
+            status: "DRAFT" | "PUBLISHED";
+            /** @example Special Sunday Service */
+            title: string;
+        };
+        CreateAssignmentDto: {
+            /** @description Member id of the leader who will shepherd them */
+            leaderId: string;
+            /** @description Member ids to assign */
+            memberIds: string[];
+            /** @example New convert — weekly follow-up */
+            note?: string;
+        };
+        CreateCellDto: Record<string, never>;
+        CreateCommentDto: {
+            /** @example This message really spoke to me today. */
+            content: string;
+            /**
+             * @description Set to reply to another comment.
+             * @example comment-id-123
+             */
+            parentId?: string;
+        };
+        CreateEventDto: {
+            /** @description Max attendees across all RSVPs. */
+            capacity?: number;
+            contactEmail?: string;
+            contactPhone?: string;
+            contactWhatsapp?: string;
+            /** @description Bespoke public route override, e.g. /events/heaven-on-earth. */
+            customPath?: string;
+            description?: string;
+            /** @example 2026-08-15T21:00:00+01:00 */
+            endAt?: string;
+            featured?: boolean;
+            flyerImageUrl?: string;
+            guestMinister?: string;
+            hostName?: string;
+            mapsLink?: string;
+            /** @description Lower numbers appear first. */
+            order?: number;
+            /** @default true */
+            rsvpEnabled: boolean;
+            /** @description Auto-derived from title if omitted. */
+            slug?: string;
+            /** @example 2026-08-15T17:00:00+01:00 */
+            startAt: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED";
+            tagline?: string;
+            /** @example Heaven on Earth */
+            title: string;
+            venueAddress?: string;
+            venueName?: string;
+        };
+        CreateEventRsvpDto: {
+            /** @default 1 */
+            attendees: number;
+            /** @example jane@example.com */
+            email: string;
+            /** @example Jane Doe */
+            fullName: string;
+            message?: string;
+            /** @example +234 801 234 5678 */
+            phone?: string;
+        };
+        CreateFollowUpEntryDto: {
+            /** @description Optionally assign immediately */
+            assigneeId?: string;
+            /** @description Required when sourceType = ABSENTEE */
+            memberId?: string;
+            /**
+             * @example FIRST_TIMER
+             * @enum {string}
+             */
+            sourceType: "FIRST_TIMER" | "ABSENTEE";
+            /** @description Defaults to the leader's own unit if omitted */
+            unitId?: string;
+            /** @description Required when sourceType = FIRST_TIMER */
+            visitorId?: string;
+        };
+        CreateInventoryItemDto: {
+            /** @example Media Department */
+            assignedTo?: string;
+            /** @example Musical Instruments */
+            category: string;
+            /**
+             * @default NEW
+             * @enum {string}
+             */
+            condition: "NEW" | "GOOD" | "FAIR" | "POOR";
+            /** @example Main Auditorium */
+            location?: string;
+            /** @example Yamaha Keyboard */
+            name: string;
+            notes?: string;
+            photoUrl?: string;
+            /** @example 2026-01-15 */
+            purchaseDate?: string;
+            /** @example 450000 */
+            purchaseValue?: number;
+            /** @default 1 */
+            quantity: number;
+            /** @example YMH-2024-001 */
+            serialNumber?: string;
+            /**
+             * @default IN_USE
+             * @enum {string}
+             */
+            status: "IN_USE" | "IN_STORAGE" | "UNDER_REPAIR" | "RETIRED";
+            /**
+             * @description Vendor/supplier — recorded on the initial "New" history entry only
+             * @example Gospel Music Store
+             */
+            vendor?: string;
+        };
+        CreatePostDto: Record<string, never>;
+        CreateReportDto: {
+            attachmentName?: string;
+            attachmentUrl?: string;
+            /** @example This week we had 3 new visitors join the unit... */
+            content: string;
+            /** @description Required when scope = DEPARTMENT */
+            departmentId?: string;
+            /**
+             * @example UNIT
+             * @enum {string}
+             */
+            scope: "DEPARTMENT" | "UNIT" | "PASTOR";
+            /**
+             * @description Omit to send immediately (back-compat); DRAFT to save without sending
+             * @enum {string}
+             */
+            status?: "DRAFT" | "SUBMITTED";
+            /** @example Weekly update — July 14 */
+            title: string;
+            /** @description Required when scope = UNIT */
+            unitId?: string;
+        };
+        CreateSermonDto: {
+            /** @example 3150 */
+            audioDuration?: number;
+            /** @example storage/audio-key */
+            audioKey?: string;
+            /** @example https://cdn.example.com/audio.mp3 */
+            audioUrl?: string;
+            /** @example 2026-05-25T09:00:00.000Z */
+            date: string;
+            /** @example A message on trusting God through trials. */
+            description?: string;
+            /**
+             * @description Primary duration for a single sermon, in seconds.
+             * @example 3150
+             */
+            duration?: number;
+            /** @description Episode list for a series sermon. */
+            episodes?: components["schemas"]["SermonEpisodeInputDto"][];
+            /** @example 2026-06-01T09:00:00.000Z */
+            scheduledFor?: string;
+            /** @example Hebrews 11:1 */
+            scriptureRef?: string;
+            /** @example Faith Series */
+            series?: string;
+            /** @example Pastor John */
+            speaker: string;
+            /**
+             * @example DRAFT
+             * @enum {string}
+             */
+            status?: "DRAFT" | "PUBLISHED" | "SCHEDULED";
+            /**
+             * @example [
+             *       "faith",
+             *       "hope"
+             *     ]
+             */
+            tags?: unknown[][];
+            /** @example https://cdn.example.com/thumbnail.jpg */
+            thumbnailUrl?: string;
+            /** @example The Power of Faith */
+            title: string;
+            /** @example Full transcript text... */
+            transcript?: string;
+            /**
+             * @example SINGLE
+             * @enum {string}
+             */
+            type?: "SINGLE" | "SERIES";
+            /**
+             * @description Primary URL for a single sermon.
+             * @example https://cdn.example.com/audio.mp3
+             */
+            url?: string;
+            /** @example https://youtube.com/watch?v=abc123 */
+            videoUrl?: string;
+        };
+        CreateServiceDto: {
+            /** @example Sunday Service — 22 June 2026 */
+            name: string;
+            /** @example 2026-06-22T09:00:00.000Z */
+            scheduledAt: string;
+            /**
+             * @example SUNDAY
+             * @enum {string}
+             */
+            serviceType?: "SUNDAY" | "WEDNESDAY" | "SPECIAL";
+        };
+        CreateTestimonialDto: {
+            /** @example Sade Adeyemi */
+            authorName: string;
+            /** @example https://cdn.example.com/people/sade.jpg */
+            authorPhotoUrl?: string;
+            /** @example Member since 2018 */
+            authorRole?: string;
+            /** @example Everlasting Hills has been a home for me… */
+            content: string;
+            /**
+             * @description Lower numbers appear first
+             * @example 0
+             */
+            order?: number;
+            /**
+             * @description Whether to show on public site immediately
+             * @example true
+             */
+            published?: boolean;
+        };
+        CreateUnitDto: {
+            /** @example Front-door welcome team */
+            description?: string;
+            /** @example Hospitality */
+            name: string;
+        };
+        CreateUserDto: {
+            /** @example jane.doe@example.com */
+            email: string;
+            /** @example Jane */
+            firstName: string;
+            /** @enum {string} */
+            gender?: "MALE" | "FEMALE";
+            /** @example Doe */
+            lastName: string;
+            /**
+             * @description Member contact number; never used as a password
+             * @example +2348012345678
+             */
+            phone: string;
+            /**
+             * @example MEMBER
+             * @enum {string}
+             */
+            role: "MEMBER" | "UNIT_LEAD" | "HEAD_USHER" | "HOD" | "ADMIN_HEAD" | "ADMIN" | "PASTOR" | "SUPER_ADMIN";
+        };
+        DiscussionResponseDto: {
+            /** @example I want to start applying this by praying daily. */
+            content: string;
+        };
+        FirstTimerDto: {
+            /** @example Dignissimos et eos u */
+            address?: string;
+            /** @example Online */
+            attendance_type?: string;
+            /** @example 27 */
+            birth_day?: string;
+            /** @example June */
+            birth_month?: string;
+            /** @example No */
+            born_again?: string;
+            /** @example jimeqaquh@mailinator.com */
+            email?: string;
+            /** @example Freya */
+            first_name: string;
+            /** @example Female */
+            gender?: string;
+            /** @example Social Media */
+            how_did_you_learn?: string;
+            /** @example  */
+            invited_by?: string;
+            /** @example Hall */
+            last_name: string;
+            /** @example false */
+            located_in_ibadan?: boolean;
+            /** @example Maybe */
+            membership_interest?: string;
+            /** @example Eos aspernatur quam */
+            occupation?: string;
+            /** @example +1 (644) 543-9874 */
+            phone_number: string;
+            /** @example Mollitia esse invent */
+            prayer_point?: string;
+            /** @example In placeat nostrum */
+            service_experience?: string;
+            /** @example FIRST_TIMER */
+            type?: string;
+            /** @example false */
+            whatsapp_interest?: boolean;
+        };
+        ForgotPasswordDto: {
+            /** @example user@example.com */
+            email: string;
+        };
+        HomeCellDto: {
+            /** @example 12 Adeyemi Street, Ikeja, Lagos */
+            address?: string;
+            /** @example tunde@example.com */
+            email: string;
+            /** @example Tunde Adeyemi */
+            name: string;
+            /** @example +2348012345678 */
+            phone: string;
+            /** @example Ikeja / Surulere area */
+            preferredArea?: string;
+        };
+        ImportRowDto: {
+            /** @example jane@example.com */
+            email: string;
+            /** @example Jane */
+            firstName: string;
+            /** @example Doe Family */
+            household?: string;
+            /** @example Doe */
+            lastName: string;
+            /**
+             * @description Member contact number; never used as a password
+             * @example +2348012345678
+             */
+            phone: string;
+            /**
+             * @example [
+             *       "choir",
+             *       "usher"
+             *     ]
+             */
+            tags?: string[];
+        };
+        InitGivingDto: {
+            /**
+             * @description Amount in Naira (major units)
+             * @example 5000
+             */
+            amount: number;
+            /**
+             * @description Designation / fund
+             * @example Tithe
+             */
+            category?: string;
+            /** @example donor@example.com */
+            email: string;
+            /** @example Jane Doe */
+            name?: string;
+        };
+        JoinDto: Record<string, never>;
+        LogContactDto: {
+            /**
+             * @example CALL
+             * @enum {string}
+             */
+            method: "CALL" | "SMS" | "WHATSAPP" | "VISIT" | "OTHER";
+            /** @example Spoke with her, she plans to visit again this Sunday. */
+            note: string;
+            /**
+             * @example REACHED
+             * @enum {string}
+             */
+            outcome: "REACHED" | "NO_ANSWER" | "VOICEMAIL" | "WRONG_NUMBER" | "SCHEDULED_VISIT";
+        };
         LoginDto: {
             /** @example user@example.com */
             email: string;
             /** @example password123 */
             password: string;
         };
-        FirstTimerDto: {
-            /** @example Freya */
-            first_name: string;
-            /** @example Hall */
-            last_name: string;
-            /** @example +1 (644) 543-9874 */
-            phone_number: string;
-            /** @example jimeqaquh@mailinator.com */
-            email?: string;
-            /** @example Female */
-            gender?: string;
-            /** @example Online */
-            attendance_type?: string;
-            /** @example Social Media */
-            how_did_you_learn?: string;
-            /** @example  */
-            invited_by?: string;
-            /** @example false */
-            located_in_ibadan?: boolean;
-            /** @example Maybe */
-            membership_interest?: string;
-            /** @example Dignissimos et eos u */
-            address?: string;
-            /** @example Eos aspernatur quam */
-            occupation?: string;
-            /** @example No */
-            born_again?: string;
-            /** @example In placeat nostrum */
-            service_experience?: string;
-            /** @example Mollitia esse invent */
-            prayer_point?: string;
-            /** @example false */
-            whatsapp_interest?: boolean;
-            /** @example 27 */
-            birth_day?: string;
-            /** @example June */
-            birth_month?: string;
-            /** @example FIRST_TIMER */
-            type?: string;
+        LogRepairDto: {
+            /** @example 35000 */
+            cost?: number;
+            /** @example Compressor stopped cooling */
+            description: string;
+            /** @example CoolFix Technicians */
+            performedBy?: string;
+            /** @example Replaced compressor and refilled refrigerant */
+            resolution?: string;
+            /**
+             * @default PENDING
+             * @enum {string}
+             */
+            status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+        };
+        MemberOverviewResponseDto: {
+            attendance: components["schemas"]["AttendanceOverviewDto"];
+            /**
+             * @description Number of courses this member has completed (scored 100% on the exam)
+             * @example 2
+             */
+            coursesCompleted: number;
+            /**
+             * @description Number of sermons this member has listened to in full
+             * @example 5
+             */
+            sermonsCompleted: number;
+            /** @description 2go-style leveling ladder combining lifetime attendance, course completions, and sermon completions */
+            streak: components["schemas"]["StreakDto"];
+        };
+        NoteDto: {
+            /** @example My sermon note */
+            content: string;
+        };
+        OverrideAttendanceDto: {
+            /**
+             * @example PRESENT
+             * @enum {string}
+             */
+            status: "PRESENT" | "ABSENT";
+        };
+        PassedLevelDto: {
+            /**
+             * @description The level that was cleared
+             * @example 3
+             */
+            level: number;
+            /** @description The task that was completed to clear it */
+            task: components["schemas"]["TaskRequirementDto"];
+            /**
+             * @description Rank title held at that level
+             * @example Seeker
+             */
+            title: string;
         };
         PrayerRequestDto: {
-            /** @example Please pray for my family and my job. */
-            request: string;
-            /** @example John Doe */
-            name?: string;
             /** @example john@example.com */
             email?: string;
-            /** @example +1 (555) 123-4567 */
-            phone?: string;
             /** @example false */
             is_anonymous?: boolean;
-        };
-        TestimonyDto: {
-            /** @example God answered my prayer */
-            title?: string;
-            /** @example God healed me after the Sunday service. */
-            testimony: string;
-            /** @example Jane Doe */
+            /** @example John Doe */
             name?: string;
-            /** @example jane@example.com */
-            email?: string;
-            /** @example +1 (555) 987-6543 */
+            /** @example +1 (555) 123-4567 */
             phone?: string;
+            /** @example Please pray for my family and my job. */
+            request: string;
         };
-        CreateSermonDto: {
-            /** @example The Power of Faith */
-            title: string;
-            /** @example Pastor John */
-            speaker: string;
-            /** @example 2026-05-25T09:00:00.000Z */
-            date: string;
-            /** @example A message on trusting God through trials. */
-            description?: string;
-            /** @example Full transcript text... */
-            transcript?: string;
-            /** @example Hebrews 11:1 */
-            scriptureRef?: string;
-            /** @example Faith Series */
-            series?: string;
-            /**
-             * @example [
-             *       "faith",
-             *       "hope"
-             *     ]
-             */
-            tags?: unknown[][];
-            /** @example https://cdn.example.com/audio.mp3 */
-            audioUrl?: string;
-            /** @example storage/audio-key */
-            audioKey?: string;
-            /** @example 3150 */
-            audioDuration?: number;
-            /** @example https://youtube.com/watch?v=abc123 */
-            videoUrl?: string;
-            /** @example https://cdn.example.com/thumbnail.jpg */
-            thumbnailUrl?: string;
-            /**
-             * @example DRAFT
-             * @enum {string}
-             */
-            status?: "DRAFT" | "PUBLISHED" | "SCHEDULED";
-            /** @example 2026-06-01T09:00:00.000Z */
-            scheduledFor?: string;
+        ProgressDto: {
+            /** @example false */
+            completed?: boolean;
+            /** @example 120 */
+            positionSec: number;
         };
-        UpdateSermonDto: {
-            /** @example The Power of Faith */
-            title?: string;
-            /** @example Pastor John */
-            speaker?: string;
-            /** @example 2026-05-25T09:00:00.000Z */
-            date?: string;
-            /** @example A message on trusting God through trials. */
-            description?: string;
-            /** @example Full transcript text... */
-            transcript?: string;
-            /** @example Hebrews 11:1 */
-            scriptureRef?: string;
-            /** @example Faith Series */
-            series?: string;
-            /**
-             * @example [
-             *       "faith",
-             *       "hope"
-             *     ]
-             */
-            tags?: unknown[][];
-            /** @example https://cdn.example.com/audio.mp3 */
-            audioUrl?: string;
-            /** @example storage/audio-key */
-            audioKey?: string;
-            /** @example 3150 */
-            audioDuration?: number;
-            /** @example https://youtube.com/watch?v=abc123 */
-            videoUrl?: string;
-            /** @example https://cdn.example.com/thumbnail.jpg */
-            thumbnailUrl?: string;
-            /**
-             * @example DRAFT
-             * @enum {string}
-             */
-            status?: "DRAFT" | "PUBLISHED" | "SCHEDULED";
-            /** @example 2026-06-01T09:00:00.000Z */
-            scheduledFor?: string;
-            /** @example true */
-            isFeatured?: boolean;
-        };
-        SubscribeEmailDto: {
-            /** @example user@example.com */
-            email: string;
+        QuestionDto: {
+            /** @example john@example.com */
+            email?: string;
+            /** @example false */
+            is_anonymous?: boolean;
+            /** @example John Doe */
+            name?: string;
+            /** @example +1 (555) 123-4567 */
+            phone?: string;
+            /** @example What time is the Sunday second service? */
+            question: string;
         };
         ReactionDto: {
             /**
@@ -1298,15 +5559,369 @@ export interface components {
              */
             type: "LIKE" | "AMEN" | "CONVICTED";
         };
-        NoteDto: {
-            /** @example My sermon note */
-            content: string;
+        RefreshTokenDto: {
+            /** @description The Supabase refresh token issued at login. */
+            refresh_token: string;
         };
-        ProgressDto: {
-            /** @example 120 */
-            positionSec: number;
-            /** @example false */
-            completed?: boolean;
+        RequestCorrectionDto: {
+            /** @example Please add attendance numbers for each service. */
+            comment: string;
+        };
+        SendDirectMessageDto: {
+            /** @example What did you mean by "living sacrifice"? */
+            content: string;
+            /**
+             * @description Set to reply within an existing thread.
+             * @example message-id-123
+             */
+            parentId?: string;
+            /**
+             * @description The member this note/question is addressed to.
+             * @example member-id-123
+             */
+            recipientMemberId: string;
+            /**
+             * @example QUESTION
+             * @enum {string}
+             */
+            type: "NOTE" | "QUESTION";
+        };
+        SermonEpisodeInputDto: {
+            /** @example 1800 */
+            duration: number;
+            /** @example ep-2 */
+            id?: string;
+            /** @example 0 */
+            order?: number;
+            /** @example Part 1 */
+            title: string;
+            /** @example https://cdn.example.com/part-1.mp3 */
+            url: string;
+        };
+        ServeTeamDto: {
+            /** @example tunde@example.com */
+            email: string;
+            /** @example I play guitar and have experience in worship. */
+            message?: string;
+            /** @example Tunde Adeyemi */
+            name: string;
+            /** @example +2348012345678 */
+            phone?: string;
+            /** @example Worship Team */
+            unit: string;
+        };
+        SetMemberRoleDto: {
+            /**
+             * @description Set assistant status
+             * @example true
+             */
+            isAssistant?: boolean;
+            /**
+             * @description Set lead status
+             * @example false
+             */
+            isLead?: boolean;
+        };
+        SetRsvpCheckedInDto: {
+            /** @example true */
+            checkedIn: boolean;
+        };
+        SetTagsDto: {
+            /**
+             * @example [
+             *       "choir",
+             *       "first-timer",
+             *       "youth"
+             *     ]
+             */
+            tags: string[];
+        };
+        StreakDto: {
+            /** @description Every level already cleared, oldest first */
+            history: components["schemas"]["PassedLevelDto"][];
+            /**
+             * @description Current level on the endless task ladder
+             * @example 6
+             */
+            level: number;
+            /** @description Progress already banked toward the current level's task */
+            progress: components["schemas"]["TaskRequirementDto"];
+            /** @description The task required to clear the current level */
+            task: components["schemas"]["TaskRequirementDto"];
+            /**
+             * @description Rank title for the current level
+             * @example Believer
+             */
+            title: string;
+        };
+        SubscribeEmailDto: {
+            /** @example user@example.com */
+            email: string;
+        };
+        TaskRequirementDto: {
+            /**
+             * @description Services to attend
+             * @example 2
+             */
+            attendance: number;
+            /**
+             * @description Courses to complete
+             * @example 0
+             */
+            course: number;
+            /**
+             * @description Sermons to finish
+             * @example 1
+             */
+            sermon: number;
+        };
+        TestimonyDto: {
+            /** @example jane@example.com */
+            email?: string;
+            /** @example Jane Doe */
+            name?: string;
+            /** @example +1 (555) 987-6543 */
+            phone?: string;
+            /** @example God healed me after the Sunday service. */
+            testimony: string;
+            /** @example God answered my prayer */
+            title?: string;
+        };
+        UpdateAnnouncementDto: {
+            /** @example Join us this Sunday for a special time of worship. */
+            body?: string;
+            /** @description Image to show alongside the announcement (from /uploads/image), or "" to remove it */
+            imageUrl?: string;
+            /**
+             * @description Also send as email (only applies on next publish)
+             * @example false
+             */
+            sendEmail?: boolean;
+            /** @example Special Sunday Service */
+            title?: string;
+        };
+        UpdateEventDto: {
+            /** @description Max attendees across all RSVPs. */
+            capacity?: number;
+            contactEmail?: string;
+            contactPhone?: string;
+            contactWhatsapp?: string;
+            /** @description Bespoke public route override, e.g. /events/heaven-on-earth. */
+            customPath?: string;
+            description?: string;
+            /** @example 2026-08-15T21:00:00+01:00 */
+            endAt?: string;
+            featured?: boolean;
+            flyerImageUrl?: string;
+            guestMinister?: string;
+            hostName?: string;
+            mapsLink?: string;
+            /** @description Lower numbers appear first. */
+            order?: number;
+            /** @default true */
+            rsvpEnabled: boolean;
+            /** @description Auto-derived from title if omitted. */
+            slug?: string;
+            /** @example 2026-08-15T17:00:00+01:00 */
+            startAt?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED";
+            tagline?: string;
+            /** @example Heaven on Earth */
+            title?: string;
+            venueAddress?: string;
+            venueName?: string;
+        };
+        UpdateInventoryItemDto: {
+            assignedTo?: string;
+            category?: string;
+            /** @enum {string} */
+            condition?: "NEW" | "GOOD" | "FAIR" | "POOR";
+            location?: string;
+            name?: string;
+            notes?: string;
+            photoUrl?: string;
+            purchaseDate?: string;
+            purchaseValue?: number;
+            quantity?: number;
+            serialNumber?: string;
+            /** @enum {string} */
+            status?: "IN_USE" | "IN_STORAGE" | "UNDER_REPAIR" | "RETIRED";
+        };
+        UpdateMemberDto: {
+            /** @example 12 Adeola Street, Ibadan */
+            address?: string;
+            /**
+             * @description ISO date or null
+             * @example 1995-04-19
+             */
+            dateOfBirth?: Record<string, never>;
+            /** @example jane.doe@example.com */
+            email?: string;
+            /** @example Jane */
+            firstName?: string;
+            /** @enum {string|null} */
+            gender?: "MALE" | "FEMALE" | null;
+            /** @example Doe */
+            lastName?: string;
+            /** @example +234 801 234 5678 */
+            phone?: string;
+        };
+        UpdateMyProfileDto: {
+            /** @example Husband, dad, and member at EHC. */
+            bio?: Record<string, never>;
+            /** @example 1990-02-18 */
+            dateOfBirth?: Record<string, never>;
+            /** @example opeyemi.peter */
+            facebook?: Record<string, never>;
+            /** @example Opeyemi */
+            firstName?: string;
+            /** @enum {string} */
+            gender?: "Male" | "Female";
+            /** @example opeyemi.peter */
+            instagram?: Record<string, never>;
+            /** @example Peter */
+            lastName?: Record<string, never>;
+            /** @example opeyemi.peter */
+            linkedin?: Record<string, never>;
+            /** @example +234 801 234 5678 */
+            phone?: Record<string, never>;
+            /** @example opeyemi.peter */
+            tiktok?: Record<string, never>;
+            /** @example opeyemi.peter */
+            twitter?: Record<string, never>;
+            /**
+             * @description Pass null to clear it and mark the member as single.
+             * @example 2015-06-20
+             */
+            weddingAnniversary?: Record<string, never>;
+        };
+        UpdatePrayerRequestStatusDto: {
+            /**
+             * @example PRAYED
+             * @enum {string}
+             */
+            status: "PENDING" | "PRAYED";
+        };
+        UpdateQuestionStatusDto: {
+            /**
+             * @example ANSWERED
+             * @enum {string}
+             */
+            status: "PENDING" | "ANSWERED";
+        };
+        UpdateRepairDto: {
+            cost?: number;
+            description?: string;
+            performedBy?: string;
+            resolution?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+        };
+        UpdateReportDto: {
+            attachmentName?: string;
+            attachmentUrl?: string;
+            content: string;
+            /**
+             * @description DRAFT to keep saving as a draft; SUBMITTED to send (from DRAFT or after a correction). Omit to preserve current resubmit/plain-edit behavior.
+             * @enum {string}
+             */
+            status?: "DRAFT" | "SUBMITTED";
+            title: string;
+        };
+        UpdateSermonDto: {
+            /** @example 3150 */
+            audioDuration?: number;
+            /** @example storage/audio-key */
+            audioKey?: string;
+            /** @example https://cdn.example.com/audio.mp3 */
+            audioUrl?: string;
+            /** @example 2026-05-25T09:00:00.000Z */
+            date?: string;
+            /** @example A message on trusting God through trials. */
+            description?: string;
+            /**
+             * @description Primary duration for a single sermon, in seconds.
+             * @example 3150
+             */
+            duration?: number;
+            /** @description Episode list for a series sermon. */
+            episodes?: components["schemas"]["SermonEpisodeInputDto"][];
+            /** @example true */
+            isFeatured?: boolean;
+            /** @example 2026-06-01T09:00:00.000Z */
+            scheduledFor?: string;
+            /** @example Hebrews 11:1 */
+            scriptureRef?: string;
+            /** @example Faith Series */
+            series?: string;
+            /** @example Pastor John */
+            speaker?: string;
+            /**
+             * @example DRAFT
+             * @enum {string}
+             */
+            status?: "DRAFT" | "PUBLISHED" | "SCHEDULED";
+            /**
+             * @example [
+             *       "faith",
+             *       "hope"
+             *     ]
+             */
+            tags?: unknown[][];
+            /** @example https://cdn.example.com/thumbnail.jpg */
+            thumbnailUrl?: string;
+            /** @example The Power of Faith */
+            title?: string;
+            /** @example Full transcript text... */
+            transcript?: string;
+            /**
+             * @example SINGLE
+             * @enum {string}
+             */
+            type?: "SINGLE" | "SERIES";
+            /**
+             * @description Primary URL for a single sermon.
+             * @example https://cdn.example.com/audio.mp3
+             */
+            url?: string;
+            /** @example https://youtube.com/watch?v=abc123 */
+            videoUrl?: string;
+        };
+        UpdateServiceDto: {
+            /** @example Sunday Service — 22 June 2026 */
+            name?: string;
+            /** @example 2026-06-22T09:00:00.000Z */
+            scheduledAt?: string;
+            /**
+             * @example SUNDAY
+             * @enum {string}
+             */
+            serviceType?: "SUNDAY" | "WEDNESDAY" | "SPECIAL";
+        };
+        UpdateTestimonialDto: {
+            authorName?: string;
+            authorPhotoUrl?: string;
+            authorRole?: string;
+            content?: string;
+            order?: number;
+            published?: boolean;
+        };
+        UpdateUnitDto: {
+            description?: string;
+            name?: string;
+        };
+        UpdateUserDto: {
+            firstName?: string;
+            lastName?: string;
+            phone?: string;
+        };
+        UpdateUserRoleDto: {
+            /**
+             * @example ADMIN
+             * @enum {string}
+             */
+            role: "MEMBER" | "UNIT_LEAD" | "HEAD_USHER" | "HOD" | "ADMIN_HEAD" | "ADMIN" | "PASTOR" | "SUPER_ADMIN";
         };
     };
     responses: never;
@@ -1332,7 +5947,2563 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        /** @example Hello from EHC api! */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getAnalytics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin analytics payload */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "avgAttendance": 80,
+                         *       "newMembersThisMonth": 5,
+                         *       "totalGivingNaira": 250000,
+                         *       "totalMembers": 123,
+                         *       "totalPrayers": 10,
+                         *       "totalVisitors": 45
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AdminController_getAttendanceTrend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "points": [
+                         *         {
+                         *           "date": "2026-04-07T09:00:00.000Z",
+                         *           "label": "7 Apr",
+                         *           "serviceType": "SUNDAY",
+                         *           "value": 420
+                         *         }
+                         *       ]
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AdminController_getDashboardSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "stats": [
+                         *         {
+                         *           "key": "members",
+                         *           "label": "Members",
+                         *           "trend": {
+                         *             "direction": "up",
+                         *             "value": 4.2
+                         *           },
+                         *           "value": 1284
+                         *         }
+                         *       ]
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_engagementAtRisk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_engagementDistribution: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_engagementLeaderboard: {
+        parameters: {
+            query: {
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_refreshEngagement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_engagementSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getFirstTimerPipeline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getFirstTimerSources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getFirstTimersByMonth: {
+        parameters: {
+            query: {
+                months: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getGivingByCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getGivingSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getTopDonors: {
+        parameters: {
+            query: {
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getGivingTrend: {
+        parameters: {
+            query: {
+                months: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AdminController_getStatsOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "activeThisMonth": 98,
+                         *       "inactiveThisMonth": 22,
+                         *       "todayPresent": 34,
+                         *       "totalMembers": 120
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getUnits: {
+        parameters: {
+            query: {
+                unitId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getUnitAttendance: {
+        parameters: {
+            query: {
+                months: string;
+            };
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getAbsenteeTrend: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getAlerts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getCompare: {
+        parameters: {
+            query: {
+                periodA: string;
+                dateFromA: string;
+                dateToA: string;
+                periodB: string;
+                dateFromB: string;
+                dateToB: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getConsistency: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getFirstTimers: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getHeatmap: {
+        parameters: {
+            query: {
+                year: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getLeaderboard: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getMemberGrowth: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getOverview: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getPeakHours: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getRateTrend: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getRetention: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getServiceComparison: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getServiceHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getSplit: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceAnalyticsController_getTrend: {
+        parameters: {
+            query: {
+                dateFrom: string;
+                dateTo: string;
+                serviceType: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnnouncementsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnnouncementsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAnnouncementDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnnouncementsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnnouncementsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAnnouncementDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnnouncementsController_publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnnouncementsController_feed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AssignmentsController_list: {
+        parameters: {
+            query?: {
+                leaderId?: string;
+                memberId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AssignmentsController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAssignmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AssignmentsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AssignmentsController_listMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AssignmentsController_addFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AssignmentsController_toggleFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceController_listAttendance: {
+        parameters: {
+            query?: {
+                sortOrder?: "ASC" | "DESC";
+                sortBy?: "date" | "name" | "status" | "markedAt" | "serviceKey";
+                dateTo?: unknown;
+                dateFrom?: unknown;
+                date?: unknown;
+                month?: unknown;
+                year?: unknown;
+                serviceKey?: "sunday" | "wednesday";
+                status?: "PRESENT" | "ABSENT";
+                name?: unknown;
+                limit?: number;
+                page?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceSelfServiceController_canMark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Whether the user can mark attendance for the active session */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Access token missing or invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceSelfServiceController_checkIn_: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current user checked in for today service */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "alreadyCheckedIn": false,
+                         *       "service": {
+                         *         "id": "service-123",
+                         *         "name": "Sunday Service",
+                         *         "scheduledAt": "2026-05-26T00:00:00.000Z"
+                         *       }
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Access token missing or invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceStatsController_getAttendanceByDayOfWeek: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceController_exportCsv: {
+        parameters: {
+            query?: {
+                dateTo?: unknown;
+                dateFrom?: unknown;
+                month?: unknown;
+                serviceKey?: unknown;
+                status?: "PRESENT" | "ABSENT";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Excel workbook */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceController_getTodayFeed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceSelfServiceController_getMyAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceSelfServiceController_getMyHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceSessionController_getServices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceSessionController_createService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateServiceDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceSessionController_removeService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceSessionController_updateService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateServiceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceSelfServiceController_checkInByServiceId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceSessionController_closeService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceSessionController_exportService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceSessionController_openService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceSessionController_getNextService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceController_bulkMark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Service / session ID */
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkMarkAttendanceDto"];
+            };
+        };
+        responses: {
+            /** @description Number of records updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "updated": 12
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceController_overrideAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Service / session ID */
+                sessionId: string;
+                /** @description Member ID */
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideAttendanceDto"];
+            };
+        };
+        responses: {
+            /** @description Updated attendance record */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "id": "rec-1",
+                         *       "markedAt": "2026-06-19T09:00:00.000Z",
+                         *       "markedBy": "ADMIN",
+                         *       "status": "PRESENT"
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceStatsController_getStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceStatsController_getAttendanceSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceStatsController_getTodayAttendance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceStatsController_getTopAttendees: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceStatsController_getAttendanceTrend: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AuthAccountController_changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordDto"];
+            };
+        };
+        responses: {
+            /** @description Password updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "message": "Password updated successfully",
+                         *       "success": true
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Access token missing, invalid, or update rejected */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AuthController_forgotPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordDto"];
+            };
+        };
+        responses: {
+            /** @description Reset email dispatched (or silently no-op if the address is unknown) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "message": "If an account exists for that email, a reset link has been sent.",
+                         *       "success": true
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
                 };
             };
         };
@@ -1356,7 +8527,25 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "access_token": "eyJhbGciOi...",
+                         *       "expires_in": 3600,
+                         *       "refresh_token": "eyJhbGciOi...",
+                         *       "token_type": "bearer",
+                         *       "user": {
+                         *         "email": "user@example.com",
+                         *         "fullName": "Jane Doe",
+                         *         "id": "user-uuid",
+                         *         "picture": null,
+                         *         "role": "MEMBER"
+                         *       }
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
             /** @description Validation failed */
@@ -1364,18 +8553,31 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
             /** @description Invalid credentials */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AuthController_logout: {
+    AuthAccountController_logout: {
         parameters: {
             query?: never;
             header?: never;
@@ -1390,7 +8592,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "message": "Logged out successfully",
+                         *       "success": true
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
             /** @description Access token missing or invalid */
@@ -1398,11 +8609,22 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AuthController_me: {
+    AuthAccountController_me: {
         parameters: {
             query?: never;
             header?: never;
@@ -1417,7 +8639,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "member": {
+                         *         "address": "Ibadan",
+                         *         "bio": null,
+                         *         "dateOfBirth": "1990-01-01T00:00:00.000Z",
+                         *         "email": "jane@example.com",
+                         *         "firstName": "Jane",
+                         *         "id": "member-uuid",
+                         *         "joinedAt": "2026-01-01T00:00:00.000Z",
+                         *         "lastName": "Doe",
+                         *         "phone": "+234...",
+                         *         "photoUrl": null
+                         *       },
+                         *       "profileId": "profile-uuid",
+                         *       "role": "MEMBER",
+                         *       "tenantId": "ehc_..."
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
             /** @description Access token missing or invalid */
@@ -1425,11 +8669,22 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    FormsController_register: {
+    AuthController_refresh: {
         parameters: {
             query?: never;
             header?: never;
@@ -1438,37 +8693,2839 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FirstTimerDto"];
+                "application/json": components["schemas"]["RefreshTokenDto"];
             };
         };
         responses: {
-            /** @description First timer registration submitted successfully */
+            /** @description New session issued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Refresh token missing, invalid, or expired */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CalendarController_memberFeed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description iCalendar subscription feed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CalendarController_eventIcs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                idOrSlug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description iCalendar document */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CalendarController_gatheringIcs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description iCalendar document */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CalendarController_myToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CalendarController_regenerate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CalendarController_serviceIcs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description iCalendar document */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/calendar": string;
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsMediaController_listAudit: {
+        parameters: {
+            query: {
+                limit: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsMediaController_listMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsMediaController_uploadMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    alt?: string;
+                    /** Format: binary */
+                    file?: string;
+                    height?: number;
+                    width?: number;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsMediaController_deleteMedia: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_listPages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_getEditorPage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_saveDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_previewToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_unpublish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsVersionsController_listVersions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsVersionsController_getVersion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsVersionsController_rollback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_previewGet: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_getPublished: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_getSiteConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CmsController_updateSiteConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CommunityController_feed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CommunityController_createPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePostDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CommunityController_react: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_enroll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_submitExam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_markLessonWatched: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                lessonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_submitModuleCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                moduleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_getBySlug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_getForAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_listCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_createCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_removeCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_updateCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_myProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_getOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_postAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_assignHead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_removeHead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_assignHod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_removeHod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_assignUnits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsController_unassignUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsMineController_getMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsMineController_postMyAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsMineController_nudge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsMineController_getMyUnitRoster: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_listPublished: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of published event summaries */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_getBySlug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_rsvp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEventRsvpDto"];
+            };
+        };
+        responses: {
+            /** @description RSVP received */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_rsvpAsMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description RSVP received */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_listAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEventDto"];
+            };
+        };
+        responses: {
+            /** @description Event created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEventDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_listRsvps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_setRsvpCheckedIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                rsvpId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetRsvpCheckedInDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_listForCalendar: {
+        parameters: {
+            query: {
+                /** @description Window start, ISO 8601. */
+                from: string;
+                /** @description Window end, ISO 8601. */
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_calendarSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_list: {
+        parameters: {
+            query?: {
+                unitId?: string;
+                stage?: "UNASSIGNED" | "ASSIGNED" | "IN_PROGRESS" | "AWAITING_REVIEW" | "CONFIRMED" | "REOPENED";
+                mine?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFollowUpEntryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_getOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignFollowUpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmFollowUpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_logContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogContactDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpMemberStatusController_optOut: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpMemberStatusController_restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_checkAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_runAutoSurface: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_candidates: {
+        parameters: {
+            query: {
+                type: "FIRST_TIMER" | "ABSENTEE";
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_team: {
+        parameters: {
+            query?: {
+                unitId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsMiscController_contact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactDto"];
+            };
+        };
+        responses: {
+            /** @description Contact message submitted */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
             /** @description Validation failed */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
-            /** @description Email or phone already registered */
-            409: {
+            /** @description Error response */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
-            /** @description Server error during form submission */
-            500: {
+        };
+    };
+    FormsMiscController_homeCell: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HomeCellDto"];
+            };
+        };
+        responses: {
+            /** @description Home Cell registration submitted */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
@@ -1490,18 +11547,389 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
             /** @description Validation failed */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    FormsController_testimony: {
+    FormsController_listPrayerRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_deletePrayerRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_updatePrayerRequestStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePrayerRequestStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_question: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionDto"];
+            };
+        };
+        responses: {
+            /** @description Question submitted successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_listQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_deleteQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_updateQuestionStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateQuestionStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FirstTimerDto"];
+            };
+        };
+        responses: {
+            /** @description First timer registration submitted successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Email or phone already registered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Server error during form submission */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsMiscController_serveTeam: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ServeTeamDto"];
+            };
+        };
+        responses: {
+            /** @description Serve team interest submitted */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsMiscController_testimony: {
         parameters: {
             query?: never;
             header?: never;
@@ -1519,18 +11947,34 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
             /** @description Validation failed */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_checkIn: {
+    GatheringsController_list: {
         parameters: {
             query?: never;
             header?: never;
@@ -1539,25 +11983,388 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Current user checked in for today service */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
-            /** @description Access token missing or invalid */
-            401: {
+            /** @description Error response */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_checkInByServiceId: {
+    GatheringsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    GatheringsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    GatheringsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    GatheringsController_listAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    GivingController_initialize: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitGivingDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    GivingController_myGiving: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    GivingController_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    GivingController_webhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "x-paystack-signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HeadcountController_getForDate: {
+        parameters: {
+            query: {
+                date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HeadcountController_upsertByDate: {
+        parameters: {
+            query: {
+                date: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HeadcountController_getHistory: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HeadcountController_getForService: {
         parameters: {
             query?: never;
             header?: never;
@@ -1568,15 +12375,362 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HeadcountController_upsert: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HeadcountController_getToday: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HeadcountController_getTrend: {
+        parameters: {
+            query?: {
+                limit?: number;
+                serviceType?: "SUNDAY" | "WEDNESDAY" | "SPECIAL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HomeCellController_search: {
+        parameters: {
+            query: {
+                state: string;
+                city: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HomeCellController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCellDto"];
+            };
+        };
+        responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getMyAttendance: {
+    HomeCellController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HomeCellController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HomeCellController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HomeCellController_join: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HomeCellController_adminCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCellDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HomeCellController_adminAll: {
         parameters: {
             query?: never;
             header?: never;
@@ -1589,29 +12743,58 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getTodayAttendance: {
+    HomeCellController_cities: {
         parameters: {
-            query?: never;
+            query: {
+                state: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Admin access required */
-            403: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getServices: {
+    HomeCellController_states: {
         parameters: {
             query?: never;
             header?: never;
@@ -1624,11 +12807,273 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getNextService: {
+    InventoryController_list: {
+        parameters: {
+            query: {
+                category: string;
+                location: string;
+                search: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InventoryController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInventoryItemDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InventoryController_getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InventoryController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InventoryController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateInventoryItemDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InventoryController_logRepair: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogRepairDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InventoryController_updateRepair: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                historyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRepairDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InventoryController_filters: {
         parameters: {
             query?: never;
             header?: never;
@@ -1641,11 +13086,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getStats: {
+    InventoryController_stats: {
         parameters: {
             query?: never;
             header?: never;
@@ -1658,14 +13117,556 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getAttendanceTrend: {
+    MembersController_list: {
         parameters: {
             query?: {
+                search?: string;
+                status?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersController_getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersController_deleteMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Member fully removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersController_updateMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMemberDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_addFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_addPastorNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersController_updateStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersController_setTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetTagsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_absent: {
+        parameters: {
+            query?: {
+                missedSundays?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_getAtRisk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "absentConsecutiveWeeks": [
+                         *         {
+                         *           "consecutiveAbsences": 3,
+                         *           "lastSeen": null,
+                         *           "userId": "uuid",
+                         *           "userName": "Emeka Nwosu"
+                         *         }
+                         *       ],
+                         *       "belowFiftyPercent": [
+                         *         {
+                         *           "presentCount": 3,
+                         *           "rate": 0.3,
+                         *           "totalCount": 10,
+                         *           "userId": "uuid",
+                         *           "userName": "Sade Kalu"
+                         *         }
+                         *       ],
+                         *       "neverAttended": [
+                         *         {
+                         *           "joinedAt": "2026-06-01",
+                         *           "userId": "uuid",
+                         *           "userName": "Tolu Bello"
+                         *         }
+                         *       ]
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_todayBirthdays: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_upcomingBirthdays: {
+        parameters: {
+            query?: {
+                daysAhead?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersController_bulkOp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkMemberOpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersOnboardingController_convertVisitor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                visitorId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created member object */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "email": "jane.doe@example.com",
+                         *       "firstName": "Jane",
+                         *       "id": "d290f1ee-6c54-4b01-90e6-d701748f0851",
+                         *       "joinedAt": "2026-05-26T12:00:00.000Z",
+                         *       "lastName": "Doe",
+                         *       "status": "ACTIVE"
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersController_directoryList: {
+        parameters: {
+            query?: {
+                sortOrder?: "asc" | "desc";
+                sortBy?: "name" | "joinedAt" | "role" | "status";
+                birthMonth?: number;
+                joinedTo?: unknown;
+                joinedFrom?: unknown;
+                hasUnit?: "true" | "false";
+                unit?: unknown;
+                gender?: "MALE" | "FEMALE";
+                status?: unknown;
+                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "UNIT_LEAD" | "MEMBER" | "VISITOR";
+                search?: unknown;
                 limit?: number;
+                page?: number;
             };
             header?: never;
             path?: never;
@@ -1677,11 +13678,124 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getAttendanceByDayOfWeek: {
+    MembersController_exportDirectory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Excel workbook */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_deleteFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_toggleFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_getOpenFollowUps: {
         parameters: {
             query?: never;
             header?: never;
@@ -1694,30 +13808,135 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getTopAttendees: {
+    MembersOnboardingController_bulkImport: {
         parameters: {
-            query?: {
-                limit?: number;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkImportDto"];
+            };
+        };
         responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersSelfServiceController_updateMyProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMyProfileDto"];
+            };
+        };
+        responses: {
+            /** @description Updated member */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AttendanceController_getAttendanceSummary: {
+    MembersSelfServiceController_uploadMyAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Uploaded; returns the new public photoUrl */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersSelfServiceController_clearMyAvatar: {
         parameters: {
             query?: never;
             header?: never;
@@ -1730,15 +13949,697 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_getAllSermons: {
+    MembersSelfServiceController_deactivateMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account deactivated; reversible within the stated window */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example {
+                         *       "reversalDays": 14,
+                         *       "status": "INACTIVE",
+                         *       "success": true
+                         *     }
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersSelfServiceController_reactivateMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_deletePastorNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersSelfServiceController_search_: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InboxController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InboxController_markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InboxController_markAllRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    InboxController_unreadCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    OverviewController_getMemberOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberOverviewResponseDto"];
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Access token missing or invalid */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PushController_getPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PushController_updatePreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PushController_publicKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PushController_subscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PushController_unsubscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PushController_test: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ReportsController_memberHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ReportsController_monthly: {
+        parameters: {
+            query: {
+                month: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ReportsController_range: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ReportsController_serviceComparison: {
+        parameters: {
+            query: {
+                format?: "xlsx";
+                period: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsPublicController_incrementPlayCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsCommentsController_getComments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sermonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsAdminController_getAllSermons: {
         parameters: {
             query?: {
-                status?: "DRAFT" | "PUBLISHED" | "SCHEDULED";
                 series?: string;
+                status?: "DRAFT" | "PUBLISHED" | "SCHEDULED";
             };
             header?: never;
             path?: never;
@@ -1750,11 +14651,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_createSermon: {
+    SermonsAdminController_createSermon: {
         parameters: {
             query?: never;
             header?: never;
@@ -1772,18 +14687,34 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
             /** @description Validation failed */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_getSermonById: {
+    SermonsAdminController_getSermonById: {
         parameters: {
             query?: never;
             header?: never;
@@ -1798,11 +14729,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_deleteSermon: {
+    SermonsAdminController_deleteSermon: {
         parameters: {
             query?: never;
             header?: never;
@@ -1817,11 +14762,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_updateSermon: {
+    SermonsAdminController_updateSermon: {
         parameters: {
             query?: never;
             header?: never;
@@ -1840,11 +14799,92 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_setFeatured: {
+    SermonsAdminController_getSermonEngagement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsAdminController_getEpisodeBySermonId: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                episodeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsAdminController_setFeatured: {
         parameters: {
             query?: never;
             header?: never;
@@ -1859,16 +14899,125 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_getPublishedSermons: {
+    SermonsAdminController_getAdminOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsAdminController_getAnalytics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsPublicController_getFeaturedSermon: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsPublicController_getSermonFeed: {
         parameters: {
             query?: {
+                /** @description Opaque keyset cursor from the previous page */
+                cursor?: string;
+                pageSize?: number;
+                /** @description Filter by series */
                 series?: string;
-                search?: string;
-                limit?: number;
             };
             header?: never;
             path?: never;
@@ -1880,47 +15029,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
-        };
-    };
-    SermonsController_getSermonBySlug: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slug: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description Error response */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-        };
-    };
-    SermonsController_getFeaturedSermon: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
                 };
-                content?: never;
             };
         };
     };
-    SermonsController_getLatestSermons: {
+    SermonsPublicController_getLatestSermons: {
         parameters: {
             query?: {
                 limit?: number;
@@ -1935,119 +15062,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
-        };
-    };
-    SermonsController_getSeriesList: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description Error response */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-        };
-    };
-    SermonsController_incrementPlayCount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
                 };
-                content?: never;
             };
         };
     };
-    SermonsController_getAnalytics: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SermonsController_getSubscribers: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SermonsController_subscribe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SubscribeEmailDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SermonsController_publishScheduledSermons: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SermonsController_getMyContext: {
+    SermonsInteractionsController_toggleBookmark: {
         parameters: {
             query?: never;
             header?: never;
@@ -2058,15 +15091,29 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_upsertReaction: {
+    SermonsCommentsController_createComment: {
         parameters: {
             query?: never;
             header?: never;
@@ -2077,7 +15124,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ReactionDto"];
+                "application/json": components["schemas"]["CreateCommentDto"];
             };
         };
         responses: {
@@ -2085,11 +15132,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_toggleBookmark: {
+    SermonsInteractionsController_getMyContext: {
         parameters: {
             query?: never;
             header?: never;
@@ -2100,15 +15161,99 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsDirectMessageController_getMyDirectMessages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sermonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsDirectMessageController_sendDirectMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sermonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendDirectMessageDto"];
+            };
+        };
+        responses: {
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_upsertNote: {
+    SermonsInteractionsController_upsertNote: {
         parameters: {
             query?: never;
             header?: never;
@@ -2127,11 +15272,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_saveProgress: {
+    SermonsInteractionsController_saveProgress: {
         parameters: {
             query?: never;
             header?: never;
@@ -2150,11 +15309,62 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_getMyBookmarks: {
+    SermonsInteractionsController_upsertReaction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sermonId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsMemberStatsController_getMyBookmarks: {
         parameters: {
             query?: never;
             header?: never;
@@ -2167,11 +15377,58 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_getMyListenHistory: {
+    SermonsCommentsController_deleteComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsMemberStatsController_getMyListenHistory: {
         parameters: {
             query?: never;
             header?: never;
@@ -2184,11 +15441,62 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_getMySermonStreak: {
+    SermonsInteractionsController_answerDiscussionQuestion: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                questionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DiscussionResponseDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsMemberStatsController_getMySermonStats: {
         parameters: {
             query?: never;
             header?: never;
@@ -2201,11 +15509,319 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    SermonsController_uploadAudio: {
+    SermonsMemberStatsController_getMySermonStreak: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsSubscribersController_publishScheduledSermons: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsPublicController_getPublishedSermons: {
+        parameters: {
+            query?: {
+                series?: string;
+                search?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsPublicController_getRecentSermons: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsPublicController_getSeriesList: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsPublicController_getSermonBySlug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsPublicController_getEpisodeBySlug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                episodeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsSubscribersController_getSubscribers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsSubscribersController_subscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubscribeEmailDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsUploadController_uploadAudio: {
         parameters: {
             query?: never;
             header?: never;
@@ -2229,11 +15845,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AnalyticsController_getAnalytics: {
+    SessionsController_getBanner: {
         parameters: {
             query?: never;
             header?: never;
@@ -2242,183 +15872,29 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Admin analytics payload */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
-        };
-    };
-    AnalyticsController_getUnits: {
-        parameters: {
-            query: {
-                unitId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description Error response */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getUnitAttendance: {
-        parameters: {
-            query: {
-                months: string;
-            };
-            header?: never;
-            path: {
-                unitId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
                 };
-                content?: never;
             };
         };
     };
-    AnalyticsController_getFirstTimerPipeline: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getFirstTimerSources: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getFirstTimersByMonth: {
-        parameters: {
-            query: {
-                months: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getGivingTrend: {
-        parameters: {
-            query: {
-                months: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getGivingByCategory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getGivingSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_getTopDonors: {
-        parameters: {
-            query: {
-                limit: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_refreshEngagement: {
+    SessionsController_closeSession: {
         parameters: {
             query?: never;
             header?: never;
@@ -2431,30 +15907,25 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
-        };
-    };
-    AnalyticsController_engagementLeaderboard: {
-        parameters: {
-            query: {
-                limit: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description Error response */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    AnalyticsController_engagementAtRisk: {
+    SiteSettingsController_getAll: {
         parameters: {
             query?: never;
             header?: never;
@@ -2463,75 +15934,1155 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_engagementDistribution: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AnalyticsController_engagementSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    MembersController_convertVisitor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                visitorId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Created member object */
+            /** @description Map of section → { section, content, updatedAt, updatedBy } */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
                 };
             };
         };
     };
-    MembersController_list: {
+    SiteSettingsController_getOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section: "HERO" | "ABOUT" | "CULTURE" | "SCRIPTURE" | "SERVICE" | "SERMONS" | "COMMUNITY" | "GIVING" | "CONTACT";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SiteSettingsController_putOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                section: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_listAll: {
+        parameters: {
+            query: {
+                status: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReportDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReportDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_addComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddCommentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_requestCorrection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestCorrectionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    StatusReportsController_listMine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    TestimonialsController_listAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    TestimonialsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTestimonialDto"];
+            };
+        };
+        responses: {
+            /** @description Testimonial created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    TestimonialsController_getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    TestimonialsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    TestimonialsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTestimonialDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    TestimonialsController_listPublished: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of published testimonials */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example [
+                         *       {
+                         *         "authorName": "Sade Adeyemi",
+                         *         "authorPhotoUrl": "https://cdn.example.com/sade.jpg",
+                         *         "authorRole": "Member since 2018",
+                         *         "content": "Everlasting Hills has been a home for me…",
+                         *         "id": "uuid",
+                         *         "publishedAt": "2026-05-01T00:00:00.000Z"
+                         *       }
+                         *     ]
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUnitDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_getById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUnitDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsMembersController_appointLead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsMembersController_removeLead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsMembersController_addMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignUnitMemberDto"];
+            };
+        };
+        responses: {
+            /** @description Member added to unit */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsMembersController_removeMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsMembersController_setMemberRoleShort: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetMemberRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsMembersController_setMemberRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetMemberRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_getDirectory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Units with lead/assistant, plus all UNIT_LEAD / ADMIN / PASTOR / SUPER_ADMIN profiles */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_getMyUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UploadsController_uploadDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Document file (DOCX, DOC, or PDF — max 15 MB)
+                     */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Document uploaded successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UploadsController_uploadImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Image file (JPG, PNG, WebP, GIF, AVIF — max 8 MB)
+                     */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Image uploaded successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersController_list: {
         parameters: {
             query?: {
                 search?: string;
-                status?: string;
+                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "UNIT_LEAD" | "MEMBER" | "VISITOR";
             };
             header?: never;
             path?: never;
@@ -2543,71 +17094,66 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
-        };
-    };
-    MembersController_upcomingBirthdays: {
-        parameters: {
-            query?: {
-                daysAhead?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description Error response */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    MembersController_todayBirthdays: {
+    UsersController_create: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUserDto"];
+            };
+        };
         responses: {
-            200: {
+            /** @description User created */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
             };
-        };
-    };
-    MembersController_absent: {
-        parameters: {
-            query?: {
-                missedSundays?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
+            /** @description Error response */
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    MembersController_getById: {
+    UsersController_deleteUser: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: string;
+                profileId: string;
             };
             cookie?: never;
         };
@@ -2617,22 +17163,36 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    MembersController_updateStatus: {
+    UsersController_updateProfile: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: string;
+                profileId: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": unknown;
+                "application/json": components["schemas"]["UpdateUserDto"];
             };
         };
         responses: {
@@ -2640,22 +17200,36 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    MembersController_addPastorNote: {
+    UsersGrantsController_grantRole: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                id: string;
+                profileId: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": unknown;
+                "application/json": components["schemas"]["UpdateUserRoleDto"];
             };
         };
         responses: {
@@ -2663,16 +17237,30 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    MembersController_deletePastorNote: {
+    UsersGrantsController_revokeGrant: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                noteId: string;
+                profileId: string;
             };
             cookie?: never;
         };
@@ -2682,11 +17270,313 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    MembersController_addFollowUp: {
+    UsersGrantsController_assignHeadUsher: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersGrantsController_removeHeadUsher: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersRolesController_updateRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersRolesController_assignableRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Array of roles the actor can assign */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example [
+                         *       "MEMBER",
+                         *       "UNIT_LEAD"
+                         *     ]
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersController_bulkCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCreateUsersDto"];
+            };
+        };
+        responses: {
+            /** @description Batch result: { created[], failed[], total } */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersRolesController_listByRole_: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersRolesController_getAllRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /**
+                         * @example [
+                         *       {
+                         *         "label": "Super Admin",
+                         *         "level": 5,
+                         *         "role": "SUPER_ADMIN"
+                         *       },
+                         *       {
+                         *         "label": "Pastor",
+                         *         "level": 4,
+                         *         "role": "PASTOR"
+                         *       }
+                         *     ]
+                         */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    VisitorsController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Visitor list ordered by submittedAt desc */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    VisitorsController_getById: {
         parameters: {
             query?: never;
             header?: never;
@@ -2695,59 +17585,59 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": unknown;
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    MembersController_deleteFollowUp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taskId: string;
-            };
-            cookie?: never;
-        };
         requestBody?: never;
         responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };
-    MembersController_toggleFollowUp: {
+    VisitorsController_count: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                taskId: string;
-            };
+            path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": unknown;
-            };
-        };
+        requestBody?: never;
         responses: {
+            /** @description Total visitors for this tenant */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
             };
         };
     };

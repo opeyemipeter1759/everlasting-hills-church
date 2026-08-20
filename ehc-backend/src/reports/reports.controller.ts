@@ -1,5 +1,12 @@
 import { Controller, Get, Param, Query, Res } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiExtension,
+  ApiOperation,
+  ApiProduces,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -18,6 +25,8 @@ function sendXlsx(res: Response, buffer: Buffer, filename: string) {
 @Controller('reports')
 @ApiBearerAuth('access-token')
 @Roles(Role.ADMIN)
+@ApiExtension('x-response-envelope', false)
+@ApiProduces(XLSX_MIME, 'application/json')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 

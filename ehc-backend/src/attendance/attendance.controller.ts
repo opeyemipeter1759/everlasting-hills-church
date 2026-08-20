@@ -3,9 +3,11 @@ import {
   ApiBearerAuth,
   ApiForbiddenResponse,
   ApiBody,
+  ApiExtension,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiProduces,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
@@ -19,6 +21,9 @@ import { AttendanceFeedService } from './services/attendance-feed.service';
 import { AttendanceExportService } from './services/attendance-export.service';
 import { AttendanceListService } from './services/attendance-list.service';
 import { AttendanceOverrideService } from './services/attendance-override.service';
+
+const XLSX_MIME =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /**
  * Attendance module — list/export/feed/override.
@@ -53,6 +58,12 @@ export class AttendanceController {
   @Get('export')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Export attendance as Excel (ADMIN+)' })
+  @ApiExtension('x-response-envelope', false)
+  @ApiProduces(XLSX_MIME)
+  @ApiOkResponse({
+    description: 'Excel workbook',
+    content: { [XLSX_MIME]: { schema: { type: 'string', format: 'binary' } } },
+  })
   @ApiQuery({ name: 'status', required: false, enum: ['PRESENT', 'ABSENT'] })
   @ApiQuery({ name: 'serviceKey', required: false })
   @ApiQuery({ name: 'month', required: false, example: '2026-06' })
@@ -63,7 +74,7 @@ export class AttendanceController {
     @Res() res: Response,
   ) {
     const buffer = await this.exportSvc.exportAttendanceCsv(q);
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Type', XLSX_MIME);
     res.setHeader('Content-Disposition', 'attachment; filename="attendance-export.xlsx"');
     res.send(buffer);
   }

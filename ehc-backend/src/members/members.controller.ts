@@ -10,7 +10,17 @@ import {
   Query,
   Res,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiNoContentResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiExtension,
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiProduces,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import type { Response } from 'express';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -26,6 +36,9 @@ import { MemberDirectoryService } from './services/member-directory.service';
 import { MemberExportService } from './services/member-export.service';
 import { MemberCrudService } from './services/member-crud.service';
 import { MemberDeletionService } from './services/member-deletion.service';
+
+const XLSX_MIME =
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /**
  * Members module — core directory/CRUD.
@@ -85,11 +98,17 @@ export class MembersController {
 
   @Get('export')
   @ApiOperation({ summary: 'Export the filtered People directory as Excel (ADMIN+)' })
+  @ApiExtension('x-response-envelope', false)
+  @ApiProduces(XLSX_MIME)
+  @ApiOkResponse({
+    description: 'Excel workbook',
+    content: { [XLSX_MIME]: { schema: { type: 'string', format: 'binary' } } },
+  })
   async exportDirectory(@Query() q: DirectoryQuery, @Res() res: Response) {
     const buffer = await this.exportSvc.exportDirectory(q);
     res.setHeader(
       'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      XLSX_MIME,
     );
     res.setHeader('Content-Disposition', 'attachment; filename="people-export.xlsx"');
     res.send(buffer);

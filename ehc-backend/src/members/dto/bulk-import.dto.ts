@@ -26,7 +26,7 @@ export class ImportRowDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ example: '+2348012345678', description: 'Used as the initial password' })
+  @ApiProperty({ example: '+2348012345678', description: 'Member contact number; never used as a password' })
   @IsString()
   @MaxLength(40)
   phone!: string;

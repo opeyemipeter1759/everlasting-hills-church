@@ -1,6 +1,13 @@
 import { Controller, Get, NotFoundException, Param, Post, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiExtension,
+  ApiOkResponse,
+  ApiOperation,
+  ApiProduces,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { Public } from '../auth/decorators/public.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -8,6 +15,8 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { CalendarEventService } from './services/calendar-event.service';
 import { CalendarFeedService } from './services/calendar-feed.service';
 import { CalendarTokenService } from './services/calendar-token.service';
+
+const ICS_MIME = 'text/calendar';
 
 /** Thin controller: every branch below delegates to a service. */
 @ApiTags('calendar')
@@ -24,6 +33,12 @@ export class CalendarController {
   @Public()
   @Get('service/:id.ics')
   @ApiOperation({ summary: 'Download a single service as .ics' })
+  @ApiExtension('x-response-envelope', false)
+  @ApiProduces(ICS_MIME)
+  @ApiOkResponse({
+    description: 'iCalendar document',
+    content: { [ICS_MIME]: { schema: { type: 'string' } } },
+  })
   async serviceIcs(@Param('id') id: string, @Res() res: Response) {
     const { filename, body } = await this.events.serviceIcs(id);
     this.sendIcs(res, filename, body, 'attachment');
@@ -32,6 +47,12 @@ export class CalendarController {
   @Public()
   @Get('event/:idOrSlug.ics')
   @ApiOperation({ summary: 'Download a single event as .ics' })
+  @ApiExtension('x-response-envelope', false)
+  @ApiProduces(ICS_MIME)
+  @ApiOkResponse({
+    description: 'iCalendar document',
+    content: { [ICS_MIME]: { schema: { type: 'string' } } },
+  })
   async eventIcs(@Param('idOrSlug') idOrSlug: string, @Res() res: Response) {
     const { filename, body } = await this.events.eventIcs(idOrSlug);
     this.sendIcs(res, filename, body, 'attachment');
@@ -40,6 +61,12 @@ export class CalendarController {
   @Public()
   @Get('gathering/:id.ics')
   @ApiOperation({ summary: 'Download a recurring gathering as .ics' })
+  @ApiExtension('x-response-envelope', false)
+  @ApiProduces(ICS_MIME)
+  @ApiOkResponse({
+    description: 'iCalendar document',
+    content: { [ICS_MIME]: { schema: { type: 'string' } } },
+  })
   async gatheringIcs(@Param('id') id: string, @Res() res: Response) {
     const { filename, body } = await this.events.gatheringIcs(id);
     this.sendIcs(res, filename, body, 'attachment');
@@ -64,6 +91,12 @@ export class CalendarController {
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @Get(':token.ics')
   @ApiOperation({ summary: 'Personal calendar subscription feed' })
+  @ApiExtension('x-response-envelope', false)
+  @ApiProduces(ICS_MIME)
+  @ApiOkResponse({
+    description: 'iCalendar subscription feed',
+    content: { [ICS_MIME]: { schema: { type: 'string' } } },
+  })
   async memberFeed(@Param('token') token: string, @Res() res: Response) {
     const owner = await this.tokens.resolve(token);
     if (!owner) throw new NotFoundException('Calendar feed not found');
