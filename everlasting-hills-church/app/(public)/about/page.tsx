@@ -16,6 +16,7 @@ interface AboutContent {
   title: string;
   accent: string;
   lead: string;
+  heroImage: string | null;
   story: { heading: string; paragraphs: string[] };
   cards: { title: string; body: string }[];
   cta: { heading: string; body: string };
@@ -26,6 +27,7 @@ const FALLBACK: AboutContent = {
   title: "A family rooted in",
   accent: "the everlasting hills",
   lead: "We are a church family in Ibadan, Nigeria, pursuing God together and making room for everyone He sends our way.",
+  heroImage: null,
   story: {
     heading: "Built on the blessing of Genesis 49",
     paragraphs: [
@@ -52,7 +54,7 @@ export default async function AboutPage({ searchParams }: { searchParams: { prev
   return (
     <main className="bg-white">
       {searchParams.preview && <div className="bg-[#87102C] text-white text-center text-xs font-semibold py-2 tracking-wide">PREVIEW — draft, not published</div>}
-      <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} />
+      <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} backgroundImage={c.heroImage} />
 
       {/* Story */}
       <section className="mx-auto max-w-3xl px-5 py-20 sm:px-8">

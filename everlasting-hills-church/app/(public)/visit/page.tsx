@@ -19,6 +19,7 @@ interface VisitContent {
   title: string;
   accent: string;
   lead: string;
+  heroImage: string | null;
   serviceTimesHeading: string;
   serviceTimes: { name: string; day: string; time: string }[];
   locationHeading: string;
@@ -33,6 +34,7 @@ const FALLBACK: VisitContent = {
   title: "We saved a",
   accent: "seat for you",
   lead: "Thinking about visiting? Here is everything you need to feel at home before you even arrive.",
+  heroImage: null,
   serviceTimesHeading: "Service Times",
   serviceTimes: [
     { name: "Sunday Service", day: "Sunday", time: "9:00 AM – 12:00 PM" },
@@ -60,7 +62,7 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
   return (
     <main className="bg-white">
       {searchParams.preview && <div className="bg-[#87102C] text-white text-center text-xs font-semibold py-2 tracking-wide">PREVIEW — draft, not published</div>}
-      <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} />
+      <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} backgroundImage={c.heroImage} />
 
       {/* Service times + map */}
       <section className="mx-auto max-w-[1100px] px-5 py-20 sm:px-8">

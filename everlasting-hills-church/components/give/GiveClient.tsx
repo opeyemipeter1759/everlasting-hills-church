@@ -23,6 +23,7 @@ export interface GiveContent {
   titleBottom: string;
   accentBottom: string;
   subtitle: string;
+  heroImage: string | null;
   sectionLabel: string;
   headingLead: string;
   headingAccent: string;
@@ -115,6 +116,7 @@ export default function GiveClient({
         titleBottom={content.titleBottom}
         accentBottom={content.accentBottom}
         subtitle={content.subtitle}
+        backgroundImage={content.heroImage}
       />
 
       {/* ── Ways to give (light) ── */}

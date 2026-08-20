@@ -6,13 +6,14 @@ import ScrollReveal from "@/components/home/ScrollReveal";
 import type { Metadata } from "next";
 import { getStructuredContent } from "@/lib/cms-page";
 
-/** CMS-editable text fields for a ministry detail page (icon + image stay fixed). */
+/** CMS-editable fields for a ministry detail page (only the icon stays fixed). */
 interface MinistryDetailContent {
   name: string;
   heroLabel: string;
   heroHeadline: string;
   heroAccent: string;
   heroBody: string;
+  heroImage: string | null;
   overview: string;
   pullQuote: string;
   verseRef: string;
@@ -238,14 +239,14 @@ export default async function MinistryDetailPage({
   const base = MINISTRIES[slug as Slug];
   if (!base) notFound();
 
-  // Text comes from the CMS (falling back to the bundled copy); the icon and hero
-  // image stay fixed per group since they aren't text-editable.
+  // Text (and now the hero image) come from the CMS, falling back to the bundled
+  // copy/photo; only the icon stays fixed per group since it isn't editable.
   const content = await getStructuredContent<MinistryDetailContent>(`ministries/${slug}`, {
     preview,
     fallback: base as unknown as MinistryDetailContent,
     valid: isValidDetail,
   });
-  const m = { ...content, icon: base.icon, heroImage: base.heroImage };
+  const m = { ...content, icon: base.icon, heroImage: content.heroImage ?? base.heroImage };
 
   const Icon = m.icon;
 

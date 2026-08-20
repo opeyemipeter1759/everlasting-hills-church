@@ -161,4 +161,14 @@ export class EventsController {
     }
     return this.eventsService.createRsvpAsMember(slug, user.profileId);
   }
+
+  @Get(':slug/rsvp/me')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Whether the signed-in member is already registered for this event' })
+  getMyRsvpStatus(@Param('slug') slug: string, @CurrentUser() user: AuthUser) {
+    if (!user.profileId) {
+      return { registered: false };
+    }
+    return this.eventsService.getRsvpStatusForMember(slug, user.profileId);
+  }
 }

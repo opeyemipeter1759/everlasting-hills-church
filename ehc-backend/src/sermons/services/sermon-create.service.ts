@@ -4,6 +4,7 @@ import { SermonStatus, SermonType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import slugify from 'slugify';
 import { PrismaService } from '../../prisma/prisma.service';
+import { EmailsService } from '../../emails/emails.service';
 import type { Env } from '../../config/env.validation';
 import {
   SERMON_COUNTS_INCLUDE,
@@ -22,6 +23,7 @@ export class SermonCreateService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly emails: EmailsService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -107,6 +109,10 @@ export class SermonCreateService {
         ...SERMON_COUNTS_INCLUDE,
       },
     });
+
+    if (sermon.status === SermonStatus.PUBLISHED) {
+      void this.emails.notifyNewContent({ kind: 'sermon', title: sermon.title, path: `/dashboard/sermon/${sermon.slug}` });
+    }
 
     return serializeSermon(sermon);
   }

@@ -14,6 +14,8 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * rules (solid white primary, ghost-outline secondary). Both CTAs reveal the
  * account options below, since bank transfer is how giving happens.
  */
+const DEFAULT_HERO_IMAGE = "/images/church_congregation_2_1779193607195.png";
+
 export interface GiveHeroProps {
   eyebrow?: string;
   titleTop?: string;
@@ -21,6 +23,7 @@ export interface GiveHeroProps {
   titleBottom?: string;
   accentBottom?: string;
   subtitle?: string;
+  backgroundImage?: string | null;
 }
 
 export default function GiveHero({
@@ -30,6 +33,7 @@ export default function GiveHero({
   titleBottom = "Our",
   accentBottom = "Mission",
   subtitle = "Your gifts fuel worship, outreach, and pastoral care, carrying the gospel unto the utmost bound of the everlasting hills.",
+  backgroundImage,
 }: GiveHeroProps = {}) {
   function scrollToAccounts() {
     document
@@ -44,7 +48,7 @@ export default function GiveHero({
         aria-hidden="true"
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: "url('/images/church_congregation_2_1779193607195.png')",
+          backgroundImage: `url('${backgroundImage || DEFAULT_HERO_IMAGE}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}

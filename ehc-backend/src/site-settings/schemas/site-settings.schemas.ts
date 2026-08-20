@@ -169,6 +169,13 @@ export const ServiceContentSchema = z.object({
   mapsLink: z.union([z.string().trim().url().max(500), z.null()]),
   /** Null when nothing special; otherwise the override banner copy. */
   specialAnnouncement: z.string().trim().min(1).max(280).nullable(),
+  /** ServiceHero copy. Optional+nullable (not required) so existing rows saved before
+   * these fields existed can still be edited/saved without filling them in — blank
+   * falls back to the bundled default copy on the public site. */
+  heroLabel: z.string().trim().max(60).nullable().optional(),
+  heroIntro: z.string().trim().max(500).nullable().optional(),
+  firstTimerTitle: z.string().trim().max(80).nullable().optional(),
+  firstTimerBody: z.string().trim().max(400).nullable().optional(),
 });
 
 /* ── 6. SERMONS (chrome only — sermon cards come from /sermons/latest) ─────── */
@@ -254,6 +261,14 @@ export const ContactContentSchema = z.object({
   twitter: channelBase.extend({ url: z.union([linkSchema, z.null()]) }),
 });
 
+/* ── 10. CAROUSEL ("Life at EHC" editorial slider) ─────────────────────────── */
+
+export const CarouselContentSchema = z.object({
+  eyebrow: z.string().trim().min(1).max(40),
+  headline: z.string().trim().min(1).max(120),
+  images: z.array(imageUrlSchema).min(1).max(30),
+});
+
 /* ── Section registry ──────────────────────────────────────────────────────── */
 
 export const SITE_SECTIONS = [
@@ -266,6 +281,7 @@ export const SITE_SECTIONS = [
   'COMMUNITY',
   'GIVING',
   'CONTACT',
+  'CAROUSEL',
 ] as const;
 
 export const SiteSection = z.enum(SITE_SECTIONS);
@@ -282,6 +298,7 @@ export const SECTION_SCHEMAS = {
   COMMUNITY: CommunityContentSchema,
   GIVING: GivingContentSchema,
   CONTACT: ContactContentSchema,
+  CAROUSEL: CarouselContentSchema,
 } as const satisfies Record<SiteSectionName, z.ZodTypeAny>;
 
 export type SectionContent<S extends SiteSectionName> = z.infer<
@@ -298,4 +315,5 @@ export type AnySectionContent =
   | { section: 'SERMONS'; content: SectionContent<'SERMONS'> }
   | { section: 'COMMUNITY'; content: SectionContent<'COMMUNITY'> }
   | { section: 'GIVING'; content: SectionContent<'GIVING'> }
-  | { section: 'CONTACT'; content: SectionContent<'CONTACT'> };
+  | { section: 'CONTACT'; content: SectionContent<'CONTACT'> }
+  | { section: 'CAROUSEL'; content: SectionContent<'CAROUSEL'> };

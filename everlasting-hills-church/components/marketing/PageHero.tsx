@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 
 /**
  * Shared hero band for public marketing pages (About, Beliefs, Pastor,
@@ -14,6 +15,7 @@ export default function PageHero({
   accent,
   lead,
   children,
+  backgroundImage,
 }: {
   eyebrow: string;
   title: string;
@@ -21,9 +23,17 @@ export default function PageHero({
   accent?: string;
   lead?: string;
   children?: ReactNode;
+  /** Optional CMS-uploaded photo behind the band, dimmed so the text stays readable. */
+  backgroundImage?: string | null;
 }) {
   return (
     <section className="relative overflow-hidden bg-church-dark text-white">
+      {backgroundImage && (
+        <div className="absolute inset-0 z-0">
+          <Image src={backgroundImage} alt="" fill priority sizes="100vw" className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/65 to-church-dark/95" />
+        </div>
+      )}
       {/* Cosmic glow */}
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute right-[-10%] top-[-20%] h-[60%] w-[60%] rounded-full bg-[#87102C]/15 blur-[140px]" />
@@ -37,12 +47,10 @@ export default function PageHero({
         <h1 className="text-balance text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
           {title}
           {accent ? (
-            <>
+            <span className="mt-1 block bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#FFB3C1] bg-clip-text font-serif italic font-normal text-transparent sm:mt-0 sm:inline">
               {" "}
-              <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#FFB3C1] bg-clip-text font-serif italic font-normal text-transparent">
-                {accent}
-              </span>
-            </>
+              {accent}
+            </span>
           ) : null}
         </h1>
         {lead ? (

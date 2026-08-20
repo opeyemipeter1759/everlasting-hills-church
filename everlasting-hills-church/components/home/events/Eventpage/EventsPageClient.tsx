@@ -5,7 +5,7 @@ import type { EventSummary } from "@/types";
 import { useRegisteredEvents } from "@/hooks";
 import EventTicketCard from "../EventTicketCard";
 import EventRsvpModal from "../EventRsvpModal";
-import EventsHero from "./EventsHero";
+import EventsHero, { type EventsHeroProps } from "./EventsHero";
 import EventsTabBar, { type EventsTab } from "./EventsTabBar";
 import EventsEmptyState from "./EventsEmptyState";
 
@@ -13,9 +13,10 @@ interface EventsPageClientProps {
   ongoing: EventSummary[];
   upcoming: EventSummary[];
   past: EventSummary[];
+  hero?: EventsHeroProps;
 }
 
-export default function EventsPageClient({ ongoing, upcoming, past }: EventsPageClientProps) {
+export default function EventsPageClient({ ongoing, upcoming, past, hero }: EventsPageClientProps) {
   const [tab, setTab] = useState<EventsTab>(ongoing.length > 0 ? "ongoing" : "upcoming");
   const [rsvpModalEvent, setRsvpModalEvent] = useState<EventSummary | null>(null);
   const registeredEvents = useRegisteredEvents();
@@ -25,10 +26,10 @@ export default function EventsPageClient({ ongoing, upcoming, past }: EventsPage
 
   return (
     <main className="min-h-screen bg-white">
-      <EventsHero />
+      <EventsHero {...hero} />
 
       <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 md:py-20">
-        <div className="mb-10 flex justify-center sm:justify-start">
+        <div className="mb-10 flex justify-start">
           <EventsTabBar
             active={tab}
             onChange={setTab}

@@ -66,4 +66,16 @@ export class MemberBirthdaysService {
   async getTodayBirthdays() {
     return this.getUpcomingBirthdays(0);
   }
+
+  /** PII-light projection for public/unauthenticated consumers — no email, no raw DOB. */
+  async getCommunityBirthdays(daysAhead = 7) {
+    const full = await this.getUpcomingBirthdays(daysAhead);
+    return full.map(({ id, firstName, lastName, photoUrl, daysUntil }) => ({
+      id,
+      firstName,
+      lastName,
+      photoUrl,
+      daysUntil,
+    }));
+  }
 }

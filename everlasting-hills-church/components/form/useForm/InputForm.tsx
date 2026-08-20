@@ -1,6 +1,6 @@
 "use client";
 
-import { EyeCloseIcon, EyeIcon } from "@/components/icons";
+import { EyeCloseIcon, EyeIcon } from "@/components/header/icons";
 import { memo, useState } from "react";
 import {
   UseFormRegister,

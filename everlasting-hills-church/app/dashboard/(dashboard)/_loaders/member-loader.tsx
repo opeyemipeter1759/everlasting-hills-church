@@ -16,6 +16,13 @@ interface MemberAttendanceOverview {
   coursesCompleted: number;
   sermonsCompleted: number;
 }
+interface CommunityBirthday {
+  id: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+  daysUntil: number;
+}
 
 const DEFAULT_STREAK: StreakState = {
   level: 1,
@@ -26,7 +33,7 @@ const DEFAULT_STREAK: StreakState = {
 };
 
 export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
-  const [me, bookmarksRaw, historyRaw, streakRaw, overviewRaw, announcementsRaw, communityFeedRaw] = await Promise.all([
+  const [me, bookmarksRaw, historyRaw, streakRaw, overviewRaw, announcementsRaw, communityFeedRaw, communityBirthdaysRaw] = await Promise.all([
     mePromise,
     safeGet<SermonBookmark[]>("/sermons/me/bookmarks"),
     safeGet<ListenHistoryItem[]>("/sermons/me/history"),
@@ -34,6 +41,7 @@ export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
     safeGet<MemberAttendanceOverview>("/overview/member"),
     safeGet<Array<{ id: string; title: string; body: string; createdAt: string }>>("/announcements/feed"),
     safeGet<Array<{ id: string; text: string; reactions: number; createdAt: string; authorName: string; authorPhotoUrl: string | null }>>("/community/feed"),
+    safeGet<CommunityBirthday[]>("/members/birthdays/community?daysAhead=7"),
   ]);
 
   const bookmarks = bookmarksRaw?.map((b) => ({
@@ -80,6 +88,7 @@ export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
       member={
         me.member
           ? {
+              id: me.member.id,
               firstName: me.member.firstName,
               lastName: me.member.lastName,
               email: me.member.email,
@@ -111,7 +120,7 @@ export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
       recentServices={[]}
       monthlyAttendance={[]}
       announcements={announcementsRaw ?? []}
-      communityBirthdays={[]}
+      communityBirthdays={communityBirthdaysRaw ?? []}
       ministryUnit={null}
       featuredSermon={null}
       pastorWord={null}

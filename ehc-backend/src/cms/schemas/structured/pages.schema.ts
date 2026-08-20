@@ -9,21 +9,35 @@ import { z } from 'zod';
 const t = (max: number) => z.string().trim().min(1).max(max);
 const CtaSchema = z.object({ heading: t(160), body: t(600) });
 
+/** Accepts both `/images/foo.png` (local) and `https://cdn…/foo.jpg` (R2), same as site-settings' imageUrlSchema. */
+const imageUrlSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2000)
+  .refine((v) => v.startsWith('/') || /^https?:\/\//i.test(v), 'Must be a relative path or absolute URL');
+
+/** Optional+nullable hero background image — null falls back to the plain dark hero. */
+const heroImageField = imageUrlSchema.nullable().optional();
+
 // ── Intro (wrapper copy over module-driven content: sermons, events) ───────────
 export const IntroSchema = z.object({
   eyebrow: t(60),
   title: t(120),
   subtitle: t(400),
+  heroImage: heroImageField,
 });
 export const DEFAULT_SERMONS_INTRO: z.infer<typeof IntroSchema> = {
   eyebrow: 'Sermon Library',
   title: 'Browse sermons by category',
   subtitle: 'A fuller library view inspired by music apps: compact cards, clear categories, and quick access to audio or video messages.',
+  heroImage: null,
 };
 export const DEFAULT_EVENTS_INTRO: z.infer<typeof IntroSchema> = {
   eyebrow: 'Gather with us',
   title: 'Events',
   subtitle: "Conferences, special services, and gatherings designed to strengthen faith and build family. We'd love to see you there.",
+  heroImage: null,
 };
 
 // ── Legal (privacy / terms / cookies) ──────────────────────────────────────────
@@ -80,6 +94,7 @@ export const GiveSchema = z.object({
   titleBottom: t(40),
   accentBottom: t(40),
   subtitle: t(400),
+  heroImage: heroImageField,
   sectionLabel: t(60),
   headingLead: t(60),
   headingAccent: t(60),
@@ -94,6 +109,7 @@ export const DEFAULT_GIVE: z.infer<typeof GiveSchema> = {
   titleBottom: 'Our',
   accentBottom: 'Mission',
   subtitle: 'Your gifts fuel worship, outreach, and pastoral care, carrying the gospel unto the utmost bound of the everlasting hills.',
+  heroImage: '/images/church_congregation_2_1779193607195.png',
   sectionLabel: 'Ways to Give',
   headingLead: 'Give by',
   headingAccent: 'bank transfer',
@@ -130,6 +146,10 @@ export const AboutSchema = z.object({
   title: t(80),
   accent: t(80),
   lead: t(400),
+  /** Optional+nullable (not required) so existing drafts saved before this field
+   * existed can still be edited/saved without setting it — null falls back to the
+   * hero's plain dark background on the public page. */
+  heroImage: imageUrlSchema.nullable().optional(),
   story: z.object({ heading: t(120), paragraphs: z.array(t(1000)).min(1).max(8) }),
   cards: z.tuple([AboutCard, AboutCard, AboutCard]),
   cta: CtaSchema,
@@ -139,6 +159,7 @@ export const DEFAULT_ABOUT: z.infer<typeof AboutSchema> = {
   title: 'A family rooted in',
   accent: 'the everlasting hills',
   lead: 'We are a church family in Ibadan, Nigeria, pursuing God together and making room for everyone He sends our way.',
+  heroImage: null,
   story: {
     heading: 'Built on the blessing of Genesis 49',
     paragraphs: [
@@ -169,6 +190,7 @@ export const MinistriesSchema = z.object({
   title: t(80),
   accent: t(80),
   lead: t(400),
+  heroImage: heroImageField,
   sectionLabel: t(60),
   sectionHeading: t(80),
   sectionLead: t(400),
@@ -179,6 +201,7 @@ export const DEFAULT_MINISTRIES: z.infer<typeof MinistriesSchema> = {
   title: 'Every season of life,',
   accent: 'a place to belong',
   lead: 'Our four ministry groups are shaped around where you are in life — so you always walk with people who truly understand your journey.',
+  heroImage: null,
   sectionLabel: 'Our Groups',
   sectionHeading: 'Four groups. One family.',
   sectionLead: 'Every person who walks through our doors belongs to one of these groups — hover a card to preview the scripture, click to explore.',
@@ -222,6 +245,8 @@ export const MinistryDetailSchema = z.object({
   heroHeadline: t(120),
   heroAccent: t(120),
   heroBody: t(600),
+  /** Optional+nullable — null falls back to the group's bundled default photo. */
+  heroImage: heroImageField,
   overview: t(1500),
   pullQuote: t(200),
   verseRef: t(60),
@@ -239,6 +264,7 @@ export const DEFAULT_MINISTRY_MENS: MinistryDetail = {
   heroAccent: 'Show up and be sharpened.',
   heroBody:
     'A community of men forged in honesty, accountability, and the word of God. No performance. No pretence. Just brothers walking together.',
+  heroImage: '/images/church_congregation_3_1779193624434.png',
   overview:
     "The Men's Ministry exists to build men of God who lead with integrity — in their homes, their work, and their community. We believe men don't grow alone. They grow in rooms where honesty is allowed, where scripture is taken seriously, and where no one has to pretend they have it all together.",
   pullQuote: 'You were never meant to carry it alone.',
@@ -261,6 +287,7 @@ export const DEFAULT_MINISTRY_WOMENS: MinistryDetail = {
   heroAccent: 'Walk in who you already are.',
   heroBody:
     'A sisterhood where every woman — regardless of where she is in life — finds belonging, truth, and the courage to walk in her God-given identity.',
+  heroImage: '/images/church_congregation_2_1779193607195.png',
   overview:
     "The Women's Ministry is a community where women are celebrated, equipped, and deeply rooted in God's word. We gather to build one another up in truth and prayer — through seasons of joy and seasons of hardship — as women who know whose they are.",
   pullQuote: 'You were made for more than survival.',
@@ -283,6 +310,7 @@ export const DEFAULT_MINISTRY_TEENS: MinistryDetail = {
   heroAccent: 'Own your faith. Now.',
   heroBody:
     'A movement for the next generation — where teenagers encounter God, own their faith, and discover who He made them to be.',
+  heroImage: '/images/church_congregation_4_1779193639860.png',
   overview:
     "Teen's Ministry is a movement — not just a service. We exist to help teenagers encounter God in a real and personal way, to walk boldly in who He made them, and to build friendships that outlast high school. This generation doesn't need to wait to do something great for God.",
   pullQuote: "Your faith is not a smaller version of someone else's.",
@@ -306,6 +334,7 @@ export const DEFAULT_MINISTRY_COUPLES: MinistryDetail = {
   heroAccent: 'A great marriage is built, not found.',
   heroBody:
     'Strengthening marriages through the word, honest conversation, and intentional moments that remind couples why they chose each other.',
+  heroImage: '/images/church_congregation_1_1779193592146.png',
   overview:
     "The Couple's Ministry is built on the belief that a strong marriage changes everything — family, community, and church. We gather to strengthen marriages through the word, real conversations, and intentional experiences that help couples grow closer to each other and to God.",
   pullQuote: 'The best version of your marriage is still ahead.',
@@ -328,6 +357,7 @@ export const VisitSchema = z.object({
   title: t(80),
   accent: t(80),
   lead: t(400),
+  heroImage: heroImageField,
   serviceTimesHeading: t(60),
   serviceTimes: z.array(z.object({ name: t(60), day: t(30), time: t(40) })).min(1).max(8),
   locationHeading: t(60),
@@ -341,6 +371,7 @@ export const DEFAULT_VISIT: z.infer<typeof VisitSchema> = {
   title: 'We saved a',
   accent: 'seat for you',
   lead: 'Thinking about visiting? Here is everything you need to feel at home before you even arrive.',
+  heroImage: null,
   serviceTimesHeading: 'Service Times',
   serviceTimes: [
     { name: 'Sunday Service', day: 'Sunday', time: '9:00 AM – 12:00 PM' },

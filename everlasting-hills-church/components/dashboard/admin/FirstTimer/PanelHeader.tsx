@@ -2,6 +2,7 @@ import { UserPlus } from "lucide-react";
 import type { InterestFilter } from "./useFirstTimersFilter";
 import FilterTabs from "./FilterTabs";
 import SearchBox from "./SearchBox";
+import VisitorImportDialog from "./VisitorImportDialog";
 
 export default function PanelHeader({
   total,
@@ -40,6 +41,7 @@ export default function PanelHeader({
       <div className="flex items-center gap-2 flex-wrap">
         <FilterTabs tabs={filterTabs} active={filter} onChange={onFilterChange} />
         <SearchBox value={search} onChange={onSearchChange} />
+        <VisitorImportDialog />
       </div>
     </div>
   );

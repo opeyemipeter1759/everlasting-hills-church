@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, CalendarCheck, MapPin, Share2, Check } from "lucide-react";
+import { CalendarDays, CalendarCheck, MapPin, Share2, Check, UserPlus } from "lucide-react";
 import type { EventSummary } from "@/types";
 import {
   formatEventDateRange,
@@ -16,6 +16,7 @@ import IconButton from "./IconButton";
 import EventFlier from "./EventFlier";
 import RegisterButton from "./RegisterButton";
 import WhatsAppIcon from "./WhatsAppIcon";
+import EventInviteModal from "./EventInviteModal";
 
 interface EventTicketCardProps {
   event: EventSummary;
@@ -43,6 +44,7 @@ export default function EventTicketCard({
   const monthShort = start.toLocaleDateString("en-GB", { month: "short", timeZone: TZ });
 
   const [countdown, setCountdown] = useState("");
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   useEffect(() => {
     setCountdown(timeUntilLabel(event.startAt));
@@ -99,6 +101,11 @@ export default function EventTicketCard({
             registering={registering}
             registered={registered}
           />
+          {registered && (
+            <IconButton onClick={() => setInviteOpen(true)} title="Invite a friend" className="text-[#87102C]">
+              <UserPlus size={14} />
+            </IconButton>
+          )}
           <IconButton onClick={handleShareLink} title="Share invite link">
             {copied ? <Check size={14} /> : <Share2 size={14} />}
           </IconButton>
@@ -107,6 +114,8 @@ export default function EventTicketCard({
           </IconButton>
         </div>
       </div>
+
+      {inviteOpen && <EventInviteModal event={event} onClose={() => setInviteOpen(false)} />}
     </div>
   );
 }

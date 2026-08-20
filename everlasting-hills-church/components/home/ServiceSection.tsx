@@ -138,6 +138,10 @@ export default function ServiceSection({ content }: { content?: ServiceContent }
             headingText={headingText}
             isLive={schedule.isLive}
             onGetDirections={scrollToDirections}
+            eyebrowLabel={c.heroLabel ?? SERVICE_FALLBACK.heroLabel!}
+            introText={c.heroIntro ?? SERVICE_FALLBACK.heroIntro!}
+            firstTimerTitle={c.firstTimerTitle ?? SERVICE_FALLBACK.firstTimerTitle!}
+            firstTimerBody={c.firstTimerBody ?? SERVICE_FALLBACK.firstTimerBody!}
           />
           <ServiceCards
             services={c.services}

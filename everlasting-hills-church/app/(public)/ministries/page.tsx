@@ -1,3 +1,4 @@
+import Image from "next/image";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import MinistriesCards, { type MinistryGroup, MINISTRIES } from "@/components/ministries/MinistriesCards";
 import GroupFinder from "@/components/ministries/GroupFinder";
@@ -14,6 +15,7 @@ interface MinistriesContent {
   title: string;
   accent: string;
   lead: string;
+  heroImage: string | null;
   sectionLabel: string;
   sectionHeading: string;
   sectionLead: string;
@@ -25,6 +27,7 @@ const FALLBACK: MinistriesContent = {
   title: "Every season of life,",
   accent: "a place to belong",
   lead: "Our four ministry groups are shaped around where you are in life — so you always walk with people who truly understand your journey.",
+  heroImage: null,
   sectionLabel: "Our Groups",
   sectionHeading: "Four groups. One family.",
   sectionLead: "Every person who walks through our doors belongs to one of these groups — hover a card to preview the scripture, click to explore.",
@@ -53,6 +56,12 @@ export default async function MinistriesPage({ searchParams }: { searchParams: {
 
       {/* ── HERO — dark, centered ────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-church-dark text-white">
+        {c.heroImage && (
+          <div className="absolute inset-0 z-0">
+            <Image src={c.heroImage} alt="" fill priority sizes="100vw" className="object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/65 to-church-dark/95" />
+          </div>
+        )}
         <div className="pointer-events-none absolute inset-0 z-0">
           <div className="absolute right-[-10%] top-[-20%] h-[60%] w-[60%] rounded-full bg-[#87102C]/15 blur-[140px]" />
           <div className="absolute bottom-[-30%] left-[-10%] h-[50%] w-[50%] rounded-full bg-[#87102C]/10 blur-[120px]" />
