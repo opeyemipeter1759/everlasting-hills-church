@@ -1,110 +1,77 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# EHC backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+NestJS 11 API for Everlasting Hills Church. PostgreSQL is accessed through
+Prisma; Supabase provides authentication; Redis, Resend, Paystack, R2, Sentry,
+and Web Push are optional integrations.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Setup
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+Use Node.js 20. Copy `.env.production.example` to `.env` for local development
+and replace every required placeholder.
 
 ```bash
-$ npm install
+npm ci
+npm run start:dev
 ```
+
+API documentation is served at `http://localhost:4000/docs` and its JSON form
+at `http://localhost:4000/docs-json`.
+
+## Commands
+
+```bash
+npm run typecheck
+npm run lint
+npm run lint:fix
+npm test -- --runInBand
+npm run test:e2e -- --runInBand
+npm run build
+npx prisma validate
+```
+
+`npm run lint` is read-only. `lint:fix` is the only lint command that changes
+files.
+
+## OpenAPI
+
+Generate the deterministic contract offline:
+
+```bash
+npm run openapi:generate
+npm --prefix ../everlasting-hills-church run gen:api
+```
+
+The generator constructs the Nest dependency graph but never initializes or
+listens on the application, so it opens no database, Redis, Supabase, or HTTP
+connection. Commit `openapi/openapi.json` and the frontend's generated
+`schema.d.ts` together.
 
 ## Environment
 
-Set `SUPABASE_ANON_KEY` for the NestJS server explicitly. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is optional and is only for client-side use in other apps.
+The validation source of truth is `src/config/env.validation.ts`. Production
+requires database URLs, Supabase URL/anon key, a tenant ID, the frontend URL,
+and independent CMS preview/revalidation secrets. Auth administration also
+requires `SUPABASE_SERVICE_ROLE_KEY`.
 
-Required values at startup:
+Do not reuse a Supabase JWT secret for CMS signing. Generate independent values
+with at least 32 random characters and rotate them separately.
 
-- `DATABASE_URL`
-- `DIRECT_URL`
-- `SUPABASE_URL`
-- `SUPABASE_ANON_KEY`
-- `DEFAULT_TENANT_ID`
+Optional integrations fail closed or return an unavailable response when their
+variables are absent. See `.env.production.example` for the complete inventory.
 
-## Compile and run the project
+## Database releases
 
-```bash
-# development
-$ npm run start
+Never run `prisma db push`, `--accept-data-loss`, or ad-hoc SQL against a shared
+database. All schema changes must be represented by a reviewed migration and
+deployed with `prisma migrate deploy` after the production baseline has been
+recorded. Follow [`prisma/MIGRATIONS.md`](prisma/MIGRATIONS.md).
 
-# watch mode
-$ npm run start:dev
+## Production release order
 
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1. Pass CI and review the migration/OpenAPI diffs.
+2. Verify a restorable database backup.
+3. Run `prisma migrate deploy` from the exact release artifact.
+4. Deploy the backend and verify `/`, `/docs-json`, authentication, and logs.
+5. Deploy the matching frontend contract/build.
+6. Roll forward with a corrective migration if a schema release has a defect;
+   restore the verified backup for destructive or irreversible failures.
