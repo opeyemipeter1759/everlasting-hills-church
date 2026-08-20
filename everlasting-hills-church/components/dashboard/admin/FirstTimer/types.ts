@@ -12,4 +12,8 @@ export interface VisitorRow {
   bornAgain: string | null;
   occupation: string | null;
   submittedAt: string;
+  hasOnlineCheckIn?: boolean;
+  // Form fields used for AI analysis
+  serviceExperience?: string | null;
+  prayerPoint?: string | null;
 }

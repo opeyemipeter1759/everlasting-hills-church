@@ -1,6 +1,8 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import type { WebSocketLikeConstructor } from '@supabase/realtime-js';
+import ws from 'ws';
 import type { Env } from '../../config/env.validation';
 
 /**
@@ -37,6 +39,7 @@ export class UsersSupabaseAdminService {
     if (!this.client) {
       this.client = createClient(this.supabaseUrl, this.supabaseServiceRoleKey, {
         auth: { persistSession: false, autoRefreshToken: false },
+        realtime: { transport: ws as unknown as WebSocketLikeConstructor },
       });
     }
     return this.client;

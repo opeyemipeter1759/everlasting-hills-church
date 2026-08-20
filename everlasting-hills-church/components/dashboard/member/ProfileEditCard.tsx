@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { User, Camera } from "lucide-react";
 import type { MemberHomeProps } from "@/types";
 
@@ -50,7 +51,7 @@ export function ProfileEditCard({ member, initials }: {
         <div className="flex items-center gap-4">
           <label className="relative cursor-pointer group flex-shrink-0">
             {photo ? (
-              <img src={photo} alt="Avatar" className="w-16 h-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-white/10" />
+              <Image src={photo} alt="Avatar" width={64} height={64} className="w-16 h-16 rounded-full object-cover ring-2 ring-gray-200 dark:ring-white/10" />
             ) : (
               <div className="w-16 h-16 rounded-full bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center text-xl font-bold text-[#87102C] dark:text-[#e8768a] ring-2 ring-gray-200 dark:ring-white/10">
                 {initials}

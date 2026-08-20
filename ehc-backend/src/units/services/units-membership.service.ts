@@ -51,6 +51,26 @@ export class UnitsMembershipService {
     throw new ForbiddenException('Insufficient role to manage units');
   }
 
+  /**
+   * Weaker than assertCanManageUnit: passes for ANY member of the unit (lead,
+   * assistant, or plain member), not just lead/assistant. Used to gate
+   * read-only self-service views (e.g. a plain member viewing their unit's
+   * roster or task list).
+   */
+  async assertIsUnitMember(actor: AuthUser, unitId: string) {
+    if (actor.role && ADMIN_ROLES.includes(actor.role)) return;
+    if (!actor.memberId) {
+      throw new ForbiddenException('No member record on your account');
+    }
+    const membership = await this.prisma.unitMember.findFirst({
+      where: { unitId, memberId: actor.memberId, tenantId: this.tenantId },
+      select: { id: true },
+    });
+    if (!membership) {
+      throw new ForbiddenException('You are not a member of this unit');
+    }
+  }
+
   async addMember(actor: AuthUser, unitId: string, data: AssignUnitMemberDto) {
     await this.assertCanManageUnit(actor, unitId);
 

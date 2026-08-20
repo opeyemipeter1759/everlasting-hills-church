@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImagePlus, X } from "lucide-react";
 import { useMedia, type MediaAsset } from "@/lib/api/cms";
@@ -60,11 +61,16 @@ export default function MediaPickerModal({
                       key={m.id}
                       type="button"
                       onClick={() => { onSelect(m); onClose(); }}
-                      className="group aspect-square rounded-xl overflow-hidden border border-[#E7CDD3]/60 dark:border-white/10 hover:ring-2 hover:ring-[#87102C]/40 transition-all"
+                      className="group relative aspect-square rounded-xl overflow-hidden border border-[#E7CDD3]/60 dark:border-white/10 hover:ring-2 hover:ring-[#87102C]/40 transition-all"
                       title={m.alt}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={m.url} alt={m.alt} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                      <Image
+                        src={m.url}
+                        alt={m.alt}
+                        fill
+                        sizes="(max-width: 640px) 33vw, 25vw"
+                        className="object-cover group-hover:scale-105 transition-transform"
+                      />
                     </button>
                   ))}
                 </div>

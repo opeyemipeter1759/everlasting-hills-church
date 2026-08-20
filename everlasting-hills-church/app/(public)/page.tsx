@@ -12,6 +12,7 @@ import TestimonialsSection from "@/components/home/TestimonialsSection";
 import { getAllSiteSettings, type SermonsContent } from "@/lib/site-settings";
 import { getTelegramSermons } from "@/lib/telegram-sermons";
 import EventSection from "@/components/home/EventSection";
+import BirthdayTeaserSection from "@/components/home/BirthdayTeaserSection";
 import Carousel from "@/components/home/Carousel";
 import { FadeIn } from "@/components/ui/motion/FadeIn";
 
@@ -47,8 +48,9 @@ export default async function HomePage() {
         <TelegramSermons content={settings.SERMONS} />
       </Suspense>
       <AttendanceSection />
+      <BirthdayTeaserSection />
       <TestimonialsSection />
-      <Carousel/>
+      <Carousel content={settings.CAROUSEL} />
       <CommunitySection content={settings.COMMUNITY} />
       {/* <ContactSection content={settings.CONTACT} /> */}
     </main>

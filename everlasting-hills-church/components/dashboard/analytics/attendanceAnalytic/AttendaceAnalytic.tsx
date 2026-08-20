@@ -1,15 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { AnalyticsFilterBar } from "../AnalyticsFilterBar";
 import { AnalyticsStatCards } from "../sections/AnalyticsStatCards";
-import { AttendanceTrendChart } from "../charts/AttendanceTrendChart";
-import { PresentAbsentDonut } from "../charts/DonutChart";
-import { ServiceComparisonChart } from "../charts/ServiceComparisonChart";
-import { RateLineChart } from "../charts/RateLineChart";
-import { AbsenteeTrendChart } from "../charts/AbsenteeTrendChart";
-import { PeakHoursChart } from "../charts/PeakHoursChart";
-import { HeatmapChart } from "../charts/HeatmapChart";
-import { MemberGrowthChart } from "../charts/MemberGrowthChart";
+import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import { Leaderboard } from "../sections/Leaderboard";
 import { ServiceHealthPanel } from "../sections/ServiceHealthPanel";
 import { RetentionCard } from "../sections/RetentionCard";
@@ -20,6 +14,18 @@ import { AlertsPanel } from "../sections/AlertsPanel";
 import type { AnalyticsFilter } from "@/lib/api/analytics";
 
 const DEFAULT_FILTER: AnalyticsFilter = { period: "week", serviceType: "all" };
+
+// recharts is a heavy dependency (~90kB) only needed once these charts actually
+// render — dynamic-importing each keeps it out of every other dashboard route's bundle.
+const chartLoading = () => <ChartSkeleton />;
+const AttendanceTrendChart = dynamic(() => import("../charts/AttendanceTrendChart").then((m) => m.AttendanceTrendChart), { ssr: false, loading: chartLoading });
+const PresentAbsentDonut = dynamic(() => import("../charts/DonutChart").then((m) => m.PresentAbsentDonut), { ssr: false, loading: chartLoading });
+const ServiceComparisonChart = dynamic(() => import("../charts/ServiceComparisonChart").then((m) => m.ServiceComparisonChart), { ssr: false, loading: chartLoading });
+const RateLineChart = dynamic(() => import("../charts/RateLineChart").then((m) => m.RateLineChart), { ssr: false, loading: chartLoading });
+const AbsenteeTrendChart = dynamic(() => import("../charts/AbsenteeTrendChart").then((m) => m.AbsenteeTrendChart), { ssr: false, loading: chartLoading });
+const PeakHoursChart = dynamic(() => import("../charts/PeakHoursChart").then((m) => m.PeakHoursChart), { ssr: false, loading: chartLoading });
+const HeatmapChart = dynamic(() => import("../charts/HeatmapChart").then((m) => m.HeatmapChart), { ssr: false, loading: chartLoading });
+const MemberGrowthChart = dynamic(() => import("../charts/MemberGrowthChart").then((m) => m.MemberGrowthChart), { ssr: false, loading: chartLoading });
 
 export default function AttendaceAnalytic() {
   const [pending, setPending] = useState<AnalyticsFilter>(DEFAULT_FILTER);

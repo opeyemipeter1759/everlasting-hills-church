@@ -46,11 +46,29 @@ export class CmsAuditService {
     }
   }
 
+  /** Recent audit entries with the actor's name resolved where possible. The log
+   * stores `actorId` as the Supabase auth id (`actor.userId` at every call site
+   * — see e.g. unit-lead-appointment.service.ts), i.e. Profile.userId, not
+   * Profile.id — no FK either way, so this is a batch lookup, not an `include`. */
   async list(limit = 50) {
-    return this.prisma.auditLog.findMany({
+    const rows = await this.prisma.auditLog.findMany({
       where: { tenantId: this.tenantId },
       orderBy: { createdAt: 'desc' },
       take: Math.min(200, Math.max(1, limit)),
     });
+    if (rows.length === 0) return rows;
+
+    const actorIds = [...new Set(rows.map((r) => r.actorId).filter((id): id is string => !!id))];
+    const profiles = actorIds.length
+      ? await this.prisma.profile.findMany({
+          where: { userId: { in: actorIds } },
+          select: { userId: true, Member: { select: { firstName: true, lastName: true } } },
+        })
+      : [];
+    const nameById = new Map(
+      profiles.map((p) => [p.userId, p.Member ? `${p.Member.firstName} ${p.Member.lastName}`.trim() : null]),
+    );
+
+    return rows.map((r) => ({ ...r, actorName: r.actorId ? nameById.get(r.actorId) ?? null : null }));
   }
 }

@@ -3,6 +3,7 @@
 import type { MemberHomePropsOptional, StreakState } from "./types";
 import { QrCheckinBanner } from "./QrCheckinBanner";
 import { WelcomeHero } from "./WelcomeHero";
+import { BirthdayCard } from "./BirthdayCard";
 import { QuickActionsStrip } from "./QuickActionsStrip";
 import { CheckInPanel } from "./CheckInPanel";
 import { JourneyBand } from "./JourneyBand";
@@ -40,6 +41,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     monthlyAttendance = [],
     listenHistory = [],
     announcements = [],
+    birthdayDaysUntil = null,
+    communityBirthdays = [],
     ministryUnit = null,
     featuredSermon = null,
     discipleshipMilestones = [],
@@ -67,11 +70,13 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         nextService={nextService}
       />
 
-      <QuickActionsStrip />
+      <BirthdayCard
+        memberId={member?.id ?? null}
+        birthdayDaysUntil={birthdayDaysUntil}
+        communityBirthdays={communityBirthdays}
+      />
 
-      {/* ═══════════════════════════════════════════════════════════
-          BAND 2 — TODAY
-          ═══════════════════════════════════════════════════════════ */}
+      <QuickActionsStrip />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CheckInPanel
@@ -84,11 +89,6 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           <GatheringsPanel />
         </div>
       </div>
-
-      {/* ═══════════════════════════════════════════════════════════
-          BAND 3 — MY JOURNEY
-          ═══════════════════════════════════════════════════════════ */}
-
       <JourneyBand
         isNewMember={isNewMember}
         member={member}
@@ -107,11 +107,6 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         discipleshipMilestones={discipleshipMilestones}
         monthlyAttendance={monthlyAttendance}
       />
-
-      {/* ═══════════════════════════════════════════════════════════
-          BAND 5 — CONTENT
-          ═══════════════════════════════════════════════════════════ */}
-
       {featuredSermon && <FeaturedSermonCard sermon={featuredSermon} />}
       <AnnouncementsPanel announcements={announcements} />
     </div>

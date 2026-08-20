@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Search, ShieldAlert, Users } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { hasMinRole } from "@/lib/auth/frontend-session";
@@ -15,10 +15,14 @@ import { AddToMasterListModal } from "./AddToMasterListModal";
 import { AssignFollowUpModal } from "./AssignFollowUpModal";
 import { PersonAvatar } from "./PersonAvatar";
 import FollowUpPipelineSkeleton from "@/components/ui/skeleton/FollowUpPipelineSkeleton";
+import { Pagination } from "@/components/ui/navigation/Pagination";
 import { Select } from "@/components/ui/select";
 
 type StageTab = "all" | "unassigned" | "in_progress" | "archive";
 type SourceFilter = "all" | FollowUpSourceType;
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
+const DEFAULT_PAGE_SIZE = 20;
 
 const STAGE_TABS: { id: StageTab; label: string }[] = [
   { id: "all", label: "All" },
@@ -40,13 +44,26 @@ export default function FollowUpPipelineClient() {
   const { data: entries = [], isLoading, error } = useFollowUpEntries();
   const accessDenied = (error as ApiError | null)?.status === 403;
 
-  const [activeTab, setActiveTab] = useState<StageTab>("all");
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>("all");
-  const [myAssignedOnly, setMyAssignedOnly] = useState(false);
-  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTabState] = useState<StageTab>("all");
+  const [sourceFilter, setSourceFilterState] = useState<SourceFilter>("all");
+  const [myAssignedOnly, setMyAssignedOnlyState] = useState(false);
+  const [search, setSearchState] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSizeState] = useState(DEFAULT_PAGE_SIZE);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [assignTarget, setAssignTarget] = useState<FollowUpEntry | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
+
+  // Any change to what's being filtered resets back to page 1 — otherwise a
+  // narrower result set can leave the view stranded on a page past the end.
+  const setActiveTab = (v: StageTab) => { setActiveTabState(v); setPage(1); };
+  const setSourceFilter = (v: SourceFilter) => { setSourceFilterState(v); setPage(1); };
+  const setMyAssignedOnly = (v: boolean | ((prev: boolean) => boolean)) => {
+    setMyAssignedOnlyState(v);
+    setPage(1);
+  };
+  const setSearch = (v: string) => { setSearchState(v); setPage(1); };
+  const setPageSize = (v: number) => { setPageSizeState(v); setPage(1); };
 
   const isLeader = hasMinRole(currentUser?.role, "UNIT_LEAD");
   const viewerId = me?.member?.id ?? "";
@@ -57,9 +74,7 @@ export default function FollowUpPipelineClient() {
   const filtered = useMemo(() => {
     return entries.filter((e) => {
       const isOptedOut = e.memberStatus === "OPTED_OUT";
-      // Follow-up is continuous — nothing gets archived away for being "done". The
-      // only thing that leaves the active views is an opted-out member, and Archive
-      // is the only place they show up.
+
       if (activeTab === "archive") {
         if (!isOptedOut) return false;
       } else if (isOptedOut) {
@@ -81,6 +96,17 @@ export default function FollowUpPipelineClient() {
       return true;
     });
   }, [entries, activeTab, sourceFilter, myAssignedOnly, search, viewerId]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  // Clamp back if a mutation or filter change shrinks the result set below the
+  // page we were sitting on (e.g. an entry gets opted out while viewing page 3).
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
+  const paged = useMemo(
+    () => filtered.slice((page - 1) * pageSize, page * pageSize),
+    [filtered, page, pageSize],
+  );
 
   const selectedEntry = entries.find((e) => e.id === selectedEntryId) ?? null;
 
@@ -156,13 +182,24 @@ export default function FollowUpPipelineClient() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Select
-            aria-label="Filter by source"
-            value={sourceFilter}
-            onChange={(v) => setSourceFilter(v as SourceFilter)}
-            className="px-3 py-2 rounded-lg text-xs font-bold border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer"
-            options={SOURCE_FILTERS.map((f) => ({ value: f.id, label: f.label }))}
-          />
+          <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-white/10 p-0.5 flex-shrink-0" role="tablist" aria-label="Filter by source">
+            {SOURCE_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                role="tab"
+                aria-selected={sourceFilter === f.id}
+                onClick={() => setSourceFilter(f.id)}
+                className={`px-2.5 py-1.5 rounded-md text-xs font-bold whitespace-nowrap transition-colors ${
+                  sourceFilter === f.id
+                    ? "bg-[#87102C] text-white"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
 
           <button
             type="button"
@@ -192,11 +229,29 @@ export default function FollowUpPipelineClient() {
 
       {/* Master list */}
       <MasterListTable
-        entries={filtered}
+        entries={paged}
         viewerId={viewerId}
         onSelect={(entry) => setSelectedEntryId(entry.id)}
         onAssign={(entry) => setAssignTarget(entry)}
       />
+
+      {filtered.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-[11px] text-[#8a7e80] dark:text-white/35 order-2 sm:order-1">
+            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex items-center gap-3 order-1 sm:order-2">
+            <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+            <Select
+              aria-label="Rows per page"
+              value={String(pageSize)}
+              onChange={(v) => setPageSize(Number(v))}
+              className="text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 py-1.5 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer"
+              options={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: `${n} / page` }))}
+            />
+          </div>
+        </div>
+      )}
 
       <FollowUpDetailDrawer
         entry={selectedEntry}

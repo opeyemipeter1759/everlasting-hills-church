@@ -6,14 +6,14 @@
  */
 export const CHURCH_INFO = {
   name: 'Everlasting Hills Church',
-  address: 'Ibadan, Oyo State, Nigeria',
+  address: 'STARLIGHT HOUSE - 7, Abimbola Ayorinde Street, Odo Niser Junction, Orogun',
   phone: '+234 706 872 7719',
-  email: 'hello@everlastinghills.org',
+  email: 'everlastinghills.org',
 
   /** Service schedule (matches the website's /visit page). */
   services: [
-    { name: 'Sunday Service', time: 'Sundays · 9:00 AM – 12:00 PM' },
-    { name: 'Midweek Service', time: 'Wednesdays · 5:30 PM – 8:00 PM' },
+    { name: 'Sunday Service', time: 'Sundays · 9:00 AM ' },
+    { name: 'Midweek Service', time: 'Wednesdays · 5:30 PM ' },
   ],
 
   /**

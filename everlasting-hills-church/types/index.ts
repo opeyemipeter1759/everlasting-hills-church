@@ -334,6 +334,8 @@ export interface UnitMemberEntry {
   id: string;
   memberId: string;
   isLead: boolean;
+  isAssistant?: boolean;
+  position?: { id: string; name: string } | null;
   Member: {
     id: string;
     firstName: string;
@@ -346,6 +348,47 @@ export interface UnitMemberEntry {
 
 export interface UnitDetail extends Unit {
   UnitMember: UnitMemberEntry[];
+}
+
+export interface UnitPosition {
+  id: string;
+  unitId: string;
+  name: string;
+  createdAt: string;
+}
+
+export type UnitTaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+
+export interface UnitTask {
+  id: string;
+  unitId: string;
+  title: string;
+  description: string | null;
+  assignedToId: string | null;
+  status: UnitTaskStatus;
+  dueDate: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  AssignedTo: { id: string; firstName: string; lastName: string; photoUrl: string | null } | null;
+}
+
+export interface UnitExpense {
+  id: string;
+  unitId: string;
+  title: string;
+  amount: number;
+  category: string | null;
+  date: string;
+  description: string | null;
+  receiptUrl: string | null;
+  createdAt: string;
+}
+
+export interface UnitTaskComment {
+  id: string;
+  content: string;
+  author: { profileId: string; name: string; photoUrl: string | null } | null;
+  createdAt: string;
 }
 
 export interface MemberRow {

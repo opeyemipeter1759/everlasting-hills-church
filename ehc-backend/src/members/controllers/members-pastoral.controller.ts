@@ -36,6 +36,12 @@ export class MembersPastoralController {
     return this.birthdays.getTodayBirthdays();
   }
 
+  @Get('anniversaries/today')
+  @ApiOperation({ summary: "Members whose wedding anniversary is today" })
+  async todayAnniversaries() {
+    return this.birthdays.getTodayAnniversaries();
+  }
+
   @Get('absent')
   @ApiOperation({ summary: 'Absent members' })
   @ApiQuery({ name: 'missedSundays', required: false })

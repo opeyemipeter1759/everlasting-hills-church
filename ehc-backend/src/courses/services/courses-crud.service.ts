@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { parseSchema } from '../../common/zod-parse.util';
+import { EmailsService } from '../../emails/emails.service';
 import { CourseInputSchema } from '../dto/course.schema';
 import { CoursesSharedService } from './courses-shared.service';
 import { CoursesReadService } from './courses-read.service';
@@ -19,6 +20,7 @@ export class CoursesCrudService {
     private readonly shared: CoursesSharedService,
     private readonly read: CoursesReadService,
     private readonly curriculumWriter: CourseCurriculumWriterService,
+    private readonly emails: EmailsService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -54,6 +56,7 @@ export class CoursesCrudService {
     });
 
     await this.shared.writeAudit({ action: 'CREATE', entityId: id, actorId: actor.userId, after: { title: dto.title } });
+    void this.emails.notifyNewContent({ kind: 'course', title: dto.title, path: `/dashboard/courses/${slug}` });
     return this.read.getForAdmin(id);
   }
 

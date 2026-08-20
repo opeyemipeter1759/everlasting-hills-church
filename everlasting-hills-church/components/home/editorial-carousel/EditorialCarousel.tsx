@@ -14,12 +14,16 @@ interface EditorialCarouselProps {
   items: CarouselSlide[];
   autoPlay?: boolean;
   delay?: number;
+  eyebrow?: string;
+  headline?: string;
 }
 
 export default function EditorialCarousel({
   items,
   autoPlay = true,
   delay = 5000,
+  eyebrow = "Life at EHC",
+  headline = "Moments worth showing up for.",
 }: EditorialCarouselProps) {
   const { active, goTo, next, prev, paused, setPaused } = useCarousel({
     length: items.length,
@@ -53,10 +57,10 @@ export default function EditorialCarousel({
           <div className="flex flex-col items-start text-start">
             <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-church-accent">
               <Sparkles size={13} />
-              Life at EHC
+              {eyebrow}
             </span>
             <h2 className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-              Moments worth showing up for.
+              {headline}
             </h2>
           </div>
         </ScrollReveal>

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { ArrowLeft, CheckCircle2, GraduationCap } from "lucide-react";
-import { useCourse, useCourses, useEnrollCourse, useMyCourseProgress, getCourseStatus } from "@/lib/api/courses";
+import { useCourse, useCourses, useEnrollCourse, useMyCourseProgress, useMyCategoryEnrollments, getCourseStatus } from "@/lib/api/courses";
 import CourseDetailSkeleton from "@/components/ui/skeleton/CourseDetailSkeleton";
 import CourseHero from "./CourseHero";
 import CourseCurriculum from "./CourseCurriculum";
@@ -14,6 +14,7 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
   const { data: catalog = [] } = useCourses();
   const { data: course, isLoading } = useCourse(slug);
   const { data: progress = {} } = useMyCourseProgress();
+  const { data: enrolledCategoryIds = [] } = useMyCategoryEnrollments();
   const enroll = useEnrollCourse();
 
   if (isLoading) return <CourseDetailSkeleton />;
@@ -34,7 +35,7 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
     );
   }
 
-  const status = getCourseStatus(course, catalog, progress);
+  const status = getCourseStatus(course, catalog, progress, enrolledCategoryIds);
   const prerequisite = catalog.find((c) => c.slug === course.prerequisiteSlug);
 
   function handleEnroll() {

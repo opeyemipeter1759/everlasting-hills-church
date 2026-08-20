@@ -1,6 +1,6 @@
 import { Network } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
-import type { MinistryUnit } from "@/lib/mock/admin-dashboard.mock";
+import type { MinistryUnit } from "@/lib/types/admin-dashboard";
 
 function barColor(pct: number): string {
   if (pct >= 90) return "from-emerald-500 to-emerald-400";

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import {
   Users, TrendingUp, AlertTriangle, CheckCircle,
@@ -236,8 +237,7 @@ export default function UnitLeadHome({
                 {/* Avatar */}
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#87102C] to-[#6E0C24] flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden">
                   {m.photoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.photoUrl} alt={m.name} className="w-full h-full object-cover" />
+                    <Image src={m.photoUrl} alt={m.name} width={36} height={36} className="w-full h-full object-cover" />
                   ) : (
                     m.name.charAt(0).toUpperCase()
                   )}

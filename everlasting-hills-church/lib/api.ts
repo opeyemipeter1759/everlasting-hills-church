@@ -4,7 +4,7 @@ import { queryKeys } from "@/lib/api/queryKeys";
 import { notifyFrontendSessionChanged } from "@/lib/auth/frontend-session";
 import { logoutFrontendSession } from "@/lib/auth/logout";
 import { setServiceWorkerUser } from "@/lib/pwa/service-worker";
-import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry } from "@/types";
+import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry, UnitPosition, UnitTask, UnitTaskStatus, UnitExpense, UnitTaskComment } from "@/types";
 import type {
   SermonDetailRaw,
   MemberSermonContext,
@@ -701,6 +701,70 @@ export function useUnitDetail(unitId: string | null) {
   });
 }
 
+/** Every unit the current user leads or assists — unlike useMyUnit, not just the first one. */
+export function useMyUnits() {
+  return useQuery({
+    queryKey: ["units", "mine"],
+    queryFn: () => api.get<MyUnit[]>("/units/mine"),
+    enabled: typeof window !== "undefined",
+  });
+}
+
+/** Self-scoped unit detail — works for a plain UNIT_LEAD, not just ADMIN+. */
+export function useMyUnitDetail(unitId: string | null) {
+  return useQuery({
+    queryKey: ["units", "mine", unitId],
+    queryFn: () => api.get<UnitDetail>(`/units/mine/${unitId}`),
+    enabled: !!unitId,
+  });
+}
+
+/** Units the current user is a plain member of (excludes units they lead/assist). */
+export function useMyMemberships() {
+  return useQuery({
+    queryKey: ["units", "my-memberships"],
+    queryFn: () => api.get<MyUnit[]>("/units/my-memberships"),
+    enabled: typeof window !== "undefined",
+  });
+}
+
+/** Full unit detail for a plain member (read-only view — roster, tasks). */
+export function useMyMembershipDetail(unitId: string | null) {
+  return useQuery({
+    queryKey: ["units", "my-memberships", unitId],
+    queryFn: () => api.get<UnitDetail>(`/units/my-memberships/${unitId}`),
+    enabled: !!unitId,
+  });
+}
+
+/** Send a message to another member of the unit — delivered as a notification. */
+export function useSendUnitMessage() {
+  return useMutation({
+    mutationFn: ({ unitId, recipientId, message }: { unitId: string; recipientId: string; message: string }) =>
+      api.post<{ sent: boolean }>(`/units/${unitId}/messages`, { recipientId, message }),
+  });
+}
+
+// ── Unit task comments ──────────────────────────────────────────────────────
+
+export function useUnitTaskComments(unitId: string | null, taskId: string | null) {
+  return useQuery({
+    queryKey: ["units", unitId, "tasks", taskId, "comments"],
+    queryFn: () => api.get<UnitTaskComment[]>(`/units/${unitId}/tasks/${taskId}/comments`),
+    enabled: !!unitId && !!taskId,
+  });
+}
+
+export function useAddUnitTaskComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, taskId, content }: { unitId: string; taskId: string; content: string }) =>
+      api.post<UnitTaskComment>(`/units/${unitId}/tasks/${taskId}/comments`, { content }),
+    onSuccess: (_data, { unitId, taskId }) =>
+      qc.invalidateQueries({ queryKey: ["units", unitId, "tasks", taskId, "comments"] }),
+  });
+}
+
 export function useCreateUnit() {
   const qc = useQueryClient();
   return useMutation({
@@ -747,9 +811,138 @@ export function useSetUnitMemberRole() {
   return useMutation({
     mutationFn: ({ unitId, memberId, isLead }: { unitId: string; memberId: string; isLead: boolean }) =>
       api.patch(`/units/${unitId}/members/${memberId}`, { isLead }),
-    onSuccess: (_data, { unitId }) => {
-      qc.invalidateQueries({ queryKey: ["units", unitId] });
-    },
+    onSuccess: (_data, { unitId }) => invalidateUnit(qc, unitId),
+  });
+}
+
+function invalidateUnit(qc: ReturnType<typeof useQueryClient>, unitId: string) {
+  qc.invalidateQueries({ queryKey: ["units", unitId] });
+  qc.invalidateQueries({ queryKey: ["units", "mine", unitId] });
+}
+
+// ── Unit positions ("roles") ──────────────────────────────────────────────
+
+export function useUnitPositions(unitId: string | null) {
+  return useQuery({
+    queryKey: ["units", unitId, "positions"],
+    queryFn: () => api.get<UnitPosition[]>(`/units/${unitId}/positions`),
+    enabled: !!unitId,
+  });
+}
+
+export function useCreateUnitPosition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, name }: { unitId: string; name: string }) =>
+      api.post<UnitPosition>(`/units/${unitId}/positions`, { name }),
+    onSuccess: (_data, { unitId }) => qc.invalidateQueries({ queryKey: ["units", unitId, "positions"] }),
+  });
+}
+
+export function useDeleteUnitPosition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, positionId }: { unitId: string; positionId: string }) =>
+      api.delete(`/units/${unitId}/positions/${positionId}`),
+    onSuccess: (_data, { unitId }) => qc.invalidateQueries({ queryKey: ["units", unitId, "positions"] }),
+  });
+}
+
+export function useSetMemberPosition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, memberId, positionId }: { unitId: string; memberId: string; positionId: string | null }) =>
+      api.patch(`/units/${unitId}/members/${memberId}/position`, { positionId }),
+    onSuccess: (_data, { unitId }) => invalidateUnit(qc, unitId),
+  });
+}
+
+// ── Unit tasks ─────────────────────────────────────────────────────────────
+
+export function useUnitTasks(unitId: string | null) {
+  return useQuery({
+    queryKey: ["units", unitId, "tasks"],
+    queryFn: () => api.get<UnitTask[]>(`/units/${unitId}/tasks`),
+    enabled: !!unitId,
+  });
+}
+
+export function useCreateUnitTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      unitId,
+      ...body
+    }: { unitId: string; title: string; description?: string; assignedToId?: string; dueDate?: string }) =>
+      api.post<UnitTask>(`/units/${unitId}/tasks`, body),
+    onSuccess: (_data, { unitId }) => qc.invalidateQueries({ queryKey: ["units", unitId, "tasks"] }),
+  });
+}
+
+export function useUpdateUnitTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      unitId,
+      taskId,
+      ...body
+    }: {
+      unitId: string;
+      taskId: string;
+      title?: string;
+      description?: string;
+      assignedToId?: string | null;
+      status?: UnitTaskStatus;
+      dueDate?: string | null;
+    }) => api.patch<UnitTask>(`/units/${unitId}/tasks/${taskId}`, body),
+    onSuccess: (_data, { unitId }) => qc.invalidateQueries({ queryKey: ["units", unitId, "tasks"] }),
+  });
+}
+
+export function useDeleteUnitTask() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, taskId }: { unitId: string; taskId: string }) =>
+      api.delete(`/units/${unitId}/tasks/${taskId}`),
+    onSuccess: (_data, { unitId }) => qc.invalidateQueries({ queryKey: ["units", unitId, "tasks"] }),
+  });
+}
+
+// ── Unit expenses ────────────────────────────────────────────────────────
+
+export function useUnitExpenses(unitId: string | null) {
+  return useQuery({
+    queryKey: ["units", unitId, "expenses"],
+    queryFn: () => api.get<{ expenses: UnitExpense[]; total: number }>(`/units/${unitId}/expenses`),
+    enabled: !!unitId,
+  });
+}
+
+export function useCreateUnitExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      unitId,
+      ...body
+    }: {
+      unitId: string;
+      title: string;
+      amount: number;
+      category?: string;
+      date: string;
+      description?: string;
+      receiptUrl?: string;
+    }) => api.post<UnitExpense>(`/units/${unitId}/expenses`, body),
+    onSuccess: (_data, { unitId }) => qc.invalidateQueries({ queryKey: ["units", unitId, "expenses"] }),
+  });
+}
+
+export function useDeleteUnitExpense() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ unitId, expenseId }: { unitId: string; expenseId: string }) =>
+      api.delete(`/units/${unitId}/expenses/${expenseId}`),
+    onSuccess: (_data, { unitId }) => qc.invalidateQueries({ queryKey: ["units", unitId, "expenses"] }),
   });
 }
 

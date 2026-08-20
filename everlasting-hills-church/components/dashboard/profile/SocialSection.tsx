@@ -1,7 +1,7 @@
 import { Linkedin } from 'lucide-react';
 import { SectionHeader } from '@/components/ui/layout/SectionHeader';
 import { SocialFieldBox } from '@/components/ui/form/SocialFieldBox';
-import { XIcon } from '@/components/icons';
+import { XIcon } from '@/components/header/icons';
 import type { SectionProps } from './types';
 
 const InstaIcon = () => (

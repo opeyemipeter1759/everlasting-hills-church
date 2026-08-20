@@ -1,5 +1,5 @@
 "use client";
-import { LoadingIcon2 } from "@/components/icons";
+import { LoadingIcon2 } from "@/components/header/icons";
 import {
   useState,
   useRef,

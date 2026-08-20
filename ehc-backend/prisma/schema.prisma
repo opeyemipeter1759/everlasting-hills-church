@@ -155,56 +155,60 @@ model ListenProgress {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Member {
-  id                 String               @id
-  tenantId           String
-  profileId          String               @unique
-  firstName          String
-  lastName           String
-  email              String?
-  phone              String?
-  gender             String?
-  dateOfBirth        DateTime?
-  weddingAnniversary DateTime?
-  instagram          String?
-  facebook           String?
-  twitter            String?
-  linkedin           String?
-  tiktok             String?
-  address            String?
-  joinedAt           DateTime             @default(now())
-  bio                String?
-  photoUrl           String?
-  status             MemberStatus         @default(ACTIVE)
-  notifyNewSermons   Boolean              @default(true)
-  tags               String[]
-  householdId        String?
-  deactivationRequestedAt DateTime?
-  AttendanceRecord   AttendanceRecord[]
-  DiscussionResponse DiscussionResponse[]
-  EngagementScore    EngagementScore?
-  FollowUpTask       FollowUpTask[]
-  ListenProgress     ListenProgress[]
-  Household          Household?           @relation(fields: [householdId], references: [id])
-  Profile            Profile              @relation(fields: [profileId], references: [id])
-  Tenant             Tenant               @relation(fields: [tenantId], references: [id])
-  PastorNote         PastorNote[]
-  PastoralAlert      PastoralAlert[]
-  SermonBookmark     SermonBookmark[]
-  SermonComment      SermonComment[]
-  SermonDirectMessageSent     SermonDirectMessage[] @relation("SermonDirectMessageSender")
-  SermonDirectMessageReceived SermonDirectMessage[] @relation("SermonDirectMessageRecipient")
-  SermonNote         SermonNote[]
-  SermonReaction     SermonReaction[]
-  UnitMember         UnitMember[]
-  CareAsMember       CareAssignment[]     @relation("CareMember")
-  CareAsLeader       CareAssignment[]     @relation("CareLeader")
-  FollowUpAsSubject  FollowUpEntry[]      @relation("FollowUpSubjectMember")
-  FollowUpAsAssignee FollowUpEntry[]      @relation("FollowUpAssignee")
-  FollowUpLogs       FollowUpContactLog[] @relation("FollowUpLoggedBy")
-  CourseEnrollment   CourseEnrollment[]
-  PrayerRequest      PrayerRequest[]
-  Question           Question[]
-  ServiceAssignment  ServiceAssignment[]
+  id                          String                     @id
+  tenantId                    String
+  profileId                   String                     @unique
+  firstName                   String
+  lastName                    String
+  email                       String?
+  phone                       String?
+  gender                      String?
+  dateOfBirth                 DateTime?
+  weddingAnniversary          DateTime?
+  instagram                   String?
+  facebook                    String?
+  twitter                     String?
+  linkedin                    String?
+  tiktok                      String?
+  address                     String?
+  joinedAt                    DateTime                   @default(now())
+  bio                         String?
+  photoUrl                    String?
+  status                      MemberStatus               @default(ACTIVE)
+  notifyNewSermons            Boolean                    @default(true)
+  tags                        String[]
+  householdId                 String?
+  deactivationRequestedAt     DateTime?
+  AttendanceRecord            AttendanceRecord[]
+  DiscussionResponse          DiscussionResponse[]
+  EngagementScore             EngagementScore?
+  FollowUpTask                FollowUpTask[]
+  ListenProgress              ListenProgress[]
+  Household                   Household?                 @relation(fields: [householdId], references: [id])
+  Profile                     Profile                    @relation(fields: [profileId], references: [id])
+  Tenant                      Tenant                     @relation(fields: [tenantId], references: [id])
+  PastorNote                  PastorNote[]
+  PastoralAlert               PastoralAlert[]
+  SermonBookmark              SermonBookmark[]
+  SermonComment               SermonComment[]
+  SermonDirectMessageSent     SermonDirectMessage[]      @relation("SermonDirectMessageSender")
+  SermonDirectMessageReceived SermonDirectMessage[]      @relation("SermonDirectMessageRecipient")
+  BirthdayGreetingReceived    BirthdayGreeting[]         @relation("BirthdayGreetingRecipient")
+  BirthdayGreetingAuthored    BirthdayGreeting[]         @relation("BirthdayGreetingAuthor")
+  SermonNote                  SermonNote[]
+  SermonReaction              SermonReaction[]
+  UnitMember                  UnitMember[]
+  CareAsMember                CareAssignment[]           @relation("CareMember")
+  CareAsLeader                CareAssignment[]           @relation("CareLeader")
+  FollowUpAsSubject           FollowUpEntry[]            @relation("FollowUpSubjectMember")
+  FollowUpAsAssignee          FollowUpEntry[]            @relation("FollowUpAssignee")
+  FollowUpLogs                FollowUpContactLog[]       @relation("FollowUpLoggedBy")
+  CourseEnrollment            CourseEnrollment[]
+  CourseCategoryEnrollment    CourseCategoryEnrollment[]
+  PrayerRequest               PrayerRequest[]
+  Question                    Question[]
+  UnitTaskAssigned            UnitTask[]
+  ServiceAssignment           ServiceAssignment[]
 
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
@@ -276,7 +280,7 @@ enum FollowUpContactOutcome {
 /// (Member) tracked from first contact to confirmed follow-up. See
 /// prisma/manual/2026-07-follow-up.sql for the hand-applied migration.
 model FollowUpEntry {
-  id            String                @id
+  id            String               @id
   tenantId      String
   unitId        String
   sourceType    FollowUpSourceType
@@ -284,20 +288,20 @@ model FollowUpEntry {
   visitorId     String? // subject, when sourceType = FIRST_TIMER
   addedById     String // Profile.id of the usher/leader who added them
   assigneeId    String? // Member.id of the team member currently assigned
-  stage         FollowUpStage         @default(UNASSIGNED)
-  goalContacts  Int                   @default(3)
-  contactCount  Int                   @default(0)
+  stage         FollowUpStage        @default(UNASSIGNED)
+  goalContacts  Int                  @default(3)
+  contactCount  Int                  @default(0)
   lastContactAt DateTime?
   outcome       FollowUpOutcome?
   reviewNote    String?
-  createdAt     DateTime              @default(now())
-  updatedAt     DateTime              @default(now()) @updatedAt
-  Tenant        Tenant                @relation(fields: [tenantId], references: [id])
-  Unit          Unit                  @relation(fields: [unitId], references: [id])
-  Member        Member?               @relation("FollowUpSubjectMember", fields: [memberId], references: [id])
-  Visitor       Visitor?              @relation(fields: [visitorId], references: [id])
-  Assignee      Member?               @relation("FollowUpAssignee", fields: [assigneeId], references: [id])
-  AddedBy       Profile               @relation("FollowUpAddedBy", fields: [addedById], references: [id])
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @default(now()) @updatedAt
+  Tenant        Tenant               @relation(fields: [tenantId], references: [id])
+  Unit          Unit                 @relation(fields: [unitId], references: [id])
+  Member        Member?              @relation("FollowUpSubjectMember", fields: [memberId], references: [id])
+  Visitor       Visitor?             @relation(fields: [visitorId], references: [id])
+  Assignee      Member?              @relation("FollowUpAssignee", fields: [assigneeId], references: [id])
+  AddedBy       Profile              @relation("FollowUpAddedBy", fields: [addedById], references: [id])
   Logs          FollowUpContactLog[]
 
   @@index([tenantId, unitId])
@@ -432,32 +436,35 @@ enum QuestionStatus {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Profile {
-  id             String           @id
-  userId         String           @unique
+  id                     String                  @id
+  userId                 String                  @unique
   /// DEPRECATED: no longer the source of truth for authorization. Effective roles
   /// are derived from RoleGrant + assignments (UnitLeadAssignment, DepartmentHead,
   /// HeadUsherAssignment). Kept as a frozen pre-migration snapshot; do not read it.
-  legacyRole     Role             @default(MEMBER)
-  tenantId       String
-  createdAt      DateTime         @default(now())
-  Member         Member?
-  Notification   Notification[]
-  RoleAssignment RoleAssignment[]
-  CommunityPost  CommunityPost[]
-  DepartmentHeadOf       DepartmentHead[] @relation("DepartmentHeadUser")
-  DepartmentHeadAssigned DepartmentHead[] @relation("DepartmentHeadAssignedBy")
-  DepartmentHodOf        DepartmentHod[]  @relation("DepartmentHodUser")
-  DepartmentHodAssigned  DepartmentHod[]  @relation("DepartmentHodAssignedBy")
-  RoleGrantOf            RoleGrant[]           @relation("RoleGrantUser")
-  RoleGrantGranted       RoleGrant[]           @relation("RoleGrantGrantedBy")
-  UnitLeadOf             UnitLeadAssignment[]  @relation("UnitLeadUser")
-  UnitLeadAssigned       UnitLeadAssignment[]  @relation("UnitLeadAssignedBy")
-  HeadUsherOf            HeadUsherAssignment[] @relation("HeadUsherUser")
-  HeadUsherAssigned      HeadUsherAssignment[] @relation("HeadUsherAssignedBy")
-  FollowUpAdded          FollowUpEntry[]       @relation("FollowUpAddedBy")
-  ReportSubmitted        Report[]              @relation("ReportSubmittedBy")
-  ReportReviewed         Report[]              @relation("ReportReviewedBy")
+  legacyRole             Role                    @default(MEMBER)
+  tenantId               String
+  createdAt              DateTime                @default(now())
+  Member                 Member?
+  Notification           Notification[]
+  RoleAssignment         RoleAssignment[]
+  CommunityPost          CommunityPost[]
+  DepartmentHeadOf       DepartmentHead[]        @relation("DepartmentHeadUser")
+  DepartmentHeadAssigned DepartmentHead[]        @relation("DepartmentHeadAssignedBy")
+  DepartmentHodOf        DepartmentHod[]         @relation("DepartmentHodUser")
+  DepartmentHodAssigned  DepartmentHod[]         @relation("DepartmentHodAssignedBy")
+  RoleGrantOf            RoleGrant[]             @relation("RoleGrantUser")
+  RoleGrantGranted       RoleGrant[]             @relation("RoleGrantGrantedBy")
+  UnitLeadOf             UnitLeadAssignment[]    @relation("UnitLeadUser")
+  UnitLeadAssigned       UnitLeadAssignment[]    @relation("UnitLeadAssignedBy")
+  HeadUsherOf            HeadUsherAssignment[]   @relation("HeadUsherUser")
+  HeadUsherAssigned      HeadUsherAssignment[]   @relation("HeadUsherAssignedBy")
+  FollowUpAdded          FollowUpEntry[]         @relation("FollowUpAddedBy")
+  ReportSubmitted        Report[]                @relation("ReportSubmittedBy")
+  ReportReviewed         Report[]                @relation("ReportReviewedBy")
   ReportComment          ReportComment[]
+  UnitTaskCreated        UnitTask[]
+  UnitExpenseCreated     UnitExpense[]
+  UnitTaskCommentAuthor  UnitTaskComment[]
   CalendarFeedToken      CalendarFeedToken[]     @relation("CalendarFeedTokenUser")
   PushSubscription       PushSubscription[]      @relation("PushSubscriptionUser")
   NotificationPreference NotificationPreference? @relation("NotificationPreferenceUser")
@@ -535,40 +542,40 @@ model RoleAssignment {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Sermon {
-  id                 String               @id
-  tenantId           String
-  title              String
-  speaker            String
-  date               DateTime
-  audioUrl           String?
-  videoUrl           String?
-  thumbnailUrl       String?
-  description        String?
-  publishedAt        DateTime?
-  createdAt          DateTime             @default(now())
-  audioDuration      Int?
-  audioKey           String?
-  isFeatured         Boolean              @default(false)
-  playCount          Int                  @default(0)
-  scheduledFor       DateTime?
-  scriptureRef       String?
-  series             String?
-  seriesSlug         String?
-  slug               String               @unique
-  status             SermonStatus         @default(DRAFT)
-  tags               String[]
-  transcript         String?
-  updatedAt          DateTime
-  type               SermonType           @default(SINGLE)
-  DiscussionQuestion DiscussionQuestion[]
-  ListenProgress     ListenProgress[]
-  Tenant             Tenant               @relation(fields: [tenantId], references: [id])
-  SermonBookmark     SermonBookmark[]
-  SermonComment      SermonComment[]
+  id                  String                @id
+  tenantId            String
+  title               String
+  speaker             String
+  date                DateTime
+  audioUrl            String?
+  videoUrl            String?
+  thumbnailUrl        String?
+  description         String?
+  publishedAt         DateTime?
+  createdAt           DateTime              @default(now())
+  audioDuration       Int?
+  audioKey            String?
+  isFeatured          Boolean               @default(false)
+  playCount           Int                   @default(0)
+  scheduledFor        DateTime?
+  scriptureRef        String?
+  series              String?
+  seriesSlug          String?
+  slug                String                @unique
+  status              SermonStatus          @default(DRAFT)
+  tags                String[]
+  transcript          String?
+  updatedAt           DateTime
+  type                SermonType            @default(SINGLE)
+  DiscussionQuestion  DiscussionQuestion[]
+  ListenProgress      ListenProgress[]
+  Tenant              Tenant                @relation(fields: [tenantId], references: [id])
+  SermonBookmark      SermonBookmark[]
+  SermonComment       SermonComment[]
   SermonDirectMessage SermonDirectMessage[]
-  Episodes           SermonEpisode[]
-  SermonNote         SermonNote[]
-  SermonReaction     SermonReaction[]
+  Episodes            SermonEpisode[]
+  SermonNote          SermonNote[]
+  SermonReaction      SermonReaction[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -649,6 +656,24 @@ model SermonComment {
   @@index([sermonId])
 }
 
+/// A birthday wish left by one member for another. Read by both the public landing-page
+/// teaser (via a PII-light projection) and the member dashboard birthday card; only the
+/// dashboard (authenticated) can write.
+model BirthdayGreeting {
+  id             String   @id
+  tenantId       String
+  memberId       String
+  authorMemberId String
+  message        String
+  createdAt      DateTime @default(now())
+  Recipient      Member   @relation("BirthdayGreetingRecipient", fields: [memberId], references: [id])
+  Author         Member   @relation("BirthdayGreetingAuthor", fields: [authorMemberId], references: [id])
+  Tenant         Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([memberId])
+  @@index([tenantId])
+}
+
 /// A private note or question about a sermon sent directly to one other member (not visible
 /// to anyone else, unlike SermonComment). Threaded via parentId so the recipient can reply.
 model SermonDirectMessage {
@@ -676,27 +701,27 @@ model SermonDirectMessage {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Service {
-  id               String             @id
+  id               String              @id
   tenantId         String
   name             String
   scheduledAt      DateTime
-  createdAt        DateTime           @default(now())
-  serviceType      ServiceType        @default(SUNDAY)
+  createdAt        DateTime            @default(now())
+  serviceType      ServiceType         @default(SUNDAY)
   openAt           DateTime?
   closeAt          DateTime?
-  isOpen           Boolean            @default(false)
+  isOpen           Boolean             @default(false)
   /// Calendar export fields. scheduledAt + durationMinutes give .ics a real DTEND
   /// (there was no end time before). cancelledAt drives STATUS:CANCELLED in the
   /// subscription feed so a cancellation reaches subscribers instead of the event
   /// silently disappearing from their calendar.
-  durationMinutes  Int                @default(120)
+  durationMinutes  Int                 @default(120)
   cancelledAt      DateTime?
   cancelReason     String?
   location         String?
   AttendanceRecord AttendanceRecord[]
   ServiceHeadcount ServiceHeadcount?
   Assignments      ServiceAssignment[]
-  Tenant           Tenant             @relation(fields: [tenantId], references: [id])
+  Tenant           Tenant              @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, scheduledAt])
   @@index([tenantId, serviceType, scheduledAt])
@@ -760,68 +785,76 @@ model ServiceHeadcount {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Tenant {
-  id                 String               @id
-  name               String
-  slug               String               @unique
-  createdAt          DateTime             @default(now())
-  Announcement       Announcement[]
-  Course             Course[]
-  CommunityPost      CommunityPost[]
-  AttendanceRecord   AttendanceRecord[]
-  AuditLog           AuditLog[]
-  CareAssignment     CareAssignment[]
-  FollowUpEntry      FollowUpEntry[]
-  FollowUpContactLog FollowUpContactLog[]
-  CmsPage            Page[]
-  ContentVersion     ContentVersion[]
-  MediaAsset         MediaAsset[]
-  SiteConfig         SiteConfig?
-  ContactMessage     ContactMessage[]
-  DiscussionQuestion DiscussionQuestion[]
-  DiscussionResponse DiscussionResponse[]
-  EmailSubscriber    EmailSubscriber[]
-  EngagementScore    EngagementScore[]
-  Event              Event[]
-  EventRsvp          EventRsvp[]
-  FollowUpTask       FollowUpTask[]
-  FormSubmission     FormSubmission[]
-  GivingRecord       GivingRecord[]
-  Household          Household[]
-  InventoryItem      InventoryItem[]
-  InventoryHistory   InventoryHistory[]
-  KnownDevice        KnownDevice[]
-  ListenProgress     ListenProgress[]
-  Member             Member[]
-  Notification       Notification[]
-  PastorNote         PastorNote[]
-  PastoralAlert      PastoralAlert[]
-  PaystackWebhookLog PaystackWebhookLog[]
-  PrayerRequest      PrayerRequest[]
-  RoleAssignment     RoleAssignment[]
-  Sermon             Sermon[]
-  SermonBookmark     SermonBookmark[]
-  SermonComment      SermonComment[]
-  SermonDirectMessage SermonDirectMessage[]
-  SermonEpisode      SermonEpisode[]
-  SermonNote         SermonNote[]
-  SermonReaction     SermonReaction[]
-  Service            Service[]
-  ServiceHeadcount   ServiceHeadcount[]
-  Department         Department[]
-  DepartmentHead     DepartmentHead[]
-  DepartmentHod      DepartmentHod[]
-  RoleGrant          RoleGrant[]
-  UnitLeadAssignment UnitLeadAssignment[]
-  HeadUsherAssignment HeadUsherAssignment[]
-  SiteSettings       SiteSettings[]
-  Testimonial        Testimonial[]
-  Unit               Unit[]
-  Visitor            Visitor[]
-  Report             Report[]
-  ReportComment      ReportComment[]
-  HomeCell           HomeCell[]
-  CourseCategory     CourseCategory[]
-  Question           Question[]
+  id                     String                   @id
+  name                   String
+  slug                   String                   @unique
+  createdAt              DateTime                 @default(now())
+  Announcement           Announcement[]
+  EmailTemplate          EmailTemplate[]
+  EmailSend              EmailSend[]
+  Course                 Course[]
+  CommunityPost          CommunityPost[]
+  AttendanceRecord       AttendanceRecord[]
+  AuditLog               AuditLog[]
+  CareAssignment         CareAssignment[]
+  FollowUpEntry          FollowUpEntry[]
+  FollowUpContactLog     FollowUpContactLog[]
+  CmsPage                Page[]
+  ContentVersion         ContentVersion[]
+  MediaAsset             MediaAsset[]
+  SiteConfig             SiteConfig?
+  ContactMessage         ContactMessage[]
+  DiscussionQuestion     DiscussionQuestion[]
+  DiscussionResponse     DiscussionResponse[]
+  EmailSubscriber        EmailSubscriber[]
+  EngagementScore        EngagementScore[]
+  Event                  Event[]
+  EventRsvp              EventRsvp[]
+  FollowUpTask           FollowUpTask[]
+  FormSubmission         FormSubmission[]
+  GivingRecord           GivingRecord[]
+  Household              Household[]
+  InventoryItem          InventoryItem[]
+  InventoryHistory       InventoryHistory[]
+  KnownDevice            KnownDevice[]
+  ListenProgress         ListenProgress[]
+  Member                 Member[]
+  Notification           Notification[]
+  OnlineCheckIn          OnlineCheckIn[]
+  PastorNote             PastorNote[]
+  PastoralAlert          PastoralAlert[]
+  PaystackWebhookLog     PaystackWebhookLog[]
+  PrayerRequest          PrayerRequest[]
+  RoleAssignment         RoleAssignment[]
+  Sermon                 Sermon[]
+  SermonBookmark         SermonBookmark[]
+  SermonComment          SermonComment[]
+  SermonDirectMessage    SermonDirectMessage[]
+  BirthdayGreeting       BirthdayGreeting[]
+  SermonEpisode          SermonEpisode[]
+  SermonNote             SermonNote[]
+  SermonReaction         SermonReaction[]
+  Service                Service[]
+  ServiceHeadcount       ServiceHeadcount[]
+  Department             Department[]
+  DepartmentHead         DepartmentHead[]
+  DepartmentHod          DepartmentHod[]
+  RoleGrant              RoleGrant[]
+  UnitLeadAssignment     UnitLeadAssignment[]
+  HeadUsherAssignment    HeadUsherAssignment[]
+  SiteSettings           SiteSettings[]
+  Testimonial            Testimonial[]
+  Unit                   Unit[]
+  Visitor                Visitor[]
+  Report                 Report[]
+  ReportComment          ReportComment[]
+  HomeCell               HomeCell[]
+  CourseCategory         CourseCategory[]
+  Question               Question[]
+  UnitPosition           UnitPosition[]
+  UnitTask               UnitTask[]
+  UnitExpense            UnitExpense[]
+  UnitTaskComment        UnitTaskComment[]
   CalendarFeedToken      CalendarFeedToken[]
   PushSubscription       PushSubscription[]
   NotificationPreference NotificationPreference[]
@@ -833,24 +866,24 @@ model Tenant {
 /// facilities, instruments, kitchen and office items. History is the single
 /// chronological log of everything that's happened to an item (purchase + repairs).
 model InventoryItem {
-  id            String              @id
+  id            String             @id
   tenantId      String
   name          String
   category      String
   serialNumber  String?
   location      String?
-  status        InventoryStatus     @default(IN_USE)
-  condition     InventoryCondition  @default(NEW)
-  quantity      Int                 @default(1)
+  status        InventoryStatus    @default(IN_USE)
+  condition     InventoryCondition @default(NEW)
+  quantity      Int                @default(1)
   purchaseDate  DateTime?
   purchaseValue Float?
   assignedTo    String?
   photoUrl      String?
   notes         String?
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
   History       InventoryHistory[]
-  Tenant        Tenant              @relation(fields: [tenantId], references: [id])
+  Tenant        Tenant             @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, category])
   @@index([tenantId, status])
@@ -859,7 +892,7 @@ model InventoryItem {
 /// One row per lifecycle event for an item — the first is always type NEW
 /// (created alongside the item), every repair logged afterward adds a REPAIR row.
 model InventoryHistory {
-  id           String                @id
+  id           String               @id
   tenantId     String
   itemId       String
   type         InventoryHistoryType
@@ -868,10 +901,10 @@ model InventoryHistory {
   cost         Float?
   performedBy  String?
   repairStatus RepairStatus?
-  occurredAt   DateTime              @default(now())
-  createdAt    DateTime              @default(now())
-  Item         InventoryItem         @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  Tenant       Tenant                @relation(fields: [tenantId], references: [id])
+  occurredAt   DateTime             @default(now())
+  createdAt    DateTime             @default(now())
+  Item         InventoryItem        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  Tenant       Tenant               @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, itemId, occurredAt])
 }
@@ -1040,18 +1073,21 @@ model AuditLog {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Unit {
-  id           String       @id
-  tenantId     String
-  name         String
-  description  String?
-  departmentId String? // nullable: units can exist unassigned and the UI surfaces them
-  createdAt    DateTime     @default(now())
-  Tenant       Tenant       @relation(fields: [tenantId], references: [id])
-  Department   Department?  @relation(fields: [departmentId], references: [id])
-  UnitMember   UnitMember[]
-  LeadAssignments UnitLeadAssignment[]
-  FollowUpEntry   FollowUpEntry[]
-  Report          Report[]
+  id                String               @id
+  tenantId          String
+  name              String
+  description       String?
+  departmentId      String? // nullable: units can exist unassigned and the UI surfaces them
+  createdAt         DateTime             @default(now())
+  Tenant            Tenant               @relation(fields: [tenantId], references: [id])
+  Department        Department?          @relation(fields: [departmentId], references: [id])
+  UnitMember        UnitMember[]
+  LeadAssignments   UnitLeadAssignment[]
+  FollowUpEntry     FollowUpEntry[]
+  Report            Report[]
+  UnitPosition      UnitPosition[]
+  UnitTask          UnitTask[]
+  UnitExpense       UnitExpense[]
   ServiceAssignment ServiceAssignment[]
 
   @@index([departmentId])
@@ -1185,47 +1221,155 @@ model DepartmentHod {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model UnitMember {
-  id          String   @id
+  id          String        @id
   tenantId    String
   unitId      String
   memberId    String
-  isLead      Boolean  @default(false)
-  isAssistant Boolean  @default(false)
-  joinedAt    DateTime @default(now())
-  Member   Member   @relation(fields: [memberId], references: [id])
-  Unit     Unit     @relation(fields: [unitId], references: [id])
+  isLead      Boolean       @default(false)
+  isAssistant Boolean       @default(false)
+  positionId  String?
+  joinedAt    DateTime      @default(now())
+  Member      Member        @relation(fields: [memberId], references: [id])
+  Unit        Unit          @relation(fields: [unitId], references: [id])
+  Position    UnitPosition? @relation(fields: [positionId], references: [id], onDelete: SetNull)
 
   @@unique([unitId, memberId])
+  @@index([positionId])
+}
+
+/// A custom named title a unit lead can assign members to (e.g. "Secretary",
+/// "Treasurer"), independent of the Lead/Assistant flags above.
+model UnitPosition {
+  id        String       @id
+  tenantId  String
+  unitId    String
+  name      String
+  createdAt DateTime     @default(now())
+  Tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  Unit      Unit         @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  Members   UnitMember[]
+
+  @@unique([unitId, name])
+  @@index([unitId])
+}
+
+enum UnitTaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+/// A task a unit lead assigns to a member of their unit (or leaves unassigned,
+/// meaning it applies to the whole unit).
+model UnitTask {
+  id           String            @id
+  tenantId     String
+  unitId       String
+  title        String
+  description  String?
+  assignedToId String? // Member.id — null = whole-unit task
+  status       UnitTaskStatus    @default(TODO)
+  dueDate      DateTime?
+  createdById  String // Profile.id
+  createdAt    DateTime          @default(now())
+  completedAt  DateTime?
+  Tenant       Tenant            @relation(fields: [tenantId], references: [id])
+  Unit         Unit              @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  AssignedTo   Member?           @relation(fields: [assignedToId], references: [id])
+  CreatedBy    Profile           @relation(fields: [createdById], references: [id])
+  Comments     UnitTaskComment[]
+
+  @@index([unitId])
+  @@index([assignedToId])
+}
+
+/// A comment on a UnitTask — any member of the unit can discuss a task here
+/// (e.g. the assignee asking a question, the lead following up).
+model UnitTaskComment {
+  id        String   @id
+  tenantId  String
+  taskId    String
+  authorId  String // Profile.id
+  content   String
+  createdAt DateTime @default(now())
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Task      UnitTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  Author    Profile  @relation(fields: [authorId], references: [id])
+
+  @@index([taskId])
+}
+
+/// A simple expense record a unit lead logs for their unit — no approval
+/// workflow, just a running, admin-visible log.
+model UnitExpense {
+  id          String   @id
+  tenantId    String
+  unitId      String
+  title       String
+  amount      Float
+  category    String?
+  date        DateTime
+  description String?
+  receiptUrl  String? // uploaded via /uploads/document
+  createdById String // Profile.id
+  createdAt   DateTime @default(now())
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  Unit        Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  CreatedBy   Profile  @relation(fields: [createdById], references: [id])
+
+  @@index([unitId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Visitor {
-  id                 String   @id
-  tenantId           String
-  firstName          String
-  lastName           String
-  email              String?
-  phone              String?
-  dateOfBirth        String?
-  address            String?
-  occupation         String?
-  gender             String?
-  howDidYouLearn     String?
-  invitedBy          String?
-  locatedInIbadan    Boolean?
-  membershipInterest String?
-  bornAgain          String?
-  serviceExperience  String?
-  prayerPoint        String?
-  whatsappInterest   Boolean?
-  submittedAt        DateTime @default(now())
-  attendanceType     String?
+  id                  String          @id
+  tenantId            String
+  firstName           String
+  lastName            String
+  email               String?
+  phone               String?
+  dateOfBirth         String?
+  address             String?
+  occupation          String?
+  gender              String?
+  howDidYouLearn      String?
+  invitedBy           String?
+  locatedInIbadan     Boolean?
+  membershipInterest  String?
+  bornAgain           String?
+  serviceExperience   String?
+  prayerPoint         String?
+  whatsappInterest    Boolean?
+  submittedAt         DateTime        @default(now())
+  attendanceType      String?
   convertedAt         DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
   convertedToMemberId String? // no FK; mirrors AuditLog.actorId — just an audit pointer
-  Tenant             Tenant   @relation(fields: [tenantId], references: [id])
-  FollowUpEntry      FollowUpEntry[]
+  Tenant              Tenant          @relation(fields: [tenantId], references: [id])
+  FollowUpEntry       FollowUpEntry[]
 
   @@index([tenantId, convertedAt])
+}
+
+/// Online-engagement check-ins (e.g. watching the livestream on YouTube) — tracks
+/// an email through FIRST_TIMER -> SECOND_TIMER -> ONLINE_MEMBER stages, distinct
+/// from the in-person Visitor first-timer form.
+model OnlineCheckIn {
+  id             String   @id
+  tenantId       String
+  email          String
+  name           String?
+  channel        String
+  stage          String   @default("FIRST_TIMER")
+  visitCount     Int      @default(1)
+  lastCheckedIn  DateTime @default(now())
+  supabaseUserId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  Tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, email, channel])
+  @@index([tenantId, channel, stage])
 }
 
 /// Featured "My Everlasting Hills Experience" stories shown on the public homepage slider.
@@ -1250,22 +1394,58 @@ model Testimonial {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Announcement {
-  id          String       @id
+  id          String      @id
   tenantId    String
   title       String
   body        String
   imageUrl    String?
-  audience    String       @default("all")
-  sendEmail   Boolean      @default(false)
-  status      EventStatus  @default(PUBLISHED)
+  audience    String      @default("all")
+  sendEmail   Boolean     @default(false)
+  status      EventStatus @default(PUBLISHED)
   createdById String?
-  recipients  Int          @default(0)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  Tenant      Tenant       @relation(fields: [tenantId], references: [id])
+  recipients  Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  Tenant      Tenant      @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, createdAt])
   @@index([tenantId, status])
+}
+
+/// Reusable, saved email content an admin can send (possibly more than once) to a
+/// chosen audience. Distinct from Announcement, which is always a one-shot
+/// publish-to-everyone. Sending snapshots subject/body onto EmailSend, so editing
+/// a template later doesn't rewrite what was already sent.
+model EmailTemplate {
+  id          String   @id
+  tenantId    String
+  name        String
+  subject     String
+  body        String
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
+}
+
+/// Audit log of one "send" action — a snapshot of what was sent, to whom (as a
+/// resolved audience description), and how many people it reached.
+model EmailSend {
+  id            String   @id
+  tenantId      String
+  templateId    String?
+  subject       String
+  body          String
+  audienceMode  String // ALL | UNIT | ROLE | SPECIFIC
+  audienceLabel String // human-readable snapshot, e.g. "Unit: Media Team"
+  recipients    Int      @default(0)
+  sentById      String?
+  createdAt     DateTime @default(now())
+  Tenant        Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -1421,6 +1601,7 @@ enum SiteSection {
   COMMUNITY
   GIVING
   CONTACT
+  CAROUSEL
 }
 
 enum AlertType {
@@ -1527,7 +1708,7 @@ model CommunityPost {
 /// Discipleship course catalog, managed at /dashboard/admin/courses. A course can
 /// require another course be completed (100% exam score) before it unlocks.
 model Course {
-  id             String    @id
+  id             String   @id
   tenantId       String
   slug           String
   title          String
@@ -1542,8 +1723,8 @@ model Course {
   instructorRole String
   outcomes       String[]
   prerequisiteId String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @default(now()) @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
 
   Tenant        Tenant             @relation(fields: [tenantId], references: [id])
   CategoryRef   CourseCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -1560,18 +1741,20 @@ model Course {
 }
 
 model CourseCategory {
-  id        String   @id
-  tenantId  String
-  name      String
-  slug      String
-  parentId  String?
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
+  id          String   @id
+  tenantId    String
+  name        String
+  slug        String
+  description String?
+  parentId    String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
 
-  Tenant   Tenant           @relation(fields: [tenantId], references: [id])
-  Parent   CourseCategory?  @relation("CourseCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
-  Children CourseCategory[] @relation("CourseCategoryTree")
-  Courses  Course[]
+  Tenant      Tenant                     @relation(fields: [tenantId], references: [id])
+  Parent      CourseCategory?            @relation("CourseCategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  Children    CourseCategory[]           @relation("CourseCategoryTree")
+  Courses     Course[]
+  Enrollments CourseCategoryEnrollment[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -1579,11 +1762,11 @@ model CourseCategory {
 }
 
 model CourseModule {
-  id        String   @id
-  tenantId  String
-  courseId  String
-  title     String
-  sortOrder Int      @default(0)
+  id                String   @id
+  tenantId          String
+  courseId          String
+  title             String
+  sortOrder         Int      @default(0)
   /// Optional single checkpoint question gating entry into the next module.
   /// checkCorrectIndex is never sent to members before they submit, same as ExamQuestion.
   checkQuestion     String?
@@ -1627,19 +1810,19 @@ model ExamQuestion {
 }
 
 model CourseEnrollment {
-  id           String    @id
-  tenantId     String
-  courseId     String
-  memberId     String
-  enrolledAt   DateTime  @default(now())
-  completed    Boolean   @default(false)
-  completedAt  DateTime?
-  lastScorePct Int?
-  attempts     Int       @default(0)
+  id               String    @id
+  tenantId         String
+  courseId         String
+  memberId         String
+  enrolledAt       DateTime  @default(now())
+  completed        Boolean   @default(false)
+  completedAt      DateTime?
+  lastScorePct     Int?
+  attempts         Int       @default(0)
   /// CourseLesson ids the member has watched to completion (YouTube "ended" event).
-  watchedLessonIds String[] @default([])
+  watchedLessonIds String[]  @default([])
   /// CourseModule ids whose checkpoint question has been answered correctly.
-  passedModuleIds  String[] @default([])
+  passedModuleIds  String[]  @default([])
 
   Course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   Member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
@@ -1648,6 +1831,29 @@ model CourseEnrollment {
   @@index([tenantId])
   @@index([memberId])
 }
+
+/// A member's one-time enrollment into a course CATEGORY — the reason/commitment/
+/// agreement they submit gates access to every course directly in that category
+/// (see CourseEnrollmentService.enroll, which checks for this row before allowing
+/// the underlying per-course CourseEnrollment).
+model CourseCategoryEnrollment {
+  id                  String   @id
+  tenantId            String
+  categoryId          String
+  memberId            String
+  reason              String
+  commitmentConfirmed Boolean  @default(false)
+  agreedToRules       Boolean  @default(false)
+  enrolledAt          DateTime @default(now())
+
+  Category CourseCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Member   Member         @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, memberId])
+  @@index([tenantId])
+  @@index([memberId])
+}
+
 model HomeCell {
   id          String   @id
   tenantId    String

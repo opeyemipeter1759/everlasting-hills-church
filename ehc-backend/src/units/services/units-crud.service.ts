@@ -54,6 +54,7 @@ export class UnitsCrudService {
             Member: {
               select: { id: true, firstName: true, lastName: true, email: true, photoUrl: true, status: true },
             },
+            Position: { select: { id: true, name: true } },
           },
           orderBy: [{ isLead: 'desc' }, { isAssistant: 'desc' }, { joinedAt: 'asc' }],
         },
@@ -74,6 +75,7 @@ export class UnitsCrudService {
         memberId: um.memberId,
         isLead: um.isLead,
         isAssistant: um.isAssistant,
+        position: um.Position ? { id: um.Position.id, name: um.Position.name } : null,
         Member: {
           id: um.Member.id,
           firstName: um.Member.firstName,

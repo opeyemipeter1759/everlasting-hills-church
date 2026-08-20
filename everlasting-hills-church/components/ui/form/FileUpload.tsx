@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { X, Loader2, Music, ImageIcon, RefreshCw } from 'lucide-react';
 import { apiClient } from '@/lib/api/axios';
 
@@ -137,8 +138,8 @@ export default function FileUpload({
           <audio src={value} controls className="w-full h-8" />
         </div>
       ) : (
-        <div className="relative overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
-          <img src={value} alt="Thumbnail" className="w-full h-36 object-cover" />
+        <div className="relative h-36 overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
+          <Image src={value} alt="Thumbnail" fill sizes="200px" className="object-cover" />
           <div className="absolute top-2 right-2 flex gap-1.5">
             <button type="button" onClick={() => !disabled && !uploading && inputRef.current?.click()} disabled={disabled || uploading} className="inline-flex items-center gap-1 rounded-lg bg-black/55 px-2 py-1 text-[10px] font-semibold text-white hover:bg-black/75 backdrop-blur-sm transition-colors disabled:opacity-50">
               <RefreshCw size={10} /> Replace

@@ -22,12 +22,12 @@ export function QuickActionsStrip() {
       iconCls: "text-emerald-600 dark:text-emerald-400",
     },
     {
-      icon: Home, label: "Join an Home Cell", href: "#", external: false,
+      icon: Home, label: "Join an Home Cell", href: "/connect/home-cell/find", external: false,
       cls: "bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-200/60 dark:border-sky-500/20 hover:bg-sky-100 dark:hover:bg-sky-500/25",
       iconCls: "text-sky-600 dark:text-sky-400",
     },
     {
-      icon: Users2, label: "Register for an Home Cell", href: "#", external: false,
+      icon: Users2, label: "Register for an Home Cell", href: "/connect/home-cell/find", external: false,
       cls: "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/25",
       iconCls: "text-amber-600 dark:text-amber-400",
     },

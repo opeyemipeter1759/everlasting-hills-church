@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { X, LogOut } from "lucide-react";
+import { X, LogOut, ChevronRight } from "lucide-react";
 import { auth } from "@/lib/api";
 import { hasMinRole, ROLE_LABELS, ROLE_BADGE_CLASS } from "./role-utils";
 import { NAV_GROUPS } from "./nav-config";
@@ -57,6 +58,35 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
     .sort((a, b) => b.length - a.length)[0];
   const isActive = (href: string) => href === bestMatch;
 
+  // Sections start collapsed; whichever one holds the active route opens
+  // automatically and — regardless of collapse state — never collapses while
+  // it's the active section (see `isCollapsed` below).
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    () => new Set(NAV_GROUPS.map((g) => g.section).filter(Boolean) as string[]),
+  );
+
+  useEffect(() => {
+    const activeSection = visibleGroups.find(
+      (group) => group.section && group.items.some((item) => isActive(item.href)),
+    )?.section;
+    if (!activeSection) return;
+    setCollapsedSections((prev) => {
+      if (!prev.has(activeSection)) return prev;
+      const next = new Set(prev);
+      next.delete(activeSection);
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  const toggleSection = (section: string) => {
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      next.has(section) ? next.delete(section) : next.add(section);
+      return next;
+    });
+  };
+
   return (
     <aside
       className={[
@@ -93,13 +123,33 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
 
       {/* ── Nav items ──────────────────────────────────────────────────────── */}
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5 scrollbar-thin">
-        {visibleGroups.map((group) => (
+        {visibleGroups.map((group) => {
+          const hasActiveItem = group.items.some((item) => isActive(item.href));
+          // A section holding the active route is always expanded, even if the
+          // user had previously collapsed it — it can't be collapsed while active.
+          const isCollapsed = group.section ? collapsedSections.has(group.section) && !hasActiveItem : false;
+          return (
           <div key={group.section ?? "__personal"}>
             {group.section && (
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/25 px-3 mb-2">
-                {group.section}
-              </p>
+              <button
+                type="button"
+                onClick={() => toggleSection(group.section!)}
+                disabled={hasActiveItem}
+                className="flex w-full items-center justify-between px-3 mb-2 group disabled:cursor-default"
+              >
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/25 group-hover:text-white/40 transition-colors">
+                  {group.section}
+                </span>
+                {!hasActiveItem && (
+                  <ChevronRight
+                    size={11}
+                    strokeWidth={2.5}
+                    className={`text-white/20 group-hover:text-white/40 transition-transform duration-200 ${isCollapsed ? "" : "rotate-90"}`}
+                  />
+                )}
+              </button>
             )}
+            {!isCollapsed && (
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const Icon = item.icon;
@@ -128,8 +178,10 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
                 );
               })}
             </div>
+            )}
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* ── User section ───────────────────────────────────────────────────── */}

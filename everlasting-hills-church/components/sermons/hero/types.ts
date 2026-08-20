@@ -14,8 +14,11 @@ export type SermonHeroSlide = {
 
 export const AUTO_ROTATE_MS = 7000;
 
-export const DEFAULT_SERMON_IMAGE =
-  "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1400&q=80";
+// Local asset, not an external host — avoids depending on next.config.mjs's
+// images.remotePatterns whitelist (an unlisted host throws at render, which is
+// exactly what happened with the previous images.unsplash.com URL whenever
+// there were no published sermons to fall back from).
+export const DEFAULT_SERMON_IMAGE = "/HeroImages/IMG_8248.jpg";
 
 export const FALLBACK_SLIDE: SermonHeroSlide = {
   title: "Latest sermon",

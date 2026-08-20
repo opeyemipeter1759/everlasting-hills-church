@@ -76,6 +76,7 @@ export class MemberAvatarService {
           Key: key,
           Body: file.buffer,
           ContentType: file.mimetype,
+          CacheControl: 'public, max-age=31536000, immutable',
         }),
       );
     } catch (err) {

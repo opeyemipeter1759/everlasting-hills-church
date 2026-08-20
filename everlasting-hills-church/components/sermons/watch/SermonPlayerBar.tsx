@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import {
   Play, Pause, X, ChevronUp, ChevronDown, RotateCcw, RotateCw, Loader2, Video as VideoIcon,
 } from 'lucide-react';
@@ -194,8 +195,7 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
             className="flex items-center gap-3 flex-1 min-w-0 text-left"
           >
             {sermon?.thumbnailUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={sermon.thumbnailUrl} alt="" className="h-11 w-11 rounded-lg object-cover shrink-0" />
+              <Image src={sermon.thumbnailUrl} alt="" width={44} height={44} className="h-11 w-11 rounded-lg object-cover shrink-0" />
             ) : (
               <div className="h-11 w-11 rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center shrink-0">
                 {isVideo ? <VideoIcon size={16} className="text-[#87102C] dark:text-[#e8768a]" /> : <Play size={16} className="text-[#87102C] dark:text-[#e8768a]" />}

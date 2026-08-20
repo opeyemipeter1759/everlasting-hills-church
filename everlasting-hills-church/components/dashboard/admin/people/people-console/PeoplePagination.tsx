@@ -33,13 +33,13 @@ export default function PeoplePagination({
           className="text-xs rounded-lg border border-[#E7CDD3] dark:border-white/10 bg-white dark:bg-white/5 px-2 py-1.5 text-gray-700 dark:text-white/70 focus:outline-none"
           options={[25, 50, 100, 200].map((n) => ({ value: String(n), label: `${n} / page` }))}
         />
-        <button type="button" disabled={meta.page <= 1} onClick={onPrev} className={pagerBtn}>
+        <button type="button" disabled={meta.page <= 1} onClick={onPrev} aria-label="Previous page" className={pagerBtn}>
           <ChevronLeft size={16} />
         </button>
         <span className="text-xs font-semibold text-gray-600 dark:text-white/60 tabular-nums">
           {meta.page} / {meta.totalPages || 1}
         </span>
-        <button type="button" disabled={meta.page >= meta.totalPages} onClick={onNext} className={pagerBtn}>
+        <button type="button" disabled={meta.page >= meta.totalPages} onClick={onNext} aria-label="Next page" className={pagerBtn}>
           <ChevronRight size={16} />
         </button>
       </div>

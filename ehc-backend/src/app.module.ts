@@ -37,12 +37,14 @@ import { InventoryModule } from './inventory/inventory.module';
 import { GivingModule } from './giving/giving.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { EmailsModule } from './emails/emails.module';
 import { CommunityModule } from './community/community.module';
 import { HomeCellModule } from './home-cell/home-cell.module';
 import { JobsModule } from './jobs/jobs.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { CoursesModule } from './courses/courses.module';
 import { StatusReportsModule } from './status-reports/status-reports.module';
+import { OnlineAttendanceModule } from './online-attendance/online-attendance.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 import { CalendarModule } from './calendar/calendar.module';
@@ -139,6 +141,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     GivingModule,
     InboxModule,
     AnnouncementsModule,
+    EmailsModule,
     CommunityModule,
     HomeCellModule,
     JobsModule.forRoot(),
@@ -148,6 +151,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     GatheringsModule,
     CoursesModule,
     StatusReportsModule,
+    OnlineAttendanceModule,
   ],
   controllers: [AppController],
   providers: [

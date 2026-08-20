@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Eye, Mail, Pencil, Radio, Trash2, Users } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { formatRelativeDate } from "./format";
@@ -26,8 +27,8 @@ export default function AnnouncementCard({
       }`}
     >
       {a.imageUrl && (
-        <div className="hidden sm:block w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-gray-100 dark:bg-white/5">
-          <img src={a.imageUrl} alt="" className="w-full h-full object-cover" />
+        <div className="relative hidden sm:block w-24 h-24 rounded-xl overflow-hidden shrink-0 bg-gray-100 dark:bg-white/5">
+          <Image src={a.imageUrl} alt="" fill sizes="96px" className="object-cover" />
         </div>
       )}
 

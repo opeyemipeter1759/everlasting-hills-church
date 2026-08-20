@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ClipboardList, RefreshCw, Users, UserCheck } from "lucide-react";
+import { ArrowLeft, ClipboardList, RefreshCw, Users, UserCheck, UserPlus } from "lucide-react";
 import {
   useHeadcountByDate,
   useHeadcountHistory,
@@ -16,11 +16,18 @@ import { watTodayStr, inferType } from "./date-utils";
 export default function UshersReport() {
   const [date, setDate] = useState<string>(watTodayStr());
   const byDate = useHeadcountByDate(date);
-  const history = useHeadcountHistory(60);
+  const history = useHeadcountHistory(500); // large limit to capture all records for the total
   const today = useTodayHeadcount();
   const stats = useAdminStatsOverview();
 
   const selectedType = byDate.data?.inferredType ?? inferType(date);
+
+  // Sum firstTimers across every confirmed headcount record — this is the total
+  // number of first timers ever recorded by ushers in the headcount form.
+  const allTimeFirstTimers =
+    history.data !== undefined
+      ? history.data.reduce((acc, h) => acc + (h.firstTimers ?? 0), 0)
+      : undefined;
 
   return (
     <div className="max-w-5xl space-y-5">
@@ -50,10 +57,11 @@ export default function UshersReport() {
         </button>
       </div>
 
-      {/* Dual signal */}
-      <div className="grid grid-cols-2 gap-3 sm:max-w-md">
+      {/* Triple signal */}
+      <div className="grid grid-cols-3 gap-3 sm:max-w-2xl">
         <Signal label="Today's headcount" hint="usher total" value={today.data?.total ?? "—"} icon={<Users size={14} />} tone="burgundy" loading={today.isLoading} />
         <Signal label="Today's check-ins" hint="individual app" value={stats.data?.todayPresent ?? 0} icon={<UserCheck size={14} />} tone="slate" loading={stats.isLoading} />
+        <Signal label="All-time first timers" hint="across all services" value={allTimeFirstTimers ?? "—"} icon={<UserPlus size={14} />} tone="green" loading={history.isLoading} />
       </div>
 
       {/* Date picker + featured card */}
@@ -113,11 +121,14 @@ export default function UshersReport() {
 function Signal({
   label, hint, value, icon, tone, loading,
 }: {
-  label: string; hint: string; value: number | string; icon: React.ReactNode; tone: "burgundy" | "slate"; loading?: boolean;
+  label: string; hint: string; value: number | string; icon: React.ReactNode; tone: "burgundy" | "slate" | "green"; loading?: boolean;
 }) {
-  const toneCls = tone === "burgundy"
-    ? "bg-[#87102C]/10 dark:bg-[#87102C]/15 text-[#87102C] dark:text-[#e8768a]"
-    : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/60";
+  const toneCls =
+    tone === "burgundy"
+      ? "bg-[#87102C]/10 dark:bg-[#87102C]/15 text-[#87102C] dark:text-[#e8768a]"
+      : tone === "green"
+      ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+      : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-white/60";
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] p-4">
       <div className="mb-1 flex items-start justify-between">

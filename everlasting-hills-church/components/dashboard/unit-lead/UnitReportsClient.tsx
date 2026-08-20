@@ -1,12 +1,12 @@
 "use client";
 
 import { Users } from "lucide-react";
-import { useMyUnit } from "./useMyUnit";
+import { useUnitLeadContext } from "./useUnitLeadContext";
 import ReportsPageShell from "@/components/dashboard/reports/ReportsPageShell";
 import ReportsListSkeleton from "@/components/ui/skeleton/ReportsListSkeleton";
 
-export default function UnitReportsClient() {
-  const { summary } = useMyUnit();
+export default function UnitReportsClient({ unitId }: { unitId: string }) {
+  const { summary } = useUnitLeadContext(unitId);
 
   if (summary === undefined) {
     return <ReportsListSkeleton />;
@@ -31,7 +31,8 @@ export default function UnitReportsClient() {
       icon={Users}
       title={`${summary.name} Reports`}
       subtitle="Log what's happening in your unit — attendance, activities, needs, wins, and concerns — for the Super Admin to review."
-      basePath="/dashboard/unit-lead/reports"
+      basePath={`/dashboard/unit-lead/${unitId}/reports`}
+      backHref={`/dashboard/unit-lead/${unitId}`}
     />
   );
 }

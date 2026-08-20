@@ -95,8 +95,8 @@ export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
   HOD: "bg-teal-500/20 text-teal-300 border border-teal-500/30",
   HEAD_USHER: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
   UNIT_LEAD: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
-  MEMBER: "bg-white/10 text-white/50 border border-white/10",
-  VISITOR: "bg-white/10 text-white/50 border border-white/10",
+  MEMBER: "bg-white/10 text-white/70 border border-white/10",
+  VISITOR: "bg-white/10 text-white/70 border border-white/10",
 };
 
 import {
@@ -130,6 +130,8 @@ import {
   Building2,
   GraduationCap,
   Compass,
+  Users2,
+  Wifi,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -142,7 +144,12 @@ export type NavItem = {
   /** Extra data-driven visibility check beyond the static role gate — e.g. a
    * UNIT_LEAD-role user who doesn't actually lead a real unit shouldn't see
    * "My Unit"; a plain MEMBER who is genuinely on a team should see "Follow Up". */
-  requiresAccess?: "unitLead" | "followUp";
+  requiresAccess?: "unitLead" | "unitMember" | "followUp";
+  /** Expanded into one nav item per unit (label = unit name, href =
+   * `${href}/${unit.id}`) instead of rendered as a single static link — see
+   * AppSidebar.tsx. "lead" sources from units the user leads/assists, "member"
+   * from units they're a plain member of. */
+  dynamicUnits?: "lead" | "member";
 };
 
 export type NavGroup = {
@@ -163,8 +170,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Unit",
     items: [
-      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
-      { label: "Reports", href: "/dashboard/unit-lead/reports", icon: FileText, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
+      { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead", dynamicUnits: "lead" },
     ],
   },
     {
@@ -185,19 +191,21 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "People",        href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
+      { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
       { label: "Calendar",      href: "/dashboard/admin/calendar",      icon: CalendarRange, minRole: "ADMIN" },
       { label: "Usher",         href: "/dashboard/admin/usher",         icon: Tally5,        minRole: "HEAD_USHER" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
+      { label: "Emails",        href: "/dashboard/admin/emails",        icon: Mail,          minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
-      { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
+      { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Roles",         href: "/dashboard/admin/roles",         icon: Shield,        minRole: "ADMIN" },
       { label: "Courses",       href: "/dashboard/admin/courses",       icon: GraduationCap, minRole: "ADMIN" },
       { label: "Home Cell",     href: "/dashboard/admin/home-cell",     icon: Compass,       minRole: "ADMIN" },
-      { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
+      // { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
       { label: "Public Site (CMS)", href: "/dashboard/cms",          icon: PanelsTopLeft, minRole: "PASTOR" },
     ],
   },
@@ -236,6 +244,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
       { label: "My Course",           href: "/dashboard/courses",            icon: GraduationCap,       minRole: "MEMBER" },
       { label: "Explore Course",           href: "/dashboard/explore-courses",            icon: Compass,       minRole: "MEMBER" },
+      { label: "Unit", href: "/dashboard/unit", icon: Users2, minRole: "MEMBER", requiresAccess: "unitMember", dynamicUnits: "member" },
 
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
 

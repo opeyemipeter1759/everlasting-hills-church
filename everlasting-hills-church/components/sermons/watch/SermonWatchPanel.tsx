@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { Play, BookOpen } from 'lucide-react';
 import SermonEngagementContent from './SermonEngagementContent';
 import { useSermonPlayer } from '@/context/SermonPlayerContext';
@@ -63,8 +64,7 @@ export default function SermonWatchPanel({
           className="group relative w-full aspect-video sm:aspect-[21/9] rounded-2xl overflow-hidden bg-gray-100 dark:bg-white/5"
         >
           {sermon.thumbnailUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={sermon.thumbnailUrl} alt={sermon.title} className="w-full h-full object-cover" />
+            <Image src={sermon.thumbnailUrl} alt={sermon.title} fill sizes="100vw" className="object-cover" />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center">
               <BookOpen size={40} className="text-[#87102C]/30 dark:text-[#87102C]/40" />

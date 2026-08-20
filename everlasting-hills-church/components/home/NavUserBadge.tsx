@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, LayoutDashboard, LogOut, User } from "lucide-react";
@@ -8,7 +9,7 @@ import {
   getFrontendSessionUser,
   type FrontendSessionUser,
 } from "@/lib/auth/frontend-session";
-import { auth } from "@/lib/api";
+import { auth, useMe } from "@/lib/api";
 
 /**
  * Compact session indicator for the public navbar.
@@ -57,6 +58,12 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
+  // Same staleness issue fixed in AppSidebar/SessionActionMenu: the cookie's
+  // picture is a snapshot from last login, so prefer the DB-fresh photoUrl from
+  // /auth/me once it's loaded.
+  const { data: me } = useMe({ enabled: !!session?.loggedIn });
+  const picture = me?.member?.photoUrl ?? session?.picture ?? null;
+
   if (!session?.loggedIn) return null;
 
   const displayName =
@@ -91,11 +98,12 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
             : "hover:bg-white/10 text-white/95"
         }`}
       >
-        {session.picture ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={session.picture}
+        {picture ? (
+          <Image
+            src={picture}
             alt=""
+            width={36}
+            height={36}
             className="w-9 h-9 rounded-full object-cover ring-2 ring-white/30"
           />
         ) : (

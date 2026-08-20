@@ -258,6 +258,8 @@ export class EventsService {
   /**
    * Logged-in member RSVP: same flow as the public form, but the name/email/phone come
    * from their own Member record instead of being typed in again — we already have them.
+   * Idempotent: re-submitting (e.g. a stale client that thinks it isn't registered yet)
+   * returns the existing RSVP instead of creating a duplicate row.
    */
   async createRsvpAsMember(slug: string, profileId: string) {
     const event = await this.getBySlug(slug); // 404 if not published
@@ -265,6 +267,11 @@ export class EventsService {
       where: { tenantId: this.tenantId, profileId },
     });
     if (!member) throw new NotFoundException('Member record not found for current user');
+
+    const existing = await this.findMemberRsvp(event.id, member.email);
+    if (existing) {
+      return { success: true, message: 'Already registered' };
+    }
 
     await this.assertRsvpAllowed(event.id, event.rsvpEnabled, event.capacity, 1);
 
@@ -277,6 +284,29 @@ export class EventsService {
     });
 
     return { success: true, message: 'RSVP received' };
+  }
+
+  /**
+   * Whether the signed-in member already has an RSVP for this event — the frontend's
+   * "Registered" state is sourced from here rather than browser storage, so it's
+   * consistent across devices/sessions instead of resetting when local state is lost.
+   */
+  async getRsvpStatusForMember(slug: string, profileId: string) {
+    const event = await this.getBySlug(slug); // 404 if not published
+    const member = await this.prisma.member.findFirst({
+      where: { tenantId: this.tenantId, profileId },
+    });
+    if (!member) return { registered: false };
+
+    const existing = await this.findMemberRsvp(event.id, member.email);
+    return { registered: !!existing };
+  }
+
+  private async findMemberRsvp(eventId: string, email: string | null) {
+    if (!email) return null;
+    return this.prisma.eventRsvp.findFirst({
+      where: { tenantId: this.tenantId, eventId, email: { equals: email, mode: 'insensitive' } },
+    });
   }
 
   private async assertRsvpAllowed(

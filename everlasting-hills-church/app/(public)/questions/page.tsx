@@ -1,3 +1,4 @@
+import Image from "next/image";
 import QuestionForm from "@/components/Formpage/QuestionForm";
 
 export default function QuestionsPage() {
@@ -6,10 +7,13 @@ export default function QuestionsPage() {
       
       {/* Cinematic Background (same as Prayer Page) */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img
+        <Image
           src="/images/church_congregation_3_1779193624434.png"
           alt="Everlasting Hills Community"
-          className="w-full h-full object-cover opacity-40 scale-105"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover opacity-40 scale-105"
         />
 
         {/* Gradient overlays */}

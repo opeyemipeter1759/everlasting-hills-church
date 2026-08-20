@@ -66,4 +66,39 @@ export class MemberBirthdaysService {
   async getTodayBirthdays() {
     return this.getUpcomingBirthdays(0);
   }
+
+  /** Active members whose wedding anniversary (month + day) is today. Same
+   * month/day match used by the anniversary-greetings cron in SchedulingService. */
+  async getTodayAnniversaries() {
+    const members = await this.prisma.member.findMany({
+      where: { tenantId: this.tenantId, status: 'ACTIVE', weddingAnniversary: { not: null } },
+      select: { id: true, firstName: true, lastName: true, weddingAnniversary: true, photoUrl: true },
+    });
+
+    const today = new Date();
+    return members
+      .filter((m) => {
+        const date = m.weddingAnniversary as Date;
+        return date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
+      })
+      .map((m) => ({
+        id: m.id,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        photoUrl: m.photoUrl,
+        years: today.getFullYear() - (m.weddingAnniversary as Date).getFullYear(),
+      }));
+  }
+
+  /** PII-light projection for public/unauthenticated consumers — no email, no raw DOB. */
+  async getCommunityBirthdays(daysAhead = 7) {
+    const full = await this.getUpcomingBirthdays(daysAhead);
+    return full.map(({ id, firstName, lastName, photoUrl, daysUntil }) => ({
+      id,
+      firstName,
+      lastName,
+      photoUrl,
+      daysUntil,
+    }));
+  }
 }

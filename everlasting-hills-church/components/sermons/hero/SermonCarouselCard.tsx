@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Headphones, Play } from "lucide-react";
 import type { SermonHeroSlide } from "./types";
@@ -42,7 +43,7 @@ export default function SermonCarouselCard({
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-0"
           >
-            <img src={slide.image} alt={slide.title} className="h-full w-full object-cover" loading="lazy" />
+            <Image src={slide.image} alt={slide.title} fill sizes="(max-width: 768px) 100vw, 480px" className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
 
             {onPlay && slide.slug ? (
@@ -86,7 +87,7 @@ export default function SermonCarouselCard({
                 i === active ? "border-white/70 opacity-100" : "border-white/10 opacity-45 hover:opacity-75"
               }`}
             >
-              <img src={s.image} alt="" className="h-full w-full object-cover" />
+              <Image src={s.image} alt="" fill sizes="56px" className="object-cover" />
             </button>
           ))}
         </div>

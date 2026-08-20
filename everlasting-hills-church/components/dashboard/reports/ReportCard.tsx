@@ -9,8 +9,7 @@ import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import ReportStatusBadge from "./ReportStatusBadge";
-import { exportReportDocx } from "./exportReportDocx";
-import { toPlainText } from "./ReportEditor";
+import { toPlainText } from "./report-text-utils";
 
 function fmt(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
@@ -58,6 +57,7 @@ export default function ReportCard({ report, index = 0, viewHref }: { report: Re
   async function handleExport(e: React.MouseEvent) {
     e.stopPropagation();
     try {
+      const { exportReportDocx } = await import("./exportReportDocx");
       await exportReportDocx(report);
     } catch {
       showToast.error("Couldn't export report");

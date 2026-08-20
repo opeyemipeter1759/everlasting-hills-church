@@ -8,12 +8,6 @@ import "./globals.css";
 import { SermonPlayerProvider } from "@/context/SermonPlayerContext";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 
-// Self-hosted at build time instead of the old `@import url(fonts.googleapis.com/...)`
-// in globals.css, which was render-blocking: the browser had to fetch that
-// external stylesheet (its own DNS+TLS+request round trip) before it could
-// finish parsing CSS at all. next/font inlines the @font-face rules and
-// serves the font files from this origin, with the same weights/styles the
-// @import previously requested.
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--nf-inter", display: "swap" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--nf-jakarta", display: "swap" });
 const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "700"], style: ["normal", "italic"], variable: "--nf-playfair", display: "swap" });
@@ -32,8 +26,6 @@ export const metadata: Metadata = {
     type: "website",
   },
 };
-
-
 
 export default function RootLayout({
   children,

@@ -1,6 +1,6 @@
 "use client";
-
 import { useState } from "react";
+import Image from "next/image";
 import { TrendingUp, Zap, Clock, QrCode } from "lucide-react";
 import type { MemberHomeProps, StreakState } from "./types";
 import { getGreeting, getServiceCountdown } from "./helpers";
@@ -38,7 +38,7 @@ export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, at
           <div className="relative flex-shrink-0">
             <div className="w-16 h-16 rounded-2xl ring-2 ring-white/20 ring-offset-2 ring-offset-transparent overflow-hidden bg-white/10 flex items-center justify-center">
               {photoUrl ? (
-                <img src={photoUrl} alt={firstName} className="w-full h-full object-cover" />
+                <Image src={photoUrl} alt={firstName} width={64} height={64} priority className="w-full h-full object-cover" />
               ) : (
                 <span className="text-2xl font-extrabold text-white">{initials}</span>
               )}

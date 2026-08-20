@@ -26,6 +26,12 @@ const IMAGE_MIME = [
   'image/webp',
   'image/gif',
   'image/avif',
+  'image/bmp',
+  'image/svg+xml',
+  'image/x-icon',
+  'image/vnd.microsoft.icon',
+  // Deliberately excludes HEIC/HEIF/TIFF — no major browser renders them via
+  // <img>, so accepting them would just produce broken images on the site.
 ];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
 
@@ -33,6 +39,11 @@ const DOCUMENT_MIME = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
   'application/msword', // legacy .doc
   'application/pdf',
+  // Receipts are often a phone photo rather than a scanned document — accepted
+  // here too so unit expense logging can reuse this same endpoint.
+  'image/jpeg',
+  'image/png',
+  'image/webp',
 ];
 const MAX_DOCUMENT_BYTES = 15 * 1024 * 1024; // 15 MB
 
@@ -70,7 +81,7 @@ export class UploadsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Image file (JPG, PNG, WebP, GIF, AVIF — max 8 MB)',
+          description: 'Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO — max 8 MB)',
         },
       },
     },
@@ -89,7 +100,7 @@ export class UploadsController {
       throw new BadRequestException('Image must be under 8 MB');
     }
     if (!IMAGE_MIME.includes(file.mimetype)) {
-      throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, or AVIF)');
+      throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, AVIF, BMP, SVG, or ICO)');
     }
     if (!hasValidFileSignature(file)) {
       throw new BadRequestException('Image content does not match its declared format');
@@ -112,7 +123,7 @@ export class UploadsController {
   @ApiOperation({
     summary: 'Upload a document',
     description:
-      'Uploads a document (docx/doc/pdf) to R2 and returns its public URL. Used by Report attachments.',
+      'Uploads a document or photo (docx/doc/pdf/jpg/png/webp) to R2 and returns its public URL. Used by Report attachments and unit expense receipts.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -122,7 +133,7 @@ export class UploadsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Document file (DOCX, DOC, or PDF — max 15 MB)',
+          description: 'Document or photo (DOCX, DOC, PDF, JPG, PNG, or WebP — max 15 MB)',
         },
       },
     },
@@ -141,7 +152,7 @@ export class UploadsController {
       throw new BadRequestException('Document must be under 15 MB');
     }
     if (!DOCUMENT_MIME.includes(file.mimetype)) {
-      throw new BadRequestException('Unsupported document format (use DOCX, DOC, or PDF)');
+      throw new BadRequestException('Unsupported format (use DOCX, DOC, PDF, JPG, PNG, or WebP)');
     }
     if (!hasValidFileSignature(file)) {
       throw new BadRequestException('Document content does not match its declared format');

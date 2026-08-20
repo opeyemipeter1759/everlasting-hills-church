@@ -51,6 +51,9 @@ const config: Config = {
         "fade-in": "fadeIn 0.8s ease-out forwards",
         "float": "float 6s ease-in-out infinite",
         "gradient-x": "gradientX 6s linear infinite",
+        "shine": "shine 3.2s ease-in-out infinite",
+        "bounce-soft": "bounceSoft 2s ease-in-out infinite",
+        "marquee": "marquee 32s linear infinite",
       },
       keyframes: {
         fadeUp: {
@@ -68,6 +71,18 @@ const config: Config = {
         gradientX: {
           "0%, 100%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
+        },
+        shine: {
+          "0%": { transform: "translateX(-150%) skewX(-20deg)" },
+          "50%, 100%": { transform: "translateX(150%) skewX(-20deg)" },
+        },
+        bounceSoft: {
+          "0%, 100%": { transform: "translateY(0)", opacity: "0.5" },
+          "50%": { transform: "translateY(8px)", opacity: "1" },
+        },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
         },
       },
     },

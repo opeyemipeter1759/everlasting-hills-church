@@ -1,3 +1,4 @@
+import Image from "next/image";
 import PrayerForm from "@/components/Formpage/PrayerForm";
 
 export default function PrayerRequestPage() {
@@ -5,10 +6,13 @@ export default function PrayerRequestPage() {
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden py-12 px-4 sm:px-5">
       {/* Cinematic Background with Fade Gradients (from Auth/First Timer) */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img 
-          src="/images/church_congregation_3_1779193624434.png" 
-          alt="Everlasting Hills Community" 
-          className="w-full h-full object-cover opacity-40 scale-105"
+        <Image
+          src="/images/church_congregation_3_1779193624434.png"
+          alt="Everlasting Hills Community"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover opacity-40 scale-105"
         />
         {/* The Fade-In/Out Gradients */}
         <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/40 to-church-dark" />

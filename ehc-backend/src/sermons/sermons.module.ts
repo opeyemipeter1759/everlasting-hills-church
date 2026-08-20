@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { InboxModule } from '../inbox/inbox.module';
+import { EmailsModule } from '../emails/emails.module';
 import { SermonReadService } from './recent/sermon-read.service';
 import { SERMON_REPOSITORY } from './recent/sermon-repository';
 import { PrismaSermonRepository } from './recent/prisma-sermon.repository';
@@ -32,7 +33,7 @@ import { SermonDirectMessageService } from './services/sermon-direct-message.ser
 import { SermonMemberStatsService } from './services/sermon-member-stats.service';
 
 @Module({
-  imports: [PrismaModule, AuthModule, InboxModule],
+  imports: [PrismaModule, AuthModule, InboxModule, EmailsModule],
   controllers: [
     SermonsAdminController,
     // SermonsPublicController owns 'slug/:slug' (2 segments); SermonsCommentsController owns

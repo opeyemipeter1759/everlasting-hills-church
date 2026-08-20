@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, Award, Compass, Gauge, GraduationCap, type LucideIcon, PlayCircle, TrendingUp } from "lucide-react";
 import { ICON_OPTIONS } from "@/lib/courses-data";
-import { useCourses, useMyCourseProgress, getCourseStatus, type CourseListItem, type ProgressMap } from "@/lib/api/courses";
+import { useCourses, useMyCourseProgress, useMyCategoryEnrollments, getCourseStatus, type CourseListItem, type ProgressMap } from "@/lib/api/courses";
 import MyCoursesSkeleton from "@/components/ui/skeleton/MyCoursesSkeleton";
 import CourseCard from "./CourseCard";
 
@@ -17,6 +17,7 @@ function progressPctFor(course: CourseListItem, progress: ProgressMap): number {
 export default function MyCoursesClient() {
   const { data: catalog = [], isLoading: catalogLoading } = useCourses();
   const { data: progress = {}, isLoading: progressLoading } = useMyCourseProgress();
+  const { data: enrolledCategoryIds = [] } = useMyCategoryEnrollments();
 
   if (catalogLoading || progressLoading) return <MyCoursesSkeleton />;
 
@@ -108,7 +109,7 @@ export default function MyCoursesClient() {
                   <CourseCard
                     key={course.id}
                     course={course}
-                    status={getCourseStatus(course, catalog, progress)}
+                    status={getCourseStatus(course, catalog, progress, enrolledCategoryIds)}
                     href={`/dashboard/courses/${course.slug}`}
                     progressPct={progressPctFor(course, progress)}
                   />
@@ -125,7 +126,7 @@ export default function MyCoursesClient() {
                   <CourseCard
                     key={course.id}
                     course={course}
-                    status={getCourseStatus(course, catalog, progress)}
+                    status={getCourseStatus(course, catalog, progress, enrolledCategoryIds)}
                     href={`/dashboard/courses/${course.slug}`}
                   />
                 ))}

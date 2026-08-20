@@ -22,7 +22,7 @@ export default function Error({
   return (
     <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-church-dark px-5 text-center text-white">
       <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute right-[-10%] top-[-20%] h-[60%] w-[60%] rounded-full bg-[#87102C]/15 blur-[140px]" />
+        <div className="absolute right-[-10%] bg-transparent top-[-20%] h-[60%] w-[60%] rounded-full bg-[#87102C]/15 blur-[140px]" />
         <div className="absolute bottom-[-20%] left-[-10%] h-[50%] w-[50%] rounded-full bg-[#87102C]/10 blur-[120px]" />
       </div>
 
@@ -37,7 +37,7 @@ export default function Error({
           An unexpected error occurred. You can try again, or head back home.
         </p>
         {error.digest ? (
-          <p className="mt-3 text-xs text-white/30">Reference: {error.digest}</p>
+          <p className="mt-3 text-xs text-white/50">Reference: {error.digest}</p>
         ) : null}
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <button

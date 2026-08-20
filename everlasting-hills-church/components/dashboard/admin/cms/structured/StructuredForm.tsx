@@ -1,6 +1,8 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { useRef, useState } from "react";
+import { ImageIcon, Loader2, Plus, Trash2, X } from "lucide-react";
+import { apiClient } from "@/lib/api/axios";
 
 /**
  * A generic, field-driven structured content form. Each designed page declares a
@@ -8,9 +10,14 @@ import { Plus, Trash2 } from "lucide-react";
  * structured page is a field definition, not a bespoke component.
  */
 export type FieldDef =
-  | { kind: "text"; key: string; label: string; help?: string }
-  | { kind: "textarea"; key: string; label: string; help?: string }
+  | { kind: "text"; key: string; label: string; help?: string; nullable?: boolean }
+  | { kind: "textarea"; key: string; label: string; help?: string; nullable?: boolean }
+  | { kind: "number"; key: string; label: string; help?: string }
+  | { kind: "boolean"; key: string; label: string; help?: string }
+  | { kind: "select"; key: string; label: string; options: { value: string; label: string }[]; help?: string }
+  | { kind: "image"; key: string; label: string; help?: string; nullable?: boolean }
   | { kind: "list"; key: string; label: string; help?: string } // string[]
+  | { kind: "imageList"; key: string; label: string; help?: string; max?: number } // string[] of image URLs, each with its own upload
   | { kind: "group"; key: string; label: string; fields: FieldDef[] } // nested object
   | {
       kind: "repeat";
@@ -52,14 +59,69 @@ function FieldView({ field, value, onChange }: { field: FieldDef; value: unknown
   if (field.kind === "text") {
     return (
       <Labeled label={field.label} help={field.help}>
-        <input className={inp} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />
+        <input
+          className={inp}
+          value={(value as string) ?? ""}
+          onChange={(e) => onChange(field.nullable && e.target.value === "" ? null : e.target.value)}
+        />
       </Labeled>
     );
   }
   if (field.kind === "textarea") {
     return (
       <Labeled label={field.label} help={field.help}>
-        <textarea className={`${inp} min-h-[90px]`} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)} />
+        <textarea
+          className={`${inp} min-h-[90px]`}
+          value={(value as string) ?? ""}
+          onChange={(e) => onChange(field.nullable && e.target.value === "" ? null : e.target.value)}
+        />
+      </Labeled>
+    );
+  }
+  if (field.kind === "number") {
+    return (
+      <Labeled label={field.label} help={field.help}>
+        <input
+          type="number"
+          className={inp}
+          value={typeof value === "number" ? value : ""}
+          onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
+        />
+      </Labeled>
+    );
+  }
+  if (field.kind === "boolean") {
+    return (
+      <label className="flex items-center gap-2.5 text-sm font-semibold text-gray-700 dark:text-white/70">
+        <input
+          type="checkbox"
+          checked={Boolean(value)}
+          onChange={(e) => onChange(e.target.checked)}
+          className="h-4 w-4 accent-[#87102C]"
+        />
+        {field.label}
+        {field.help && <span className="font-normal text-gray-400 dark:text-white/30">{field.help}</span>}
+      </label>
+    );
+  }
+  if (field.kind === "select") {
+    return (
+      <Labeled label={field.label} help={field.help}>
+        <select className={inp} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)}>
+          {field.options.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </Labeled>
+    );
+  }
+  if (field.kind === "image") {
+    return (
+      <Labeled label={field.label} help={field.help}>
+        <ImageField
+          value={(value as string) ?? ""}
+          onChange={(v) => onChange(field.nullable && v === "" ? null : v)}
+        />
       </Labeled>
     );
   }
@@ -68,6 +130,17 @@ function FieldView({ field, value, onChange }: { field: FieldDef; value: unknown
     return (
       <Labeled label={field.label} help={field.help ?? "One per line"}>
         <textarea className={`${inp} min-h-[110px]`} value={items.join("\n")} onChange={(e) => onChange(e.target.value.split("\n"))} />
+      </Labeled>
+    );
+  }
+  if (field.kind === "imageList") {
+    return (
+      <Labeled label={field.label} help={field.help}>
+        <ImageListField
+          value={Array.isArray(value) ? (value as string[]) : []}
+          onChange={onChange}
+          max={field.max}
+        />
       </Labeled>
     );
   }
@@ -81,7 +154,7 @@ function FieldView({ field, value, onChange }: { field: FieldDef; value: unknown
   }
   // repeat
   const items = Array.isArray(value) ? (value as Obj[]) : [];
-  const emptyItem = (): Obj => Object.fromEntries(field.fields.map((sf) => [sf.key, sf.kind === "list" ? [] : ""]));
+  const emptyItem = (): Obj => Object.fromEntries(field.fields.map((sf) => [sf.key, emptyValueFor(sf)]));
   const setItem = (i: number, v: Obj) => onChange(items.map((it, idx) => (idx === i ? v : it)));
   return (
     <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-[#FFF4F6]/30 dark:bg-white/[0.02] p-4">
@@ -116,6 +189,170 @@ function Labeled({ label, help, children }: { label: string; help?: string; chil
         {help && <span className="ml-2 font-normal text-gray-400 dark:text-white/30">{help}</span>}
       </label>
       {children}
+    </div>
+  );
+}
+
+function emptyValueFor(field: FieldDef): unknown {
+  switch (field.kind) {
+    case "list": return [];
+    case "imageList": return [];
+    case "repeat": return [];
+    case "group": return {};
+    case "number": return 0;
+    case "boolean": return false;
+    case "select": return field.options[0]?.value ?? "";
+    case "text":
+    case "textarea":
+    case "image":
+      return field.nullable ? null : "";
+  }
+}
+
+/** Image URL field with an inline upload button (posts to /uploads/image, fills the URL directly). */
+function ImageField({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  async function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiClient.post<{ url?: string }>("/uploads/image", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120_000,
+      });
+      const url = res.data?.url ?? "";
+      if (!url) throw new Error("Upload succeeded but returned no URL");
+      onChange(url);
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-3">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" className="h-14 w-14 rounded-lg object-cover border border-[#E7CDD3] dark:border-white/10 flex-shrink-0" />
+        ) : (
+          <div className="h-14 w-14 rounded-lg border border-dashed border-[#E7CDD3] dark:border-white/15 flex items-center justify-center flex-shrink-0">
+            <ImageIcon size={16} className="text-gray-300 dark:text-white/20" />
+          </div>
+        )}
+        <input className={`${inp} flex-1`} value={value} onChange={(e) => onChange(e.target.value)} placeholder="Image URL" />
+        <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handlePick} />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#E7CDD3] dark:border-white/10 text-xs font-semibold text-gray-600 dark:text-white/70 hover:bg-[#FFF4F6] dark:hover:bg-white/5 disabled:opacity-50"
+        >
+          {uploading ? <Loader2 size={13} className="animate-spin" /> : <ImageIcon size={13} />}
+          {uploading ? "Uploading…" : "Upload"}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+/**
+ * Compact thumbnail grid for a list of image URLs. Deliberately not one ImageField
+ * row per image — at a dozen-plus images that would push the whole page's scroll out
+ * to match; tiles pack many images into little vertical space, and the grid itself
+ * scrolls within a capped height so the list never grows past it either.
+ */
+function ImageListField({
+  value,
+  onChange,
+  max,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  max?: number;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const atMax = !!max && value.length >= max;
+
+  async function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiClient.post<{ url?: string }>("/uploads/image", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120_000,
+      });
+      const url = res.data?.url ?? "";
+      if (!url) throw new Error("Upload succeeded but returned no URL");
+      onChange([...value, url]);
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function remove(i: number) {
+    onChange(value.filter((_, idx) => idx !== i));
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 max-h-64 overflow-y-auto p-0.5">
+        {value.map((url, i) => (
+          <div
+            key={i}
+            className="group relative aspect-square overflow-hidden rounded-lg border border-[#E7CDD3] dark:border-white/10"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt="" className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+              aria-label="Remove image"
+            >
+              <X size={11} />
+            </button>
+          </div>
+        ))}
+        {!atMax && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-[#E7CDD3] text-gray-400 hover:border-[#87102C]/40 hover:text-[#87102C] disabled:opacity-50 dark:border-white/15 dark:text-white/30"
+            aria-label="Add image"
+          >
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={18} />}
+          </button>
+        )}
+      </div>
+      <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handlePick} />
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] text-gray-400 dark:text-white/30">
+          {value.length}
+          {max ? ` / ${max}` : ""} image{value.length !== 1 ? "s" : ""}
+        </p>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+      </div>
     </div>
   );
 }

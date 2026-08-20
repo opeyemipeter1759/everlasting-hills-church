@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, LayoutDashboard, LogOut, UserRound } from "lucide-react";
@@ -72,6 +73,9 @@ export default function SessionActionMenu({
   // has loaded; fall back to the cookie so the badge doesn't flash empty first.
   const { data: me } = useMe({ enabled: !!session?.loggedIn });
   const role = normalizeRole(me?.role ?? session?.role ?? null);
+  // Same staleness issue as role above: the cookie's picture is a snapshot from
+  // last login, so prefer the DB-fresh photoUrl from /auth/me once it's loaded.
+  const picture = me?.member?.photoUrl ?? session?.picture ?? null;
   // "Worker" is a display-only distinction, not a real role: a plain MEMBER who
   // also belongs to a unit (but isn't its lead — that's UNIT_LEAD, a real role).
   const isWorker = role === "MEMBER" && (me?.member?.units?.length ?? 0) > 0;
@@ -137,8 +141,8 @@ export default function SessionActionMenu({
         className={`dropdown-toggle ${loggedInTriggerClassName}`}
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white shadow-md text-[12px] font-bold text-[#87102C] dark:bg-[#87102C]/20 dark:text-red-200">
-          {session.picture ? (
-            <img src={session.picture} alt={displayName} className="h-full w-full object-cover" />
+          {picture ? (
+            <Image src={picture} alt={displayName} width={40} height={40} className="h-full w-full object-cover" />
           ) : (
             userInitials
           )}

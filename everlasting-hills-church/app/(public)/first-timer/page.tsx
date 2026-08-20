@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { apiClient } from "@/lib/api/axios";
 import {
   FormValues,
@@ -29,7 +31,18 @@ const STEP_FIELDS: (keyof FormValues)[][] = [
   ["service_experience", "whatsapp_interest"],
 ];
 
-export default function FirstTimerPage() {
+export default function FirstTimerPageWrapper() {
+  return (
+    <Suspense>
+      <FirstTimerPage />
+    </Suspense>
+  );
+}
+
+function FirstTimerPage() {
+  const searchParams = useSearchParams();
+  const isOnlineSource = searchParams.get("source") === "online";
+
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -44,6 +57,11 @@ export default function FirstTimerPage() {
     control,
     formState: { errors },
   } = useForm<FormValues>({ mode: "onBlur" });
+
+  useEffect(() => {
+    if (isOnlineSource) setValue("attendance_type", "Online");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isOnline = watch("attendance_type") === "Online";
   const firstName = watch("first_name") ?? "";
@@ -119,7 +137,7 @@ export default function FirstTimerPage() {
   }
 
   const stepComponents = [
-    <Step1PersonalInfo key="s1" register={register} errors={errors} control={control} />,
+    <Step1PersonalInfo key="s1" register={register} errors={errors} control={control} isOnlineSource={isOnlineSource} />,
     <Step2FriendFamilyLocation
       key="s2"
       register={register}
@@ -139,10 +157,13 @@ export default function FirstTimerPage() {
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon relative overflow-x-hidden py-12 px-4 sm:px-5">
       {/* Cinematic Background with Fade Gradients (copied from Connect page) */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <img 
-          src="/images/church_congregation_3_1779193624434.png" 
-          alt="Everlasting Hills Community" 
-          className="w-full h-full object-cover opacity-40 scale-105"
+        <Image
+          src="/images/church_congregation_3_1779193624434.png"
+          alt="Everlasting Hills Community"
+          fill
+          sizes="100vw"
+          priority
+          className="object-cover opacity-40 scale-105"
         />
         {/* The Fade-In/Out Gradients */}
         <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/40 to-church-dark" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { ImagePlus, Trash2, UploadCloud, X } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import {
@@ -131,9 +132,14 @@ export default function CmsMediaLibrary() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {media.map((m) => (
             <div key={m.id} className="group relative rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] overflow-hidden">
-              <div className="aspect-square bg-[#FFF4F6] dark:bg-white/[0.03]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={m.url} alt={m.alt} className="h-full w-full object-cover" />
+              <div className="relative aspect-square bg-[#FFF4F6] dark:bg-white/[0.03]">
+                <Image
+                  src={m.url}
+                  alt={m.alt}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover"
+                />
               </div>
               <div className="p-3">
                 <p className="text-xs font-medium text-gray-700 dark:text-white/70 truncate" title={m.alt}>{m.alt}</p>

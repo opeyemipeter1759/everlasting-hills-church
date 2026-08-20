@@ -7,6 +7,7 @@ import {
 } from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
 import UnitLeadControl from "./UnitLeadControl";
+import Link from "next/link";
 
 export default function MyDepartment() {
   const q = useMyDepartments();
@@ -18,7 +19,9 @@ export default function MyDepartment() {
   const departments = q.data?.departments ?? [];
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5">
+    <div className="max-w-6xl mx-auto space-y-5">
+      <div className="flex  items-start justify-between gap-4">
+
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-[#87102C]/10 dark:bg-[#87102C]/15">
           <Building2 size={16} className="text-[#87102C] dark:text-[#e8768a]" />
@@ -29,6 +32,9 @@ export default function MyDepartment() {
             The units, leads, and members you oversee as an Admin Head.
           </p>
         </div>
+      </div>
+      <Link href='/dashboard/my-department/reports' className='flex bg-[#6E0C24] text-[#fff] font-medium text-sm rounded-md px-6 h-[40px] items-center'>Report</Link>
+      
       </div>
 
       {departments.length === 0 ? (

@@ -59,6 +59,7 @@ export default function ScrollReveal({
         delay,
         ease: [0.22, 1, 0.36, 1],
       }}
+      suppressHydrationWarning
       className={className}
     >
       {children}

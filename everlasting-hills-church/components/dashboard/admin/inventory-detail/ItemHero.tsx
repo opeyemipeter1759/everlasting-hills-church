@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Package } from "lucide-react";
 import type { InventoryItemDetail } from "../inventory/types";
 import { ConditionBadge, StatusBadge } from "../inventory/badges";
@@ -8,8 +9,7 @@ export default function ItemHero({ item }: { item: InventoryItemDetail }) {
     <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] overflow-hidden">
       <div className="relative h-40 sm:h-48 bg-[#FFE8ED] dark:bg-[#87102C]/20 flex items-center justify-center">
         {item.photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.photoUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <Image src={item.photoUrl} alt="" fill sizes="100vw" className="object-cover" />
         ) : (
           <Package size={40} className="text-[#87102C]" />
         )}

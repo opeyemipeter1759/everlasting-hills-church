@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { Mail, Phone, Plus, ShieldCheck, Trash2, UserPlus, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -285,10 +286,11 @@ export default function UsersCmsClient() {
                 <div className="flex items-center gap-4">
                   {/* Avatar */}
                   {u.member?.photoUrl ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
+                    <Image
                       src={u.member.photoUrl}
                       alt=""
+                      width={40}
+                      height={40}
                       className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                     />
                   ) : (

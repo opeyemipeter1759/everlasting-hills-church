@@ -76,6 +76,10 @@ export interface ServiceContent {
   address: string | null;
   mapsLink: string | null;
   specialAnnouncement: string | null;
+  heroLabel: string | null;
+  heroIntro: string | null;
+  firstTimerTitle: string | null;
+  firstTimerBody: string | null;
 }
 
 export interface SermonsContent {
@@ -124,6 +128,12 @@ export interface ContactContent {
   tiktok: { visible: boolean; url: string | null };
 }
 
+export interface CarouselContent {
+  eyebrow: string;
+  headline: string;
+  images: string[];
+}
+
 export interface SiteSettingsMap {
   HERO: HeroContent;
   ABOUT: AboutContent;
@@ -134,6 +144,7 @@ export interface SiteSettingsMap {
   COMMUNITY: CommunityContent;
   GIVING: GivingContent;
   CONTACT: ContactContent;
+  CAROUSEL: CarouselContent;
 }
 
 export type SiteSectionName = keyof SiteSettingsMap;
@@ -307,6 +318,12 @@ export const SERVICE_FALLBACK: ServiceContent = {
   address: "Akobo, Ibadan",
   mapsLink: null,
   specialAnnouncement: null,
+  heroLabel: "Visit Us",
+  heroIntro:
+    "Whether this is your first Sunday or your hundredth, you are welcome here. Come expecting to encounter the Word, the Spirit, and a family that genuinely cares.",
+  firstTimerTitle: "First time visiting?",
+  firstTimerBody:
+    "We'd love to meet you. Come as you are — no dress code, no pressure. Just come expecting something real.",
 };
 
 export const SERMONS_FALLBACK: SermonsContent = {
@@ -392,6 +409,33 @@ export const CONTACT_FALLBACK: ContactContent = {
   tiktok: { visible: true, url: "https://www.tiktok.com/@everlasting_hills_church" },
 };
 
+export const CAROUSEL_FALLBACK: CarouselContent = {
+  eyebrow: "Life at EHC",
+  headline: "Moments worth showing up for.",
+  images: [
+    "/HeroImages/1.jpg",
+    "/HeroImages/2.jpg",
+    "/HeroImages/3.jpg",
+    "/HeroImages/4.jpg",
+    "/HeroImages/21.jpg",
+    "/HeroImages/IMG_101.jpg",
+    "/HeroImages/IMG_1080.jpg",
+    "/HeroImages/IMG_4565.jpg",
+    "/HeroImages/IMG_4667.jpg",
+    "/HeroImages/IMG_5684.jpg",
+    "/HeroImages/IMG_8248.jpg",
+    "/HeroImages/IMG_8470.jpg",
+    "/HeroImages/IMG_8931.jpg",
+    "/HeroImages/IMG_9.jpg",
+    "/HeroImages/IMG_9003.jpg",
+    "/HeroImages/IMG_9014.jpg",
+    "/HeroImages/1.jpg",
+    "/HeroImages/2.jpg",
+    "/HeroImages/3.jpg",
+    "/HeroImages/4.jpg",
+  ],
+};
+
 const FALLBACKS: SiteSettingsMap = {
   HERO: HERO_FALLBACK,
   ABOUT: ABOUT_FALLBACK,
@@ -402,6 +446,7 @@ const FALLBACKS: SiteSettingsMap = {
   COMMUNITY: COMMUNITY_FALLBACK,
   GIVING: GIVING_FALLBACK,
   CONTACT: CONTACT_FALLBACK,
+  CAROUSEL: CAROUSEL_FALLBACK,
 };
 
 /* ── Fetcher ─────────────────────────────────────────────────────────────── */

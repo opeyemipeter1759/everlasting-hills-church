@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Search, AlertTriangle, Loader2 } from "lucide-react";
 import FormModal from "@/components/ui/overlay/FormModal";
 import { usePeople } from "@/lib/api/people";
@@ -109,8 +110,7 @@ export default function HeadPicker({
 export function Avatar({ name, photoUrl, px = 36 }: { name: string; photoUrl: string | null; px?: number }) {
   const initials = name.split(/\s+/).map((s) => s[0]).slice(0, 2).join("").toUpperCase();
   if (photoUrl) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={photoUrl} alt={name} style={{ width: px, height: px }} className="shrink-0 rounded-full object-cover" />;
+    return <Image src={photoUrl} alt={name} width={px} height={px} className="shrink-0 rounded-full object-cover" />;
   }
   return (
     <span

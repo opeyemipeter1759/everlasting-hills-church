@@ -16,11 +16,12 @@ import {
 } from "lucide-react";
 import { getFrontendSessionUser } from "@/lib/auth/frontend-session";
 import { useAdminDashboardData } from "./useAdminDashboardData";
-import type { StatKey } from "@/lib/mock/admin-dashboard.mock";
+import type { StatKey } from "@/lib/types/admin-dashboard";
 import DashboardStatCard from "./DashboardStatCard";
 import GivingSummaryCard from "./GivingSummaryCard";
 import AIInsightsCard from "./AIInsightsCard";
 import AttendanceTrendCard from "./AttendanceTrendCard";
+import FirstTimerBreakdownCard from "./FirstTimerBreakdownCard";
 import FirstTimerFunnelCard from "./FirstTimerFunnelCard";
 import CalendarSummaryCard from "./CalendarSummaryCard";
 import PastoralCareCard from "./PastoralCareCard";
@@ -89,20 +90,27 @@ export default function AdminDashboardClient() {
             )}
             {visible("ai") && (
               <AIInsightsCard
-                insights={data.aiInsights}
+                trend={data.attendanceTrend}
+                fallback={data.aiInsights}
                 viewMoreHref="/dashboard/follow-up"
                 onDismiss={() => dismiss("ai")}
               />
             )}
           </div>
 
-          {/* Attendance trend — full width */}
+          {/* Attendance trend + First-timer breakdown — side by side */}
           {visible("attendance") && (
-            <AttendanceTrendCard
-              data={data.attendanceTrend}
-              viewMoreHref="/dashboard/analytics/attendance"
-              onDismiss={() => dismiss("attendance")}
-            />
+            <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+              <AttendanceTrendCard
+                data={data.attendanceTrend}
+                viewMoreHref="/dashboard/analytics/attendance"
+                onDismiss={() => dismiss("attendance")}
+              />
+              <FirstTimerBreakdownCard
+                viewMoreHref="/dashboard/admin/first-timers"
+                onDismiss={() => dismiss("attendance")}
+              />
+            </div>
           )}
 
           {/* Funnel + events */}

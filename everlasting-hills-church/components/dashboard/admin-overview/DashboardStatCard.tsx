@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
-import type { Trend } from "@/lib/mock/admin-dashboard.mock";
+import type { Trend } from "@/lib/types/admin-dashboard";
 
 export function TrendPill({ trend }: { trend: Trend }) {
   const up = trend.direction === "up";

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { Camera } from 'lucide-react';
 
 interface AvatarSectionProps {
@@ -14,7 +15,7 @@ export function AvatarSection({ displayPhoto, fullName, initials, roleLabel, fil
     <div className="flex items-center gap-5 px-6 py-5 border-b border-gray-100 dark:border-white/5">
       <div className="relative flex-shrink-0">
         {displayPhoto ? (
-          <img src={displayPhoto} alt={fullName} className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-white/10" />
+          <Image src={displayPhoto} alt={fullName} width={96} height={96} className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-white/10" />
         ) : (
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#87102C] to-[#c0392b] flex items-center justify-center select-none">
             <span className="text-2xl font-bold text-white">{initials}</span>

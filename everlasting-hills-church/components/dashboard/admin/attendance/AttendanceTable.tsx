@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { format } from "date-fns";
 import { Search, ChevronUp, ChevronDown, Check, X, Download, Loader2 } from "lucide-react";
 import { useAttendanceList, useOverrideAttendance, useBulkMarkAttendance, downloadAttendanceCsv, type AttendanceListQuery } from "@/lib/api";
@@ -161,8 +162,7 @@ export function AttendanceTable() {
                 <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-2.5">
                     {row.photoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={row.photoUrl} alt={row.userName} className="w-7 h-7 rounded-full object-cover shrink-0" />
+                      <Image src={row.photoUrl} alt={row.userName} width={28} height={28} className="w-7 h-7 rounded-full object-cover shrink-0" />
                     ) : (
                       <div className="w-7 h-7 rounded-full bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center shrink-0 text-[11px] font-black text-[#87102C] dark:text-[#e8768a] uppercase">{row.userName.charAt(0)}</div>
                     )}

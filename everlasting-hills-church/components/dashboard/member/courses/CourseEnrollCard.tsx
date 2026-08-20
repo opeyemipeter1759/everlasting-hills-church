@@ -49,7 +49,20 @@ export default function CourseEnrollCard({
       </div>
 
       <div className="border-t border-gray-100 dark:border-white/8 p-5">
-        {status === "locked" ? (
+        {status === "category-locked" ? (
+          <div className="rounded-xl bg-gray-50 dark:bg-white/5 p-4 text-center">
+            <Lock size={18} className="mx-auto mb-2 text-gray-400 dark:text-white/40" />
+            <p className="text-xs font-semibold text-gray-600 dark:text-white/60">
+              Enroll in the "{course.category.name}" category first
+            </p>
+            <Link
+              href={`/dashboard/explore-courses/category/${course.category.id}`}
+              className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#87102C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#6E0C24] transition-colors"
+            >
+              Go to category
+            </Link>
+          </div>
+        ) : status === "locked" ? (
           <div className="rounded-xl bg-gray-50 dark:bg-white/5 p-4 text-center">
             <Lock size={18} className="mx-auto mb-2 text-gray-400 dark:text-white/40" />
             <p className="text-xs font-semibold text-gray-600 dark:text-white/60">

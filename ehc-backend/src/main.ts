@@ -65,7 +65,7 @@ async function bootstrap() {
   const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS !== 'false';
 
   const staticAllowed = new Set<string>(
-    [frontendUrl, ...extraOrigins, !isProd && 'http://localhost:3000', !isProd && 'http://localhost:3001']
+    [frontendUrl, ...extraOrigins, !isProd && 'http://localhost:3000', !isProd && 'http://localhost:3001', !isProd && 'http://localhost:3002']
       .filter(Boolean) as string[],
   );
 
@@ -121,8 +121,8 @@ async function bootstrap() {
    */
   app.enableShutdownHooks();
 
-  const port = config.get('PORT', { infer: true });
-  await app.listen(port);
+  const port = config.get('PORT', { infer: true }) || 8080;
+  await app.listen(port, '0.0.0.0');
   logger.log(`church-api running on http://localhost:${port}`);
   logger.log(`Swagger docs at http://localhost:${port}/docs`);
 }

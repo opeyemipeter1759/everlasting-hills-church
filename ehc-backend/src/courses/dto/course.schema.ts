@@ -41,9 +41,19 @@ export type CourseInput = z.infer<typeof CourseInputSchema>;
 
 export const CourseCategoryInputSchema = z.object({
   name: text(80),
+  description: z.string().trim().max(600).nullish(),
   parentId: z.string().trim().min(1).nullish(),
 });
 export type CourseCategoryInput = z.infer<typeof CourseCategoryInputSchema>;
+
+/** z.literal(true) enforces server-side that both boxes were actually checked —
+ * not just a client-side nicety the caller could bypass. */
+export const CourseCategoryEnrollInputSchema = z.object({
+  reason: text(500),
+  commitmentConfirmed: z.literal(true),
+  agreedToRules: z.literal(true),
+});
+export type CourseCategoryEnrollInput = z.infer<typeof CourseCategoryEnrollInputSchema>;
 
 export const SubmitExamSchema = z.object({
   answers: z.record(z.string(), z.number().int().min(0)),

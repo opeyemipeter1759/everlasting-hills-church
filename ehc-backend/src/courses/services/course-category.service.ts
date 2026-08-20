@@ -37,6 +37,7 @@ export class CourseCategoryService {
       id: c.id,
       name: c.name,
       slug: c.slug,
+      description: c.description,
       parentId: c.parentId,
       courseCount: courseCountByCategory.get(c.id) ?? 0,
     }));
@@ -49,7 +50,14 @@ export class CourseCategoryService {
     const id = randomUUID();
     const slug = await this.shared.uniqueCategorySlug(dto.name);
     await this.prisma.courseCategory.create({
-      data: { id, tenantId: this.tenantId, name: dto.name, slug, parentId: dto.parentId ?? null },
+      data: {
+        id,
+        tenantId: this.tenantId,
+        name: dto.name,
+        slug,
+        description: dto.description ?? null,
+        parentId: dto.parentId ?? null,
+      },
     });
     await this.shared.writeAudit({ action: 'CREATE', entityId: id, actorId: actor.userId, after: { name: dto.name } });
     return this.listCategories();
@@ -65,7 +73,7 @@ export class CourseCategoryService {
     const slug = dto.name === existing.name ? existing.slug : await this.shared.uniqueCategorySlug(dto.name, id);
     await this.prisma.courseCategory.update({
       where: { id },
-      data: { name: dto.name, slug, parentId: dto.parentId ?? null },
+      data: { name: dto.name, slug, description: dto.description ?? null, parentId: dto.parentId ?? null },
     });
     await this.shared.writeAudit({ action: 'UPDATE', entityId: id, actorId: actor.userId, after: { name: dto.name } });
     return this.listCategories();

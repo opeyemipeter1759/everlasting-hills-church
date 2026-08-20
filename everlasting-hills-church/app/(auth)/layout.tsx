@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Navbar from "@/components/home/Navbar";
 import PageFooter from "@/components/home/PageFooter";
 
@@ -24,12 +25,13 @@ export default function AuthLayout({
       <main className="relative min-h-[80vh] bg-church-dark text-white overflow-hidden py-16 sm:py-24 px-4 sm:px-5 selection:bg-church-maroon">
         {/* Cinematic background image with fade gradients */}
         <div className="absolute inset-0 z-0 pointer-events-none">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/images/church_congregation_3_1779193624434.png"
             alt=""
             aria-hidden="true"
-            className="w-full h-full object-cover opacity-40 scale-105"
+            fill
+            sizes="100vw"
+            className="object-cover opacity-40 scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-church-dark via-church-dark/40 to-church-dark" />
           <div className="absolute inset-0 bg-gradient-to-b from-church-dark/80 via-transparent to-church-dark/80" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Check, Trash2, RefreshCw } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
@@ -133,10 +134,11 @@ export default function ProfilePhotoCard({
         <div className="px-6 sm:px-7 pt-6">
           <div className="flex items-center gap-4">
             {currentPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={currentPreview}
                 alt={displayName}
+                width={56}
+                height={56}
                 className="w-14 h-14 rounded-full object-cover ring-2 ring-[#E7CDD3]/70 dark:ring-white/[0.14]"
               />
             ) : (

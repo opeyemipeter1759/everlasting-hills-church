@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Cake, Check, Heart } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { FormInput, labelBase } from "@/components/ui/form/FormInput";
+import { Select } from "@/components/ui/select";
 
 export type ProfileDetailsUser = {
   gender: string | null;
@@ -15,13 +16,35 @@ export type ProfileDetailsUser = {
 
 type FormValues = {
   gender: "Male" | "Female" | "";
-  dateOfBirth: string;
+  birthDay: string;
+  birthMonth: string;
   maritalStatus: "single" | "married";
   weddingAnniversary: string;
 };
 
 function toDateInputValue(iso: string | null): string {
   return iso ? iso.slice(0, 10) : "";
+}
+
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+// Date of birth is collected as day + month only (no year, since it's only ever
+// used for birthday matching) — the year on the stored value is a carry-over
+// sentinel, defaulted to 2000 for members who never had one.
+function dayMonthFromIso(iso: string | null): { day: string; month: string } {
+  if (!iso) return { day: "", month: "" };
+  const d = new Date(iso);
+  return { day: String(d.getUTCDate()), month: MONTH_NAMES[d.getUTCMonth()] };
+}
+
+function composeDobIso(day: string, month: string, year: number): string | null {
+  const mi = MONTH_NAMES.indexOf(month);
+  const d = parseInt(day, 10);
+  if (mi === -1 || !d || d < 1 || d > 31) return null;
+  return new Date(Date.UTC(year, mi, d)).toISOString();
 }
 
 const todayStr = new Date().toISOString().slice(0, 10);
@@ -40,18 +63,24 @@ interface Props {
 
 export default function ProfileDetailsForm({ user }: Props) {
   const router = useRouter();
+  const { day: initialDay, month: initialMonth } = dayMonthFromIso(user.dateOfBirth);
   const initial: FormValues = {
     gender: (user.gender as "Male" | "Female" | null) ?? "",
-    dateOfBirth: toDateInputValue(user.dateOfBirth),
+    birthDay: initialDay,
+    birthMonth: initialMonth,
     maritalStatus: user.weddingAnniversary ? "married" : "single",
     weddingAnniversary: toDateInputValue(user.weddingAnniversary),
   };
+  // Year isn't shown or edited, but is preserved on submit so an existing accurate
+  // birth year isn't silently overwritten by the sentinel used for new profiles.
+  const dobYear = useRef(user.dateOfBirth ? new Date(user.dateOfBirth).getUTCFullYear() : 2000).current;
 
   const {
     register,
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { isSubmitting, isDirty },
   } = useForm<FormValues>({ defaultValues: initial });
 
@@ -59,6 +88,8 @@ export default function ProfileDetailsForm({ user }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const maritalStatus = watch("maritalStatus");
+  const birthDay = watch("birthDay");
+  const birthMonth = watch("birthMonth");
 
   async function onSubmit(values: FormValues) {
     setSaved(false);
@@ -66,7 +97,7 @@ export default function ProfileDetailsForm({ user }: Props) {
     try {
       await apiClient.patch("/members/me", {
         gender: values.gender || null,
-        dateOfBirth: values.dateOfBirth || null,
+        dateOfBirth: composeDobIso(values.birthDay, values.birthMonth, dobYear),
         weddingAnniversary:
           values.maritalStatus === "married" ? values.weddingAnniversary || null : null,
       });
@@ -131,13 +162,30 @@ export default function ProfileDetailsForm({ user }: Props) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          <FormInput
-            label="Date of birth"
-            icon={Cake}
-            type="date"
-            max={todayStr}
-            {...register("dateOfBirth")}
-          />
+          <div>
+            <label className={labelBase}>
+              <Cake size={12} className="inline mr-1 -mt-0.5" aria-hidden="true" />
+              Date of birth
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <Select
+                aria-label="Birth month"
+                value={birthMonth}
+                onChange={(v) => setValue("birthMonth", v, { shouldDirty: true })}
+                placeholder="Month"
+                className="w-full text-sm rounded-xl px-4 py-3 text-[#111] bg-white border border-[#E7CDD3]/60 focus:outline-none focus:border-[#87102C] focus:ring-2 focus:ring-[#87102C]/15 dark:text-white dark:bg-white/[0.06] dark:border-white/[0.10]"
+                options={MONTH_NAMES.map((m) => ({ value: m, label: m }))}
+              />
+              <Select
+                aria-label="Birth day"
+                value={birthDay}
+                onChange={(v) => setValue("birthDay", v, { shouldDirty: true })}
+                placeholder="Day"
+                className="w-full text-sm rounded-xl px-4 py-3 text-[#111] bg-white border border-[#E7CDD3]/60 focus:outline-none focus:border-[#87102C] focus:ring-2 focus:ring-[#87102C]/15 dark:text-white dark:bg-white/[0.06] dark:border-white/[0.10]"
+                options={Array.from({ length: 31 }, (_, i) => String(i + 1)).map((d) => ({ value: d, label: d }))}
+              />
+            </div>
+          </div>
 
           {maritalStatus === "married" && (
             <FormInput

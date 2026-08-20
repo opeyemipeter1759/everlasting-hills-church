@@ -1,9 +1,10 @@
 "use client";
 
-import { Building2, Inbox } from "lucide-react";
+import { ArrowLeft, Building2, Inbox } from "lucide-react";
 import { useMyDepartments } from "@/lib/api/departments";
 import ReportsPageShell from "@/components/dashboard/reports/ReportsPageShell";
 import ReportsListSkeleton from "@/components/ui/skeleton/ReportsListSkeleton";
+import Link from "next/link";
 
 export default function DepartmentReportsClient() {
   const q = useMyDepartments();
@@ -16,7 +17,11 @@ export default function DepartmentReportsClient() {
 
   if (departments.length === 0) {
     return (
-      <div className="mx-auto max-w-4xl">
+      <div className="mx-auto max-w-6xl">
+           <div className="flex items-center gap-1">
+              <ArrowLeft size={16} className="text-[#87102C] dark:text-[#e8768a]" /> 
+              <Link href='/dashboard/my-department' className='flex text-[#6E0C24]  font-medium text-sm rounded-md  items-center'>Back</Link>
+              </div>
         <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
           <Inbox size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">You have not been assigned a department yet.</p>
