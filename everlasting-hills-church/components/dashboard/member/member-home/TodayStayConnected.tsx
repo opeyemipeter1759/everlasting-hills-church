@@ -39,7 +39,7 @@ export function TodayStayConnected() {
           <ChevronRight size={14} className="text-emerald-500 ml-auto flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
         </a>
         <Link
-          href="/dashboard/prayer-requests"
+          href="/prayer-request"
           className="flex items-center gap-3.5 p-4 rounded-2xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200/60 dark:border-violet-500/20 hover:bg-violet-100 dark:hover:bg-violet-500/20 transition-colors group"
         >
           <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-500/25">

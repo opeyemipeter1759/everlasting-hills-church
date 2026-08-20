@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Check, ChevronDown, Search } from "lucide-react";
 
 export interface ComboOption {
@@ -34,8 +34,11 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listboxId = useId();
 
   const selected = options.find((o) => o.id === value);
   const filtered = query
@@ -56,25 +59,65 @@ export function Combobox({
 
   function handleOpen() {
     if (disabled || loading) return;
+    const selectedIndex = options.findIndex((option) => option.id === value);
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
     setOpen(true);
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
-  function handleSelect(opt: ComboOption) {
-    onChange(opt.id);
+  function handleClose({ restoreFocus = false } = {}) {
     setOpen(false);
     setQuery("");
+    if (restoreFocus) window.requestAnimationFrame(() => triggerRef.current?.focus());
+  }
+
+  function handleSelect(opt: ComboOption) {
+    onChange(opt.id);
+    handleClose({ restoreFocus: true });
+  }
+
+  function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      handleClose({ restoreFocus: true });
+      return;
+    }
+
+    if (event.key === "Tab") {
+      handleClose();
+      return;
+    }
+
+    if (filtered.length === 0) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setActiveIndex((index) => (index + 1) % filtered.length);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((index) => (index - 1 + filtered.length) % filtered.length);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      setActiveIndex(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      setActiveIndex(filtered.length - 1);
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      handleSelect(filtered[Math.min(activeIndex, filtered.length - 1)]);
+    }
   }
 
   return (
     <div ref={containerRef} className="relative">
       {/* Trigger */}
       <button
+        ref={triggerRef}
         type="button"
         onClick={handleOpen}
         disabled={disabled || loading}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={open ? listboxId : undefined}
         className="w-full flex items-center justify-between gap-2 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-sm px-3 py-2.5 outline-none focus:ring-2 focus:ring-[#87102C]/25 focus:border-[#87102C]/40 transition disabled:opacity-50 text-left"
       >
         <span className={selected ? "text-gray-900 dark:text-white" : "text-gray-400"}>
@@ -88,43 +131,55 @@ export function Combobox({
 
       {/* Dropdown panel */}
       {open && (
-        <div
-          role="listbox"
-          className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#2a2a2e] shadow-xl overflow-hidden"
-        >
+        <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#2a2a2e] shadow-xl overflow-hidden">
           {/* Search */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-white/8">
             <Search size={13} className="text-gray-400 shrink-0" />
             <input
               ref={inputRef}
               type="text"
+              role="combobox"
+              aria-label={searchPlaceholder}
+              aria-autocomplete="list"
+              aria-expanded="true"
+              aria-controls={listboxId}
+              aria-activedescendant={filtered[activeIndex] ? `${listboxId}-option-${activeIndex}` : undefined}
               value={query}
               onChange={(e) => {
                 setQuery(e.target.value);
+                setActiveIndex(0);
                 onQueryChange?.(e.target.value);
               }}
+              onKeyDown={handleInputKeyDown}
               placeholder={searchPlaceholder}
               className="flex-1 text-sm bg-transparent outline-none text-gray-900 dark:text-white placeholder:text-gray-400"
             />
           </div>
 
           {/* Options */}
-          <ul className="max-h-48 no-scrollbar overflow-y-auto py-1">
+          <ul id={listboxId} role="listbox" className="max-h-48 no-scrollbar overflow-y-auto py-1">
             {filtered.length === 0 ? (
-              <li className="px-3 py-2.5 text-xs text-gray-400 text-center">{emptyText}</li>
+              <li role="presentation" className="px-3 py-2.5 text-xs text-gray-400 text-center">{emptyText}</li>
             ) : (
-              filtered.map((opt) => (
-                <li key={opt.id} role="option" aria-selected={opt.id === value}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(opt)}
-                    className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-left"
-                  >
-                    <span>{opt.label}</span>
-                    {opt.id === value && (
-                      <Check size={13} className="text-[#87102C] shrink-0" />
-                    )}
-                  </button>
+              filtered.map((opt, index) => (
+                <li
+                  key={opt.id}
+                  id={`${listboxId}-option-${index}`}
+                  role="option"
+                  aria-selected={opt.id === value}
+                  onMouseMove={() => setActiveIndex(index)}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    handleSelect(opt);
+                  }}
+                  className={`w-full flex cursor-pointer items-center justify-between gap-2 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 transition-colors text-left ${
+                    index === activeIndex ? "bg-gray-50 dark:bg-white/5" : ""
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {opt.id === value && (
+                    <Check size={13} aria-hidden="true" className="text-[#87102C] shrink-0" />
+                  )}
                 </li>
               ))
             )}

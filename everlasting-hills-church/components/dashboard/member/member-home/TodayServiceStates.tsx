@@ -25,7 +25,7 @@ export function TodayAttendanceRecorded() {
             <Youtube size={13} />
             Watch on YouTube
           </a>
-          <Link href="/dashboard/prayer-requests"
+          <Link href="/prayer-request"
             className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-white/[0.04] border border-[#E7CDD3]/60 dark:border-white/[0.09] text-[#8a7e80] dark:text-white/55 text-xs font-semibold hover:bg-gray-100 dark:hover:bg-white/[0.07] transition-all">
             <MessageCircle size={13} />
             Visit the Prayer Wall

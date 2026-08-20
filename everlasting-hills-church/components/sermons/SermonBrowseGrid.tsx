@@ -233,7 +233,7 @@ export default function SermonBrowseGrid({
   onPlay,
   heading = 'Sermon Archive',
   subheading = 'Browse every message — tap play to listen or watch right here, no page reload needed.',
-  detailsHref = (slug) => `/dashboard/sermon/${slug}`,
+  detailsHref = (slug) => `/sermons/${slug}`,
   detailsLabel = 'Open page',
 }: {
   onPlay: (slug: string) => void;

@@ -157,7 +157,7 @@ export default function AdminOverview({
       label: "Total Members",
       value: stats.members,
       icon: Users,
-      href: "/dashboard/members",
+      href: "/dashboard/admin/members",
       iconBg: "bg-[#FFE8ED] dark:bg-[#87102C]/25",
       iconColor: "text-[#87102C] dark:text-[#FFB3C1]",
     },
@@ -165,7 +165,7 @@ export default function AdminOverview({
       label: "First-Time Visitors",
       value: stats.visitors,
       icon: UserPlus,
-      href: "/dashboard/first-timers",
+      href: "/dashboard/admin/first-timers",
       iconBg: "bg-amber-50 dark:bg-amber-500/20",
       iconColor: "text-amber-600 dark:text-amber-400",
     },
@@ -339,7 +339,7 @@ export default function AdminOverview({
                       {b.daysUntil === 0 ? "Today! 🎂" : `In ${b.daysUntil}d`}
                     </span>
                     <Link
-                      href={`/dashboard/members/${b.id}`}
+                      href={`/dashboard/admin/members/${b.id}`}
                       className="text-[#b8a8ac] dark:text-white/25 hover:text-[#87102C] dark:hover:text-[#FFB3C1] transition-colors flex-shrink-0"
                       aria-label={`View ${b.firstName} ${b.lastName}`}
                     >
@@ -415,7 +415,7 @@ export default function AdminOverview({
               <SearchInput value={memberSearch} onChange={setMemberSearch} placeholder="Search members…" />
             </div>
             <Link
-              href="/dashboard/members"
+              href="/dashboard/admin/members"
               className="group text-xs text-[#87102C] dark:text-[#FFB3C1] font-semibold flex items-center gap-1 hover:gap-1.5 transition-all whitespace-nowrap"
             >
               View all

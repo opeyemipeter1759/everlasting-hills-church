@@ -5,6 +5,7 @@ import { CheckCircle2, Send } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import ScrollReveal from "@/components/home/ScrollReveal";
+import { apiClient } from "@/lib/api/axios";
 import { HEAVEN_ON_EARTH } from "./event-constants";
 
 /**
@@ -25,16 +26,6 @@ interface FormValues {
   phone: string;
   attendees: number;
 }
-
-interface RegisterResponse {
-  success?: boolean;
-  message?: string;
-  visitor?: unknown;
-}
-
-const API_BASE =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_BASE_URL?.trim()) ||
-  "/api";
 
 export default function RsvpForm() {
   const [submitting, setSubmitting] = useState(false);
@@ -63,21 +54,7 @@ export default function RsvpForm() {
         service_experience: `RSVP for ${HEAVEN_ON_EARTH.title} on ${HEAVEN_ON_EARTH.dateDisplay}. ${data.attendees} attendee(s).`,
       };
 
-      const res = await fetch(`${API_BASE.replace(/\/$/, "")}/forms/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      // Server wraps responses in { data, meta } / { error } envelopes
-      const body = (await res.json().catch(() => null)) as
-        | { data?: RegisterResponse; error?: { message?: string } }
-        | null;
-
-      if (!res.ok) {
-        const msg = body?.error?.message ?? `RSVP failed (${res.status})`;
-        throw new Error(msg);
-      }
+      await apiClient.post("/forms/register", payload);
       setSuccess(true);
       reset();
     } catch (err) {

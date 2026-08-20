@@ -67,7 +67,7 @@ export default function SermonList({ sermons: initial }: { sermons: Sermon[] }) 
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Sermons</h1>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-0.5">{sermons.length} sermon{sermons.length !== 1 ? "s" : ""} total</p>
         </div>
-        <Link href="/dashboard/sermons/new"
+        <Link href="/dashboard/pastor/sermons/new"
           className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-[#87102C] text-white hover:bg-[#6E0C24] transition-colors">
           <Plus size={15} /> New Sermon
         </Link>
@@ -77,7 +77,7 @@ export default function SermonList({ sermons: initial }: { sermons: Sermon[] }) 
         <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-2xl p-12 flex flex-col items-center justify-center text-center">
           <BookOpen size={32} className="text-gray-200 dark:text-gray-700 mb-3" />
           <p className="text-sm font-medium text-gray-400 dark:text-gray-500">No sermons yet.</p>
-          <Link href="/dashboard/sermons/new"
+          <Link href="/dashboard/pastor/sermons/new"
             className="mt-4 text-sm font-semibold text-[#87102C] dark:text-[#e8768a] hover:underline">
             Create your first sermon →
           </Link>
@@ -125,7 +125,7 @@ export default function SermonList({ sermons: initial }: { sermons: Sermon[] }) 
                       className="p-1.5 rounded-lg text-gray-400 hover:text-sky-500 hover:bg-sky-50 dark:hover:bg-sky-500/10 transition-colors">
                       <Eye size={13} />
                     </Link>
-                    <Link href={`/dashboard/sermons/${s.id}/edit`} title="Edit"
+                    <Link href={`/dashboard/pastor/sermons/${s.id}/edit`} title="Edit"
                       className="p-1.5 rounded-lg text-gray-400 hover:text-[#87102C] hover:bg-[#87102C]/5 transition-colors">
                       <Edit2 size={13} />
                     </Link>

@@ -17,7 +17,7 @@ export function OnboardingChecklist({ member, prayerCount, ministryUnit }: {
   const steps = [
     { label: "Complete your profile",           desc: "Add your bio, phone number, and date of birth.", done: profileComplete,  href: "/dashboard/profile" },
     { label: "Join a ministry unit",             desc: "Connect with a team that fits your calling.",    done: !!ministryUnit,   href: "#" },
-    { label: "Submit your first prayer request", desc: "Our team is ready to pray with you.",            done: prayerCount > 0, href: "/dashboard/prayer-requests" },
+    { label: "Submit your first prayer request", desc: "Our team is ready to pray with you.",            done: prayerCount > 0, href: "/prayer-request" },
   ];
 
   const done = steps.filter((s) => s.done).length;
