@@ -374,6 +374,8 @@ model PaystackWebhookLog {
   processedAt DateTime @default(now())
   tenantId    String
   Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, event, reference])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
