@@ -1383,6 +1383,7 @@ enum SiteSection {
   COMMUNITY
   GIVING
   CONTACT
+  CAROUSEL
 }
 
 enum AlertType {

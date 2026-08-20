@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Link, Upload } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Link, Upload, Sparkles } from 'lucide-react';
 import { useCreateSermon, useUpdateSermon, useSermon } from '@/lib/api';
 import FileUpload from '@/components/ui/form/FileUpload';
 import { Select } from '@/components/ui/select';
@@ -189,6 +189,38 @@ export default function SermonForm({ mode }: SermonFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [audioMode, setAudioMode] = useState<AudioMode>('upload');
+
+  // AI sermon summary
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiTakeaways, setAiTakeaways] = useState<string[]>([]);
+  const [aiError, setAiError] = useState('');
+
+  async function generateSermonSummary() {
+    if (!form.title) return;
+    setAiLoading(true);
+    setAiError('');
+    try {
+      const res = await fetch('/api/ai/sermon-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: form.title,
+          description: form.description || undefined,
+          scriptureRef: form.scriptureRef || undefined,
+          series: form.series || undefined,
+          speaker: form.speaker || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (data.summary) set('description', data.summary);
+      if (data.tags?.length) set('tagsRaw', (data.tags as string[]).join(', '));
+      if (data.keyTakeaways?.length) setAiTakeaways(data.keyTakeaways as string[]);
+    } catch {
+      setAiError('Gemini unavailable. Fill in the description manually.');
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   /* populate form when editing */
   useEffect(() => {
@@ -436,13 +468,43 @@ export default function SermonForm({ mode }: SermonFormProps) {
             </div>
 
             <Field label="Description">
-              <textarea
-                rows={3}
-                placeholder="A brief description of this message…"
-                value={form.description}
-                onChange={(e) => set('description', e.target.value)}
-                className={`${INPUT} resize-none`}
-              />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={LABEL} style={{ margin: 0 }}>Description</span>
+                  <button
+                    type="button"
+                    onClick={generateSermonSummary}
+                    disabled={!form.title || aiLoading}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] px-2.5 py-1 text-[11px] font-bold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-500/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    title={!form.title ? 'Enter a title first' : 'Generate with Gemini AI'}
+                  >
+                    {aiLoading ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+                    {aiLoading ? 'Generating…' : 'Generate with AI'}
+                  </button>
+                </div>
+                <textarea
+                  rows={3}
+                  placeholder="A brief description of this message…"
+                  value={form.description}
+                  onChange={(e) => set('description', e.target.value)}
+                  className={`${INPUT} resize-none`}
+                />
+                {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+                {aiTakeaways.length > 0 && (
+                  <div className="rounded-xl border border-violet-100 dark:border-violet-500/20 bg-violet-50/60 dark:bg-violet-500/[0.06] p-3">
+                    <p className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
+                      <Sparkles size={10} /> Key Takeaways (AI generated)
+                    </p>
+                    <ul className="space-y-1">
+                      {aiTakeaways.map((t, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-violet-800 dark:text-violet-200">
+                          <span className="mt-0.5 text-violet-400">•</span> {t}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </Field>
 
             <Field label="Tags" hint="(comma-separated)">
