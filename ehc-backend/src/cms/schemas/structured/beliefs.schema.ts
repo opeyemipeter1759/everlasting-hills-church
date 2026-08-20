@@ -12,11 +12,20 @@ const PillarSchema = z.object({
   text: z.string().trim().min(1).max(1000),
 });
 
+const heroImageSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2000)
+  .refine((v) => v.startsWith('/') || /^https?:\/\//i.test(v), 'Must be a relative path or absolute URL');
+
 export const BeliefsSchema = z.object({
   eyebrow: z.string().trim().min(1).max(60),
   title: z.string().trim().min(1).max(80),
   accent: z.string().trim().min(1).max(80),
   lead: z.string().trim().min(1).max(400),
+  /** Optional+nullable so existing drafts saved before this field existed still save fine. */
+  heroImage: heroImageSchema.nullable().optional(),
   pillars: z.tuple([PillarSchema, PillarSchema, PillarSchema, PillarSchema, PillarSchema]),
   cta: z.object({
     heading: z.string().trim().min(1).max(120),
@@ -32,6 +41,7 @@ export const DEFAULT_BELIEFS: BeliefsContent = {
   title: 'Five pillars from',
   accent: 'Genesis 49:22-26',
   lead: 'The blessing spoken over Joseph still shapes a people who give themselves fully to God. These five pillars frame everything we are.',
+  heroImage: null,
   pillars: [
     {
       title: 'Fruitfulness',

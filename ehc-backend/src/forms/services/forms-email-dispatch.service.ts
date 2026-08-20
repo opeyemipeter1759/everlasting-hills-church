@@ -23,7 +23,7 @@ export class FormsEmailDispatchService {
       config.get('CONTACT_EMAIL', { infer: true }) ??
       'hello@everlastinghills.org';
     this.appUrl =
-      (config.get('FRONTEND_URL', { infer: true }) as string | undefined) ?? 'http://localhost:3000';
+      (config.get('FRONTEND_URL', { infer: true }) as string | undefined) ?? 'https://www.everlastinghills.church/visit';
   }
 
   dispatch(payload: SendEmailPayload) {

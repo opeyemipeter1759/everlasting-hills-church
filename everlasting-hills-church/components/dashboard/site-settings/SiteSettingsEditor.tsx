@@ -9,6 +9,7 @@ import {
   Eye,
   Globe,
   HelpingHand,
+  Images,
   Mountain,
   Phone,
   Play,
@@ -51,6 +52,7 @@ const SECTION_META: Record<SiteSectionName, { label: string; icon: LucideIcon }>
   COMMUNITY: { label: "Community", icon: Users },
   GIVING: { label: "Giving", icon: HelpingHand },
   CONTACT: { label: "Contact", icon: Phone },
+  CAROUSEL: { label: "Carousel", icon: Images },
 };
 
 const SECTION_ORDER: SiteSectionName[] = [
@@ -63,6 +65,7 @@ const SECTION_ORDER: SiteSectionName[] = [
   "COMMUNITY",
   "GIVING",
   "CONTACT",
+  "CAROUSEL",
 ];
 
 /**

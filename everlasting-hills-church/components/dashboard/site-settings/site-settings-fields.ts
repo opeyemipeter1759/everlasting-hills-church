@@ -42,7 +42,7 @@ const hero: FieldDef[] = [
   },
   cta("ctaPrimary", "Primary button"),
   cta("ctaSecondary", "Secondary button"),
-  { kind: "list", key: "carouselImages", label: "Carousel images", help: "One image URL per line" },
+  { kind: "imageList", key: "carouselImages", label: "Carousel images", help: "Shown in the homepage hero's photo strip", max: 12 },
   {
     kind: "group",
     key: "mediaCard",
@@ -120,6 +120,10 @@ const scripture: FieldDef[] = [
 ];
 
 const service: FieldDef[] = [
+  { kind: "text", key: "heroLabel", label: "Hero eyebrow label", nullable: true, help: "Leave blank to use the default" },
+  { kind: "textarea", key: "heroIntro", label: "Hero intro paragraph", nullable: true, help: "Leave blank to use the default" },
+  { kind: "text", key: "firstTimerTitle", label: "First-timer callout title", nullable: true, help: "Leave blank to use the default" },
+  { kind: "textarea", key: "firstTimerBody", label: "First-timer callout body", nullable: true, help: "Leave blank to use the default" },
   {
     kind: "repeat",
     key: "services",
@@ -248,6 +252,12 @@ const contact: FieldDef[] = [
   ]),
 ];
 
+const carousel: FieldDef[] = [
+  { kind: "text", key: "eyebrow", label: "Eyebrow" },
+  { kind: "text", key: "headline", label: "Headline" },
+  { kind: "imageList", key: "images", label: "Slides", help: "\"Life at EHC\" editorial slider on the homepage", max: 30 },
+];
+
 export const SITE_SETTINGS_FIELDS: Record<SiteSectionName, FieldDef[]> = {
   HERO: hero,
   ABOUT: about,
@@ -258,4 +268,5 @@ export const SITE_SETTINGS_FIELDS: Record<SiteSectionName, FieldDef[]> = {
   COMMUNITY: community,
   GIVING: giving,
   CONTACT: contact,
+  CAROUSEL: carousel,
 };

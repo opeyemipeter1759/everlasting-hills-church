@@ -15,6 +15,7 @@ const FALLBACK: GiveContent = {
   accentBottom: "Mission",
   subtitle:
     "Your gifts fuel worship, outreach, and pastoral care, carrying the gospel unto the utmost bound of the everlasting hills.",
+  heroImage: "/images/church_congregation_2_1779193607195.png",
   sectionLabel: "Ways to Give",
   headingLead: "Give by",
   headingAccent: "bank transfer",

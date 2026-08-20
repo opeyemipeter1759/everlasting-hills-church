@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ImageIcon, Loader2, Plus, Trash2 } from "lucide-react";
+import { ImageIcon, Loader2, Plus, Trash2, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 
 /**
@@ -17,6 +17,7 @@ export type FieldDef =
   | { kind: "select"; key: string; label: string; options: { value: string; label: string }[]; help?: string }
   | { kind: "image"; key: string; label: string; help?: string; nullable?: boolean }
   | { kind: "list"; key: string; label: string; help?: string } // string[]
+  | { kind: "imageList"; key: string; label: string; help?: string; max?: number } // string[] of image URLs, each with its own upload
   | { kind: "group"; key: string; label: string; fields: FieldDef[] } // nested object
   | {
       kind: "repeat";
@@ -132,6 +133,17 @@ function FieldView({ field, value, onChange }: { field: FieldDef; value: unknown
       </Labeled>
     );
   }
+  if (field.kind === "imageList") {
+    return (
+      <Labeled label={field.label} help={field.help}>
+        <ImageListField
+          value={Array.isArray(value) ? (value as string[]) : []}
+          onChange={onChange}
+          max={field.max}
+        />
+      </Labeled>
+    );
+  }
   if (field.kind === "group") {
     return (
       <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] p-4">
@@ -184,6 +196,7 @@ function Labeled({ label, help, children }: { label: string; help?: string; chil
 function emptyValueFor(field: FieldDef): unknown {
   switch (field.kind) {
     case "list": return [];
+    case "imageList": return [];
     case "repeat": return [];
     case "group": return {};
     case "number": return 0;
@@ -249,6 +262,97 @@ function ImageField({ value, onChange }: { value: string; onChange: (url: string
         </button>
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+/**
+ * Compact thumbnail grid for a list of image URLs. Deliberately not one ImageField
+ * row per image — at a dozen-plus images that would push the whole page's scroll out
+ * to match; tiles pack many images into little vertical space, and the grid itself
+ * scrolls within a capped height so the list never grows past it either.
+ */
+function ImageListField({
+  value,
+  onChange,
+  max,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+  max?: number;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const atMax = !!max && value.length >= max;
+
+  async function handlePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiClient.post<{ url?: string }>("/uploads/image", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120_000,
+      });
+      const url = res.data?.url ?? "";
+      if (!url) throw new Error("Upload succeeded but returned no URL");
+      onChange([...value, url]);
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function remove(i: number) {
+    onChange(value.filter((_, idx) => idx !== i));
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 max-h-64 overflow-y-auto p-0.5">
+        {value.map((url, i) => (
+          <div
+            key={i}
+            className="group relative aspect-square overflow-hidden rounded-lg border border-[#E7CDD3] dark:border-white/10"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={url} alt="" className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+              aria-label="Remove image"
+            >
+              <X size={11} />
+            </button>
+          </div>
+        ))}
+        {!atMax && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-[#E7CDD3] text-gray-400 hover:border-[#87102C]/40 hover:text-[#87102C] disabled:opacity-50 dark:border-white/15 dark:text-white/30"
+            aria-label="Add image"
+          >
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={18} />}
+          </button>
+        )}
+      </div>
+      <input ref={fileInputRef} type="file" accept="image/*" className="sr-only" onChange={handlePick} />
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] text-gray-400 dark:text-white/30">
+          {value.length}
+          {max ? ` / ${max}` : ""} image{value.length !== 1 ? "s" : ""}
+        </p>
+        {error && <p className="text-xs text-red-600">{error}</p>}
+      </div>
     </div>
   );
 }

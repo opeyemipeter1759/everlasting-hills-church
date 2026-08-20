@@ -8,12 +8,20 @@ interface ServiceHeroProps {
   headingText: string;
   isLive: boolean;
   onGetDirections: () => void;
+  eyebrowLabel: string;
+  introText: string;
+  firstTimerTitle: string;
+  firstTimerBody: string;
 }
 
 export default function ServiceHero({
   headingText,
   isLive,
   onGetDirections,
+  eyebrowLabel,
+  introText,
+  firstTimerTitle,
+  firstTimerBody,
 }: ServiceHeroProps) {
   return (
     <div>
@@ -21,7 +29,7 @@ export default function ServiceHero({
                <div className="flex items-center gap-3 mb-3">
             <span className="w-full max-w-8 h-[1px] bg-[#87102C]/40" />
         <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold ">
-          Visit Us
+          {eyebrowLabel}
                   </p>
                   </div>
       </ScrollReveal>
@@ -48,9 +56,7 @@ export default function ServiceHero({
 
       <ScrollReveal delay={0.2}>
         <p className="text-[#555] text-base sm:text-base leading-relaxed mb-3">
-          Whether this is your first Sunday or your hundredth, you are welcome
-          here. Come expecting to encounter the Word, the Spirit, and a family
-          that genuinely cares.
+          {introText}
         </p>
       </ScrollReveal>
   <ScrollReveal delay={0.45} direction="right">
@@ -60,11 +66,10 @@ export default function ServiceHero({
           </div>
           <div>
             <p className="text-[#111] font-semibold text-base mb-1">
-              First time visiting?
+              {firstTimerTitle}
             </p>
             <p className="text-[#666] text-sm leading-relaxed">
-              We'd love to meet you. Come as you are  no dress code, no
-              pressure. Just come expecting something real.
+              {firstTimerBody}
             </p>
           </div>
         </div>

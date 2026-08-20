@@ -12,6 +12,14 @@ const hero: FieldDef[] = [
   { kind: "textarea", key: "lead", label: "Lead paragraph" },
 ];
 
+const heroImageField: FieldDef = {
+  kind: "image",
+  key: "heroImage",
+  label: "Hero background image",
+  nullable: true,
+  help: "Leave blank for the default dark background",
+};
+
 const cta: FieldDef = {
   kind: "group",
   key: "cta",
@@ -25,6 +33,7 @@ const cta: FieldDef = {
 export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
   beliefs: [
     ...hero,
+    heroImageField,
     {
       kind: "repeat",
       key: "pillars",
@@ -42,6 +51,7 @@ export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
 
   about: [
     ...hero,
+    { kind: "image", key: "heroImage", label: "Hero background image", nullable: true, help: "Leave blank for the default dark background" },
     {
       kind: "group",
       key: "story",
@@ -67,6 +77,7 @@ export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
 
   ministries: [
     ...hero,
+    heroImageField,
     { kind: "text", key: "sectionLabel", label: "Groups section label" },
     { kind: "text", key: "sectionHeading", label: "Groups section heading" },
     { kind: "textarea", key: "sectionLead", label: "Groups section intro" },
@@ -87,6 +98,7 @@ export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
 
   visit: [
     ...hero,
+    heroImageField,
     { kind: "text", key: "serviceTimesHeading", label: "Service times heading" },
     {
       kind: "repeat",
@@ -130,6 +142,7 @@ export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
     { kind: "text", key: "titleBottom", label: "Headline line 2" },
     { kind: "text", key: "accentBottom", label: "Headline line 2 — accent word" },
     { kind: "textarea", key: "subtitle", label: "Subtitle" },
+    heroImageField,
     { kind: "text", key: "sectionLabel", label: "Accounts section label" },
     { kind: "text", key: "headingLead", label: "Accounts heading" },
     { kind: "text", key: "headingAccent", label: "Accounts heading — accent" },
@@ -169,13 +182,14 @@ export const STRUCTURED_FIELDS: Record<string, FieldDef[]> = {
 };
 
 // Ministry detail pages (/ministries/mens, /womens, /teens, /couples) — same
-// bespoke layout, one shared field set; icon + hero image stay fixed per group.
+// bespoke layout, one shared field set; only the icon stays fixed per group.
 const ministryDetailFields: FieldDef[] = [
   { kind: "text", key: "name", label: "Ministry name" },
   { kind: "text", key: "heroLabel", label: "Hero eyebrow" },
   { kind: "text", key: "heroHeadline", label: "Hero headline" },
   { kind: "text", key: "heroAccent", label: "Hero accent line" },
   { kind: "textarea", key: "heroBody", label: "Hero body" },
+  { kind: "image", key: "heroImage", label: "Hero background image", nullable: true, help: "Leave blank to use this group's default photo" },
   { kind: "textarea", key: "overview", label: 'Overview ("Who we are")' },
   { kind: "text", key: "pullQuote", label: "Pull quote" },
   { kind: "text", key: "verseRef", label: "Verse reference" },
@@ -207,7 +221,7 @@ const introFields: FieldDef[] = [
   { kind: "textarea", key: "subtitle", label: "Subtitle" },
 ];
 STRUCTURED_FIELDS.sermonsIntro = introFields;
-STRUCTURED_FIELDS.eventsIntro = introFields;
+STRUCTURED_FIELDS.eventsIntro = [...introFields, heroImageField];
 
 // Legal / policy pages
 const legalFields: FieldDef[] = [

@@ -5,15 +5,8 @@ import { CHURCH_INFO } from '../church-info';
 interface Args {
   firstName: string;
   email: string;
-  /** Public site URL, no trailing slash. */
   appUrl: string;
 }
-
-/**
- * Warm welcome to a first-time guest immediately after they submit the
- * first-timer form. Confirms we received them, sets expectations, shares
- * service times + address, and offers ways to stay connected (socials).
- */
 export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl }: Args): SendEmailPayload {
   const base = appUrl.replace(/\/$/, '');
   const socials = CHURCH_INFO.socials.filter((s) => s.href);

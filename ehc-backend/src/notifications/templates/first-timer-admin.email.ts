@@ -5,7 +5,6 @@ import type { FirstTimerDto } from '../../forms/dto/first-timer.dto';
 interface Args {
   data: FirstTimerDto;
   adminEmail: string;
-  /** Public site URL, no trailing slash. */
   appUrl: string;
 }
 
@@ -15,12 +14,6 @@ function fmt(v: string | boolean | null | undefined): string {
   return v ?? '—';
 }
 
-/**
- * Notification to the pastoral/admin team when a first-timer registers.
- * Includes the full submission and two next-step CTAs: review in the dashboard
- * and assign for follow-up. The dashboard links are login-gated (the secure
- * place for pastoral actions).
- */
 export function buildFirstTimerAdminEmail({ data, adminEmail, appUrl }: Args): SendEmailPayload {
   const base = appUrl.replace(/\/$/, '');
   const fullName = `${data.first_name} ${data.last_name}`.trim();

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AlertTriangle } from "lucide-react";
-import  { Loader } from "@/components/icons";
+import  { Loader } from "@/components/header/icons";
 
 export type ConfirmDialogTone = "danger" | "warning" | "info";
 

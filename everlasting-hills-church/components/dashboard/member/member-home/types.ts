@@ -23,6 +23,7 @@ export interface StreakState {
 
 export interface MemberHomeProps {
   member: {
+    id: string;
     firstName: string;
     lastName: string;
     email: string | null;
@@ -54,7 +55,7 @@ export interface MemberHomeProps {
   listenHistory: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; positionSec: number; completed: boolean; audioDuration: number | null }>;
   // New optional props — null/empty defaults; no backend required yet
   announcements?: Array<{ id: string; title: string; body: string; createdAt: string }>;
-  communityBirthdays?: Array<{ firstName: string; lastName: string; photoUrl: string | null }>;
+  communityBirthdays?: Array<{ id: string; firstName: string; lastName: string; photoUrl: string | null; daysUntil: number }>;
   ministryUnit?: { name: string; nextServingDate: string | null } | null;
   featuredSermon?: {
     slug: string; title: string; speaker: string; date: string;

@@ -8,15 +8,7 @@ import {
 } from '../notifications/notification-events';
 import { EMAIL_QUEUE, EMAIL_JOB_SEND } from './jobs.constants';
 
-/**
- * Abstraction over "how do we get this email delivered". Two implementations
- * are wired by JobsModule depending on whether Redis is configured:
- *
- *   QueueMailDispatcher  → durable BullMQ queue with retries (Redis present)
- *   EventMailDispatcher  → in-process EventEmitter, fire-and-forget (no Redis)
- *
- * Callers depend only on this token, so they never need to know which is active.
- */
+
 export abstract class MailDispatcher {
   abstract dispatch(payload: SendEmailPayload): Promise<void>;
 }

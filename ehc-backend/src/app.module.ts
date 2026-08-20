@@ -37,6 +37,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { GivingModule } from './giving/giving.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { EmailsModule } from './emails/emails.module';
 import { CommunityModule } from './community/community.module';
 import { HomeCellModule } from './home-cell/home-cell.module';
 import { JobsModule } from './jobs/jobs.module';
@@ -137,6 +138,7 @@ import type { Env } from './config/env.validation';
     GivingModule,
     InboxModule,
     AnnouncementsModule,
+    EmailsModule,
     CommunityModule,
     HomeCellModule,
     JobsModule.forRoot(),

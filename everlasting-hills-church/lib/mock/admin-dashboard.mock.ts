@@ -97,7 +97,11 @@ export interface AdminDashboardData {
   firstTimerFunnel: FunnelStage[];
   upcomingEvents: UpcomingEvent[];
   pastoralCare: { prayerRequests: number; counseling: number; hospitalVisits: number };
-  celebrations: { birthdaysToday: number; anniversaries: number };
+  celebrations: {
+    birthdaysToday: number;
+    anniversaries: number;
+    upcomingBirthdays: Array<{ id: string; firstName: string; lastName: string; photoUrl: string | null; daysUntil: number }>;
+  };
   ministryUnits: MinistryUnit[];
   recentActivities: ActivityItem[];
 }
@@ -156,7 +160,17 @@ const MOCK: AdminDashboardData = {
     { id: "e2", title: "Church Anniversary", when: "June 15" },
   ],
   pastoralCare: { prayerRequests: 8, counseling: 3, hospitalVisits: 2 },
-  celebrations: { birthdaysToday: 3, anniversaries: 1 },
+  celebrations: {
+    birthdaysToday: 3,
+    anniversaries: 1,
+    upcomingBirthdays: [
+      { id: "m1", firstName: "Grace", lastName: "Adeyemi", photoUrl: null, daysUntil: 0 },
+      { id: "m2", firstName: "Samuel", lastName: "Okafor", photoUrl: null, daysUntil: 0 },
+      { id: "m3", firstName: "Blessing", lastName: "Eze", photoUrl: null, daysUntil: 0 },
+      { id: "m4", firstName: "Daniel", lastName: "Balogun", photoUrl: null, daysUntil: 3 },
+      { id: "m5", firstName: "Faith", lastName: "Nwosu", photoUrl: null, daysUntil: 5 },
+    ],
+  },
   ministryUnits: [
     { name: "Worship", members: 24, attendance: 87 },
     { name: "Media", members: 14, attendance: 92 },

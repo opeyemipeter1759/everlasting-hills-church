@@ -3,6 +3,7 @@
 import type { MemberHomePropsOptional, StreakState } from "./types";
 import { QrCheckinBanner } from "./QrCheckinBanner";
 import { WelcomeHero } from "./WelcomeHero";
+import { BirthdayCard } from "./BirthdayCard";
 import { QuickActionsStrip } from "./QuickActionsStrip";
 import { CheckInPanel } from "./CheckInPanel";
 import { JourneyBand } from "./JourneyBand";
@@ -39,6 +40,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     monthlyAttendance = [],
     listenHistory = [],
     announcements = [],
+    birthdayDaysUntil = null,
+    communityBirthdays = [],
     ministryUnit = null,
     featuredSermon = null,
     discipleshipMilestones = [],
@@ -64,6 +67,12 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         attendanceRate={attendanceRate}
         streak={streak}
         nextService={nextService}
+      />
+
+      <BirthdayCard
+        memberId={member?.id ?? null}
+        birthdayDaysUntil={birthdayDaysUntil}
+        communityBirthdays={communityBirthdays}
       />
 
       <QuickActionsStrip />

@@ -188,6 +188,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Calendar",      href: "/dashboard/admin/calendar",      icon: CalendarRange, minRole: "ADMIN" },
       { label: "Usher",         href: "/dashboard/admin/usher",         icon: Tally5,        minRole: "HEAD_USHER" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
+      { label: "Emails",        href: "/dashboard/admin/emails",        icon: Mail,          minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },

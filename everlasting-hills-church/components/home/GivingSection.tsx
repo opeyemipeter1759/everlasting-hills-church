@@ -60,7 +60,7 @@ export default function GivingSection() {
 
           {/* RIGHT: How to give panel + CTA */}
           <aside className="relative rounded-[20px] border border-white/8 bg-[#0a0306]/95 p-6 sm:p-7 shadow-inner">
-            <div className="flex items-center justify-between mb-5">
+            <div className="flex flex-col md:flex-row items-center justify-between mb-5">
               <p className="text-white/50 text-[10px] uppercase tracking-[0.3em] font-bold">
                 Ways to give
               </p>

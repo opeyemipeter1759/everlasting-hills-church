@@ -148,6 +148,12 @@ export const SERVICE_DEFAULT: SectionContent<'SERVICE'> = {
   address: 'Akobo, Ibadan',
   mapsLink: null,
   specialAnnouncement: null,
+  heroLabel: 'Visit Us',
+  heroIntro:
+    'Whether this is your first Sunday or your hundredth, you are welcome here. Come expecting to encounter the Word, the Spirit, and a family that genuinely cares.',
+  firstTimerTitle: 'First time visiting?',
+  firstTimerBody:
+    "We'd love to meet you. Come as you are — no dress code, no pressure. Just come expecting something real.",
 };
 
 export const SERMONS_DEFAULT: SectionContent<'SERMONS'> = {
@@ -238,6 +244,33 @@ export const CONTACT_DEFAULT: SectionContent<'CONTACT'> = {
   twitter: { visible: false, url: null },
 };
 
+export const CAROUSEL_DEFAULT: SectionContent<'CAROUSEL'> = {
+  eyebrow: 'Life at EHC',
+  headline: 'Moments worth showing up for.',
+  images: [
+    '/HeroImages/1.jpg',
+    '/HeroImages/2.jpg',
+    '/HeroImages/3.jpg',
+    '/HeroImages/4.jpg',
+    '/HeroImages/21.jpg',
+    '/HeroImages/IMG_101.jpg',
+    '/HeroImages/IMG_1080.jpg',
+    '/HeroImages/IMG_4565.jpg',
+    '/HeroImages/IMG_4667.jpg',
+    '/HeroImages/IMG_5684.jpg',
+    '/HeroImages/IMG_8248.jpg',
+    '/HeroImages/IMG_8470.jpg',
+    '/HeroImages/IMG_8931.jpg',
+    '/HeroImages/IMG_9.jpg',
+    '/HeroImages/IMG_9003.jpg',
+    '/HeroImages/IMG_9014.jpg',
+    '/HeroImages/1.jpg',
+    '/HeroImages/2.jpg',
+    '/HeroImages/3.jpg',
+    '/HeroImages/4.jpg',
+  ],
+};
+
 export const DEFAULT_CONTENT = {
   HERO: HERO_DEFAULT,
   ABOUT: ABOUT_DEFAULT,
@@ -248,4 +281,5 @@ export const DEFAULT_CONTENT = {
   COMMUNITY: COMMUNITY_DEFAULT,
   GIVING: GIVING_DEFAULT,
   CONTACT: CONTACT_DEFAULT,
+  CAROUSEL: CAROUSEL_DEFAULT,
 } as const;

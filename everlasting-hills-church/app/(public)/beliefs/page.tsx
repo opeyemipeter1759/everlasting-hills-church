@@ -17,6 +17,7 @@ interface BeliefsContent {
   title: string;
   accent: string;
   lead: string;
+  heroImage: string | null;
   pillars: Pillar[];
   cta: { heading: string; body: string };
 }
@@ -27,6 +28,7 @@ const FALLBACK: BeliefsContent = {
   title: "Five pillars from",
   accent: "Genesis 49:22-26",
   lead: "The blessing spoken over Joseph still shapes a people who give themselves fully to God. These five pillars frame everything we are.",
+  heroImage: null,
   pillars: [
     { title: "Fruitfulness", verse: "Genesis 49:22", text: "Joseph is a fruitful bough by a well. We believe every life joined to Christ, the well that never runs dry, is meant to be fruitful, with branches that run over the wall into every sphere of society." },
     { title: "Endurance", verse: "Genesis 49:23-24", text: "Though the archers shot at him, his bow abode in strength. We believe in standing firm under pressure, holding our confession through trials, anchored by a faith that does not bend." },
@@ -75,7 +77,7 @@ export default async function BeliefsPage({
           PREVIEW — draft, not published
         </div>
       )}
-      <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} />
+      <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} backgroundImage={c.heroImage} />
 
       <section className="mx-auto max-w-[1000px] px-5 py-20 sm:px-8">
         <div className="space-y-6">
@@ -94,9 +96,9 @@ export default async function BeliefsPage({
                   <span className="font-display text-3xl font-black text-[#87102C]/20 sm:hidden">{n}</span>
                 </div>
                 <div>
-                  <div className="mb-2 flex items-center gap-3">
+                  <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                     <h2 className="text-2xl font-bold text-[#111]">{p.title}</h2>
-                    <span className="rounded-full bg-[#87102C]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#87102C]">
+                    <span className="shrink-0 rounded-full bg-[#87102C]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#87102C]">
                       {p.verse}
                     </span>
                   </div>
