@@ -3,13 +3,15 @@ import type { VisitorRow } from "./types";
 
 export type InterestFilter = "all" | "yes" | "no";
 
-const PAGE_SIZE = 8;
+export const PAGE_SIZE_OPTIONS = [8, 20, 50, 100];
+const DEFAULT_PAGE_SIZE = 8;
 
 export function useFirstTimersFilter(visitors: VisitorRow[]) {
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InterestFilter>("all");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   function handleCreated(visitorId: string) {
     setRemovedIds((prev) => new Set(prev).add(visitorId));
@@ -36,11 +38,11 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
     });
   }, [active, search, filter]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, pageCount);
   const pagedRows = useMemo(
-    () => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
-    [filtered, safePage],
+    () => filtered.slice((safePage - 1) * pageSize, safePage * pageSize),
+    [filtered, safePage, pageSize],
   );
 
   function updateSearch(v: string) {
@@ -50,6 +52,11 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
 
   function updateFilter(f: InterestFilter) {
     setFilter(f);
+    setPage(1);
+  }
+
+  function updatePageSize(v: number) {
+    setPageSize(v);
     setPage(1);
   }
 
@@ -70,6 +77,8 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
     page: safePage,
     pageCount,
     setPage,
+    pageSize,
+    setPageSize: updatePageSize,
     filterTabs,
     total: active.length,
   };

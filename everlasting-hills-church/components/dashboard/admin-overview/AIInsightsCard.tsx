@@ -29,7 +29,7 @@ export default function AIInsightsCard({
       </ul>
 
       <Link
-        href="/dashboard/follow-ups"
+        href="/dashboard/follow-up"
         className="group mt-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40 dark:border-amber-500/20 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
       >
         <span className="flex items-center gap-2.5">
