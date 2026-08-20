@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Building2, Users, ChevronRight, UserCog, RefreshCw, Layers } from "lucide-react";
-import { useDepartments, useAssignUnits, type UnassignedUnit } from "@/lib/api/departments";
+import { Building2, Users, ChevronRight, UserCog, RefreshCw, Layers, Plus, X } from "lucide-react";
+import { useDepartments, useAssignUnits, useCreateDepartment, type UnassignedUnit } from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
 import { Select } from "@/components/ui/select";
+import { showToast } from "@/components/ui/toast/toast";
 
 export default function DepartmentsConsole() {
   const q = useDepartments();
+  const [showCreate, setShowCreate] = useState(false);
 
   return (
     <div className="max-w-6xl space-y-6">
@@ -20,17 +22,31 @@ export default function DepartmentsConsole() {
           </p>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Departments</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-white/50">
-            Seven administrative structures. Each Admin Head oversees the units grouped under their department.
+            Administrative structures. Each Admin Head oversees the units grouped under their department.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => q.refetch()}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
-        >
-          <RefreshCw size={12} className={q.isFetching ? "animate-spin" : ""} /> Refresh
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => q.refetch()}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
+          >
+            <RefreshCw size={12} className={q.isFetching ? "animate-spin" : ""} /> Refresh
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCreate(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#87102C] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#6E0C24] transition-colors"
+          >
+            <Plus size={13} /> Add Department
+          </button>
+        </div>
       </div>
+
+      {/* Create department modal */}
+      {showCreate && (
+        <CreateDepartmentForm onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); q.refetch(); }} />
+      )}
 
       {/* Department grid */}
       {q.isLoading ? (
@@ -98,6 +114,89 @@ export default function DepartmentsConsole() {
   );
 }
 
+function CreateDepartmentForm({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const create = useCreateDepartment();
+  const [code, setCode] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!code.trim() || !name.trim()) return;
+    try {
+      await create.mutateAsync({ code: code.trim().toUpperCase(), name: name.trim(), description: description.trim() || undefined });
+      showToast.success(`Department "${name.trim()}" created`);
+      onCreated();
+    } catch (err) {
+      showToast.error((err as { message?: string }).message ?? "Failed to create department");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">New Department</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10">
+            <X size={16} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-white/60">
+              Department Code <span className="text-red-400">*</span>
+            </label>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="e.g. WORSHIP"
+              maxLength={20}
+              required
+              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3.5 py-2.5 text-sm font-mono font-semibold uppercase text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#87102C]/30"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-white/60">
+              Department Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Worship & Music"
+              required
+              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#87102C]/30"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-white/60">
+              Description <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of this department's role…"
+              rows={2}
+              className="w-full resize-none rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#87102C]/30"
+            />
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-gray-200 dark:border-white/10 py-2.5 text-sm font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={create.isPending || !code.trim() || !name.trim()}
+              className="flex-1 rounded-xl bg-[#87102C] py-2.5 text-sm font-semibold text-white hover:bg-[#6E0C24] disabled:opacity-50 transition-colors"
+            >
+              {create.isPending ? "Creating…" : "Create Department"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function QuickAssignRow({
   unit,
   departments,
@@ -106,7 +205,6 @@ function QuickAssignRow({
   departments: { id: string; code: string; name: string }[];
 }) {
   const [deptId, setDeptId] = useState("");
-  // A separate hook instance per row; assigns this unit to the chosen department.
   const assign = useAssignUnits(deptId);
 
   return (

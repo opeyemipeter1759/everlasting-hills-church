@@ -221,6 +221,15 @@ export function useUnassignUnit(deptId: string) {
   });
 }
 
+export function useCreateDepartment() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { code: string; name: string; description?: string; sortOrder?: number }) =>
+      api.post<{ id: string; code: string; name: string }>("/departments", body),
+    onSuccess: invalidate,
+  });
+}
+
 export function useUpdateDepartment(id: string) {
   const invalidate = useInvalidate();
   return useMutation({

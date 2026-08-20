@@ -4,8 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import AddCellModal from "./AddCellModal";
 import {
-  ArrowLeft,
   Users,
   BookOpen,
   BookOpenCheck,
@@ -145,7 +145,10 @@ interface Props {
 }
 
 export default function HomeCellContent({ heroImageUrl }: Props) {
+  const [showAdd, setShowAdd] = useState(false);
+
   return (
+    <>
     <main className="min-h-screen bg-church-dark text-white selection:bg-church-maroon selection:text-white overflow-x-hidden">
 
       {/* ══════════════════════════════════════════════════════════════════════
@@ -166,15 +169,6 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
           <div className="absolute inset-0 bg-gradient-to-r from-church-dark/80 via-transparent to-transparent" />
         </div>
 
-        <div className="absolute top-24 left-6 sm:left-10 z-20">
-          <Link
-            href="/connect"
-            className="inline-flex items-center gap-2 text-white/40 hover:text-white transition-all group"
-          >
-            <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
-            <span className="text-[10px] font-black uppercase tracking-[0.4em]">Connect</span>
-          </Link>
-        </div>
 
         <motion.div
           initial={{ opacity: 0, x: 20 }}
@@ -225,17 +219,17 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
             className="flex flex-wrap items-center gap-4"
           >
             <a
-              href="/connect/home-cell/find"
+              href="/home-cell/find"
               className="inline-flex items-center gap-2 rounded-full bg-church-maroon px-8 py-4 text-sm font-black text-white tracking-wide transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/40"
             >
               Find your cell <ChevronRight size={15} />
             </a>
-            <a
-              href="#what"
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-white/40 hover:text-white/70 transition-colors"
+            <button
+              onClick={() => setShowAdd(true)}
+              className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-black text-church-dark tracking-wide transition-all hover:bg-white/90 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-white/20"
             >
-              Learn more <ChevronDown size={14} />
-            </a>
+              Register your cell <ChevronRight size={15} />
+            </button>
           </motion.div>
         </div>
 
@@ -553,7 +547,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link
-              href="/connect/home-cell/find"
+              href="/home-cell/find"
               className="inline-flex items-center gap-2 rounded-full bg-church-maroon px-9 py-4 font-black text-sm text-white tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/40 transition-all"
             >
               Find a Cell Near You <ChevronRight size={15} />
@@ -563,5 +557,12 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
       </section>
 
     </main>
+
+    <AnimatePresence>
+      {showAdd && (
+        <AddCellModal key="add-cell" onClose={() => setShowAdd(false)} />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

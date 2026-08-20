@@ -544,7 +544,7 @@ export default function FindCellPage() {
         <div className="relative z-10 px-4 pt-28 pb-16 text-center max-w-3xl mx-auto">
           {/* Back */}
           <div className="mb-10">
-            <Link href="/connect/home-cell"
+            <Link href="/home-cell"
               className="inline-flex items-center gap-2 text-white/30 hover:text-white/60 transition-all group">
               <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
               <span className="text-[10px] font-black uppercase tracking-[0.4em]">Home Cell</span>

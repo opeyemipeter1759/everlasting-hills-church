@@ -28,6 +28,7 @@ export default function EditorialCard({
         if (e.key === "Enter") onClick();
       }}
       whileHover={{ opacity: isActive ? 1 : 0.92 }}
+      initial={false}
       animate={{
         flexGrow: isActive ? 8 : 1,
         opacity: isActive ? 1 : 0.7,

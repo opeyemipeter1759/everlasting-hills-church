@@ -1,5 +1,7 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { Check, FileText, Loader2, Mail, Send } from "lucide-react";
+import { Check, FileText, Loader2, Mail, Send, Sparkles, X } from "lucide-react";
 import Modal from "@/components/ui/overlay/Modal";
 import FileUpload from "@/components/ui/form/FileUpload";
 import { EMPTY_FORM } from "./types";
@@ -29,22 +31,49 @@ export default function AnnouncementComposerModal({
   const isEditing = !!editingItem;
   const busy = creating || updating;
 
+  // AI drafting state
+  const [aiIdea, setAiIdea] = useState("");
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) { setAiOpen(false); setAiIdea(""); setAiError(""); return; }
     setValues(
       editingItem
-        ? {
-            title: editingItem.title,
-            body: editingItem.body,
-            imageUrl: editingItem.imageUrl ?? "",
-            sendEmail: editingItem.sendEmail,
-          }
+        ? { title: editingItem.title, body: editingItem.body, imageUrl: editingItem.imageUrl ?? "", sendEmail: editingItem.sendEmail }
         : EMPTY_FORM,
     );
   }, [open, editingItem]);
 
   function set<K extends keyof AnnouncementFormValues>(key: K, value: AnnouncementFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
+  }
+
+  async function draftWithAI() {
+    if (!aiIdea.trim()) return;
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const res = await fetch("/api/ai/announcement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea: aiIdea }),
+      });
+      const json = await res.json();
+      if (json.title || json.body) {
+        set("title", json.title ?? values.title);
+        set("body", json.body ?? values.body);
+        setAiOpen(false);
+        setAiIdea("");
+      } else {
+        setAiError("Gemini couldn't generate a draft. Try rephrasing your idea.");
+      }
+    } catch {
+      setAiError("Something went wrong. Check your connection and try again.");
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   const canSubmit = values.title.trim().length >= 3 && values.body.trim().length >= 3;
@@ -62,6 +91,54 @@ export default function AnnouncementComposerModal({
       maxWidth="lg"
     >
       <div className="space-y-4">
+
+        {/* AI Draft panel */}
+        {!isEditing && (
+          <div>
+            {!aiOpen ? (
+              <button
+                type="button"
+                onClick={() => setAiOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] px-4 py-2.5 text-sm font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-500/15 transition-colors"
+              >
+                <Sparkles size={15} />
+                Draft with Gemini AI
+              </button>
+            ) : (
+              <div className="rounded-2xl border border-violet-200 dark:border-violet-500/25 bg-violet-50/60 dark:bg-violet-500/[0.06] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="flex items-center gap-2 text-sm font-semibold text-violet-800 dark:text-violet-200">
+                    <Sparkles size={14} /> Describe your announcement idea
+                  </p>
+                  <button type="button" onClick={() => { setAiOpen(false); setAiError(""); }} className="text-violet-400 hover:text-violet-600 dark:hover:text-violet-200">
+                    <X size={16} />
+                  </button>
+                </div>
+                <textarea
+                  value={aiIdea}
+                  onChange={(e) => setAiIdea(e.target.value)}
+                  placeholder="e.g. Sunday's service is about Daniel's faith, we're also doing a baby dedication, dress code is white..."
+                  rows={3}
+                  className="w-full rounded-xl border border-violet-200 dark:border-violet-500/20 bg-white dark:bg-white/[0.05] px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder-violet-300 dark:placeholder-white/25 focus:outline-none focus:border-violet-400 dark:focus:border-violet-500/50 focus:ring-2 focus:ring-violet-200 dark:focus:ring-violet-500/20 resize-none transition-all"
+                />
+                {aiError && <p className="text-xs text-red-500">{aiError}</p>}
+                <button
+                  type="button"
+                  onClick={draftWithAI}
+                  disabled={!aiIdea.trim() || aiLoading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {aiLoading ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                  {aiLoading ? "Drafting…" : "Generate Draft"}
+                </button>
+                <p className="text-[11px] text-violet-400 dark:text-violet-500">
+                  Gemini will write a complete announcement. You can edit it before publishing.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
         <input
           value={values.title}
           onChange={(e) => set("title", e.target.value)}

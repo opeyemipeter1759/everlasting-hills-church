@@ -20,6 +20,8 @@ interface VisitorApi {
   bornAgain: string | null;
   occupation: string | null;
   submittedAt: string;
+  serviceExperience?: string | null;
+  prayerPoint?: string | null;
 }
 
 async function safeGet<T>(path: string): Promise<T | null> {
@@ -55,6 +57,8 @@ export default async function FirstTimersPage() {
     occupation: v.occupation,
     submittedAt: v.submittedAt,
     hasOnlineCheckIn: v.email ? onlineEmails.has(v.email.toLowerCase()) : false,
+    serviceExperience: v.serviceExperience ?? null,
+    prayerPoint: v.prayerPoint ?? null,
   }));
 
   return <FirstTimersClient visitors={visitors} />;
