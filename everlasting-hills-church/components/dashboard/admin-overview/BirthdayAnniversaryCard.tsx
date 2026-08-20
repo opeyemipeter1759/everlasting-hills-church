@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Cake, Gift } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
-import type { AdminDashboardData } from "@/lib/mock/admin-dashboard.mock";
+import type { AdminDashboardData } from "@/lib/types/admin-dashboard";
 
 function initials(firstName: string, lastName: string) {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();

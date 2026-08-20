@@ -1,6 +1,6 @@
-import { HandHeart, HeartHandshake, Stethoscope, type LucideIcon } from "lucide-react";
+import { AlertTriangle, HandHeart, ListChecks, type LucideIcon } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
-import type { AdminDashboardData } from "@/lib/mock/admin-dashboard.mock";
+import type { AdminDashboardData } from "@/lib/types/admin-dashboard";
 
 export default function PastoralCareCard({
   care,
@@ -8,8 +8,8 @@ export default function PastoralCareCard({
 }: { care: AdminDashboardData["pastoralCare"] } & DashboardCardChrome) {
   const rows: { icon: LucideIcon; label: string; value: number; iconBg: string; iconColor: string }[] = [
     { icon: HandHeart, label: "Prayer Requests", value: care.prayerRequests, iconBg: "bg-[#FFE8ED] dark:bg-[#87102C]/25", iconColor: "text-[#87102C] dark:text-[#FFB3C1]" },
-    { icon: HeartHandshake, label: "Counseling", value: care.counseling, iconBg: "bg-violet-50 dark:bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
-    { icon: Stethoscope, label: "Hospital Visits", value: care.hospitalVisits, iconBg: "bg-sky-50 dark:bg-sky-500/15", iconColor: "text-sky-600 dark:text-sky-400" },
+    { icon: ListChecks, label: "Open Follow-ups", value: care.openFollowUps, iconBg: "bg-violet-50 dark:bg-violet-500/15", iconColor: "text-violet-600 dark:text-violet-400" },
+    { icon: AlertTriangle, label: "At-Risk Members", value: care.atRiskMembers, iconBg: "bg-sky-50 dark:bg-sky-500/15", iconColor: "text-sky-600 dark:text-sky-400" },
   ];
 
   return (

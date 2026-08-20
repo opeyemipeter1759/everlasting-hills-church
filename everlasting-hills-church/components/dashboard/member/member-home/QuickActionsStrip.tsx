@@ -7,7 +7,7 @@ export function QuickActionsStrip() {
   const scrollRef = useAutoScroll<HTMLDivElement>();
   const actions = [
     {
-      icon: Send, label: "Submit Prayer", href: "/prayer-requests", external: false,
+      icon: Send, label: "Submit Prayer", href: "/prayer-request", external: false,
       cls: "bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-500/20 hover:bg-violet-100 dark:hover:bg-violet-500/25",
       iconCls: "text-violet-600 dark:text-violet-400",
     },
@@ -22,12 +22,12 @@ export function QuickActionsStrip() {
       iconCls: "text-emerald-600 dark:text-emerald-400",
     },
     {
-      icon: Home, label: "Join an Home Cell", href: "#", external: false,
+      icon: Home, label: "Join an Home Cell", href: "/connect/home-cell/find", external: false,
       cls: "bg-sky-50 dark:bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-200/60 dark:border-sky-500/20 hover:bg-sky-100 dark:hover:bg-sky-500/25",
       iconCls: "text-sky-600 dark:text-sky-400",
     },
     {
-      icon: Users2, label: "Register for an Home Cell", href: "#", external: false,
+      icon: Users2, label: "Register for an Home Cell", href: "/connect/home-cell/find", external: false,
       cls: "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-500/20 hover:bg-amber-100 dark:hover:bg-amber-500/25",
       iconCls: "text-amber-600 dark:text-amber-400",
     },

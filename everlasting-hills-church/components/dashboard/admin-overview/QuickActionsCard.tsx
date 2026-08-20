@@ -12,12 +12,12 @@ import {
 import DashboardCard from "./DashboardCard";
 
 const ACTIONS: { label: string; href: string; icon: LucideIcon }[] = [
-  { label: "Member", href: "/dashboard/members", icon: UserPlus },
-  { label: "Attendance", href: "/dashboard/attendance", icon: CalendarCheck },
-  { label: "Sermon", href: "/dashboard/sermons/new", icon: Mic },
-  { label: "Event", href: "/dashboard/events", icon: CalendarPlus },
-  { label: "Announcement", href: "/dashboard/announcements", icon: Megaphone },
-  { label: "Report", href: "/dashboard/reports", icon: FileBarChart },
+  { label: "Member", href: "/dashboard/admin/members", icon: UserPlus },
+  { label: "Attendance", href: "/dashboard/admin/attendance", icon: CalendarCheck },
+  { label: "Sermon", href: "/dashboard/pastor/sermons/new", icon: Mic },
+  { label: "Event", href: "/dashboard/admin/events", icon: CalendarPlus },
+  { label: "Announcement", href: "/dashboard/admin/announcements", icon: Megaphone },
+  { label: "Report", href: "/dashboard/pastor/reports", icon: FileBarChart },
 ];
 
 export default function QuickActionsCard() {

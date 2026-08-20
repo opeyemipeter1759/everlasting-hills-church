@@ -1,6 +1,6 @@
 import { Filter } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
-import type { FunnelStage } from "@/lib/mock/admin-dashboard.mock";
+import type { FunnelStage } from "@/lib/types/admin-dashboard";
 
 /**
  * First-timer funnel — proportional bars from registration to joining a class.

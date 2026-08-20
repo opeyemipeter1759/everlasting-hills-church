@@ -25,6 +25,12 @@ const IMAGE_MIME = [
   'image/webp',
   'image/gif',
   'image/avif',
+  'image/bmp',
+  'image/svg+xml',
+  'image/x-icon',
+  'image/vnd.microsoft.icon',
+  // Deliberately excludes HEIC/HEIF/TIFF — no major browser renders them via
+  // <img>, so accepting them would just produce broken images on the site.
 ];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
 
@@ -69,7 +75,7 @@ export class UploadsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Image file (JPG, PNG, WebP, GIF, AVIF — max 8 MB)',
+          description: 'Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO — max 8 MB)',
         },
       },
     },
@@ -88,7 +94,7 @@ export class UploadsController {
       throw new BadRequestException('Image must be under 8 MB');
     }
     if (!IMAGE_MIME.includes(file.mimetype)) {
-      throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, or AVIF)');
+      throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, AVIF, BMP, SVG, or ICO)');
     }
 
     // Return the bare payload — the global ResponseEnvelopeInterceptor wraps it
