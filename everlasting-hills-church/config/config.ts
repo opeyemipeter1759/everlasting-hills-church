@@ -62,7 +62,16 @@ const LEVELS: Record<UserRole, number> = {
   SUPER_ADMIN: 8,
 };
 
+const CHURCH_WIDE_ROLES = new Set<UserRole>(["ADMIN", "ADMIN_HEAD", "PASTOR", "SUPER_ADMIN"]);
+const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER"]);
+
 export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
+  if (LATERAL_ROLES.has(minRole)) {
+    return userRole === minRole || CHURCH_WIDE_ROLES.has(userRole);
+  }
+  if (LATERAL_ROLES.has(userRole)) {
+    return minRole === "MEMBER" || minRole === "VISITOR";
+  }
   return (LEVELS[userRole] ?? 0) >= (LEVELS[minRole] ?? 0);
 }
 
@@ -145,10 +154,10 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: null,
     items: [
-      { label: "Home",            href: "/dashboard/admin",                  icon: LayoutDashboard, minRole: "SUPER_ADMIN" },
-      { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "SUPER_ADMIN" },
-      { label: "Testimonials",      href: "/dashboard/testimonies",       icon: MessageSquare,  minRole: "SUPER_ADMIN" },
-      { label: "Questions",     href: "/dashboard/questions",      icon: MessageSquare,   minRole: "SUPER_ADMIN" },
+      { label: "Home",            href: "/dashboard/admin",            icon: LayoutDashboard, minRole: "ADMIN" },
+      { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "ADMIN" },
+      { label: "Testimonials",    href: "/dashboard/testimonies",     icon: MessageSquare,   minRole: "ADMIN" },
+      { label: "Questions",       href: "/dashboard/questions",       icon: MessageSquare,   minRole: "ADMIN" },
     ],
   },
   {
@@ -167,7 +176,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "My Department",
     items: [
-      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "ADMIN_HEAD", },
+      { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "HOD" },
       { label: "Reports", href: "/dashboard/my-department/reports", icon: FileText, minRole: "ADMIN_HEAD" },
     ],
   },
@@ -185,7 +194,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
-      { label: "Roles",         href: "/dashboard/admin/roles",         icon: Shield,        minRole: "HOD" },
+      { label: "Roles",         href: "/dashboard/admin/roles",         icon: Shield,        minRole: "ADMIN" },
       { label: "Courses",       href: "/dashboard/admin/courses",       icon: GraduationCap, minRole: "ADMIN" },
       { label: "Home Cell",     href: "/dashboard/admin/home-cell",     icon: Compass,       minRole: "ADMIN" },
       { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },

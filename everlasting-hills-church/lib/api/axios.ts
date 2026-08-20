@@ -1,87 +1,21 @@
-import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
-import {
-  ACCESS_TOKEN_COOKIE,
-  AUTH_ERROR_EVENT,
-  clearFrontendSession,
-  getAccessTokenFromCookie,
-  getRefreshTokenFromCookie,
-  setFrontendSession,
-} from "../auth/frontend-session";
+import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
+import { AUTH_ERROR_EVENT } from "../auth/frontend-session";
+import { clearClientSessionState } from "../auth/logout";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "/api";
-
-let refreshPromise: Promise<string | null> | null = null;
-
-async function performRefresh(): Promise<string | null> {
-  const refreshToken = getRefreshTokenFromCookie();
-  if (!refreshToken) return null;
-  try {
-    const resp = await axios.post(
-      `${BASE_URL.replace(/\/$/, "")}/auth/refresh`,
-      { refresh_token: refreshToken },
-      { headers: { "Content-Type": "application/json" }, timeout: 15000 },
-    );
-    const body = (resp.data?.data ?? resp.data) as {
-      access_token?: string;
-      refresh_token?: string;
-      expires_in?: number;
-      user?: { email?: string; role?: string | null; fullName?: string | null; picture?: string | null };
-    };
-    if (!body?.access_token) return null;
-    setFrontendSession({
-      accessToken: body.access_token,
-      refreshToken: body.refresh_token,
-      email: body.user?.email ?? "",
-      role: body.user?.role ?? null,
-      fullName: body.user?.fullName ?? null,
-      picture: body.user?.picture ?? null,
-      expiresInSeconds: body.expires_in,
-    });
-    return body.access_token;
-  } catch {
-    return null;
-  }
-}
-
-function refreshAccessToken(): Promise<string | null> {
-  if (!refreshPromise) {
-    refreshPromise = performRefresh().finally(() => {
-      refreshPromise = null;
-    });
-  }
-  return refreshPromise;
-}
+/** Browser requests always use the same-origin Next BFF. */
+const BASE_URL = "/api/backend";
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
+  withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });
 
-/**
- * Backend response envelope shape (matches ResponseEnvelopeInterceptor).
- * Errors use a different shape (see AllExceptionsFilter) and are not wrapped here —
- * the response interceptor's error handler converts them.
- */
 interface ServerEnvelope<T> {
   data: T;
   meta?: Record<string, unknown>;
 }
-
-/**
- * Attach the Supabase JWT from the unified session cookie on every request.
- */
-apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getAccessTokenFromCookie();
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error),
-);
-
 apiClient.interceptors.response.use(
   (response: AxiosResponse<ServerEnvelope<unknown> | unknown>) => {
     const body = response.data as ServerEnvelope<unknown> | unknown;
@@ -91,33 +25,17 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const original = error.config as
-      | (InternalAxiosRequestConfig & { _retry?: boolean })
-      | undefined;
     const status = error.response?.status;
-    const url = original?.url ?? "";
-    const isAuthCall = url.includes("/auth/refresh") || url.includes("/auth/login");
+    const url = error.config?.url ?? "";
+    const isLoginOrRecovery =
+      url.includes("/auth/login") ||
+      url.includes("/auth/forgot-password") ||
+      url.includes("/auth/recovery");
 
-    // First 401 on a normal request → try to refresh once, then retry.
-    if (
-      status === 401 &&
-      original &&
-      !original._retry &&
-      !isAuthCall &&
-      typeof window !== "undefined"
-    ) {
-      original._retry = true;
-      const newToken = await refreshAccessToken();
-      if (newToken) {
-        original.headers = original.headers ?? {};
-        (original.headers as Record<string, string>).Authorization = `Bearer ${newToken}`;
-        return apiClient(original); // retry once with the fresh token
-      }
-    }
-
-    // Refresh impossible/failed (or 401 on an auth call) → log out.
-    if (status === 401) {
-      clearFrontendSession();
+    // The BFF has already attempted one refresh and cleared its HttpOnly cookies
+    // before a protected request reaches this branch.
+    if (status === 401 && !isLoginOrRecovery) {
+      clearClientSessionState();
       if (typeof window !== "undefined" && window.location.pathname !== "/login") {
         window.dispatchEvent(new CustomEvent(AUTH_ERROR_EVENT));
       }
@@ -134,10 +52,6 @@ export interface ApiError {
   details?: unknown;
 }
 
-/**
- * Convert AllExceptionsFilter's envelope into a flat ApiError the UI can render directly.
- * Also tolerates legacy / non-enveloped error responses (network errors, unknown servers).
- */
 function normalizeError(error: AxiosError): ApiError {
   if (error.response) {
     const body = error.response.data as
@@ -152,10 +66,6 @@ function normalizeError(error: AxiosError): ApiError {
       details: enveloped?.details,
     };
   }
-  if (error.request) {
-    return { message: "No response from server. Check your connection." };
-  }
+  if (error.request) return { message: "No response from server. Check your connection." };
   return { message: error.message };
 }
-
-export { ACCESS_TOKEN_COOKIE };

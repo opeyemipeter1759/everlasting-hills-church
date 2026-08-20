@@ -8,14 +8,13 @@ import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/components/ui/dropdown/DropdownItem";
 import { DropdownDivider } from "@/components/ui/dropdown/DropdownDivider";
 import {
-  clearFrontendSession,
   getFrontendSessionUser,
   normalizeRole,
   SESSION_CHANGED_EVENT,
   type FrontendSessionUser,
 } from "@/lib/auth/frontend-session";
 import { ROLE_LABELS } from "@/config/config";
-import { useMe } from "@/lib/api";
+import { auth, useMe } from "@/lib/api";
 
 type LoggedOutMode = "both" | "login-only" | "none";
 
@@ -91,7 +90,7 @@ export default function SessionActionMenu({
   };
 
   const handleLogout = async () => {
-    clearFrontendSession();
+    await auth.logout();
     handleNavigate();
     router.push("/login");
     router.refresh();

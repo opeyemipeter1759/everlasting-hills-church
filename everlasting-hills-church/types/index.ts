@@ -97,18 +97,18 @@ export interface YouTubeVideosResponse {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
   expires_in: number;
   token_type: string;
   user: {
     id: string;
     email: string;
     role: UserRole | string | null;
-    fullName?: string | null;
-    picture?: string | null;
+    fullName: string | null;
+    picture: string | null;
     firstName?: string | null;
     lastName?: string | null;
+    /** True until a provisioned account completes the signed password-setup flow. */
+    needsPasswordChange: boolean;
   };
 }
 

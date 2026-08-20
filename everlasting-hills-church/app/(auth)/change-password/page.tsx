@@ -4,11 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { ShieldCheck } from "lucide-react";
-import { useChangePassword } from "@/lib/api";
-import {
-  getAccessTokenFromCookie,
-  setFrontendSession,
-} from "@/lib/auth/frontend-session";
+import { auth, useChangePassword } from "@/lib/api";
+import { getFrontendSessionUser } from "@/lib/auth/frontend-session";
 import AuthSplitScreen from "@/components/auth/AuthSplitScreen";
 import { AuthDivider } from "@/components/auth/AuthDivider";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
@@ -32,28 +29,38 @@ export default function ChangePasswordPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const existing = getAccessTokenFromCookie();
-    const hash = window.location.hash;
-    const hasRecoveryHash = hash.includes("access_token") && hash.includes("type=recovery");
+    const establishRecoverySession = async () => {
+      const hash = window.location.hash;
+      const hasRecoveryHash = hash.includes("access_token") && hash.includes("type=recovery");
 
-    if (hasRecoveryHash) {
-      const params = new URLSearchParams(hash.replace(/^#/, ""));
-      const accessToken = params.get("access_token");
-      const expiresIn = Number(params.get("expires_in") ?? "3600");
-      if (accessToken) {
-        setFrontendSession({
-          accessToken,
-          email: "",
-          role: null,
-          expiresInSeconds: expiresIn,
-        });
+      if (hasRecoveryHash) {
+        const params = new URLSearchParams(hash.replace(/^#/, ""));
+        const accessToken = params.get("access_token");
+        // Erase the fragment before any further navigation, telemetry, or user
+        // interaction. The token is exchanged for an HttpOnly cookie below.
         window.history.replaceState(null, "", window.location.pathname);
+        if (!accessToken) throw new Error("This password-reset link is invalid or expired.");
+        const response = await fetch("/api/auth/recovery", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ accessToken }),
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error("This password-reset link is invalid or expired.");
+        setFlow("recovery");
+      } else if (getFrontendSessionUser()?.loggedIn) {
+        setFlow("first-login");
+      } else {
+        throw new Error("Please use the password-reset link from your email or sign in again.");
       }
-      setFlow("recovery");
-    } else if (existing) {
-      setFlow("first-login");
-    }
-    setReady(true);
+    };
+
+    void establishRecoverySession()
+      .catch((error: unknown) => {
+        setServerError(error instanceof Error ? error.message : "Could not start password recovery.");
+      })
+      .finally(() => setReady(true));
   }, []);
 
   const {
@@ -69,6 +76,7 @@ export default function ChangePasswordPage() {
     setServerError(null);
     try {
       await submit(password);
+      if (flow === "recovery") await auth.logout();
       setSubmitted(true);
       const next = flow === "first-login" ? "/dashboard" : "/login";
       setTimeout(() => router.replace(next), 1500);
