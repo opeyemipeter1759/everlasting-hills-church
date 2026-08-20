@@ -18,6 +18,7 @@ const navLinks = [
   { label: "Sermons", href: "/sermons" },
   { label: "Events", href: "/events" },
   { label: "Ministries", href: "/ministries" },
+  { label: "Home Cell", href: "/home-cell" },
   { label: "Visit", href: "/visit" },
   { label: "Give", href: "/give" },
 ];
@@ -25,7 +26,6 @@ const navLinks = [
 // Connect is in the footer on desktop — keep accessible in mobile menu
 const mobileOnlyLinks = [
   { label: "Connect", href: "/connect" },
-  { label: "Home Cell", href: "/connect/home-cell" },
 ];
 
 export default function Navbar() {
