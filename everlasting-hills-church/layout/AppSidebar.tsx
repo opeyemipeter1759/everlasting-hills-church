@@ -79,9 +79,20 @@ const AppSidebar: React.FC = () => {
   // already used for `role` in SessionActionMenu.tsx.
   const { data: me } = useMe({ enabled: !!currentUser?.loggedIn });
   const currentPicture = me?.member?.photoUrl ?? currentUser?.picture ?? null;
+  // NOTE: single source for /auth/me — both the avatar and the role gate read it.
 
   const showLabels = isExpanded || isMobileOpen || isHovered;
   const userRole = normalizeRole(currentUser?.role);
+  const effectiveRoles = (me?.effectiveRoles ?? [])
+    .map((role) => normalizeRole(role))
+    .filter((role): role is NonNullable<typeof role> => Boolean(role));
+  const activeRoles = effectiveRoles.length > 0
+    ? effectiveRoles
+    : userRole
+      ? [userRole]
+      : [];
+  const canAccessRole = (minimum: Parameters<typeof hasMinRole>[1]) =>
+    activeRoles.some((role) => hasMinRole(role, minimum));
 
   // Data-driven checks beyond the static role gate — see NavItem.requiresAccess.
   // Undefined while loading is treated as "no access yet" so a link never flashes
@@ -90,13 +101,13 @@ const AppSidebar: React.FC = () => {
   const { data: myMemberships } = useMyMemberships();
   const { data: followUpAccess } = useFollowUpAccess();
 
-  const visibleGroups = userRole
+  const visibleGroups = activeRoles.length > 0
     ? NAV_GROUPS.map((group) => ({
         ...group,
         items: group.items
           .filter((item) => {
-            if (!hasMinRole(userRole, item.minRole)) return false;
-            if (item.maxRole && hasMinRole(userRole, item.maxRole)) return false;
+            if (!canAccessRole(item.minRole)) return false;
+            if (item.maxRole && canAccessRole(item.maxRole)) return false;
             if (item.requiresAccess === 'unitLead' && !myUnits?.length) return false;
             if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
             if (item.requiresAccess === 'followUp' && !followUpAccess?.hasAccess) return false;

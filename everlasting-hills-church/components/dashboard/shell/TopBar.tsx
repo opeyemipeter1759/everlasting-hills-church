@@ -11,18 +11,19 @@ const PATH_TITLES: Record<string, string> = {
   "/dashboard/attendance":      "Attendance",
   "/dashboard/prayer-requests": "Prayer Requests",
   "/dashboard/testimonies":     "Testimonies",
-  "/dashboard/members":         "Members",
-  "/dashboard/first-timers":    "First Timers",
-  "/dashboard/services":        "Services",
-  "/dashboard/events":          "Events",
+  "/dashboard/admin/members":         "Members",
+  "/dashboard/admin/first-timers":    "First Timers",
+  "/dashboard/admin/services":        "Services",
+  "/dashboard/admin/attendance":      "Attendance",
+  "/dashboard/admin/events":          "Events",
   "/dashboard/submissions":     "Submissions",
-  "/dashboard/announcements":   "Announcements",
-  "/dashboard/inventory":       "Inventory",
-  "/dashboard/units":           "Units",
-  "/dashboard/sermons":                  "Sermons",
-  "/dashboard/sermons/new":              "New Sermon",
-  "/dashboard/sermons/analytics":        "Sermon Analytics",
-  "/dashboard/subscribers":              "Sermon Subscribers",
+  "/dashboard/admin/announcements":       "Announcements",
+  "/dashboard/admin/inventory":           "Inventory",
+  "/dashboard/admin/units":               "Units",
+  "/dashboard/admin/gatherings":           "Gatherings",
+  "/dashboard/pastor/sermons":             "Sermons",
+  "/dashboard/pastor/sermons/new":         "New Sermon",
+  "/dashboard/pastor/sermons/analytics":   "Sermon Analytics",
   "/dashboard/giving":                   "Giving",
   "/dashboard/analytics":                "Analytics",
   "/dashboard/analytics/attendance":     "Attendance Analytics",
@@ -31,9 +32,8 @@ const PATH_TITLES: Record<string, string> = {
   "/dashboard/analytics/engagement":     "Engagement Scoring",
   "/dashboard/analytics/departments":    "Department Performance",
   "/dashboard/analytics/giving":         "Giving Analytics",
-  "/dashboard/alerts":                   "Pastoral Alerts",
-  "/dashboard/reports":                  "Reports & Exports",
-  "/dashboard/follow-ups":              "Follow-ups",
+  "/dashboard/pastor/reports":           "Reports & Exports",
+  "/dashboard/pastor/follow-ups":        "Follow-ups",
   "/dashboard/settings":                "Settings",
   "/dashboard/audit-log":               "Audit Log",
 };
@@ -41,7 +41,7 @@ const PATH_TITLES: Record<string, string> = {
 function getTitle(pathname: string): string {
   if (PATH_TITLES[pathname]) return PATH_TITLES[pathname];
 
-  if (/^\/dashboard\/members\/.+$/.test(pathname)) return "Member Profile";
+  if (/^\/dashboard\/admin\/members\/.+$/.test(pathname)) return "Member Profile";
 
   const last = pathname.split("/").at(-1) ?? "";
   return last

@@ -1,24 +1,30 @@
 "use client";
+
 import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import type { ApiError } from "./axios";
-import { patchFrontendSession } from "@/lib/auth/frontend-session";
+import { patchFrontendSession, SESSION_CLEARED_EVENT } from "@/lib/auth/frontend-session";
 import type { MeResponse } from "@/lib/api";
+import { setServiceWorkerUser } from "@/lib/pwa/service-worker";
 
 export function QueryProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
-        // Keeps the role hint cookie (read by middleware + the header's role badge)
-        // in sync with the DB-computed role every time /auth/me resolves anywhere
-        // in the app — otherwise a promotion/demotion made by an admin only shows
-        // up for the affected user after their next login.
+        // This cookie is only a display hint for header/sidebar UI. Middleware
+        // ignores it for authorization and uses server-authenticated role data.
         queryCache: new QueryCache({
           onSuccess: (data, query) => {
             if (query.queryKey[0] === "auth" && query.queryKey[1] === "me") {
               const me = data as MeResponse;
-              if (me.role) patchFrontendSession({ role: me.role });
+              // Passing null is intentional: revoking the final role must also
+              // remove an old role badge rather than leave a stale cookie.
+              patchFrontendSession({ role: me.role });
+              // Rehydrate the worker after every page/worker restart. Until
+              // this trusted response arrives the worker does not cache member
+              // API reads, so no authenticated response is stored as "anon".
+              if (me.profileId) void setServiceWorkerUser(me.profileId);
             }
           },
         }),
@@ -33,12 +39,16 @@ export function QueryProvider({ children }: { children: ReactNode }) {
             },
             refetchOnWindowFocus: false,
           },
-          mutations: {
-            retry: false,
-          },
+          mutations: { retry: false },
         },
-      })
+      }),
   );
+
+  useEffect(() => {
+    const clearPrivateQueries = () => queryClient.clear();
+    window.addEventListener(SESSION_CLEARED_EVENT, clearPrivateQueries);
+    return () => window.removeEventListener(SESSION_CLEARED_EVENT, clearPrivateQueries);
+  }, [queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>

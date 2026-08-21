@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { X, LogOut, ChevronRight } from "lucide-react";
-import { clearFrontendSession } from "@/lib/auth/frontend-session";
+import { auth } from "@/lib/api";
 import { hasMinRole, ROLE_LABELS, ROLE_BADGE_CLASS } from "./role-utils";
 import { NAV_GROUPS } from "./nav-config";
 import type { SessionUser } from "./DashboardShell";
@@ -34,7 +34,7 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
   const router = useRouter();
 
   const handleLogout = async () => {
-    clearFrontendSession();
+    await auth.logout();
     router.push("/login");
     router.refresh();
   };

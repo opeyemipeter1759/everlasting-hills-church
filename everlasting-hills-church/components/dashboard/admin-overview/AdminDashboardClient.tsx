@@ -90,6 +90,8 @@ export default function AdminDashboardClient() {
             )}
             {visible("ai") && (
               <AIInsightsCard
+                trend={data.attendanceTrend}
+                fallback={data.aiInsights}
                 viewMoreHref="/dashboard/follow-up"
                 onDismiss={() => dismiss("ai")}
               />

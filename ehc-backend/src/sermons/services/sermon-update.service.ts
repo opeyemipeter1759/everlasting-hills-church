@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConfigService } from '@nestjs/config';
 import { SermonStatus, SermonType } from '@prisma/client';
 import { randomUUID } from 'crypto';
@@ -6,6 +7,7 @@ import slugify from 'slugify';
 import { PrismaService } from '../../prisma/prisma.service';
 import { EmailsService } from '../../emails/emails.service';
 import type { Env } from '../../config/env.validation';
+import { PushEvents, type SermonPublishedPayload } from '../../push/push.events';
 import {
   SERMON_COUNTS_INCLUDE,
   SERMON_EPISODES_INCLUDE,
@@ -24,6 +26,7 @@ export class SermonUpdateService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly sermonRead: SermonAdminReadService,
+    private readonly emitter: EventEmitter2,
     private readonly emails: EmailsService,
     config: ConfigService<Env, true>,
   ) {
@@ -108,7 +111,19 @@ export class SermonUpdateService {
       },
     });
 
+    // Emitted here rather than at each return: updateSermon has three exit
+    // points and only the DRAFT-to-PUBLISHED transition should notify, so
+    // hanging this off `nowPublishing` keeps a later edit from re-notifying.
+    // Push and email are separate channels with separate opt-outs, so a publish
+    // fires both rather than one standing in for the other.
     if (nowPublishing) {
+      this.emitter.emit(PushEvents.SermonPublished, {
+        tenantId: this.tenantId,
+        sermonId: sermon.id,
+        title: sermon.title,
+        slug: sermon.slug,
+        preacher: sermon.speaker,
+      } satisfies SermonPublishedPayload);
       void this.emails.notifyNewContent({ kind: 'sermon', title: sermon.title, path: `/dashboard/sermon/${sermon.slug}` });
     }
 

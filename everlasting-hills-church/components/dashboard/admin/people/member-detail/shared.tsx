@@ -71,7 +71,7 @@ export function ScoreBar({ label, value }: { label: string; value: number }) {
 export function CareChip({ person }: { person: CarePerson }) {
   return (
     <Link
-      href={`/dashboard/members/${person.id}`}
+      href={`/dashboard/admin/members/${person.id}`}
       className="flex items-center gap-2.5 rounded-xl border border-[#E7CDD3]/50 dark:border-white/10 px-3 py-2 hover:bg-[#FFF4F6]/50 dark:hover:bg-white/[0.03] transition-colors"
     >
       <Avatar photoUrl={person.photoUrl} firstName={person.firstName} lastName={person.lastName} size={28} />

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { clearFrontendSession } from "@/lib/auth/frontend-session";
+import { auth } from "@/lib/api";
 
 export default function LogoutButton({
   className,
@@ -14,7 +14,7 @@ export default function LogoutButton({
   const router = useRouter();
 
   const handleLogout = async () => {
-    clearFrontendSession();
+    await auth.logout();
     router.push("/login");
     router.refresh();
   };

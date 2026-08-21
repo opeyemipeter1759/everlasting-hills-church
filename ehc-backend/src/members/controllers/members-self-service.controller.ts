@@ -51,7 +51,12 @@ export class MembersSelfServiceController {
 
   @Post('me/avatar')
   @Roles(Role.MEMBER)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 1024 * 1024, files: 1 },
+    }),
+  )
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload my profile photo (PNG/JPG/JPEG, ≤ 1 MB)' })
   @ApiBody({

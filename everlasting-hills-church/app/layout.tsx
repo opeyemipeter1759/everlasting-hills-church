@@ -6,6 +6,7 @@ import NavigationProgress from "@/components/ui/navigation/NavigationProgress";
 import { ToastProvider } from "@/lib/api/ToastProvider";
 import "./globals.css";
 import { SermonPlayerProvider } from "@/context/SermonPlayerContext";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--nf-inter", display: "swap" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--nf-jakarta", display: "swap" });
@@ -48,23 +49,20 @@ export default function RootLayout({
           sizes="32x32"
           href="/favicon/favicon-32x32.png"
         />
+        {/* iOS ignores the manifest's icons for the home screen and reads this
+            instead. Points at the generated PWA set, whose mark sits on the
+            brand's black base — the older /favicon/android-chrome-*.png are a
+            white mark on transparency, which iOS composites onto black and
+            renders as an almost invisible icon. */}
         <link
           rel="apple-touch-icon"
           type="image/png"
-          href="/favicon/apple-touch-icon.png"
+          sizes="180x180"
+          href="/icons/apple-touch-icon.png"
         />
-        <link
-          rel="apple-touch-icon"
-          type="image/png"
-          sizes="192x192"
-          href="/favicon/android-chrome-192x192.png"
-        />
-        <link
-          rel="apple-touch-icon"
-          type="image/png"
-          sizes="512x512"
-          href="/favicon/android-chrome-512x512.png"
-        />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Everlasting Hills" />
       </head>
       <body className="antialiased bg-white dark:bg-[#111111] transition-colors">
         <Suspense fallback={null}>

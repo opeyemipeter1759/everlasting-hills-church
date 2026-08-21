@@ -10,7 +10,7 @@ import { UsersRoleGrantsService } from './services/users-role-grants.service';
 /** Additive multi-role grants and the global Head Usher assignment. */
 @ApiTags('users')
 @Controller('users')
-@Roles(Role.HOD)
+@Roles(Role.ADMIN)
 @ApiBearerAuth('access-token')
 export class UsersGrantsController {
   constructor(private readonly grants: UsersRoleGrantsService) {}

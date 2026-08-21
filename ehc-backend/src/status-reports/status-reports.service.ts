@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
 import type { CreateReportDto, UpdateReportDto } from './dto/status-report.dto';
+import { hasReportText, sanitizeStatusReportHtml } from './status-report-sanitizer';
 
 const REVIEW_ROLES: Role[] = [Role.SUPER_ADMIN];
 
@@ -66,7 +67,9 @@ export class StatusReportsService {
       id: r.id,
       scope: r.scope,
       title: r.title,
-      content: r.content,
+      // Response-boundary sanitization also protects against legacy rows written
+      // before persistence sanitization was introduced.
+      content: sanitizeStatusReportHtml(r.content),
       attachmentUrl: r.attachmentUrl,
       attachmentName: r.attachmentName,
       status: r.status,
@@ -85,6 +88,11 @@ export class StatusReportsService {
     if (!actor.profileId) throw new ForbiddenException('No profile on your account');
     await this.assertCanSubmit(actor, dto);
 
+    const content = sanitizeStatusReportHtml(dto.content);
+    if (!hasReportText(content)) {
+      throw new BadRequestException('Report content is empty after unsafe markup is removed');
+    }
+
     const row = await this.prisma.report.create({
       data: {
         id: randomUUID(),
@@ -94,7 +102,7 @@ export class StatusReportsService {
         unitId: dto.scope === 'UNIT' ? dto.unitId : null,
         submittedById: actor.profileId,
         title: dto.title.trim(),
-        content: dto.content.trim(),
+        content,
         attachmentUrl: dto.attachmentUrl ?? null,
         attachmentName: dto.attachmentName ?? null,
         status: dto.status ?? 'SUBMITTED',
@@ -167,13 +175,17 @@ export class StatusReportsService {
       throw new BadRequestException('An approved report cannot be edited');
     }
 
+    const content = sanitizeStatusReportHtml(dto.content);
+    if (!hasReportText(content)) {
+      throw new BadRequestException('Report content is empty after unsafe markup is removed');
+    }
     const nextStatus = dto.status ?? (row.status === 'NEEDS_CORRECTION' ? 'SUBMITTED' : row.status);
 
     const updated = await this.prisma.report.update({
       where: { id },
       data: {
         title: dto.title.trim(),
-        content: dto.content.trim(),
+        content,
         attachmentUrl: dto.attachmentUrl ?? row.attachmentUrl,
         attachmentName: dto.attachmentName ?? row.attachmentName,
         status: nextStatus,

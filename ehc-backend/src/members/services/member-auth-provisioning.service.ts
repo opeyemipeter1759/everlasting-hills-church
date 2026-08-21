@@ -1,26 +1,56 @@
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Role } from '@prisma/client';
+import { generateUnusableInitialPassword, passwordSetupRedirect } from '../../auth/secure-provisioning';
+import type { Env } from '../../config/env.validation';
 import { PrismaService } from '../../prisma/prisma.service';
 import { createAdminClient } from '../members-supabase-admin.util';
 
-/** Creates (or safely reuses) the Supabase auth user backing a newly-converted member. */
+export interface ProvisionedAuthUser {
+  userId: string;
+  /** True only when this operation created the Supabase identity. */
+  created: boolean;
+}
+
+/** Creates or safely links the Supabase identity backing a converted member. */
 @Injectable()
 export class MemberAuthProvisioningService {
-  constructor(private readonly prisma: PrismaService) {}
-  async createOrReuseAuthUser(email: string, phone: string): Promise<string> {
+  private readonly logger = new Logger(MemberAuthProvisioningService.name);
+  private readonly appUrl: string;
+
+  constructor(
+    private readonly prisma: PrismaService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.appUrl = config.get('FRONTEND_URL', { infer: true }) ?? 'http://localhost:3000';
+  }
+
+  async createOrReuseAuthUser(email: string): Promise<ProvisionedAuthUser> {
     const supabase = createAdminClient();
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
-      password: phone,
+      password: generateUnusableInitialPassword(),
       email_confirm: true,
-      user_metadata: { needs_password_change: true },
+      app_metadata: { role: Role.MEMBER },
+      user_metadata: {
+        needs_password_change: true,
+        provisioned_by: 'member-onboarding',
+      },
     } as any);
 
-    if (!authError) return authData.user.id;
+    if (!authError && authData.user) {
+      return { userId: authData.user.id, created: true };
+    }
 
-    const isDuplicate = /already.*registered|already.*exists/i.test(authError.message);
+    const isDuplicate = /already.*registered|already.*exists/i.test(authError?.message ?? '');
     if (!isDuplicate) {
       throw new InternalServerErrorException(
-        `Could not create auth account: ${authError.message}`,
+        `Could not create auth account: ${authError?.message ?? 'unknown error'}`,
       );
     }
 
@@ -33,26 +63,45 @@ export class MemberAuthProvisioningService {
         `Auth user exists but could not be looked up: ${listError.message}`,
       );
     }
-    const found = list.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+    const found = list.users.find((user) => user.email?.toLowerCase() === email.toLowerCase());
     if (!found) {
       throw new InternalServerErrorException(
         'Auth user reported as duplicate but could not be located',
       );
     }
 
-    // Re-link an orphan auth user: refresh password to the visitor's phone so the
-    // admin's intent ("their initial password is their phone") holds.
-    await supabase.auth.admin.updateUserById(found.id, { password: phone, email_confirm: true });
-
-    // If a Profile already exists for this user, the visitor was effectively converted
-    // before — bail out with a clear 409 so the admin knows.
-    const orphanProfile = await this.prisma.profile.findUnique({ where: { userId: found.id } });
-    if (orphanProfile) {
+    // Check application ownership before *any* mutation to an existing identity.
+    // A duplicate address can belong to a privileged or unrelated account.
+    const existingProfile = await this.prisma.profile.findUnique({
+      where: { userId: found.id },
+      select: { id: true },
+    });
+    if (existingProfile) {
       throw new ConflictException(
-        'This person already has an account. Their Member record may have been removed — restore it instead of creating a new one.',
+        'This person already has an account. Their Member record may have been removed - restore it instead of creating a new one.',
       );
     }
 
-    return found.id;
+    // The identity is an orphan from an interrupted legacy flow. Reuse it without
+    // changing its password, confirmation state, role, or metadata.
+    return { userId: found.id, created: false };
+  }
+
+  async sendPasswordSetupEmail(email: string): Promise<boolean> {
+    const { error } = await createAdminClient().auth.resetPasswordForEmail(email, {
+      redirectTo: passwordSetupRedirect(this.appUrl),
+    });
+    if (error) {
+      this.logger.error(`Could not send password setup email to ${email}: ${error.message}`);
+      return false;
+    }
+    return true;
+  }
+
+  async rollbackCreatedAuthUser(userId: string): Promise<void> {
+    const { error } = await createAdminClient().auth.admin.deleteUser(userId);
+    if (error) {
+      this.logger.error(`Could not roll back newly-created auth user ${userId}: ${error.message}`);
+    }
   }
 }

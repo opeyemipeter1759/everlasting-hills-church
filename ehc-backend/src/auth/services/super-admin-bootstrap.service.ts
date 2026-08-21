@@ -59,7 +59,6 @@ export class SuperAdminBootstrapService implements OnModuleInit {
     let userId: string;
     if (existingUser) {
       const { data: updated, error: updateError } = await admin.auth.admin.updateUserById(existingUser.id, {
-        password: this.defaultSuperAdminPassword,
         email_confirm: true,
         app_metadata: { ...(existingUser.app_metadata ?? {}), role: Role.SUPER_ADMIN },
         user_metadata: { ...(existingUser.user_metadata ?? {}), role: Role.SUPER_ADMIN, full_name: 'Super Admin' },

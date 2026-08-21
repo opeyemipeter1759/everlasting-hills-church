@@ -9,6 +9,7 @@ import { CheckInPanel } from "./CheckInPanel";
 import { JourneyBand } from "./JourneyBand";
 import { FeaturedSermonCard } from "./FeaturedSermonCard";
 import { ContinueListeningCard } from "./ContinueListeningCard";
+import { GatheringsPanel } from "./GatheringsPanel";
 import { AnnouncementsPanel } from "../AnnouncementsPanel";
 import { ProfileCompletionToast } from "./ProfileCompletionToast";
 
@@ -85,6 +86,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         />
         <div className="grid grid-cols-1 gap-5">
           <ContinueListeningCard listenHistory={listenHistory} />
+          <GatheringsPanel />
         </div>
       </div>
       <JourneyBand

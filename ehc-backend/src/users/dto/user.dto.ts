@@ -36,10 +36,10 @@ export class CreateUserDto {
   @MaxLength(254)
   email!: string;
 
-  @ApiProperty({ example: '+2348012345678', description: 'Used as initial password' })
+  @ApiProperty({ example: '+2348012345678', description: 'Member contact number; never used as a password' })
   @IsString()
   @IsNotEmpty()
-  @MinLength(6, { message: 'Phone (initial password) must be at least 6 characters' })
+  @MinLength(6, { message: 'Phone must be at least 6 characters' })
   @MaxLength(40)
   phone!: string;
 

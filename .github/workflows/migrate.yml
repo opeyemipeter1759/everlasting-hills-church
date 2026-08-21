@@ -1,37 +1,47 @@
-name: Database Migration
+name: Production database migration
 
 on:
-  push:
-    branches: [master]
-    paths:
-      - 'everlasting-hills-church/prisma/schema.prisma'
   workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type BASELINE_RECORDED_AND_BACKUP_VERIFIED to continue
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database-migration
+  cancel-in-progress: false
 
 jobs:
   migrate:
-    name: Push schema to Supabase
+    name: Prisma migrate deploy
     runs-on: ubuntu-latest
+    environment: production
     defaults:
       run:
-        working-directory: everlasting-hills-church
-
+        working-directory: ehc-backend
+    env:
+      NODE_ENV: production
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL: ${{ secrets.DIRECT_URL }}
     steps:
+      - name: Require explicit operator confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "BASELINE_RECORDED_AND_BACKUP_VERIFIED"
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: everlasting-hills-church/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Prisma client
-        run: npx prisma generate
-
-      - name: Push schema changes
-        run: npx prisma db push --accept-data-loss
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DIRECT_URL: ${{ secrets.DATABASE_URL }}
+          cache: npm
+          cache-dependency-path: ehc-backend/package-lock.json
+      - run: npm ci
+      - name: Validate checked-in Prisma schema
+        run: npx prisma validate
+      - name: Verify production baseline (read-only)
+        run: npm run migration:check-baseline
+      - name: Apply pending reviewed migrations
+        run: npx prisma migrate deploy

@@ -8,6 +8,7 @@ import PersonalInformationForm, {
 import ProfileDetailsForm, { type ProfileDetailsUser } from "./ProfileDetailsForm";
 import SocialLinksForm, { type SocialLinksUser } from "./SocialLinksForm";
 import ProfilePhotoCard from "./ProfilePhotoCard";
+import CalendarSubscriptionCard from "./CalendarSubscriptionCard";
 
 interface Props {
   user: PersonalFormUser &

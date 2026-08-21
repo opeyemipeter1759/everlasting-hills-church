@@ -47,6 +47,9 @@ import { StatusReportsModule } from './status-reports/status-reports.module';
 import { OnlineAttendanceModule } from './online-attendance/online-attendance.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
+import { CalendarModule } from './calendar/calendar.module';
+import { PushModule } from './push/push.module';
+import { GatheringsModule } from './gatherings/gatherings.module';
 
 @Module({
   imports: [
@@ -143,6 +146,9 @@ import type { Env } from './config/env.validation';
     HomeCellModule,
     JobsModule.forRoot(),
     SchedulingModule,
+    CalendarModule,
+    PushModule,
+    GatheringsModule,
     CoursesModule,
     StatusReportsModule,
     OnlineAttendanceModule,

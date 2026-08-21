@@ -7,7 +7,7 @@ import {
   LayoutDashboard, User, CalendarCheck, BookOpen, Sparkles,
   Menu, X, Search, Bell, Settings,
 } from "lucide-react";
-import { clearFrontendSession } from "@/lib/auth/frontend-session";
+import { auth } from "@/lib/api";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ function MemberSidebar({ memberDisplayId: _id, displayName, initials, email: _em
   const router = useRouter();
 
   const handleLogout = async () => {
-    clearFrontendSession();
+    await auth.logout();
     router.push("/login");
     router.refresh();
   };

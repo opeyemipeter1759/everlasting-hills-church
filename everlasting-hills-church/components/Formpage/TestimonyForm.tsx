@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type UseFormRegister } from "react-hook-form";
 import { apiClient } from "@/lib/api/axios";
 
 type FormValues = {
@@ -21,8 +21,8 @@ function RadioCard({
 }: {
   value: string;
   label: string;
-  fieldName: keyof FormValues;
-  register: any;
+  fieldName: "share_physically";
+  register: UseFormRegister<FormValues>;
   hasError?: boolean;
 }) {
   return (
@@ -34,10 +34,12 @@ function RadioCard({
       }
     >
       <input
+        id={`testimony-share-${value.toLowerCase()}`}
         type="radio"
         value={value}
+        aria-invalid={hasError || undefined}
         className="w-4 h-4 accent-[#800020]"
-        {...register(fieldName)}
+        {...register(fieldName, { required: "Please choose an option" })}
       />
 
       <span className="text-[15px] font-semibold text-black">{label}</span>
@@ -129,16 +131,22 @@ export default function TestimonyForm() {
         {/* INPUTS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-semibold mb-2">Name</label>
+            <label htmlFor="testimony-name" className="block text-sm font-semibold mb-2">Name</label>
             <input
+              id="testimony-name"
+              autoComplete="name"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
               {...register("name")}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-2">Phone</label>
+            <label htmlFor="testimony-phone" className="block text-sm font-semibold mb-2">Phone</label>
             <input
+              id="testimony-phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
               {...register("phone_number")}
             />
@@ -147,12 +155,15 @@ export default function TestimonyForm() {
 
         {/* TEXTAREA FIXED */}
         <div>
-          <label className="block text-sm font-semibold mb-2">
+          <label htmlFor="testimony-content" className="block text-sm font-semibold mb-2">
             What is your testimony? <span className="text-red-500">*</span>
           </label>
 
           <textarea
+            id="testimony-content"
             rows={6}
+            aria-invalid={!!errors.content}
+            aria-describedby={errors.content ? "testimony-content-error" : undefined}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none resize-none"
             {...register("content", {
               required: "This field is required",
@@ -160,14 +171,14 @@ export default function TestimonyForm() {
           />
 
           {errors.content && (
-            <p className="text-red-500 text-sm mt-1">
+            <p id="testimony-content-error" role="alert" className="text-red-500 text-sm mt-1">
               {errors.content.message}
             </p>
           )}
         </div>
 
         {/* RADIO FIXED (NOW FULLY CLICKABLE) */}
-        <fieldset className="space-y-3">
+        <fieldset className="space-y-3" aria-describedby={errors.share_physically ? "testimony-share-error" : undefined}>
           <legend className="text-sm font-semibold">
             Do you want to share your testimony physically?
             <span className="text-red-500 ml-1">*</span>
@@ -190,11 +201,16 @@ export default function TestimonyForm() {
               hasError={!!errors.share_physically}
             />
           </div>
+          {errors.share_physically && (
+            <p id="testimony-share-error" role="alert" className="text-red-500 text-sm">
+              {errors.share_physically.message}
+            </p>
+          )}
         </fieldset>
 
         {/* ERROR */}
         {serverError && (
-          <p className="text-red-500 text-sm">{serverError}</p>
+          <p role="alert" className="text-red-500 text-sm">{serverError}</p>
         )}
 
         {/* BUTTON */}

@@ -144,7 +144,7 @@ export default function SermonForm({
       } else {
         await apiClient.post("/sermons/admin", payload);
       }
-      router.push("/dashboard/sermons");
+      router.push("/dashboard/pastor/sermons");
       router.refresh();
     } catch (err) {
       setError((err as { message?: string }).message ?? "Save failed");

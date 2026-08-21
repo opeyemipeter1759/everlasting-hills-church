@@ -1,3 +1,25 @@
+import {
+  ACCESS_TOKEN_COOKIE,
+  EMAIL_COOKIE,
+  FULL_NAME_COOKIE,
+  LOGGED_IN_COOKIE,
+  LOGOUT_PENDING_COOKIE,
+  PICTURE_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  ROLE_COOKIE,
+} from "./session-constants";
+
+export {
+  ACCESS_TOKEN_COOKIE,
+  EMAIL_COOKIE,
+  FULL_NAME_COOKIE,
+  LOGGED_IN_COOKIE,
+  LOGOUT_PENDING_COOKIE,
+  PICTURE_COOKIE,
+  REFRESH_TOKEN_COOKIE,
+  ROLE_COOKIE,
+} from "./session-constants";
+
 export type UserRole =
   | "SUPER_ADMIN"
   | "PASTOR"
@@ -8,7 +30,8 @@ export type UserRole =
   | "UNIT_LEAD"
   | "MEMBER";
 
-// Admin merged into Admin Head — same level, full church-wide access.
+// This hierarchy is only a frontend routing convenience. Nest authorization is
+// authoritative and additionally enforces assignment/department scope.
 const ROLE_LEVELS: Record<UserRole, number> = {
   MEMBER: 1,
   UNIT_LEAD: 2,
@@ -20,15 +43,13 @@ const ROLE_LEVELS: Record<UserRole, number> = {
   SUPER_ADMIN: 8,
 };
 
-export const ACCESS_TOKEN_COOKIE = "ehc_access_token";
-export const REFRESH_TOKEN_COOKIE = "ehc_refresh_token";
-export const ROLE_COOKIE = "ehc_role";
-
-const REFRESH_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
-export const EMAIL_COOKIE = "ehc_user_email";
-export const FULL_NAME_COOKIE = "ehc_user_full_name";
-export const PICTURE_COOKIE = "ehc_user_picture";
-export const LOGGED_IN_COOKIE = "ehc_logged_in";
+const CHURCH_WIDE_ROLES = new Set<UserRole>([
+  "ADMIN",
+  "ADMIN_HEAD",
+  "PASTOR",
+  "SUPER_ADMIN",
+]);
+const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER"]);
 
 export interface FrontendSessionUser {
   email: string | null;
@@ -63,41 +84,90 @@ export function normalizeRole(role: string | null | undefined): UserRole | null 
 
   const upper = cleaned.toUpperCase().replace(/\s+/g, "_");
   if (upper in ROLE_LEVELS) return upper as UserRole;
-
   return null;
 }
 
 export function hasMinRole(userRole: string | null | undefined, minRole: UserRole): boolean {
   const normalized = normalizeRole(userRole);
   if (!normalized) return false;
+  if (LATERAL_ROLES.has(minRole)) {
+    return normalized === minRole || CHURCH_WIDE_ROLES.has(normalized);
+  }
+  if (LATERAL_ROLES.has(normalized)) {
+    // Lateral assignments include normal member access plus only their named
+    // capability. HOD/Head Usher must not inherit generic Unit Lead routes.
+    return minRole === "MEMBER";
+  }
   return ROLE_LEVELS[normalized] >= ROLE_LEVELS[minRole];
 }
 
-export function getLandingPage(role: string | null | undefined): string {
-  const normalized = normalizeRole(role);
-  if (!normalized) return "/login";
-  return normalized === "SUPER_ADMIN" ? "/dashboard" : "/dashboard";
+export function hasAnyMinRole(
+  userRoles: ReadonlyArray<string | null | undefined>,
+  minRole: UserRole,
+): boolean {
+  return userRoles.some((role) => hasMinRole(role, minRole));
 }
 
+export function getLandingPage(role: string | null | undefined): string {
+  return normalizeRole(role) ? "/dashboard" : "/login";
+}
+
+/**
+ * Ordered from most specific to least specific. The list covers both canonical
+ * filesystem routes and the shorter URLs currently used by dashboard nav.
+ */
+export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
+  ["/dashboard/audit-log", "SUPER_ADMIN"],
+  ["/dashboard/admin/roles", "ADMIN"],
+  ["/dashboard/admin/attendance/ushers-report", "HEAD_USHER"],
+  ["/dashboard/admin/usher", "HEAD_USHER"],
+  ["/dashboard/my-department/reports", "ADMIN_HEAD"],
+  ["/dashboard/my-department", "HOD"],
+  ["/dashboard/unit-lead", "UNIT_LEAD"],
+  ["/dashboard/analytics/departments", "UNIT_LEAD"],
+  ["/dashboard/cms", "PASTOR"],
+  ["/dashboard/sermons", "PASTOR"],
+  ["/dashboard/subscribers", "PASTOR"],
+  ["/dashboard/alerts", "PASTOR"],
+  ["/dashboard/reports", "PASTOR"],
+  ["/dashboard/giving", "PASTOR"],
+  ["/dashboard/analytics/engagement", "PASTOR"],
+  ["/dashboard/analytics/giving", "PASTOR"],
+  ["/dashboard/pastor", "PASTOR"],
+  ["/dashboard/members", "ADMIN"],
+  ["/dashboard/first-timers", "ADMIN"],
+  ["/dashboard/services", "ADMIN"],
+  ["/dashboard/events", "ADMIN"],
+  ["/dashboard/announcements", "ADMIN"],
+  ["/dashboard/units", "ADMIN"],
+  ["/dashboard/analytics/attendance", "ADMIN"],
+  ["/dashboard/analytics/growth", "ADMIN"],
+  ["/dashboard/analytics/first-timers", "ADMIN"],
+  ["/dashboard/analytics", "ADMIN"],
+  ["/dashboard/prayer-requests", "ADMIN"],
+  ["/dashboard/testimonies", "ADMIN"],
+  ["/dashboard/questions", "ADMIN"],
+  ["/dashboard/settings/homepage", "ADMIN"],
+  ["/dashboard/admin", "ADMIN"],
+  ["/dashboard/follow-up", "MEMBER"],
+  ["/dashboard", "MEMBER"],
+  ["/me", "MEMBER"],
+  ["/admin", "SUPER_ADMIN"],
+];
+
 export function getRequiredRole(pathname: string): UserRole | null {
-  if (pathname.startsWith("/admin")) return "SUPER_ADMIN";
-  // Reachable by HOD/ADMIN_HEAD too (their own scoped view), not just ADMIN+ —
-  // must be checked before the generic /dashboard/admin prefix rule below.
-  if (pathname.startsWith("/dashboard/admin/roles")) return "HOD";
-  if (pathname.startsWith("/dashboard/admin")) return "ADMIN";
-  if (pathname.startsWith("/dashboard/pastor")) return "PASTOR";
-  if (pathname.startsWith("/dashboard/unit-lead")) return "UNIT_LEAD";
-  // Both unit leaders and team members work this page; row-level actions are
-  // permission-gated in the UI (see FollowUpPipelineClient).
-  if (pathname.startsWith("/dashboard/follow-up")) return "MEMBER";
-  if (pathname.startsWith("/dashboard") || pathname.startsWith("/me")) return "MEMBER";
+  const normalizedPath = pathname !== "/" ? pathname.replace(/\/+$/, "") : pathname;
+  for (const [prefix, role] of ROUTE_ROLE_RULES) {
+    if (normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`)) return role;
+  }
   return null;
 }
+
 function isHttps(): boolean {
   return typeof window !== "undefined" && window.location.protocol === "https:";
 }
 
-function setCookie(name: string, value: string, maxAgeSeconds: number) {
+function setCookie(name: string, value: string, maxAgeSeconds: number): void {
   if (typeof document === "undefined") return;
   const parts = [
     `${name}=${encodeURIComponent(value)}`,
@@ -109,38 +179,13 @@ function setCookie(name: string, value: string, maxAgeSeconds: number) {
   document.cookie = parts.join("; ");
 }
 
-function clearCookie(name: string) {
+function clearCookie(name: string): void {
   if (typeof document === "undefined") return;
   document.cookie = `${name}=; Path=/; Max-Age=0; SameSite=Lax`;
 }
 
-export function getAccessTokenFromCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const prefix = `${ACCESS_TOKEN_COOKIE}=`;
-  const found = document.cookie.split("; ").find((c) => c.startsWith(prefix));
-  return found ? decodeURIComponent(found.slice(prefix.length)) : null;
-}
-
-export function getRefreshTokenFromCookie(): string | null {
-  if (typeof document === "undefined") return null;
-  const prefix = `${REFRESH_TOKEN_COOKIE}=`;
-  const found = document.cookie.split("; ").find((c) => c.startsWith(prefix));
-  return found ? decodeURIComponent(found.slice(prefix.length)) : null;
-}
-
-export interface FrontendSessionInput {
-  accessToken: string;
-  refreshToken?: string | null;
-  email: string;
-  role: string | null;
-  fullName?: string | null;
-  picture?: string | null;
-  expiresInSeconds?: number;
-}
-
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
-
   const prefix = `${name}=`;
   const found = document.cookie.split("; ").find((cookie) => cookie.startsWith(prefix));
   return found ? decodeURIComponent(found.slice(prefix.length)) : null;
@@ -153,43 +198,25 @@ export function getFrontendSessionUser(): FrontendSessionUser | null {
   const picture = readCookie(PICTURE_COOKIE);
   const loggedIn = readCookie(LOGGED_IN_COOKIE) === "true";
 
-  if (!loggedIn && !email && !role && !fullName && !picture) {
-    return null;
-  }
-
-  return {
-    email,
-    role,
-    fullName,
-    picture,
-    loggedIn,
-  };
+  if (!loggedIn && !email && !role && !fullName && !picture) return null;
+  return { email, role, fullName, picture, loggedIn };
 }
 
-export function setFrontendSession({
-  accessToken,
-  refreshToken,
-  email,
-  role,
-  fullName,
-  picture,
-}: FrontendSessionInput): void {
-  // All cookies live as long as the refresh token (30 days) so the browser never
-  // auto-deletes the session mid-use. Actual auth validity is enforced by the backend
-  // via JWT signature verification; the cookie lifetime is just a browser-side persistence.
-  setCookie(ACCESS_TOKEN_COOKIE, accessToken, REFRESH_MAX_AGE);
-  if (refreshToken) setCookie(REFRESH_TOKEN_COOKIE, refreshToken, REFRESH_MAX_AGE);
-  setCookie(EMAIL_COOKIE, email, REFRESH_MAX_AGE);
-  setCookie(LOGGED_IN_COOKIE, "true", REFRESH_MAX_AGE);
-  if (role) setCookie(ROLE_COOKIE, role, REFRESH_MAX_AGE);
-  else clearCookie(ROLE_COOKIE);
-  if (fullName) setCookie(FULL_NAME_COOKIE, fullName, REFRESH_MAX_AGE);
-  else clearCookie(FULL_NAME_COOKIE);
-  if (picture) setCookie(PICTURE_COOKIE, picture, REFRESH_MAX_AGE);
-  else clearCookie(PICTURE_COOKIE);
-}
 export const SESSION_CHANGED_EVENT = "ehc:session-changed";
+export const SESSION_CLEARED_EVENT = "ehc:session-cleared";
 export const AUTH_ERROR_EVENT = "ehc:auth-error";
+
+export function notifyFrontendSessionChanged(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(SESSION_CHANGED_EVENT));
+  }
+}
+
+export function markLogoutPending(): void {
+  // Persists as long as a refresh session could. Middleware treats this only as
+  // a request to destroy credentials, never as proof of identity/authorization.
+  setCookie(LOGOUT_PENDING_COOKIE, "1", 60 * 60 * 24 * 30);
+}
 
 export function patchFrontendSession(
   partial: Partial<{
@@ -213,12 +240,12 @@ export function patchFrontendSession(
     if (partial.role) setCookie(ROLE_COOKIE, partial.role, maxAge);
     else clearCookie(ROLE_COOKIE);
   }
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(SESSION_CHANGED_EVENT));
-  }
+  notifyFrontendSessionChanged();
 }
 
 export function clearFrontendSession(): void {
+  // The first two calls clean up legacy, JavaScript-readable cookies. Current
+  // token cookies are HttpOnly and are cleared by the logout route response.
   clearCookie(ACCESS_TOKEN_COOKIE);
   clearCookie(REFRESH_TOKEN_COOKIE);
   clearCookie(ROLE_COOKIE);
@@ -226,4 +253,8 @@ export function clearFrontendSession(): void {
   clearCookie(FULL_NAME_COOKIE);
   clearCookie(PICTURE_COOKIE);
   clearCookie(LOGGED_IN_COOKIE);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(SESSION_CHANGED_EVENT));
+    window.dispatchEvent(new CustomEvent(SESSION_CLEARED_EVENT));
+  }
 }

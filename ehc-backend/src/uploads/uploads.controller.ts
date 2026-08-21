@@ -18,6 +18,7 @@ import {
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UploadsService } from './uploads.service';
+import { hasValidFileSignature } from './file-signature.util';
 
 const IMAGE_MIME = [
   'image/jpeg',
@@ -60,7 +61,12 @@ export class UploadsController {
 
   @Post('image')
   @Roles(Role.ADMIN)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_IMAGE_BYTES, files: 1 },
+    }),
+  )
   @ApiBearerAuth('access-token')
   @ApiOperation({
     summary: 'Upload an image',
@@ -96,6 +102,9 @@ export class UploadsController {
     if (!IMAGE_MIME.includes(file.mimetype)) {
       throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, AVIF, BMP, SVG, or ICO)');
     }
+    if (!hasValidFileSignature(file)) {
+      throw new BadRequestException('Image content does not match its declared format');
+    }
 
     // Return the bare payload — the global ResponseEnvelopeInterceptor wraps it
     // in { data, meta }, which the frontend axios client unwraps to { url, key }.
@@ -104,7 +113,12 @@ export class UploadsController {
 
   @Post('document')
   @Roles(Role.UNIT_LEAD)
-  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: MAX_DOCUMENT_BYTES, files: 1 },
+    }),
+  )
   @ApiBearerAuth('access-token')
   @ApiOperation({
     summary: 'Upload a document',
@@ -139,6 +153,9 @@ export class UploadsController {
     }
     if (!DOCUMENT_MIME.includes(file.mimetype)) {
       throw new BadRequestException('Unsupported format (use DOCX, DOC, PDF, JPG, PNG, or WebP)');
+    }
+    if (!hasValidFileSignature(file)) {
+      throw new BadRequestException('Document content does not match its declared format');
     }
 
     const result = await this.uploads.uploadObject(file, 'documents');

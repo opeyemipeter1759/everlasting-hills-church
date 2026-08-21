@@ -208,6 +208,7 @@ model Member {
   PrayerRequest               PrayerRequest[]
   Question                    Question[]
   UnitTaskAssigned            UnitTask[]
+  ServiceAssignment           ServiceAssignment[]
 
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
@@ -377,6 +378,8 @@ model PaystackWebhookLog {
   processedAt DateTime @default(now())
   tenantId    String
   Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, event, reference])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -433,35 +436,38 @@ enum QuestionStatus {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Profile {
-  id                     String                @id
-  userId                 String                @unique
+  id                     String                  @id
+  userId                 String                  @unique
   /// DEPRECATED: no longer the source of truth for authorization. Effective roles
   /// are derived from RoleGrant + assignments (UnitLeadAssignment, DepartmentHead,
   /// HeadUsherAssignment). Kept as a frozen pre-migration snapshot; do not read it.
-  legacyRole             Role                  @default(MEMBER)
+  legacyRole             Role                    @default(MEMBER)
   tenantId               String
-  createdAt              DateTime              @default(now())
+  createdAt              DateTime                @default(now())
   Member                 Member?
   Notification           Notification[]
   RoleAssignment         RoleAssignment[]
   CommunityPost          CommunityPost[]
-  DepartmentHeadOf       DepartmentHead[]      @relation("DepartmentHeadUser")
-  DepartmentHeadAssigned DepartmentHead[]      @relation("DepartmentHeadAssignedBy")
-  DepartmentHodOf        DepartmentHod[]       @relation("DepartmentHodUser")
-  DepartmentHodAssigned  DepartmentHod[]       @relation("DepartmentHodAssignedBy")
-  RoleGrantOf            RoleGrant[]           @relation("RoleGrantUser")
-  RoleGrantGranted       RoleGrant[]           @relation("RoleGrantGrantedBy")
-  UnitLeadOf             UnitLeadAssignment[]  @relation("UnitLeadUser")
-  UnitLeadAssigned       UnitLeadAssignment[]  @relation("UnitLeadAssignedBy")
-  HeadUsherOf            HeadUsherAssignment[] @relation("HeadUsherUser")
-  HeadUsherAssigned      HeadUsherAssignment[] @relation("HeadUsherAssignedBy")
-  FollowUpAdded          FollowUpEntry[]       @relation("FollowUpAddedBy")
-  ReportSubmitted        Report[]              @relation("ReportSubmittedBy")
-  ReportReviewed         Report[]              @relation("ReportReviewedBy")
+  DepartmentHeadOf       DepartmentHead[]        @relation("DepartmentHeadUser")
+  DepartmentHeadAssigned DepartmentHead[]        @relation("DepartmentHeadAssignedBy")
+  DepartmentHodOf        DepartmentHod[]         @relation("DepartmentHodUser")
+  DepartmentHodAssigned  DepartmentHod[]         @relation("DepartmentHodAssignedBy")
+  RoleGrantOf            RoleGrant[]             @relation("RoleGrantUser")
+  RoleGrantGranted       RoleGrant[]             @relation("RoleGrantGrantedBy")
+  UnitLeadOf             UnitLeadAssignment[]    @relation("UnitLeadUser")
+  UnitLeadAssigned       UnitLeadAssignment[]    @relation("UnitLeadAssignedBy")
+  HeadUsherOf            HeadUsherAssignment[]   @relation("HeadUsherUser")
+  HeadUsherAssigned      HeadUsherAssignment[]   @relation("HeadUsherAssignedBy")
+  FollowUpAdded          FollowUpEntry[]         @relation("FollowUpAddedBy")
+  ReportSubmitted        Report[]                @relation("ReportSubmittedBy")
+  ReportReviewed         Report[]                @relation("ReportReviewedBy")
   ReportComment          ReportComment[]
   UnitTaskCreated        UnitTask[]
   UnitExpenseCreated     UnitExpense[]
   UnitTaskCommentAuthor  UnitTaskComment[]
+  CalendarFeedToken      CalendarFeedToken[]     @relation("CalendarFeedTokenUser")
+  PushSubscription       PushSubscription[]      @relation("PushSubscriptionUser")
+  NotificationPreference NotificationPreference? @relation("NotificationPreferenceUser")
 }
 
 /// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
@@ -695,21 +701,59 @@ model SermonDirectMessage {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Service {
-  id               String             @id
+  id               String              @id
   tenantId         String
   name             String
   scheduledAt      DateTime
-  createdAt        DateTime           @default(now())
-  serviceType      ServiceType        @default(SUNDAY)
+  createdAt        DateTime            @default(now())
+  serviceType      ServiceType         @default(SUNDAY)
   openAt           DateTime?
   closeAt          DateTime?
-  isOpen           Boolean            @default(false)
+  isOpen           Boolean             @default(false)
+  /// Calendar export fields. scheduledAt + durationMinutes give .ics a real DTEND
+  /// (there was no end time before). cancelledAt drives STATUS:CANCELLED in the
+  /// subscription feed so a cancellation reaches subscribers instead of the event
+  /// silently disappearing from their calendar.
+  durationMinutes  Int                 @default(120)
+  cancelledAt      DateTime?
+  cancelReason     String?
+  location         String?
   AttendanceRecord AttendanceRecord[]
   ServiceHeadcount ServiceHeadcount?
-  Tenant           Tenant             @relation(fields: [tenantId], references: [id])
+  Assignments      ServiceAssignment[]
+  Tenant           Tenant              @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, scheduledAt])
   @@index([tenantId, serviceType, scheduledAt])
+}
+
+/// Per-service serving roster: who is on duty at a given service, and in what
+/// capacity. Distinct from the standing-role tables (RoleGrant, UnitLeadAssignment,
+/// HeadUsherAssignment, DepartmentHead) which say what someone IS, not what they
+/// are rostered for on a specific date. Drives the "serving" marker in the member
+/// calendar feed and the 48h serving reminder. Tenant-scoped in the service layer;
+/// RLS deny-all backstop via prisma/manual SQL.
+model ServiceAssignment {
+  id           String   @id
+  tenantId     String
+  serviceId    String
+  memberId     String
+  /// Free text capacity, e.g. "Usher", "Media", "Worship". Not an enum: units and
+  /// departments are data-driven here, so a fixed enum would go stale.
+  role         String
+  unitId       String?
+  notes        String?
+  assignedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  Tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  Service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  Member       Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  Unit         Unit?    @relation(fields: [unitId], references: [id])
+
+  @@unique([serviceId, memberId, role])
+  @@index([tenantId, serviceId])
+  @@index([tenantId, memberId])
 }
 
 /// Authoritative usher headcount: one aggregate count per service. Source of
@@ -741,76 +785,81 @@ model ServiceHeadcount {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Tenant {
-  id                  String                @id
-  name                String
-  slug                String                @unique
-  createdAt           DateTime              @default(now())
-  Announcement        Announcement[]
-  EmailTemplate       EmailTemplate[]
-  EmailSend           EmailSend[]
-  Course              Course[]
-  CommunityPost       CommunityPost[]
-  AttendanceRecord    AttendanceRecord[]
-  AuditLog            AuditLog[]
-  CareAssignment      CareAssignment[]
-  FollowUpEntry       FollowUpEntry[]
-  FollowUpContactLog  FollowUpContactLog[]
-  CmsPage             Page[]
-  ContentVersion      ContentVersion[]
-  MediaAsset          MediaAsset[]
-  SiteConfig          SiteConfig?
-  ContactMessage      ContactMessage[]
-  DiscussionQuestion  DiscussionQuestion[]
-  DiscussionResponse  DiscussionResponse[]
-  EmailSubscriber     EmailSubscriber[]
-  EngagementScore     EngagementScore[]
-  Event               Event[]
-  EventRsvp           EventRsvp[]
-  FollowUpTask        FollowUpTask[]
-  FormSubmission      FormSubmission[]
-  GivingRecord        GivingRecord[]
-  Household           Household[]
-  InventoryItem       InventoryItem[]
-  InventoryHistory    InventoryHistory[]
-  KnownDevice         KnownDevice[]
-  ListenProgress      ListenProgress[]
-  Member              Member[]
-  Notification        Notification[]
-  OnlineCheckIn       OnlineCheckIn[]
-  PastorNote          PastorNote[]
-  PastoralAlert       PastoralAlert[]
-  PaystackWebhookLog  PaystackWebhookLog[]
-  PrayerRequest       PrayerRequest[]
-  RoleAssignment      RoleAssignment[]
-  Sermon              Sermon[]
-  SermonBookmark      SermonBookmark[]
-  SermonComment       SermonComment[]
-  SermonDirectMessage SermonDirectMessage[]
-  BirthdayGreeting    BirthdayGreeting[]
-  SermonEpisode       SermonEpisode[]
-  SermonNote          SermonNote[]
-  SermonReaction      SermonReaction[]
-  Service             Service[]
-  ServiceHeadcount    ServiceHeadcount[]
-  Department          Department[]
-  DepartmentHead      DepartmentHead[]
-  DepartmentHod       DepartmentHod[]
-  RoleGrant           RoleGrant[]
-  UnitLeadAssignment  UnitLeadAssignment[]
-  HeadUsherAssignment HeadUsherAssignment[]
-  SiteSettings        SiteSettings[]
-  Testimonial         Testimonial[]
-  Unit                Unit[]
-  Visitor             Visitor[]
-  Report              Report[]
-  ReportComment       ReportComment[]
-  HomeCell            HomeCell[]
-  CourseCategory      CourseCategory[]
-  Question            Question[]
-  UnitPosition        UnitPosition[]
-  UnitTask            UnitTask[]
-  UnitExpense         UnitExpense[]
-  UnitTaskComment     UnitTaskComment[]
+  id                     String                   @id
+  name                   String
+  slug                   String                   @unique
+  createdAt              DateTime                 @default(now())
+  Announcement           Announcement[]
+  EmailTemplate          EmailTemplate[]
+  EmailSend              EmailSend[]
+  Course                 Course[]
+  CommunityPost          CommunityPost[]
+  AttendanceRecord       AttendanceRecord[]
+  AuditLog               AuditLog[]
+  CareAssignment         CareAssignment[]
+  FollowUpEntry          FollowUpEntry[]
+  FollowUpContactLog     FollowUpContactLog[]
+  CmsPage                Page[]
+  ContentVersion         ContentVersion[]
+  MediaAsset             MediaAsset[]
+  SiteConfig             SiteConfig?
+  ContactMessage         ContactMessage[]
+  DiscussionQuestion     DiscussionQuestion[]
+  DiscussionResponse     DiscussionResponse[]
+  EmailSubscriber        EmailSubscriber[]
+  EngagementScore        EngagementScore[]
+  Event                  Event[]
+  EventRsvp              EventRsvp[]
+  FollowUpTask           FollowUpTask[]
+  FormSubmission         FormSubmission[]
+  GivingRecord           GivingRecord[]
+  Household              Household[]
+  InventoryItem          InventoryItem[]
+  InventoryHistory       InventoryHistory[]
+  KnownDevice            KnownDevice[]
+  ListenProgress         ListenProgress[]
+  Member                 Member[]
+  Notification           Notification[]
+  OnlineCheckIn          OnlineCheckIn[]
+  PastorNote             PastorNote[]
+  PastoralAlert          PastoralAlert[]
+  PaystackWebhookLog     PaystackWebhookLog[]
+  PrayerRequest          PrayerRequest[]
+  RoleAssignment         RoleAssignment[]
+  Sermon                 Sermon[]
+  SermonBookmark         SermonBookmark[]
+  SermonComment          SermonComment[]
+  SermonDirectMessage    SermonDirectMessage[]
+  BirthdayGreeting       BirthdayGreeting[]
+  SermonEpisode          SermonEpisode[]
+  SermonNote             SermonNote[]
+  SermonReaction         SermonReaction[]
+  Service                Service[]
+  ServiceHeadcount       ServiceHeadcount[]
+  Department             Department[]
+  DepartmentHead         DepartmentHead[]
+  DepartmentHod          DepartmentHod[]
+  RoleGrant              RoleGrant[]
+  UnitLeadAssignment     UnitLeadAssignment[]
+  HeadUsherAssignment    HeadUsherAssignment[]
+  SiteSettings           SiteSettings[]
+  Testimonial            Testimonial[]
+  Unit                   Unit[]
+  Visitor                Visitor[]
+  Report                 Report[]
+  ReportComment          ReportComment[]
+  HomeCell               HomeCell[]
+  CourseCategory         CourseCategory[]
+  Question               Question[]
+  UnitPosition           UnitPosition[]
+  UnitTask               UnitTask[]
+  UnitExpense            UnitExpense[]
+  UnitTaskComment        UnitTaskComment[]
+  CalendarFeedToken      CalendarFeedToken[]
+  PushSubscription       PushSubscription[]
+  NotificationPreference NotificationPreference[]
+  RecurringGathering     RecurringGathering[]
+  ServiceAssignment      ServiceAssignment[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1024,21 +1073,22 @@ model AuditLog {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Unit {
-  id              String               @id
-  tenantId        String
-  name            String
-  description     String?
-  departmentId    String? // nullable: units can exist unassigned and the UI surfaces them
-  createdAt       DateTime             @default(now())
-  Tenant          Tenant               @relation(fields: [tenantId], references: [id])
-  Department      Department?          @relation(fields: [departmentId], references: [id])
-  UnitMember      UnitMember[]
-  LeadAssignments UnitLeadAssignment[]
-  FollowUpEntry   FollowUpEntry[]
-  Report          Report[]
-  UnitPosition    UnitPosition[]
-  UnitTask        UnitTask[]
-  UnitExpense     UnitExpense[]
+  id                String               @id
+  tenantId          String
+  name              String
+  description       String?
+  departmentId      String? // nullable: units can exist unassigned and the UI surfaces them
+  createdAt         DateTime             @default(now())
+  Tenant            Tenant               @relation(fields: [tenantId], references: [id])
+  Department        Department?          @relation(fields: [departmentId], references: [id])
+  UnitMember        UnitMember[]
+  LeadAssignments   UnitLeadAssignment[]
+  FollowUpEntry     FollowUpEntry[]
+  Report            Report[]
+  UnitPosition      UnitPosition[]
+  UnitTask          UnitTask[]
+  UnitExpense       UnitExpense[]
+  ServiceAssignment ServiceAssignment[]
 
   @@index([departmentId])
 }
@@ -1425,6 +1475,115 @@ model Notification {
   Tenant    Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([profileId, readAt])
+}
+
+/// Per-member secret for the .ics calendar subscription feed. The token IS the
+/// auth: calendar clients (Google, Apple, Outlook) cannot send a bearer header,
+/// so the URL must be unguessable and revocable. Revoking sets revokedAt rather
+/// than deleting, so a regenerated link provably 404s instead of being recycled.
+/// A DB partial unique index enforces one active token per user.
+/// Tenant-scoped in the service layer; RLS deny-all backstop.
+model CalendarFeedToken {
+  id             String    @id
+  tenantId       String
+  userId         String // Profile.id
+  token          String    @unique
+  createdAt      DateTime  @default(now())
+  revokedAt      DateTime? // null = active
+  lastAccessedAt DateTime?
+  Tenant         Tenant    @relation(fields: [tenantId], references: [id])
+  User           Profile   @relation("CalendarFeedTokenUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+/// One row per browser/device push endpoint. endpoint is globally unique (the
+/// push service issues it), so re-subscribing the same device upserts rather
+/// than duplicating. failedAt/failureCount drive pruning: a 404/410 from the
+/// push service deletes the row immediately, transient errors increment.
+/// Tenant-scoped in the service layer; RLS deny-all backstop.
+model PushSubscription {
+  id           String    @id
+  tenantId     String
+  userId       String // Profile.id
+  endpoint     String    @unique
+  p256dh       String
+  auth         String
+  userAgent    String?
+  createdAt    DateTime  @default(now())
+  lastSeenAt   DateTime  @default(now())
+  failedAt     DateTime?
+  failureCount Int       @default(0)
+  Tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  User         Profile   @relation("PushSubscriptionUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([tenantId, userId])
+}
+
+/// Per-member notification categories, quiet hours and timezone. A missing row
+/// means "all defaults", so the dispatcher never blocks on a backfill.
+///
+/// prayerMeeting defaults to false and is opt-in by design: a daily notification
+/// is the fastest way to make someone disable notifications altogether.
+///
+/// quietStart/quietEnd are local wall-clock "HH:MM" read in `timezone`, matching
+/// the ATTENDANCE_*_OPEN/CLOSE convention in env config. The window may wrap
+/// midnight (22:00 to 06:00); the dispatcher handles that case.
+/// Tenant-scoped in the service layer; RLS deny-all backstop.
+model NotificationPreference {
+  id                String   @id
+  tenantId          String
+  userId            String   @unique // Profile.id
+  serviceStarting   Boolean  @default(true)
+  serviceReminder   Boolean  @default(true)
+  servingReminder   Boolean  @default(true)
+  /// Opt-in only. Never default this to true.
+  prayerMeeting     Boolean  @default(false)
+  announcements     Boolean  @default(true)
+  unitAnnouncements Boolean  @default(true)
+  newSermon         Boolean  @default(true)
+  milestones        Boolean  @default(true)
+  quietStart        String? // "HH:MM", DB CHECK-guarded
+  quietEnd          String? // "HH:MM", DB CHECK-guarded
+  timezone          String   @default("Africa/Lagos")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @default(now()) @updatedAt
+  Tenant            Tenant   @relation(fields: [tenantId], references: [id])
+  User              Profile  @relation("NotificationPreferenceUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+/// Admin-managed recurring online gathering (the daily prayer meeting). Nothing
+/// in this schema modelled recurrence before this, so there was no existing
+/// recurrence model to extend.
+///
+/// DTSTART is split on purpose: startDate anchors the RRULE and startTime is
+/// local wall-clock "HH:MM" read in `timezone`. A single UTC timestamp would
+/// silently shift the meeting whenever the anchor and an occurrence fall on
+/// different UTC offsets, which is the classic recurring-event bug.
+/// Members read; PASTOR and ADMIN write. RLS deny-all backstop.
+model RecurringGathering {
+  id              String   @id
+  tenantId        String
+  title           String
+  description     String?
+  /// RFC 5545 RRULE, e.g. "FREQ=DAILY". Emitted verbatim into the VEVENT.
+  recurrenceRule  String
+  startDate       DateTime @db.Date
+  startTime       String // "HH:MM" local wall clock, DB CHECK-guarded
+  durationMinutes Int      @default(60)
+  timezone        String   @default("Africa/Lagos")
+  joinUrl         String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @default(now()) @updatedAt
+  Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, isActive])
 }
 
 enum EventStatus {

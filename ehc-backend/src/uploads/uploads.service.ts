@@ -9,6 +9,17 @@ export interface UploadResult {
   key: string;
 }
 
+const SAFE_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/avif': 'avif',
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+};
+
 /**
  * Thin wrapper around Cloudflare R2 (S3-compatible) object storage.
  *
@@ -37,7 +48,7 @@ export class UploadsService {
       );
     }
 
-    const ext = (file.originalname || '').split('.').pop() ?? 'bin';
+    const ext = SAFE_EXTENSIONS[file.mimetype.toLowerCase()] ?? 'bin';
     const key = `${prefix}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
     try {

@@ -31,6 +31,21 @@ const ROLE_LEVEL: Record<Role, number> = {
  * Registered globally in AuthModule via APP_GUARD. Runs AFTER JwtAuthGuard, so req.user
  * is always populated when this runs (unless the route is @Public, in which case we skip).
  */
+const CHURCH_WIDE_ROLES = new Set<Role>([
+  Role.ADMIN,
+  Role.ADMIN_HEAD,
+  Role.PASTOR,
+  Role.SUPER_ADMIN,
+]);
+
+const LATERAL_ROLES = new Set<Role>([Role.HOD, Role.HEAD_USHER]);
+const LATERAL_IMPLICATIONS: Partial<Record<Role, ReadonlySet<Role>>> = {
+  [Role.HEAD_USHER]: new Set([Role.MEMBER, Role.HEAD_USHER]),
+  // HOD can appoint unit leads only through the department-scoped service.
+  // It must not inherit every unscoped UNIT_LEAD controller capability.
+  [Role.HOD]: new Set([Role.MEMBER, Role.HOD]),
+};
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -55,10 +70,19 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('No role assigned to user');
     }
 
-    const userLevel = Math.max(...effective.map((r) => ROLE_LEVEL[r] ?? 0));
-    const minRequiredLevel = Math.min(...required.map((r) => ROLE_LEVEL[r]));
+    const allowed = required.some((needed) =>
+      effective.some((actual) => {
+        if (CHURCH_WIDE_ROLES.has(actual)) {
+          return ROLE_LEVEL[actual] >= ROLE_LEVEL[needed];
+        }
+        if (LATERAL_ROLES.has(actual)) {
+          return LATERAL_IMPLICATIONS[actual]?.has(needed) ?? false;
+        }
+        return ROLE_LEVEL[actual] >= ROLE_LEVEL[needed];
+      }),
+    );
 
-    if (userLevel < minRequiredLevel) {
+    if (!allowed) {
       throw new ForbiddenException(
         `Requires role ${required.join(' or ')} (you have ${effective.join(', ')})`,
       );

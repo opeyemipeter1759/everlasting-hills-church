@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  backend:
+    name: Backend quality gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ehc-backend
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ehc_ci
+      DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ehc_ci
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_ANON_KEY: ci-placeholder
+      DEFAULT_TENANT_ID: ehc_ci_tenant
+      CMS_PREVIEW_SECRET: ci-preview-secret-at-least-32-characters
+      CMS_REVALIDATE_SECRET: ci-revalidation-secret-at-least-32-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ehc-backend/package-lock.json
+      - run: npm ci
+      - name: Validate Prisma schema
+        run: npx prisma validate
+      - name: Type-check
+        run: npm run typecheck
+      - name: Lint (read-only)
+        run: npm run lint
+      - name: Unit tests
+        run: npm test -- --runInBand
+      - name: E2E tests
+        run: npm run test:e2e -- --runInBand
+      - name: Production build
+        run: npm run build
+
+  frontend:
+    name: Frontend quality gates
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: everlasting-hills-church
+    env:
+      API_BASE_URL: http://127.0.0.1:4000
+      NEXT_PUBLIC_API_BASE_URL: http://127.0.0.1:4000
+      NEXT_PUBLIC_APP_URL: http://127.0.0.1:3000
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: everlasting-hills-church/package-lock.json
+      - run: npm ci
+      - name: Type-check
+        run: npm run typecheck
+      - name: Lint (read-only)
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+
+  api-contract:
+    name: OpenAPI contract drift
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ehc_ci
+      DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/ehc_ci
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_ANON_KEY: ci-placeholder
+      DEFAULT_TENANT_ID: ehc_ci_tenant
+      CMS_PREVIEW_SECRET: ci-preview-secret-at-least-32-characters
+      CMS_REVALIDATE_SECRET: ci-revalidation-secret-at-least-32-characters
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: |
+            ehc-backend/package-lock.json
+            everlasting-hills-church/package-lock.json
+      - run: npm ci
+        working-directory: ehc-backend
+      - run: npm ci
+        working-directory: everlasting-hills-church
+      - name: Generate OpenAPI document without external services
+        run: npm run openapi:generate
+        working-directory: ehc-backend
+      - name: Generate TypeScript API contract
+        run: npm run gen:api
+        working-directory: everlasting-hills-church
+      - name: Reject uncommitted contract drift
+        run: git diff --exit-code -- ehc-backend/openapi/openapi.json everlasting-hills-church/lib/api/generated/schema.d.ts

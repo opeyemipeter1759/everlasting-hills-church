@@ -3,25 +3,13 @@ import './observability/instrument';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
-import { AuthModule } from './auth/auth.module';
-import { AttendanceModule } from './attendance/attendance.module';
-import { FormsModule } from './forms/forms.module';
-import { SermonsModule } from './sermons/sermons.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
-import { AnalyticsModule } from './analytics/analytics.module';
-import { MembersModule } from './members/members.module';
-import { OverviewModule } from './overview/overview.module';
-import { SessionsModule } from './sessions/sessions.module';
-import { AdminModule } from './admin/admin.module';
-import { ReportsModule } from './reports/reports.module';
-import { UnitsModule } from './units/units.module';
-import { UsersModule } from './users/users.module';
 import type { Env } from './config/env.validation';
+import { setupOpenApi } from './openapi/openapi-document';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -121,26 +109,8 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new ResponseEnvelopeInterceptor());
 
-  /**
-   * Swagger. Restricting include[] to known modules avoids scanning dynamically created
-   * internal modules that lack route metadata.
-   */
-  const swagger = new DocumentBuilder()
-    .setTitle('church-api')
-    .setDescription('API documentation for Everlasting Hills Church')
-    .setVersion('0.1.0')
-    .addBearerAuth(
-      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
-      'access-token',
-    )
-    .build();
-
   try {
-    const document = SwaggerModule.createDocument(app, swagger, {
-      include: [AppModule, AuthModule, AttendanceModule, FormsModule, SermonsModule, AnalyticsModule, MembersModule, OverviewModule, SessionsModule, AdminModule, ReportsModule, UnitsModule, UsersModule],
-    });
-    // include MembersModule by referencing via AppModule's imports at runtime
-    SwaggerModule.setup('docs', app, document);
+    setupOpenApi(app);
   } catch (err) {
     logger.warn(`Swagger setup failed; continuing without docs: ${(err as Error).message}`);
   }

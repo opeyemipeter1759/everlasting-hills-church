@@ -66,4 +66,43 @@ describe('RolesGuard', () => {
     const guard = new RolesGuard(makeReflector([Role.PASTOR]));
     expect(guard.canActivate(makeContext({ role: Role.SUPER_ADMIN }))).toBe(true);
   });
+
+  it('does not let HOD inherit the lateral HEAD_USHER capability', () => {
+    const guard = new RolesGuard(makeReflector([Role.HEAD_USHER]));
+    expect(() => guard.canActivate(makeContext({ role: Role.HOD }))).toThrow(ForbiddenException);
+  });
+
+  it('does not let HOD inherit unscoped UNIT_LEAD capabilities', () => {
+    const guard = new RolesGuard(makeReflector([Role.UNIT_LEAD]));
+    expect(() => guard.canActivate(makeContext({ role: Role.HOD }))).toThrow(ForbiddenException);
+  });
+
+  it('does not let HEAD_USHER inherit HOD or UNIT_LEAD capabilities', () => {
+    expect(() =>
+      new RolesGuard(makeReflector([Role.HOD])).canActivate(
+        makeContext({ role: Role.HEAD_USHER }),
+      ),
+    ).toThrow(ForbiddenException);
+    expect(() =>
+      new RolesGuard(makeReflector([Role.UNIT_LEAD])).canActivate(
+        makeContext({ role: Role.HEAD_USHER }),
+      ),
+    ).toThrow(ForbiddenException);
+  });
+
+  it('still admits church-wide administrators to lateral capabilities', () => {
+    const guard = new RolesGuard(makeReflector([Role.HEAD_USHER]));
+    expect(guard.canActivate(makeContext({ role: Role.ADMIN }))).toBe(true);
+    expect(guard.canActivate(makeContext({ role: Role.PASTOR }))).toBe(true);
+    expect(guard.canActivate(makeContext({ role: Role.SUPER_ADMIN }))).toBe(true);
+  });
+
+  it('allows a lateral capability only when it is explicitly assigned', () => {
+    const guard = new RolesGuard(makeReflector([Role.HEAD_USHER]));
+    expect(
+      guard.canActivate(
+        makeContext({ role: Role.HOD, effectiveRoles: [Role.HOD, Role.HEAD_USHER] }),
+      ),
+    ).toBe(true);
+  });
 });

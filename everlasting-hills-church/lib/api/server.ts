@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
-import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/frontend-session";
+import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/session-constants";
+import { getBackendBaseUrl } from "@/lib/api/backend-url";
 import type { MeResponse } from "@/lib/api";
 
 export interface ApiError {
@@ -25,10 +26,7 @@ interface ErrorEnvelope {
   };
 }
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
-  process.env.API_BASE_URL?.trim() ||
-  "http://localhost:4000";
+const BASE_URL = getBackendBaseUrl();
 
 function buildUrl(path: string): string {
   if (path.startsWith("http")) return path;

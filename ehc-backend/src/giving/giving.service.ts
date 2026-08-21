@@ -1,29 +1,26 @@
 import {
+  BadGatewayException,
   Injectable,
   Logger,
   ServiceUnavailableException,
-  BadGatewayException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac, randomUUID, timingSafeEqual } from 'crypto';
-import { PrismaService } from '../prisma/prisma.service';
+import type { Env } from '../config/env.validation';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
 import { buildGivingReceiptEmail } from '../notifications/templates/giving-receipt.email';
+import { PrismaService } from '../prisma/prisma.service';
 import { InitGivingDto } from './dto/init-giving.dto';
-import type { Env } from '../config/env.validation';
 
 const PAYSTACK_BASE = 'https://api.paystack.co';
 
-/**
- * Online giving via Paystack.
- *
- * Money is stored in kobo on GivingRecord.amount (matching the analytics module,
- * which divides by 100 for naira). paystackStatus mirrors Paystack's own status
- * string: 'pending' on initialise, 'success' once confirmed.
- *
- * Confirmation is idempotent: verify() and the webhook both call confirm(),
- * which only sends a receipt the first time a record flips to success.
- */
+interface PaystackTransaction {
+  status?: string;
+  amount?: number;
+  currency?: string;
+  reference?: string;
+}
+
 @Injectable()
 export class GivingService {
   private readonly logger = new Logger(GivingService.name);
@@ -52,40 +49,29 @@ export class GivingService {
     return this.secretKey;
   }
 
-  /** Start a transaction: create a pending record and hand back Paystack's checkout URL. */
   async initialize(dto: InitGivingDto) {
     const key = this.requireKey();
     const reference = `ehc-${Date.now()}-${randomUUID().slice(0, 8)}`;
     const amountKobo = Math.round(dto.amount * 100);
-
     const res = await fetch(`${PAYSTACK_BASE}/transaction/initialize`, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${key}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: dto.email,
         amount: amountKobo,
+        currency: 'NGN',
         reference,
         callback_url: `${this.frontendUrl}/give/callback`,
-        metadata: {
-          donorName: dto.name ?? null,
-          category: dto.category ?? null,
-        },
+        metadata: { donorName: dto.name ?? null, category: dto.category ?? null },
       }),
     });
-
     const json = (await res.json().catch(() => null)) as {
       status?: boolean;
       message?: string;
-      data?: { authorization_url?: string; access_code?: string };
+      data?: { authorization_url?: string };
     } | null;
-
     if (!res.ok || !json?.status || !json.data?.authorization_url) {
-      this.logger.error(
-        `Paystack initialize failed (${res.status}): ${json?.message ?? 'unknown'}`,
-      );
+      this.logger.error(`Paystack initialize failed (${res.status}): ${json?.message ?? 'unknown'}`);
       throw new BadGatewayException('Could not start the payment. Please try again.');
     }
 
@@ -102,14 +88,9 @@ export class GivingService {
         paystackStatus: 'pending',
       },
     });
-
-    return {
-      authorizationUrl: json.data.authorization_url,
-      reference,
-    };
+    return { authorizationUrl: json.data.authorization_url, reference };
   }
 
-  /** Verify a transaction with Paystack and confirm the record. Used by the callback page. */
   async verify(reference: string) {
     const key = this.requireKey();
     const res = await fetch(
@@ -118,67 +99,57 @@ export class GivingService {
     );
     const json = (await res.json().catch(() => null)) as {
       status?: boolean;
-      data?: { status?: string; amount?: number };
+      data?: PaystackTransaction;
     } | null;
-
     if (!res.ok || !json?.status || !json.data) {
       throw new BadGatewayException('Could not verify the payment.');
     }
 
-    const paystackStatus = json.data.status ?? 'failed';
-    await this.confirm(reference, paystackStatus);
-
-    return { reference, status: paystackStatus };
+    await this.confirm(reference, json.data);
+    return { reference, status: json.data.status ?? 'failed' };
   }
 
-  /**
-   * Handle a Paystack webhook. Verifies the HMAC SHA512 signature over the raw
-   * body, logs the event for idempotency/audit, and confirms the record on
-   * charge.success.
-   */
   async handleWebhook(rawBody: Buffer, signature: string | undefined) {
     const key = this.requireKey();
-
     if (!signature || !this.isValidSignature(rawBody, signature, key)) {
       this.logger.warn('Rejected Paystack webhook: bad signature');
       return { ok: false };
     }
 
-    const event = JSON.parse(rawBody.toString('utf8')) as {
-      event?: string;
-      data?: { reference?: string; status?: string };
-    };
+    let event: { event?: string; data?: PaystackTransaction };
+    try {
+      event = JSON.parse(rawBody.toString('utf8')) as typeof event;
+    } catch {
+      this.logger.warn('Rejected Paystack webhook: invalid JSON');
+      return { ok: false };
+    }
+    const eventName = event.event ?? 'unknown';
     const reference = event.data?.reference;
     if (!reference) return { ok: true };
 
-    // Idempotency + audit: skip if we already logged this exact event+reference.
-    const already = await this.prisma.paystackWebhookLog.findFirst({
-      where: { reference, event: event.event ?? 'unknown' },
-      select: { id: true },
-    });
-    if (already) {
-      this.logger.debug(`Webhook ${event.event} for ${reference} already processed`);
-      return { ok: true };
+    // Confirmation is safe to race: only one pending-to-success update wins.
+    // Log after successful processing so a transient failure remains retryable.
+    if (eventName === 'charge.success') {
+      await this.confirm(reference, { ...event.data, status: 'success' });
     }
 
-    await this.prisma.paystackWebhookLog.create({
-      data: {
-        id: randomUUID(),
-        tenantId: this.tenantId,
-        event: event.event ?? 'unknown',
-        reference,
-        payload: event as unknown as object,
-      },
-    });
-
-    if (event.event === 'charge.success') {
-      await this.confirm(reference, event.data?.status ?? 'success');
+    try {
+      await this.prisma.paystackWebhookLog.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          event: eventName,
+          reference,
+          payload: event as unknown as object,
+        },
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code !== 'P2002') throw error;
+      this.logger.debug(`Webhook ${eventName} for ${reference} already logged`);
     }
-
     return { ok: true };
   }
 
-  /** Member-facing giving history, matched by the member's email. */
   async listForEmail(email: string | null) {
     if (!email) return [];
     const records = await this.prisma.givingRecord.findMany({
@@ -195,42 +166,64 @@ export class GivingService {
         verifiedAt: true,
       },
     });
-    return records.map((r) => ({ ...r, amountNaira: Math.round(r.amount / 100) }));
+    return records.map((record) => ({
+      ...record,
+      amountNaira: Math.round(record.amount / 100),
+    }));
   }
-
-  // ── internals ──────────────────────────────────────────────────────────────
 
   private isValidSignature(rawBody: Buffer, signature: string, key: string): boolean {
     const expected = createHmac('sha512', key).update(rawBody).digest('hex');
-    const a = Buffer.from(expected);
-    const b = Buffer.from(signature);
-    return a.length === b.length && timingSafeEqual(a, b);
+    const actualBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expected);
+    return (
+      actualBuffer.length === expectedBuffer.length &&
+      timingSafeEqual(actualBuffer, expectedBuffer)
+    );
   }
 
-  /**
-   * Flip a record to its final status. Sends a receipt only on the first
-   * transition into 'success', so verify() and the webhook can both call this
-   * without double-emailing.
-   */
-  private async confirm(reference: string, paystackStatus: string): Promise<void> {
-    const record = await this.prisma.givingRecord.findUnique({
-      where: { reference },
-    });
-    if (!record) {
+  private assertTransactionMatches(
+    reference: string,
+    record: { reference: string; amount: number; currency: string },
+    transaction: PaystackTransaction,
+  ): void {
+    const matches =
+      transaction.reference === reference &&
+      transaction.reference === record.reference &&
+      Number.isInteger(transaction.amount) &&
+      transaction.amount === record.amount &&
+      typeof transaction.currency === 'string' &&
+      transaction.currency.toUpperCase() === record.currency.toUpperCase();
+    if (!matches) {
+      this.logger.error(`Rejected mismatched Paystack confirmation for ${reference}`);
+      throw new BadGatewayException('Verified payment details did not match the initialized gift.');
+    }
+  }
+
+  private async confirm(reference: string, transaction: PaystackTransaction): Promise<void> {
+    const record = await this.prisma.givingRecord.findUnique({ where: { reference } });
+    if (!record || record.tenantId !== this.tenantId) {
       this.logger.warn(`confirm(): no record for reference ${reference}`);
       return;
     }
 
-    const alreadySucceeded = record.paystackStatus === 'success';
-    await this.prisma.givingRecord.update({
-      where: { reference },
-      data: {
-        paystackStatus,
-        verifiedAt: paystackStatus === 'success' ? new Date() : record.verifiedAt,
+    const paystackStatus = transaction.status ?? 'failed';
+    if (paystackStatus === 'success') {
+      this.assertTransactionMatches(reference, record, transaction);
+    }
+
+    const verifiedAt = paystackStatus === 'success' ? new Date() : record.verifiedAt;
+    const result = await this.prisma.givingRecord.updateMany({
+      where: {
+        id: record.id,
+        tenantId: this.tenantId,
+        paystackStatus: { not: 'success' },
       },
+      data: { paystackStatus, verifiedAt },
     });
 
-    if (paystackStatus === 'success' && !alreadySucceeded && record.donorEmail) {
+    // Exactly one process wins the transition and therefore queues the receipt.
+    if (paystackStatus === 'success' && result.count === 1 && record.donorEmail) {
       await this.mail.dispatch(
         buildGivingReceiptEmail({
           donorName: record.donorName,
@@ -239,7 +232,7 @@ export class GivingService {
           currency: record.currency,
           reference: record.reference,
           category: record.category,
-          date: new Date(),
+          date: verifiedAt ?? new Date(),
         }),
       );
       this.logger.log(`Giving confirmed + receipt queued for ${reference}`);

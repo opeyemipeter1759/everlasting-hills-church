@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   hasMinRole,
+  hasAnyMinRole,
   normalizeRole,
   getRequiredRole,
   getLandingPage,
@@ -70,6 +71,26 @@ describe("hasMinRole (hierarchy)", () => {
     expect(hasMinRole(undefined, "MEMBER")).toBe(false);
     expect(hasMinRole("robot", "MEMBER")).toBe(false);
   });
+
+  it("keeps HOD and HEAD_USHER lateral instead of treating them as a numeric ladder", () => {
+    expect(hasMinRole("HOD", "HEAD_USHER")).toBe(false);
+    expect(hasMinRole("HEAD_USHER", "HOD")).toBe(false);
+    expect(hasMinRole("HOD", "UNIT_LEAD")).toBe(false);
+    expect(hasMinRole("HEAD_USHER", "UNIT_LEAD")).toBe(false);
+    expect(hasMinRole("HOD", "MEMBER")).toBe(true);
+    expect(hasMinRole("HEAD_USHER", "HEAD_USHER")).toBe(true);
+    expect(hasMinRole("ADMIN_HEAD", "HEAD_USHER")).toBe(true);
+    expect(hasMinRole("PASTOR", "HOD")).toBe(true);
+  });
+
+  it("supports explicit multi-role capabilities without lateral inheritance", () => {
+    const roles = ["MEMBER", "UNIT_LEAD", "HOD"];
+    expect(hasAnyMinRole(roles, "UNIT_LEAD")).toBe(true);
+    expect(hasAnyMinRole(roles, "HOD")).toBe(true);
+    expect(hasAnyMinRole(roles, "HEAD_USHER")).toBe(false);
+    expect(hasAnyMinRole(["MEMBER", "UNIT_LEAD", "HEAD_USHER"], "UNIT_LEAD")).toBe(true);
+    expect(hasAnyMinRole(["HEAD_USHER"], "UNIT_LEAD")).toBe(false);
+  });
 });
 
 describe("getRequiredRole (route → minimum-role map)", () => {
@@ -80,6 +101,9 @@ describe("getRequiredRole (route → minimum-role map)", () => {
 
   it("sermon CMS + alerts + reports + giving + subscribers require PASTOR", () => {
     expect(getRequiredRole("/dashboard/sermons")).toBe("PASTOR");
+    expect(getRequiredRole("/dashboard/pastor/sermons")).toBe("PASTOR");
+    expect(getRequiredRole("/dashboard/pastor/reports/123")).toBe("PASTOR");
+    expect(getRequiredRole("/dashboard/cms/pages/about")).toBe("PASTOR");
     expect(getRequiredRole("/dashboard/subscribers")).toBe("PASTOR");
     expect(getRequiredRole("/dashboard/alerts")).toBe("PASTOR");
     expect(getRequiredRole("/dashboard/reports")).toBe("PASTOR");
@@ -90,28 +114,44 @@ describe("getRequiredRole (route → minimum-role map)", () => {
 
   it("members + first-timers + services + analytics/{attendance,growth,first-timers} require ADMIN", () => {
     expect(getRequiredRole("/dashboard/members")).toBe("ADMIN");
+    expect(getRequiredRole("/dashboard/admin/members")).toBe("ADMIN");
+    expect(getRequiredRole("/dashboard/admin/gatherings")).toBe("ADMIN");
     expect(getRequiredRole("/dashboard/first-timers")).toBe("ADMIN");
     expect(getRequiredRole("/dashboard/services")).toBe("ADMIN");
     expect(getRequiredRole("/dashboard/analytics/attendance")).toBe("ADMIN");
     expect(getRequiredRole("/dashboard/analytics/growth")).toBe("ADMIN");
+    expect(getRequiredRole("/dashboard/analytics")).toBe("ADMIN");
+    expect(getRequiredRole("/dashboard/prayer-requests")).toBe("ADMIN");
+    expect(getRequiredRole("/dashboard/testimonies")).toBe("ADMIN");
+    expect(getRequiredRole("/dashboard/questions")).toBe("ADMIN");
   });
 
   it("units + analytics/departments require UNIT_LEAD", () => {
-    expect(getRequiredRole("/dashboard/units")).toBe("UNIT_LEAD");
+    expect(getRequiredRole("/dashboard/unit-lead")).toBe("UNIT_LEAD");
     expect(getRequiredRole("/dashboard/analytics/departments")).toBe("UNIT_LEAD");
+  });
+
+  it("keeps department and head-usher routes above their broader route rules", () => {
+    expect(getRequiredRole("/dashboard/admin/roles")).toBe("ADMIN");
+    expect(getRequiredRole("/dashboard/my-department")).toBe("HOD");
+    expect(getRequiredRole("/dashboard/my-department/reports/new")).toBe("ADMIN_HEAD");
+    expect(getRequiredRole("/dashboard/admin/usher")).toBe("HEAD_USHER");
+    expect(getRequiredRole("/dashboard/admin/attendance/ushers-report")).toBe("HEAD_USHER");
   });
 
   it("plain dashboard + /me require MEMBER", () => {
     expect(getRequiredRole("/dashboard")).toBe("MEMBER");
     expect(getRequiredRole("/dashboard/profile")).toBe("MEMBER");
     expect(getRequiredRole("/me")).toBe("MEMBER");
-    expect(getRequiredRole("/change-password")).toBe("MEMBER");
+    expect(getRequiredRole("/dashboard/profile/")).toBe("MEMBER");
   });
 
   it("unknown paths return null (no protection)", () => {
     expect(getRequiredRole("/")).toBeNull();
     expect(getRequiredRole("/about")).toBeNull();
     expect(getRequiredRole("/sermons")).toBeNull(); // public sermon route
+    expect(getRequiredRole("/dashboarding")).toBeNull();
+    expect(getRequiredRole("/administrator")).toBeNull();
   });
 });
 

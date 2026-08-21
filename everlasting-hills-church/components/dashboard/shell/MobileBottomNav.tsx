@@ -30,14 +30,13 @@ const BOTTOM_TABS: BottomTab[] = [
   { label: "Home",       href: "/dashboard",                         icon: LayoutDashboard, minRole: "MEMBER" },
   { label: "Profile",    href: "/dashboard/profile",                 icon: User,            minRole: "MEMBER",    maxRole: "ADMIN" },
   { label: "Attendance", href: "/dashboard/attendance",              icon: CheckCircle,     minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
-  { label: "Prayer",     href: "/dashboard/prayer-requests",         icon: Heart,           minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
-  { label: "Testimony",  href: "/dashboard/testimonies",             icon: MessageSquare,   minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
+  { label: "Prayer",     href: "/prayer-request",                    icon: Heart,           minRole: "MEMBER" },
+  { label: "Testimony",  href: "/testimony",                         icon: MessageSquare,   minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
   { label: "Depts",      href: "/dashboard/analytics/departments",   icon: Network,         minRole: "UNIT_LEAD", maxRole: "ADMIN" },
-  { label: "Prayer",     href: "/dashboard/prayer-requests",         icon: Heart,           minRole: "UNIT_LEAD", maxRole: "ADMIN" },
-  { label: "Members",    href: "/dashboard/members",                 icon: Users,           minRole: "ADMIN" },
-  { label: "1st Timers", href: "/dashboard/first-timers",            icon: UserPlus,        minRole: "ADMIN",     maxRole: "PASTOR" },
-  { label: "Sermons",    href: "/dashboard/sermons",                 icon: BookOpen,        minRole: "PASTOR" },
-  { label: "Analytics",  href: "/dashboard/analytics/attendance",    icon: BarChart3,       minRole: "PASTOR" },
+  { label: "Members",    href: "/dashboard/admin/members",           icon: Users,           minRole: "ADMIN" },
+  { label: "1st Timers", href: "/dashboard/admin/first-timers",      icon: UserPlus,        minRole: "ADMIN",     maxRole: "PASTOR" },
+  { label: "Sermons",    href: "/dashboard/pastor/sermons",          icon: BookOpen,        minRole: "PASTOR" },
+  { label: "Analytics",  href: "/dashboard/analytics/attendance",    icon: BarChart3,       minRole: "ADMIN" },
 ];
 
 export default function MobileBottomNav({ user }: { user: SessionUser }) {

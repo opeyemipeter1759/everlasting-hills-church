@@ -255,7 +255,7 @@ export default function MembersListClient({ initialMembers, searchQuery }: Props
                 )}
 
                 <Link
-                  href={`/dashboard/members/${m.id}`}
+                  href={`/dashboard/admin/members/${m.id}`}
                   className="flex-1 min-w-0 group/link"
                 >
                   <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover/link:text-[#87102C] dark:group-hover/link:text-[#e8768a] transition-colors">

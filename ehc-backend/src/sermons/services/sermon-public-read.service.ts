@@ -46,7 +46,7 @@ export class SermonPublicReadService {
 
   async getSermonBySlug(slug: string) {
     const sermon = await this.prisma.sermon.findFirst({
-      where: { slug, tenantId: this.tenantId },
+      where: { slug, tenantId: this.tenantId, status: SermonStatus.PUBLISHED },
       include: {
         DiscussionQuestion: {
           orderBy: { order: 'asc' },

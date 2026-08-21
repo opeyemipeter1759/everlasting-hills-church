@@ -77,7 +77,7 @@ export default function FollowUpCard() {
                 )}
               </div>
               <Link
-                href={`/dashboard/members/${a.id}`}
+                href={`/dashboard/admin/members/${a.id}`}
                 className="text-[#b8a8ac] dark:text-white/25 hover:text-[#87102C] dark:hover:text-[#FFB3C1] transition-colors flex-shrink-0"
                 aria-label={`View ${a.firstName} ${a.lastName}`}
               >

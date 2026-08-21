@@ -1,27 +1,15 @@
-/**
- * jwks-rsa pulls in `jose` (ESM-only) which Jest's default CommonJS transform cannot load.
- * Mock at module level — passportJwtSecret returns a no-op key provider that's never
- * actually called because our tests skip cryptographic verification.
- */
+/** jwks-rsa pulls in ESM-only jose, so unit tests replace only its key provider. */
 jest.mock('jwks-rsa', () => ({
   passportJwtSecret: () => () => undefined,
 }));
 
-import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Role } from '@prisma/client';
-import { JwtStrategy } from './jwt.strategy';
 import type { PrismaService } from '../../prisma/prisma.service';
+import { JwtStrategy } from './jwt.strategy';
 
-/**
- * Tests for JwtStrategy.validate — the function passport-jwt calls AFTER signature/expiry
- * verification succeed. Our job is to translate the verified payload into our AuthUser shape.
- *
- * We don't test the cryptographic verification itself — that's passport-jwt's contract.
- * We test our domain logic: payload→AuthUser mapping, profile lookup, error cases.
- */
-
-function makeStrategy(profileFinder: jest.Mock) {
+function makeStrategy(profileFinder: jest.Mock, effectiveRole: Role = Role.MEMBER) {
   const config = {
     get: jest.fn().mockReturnValue('https://supabase.example.com'),
   } as unknown as ConfigService;
@@ -30,14 +18,24 @@ function makeStrategy(profileFinder: jest.Mock) {
   } as unknown as PrismaService;
   const effectiveRoles = {
     getEffectiveRoles: jest.fn().mockResolvedValue({
-      roles: ['MEMBER'], unitLeadOf: [], adminHeadOf: [], headUsher: false, primaryRole: 'MEMBER',
+      roles: [effectiveRole],
+      unitLeadOf: [],
+      adminHeadOf: [],
+      hodOf: [],
+      headUsher: false,
+      primaryRole: effectiveRole,
     }),
   };
-  // Cast through unknown so we don't need to construct the full Passport machinery for tests.
   return new JwtStrategy(config as never, prisma, effectiveRoles as never);
 }
 
-describe('JwtStrategy.validate', () => {
+describe('JwtStrategy', () => {
+  it('configures passport-jwt to reject expired access tokens', () => {
+    const strategy = makeStrategy(jest.fn());
+    expect((strategy as unknown as { _verifOpts: { ignoreExpiration: boolean } })._verifOpts)
+      .toMatchObject({ ignoreExpiration: false });
+  });
+
   it('throws when token has no sub claim', async () => {
     const finder = jest.fn();
     const strategy = makeStrategy(finder);
@@ -45,10 +43,9 @@ describe('JwtStrategy.validate', () => {
     expect(finder).not.toHaveBeenCalled();
   });
 
-  it('returns AuthUser with null role when no Profile exists', async () => {
+  it('returns an identity with no application role when no Profile exists', async () => {
     const finder = jest.fn().mockResolvedValue(null);
     const strategy = makeStrategy(finder);
-
     const result = await strategy.validate({
       sub: 'user-uuid-123',
       email: 'orphan@example.com',
@@ -58,25 +55,24 @@ describe('JwtStrategy.validate', () => {
       userId: 'user-uuid-123',
       email: 'orphan@example.com',
       role: null,
+      effectiveRoles: [],
+      unitLeadOf: [],
+      adminHeadOf: [],
+      hodOf: [],
+      headUsher: false,
       profileId: null,
       memberId: null,
       tenantId: null,
     });
-    expect(finder).toHaveBeenCalledWith({
-      where: { userId: 'user-uuid-123' },
-      select: expect.any(Object),
-    });
   });
 
-  it('returns AuthUser fully populated when Profile + Member exist', async () => {
+  it('returns live effective roles with Profile and Member identity', async () => {
     const finder = jest.fn().mockResolvedValue({
       id: 'profile-1',
-      role: Role.ADMIN,
       tenantId: 'tenant-1',
       Member: { id: 'member-1' },
     });
-    const strategy = makeStrategy(finder);
-
+    const strategy = makeStrategy(finder, Role.ADMIN);
     const result = await strategy.validate({
       sub: 'user-uuid-123',
       email: 'admin@example.com',
@@ -86,18 +82,20 @@ describe('JwtStrategy.validate', () => {
       userId: 'user-uuid-123',
       email: 'admin@example.com',
       role: Role.ADMIN,
+      effectiveRoles: [Role.ADMIN],
+      unitLeadOf: [],
+      adminHeadOf: [],
+      hodOf: [],
+      headUsher: false,
       profileId: 'profile-1',
       memberId: 'member-1',
       tenantId: 'tenant-1',
     });
   });
 
-  it('handles missing email in JWT payload gracefully', async () => {
-    const finder = jest.fn().mockResolvedValue(null);
-    const strategy = makeStrategy(finder);
-
+  it('handles a missing email claim', async () => {
+    const strategy = makeStrategy(jest.fn().mockResolvedValue(null));
     const result = await strategy.validate({ sub: 'user-uuid' } as never);
-
     expect(result.email).toBe('');
   });
 });

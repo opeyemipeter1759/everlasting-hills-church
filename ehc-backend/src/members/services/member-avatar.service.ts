@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MemberSelfLookupService } from './member-self-lookup.service';
+import { hasValidFileSignature } from '../../uploads/file-signature.util';
 
 /**
  * Upload a profile photo to Cloudflare R2 and stamp the public URL on the Member row.
@@ -34,6 +35,9 @@ export class MemberAvatarService {
     if (!allowed.includes(file.mimetype)) {
       throw new BadRequestException('Photo must be PNG, JPG, or JPEG');
     }
+    if (!hasValidFileSignature(file)) {
+      throw new BadRequestException('Photo content does not match its declared format');
+    }
 
     if (
       !process.env.R2_ACCOUNT_ID ||
@@ -45,7 +49,7 @@ export class MemberAvatarService {
       );
     }
 
-    const ext = (file.originalname || '').split('.').pop() ?? 'jpg';
+    const ext = file.mimetype === 'image/png' ? 'png' : 'jpg';
     const key = `avatars/${memberId}-${Date.now()}.${ext.toLowerCase()}`;
 
     try {

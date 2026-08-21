@@ -198,7 +198,7 @@ export default function UnitLeadHome({
       {/* ─────────────────────────────────────────────────────────────────────
           4. UNIT MEMBERS ATTENDANCE
       ──────────────────────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none">
+      <div id="unit-members" className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none">
 
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
           <div className="flex items-center gap-3">
@@ -308,7 +308,7 @@ export default function UnitLeadHome({
         </Link>
 
         <Link
-          href="/dashboard/units"
+          href="#unit-members"
           className="group bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-5 flex items-center gap-4
             hover:border-[#87102C]/30 dark:hover:border-white/[0.18] hover:shadow-[0_4px_24px_rgba(135,16,44,0.07)] dark:hover:shadow-none hover:-translate-y-0.5
             transition-all duration-300 shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none"
@@ -317,8 +317,8 @@ export default function UnitLeadHome({
             <BarChart3 size={17} className="text-sky-600 dark:text-sky-400" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-[#111] dark:text-white">Manage Unit</p>
-            <p className="text-xs text-[#8a7e80] dark:text-white/45 mt-0.5">Members, assignments, and more</p>
+            <p className="text-sm font-bold text-[#111] dark:text-white">View Unit Members</p>
+            <p className="text-xs text-[#8a7e80] dark:text-white/45 mt-0.5">Attendance and member activity</p>
           </div>
           <ChevronRight
             size={16}

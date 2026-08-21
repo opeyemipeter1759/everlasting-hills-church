@@ -1,12 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 import { queryKeys } from "@/lib/api/queryKeys";
-import {
-  clearFrontendSession,
-  setFrontendSession,
-} from "@/lib/auth/frontend-session";
-import { LoginPayload, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry, UnitPosition, UnitTask, UnitTaskStatus, UnitExpense, UnitTaskComment } from "@/types";
-import type { UserRole } from "@/config/config";
+import { notifyFrontendSessionChanged } from "@/lib/auth/frontend-session";
+import { logoutFrontendSession } from "@/lib/auth/logout";
+import { setServiceWorkerUser } from "@/lib/pwa/service-worker";
+import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry, UnitPosition, UnitTask, UnitTaskStatus, UnitExpense, UnitTaskComment } from "@/types";
 import type {
   SermonDetailRaw,
   MemberSermonContext,
@@ -56,46 +54,24 @@ export function useMe(options: { enabled?: boolean } = {}) {
   });
 }
 
-export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  token_type: string;
-  user: {
-    id: string;
-    email: string;
-    role: UserRole | string | null;
-    fullName: string | null;
-    picture: string | null;
-    /** True when the account was just created with a temp (phone-number) password. */
-    needsPasswordChange: boolean;
-  };
-}
-
-
 export const auth = {
   login: async (payload: LoginPayload): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>("/auth/login", payload);
-    setFrontendSession({
-      accessToken: response.access_token,
-      refreshToken: response.refresh_token,
-      email: response.user.email,
-      role: response.user.role ?? null,
-      fullName: response.user.fullName,
-      picture: response.user.picture,
-      expiresInSeconds: response.expires_in,
-    });
+    // The BFF has already persisted the credentials in HttpOnly cookies. This
+    // event only asks mounted header UI to re-read its non-sensitive hints.
+    notifyFrontendSessionChanged();
+
+    // Namespaces the service worker's API cache to this member, so a second
+    // person signing in on the same device cannot be served the first one's
+    // cached dashboard from disk. Shared phones are common here.
+    // Do not let navigation race ahead of the cache namespace change on a
+    // shared device. The worker only begins caching member APIs after this.
+    await setServiceWorkerUser(response.user.id);
 
     return response;
   },
 
-  logout: async (): Promise<void> => {
-    try {
-      await api.post("/auth/logout");
-    } finally {
-      clearFrontendSession();
-    }
-  },
+  logout: logoutFrontendSession,
 }
 export function useUsers(filters: object = {}) {
   return useQuery({
