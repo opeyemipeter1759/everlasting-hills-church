@@ -173,7 +173,10 @@ export const COMMUNITY_DEFAULT: SectionContent<'COMMUNITY'> = {
     'Whether you are taking your very first step of faith or you have walked with God for decades, there is a place for you here.',
   ],
   ctaPrimary: { label: 'I’m New Here', href: '#contact' },
-  ctaSecondary: { label: 'Join a Community', href: '#contact' },
+  ctaSecondary: {
+    label: 'Join a Community',
+    href: 'https://chat.whatsapp.com/HWAW4Cr3ByqIUJKEtRiWUX',
+  },
   visualCard: {
     eyebrow: 'You are welcome',
     headline: 'A family that prays, grows, and stays',

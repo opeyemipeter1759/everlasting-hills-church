@@ -175,7 +175,7 @@ export default function AddCellModal({ onClose }: { onClose: () => void }) {
                 }
               />
               <FormField
-                label="Why did you decide to register a Home Cell?"
+                label="Why did you decide to register your home for Home Cell?"
                 input={
                   <textarea
                     value={form.whyRegister}
@@ -186,10 +186,10 @@ export default function AddCellModal({ onClose }: { onClose: () => void }) {
                 }
               />
 
-              {/* Are you submitted to a Pastor */}
+              {/* Are you submitted to Pastor Opeyemi Peter */}
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-2">
-                  Are you submitted to a Pastor?<span className="text-church-accent ml-0.5">*</span>
+                  Are you submitted to Pastor Opeyemi Peter?<span className="text-church-accent ml-0.5">*</span>
                 </p>
                 <div className="flex gap-3">
                   {(["yes", "no"] as const).map((opt) => (

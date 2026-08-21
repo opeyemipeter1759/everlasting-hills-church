@@ -23,10 +23,7 @@ const navLinks = [
   { label: "Give", href: "/give" },
 ];
 
-// Connect is in the footer on desktop — keep accessible in mobile menu
-const mobileOnlyLinks = [
-  { label: "Connect", href: "/connect" },
-];
+const mobileOnlyLinks: { label: string; href: string }[] = [];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);

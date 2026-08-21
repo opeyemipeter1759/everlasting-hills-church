@@ -109,6 +109,13 @@ export class DepartmentsController {
     return this.units.assignUnits(user, id, body);
   }
 
+  @Post(':id/units/new')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Create a brand-new unit directly under this department (ADMIN+)' })
+  createUnit(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() body: unknown) {
+    return this.units.createUnit(user, id, body);
+  }
+
   @Delete(':id/units/:unitId')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Unassign a unit from its department (ADMIN+)' })
