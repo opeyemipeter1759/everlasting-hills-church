@@ -25,6 +25,12 @@ export function hasValidFileSignature(file: UploadLike): boolean {
       return ascii(buffer, 0, 4) === 'RIFF' && ascii(buffer, 8, 12) === 'WEBP';
     case 'image/avif':
       return ascii(buffer, 4, 8) === 'ftyp' && /avif|avis/.test(ascii(buffer, 8, 32));
+    case 'image/heic':
+    case 'image/heif':
+      return (
+        ascii(buffer, 4, 8) === 'ftyp' &&
+        /heic|heix|hevc|hevx|heim|heis|hevm|hevs|mif1|msf1/.test(ascii(buffer, 8, 32))
+      );
     case 'application/pdf':
       return ascii(buffer, 0, 5) === '%PDF-';
     case 'application/msword':

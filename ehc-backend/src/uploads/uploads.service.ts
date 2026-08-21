@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   ServiceUnavailableException,
@@ -8,6 +9,8 @@ export interface UploadResult {
   url: string;
   key: string;
 }
+
+type UploadFile = { buffer: Buffer; mimetype: string; originalname: string; size: number };
 
 const SAFE_EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -30,6 +33,31 @@ const SAFE_EXTENSIONS: Record<string, string> = {
  */
 @Injectable()
 export class UploadsService {
+  /**
+   * HEIC/HEIF (the default photo format on iPhone) decodes fine but no browser
+   * renders it via `<img>`, so it's converted to JPEG here — the one format
+   * conversion this endpoint does — rather than accepted and stored as-is.
+   * `heic-convert` is pure JS (libheif via WASM), avoiding the native-binary
+   * HEIC patent/licensing gap in most prebuilt `sharp` binaries.
+   */
+  async convertHeicToJpeg(file: UploadFile): Promise<UploadFile> {
+    try {
+      // Lazily required, same rationale as the AWS SDK below.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const convert = require('heic-convert');
+      const jpegBuffer: Buffer = await convert({ buffer: file.buffer, format: 'JPEG', quality: 0.9 });
+      return {
+        buffer: jpegBuffer,
+        mimetype: 'image/jpeg',
+        originalname: file.originalname.replace(/\.(heic|heif)$/i, '.jpg'),
+        size: jpegBuffer.length,
+      };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      throw new BadRequestException(`Couldn't convert this HEIC image: ${msg}`);
+    }
+  }
+
   /**
    * PUT a file buffer into R2 under `<prefix>/<timestamp>-<rand>.<ext>` and return
    * its public URL + key. Throws ServiceUnavailableException if R2 isn't configured.

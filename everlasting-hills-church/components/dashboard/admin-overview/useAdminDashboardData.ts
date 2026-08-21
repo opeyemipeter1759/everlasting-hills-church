@@ -107,7 +107,7 @@ export function useAdminDashboardData() {
         apiClient.get<{ totalPrayers: number }>("/admin/analytics"),
         apiClient.get<unknown[]>("/members/follow-ups"),
         apiClient.get<AtRiskResponse>("/members/at-risk"),
-        apiClient.get<{ name: string; totalMembers: number; attendanceRate: number }[]>("/admin/units"),
+        apiClient.get<{ name: string; totalMembers: number; activeMembers: number }[]>("/admin/units"),
         apiClient.get<AuditEntry[]>("/cms/audit?limit=10"),
       ]);
 
@@ -154,7 +154,8 @@ export function useAdminDashboardData() {
         ministryUnits: units.data.map((u) => ({
           name: u.name,
           members: u.totalMembers,
-          attendance: u.attendanceRate,
+          activeMembers: u.activeMembers,
+          activePct: u.totalMembers > 0 ? Math.round((u.activeMembers / u.totalMembers) * 100) : 0,
         })),
         recentActivities: audit.data.map((entry) => ({
           id: entry.id,

@@ -52,8 +52,9 @@ export interface FunnelStage {
 export interface MinistryUnit {
   name: string;
   members: number;
-  /** Attendance rate as a percentage (0–100). */
-  attendance: number;
+  activeMembers: number;
+  /** Share of members with ACTIVE status, as a percentage (0–100). */
+  activePct: number;
 }
 
 /** Any AuditLog entity name — the log isn't limited to a fixed set, so icon

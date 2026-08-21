@@ -30,8 +30,11 @@ const IMAGE_MIME = [
   'image/svg+xml',
   'image/x-icon',
   'image/vnd.microsoft.icon',
-  // Deliberately excludes HEIC/HEIF/TIFF — no major browser renders them via
-  // <img>, so accepting them would just produce broken images on the site.
+  // HEIC/HEIF (iPhone's default photo format) is accepted here and converted to
+  // JPEG before storage — see UploadsService.convertHeicToJpeg — since no browser
+  // renders it via <img>. TIFF is still excluded: no equivalent conversion path.
+  'image/heic',
+  'image/heif',
 ];
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
 
@@ -81,7 +84,7 @@ export class UploadsController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO — max 8 MB)',
+          description: 'Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC/HEIF — max 8 MB)',
         },
       },
     },
@@ -100,15 +103,20 @@ export class UploadsController {
       throw new BadRequestException('Image must be under 8 MB');
     }
     if (!IMAGE_MIME.includes(file.mimetype)) {
-      throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, AVIF, BMP, SVG, or ICO)');
+      throw new BadRequestException('Unsupported image format (use JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC, or HEIF)');
     }
     if (!hasValidFileSignature(file)) {
       throw new BadRequestException('Image content does not match its declared format');
     }
 
+    const stored =
+      file.mimetype === 'image/heic' || file.mimetype === 'image/heif'
+        ? await this.uploads.convertHeicToJpeg(file)
+        : file;
+
     // Return the bare payload — the global ResponseEnvelopeInterceptor wraps it
     // in { data, meta }, which the frontend axios client unwraps to { url, key }.
-    return this.uploads.uploadObject(file, 'images');
+    return this.uploads.uploadObject(stored, 'images');
   }
 
   @Post('document')

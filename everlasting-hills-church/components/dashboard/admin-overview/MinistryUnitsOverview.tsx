@@ -10,7 +10,13 @@ function barColor(pct: number): string {
 
 /**
  * Full-width ministry units table. Uses a semantic <table> (readable on small screens
- * via horizontal scroll) with an inline attendance progress bar.
+ * via horizontal scroll) with an inline "active members" progress bar.
+ *
+ * This deliberately shows the share of members with ACTIVE status, not a service
+ * attendance rate — the app's real attendance workflow is a bulk usher headcount per
+ * service (no per-member, per-unit breakdown exists), while individual check-in
+ * records (the only data that could produce a true per-unit rate) go unused, so that
+ * number would always read 0%.
  */
 export default function MinistryUnitsOverview({
   units,
@@ -27,7 +33,7 @@ export default function MinistryUnitsOverview({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <caption className="sr-only">
-            Ministry units with member counts and attendance rates
+            Ministry units with member counts and share of active members
           </caption>
           <thead>
             <tr className="border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
@@ -38,7 +44,7 @@ export default function MinistryUnitsOverview({
                 Members
               </th>
               <th scope="col" className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C]/60 dark:text-white/35">
-                Attendance
+                Active Members
               </th>
             </tr>
           </thead>
@@ -58,12 +64,12 @@ export default function MinistryUnitsOverview({
                   <div className="flex items-center gap-3 min-w-[160px]">
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#FFE8ED] dark:bg-white/[0.06]">
                       <div
-                        className={`h-full rounded-full bg-gradient-to-r ${barColor(u.attendance)}`}
-                        style={{ width: `${u.attendance}%` }}
+                        className={`h-full rounded-full bg-gradient-to-r ${barColor(u.activePct)}`}
+                        style={{ width: `${u.activePct}%` }}
                       />
                     </div>
-                    <span className="w-10 text-right text-xs font-bold tabular-nums text-[#111] dark:text-white">
-                      {u.attendance}%
+                    <span className="w-16 text-right text-xs font-bold tabular-nums text-[#111] dark:text-white">
+                      {u.activeMembers}/{u.members}
                     </span>
                   </div>
                 </td>
