@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Clock, Heart, Mail, Phone, RefreshCw, Search, ShieldCheck, Trash2, UserRound, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Heart, Mail, Phone, RefreshCw, Search, ShieldCheck, Sparkles, Trash2, UserRound, X } from "lucide-react";
 import {
   usePrayerRequests,
   useDeletePrayerRequest,
@@ -24,9 +24,17 @@ function errorMessage(err: unknown, fallback: string): string {
   return (err as ApiError)?.message || fallback;
 }
 
+const URGENCY_STYLE: Record<string, { label: string; className: string }> = {
+  urgent: { label: "Urgent", className: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20" },
+  "needs-attention": { label: "Needs attention", className: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20" },
+  routine: { label: "Routine", className: "bg-gray-50 text-gray-500 border-gray-200 dark:bg-white/5 dark:text-white/50 dark:border-white/10" },
+};
+
+// Only two statuses exist, so "Pending" and "All" would be identical once
+// prayed-for requests are archived out of the active view — one active tab,
+// one archive tab, same idiom as the Follow-Up Pipeline's All/Archive split.
 const STATUS_TABS: { label: string; value: PrayerRequestStatus | "" }[] = [
-  { label: "All", value: "" },
-  { label: "Pending", value: "PENDING" },
+  { label: "Pending", value: "" },
   { label: "Prayed for", value: "PRAYED" },
 ];
 
@@ -47,7 +55,14 @@ export default function PrayerRequestsClient() {
   const to = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
 
   const filtered = requests.filter((r) => {
-    if (status && r.status !== status) return false;
+    // Prayed-for requests are archived out of the default view — "Prayed for"
+    // is the only tab that shows them, mirroring the Follow-Up Pipeline's
+    // Archive tab for opted-out members.
+    if (status === "PRAYED") {
+      if (r.status !== "PRAYED") return false;
+    } else if (r.status === "PRAYED") {
+      return false;
+    }
     const submitted = new Date(r.submittedAt);
     if (from && submitted < from) return false;
     if (to && submitted > to) return false;
@@ -61,6 +76,7 @@ export default function PrayerRequestsClient() {
 
   const groups = groupByDay(filtered, (r) => r.submittedAt);
   const pendingCount = requests.filter((r) => r.status === "PENDING").length;
+  const prayedCount = requests.filter((r) => r.status === "PRAYED").length;
   const hasFilters = !!(search || status || dateFrom || dateTo);
 
   function clearFilters() {
@@ -82,7 +98,7 @@ export default function PrayerRequestsClient() {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="px-5 space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -91,8 +107,7 @@ export default function PrayerRequestsClient() {
           </p>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Prayer Requests</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-white/50">
-            {requests.length} request{requests.length === 1 ? "" : "s"}
-            {pendingCount > 0 ? ` · ${pendingCount} pending` : ""} — signed-in submitters are always identified here, even when marked anonymous.
+            {pendingCount} pending{prayedCount > 0 ? ` · ${prayedCount} prayed for` : ""} — signed-in submitters are always identified here, even when marked anonymous.
           </p>
         </div>
         <button
@@ -168,6 +183,12 @@ export default function PrayerRequestsClient() {
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">No prayer requests yet.</p>
           <p className="mt-1 text-sm text-gray-400 dark:text-white/40">Submissions from the public prayer request form will show up here.</p>
         </div>
+      ) : filtered.length === 0 && !hasFilters && status === "" ? (
+        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-12 text-center">
+          <CheckCircle2 size={26} className="mx-auto mb-3 text-emerald-300 dark:text-emerald-500/40" />
+          <p className="text-base font-semibold text-gray-700 dark:text-white/80">All caught up.</p>
+          <p className="mt-1 text-sm text-gray-400 dark:text-white/40">Every prayer request has been prayed for — see the &quot;Prayed for&quot; tab.</p>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-12 text-center">
           <Search size={24} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
@@ -213,6 +234,7 @@ function RequestCard({ r, onDelete }: { r: PrayerRequestRow; onDelete: () => voi
   const email = r.member?.email ?? (r.isAnonymous ? null : r.email);
   const phone = r.member?.phone ?? (r.isAnonymous ? null : r.phone);
   const prayed = r.status === "PRAYED";
+  const urgent = !prayed && r.aiUrgency === "urgent";
 
   async function toggleStatus() {
     try {
@@ -226,7 +248,11 @@ function RequestCard({ r, onDelete }: { r: PrayerRequestRow; onDelete: () => voi
   return (
     <div
       className={`rounded-2xl border bg-white dark:bg-[#161618] p-5 space-y-3 ${
-        prayed ? "border-gray-200 dark:border-white/10" : "border-l-4 border-l-amber-400 border-gray-200 dark:border-l-amber-500 dark:border-white/10"
+        prayed
+          ? "border-gray-200 dark:border-white/10"
+          : urgent
+          ? "border-l-4 border-l-rose-500 border-gray-200 dark:border-l-rose-500 dark:border-white/10"
+          : "border-l-4 border-l-amber-400 border-gray-200 dark:border-l-amber-500 dark:border-white/10"
       }`}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -278,6 +304,29 @@ function RequestCard({ r, onDelete }: { r: PrayerRequestRow; onDelete: () => voi
       </div>
 
       <p className="whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-white/80">{r.request}</p>
+
+      {(r.aiCategory || r.aiUrgency || r.aiRouteTo) && (
+        <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-[#FFF4F6]/50 dark:bg-white/[0.03] px-3 py-2">
+          <Sparkles size={11} className="shrink-0 text-[#87102C]/50 dark:text-[#e8768a]/50" aria-hidden="true" />
+          {r.aiUrgency && (
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${URGENCY_STYLE[r.aiUrgency]?.className ?? URGENCY_STYLE.routine.className}`}>
+              {r.aiUrgency === "urgent" && <AlertTriangle size={9} />}
+              {URGENCY_STYLE[r.aiUrgency]?.label ?? r.aiUrgency}
+            </span>
+          )}
+          {r.aiCategory && (
+            <span className="rounded-full bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:text-white/60">
+              {r.aiCategory}
+            </span>
+          )}
+          {r.aiRouteTo && (
+            <span className="text-[11px] text-gray-500 dark:text-white/50">→ {r.aiRouteTo}</span>
+          )}
+          {r.aiSummary && (
+            <p className="w-full text-[11px] italic text-gray-500 dark:text-white/45 mt-0.5">{r.aiSummary}</p>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 dark:border-white/[0.06] pt-3">
         {(email || phone) ? (

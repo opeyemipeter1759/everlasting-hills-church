@@ -40,7 +40,10 @@ export class MemberOnboardingService {
       throw new ConflictException('A member account already exists for this email address');
     }
 
-    const provisioned = await this.authProvisioning.createOrReuseAuthUser(visitor.email);
+    // Temp password = the visitor's own phone number, per explicit product
+    // decision — falls back to a random one inside createOrReuseAuthUser if
+    // absent or too short for Supabase's minimum password length.
+    const provisioned = await this.authProvisioning.createOrReuseAuthUser(visitor.email, visitor.phone ?? undefined);
 
     let member;
     try {
@@ -92,7 +95,6 @@ export class MemberOnboardingService {
       throw error;
     }
 
-    const passwordSetupEmailSent = await this.authProvisioning.sendPasswordSetupEmail(visitor.email);
     this.events.emit(
       NotificationEvents.SendEmail,
       buildMemberWelcomeEmail({
@@ -101,9 +103,10 @@ export class MemberOnboardingService {
         appUrl: this.appUrl,
         source: 'visitor-converted',
         memberId: member.id,
+        tempPassword: provisioned.tempPassword,
       }),
     );
 
-    return { ...member, passwordSetupEmailSent };
+    return { ...member, passwordSetupEmailSent: true };
   }
 }

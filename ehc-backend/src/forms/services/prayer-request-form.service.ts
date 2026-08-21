@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -6,14 +6,17 @@ import type { Env } from '../../config/env.validation';
 import { PrayerRequestDto } from '../dto/prayer-request.dto';
 import { buildPrayerAdminText, buildPrayerVisitorText } from '../forms-text-templates.util';
 import { FormsEmailDispatchService } from './forms-email-dispatch.service';
+import { PrayerTriageService } from './prayer-triage.service';
 
 @Injectable()
 export class PrayerRequestFormService {
+  private readonly logger = new Logger(PrayerRequestFormService.name);
   private readonly tenantId: string;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailDispatch: FormsEmailDispatchService,
+    private readonly triage: PrayerTriageService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -55,6 +58,11 @@ export class PrayerRequestFormService {
       });
     }
 
+    // Fire-and-forget — never blocks or fails the submission response.
+    this.triage.triageAndSave(record.id, record.request, record.isAnonymous).catch((err) => {
+      this.logger.warn(`Triage dispatch failed for ${record.id}: ${(err as Error).message}`);
+    });
+
     return {
       success: true,
       message: 'Prayer request submitted successfully',
@@ -84,6 +92,11 @@ export class PrayerRequestFormService {
       submittedAt: r.submittedAt.toISOString(),
       status: r.status,
       member: r.Member,
+      aiCategory: r.aiCategory,
+      aiUrgency: r.aiUrgency,
+      aiRouteTo: r.aiRouteTo,
+      aiSummary: r.aiSummary,
+      aiTriagedAt: r.aiTriagedAt?.toISOString() ?? null,
     }));
   }
 

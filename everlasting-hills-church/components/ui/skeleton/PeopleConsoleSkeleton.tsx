@@ -63,7 +63,7 @@ function TableRowSkeleton() {
 
 export default function PeopleConsoleSkeleton() {
   return (
-    <div className="space-y-6 max-w-[1500px]">
+    <div className="space-y-6 w-full">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="space-y-2">

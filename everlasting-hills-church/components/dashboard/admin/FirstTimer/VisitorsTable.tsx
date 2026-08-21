@@ -7,9 +7,13 @@ const TH =
 export default function VisitorsTable({
   rows,
   onCreated,
+  onEdit,
+  onDelete,
 }: {
   rows: VisitorRow[];
   onCreated: (visitorId: string) => void;
+  onEdit: (visitor: VisitorRow) => void;
+  onDelete: (visitor: VisitorRow) => void;
 }) {
   return (
     <div className="overflow-x-auto">
@@ -26,7 +30,7 @@ export default function VisitorsTable({
         </thead>
         <tbody>
           {rows.map((v) => (
-            <VisitorRowItem key={v.id} visitor={v} onCreated={onCreated} />
+            <VisitorRowItem key={v.id} visitor={v} onCreated={onCreated} onEdit={onEdit} onDelete={onDelete} />
           ))}
         </tbody>
       </table>

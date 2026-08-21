@@ -47,7 +47,7 @@ export default function PeopleConsole() {
     (counts?.byRole.HEAD_USHER ?? 0);
 
   return (
-    <div className="space-y-6 max-w-[1500px]">
+    <div className="space-y-6 px-5">
       <PeopleHeader
         onAssign={() => actions.openAssign(Object.values(selectedRows))}
         onCreate={() => actions.setCreateOpen(true)}
@@ -80,6 +80,7 @@ export default function PeopleConsole() {
         onChangeRole={(person, role) => actions.setPendingRole({ person, role })}
         onEdit={actions.setEditTarget}
         onTags={actions.setTagTarget}
+        onResendLogin={actions.resendLogin}
         onDelete={actions.setDeleteTarget}
       />
 

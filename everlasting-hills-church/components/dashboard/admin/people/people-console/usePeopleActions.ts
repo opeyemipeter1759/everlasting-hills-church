@@ -3,9 +3,11 @@ import {
   useBulkMemberOp,
   useChangeRole,
   useDeletePerson,
+  useResendLoginDetails,
   type PersonRole,
   type PersonRow,
 } from "@/lib/api/people";
+import { showToast } from "@/components/ui/toast/toast";
 
 export function usePeopleActions(selectedRows: Record<string, PersonRow>, clearSelection: () => void) {
   const [createOpen, setCreateOpen] = useState(false);
@@ -22,6 +24,17 @@ export function usePeopleActions(selectedRows: Record<string, PersonRow>, clearS
   const changeRole = useChangeRole();
   const deletePerson = useDeletePerson();
   const bulkOp = useBulkMemberOp();
+  const resendLoginDetails = useResendLoginDetails();
+
+  async function resendLogin(person: PersonRow) {
+    if (!person.profileId) return;
+    try {
+      await resendLoginDetails.mutateAsync(person.profileId);
+      showToast.success(`Login details resent to ${person.name}`);
+    } catch (err) {
+      showToast.error((err as { message?: string }).message ?? "Couldn't resend login details");
+    }
+  }
 
   function openAssign(preselect: PersonRow[]) {
     setAssignPreselect(preselect);
@@ -120,6 +133,8 @@ export function usePeopleActions(selectedRows: Record<string, PersonRow>, clearS
     changeRole,
     deletePerson,
     bulkOp,
+    resendLoginDetails,
+    resendLogin,
     confirmRoleChange,
     confirmDelete,
     bulkStatus,

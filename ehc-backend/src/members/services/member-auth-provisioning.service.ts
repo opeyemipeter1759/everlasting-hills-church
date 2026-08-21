@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Role } from '@prisma/client';
-import { generateUnusableInitialPassword, passwordSetupRedirect } from '../../auth/secure-provisioning';
+import { generateTempPassword, passwordSetupRedirect } from '../../auth/secure-provisioning';
 import type { Env } from '../../config/env.validation';
 import { PrismaService } from '../../prisma/prisma.service';
 import { createAdminClient } from '../members-supabase-admin.util';
@@ -15,6 +15,10 @@ export interface ProvisionedAuthUser {
   userId: string;
   /** True only when this operation created the Supabase identity. */
   created: boolean;
+  /** Real, usable temporary password — emailed to the new member so they can
+   * log in directly. Paired with needs_password_change: true, which forces a
+   * real password to be chosen immediately on first login. */
+  tempPassword: string;
 }
 
 /** Creates or safely links the Supabase identity backing a converted member. */
@@ -30,11 +34,16 @@ export class MemberAuthProvisioningService {
     this.appUrl = config.get('FRONTEND_URL', { infer: true }) ?? 'http://localhost:3000';
   }
 
-  async createOrReuseAuthUser(email: string): Promise<ProvisionedAuthUser> {
+  /** `password`, when supplied, is used as-is as the account's temp password
+   * (e.g. the visitor's phone number) instead of a randomly generated one.
+   * Falls back to a random one if omitted or too short for Supabase's minimum
+   * password length. */
+  async createOrReuseAuthUser(email: string, password?: string): Promise<ProvisionedAuthUser> {
     const supabase = createAdminClient();
+    const tempPassword = password && password.trim().length >= 6 ? password.trim() : generateTempPassword();
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
-      password: generateUnusableInitialPassword(),
+      password: tempPassword,
       email_confirm: true,
       app_metadata: { role: Role.MEMBER },
       user_metadata: {
@@ -44,7 +53,7 @@ export class MemberAuthProvisioningService {
     } as any);
 
     if (!authError && authData.user) {
-      return { userId: authData.user.id, created: true };
+      return { userId: authData.user.id, created: true, tempPassword };
     }
 
     const isDuplicate = /already.*registered|already.*exists/i.test(authError?.message ?? '');
@@ -82,9 +91,22 @@ export class MemberAuthProvisioningService {
       );
     }
 
-    // The identity is an orphan from an interrupted legacy flow. Reuse it without
-    // changing its password, confirmation state, role, or metadata.
-    return { userId: found.id, created: false };
+    // The identity is an orphan from an interrupted legacy flow — reused rather
+    // than recreated. We don't know its existing password (it may be an old
+    // generateUnusableInitialPassword() blob), so the same resolved temp
+    // password is (re)set here too; that's the only field touched —
+    // confirmation state, role, and other metadata are left as-is.
+    const { error: updateError } = await supabase.auth.admin.updateUserById(found.id, {
+      password: tempPassword,
+      user_metadata: { ...found.user_metadata, needs_password_change: true },
+    });
+    if (updateError) {
+      throw new InternalServerErrorException(
+        `Could not set a temporary password for the existing identity: ${updateError.message}`,
+      );
+    }
+
+    return { userId: found.id, created: false, tempPassword };
   }
 
   async sendPasswordSetupEmail(email: string): Promise<boolean> {

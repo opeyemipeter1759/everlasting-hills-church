@@ -14,6 +14,8 @@ export interface PrayerRequestMember {
 
 export type PrayerRequestStatus = "PENDING" | "PRAYED";
 
+export type PrayerUrgency = "routine" | "needs-attention" | "urgent";
+
 export interface PrayerRequestRow {
   id: string;
   request: string;
@@ -26,6 +28,13 @@ export interface PrayerRequestRow {
   /** Set only when the submitter was signed in — present even if isAnonymous,
    * since anonymous only hides the free-text name, never the linked member. */
   member: PrayerRequestMember | null;
+  /** AI triage (Gemini), filled in fire-and-forget shortly after submission.
+   * All null until triage completes — treat null as "not triaged yet", not an error. */
+  aiCategory: string | null;
+  aiUrgency: PrayerUrgency | null;
+  aiRouteTo: string | null;
+  aiSummary: string | null;
+  aiTriagedAt: string | null;
 }
 
 export function usePrayerRequests() {

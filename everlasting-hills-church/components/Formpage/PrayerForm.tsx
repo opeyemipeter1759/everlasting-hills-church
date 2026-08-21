@@ -87,14 +87,8 @@ export default function PrayerForm() {
         }),
       });
 
-      // Fire-and-forget: AI triage runs in the background after successful
-      // submission. Does not block or affect the user experience.
-      fetch("/api/ai/prayer-triage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request: data.request, isAnonymous: anonymous }),
-      }).catch(() => {/* silent — triage is best-effort */});
-
+      // AI triage now runs server-side (backend, fire-and-forget right after
+      // the row is created) — see PrayerTriageService. No client-side call needed.
       setSubmitted(true);
     } catch (err) {
       const msg = (err as { message?: string }).message;

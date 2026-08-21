@@ -253,6 +253,14 @@ export function useRemoveHeadUsher() {
   });
 }
 
+/** Issues a fresh temp password and re-sends the welcome email — same flow as
+ * account creation, for someone who lost their original login email. */
+export function useResendLoginDetails() {
+  return useMutation({
+    mutationFn: (profileId: string) => api.post(`/users/${profileId}/resend-login`),
+  });
+}
+
 export function useDeletePerson() {
   const invalidate = useInvalidatePeople();
   // Members carry a profileId; we delete through /users/:profileId (removes

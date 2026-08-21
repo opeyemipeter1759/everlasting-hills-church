@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { VisitorsService } from './visitors.service';
 import { VisitorBulkImportService } from './services/visitor-bulk-import.service';
 import { BulkImportVisitorsDto } from './dto/bulk-import-visitor.dto';
+import { UpdateVisitorDto } from './dto/update-visitor.dto';
 
 /**
  * Admin visitor endpoints. ADMIN+ via class-level @Roles.
@@ -42,10 +43,32 @@ export class VisitorsController {
     return { count: await this.visitorsService.count() };
   }
 
+  // Declared before :id — a literal segment route below a wildcard :id route
+  // would otherwise be swallowed by getById("stats").
+  @Get('stats')
+  @ApiOperation({ summary: 'First-timer count broken down by attendance type' })
+  @ApiOkResponse({ description: '{ total, onsite, online }' })
+  async stats() {
+    return this.visitorsService.getStats();
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get visitor by id' })
   async getById(@Param('id') id: string) {
     return this.visitorsService.getById(id);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Edit a visitor record (e.g. correct a name or phone number)' })
+  @ApiBody({ type: UpdateVisitorDto })
+  async update(@Param('id') id: string, @Body() body: UpdateVisitorDto) {
+    return this.visitorsService.update(id, body);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a visitor record' })
+  async delete(@Param('id') id: string) {
+    return this.visitorsService.delete(id);
   }
 
   @Post('import')

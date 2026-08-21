@@ -88,7 +88,7 @@ export default function QuestionsClient() {
   }
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="px-5 space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>

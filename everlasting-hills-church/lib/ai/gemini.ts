@@ -10,12 +10,17 @@ if (!process.env.GEMINI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 
-/** Gemini 1.5 Flash — fast, low-cost. Use for all Phase 1 features. */
+/** Gemini 3.6 Flash — fast, low-cost. Use for all Phase 1 features.
+ * (gemini-1.5-flash and gemini-2.5-flash were both retired by Google — confirmed
+ * live against the API on 2026-08-21; gemini-3.6-flash is the current replacement.) */
 export const flashModel = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-3.6-flash",
   generationConfig: {
     temperature: 0.4,
-    maxOutputTokens: 1024,
+    // 3.6 Flash spends part of this budget on internal "thinking" before writing
+    // output (observed ~390 tokens on a two-sentence draft) — headroom above the
+    // old 1024 so a real-length announcement doesn't get cut off mid-JSON.
+    maxOutputTokens: 2048,
   },
 });
 

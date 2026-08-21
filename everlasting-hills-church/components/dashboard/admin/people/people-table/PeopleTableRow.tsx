@@ -25,6 +25,7 @@ export default function PeopleTableRow({
   onChangeRole,
   onEdit,
   onTags,
+  onResendLogin,
   onDelete,
 }: {
   p: PersonRow;
@@ -35,6 +36,7 @@ export default function PeopleTableRow({
   onChangeRole: (person: PersonRow, role: PersonRole) => void;
   onEdit: (person: PersonRow) => void;
   onTags: (person: PersonRow) => void;
+  onResendLogin: (person: PersonRow) => void;
   onDelete: (person: PersonRow) => void;
 }) {
   const router = useRouter();
@@ -110,7 +112,7 @@ export default function PeopleTableRow({
 
       <td className={`${TD} text-sm text-gray-500 dark:text-white/50 whitespace-nowrap`}>{fmtDate(p.joinedAt)}</td>
 
-      <RowActions p={p} manageable={manageable} onEdit={onEdit} onTags={onTags} onDelete={onDelete} />
+      <RowActions p={p} manageable={manageable} onEdit={onEdit} onTags={onTags} onResendLogin={onResendLogin} onDelete={onDelete} />
     </tr>
   );
 }

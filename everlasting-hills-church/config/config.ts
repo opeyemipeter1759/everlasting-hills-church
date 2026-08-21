@@ -176,7 +176,7 @@ export const NAV_GROUPS: NavGroup[] = [
     {
     section: "Follow up",
     items: [
-      { label: "Follow Up", href: "/dashboard/follow-up", icon: Users, minRole: "MEMBER", requiresAccess: "followUp" },
+      { label: "Follow Up", href: "/dashboard/follow-up", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "followUp" },
     ],
   },
   {

@@ -9,6 +9,10 @@ interface BuildArgs {
   source: 'admin-created' | 'visitor-converted';
   /** Member record id — rendered as a friendly member code (EHC-XXXX). */
   memberId?: string;
+  /** Real, usable temp password (see auth/secure-provisioning.ts generateTempPassword).
+   * When present, shown directly instead of the setup-link flow — the recipient
+   * logs in with it and is forced to /change-password immediately. */
+  tempPassword?: string;
 }
 
 /** Stable, human-readable member code derived from the record id (matches the dashboard). */
@@ -27,7 +31,7 @@ export function memberCode(id: string): string {
  *   - Single CTA: log in. Don't dilute it with a second button.
  */
 export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
-  const { firstName, email, appUrl, source, memberId } = args;
+  const { firstName, email, appUrl, source, memberId, tempPassword } = args;
   const loginUrl = `${appUrl.replace(/\/$/, '')}/login`;
   const setupUrl = `${appUrl.replace(/\/$/, '')}/forgot-password`;
   const code = memberId ? memberCode(memberId) : null;
@@ -37,12 +41,14 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
   const text = [
     `Welcome, ${firstName} — you are now part of the Everlasting Hills family.`,
     '',
-    'Your member portal is ready. For security, choose your own password using the setup email sent separately.',
+    tempPassword
+      ? "Your member portal is ready. Here's a temporary password to log in with — you'll be asked to choose your own right after."
+      : 'Your member portal is ready. For security, choose your own password using the setup email sent separately.',
     '',
     `  Login URL:  ${loginUrl}`,
     ...(code ? [`  Member ID:  ${code}`] : []),
     `  Email:      ${email}`,
-    `  Set password: ${setupUrl}`,
+    ...(tempPassword ? [`  Temporary password: ${tempPassword}`] : [`  Set password: ${setupUrl}`]),
     '',
     'Inside the portal you can:',
     '  • Listen to the latest sermons (audio, video, transcripts)',
@@ -80,7 +86,12 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
         <p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Login URL:</strong> <a href="${loginUrl}" style="color:#87102C;text-decoration:none">${loginUrl}</a></p>
         ${code ? `<p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Member ID:</strong> <span style="font-family:monospace;color:#87102C;font-weight:700">${code}</span></p>` : ''}
         <p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Email:</strong> ${escapeHtml(email)}</p>
-        <p style="margin:0;font-size:14px;color:#111"><strong>Set your password:</strong> <a href="${setupUrl}" style="color:#87102C;text-decoration:none">Use the secure password setup page</a></p>
+        ${
+          tempPassword
+            ? `<p style="margin:0;font-size:14px;color:#111"><strong>Temporary password:</strong> <span style="font-family:monospace;color:#87102C;font-weight:700;letter-spacing:0.5px">${escapeHtml(tempPassword)}</span></p>
+        <p style="margin:8px 0 0;font-size:12px;color:#9CA3AF">You'll be asked to choose your own password the first time you sign in.</p>`
+            : `<p style="margin:0;font-size:14px;color:#111"><strong>Set your password:</strong> <a href="${setupUrl}" style="color:#87102C;text-decoration:none">Use the secure password setup page</a></p>`
+        }
       </div>
 
       <p style="margin:0 0 12px;font-size:13px;color:#6B7280;text-transform:uppercase;letter-spacing:2px;font-weight:800">What's waiting inside</p>
@@ -100,7 +111,7 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
       </div>
 
       <p style="font-size:13px;color:#6B7280;line-height:1.6;margin:0 0 24px">
-        For your security, choose your own password from the signed setup email. Your phone number is never used as a password.
+        ${tempPassword ? "For your security, you'll be asked to choose your own password right after signing in." : 'For your security, choose your own password from the signed setup email.'} Your phone number is never used as a password.
       </p>
 
       <hr style="border:none;border-top:1px solid #E5E7EB;margin:24px 0"/>

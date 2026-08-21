@@ -14,6 +14,7 @@ import { UsersCreateService } from './services/users-create.service';
 import { UsersBulkCreateService } from './services/users-bulk-create.service';
 import { UsersUpdateService } from './services/users-update.service';
 import { UsersDeletionService } from './services/users-deletion.service';
+import { UsersResendLoginService } from './services/users-resend-login.service';
 
 @Module({
   imports: [PrismaModule, AuthModule],
@@ -29,6 +30,7 @@ import { UsersDeletionService } from './services/users-deletion.service';
     UsersBulkCreateService,
     UsersUpdateService,
     UsersDeletionService,
+    UsersResendLoginService,
   ],
 })
 export class UsersModule {}

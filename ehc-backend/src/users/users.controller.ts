@@ -10,6 +10,7 @@ import { UsersCreateService } from './services/users-create.service';
 import { UsersBulkCreateService } from './services/users-bulk-create.service';
 import { UsersUpdateService } from './services/users-update.service';
 import { UsersDeletionService } from './services/users-deletion.service';
+import { UsersResendLoginService } from './services/users-resend-login.service';
 
 /**
  * Core user CRUD. Class-gate at HOD (see users.module.ts sibling controllers for
@@ -26,6 +27,7 @@ export class UsersController {
     private readonly usersBulkCreate: UsersBulkCreateService,
     private readonly usersUpdate: UsersUpdateService,
     private readonly usersDeletion: UsersDeletionService,
+    private readonly usersResendLogin: UsersResendLoginService,
   ) {}
 
   @Get()
@@ -73,6 +75,17 @@ export class UsersController {
     @Body() body: UpdateUserDto,
   ) {
     return this.usersUpdate.updateProfile(actor, profileId, body);
+  }
+
+  @Post(':profileId/resend-login')
+  @Roles(Role.ADMIN)
+  @ApiOperation({
+    summary: 'Resend login details',
+    description:
+      'Issues a fresh temporary password and re-sends the welcome email. The previous password (if any) stops working immediately.',
+  })
+  async resendLogin(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.usersResendLogin.resend(actor, profileId);
   }
 
   @Delete(':profileId')

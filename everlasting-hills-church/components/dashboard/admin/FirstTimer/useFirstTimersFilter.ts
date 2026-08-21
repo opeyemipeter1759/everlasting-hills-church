@@ -8,6 +8,7 @@ const DEFAULT_PAGE_SIZE = 8;
 
 export function useFirstTimersFilter(visitors: VisitorRow[]) {
   const [removedIds, setRemovedIds] = useState<Set<string>>(() => new Set());
+  const [edits, setEdits] = useState<Record<string, Partial<VisitorRow>>>({});
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InterestFilter>("all");
   const [page, setPage] = useState(1);
@@ -17,7 +18,21 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
     setRemovedIds((prev) => new Set(prev).add(visitorId));
   }
 
-  const active = useMemo(() => visitors.filter((v) => !removedIds.has(v.id)), [visitors, removedIds]);
+  function handleDeleted(visitorId: string) {
+    setRemovedIds((prev) => new Set(prev).add(visitorId));
+  }
+
+  function handleUpdated(visitorId: string, patch: Partial<VisitorRow>) {
+    setEdits((prev) => ({ ...prev, [visitorId]: { ...prev[visitorId], ...patch } }));
+  }
+
+  const active = useMemo(
+    () =>
+      visitors
+        .filter((v) => !removedIds.has(v.id))
+        .map((v) => (edits[v.id] ? { ...v, ...edits[v.id] } : v)),
+    [visitors, removedIds, edits],
+  );
 
   const interestedCount = active.filter((v) => v.membershipInterest === "Yes").length;
   const notYetCount = active.filter((v) => v.membershipInterest !== "Yes").length;
@@ -68,6 +83,9 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
 
   return {
     handleCreated,
+    handleDeleted,
+    handleUpdated,
+    active,
     search,
     setSearch: updateSearch,
     filter,

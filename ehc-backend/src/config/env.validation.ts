@@ -81,6 +81,9 @@ export const envSchema = z.object({
   /** Paystack giving. Absent → giving endpoints return 503. */
   PAYSTACK_SECRET_KEY: z.string().min(1).optional(),
 
+  /** Gemini (prayer-request AI triage). Absent → triage is skipped, request still saves. */
+  GEMINI_API_KEY: z.string().min(1).optional(),
+
   /**
    * Cloudflare R2 object storage. Absent → upload endpoints return 503.
    * R2_ENDPOINT is auto-derived from R2_ACCOUNT_ID if omitted.

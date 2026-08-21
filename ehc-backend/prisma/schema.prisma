@@ -397,6 +397,16 @@ model PrayerRequest {
   /// "Anonymous" only hides identity from the free-text name field shown around
   /// the request — admins can always see the linked member, anonymous or not.
   memberId    String?
+  /// AI triage (Gemini), populated fire-and-forget right after creation. Plain
+  /// text rather than enums: AI output isn't guaranteed to match a fixed set,
+  /// and a Postgres enum violation would throw where a stray value should just
+  /// display as-is. All four are null until triage completes (or if it fails/
+  /// GEMINI_API_KEY is unset) — the admin UI treats null as "not triaged".
+  aiCategory  String?
+  aiUrgency   String?
+  aiRouteTo   String?
+  aiSummary   String?
+  aiTriagedAt DateTime?
   Tenant      Tenant              @relation(fields: [tenantId], references: [id])
   Member      Member?             @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
