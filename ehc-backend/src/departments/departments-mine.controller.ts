@@ -6,6 +6,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { DepartmentsMineService } from './services/departments-mine.service';
 import { DepartmentsEngagementService } from './services/departments-engagement.service';
+import { DepartmentsUnitsService } from './services/departments-units.service';
 
 /**
  * Admin Head / HOD scoped surface. Registered BEFORE DepartmentsController (which
@@ -18,6 +19,7 @@ export class DepartmentsMineController {
   constructor(
     private readonly mine: DepartmentsMineService,
     private readonly engagement: DepartmentsEngagementService,
+    private readonly units: DepartmentsUnitsService,
   ) {}
 
   @Get('mine')
@@ -47,5 +49,13 @@ export class DepartmentsMineController {
   @ApiOperation({ summary: 'Nudge a unit lead within the actor\'s department (HOD+)' })
   nudge(@CurrentUser() user: AuthUser, @Param('unitId') unitId: string, @Body() body: unknown) {
     return this.engagement.nudgeLead(user, unitId, body);
+  }
+
+  @Post('mine/units')
+  @Roles(Role.HOD)
+  @ApiOperation({ summary: 'Create a new unit under a department the actor heads (HOD+)' })
+  createMyUnit(@CurrentUser() user: AuthUser, @Body() body: { departmentId?: string; name?: string; description?: string }) {
+    if (!body?.departmentId) throw new BadRequestException('departmentId is required');
+    return this.units.createUnit(user, body.departmentId, body);
   }
 }

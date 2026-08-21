@@ -43,8 +43,8 @@ export class MembersSelfServiceController {
 
   @Get('search')
   @Roles(Role.MEMBER)
-  @ApiOperation({ summary: 'Search active members by name — for "pick a person" pickers (MEMBER+)' })
-  @ApiQuery({ name: 'q', required: true })
+  @ApiOperation({ summary: 'Search active members by name, or list them when q is empty — for "pick a person" pickers (MEMBER+)' })
+  @ApiQuery({ name: 'q', required: false })
   async search_(@Query('q') q: string, @CurrentUser() actor: AuthUser) {
     return this.search.searchMembersForPicker(q ?? '', actor.userId);
   }

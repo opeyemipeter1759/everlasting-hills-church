@@ -51,6 +51,8 @@ export default function CommunitySection({ content }: { content?: CommunityConte
                 </a>
                 <a
                   href={c.ctaSecondary.href}
+                  target={c.ctaSecondary.href.startsWith("http") ? "_blank" : undefined}
+                  rel={c.ctaSecondary.href.startsWith("http") ? "noopener noreferrer" : undefined}
                   className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-lg border border-[#E7CDD3] text-[#87102C] text-sm font-semibold hover:bg-white transition-colors"
                 >
                   <Heart size={15} />
