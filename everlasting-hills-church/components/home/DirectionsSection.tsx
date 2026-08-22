@@ -211,7 +211,7 @@ function EmailTile() {
 
 
 function MapTile() {
-  const embedUrl = `https://www.google.com/maps?q=${CHURCH.lat},${CHURCH.lng}&z=15&output=embed`;
+  const embedUrl = `https://www.google.com/maps?q=${encodeURIComponent(CHURCH.address)}&z=16&output=embed`;
   return (
     <div className="relative rounded-2xl overflow-hidden border border-white/10 h-44">
       <iframe

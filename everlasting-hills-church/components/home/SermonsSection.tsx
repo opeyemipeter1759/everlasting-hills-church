@@ -72,10 +72,14 @@ export default function SermonsSection({
   }
 
   return (
-    <section id="sermons" className="relative overflow-hidden bg-[#080808] py-24 md:py-32 text-white">
+    <section
+      id="sermons"
+      className="relative overflow-hidden bg-gradient-to-b from-[#141414] via-[#0a0a0a] to-[#050505] py-24 md:py-32 text-white"
+    >
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-20 right-[-5%] h-72 w-72 rounded-full bg-[#87102C]/20 blur-[120px]" />
-        <div className="absolute bottom-[-10%] left-[-8%] h-80 w-80 rounded-full bg-[#FFB3C1]/8 blur-[120px]" />
+        <div className="absolute -top-20 right-[-5%] h-72 w-72 rounded-full bg-[#87102C]/25 blur-[130px]" />
+        <div className="absolute bottom-[-10%] left-[-8%] h-80 w-80 rounded-full bg-[#FFB3C1]/10 blur-[130px]" />
+        <div className="absolute inset-0 bg-grain opacity-[0.05] mix-blend-overlay" />
       </div>
 
       <div className="relative mx-auto max-w-[1200px] px-5 sm:px-8">

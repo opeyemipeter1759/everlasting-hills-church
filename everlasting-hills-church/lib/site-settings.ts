@@ -323,7 +323,7 @@ export const SERVICE_FALLBACK: ServiceContent = {
     "Whether this is your first Sunday or your hundredth, you are welcome here. Come expecting to encounter the Word, the Spirit, and a family that genuinely cares.",
   firstTimerTitle: "First time visiting?",
   firstTimerBody:
-    "We'd love to meet you. Come as you are — no dress code, no pressure. Just come expecting something real.",
+    "We'd love to meet you. Come as you are. Just come expecting something real.",
 };
 
 export const SERMONS_FALLBACK: SermonsContent = {
@@ -351,7 +351,7 @@ export const COMMUNITY_FALLBACK: CommunityContent = {
     eyebrow: "You are welcome",
     headline: "A family that prays, grows, and stays",
     tagline:
-      "No background check. No dress code. Just come, and you will belong.",
+      "No masks. No performances. Just come as you are, and you will belong.",
   },
   statCard: { title: "Real Community", subtitle: "Not just a service" },
 };

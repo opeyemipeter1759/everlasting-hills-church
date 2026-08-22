@@ -46,15 +46,6 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
               </span>
             </span>
           )}
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-church-accent opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-church-accent" />
-            </span>
-            <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] font-bold text-white/70">
-              Live every Sunday
-            </span>
-          </span>
         </div>
 
         {/* Headline block */}

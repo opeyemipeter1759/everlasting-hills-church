@@ -51,9 +51,9 @@ function Story({ testimonial, index }: { testimonial: Testimonial; index: number
     <motion.article
       {...reveal}
       viewport={{ once: true, margin: "-60px" }}
-      className="mb-12 break-inside-avoid border-b border-[#E7CDD3]/50 pb-12 last:border-0"
+      className="mb-12 break-inside-avoid border-b border-[#E7CDD3]/50 pb-12 last:border-0 dark:border-white/10"
     >
-      <h3 className="font-serif text-[clamp(1.5rem,1.1rem+1.4vw,2rem)] font-bold leading-tight text-[#87102C]">
+      <h3 className="font-serif text-[clamp(1.5rem,1.1rem+1.4vw,2rem)] font-bold leading-tight text-[#87102C] dark:text-[#e8768a]">
         {testimonial.title}
       </h3>
 
@@ -64,13 +64,13 @@ function Story({ testimonial, index }: { testimonial: Testimonial; index: number
         transition={reduce ? { duration: 0 } : { duration: 0.45, ease: EASE }}
         className="relative mt-4 overflow-hidden"
       >
-        <div className="space-y-4 text-[1.0625rem] leading-[1.7] text-[#080808]/80">
+        <div className="space-y-4 text-[1.0625rem] leading-[1.7] text-[#080808]/80 dark:text-white">
           {paragraphs.map((p, i) => (
             <p key={i}>{p}</p>
           ))}
         </div>
         {isLong && !expanded && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#FBEAF0] to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#FBEAF0] to-transparent dark:from-[#160a0e]" />
         )}
       </motion.div>
 
@@ -80,14 +80,14 @@ function Story({ testimonial, index }: { testimonial: Testimonial; index: number
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
           aria-controls={bodyId}
-          className="mt-3 rounded text-sm font-semibold text-[#87102C] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40"
+          className="mt-3 rounded text-sm font-semibold text-[#87102C] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40 dark:text-[#e8768a]"
         >
           {expanded ? "Read less" : "Read more"}
         </button>
       )}
 
-      <p className="mt-6 flex items-center gap-2.5 text-sm font-bold text-[#080808]/65">
-        <span aria-hidden="true" className="h-px w-6 bg-[#87102C]" />
+      <p className="mt-6 flex items-center gap-2.5 text-sm font-bold text-[#080808]/65 dark:text-white">
+        <span aria-hidden="true" className="h-px w-6 bg-[#87102C] dark:bg-[#e8768a]" />
         {testimonial.author}
       </p>
     </motion.article>
