@@ -166,13 +166,13 @@ export default function PrayerForm() {
         {/* RADIO (UPDATED TO RADIO CARD) */}
         <fieldset className="space-y-3">
           <legend className="text-sm font-semibold text-black">
-            Submit anonymously? <span className="text-red-500">*</span>
+            Include your name? <span className="text-red-500">*</span>
           </legend>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <RadioCard
               value="false"
-              label="No — include my name"
+              label="Yes (Include my name)"
               fieldName="is_anonymous"
               register={register}
               validation={{ required: true }}
@@ -181,7 +181,7 @@ export default function PrayerForm() {
 
             <RadioCard
               value="true"
-              label="Yes — keep it anonymous"
+              label="No"
               fieldName="is_anonymous"
               register={register}
               validation={{ required: true }}
@@ -210,12 +210,24 @@ export default function PrayerForm() {
               <label className="block text-sm font-semibold text-black mb-2">
                 Phone
               </label>
-              <input
-                type="text"
-                placeholder="Phone number"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
-                {...register("phone")}
-              />
+              {(() => {
+                const phoneField = register("phone");
+                return (
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="Phone number"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
+                    name={phoneField.name}
+                    ref={phoneField.ref}
+                    onBlur={phoneField.onBlur}
+                    onChange={(e) => {
+                      e.target.value = e.target.value.replace(/[^\d+]/g, "");
+                      phoneField.onChange(e);
+                    }}
+                  />
+                );
+              })()}
             </div>
 
             <div className="sm:col-span-2">

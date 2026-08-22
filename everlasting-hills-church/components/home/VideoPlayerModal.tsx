@@ -160,7 +160,7 @@ export default function VideoPlayerModal({ video, onClose }: VideoPlayerModalPro
                 <span className="text-xs text-white/55">{video.duration}</span>
               </div>
               <p className="text-sm leading-relaxed text-white/75">
-                {video.description || "Watch this message, then use the actions below to keep engaging with the video without leaving the page."}
+                {video.description || video.title}
               </p>
             </div>
 

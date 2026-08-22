@@ -39,7 +39,7 @@ export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
     safeGet<ListenHistoryItem[]>("/sermons/me/history"),
     safeGet<number>("/sermons/me/streak"),
     safeGet<MemberAttendanceOverview>("/overview/member"),
-    safeGet<Array<{ id: string; title: string; body: string; createdAt: string }>>("/announcements/feed"),
+    safeGet<Array<{ id: string; title: string; body: string; imageUrl: string | null; createdAt: string }>>("/announcements/feed"),
     safeGet<Array<{ id: string; text: string; reactions: number; createdAt: string; authorName: string; authorPhotoUrl: string | null }>>("/community/feed"),
     safeGet<CommunityBirthday[]>("/members/birthdays/community?daysAhead=7"),
   ]);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Clock, Car, Heart, Coffee, ArrowRight } from "lucide-react";
+import { MapPin, Clock, Music, BookOpen, HandHeart, Users, ArrowRight } from "lucide-react";
 import PageHero from "@/components/marketing/PageHero";
 import { CHURCH } from "@/config/config";
 import { getStructuredContent } from "@/lib/cms-page";
@@ -10,9 +10,9 @@ export const metadata = {
     "Everything you need for your first visit to Everlasting Hills Church, Ibadan: service times, location, and what to expect.",
 };
 
-const MAP_EMBED_URL = `https://www.google.com/maps?q=${CHURCH.lat},${CHURCH.lng}&z=15&output=embed`;
-const MAP_LINK = `https://www.google.com/maps/search/?api=1&query=${CHURCH.lat},${CHURCH.lng}`;
-const EXPECT_ICONS = [Clock, Heart, Coffee, Car];
+const MAP_EMBED_URL = `https://www.google.com/maps?q=${encodeURIComponent(CHURCH.address)}&z=16&output=embed`;
+const MAP_LINK = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(CHURCH.address)}`;
+const EXPECT_ICONS = [Music, BookOpen, HandHeart, Users];
 
 interface VisitContent {
   eyebrow: string;
@@ -37,17 +37,17 @@ const FALLBACK: VisitContent = {
   heroImage: null,
   serviceTimesHeading: "Service Times",
   serviceTimes: [
-    { name: "Sunday Service", day: "Sunday", time: "9:00 AM – 12:00 PM" },
-    { name: "Midweek Service", day: "Wednesday", time: "5:30 PM – 8:00 PM" },
+    { name: "Sunday Service", day: "Sunday", time: "8:00 AM – 12:00 PM" },
+    { name: "Wednesday Service", day: "Wednesday", time: "5:30 PM – 8:00 PM" },
   ],
   locationHeading: "Location",
   address: CHURCH.address,
-  expect: { label: "What to Expect", heading: "Your first visit, simplified" },
+  expect: { label: "Every Service", heading: "Here is what you have to look forward to" },
   expectItems: [
-    { title: "How long is service?", body: "Sunday gatherings run about three hours of worship, the word, and prayer. Come as you are and stay as long as you can." },
-    { title: "What should I wear?", body: "There is no dress code. Most people come smart-casual, but you are welcome exactly as you are." },
-    { title: "Will I be noticed?", body: "Only in the best way. Our hospitality team will welcome you, and there is no pressure to give or sign up for anything." },
-    { title: "Is there parking?", body: "Yes. Parking is available on site, and our ushers will help you find your way in." },
+    { title: "Worship That Lifts You", body: "Passionate, Spirit-led praise that ushers you into God's presence from the very first song." },
+    { title: "The Word, Made Plain", body: "Teaching that is deep in truth yet simple enough to carry into your everyday life." },
+    { title: "Prayer That Reaches Heaven", body: "Every gathering makes room for real prayer, over you and for the things weighing on your heart." },
+    { title: "A Family, Not a Crowd", body: "Stay a while and you will leave knowing people's names, not just their faces." },
   ],
   cta: { heading: "Let us know you are coming", body: "Fill the first-timer form and our welcome team will be looking out for you when you arrive." },
 };
@@ -109,12 +109,12 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#87102C]">{c.expect.label}</p>
             <h2 className="text-balance text-3xl font-bold tracking-tight text-[#111] sm:text-4xl">{c.expect.heading}</h2>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {c.expectItems.map((item, i) => {
               const Icon = EXPECT_ICONS[i % EXPECT_ICONS.length];
               return (
-                <div key={i} className="rounded-3xl border border-brand-rose/60 bg-white p-7">
-                  <span className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#87102C]/10 text-[#87102C]"><Icon size={20} /></span>
+                <div key={i} className="relative rounded-3xl border border-brand-rose/60 bg-white p-7">
+                  <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#87102C]/10 text-[#87102C]"><Icon size={20} /></span>
                   <h3 className="mb-2 text-lg font-bold text-[#111]">{item.title}</h3>
                   <p className="text-sm leading-relaxed text-[#4a4a4a]">{item.body}</p>
                 </div>

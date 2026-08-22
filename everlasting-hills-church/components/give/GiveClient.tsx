@@ -366,7 +366,9 @@ function AccountCard({
   const [logoErr, setLogoErr] = useState(false);
   const showLogo = Boolean(acc.logo) && !logoErr;
   const hasNumber = acc.number.toLowerCase() !== "to be provided";
-  const hasWire = Boolean(acc.wire && acc.wire.length > 0);
+  // Wire instructions are only meaningful once the account itself is set up —
+  // don't offer routing details for an account that's still "To be provided".
+  const hasWire = hasNumber && Boolean(acc.wire && acc.wire.length > 0);
 
   return (
     <ScrollReveal delay={delay}>

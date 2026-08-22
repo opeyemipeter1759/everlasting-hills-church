@@ -1,7 +1,7 @@
 // ── CHURCH CONFIG — update these ──
 export const CHURCH = {
   name: "Everlasting Hills Church",
-  address: "Ibadan, Oyo State, Nigeria",
+  address: "Odo Niser Junction, Starlight House, 7 Abimbola Ayorinde Street, Orogun Rd, Ibadan 200213, Oyo",
   lat: 7.3775,
   lng: 3.9470,
   youtubeUrl: "https://youtube.com/@everlastinghillschurch?si=3ftJeVz2a6F7Hu3g",
