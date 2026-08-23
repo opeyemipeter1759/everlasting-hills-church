@@ -165,6 +165,13 @@ export const SERMONS_DEFAULT: SectionContent<'SERMONS'> = {
   displayCount: 3,
 };
 
+export const TESTIMONIALS_DEFAULT: SectionContent<'TESTIMONIALS'> = {
+  label: 'Member stories',
+  headline: 'My Everlasting Hills Experience',
+  subtext: 'Real people, everlasting life.',
+  displayCount: 5,
+};
+
 export const COMMUNITY_DEFAULT: SectionContent<'COMMUNITY'> = {
   label: 'You Belong Here',
   headline: 'Become part of something real',
@@ -281,6 +288,7 @@ export const DEFAULT_CONTENT = {
   SCRIPTURE: SCRIPTURE_DEFAULT,
   SERVICE: SERVICE_DEFAULT,
   SERMONS: SERMONS_DEFAULT,
+  TESTIMONIALS: TESTIMONIALS_DEFAULT,
   COMMUNITY: COMMUNITY_DEFAULT,
   GIVING: GIVING_DEFAULT,
   CONTACT: CONTACT_DEFAULT,

@@ -1,14 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, FileText, Loader2, Mail, Send, Sparkles, X } from "lucide-react";
+import { Check, Clock, FileText, Loader2, Mail, MapPin, Send, Sparkles, Users, X } from "lucide-react";
 import Modal from "@/components/ui/overlay/Modal";
 import FileUpload from "@/components/ui/form/FileUpload";
+import type { PersonRole } from "@/lib/api/people";
+import { ROLE_LABEL } from "../people/peopleShared/roleMeta";
+import { SpecificPeoplePicker } from "./SpecificPeoplePicker";
 import { EMPTY_FORM } from "./types";
-import type { Announcement, AnnouncementFormValues } from "./types";
+import type { Announcement, AnnouncementFormValues, TargetGender } from "./types";
 
 const inputCls =
   "w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#87102C]/40 focus:ring-2 focus:ring-[#87102C]/10 transition-all";
+
+const ROLE_OPTIONS = Object.keys(ROLE_LABEL) as PersonRole[];
+const GENDER_OPTIONS: { value: TargetGender; label: string }[] = [
+  { value: "MALE", label: "Male" },
+  { value: "FEMALE", label: "Female" },
+];
 
 export default function AnnouncementComposerModal({
   open,
@@ -41,7 +50,17 @@ export default function AnnouncementComposerModal({
     if (!open) { setAiOpen(false); setAiIdea(""); setAiError(""); return; }
     setValues(
       editingItem
-        ? { title: editingItem.title, body: editingItem.body, imageUrl: editingItem.imageUrl ?? "", sendEmail: editingItem.sendEmail }
+        ? {
+            title: editingItem.title,
+            body: editingItem.body,
+            imageUrl: editingItem.imageUrl ?? "",
+            sendEmail: editingItem.sendEmail,
+            targetRoles: editingItem.targetRoles,
+            targetGenders: editingItem.targetGenders,
+            targetPeople: editingItem.targetProfileIds.map((id, i) => ({ id, name: editingItem.targetProfileNames[i] ?? "Unknown" })),
+            eventTime: editingItem.eventTime ?? "",
+            venue: editingItem.venue ?? "",
+          }
         : EMPTY_FORM,
     );
   }, [open, editingItem]);
@@ -49,6 +68,16 @@ export default function AnnouncementComposerModal({
   function set<K extends keyof AnnouncementFormValues>(key: K, value: AnnouncementFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
   }
+
+  function toggleRole(role: PersonRole) {
+    set("targetRoles", values.targetRoles.includes(role) ? values.targetRoles.filter((r) => r !== role) : [...values.targetRoles, role]);
+  }
+
+  function toggleGender(gender: TargetGender) {
+    set("targetGenders", values.targetGenders.includes(gender) ? values.targetGenders.filter((g) => g !== gender) : [...values.targetGenders, gender]);
+  }
+
+  const hasTargeting = values.targetRoles.length > 0 || values.targetGenders.length > 0 || values.targetPeople.length > 0;
 
   async function draftWithAI() {
     if (!aiIdea.trim()) return;
@@ -155,6 +184,28 @@ export default function AnnouncementComposerModal({
           className={`${inputCls} resize-y`}
         />
 
+        <div className="grid grid-cols-2 gap-3">
+          <div className="relative">
+            <Clock size={14} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="time"
+              value={values.eventTime}
+              onChange={(e) => set("eventTime", e.target.value)}
+              className={`${inputCls} pl-10`}
+            />
+          </div>
+          <div className="relative">
+            <MapPin size={14} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              value={values.venue}
+              onChange={(e) => set("venue", e.target.value)}
+              placeholder="Venue"
+              maxLength={140}
+              className={`${inputCls} pl-10`}
+            />
+          </div>
+        </div>
+
         <FileUpload
           type="image"
           endpoint="/uploads/image"
@@ -174,6 +225,72 @@ export default function AnnouncementComposerModal({
             {values.sendEmail ? "Also email members" : "Skip email"}
           </span>
         </label>
+
+        {/* Email audience — everyone always sees the announcement in-app; this
+            only narrows who additionally gets emailed. */}
+        {values.sendEmail && (
+        <div className="rounded-2xl border border-gray-200 dark:border-white/10 p-4 space-y-3.5">
+          <div className="flex items-center gap-2">
+            <Users size={14} className="text-gray-400" />
+            <p className="text-sm font-semibold text-gray-700 dark:text-white/80">Who should receive the email?</p>
+            {!hasTargeting && (
+              <span className="ml-auto text-[11px] font-medium text-gray-400">Everyone (default)</span>
+            )}
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">Roles</p>
+            <div className="flex flex-wrap gap-1.5">
+              {ROLE_OPTIONS.map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => toggleRole(role)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    values.targetRoles.includes(role)
+                      ? "border-[#87102C]/40 bg-[#87102C] text-white"
+                      : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
+                  }`}
+                >
+                  {ROLE_LABEL[role]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">Gender</p>
+            <div className="flex flex-wrap gap-1.5">
+              {GENDER_OPTIONS.map((g) => (
+                <button
+                  key={g.value}
+                  type="button"
+                  onClick={() => toggleGender(g.value)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    values.targetGenders.includes(g.value)
+                      ? "border-[#87102C]/40 bg-[#87102C] text-white"
+                      : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
+                  }`}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">Specific people</p>
+            <SpecificPeoplePicker selected={values.targetPeople} onChange={(people) => set("targetPeople", people)} />
+          </div>
+
+          {hasTargeting && (
+            <p className="text-[11px] text-gray-400">
+              Emails anyone matching any of the above — leave everything blank to email everyone instead.
+              The announcement itself still shows to everyone on their dashboard either way.
+            </p>
+          )}
+        </div>
+        )}
 
         <div className="flex items-center justify-end gap-2.5 pt-2">
           {isEditing ? (

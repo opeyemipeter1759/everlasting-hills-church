@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Eye, Mail, Pencil, Radio, Trash2, Users } from "lucide-react";
+import { Clock, Eye, Mail, MapPin, Pencil, Radio, Trash2, Users } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { formatRelativeDate } from "./format";
 import type { Announcement } from "./types";
@@ -58,6 +58,18 @@ export default function AnnouncementCard({
               <span className="inline-flex items-center gap-1">
                 <Mail size={12} />
                 Emailed
+              </span>
+            )}
+            {a.eventTime && (
+              <span className="inline-flex items-center gap-1">
+                <Clock size={12} />
+                {a.eventTime}
+              </span>
+            )}
+            {a.venue && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin size={12} />
+                {a.venue}
               </span>
             )}
           </div>

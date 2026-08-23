@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { EventStatus } from '@prisma/client';
-import { IsBoolean, IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { EventStatus, Role } from '@prisma/client';
+import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateAnnouncementDto {
   @ApiProperty({ example: 'Special Sunday Service' })
@@ -43,4 +43,56 @@ export class CreateAnnouncementDto {
   @IsOptional()
   @IsEnum(EventStatus)
   status?: EventStatus;
+
+  @ApiPropertyOptional({
+    enum: Role,
+    isArray: true,
+    description: 'Send to anyone holding any of these roles. Combined (union) with targetGenders/targetProfileIds. Empty = no role restriction.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsEnum(Role, { each: true })
+  targetRoles?: Role[];
+
+  @ApiPropertyOptional({
+    type: [String],
+    example: ['MALE', 'FEMALE'],
+    description: 'Send to members of these genders. Combined (union) with targetRoles/targetProfileIds.',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsIn(['MALE', 'FEMALE'], { each: true })
+  targetGenders?: string[];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Specific Profile ids to always include, regardless of role/gender.',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(500)
+  @IsString({ each: true })
+  targetProfileIds?: string[];
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Display-only names matching targetProfileIds, in the same order (snapshot at send time).',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(500)
+  @IsString({ each: true })
+  targetProfileNames?: string[];
+
+  @ApiPropertyOptional({ example: '10:00 AM', description: 'Event time to display alongside the announcement' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  eventTime?: string;
+
+  @ApiPropertyOptional({ example: 'Main Auditorium', description: 'Venue/location to display alongside the announcement' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(140)
+  venue?: string;
 }

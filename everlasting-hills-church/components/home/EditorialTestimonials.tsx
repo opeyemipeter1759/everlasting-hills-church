@@ -53,9 +53,11 @@ function Story({ testimonial, index }: { testimonial: Testimonial; index: number
       viewport={{ once: true, margin: "-60px" }}
       className="mb-12 break-inside-avoid border-b border-[#E7CDD3]/50 pb-12 last:border-0 dark:border-white/10"
     >
-      <h3 className="font-serif text-[clamp(1.5rem,1.1rem+1.4vw,2rem)] font-bold leading-tight text-[#87102C] dark:text-[#e8768a]">
-        {testimonial.title}
-      </h3>
+      {testimonial.title && (
+        <h3 className="font-serif text-[clamp(1.5rem,1.1rem+1.4vw,2rem)] font-bold leading-tight text-[#87102C] dark:text-[#e8768a]">
+          {testimonial.title}
+        </h3>
+      )}
 
       <motion.div
         id={bodyId}
@@ -89,6 +91,7 @@ function Story({ testimonial, index }: { testimonial: Testimonial; index: number
       <p className="mt-6 flex items-center gap-2.5 text-sm font-bold text-[#080808]/65 dark:text-white">
         <span aria-hidden="true" className="h-px w-6 bg-[#87102C] dark:bg-[#e8768a]" />
         {testimonial.author}
+        {testimonial.role && <span className="font-normal text-[#080808]/45 dark:text-white/40">· {testimonial.role}</span>}
       </p>
     </motion.article>
   );

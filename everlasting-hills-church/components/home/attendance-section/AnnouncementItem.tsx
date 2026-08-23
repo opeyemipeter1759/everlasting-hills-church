@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Clock } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import type { Announcement } from "@/hooks";
 import { absoluteDate, formatTime, relativeTime } from "./utils";
 import { getAnnouncementIcon } from "./getAnnouncementIcon";
@@ -55,6 +55,22 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
         <p className={`mt-1.5 text-xs leading-relaxed text-white/50 ${expanded ? "" : "line-clamp-2"}`}>
           {announcement.body}
         </p>
+        {(announcement.eventTime || announcement.venue) && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-3">
+            {announcement.eventTime && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#FFB3C1]">
+                <Clock size={9} className="flex-shrink-0" />
+                {announcement.eventTime}
+              </span>
+            )}
+            {announcement.venue && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#FFB3C1]">
+                <MapPin size={9} className="flex-shrink-0" />
+                {announcement.venue}
+              </span>
+            )}
+          </div>
+        )}
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {isLong && (
             <button

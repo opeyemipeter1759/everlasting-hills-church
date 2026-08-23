@@ -39,7 +39,7 @@ export class AnnouncementsController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: "Edit an announcement's title/body/email flag" })
+  @ApiOperation({ summary: "Edit an announcement's title/body/email flag/targeting/event details" })
   update(@Param('id') id: string, @Body() body: UpdateAnnouncementDto) {
     return this.announcements.update(id, body);
   }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "lucide-react";
+import { useAnchoredPosition } from "../useAnchoredPosition";
 
 export interface SelectOption {
   value: string;
@@ -67,27 +68,10 @@ export function Select({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  // Fixed-position rect for the panel, recomputed on open and on any scroll/resize so
-  // the panel tracks the trigger instead of detaching.
-  const [rect, setRect] = useState<{ top: number; left: number; width: number; below: number } | null>(null);
-  const measure = () => {
-    const el = triggerRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    setRect({ top: r.bottom, left: r.left, width: r.width, below: window.innerHeight - r.bottom });
-  };
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    measure();
-    const onScrollOrResize = () => measure();
-    window.addEventListener("scroll", onScrollOrResize, true);
-    window.addEventListener("resize", onScrollOrResize);
-    return () => {
-      window.removeEventListener("scroll", onScrollOrResize, true);
-      window.removeEventListener("resize", onScrollOrResize);
-    };
-  }, [open]);
+  // Fixed-position rect for the panel, recomputed on open and on any scroll/resize
+  // (page or any scrollable ancestor) so the panel tracks the trigger instead of
+  // detaching, and flips above the trigger when there isn't room below.
+  const { rect, openUp } = useAnchoredPosition(triggerRef, open, 260);
 
   // Dismiss on outside pointer-down (trigger and panel both excluded).
   useEffect(() => {
@@ -183,8 +167,6 @@ export function Select({
     }
   }
 
-  const openUp = rect ? rect.below < 260 : false;
-
   return (
     <>
       <button
@@ -233,7 +215,7 @@ export function Select({
               position: "fixed",
               left: rect.left,
               width: rect.width,
-              ...(openUp ? { bottom: window.innerHeight - rect.top + rect.below + 4 } : { top: rect.top + 4 }),
+              ...(openUp ? { bottom: window.innerHeight - rect.triggerTop + 4 } : { top: rect.triggerBottom + 4 }),
             }}
             className="z-[60] max-h-60 overflow-y-auto rounded-xl border border-[#E7CDD3]/70 bg-white p-1 shadow-lg shadow-black/[0.08] dark:border-white/[0.1] dark:bg-[#1c1c1e] dark:shadow-black/40"
           >

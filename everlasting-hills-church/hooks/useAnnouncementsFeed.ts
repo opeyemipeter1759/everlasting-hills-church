@@ -9,6 +9,8 @@ export interface Announcement {
   body: string;
   imageUrl: string | null;
   createdAt: string;
+  eventTime?: string | null;
+  venue?: string | null;
 }
 
 export function useAnnouncementsFeed(enabled: boolean) {

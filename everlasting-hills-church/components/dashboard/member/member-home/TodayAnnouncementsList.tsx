@@ -1,9 +1,9 @@
-import { BellRing, Clock } from "lucide-react";
+import { BellRing, Clock, MapPin } from "lucide-react";
 import { card, muted } from "./tokens";
 import { relativeTime } from "./helpers";
 
 export function TodayAnnouncementsList({ announcements }: {
-  announcements: Array<{ id: string; title: string; body: string; createdAt: string }>;
+  announcements: Array<{ id: string; title: string; body: string; createdAt: string; eventTime?: string | null; venue?: string | null }>;
 }) {
   return (
     <section className={`${card} overflow-hidden`}>
@@ -65,6 +65,22 @@ export function TodayAnnouncementsList({ announcements }: {
               <p className={`text-xs ${muted} mt-1 leading-relaxed line-clamp-2`}>
                 {a.body}
               </p>
+              {(a.eventTime || a.venue) && (
+                <div className="mt-1.5 flex flex-wrap items-center gap-3">
+                  {a.eventTime && (
+                    <p className="text-[10px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
+                      <Clock size={9} className="flex-shrink-0" />
+                      {a.eventTime}
+                    </p>
+                  )}
+                  {a.venue && (
+                    <p className="text-[10px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
+                      <MapPin size={9} className="flex-shrink-0" />
+                      {a.venue}
+                    </p>
+                  )}
+                </div>
+              )}
               <p className={`text-[10px] ${muted} opacity-60 mt-1.5 flex items-center gap-1`}>
                 <Clock size={9} className="flex-shrink-0" />
                 {relativeTime(a.createdAt)}

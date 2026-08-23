@@ -3,6 +3,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/axios";
 import type { Announcement, AnnouncementFilter, AnnouncementFormValues } from "./types";
 
+/** Flattens the composer's targetPeople chips into the parallel id/name arrays
+ * the API expects, and drops the form-only field. */
+function toPayload(values: AnnouncementFormValues) {
+  const { targetPeople, ...rest } = values;
+  return {
+    ...rest,
+    targetProfileIds: targetPeople.map((p) => p.id),
+    targetProfileNames: targetPeople.map((p) => p.name),
+  };
+}
+
 export function useAnnouncements() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState<AnnouncementFilter>("ALL");
@@ -44,7 +55,7 @@ export function useAnnouncements() {
 
   const createMutation = useMutation({
     mutationFn: ({ values, status }: { values: AnnouncementFormValues; status: "DRAFT" | "PUBLISHED" }) =>
-      apiClient.post("/announcements", { ...values, audience: "all", status }),
+      apiClient.post("/announcements", { ...toPayload(values), status }),
     onSuccess: (_data, { status }) => {
       setComposerOpen(false);
       flash(status === "DRAFT" ? "Draft saved" : "Published");
@@ -54,7 +65,7 @@ export function useAnnouncements() {
 
   const updateMutation = useMutation({
     mutationFn: (values: AnnouncementFormValues) =>
-      apiClient.patch(`/announcements/${editingItem?.id}`, values),
+      apiClient.patch(`/announcements/${editingItem?.id}`, toPayload(values)),
     onSuccess: () => {
       setComposerOpen(false);
       setEditingItem(null);

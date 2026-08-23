@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, ChevronDown, Search } from "lucide-react";
+import { useAnchoredPosition } from "../useAnchoredPosition";
 
 export interface ComboOption {
   id: string;
@@ -37,8 +39,12 @@ export function Combobox({
   const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listboxId = useId();
+  const { rect, openUp } = useAnchoredPosition(triggerRef, open, 220);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   const selected = options.find((o) => o.id === value);
   const filtered = query
@@ -48,10 +54,12 @@ export function Combobox({
   useEffect(() => {
     if (!open) return;
     function onOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setQuery("");
-      }
+      const t = e.target as Node;
+      // panelRef is checked separately from containerRef because the panel is
+      // portalled to <body> — it's no longer a DOM descendant of containerRef.
+      if (containerRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+      setOpen(false);
+      setQuery("");
     }
     document.addEventListener("mousedown", onOutside);
     return () => document.removeEventListener("mousedown", onOutside);
@@ -129,9 +137,20 @@ export function Combobox({
         />
       </button>
 
-      {/* Dropdown panel */}
-      {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#2a2a2e] shadow-xl overflow-hidden">
+      {/* Dropdown panel — portalled to <body> with fixed positioning so it's never
+          clipped by an ancestor's overflow (e.g. a Modal's scrollable body), and
+          tracks the trigger via useAnchoredPosition instead of detaching on scroll. */}
+      {mounted && open && rect && createPortal(
+        <div
+          ref={panelRef}
+          style={{
+            position: "fixed",
+            left: rect.left,
+            width: rect.width,
+            ...(openUp ? { bottom: window.innerHeight - rect.triggerTop + 4 } : { top: rect.triggerBottom + 4 }),
+          }}
+          className="z-[60] rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#2a2a2e] shadow-xl overflow-hidden"
+        >
           {/* Search */}
           <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-white/8">
             <Search size={13} className="text-gray-400 shrink-0" />
@@ -184,7 +203,8 @@ export function Combobox({
               ))
             )}
           </ul>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

@@ -1413,14 +1413,28 @@ model Announcement {
   title       String
   body        String
   imageUrl    String?
-  audience    String      @default("all")
+  audience    String      @default("all") // display label only ("all" or "custom"); actual targeting lives in the fields below
   sendEmail   Boolean     @default(false)
   status      EventStatus @default(PUBLISHED)
   createdById String?
   recipients  Int         @default(0)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
-  Tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  // Audience targeting — empty on all three means "everyone" (unchanged default
+  // behavior). Otherwise the recipient set is the UNION of: profiles matching any
+  // of targetRoles, profiles whose Member.gender is in targetGenders, and the
+  // specific profiles in targetProfileIds. targetProfileNames is a display-only
+  // snapshot taken at send time so the detail view doesn't need an extra lookup
+  // and stays stable even if a person's name changes later.
+  targetRoles        Role[]   @default([])
+  targetGenders      String[] @default([])
+  targetProfileIds   String[] @default([])
+  targetProfileNames String[] @default([])
+  // Optional event details shown alongside the announcement — a time of day
+  // (free text, e.g. "10:00 AM") and a venue/location name.
+  eventTime String?
+  venue     String?
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, createdAt])
   @@index([tenantId, status])
@@ -1612,6 +1626,7 @@ enum SiteSection {
   SCRIPTURE
   SERVICE
   SERMONS
+  TESTIMONIALS
   COMMUNITY
   GIVING
   CONTACT

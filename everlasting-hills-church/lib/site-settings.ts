@@ -90,6 +90,13 @@ export interface SermonsContent {
   displayCount: number;
 }
 
+export interface TestimonialsContent {
+  label: string;
+  headline: string;
+  subtext: string;
+  displayCount: number;
+}
+
 export interface CommunityContent {
   label: string;
   headline: string;
@@ -141,6 +148,7 @@ export interface SiteSettingsMap {
   SCRIPTURE: ScriptureContent;
   SERVICE: ServiceContent;
   SERMONS: SermonsContent;
+  TESTIMONIALS: TestimonialsContent;
   COMMUNITY: CommunityContent;
   GIVING: GivingContent;
   CONTACT: ContactContent;
@@ -335,6 +343,13 @@ export const SERMONS_FALLBACK: SermonsContent = {
   displayCount: 3,
 };
 
+export const TESTIMONIALS_FALLBACK: TestimonialsContent = {
+  label: "Member stories",
+  headline: "My Everlasting Hills Experience",
+  subtext: "Real people, everlasting life.",
+  displayCount: 5,
+};
+
 export const COMMUNITY_FALLBACK: CommunityContent = {
   label: "You Belong Here",
   headline: "Become part of something real",
@@ -446,6 +461,7 @@ const FALLBACKS: SiteSettingsMap = {
   SCRIPTURE: SCRIPTURE_FALLBACK,
   SERVICE: SERVICE_FALLBACK,
   SERMONS: SERMONS_FALLBACK,
+  TESTIMONIALS: TESTIMONIALS_FALLBACK,
   COMMUNITY: COMMUNITY_FALLBACK,
   GIVING: GIVING_FALLBACK,
   CONTACT: CONTACT_FALLBACK,

@@ -86,10 +86,10 @@ export default function Modal({ open, onClose, title, description, children, max
           aria-labelledby={titleId}
           aria-describedby={description ? descriptionId : undefined}
           tabIndex={-1}
-          className={`relative w-full ${MAX_W[maxWidth]} rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 shadow-2xl max-h-[calc(100vh-2rem)] flex flex-col outline-none`}
+          className={`relative w-full no-scrollbar ${MAX_W[maxWidth]} rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 shadow-2xl max-h-[calc(100vh-2rem)] flex flex-col outline-none`}
         >
           {/* Header — overflow-hidden here keeps rounded corners on the top edge only */}
-          <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-4 border-b border-gray-100 dark:border-white/8 rounded-t-2xl overflow-hidden shrink-0">
+          <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-4 border-b border-gray-100 dark:border-white/8 rounded-t-2xl no-scrollbar overflow-hidden shrink-0">
             <div>
               <h2 id={titleId} className="text-base font-bold text-gray-900 dark:text-white">{title}</h2>
               {description && <p id={descriptionId} className="text-xs text-gray-400 mt-0.5">{description}</p>}

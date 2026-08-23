@@ -1,18 +1,58 @@
 export type Testimonial = {
   id: string;
-  title: string;
+  /** Real testimonials (from the CMS) have no separate title — only seed/legacy
+   * entries do. EditorialTestimonials renders the heading only when present. */
+  title?: string;
   /** May contain multiple paragraphs separated by blank lines. */
   body: string;
   author: string;
+  role?: string;
 };
 
+interface ApiTestimonial {
+  id: string;
+  authorName: string;
+  authorRole: string | null;
+  content: string;
+}
+
+interface ServerEnvelope<T> {
+  data: T;
+}
+
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
+  process.env.API_BASE_URL?.trim() ||
+  "http://localhost:4000";
+
 /**
- * Single seam for testimonial data. Local seed today; swap the body for a server
- * fetch of the NestJS testimonials endpoint (mapping content → body) later without
- * touching the component. Trivial to extend: add an object to the array.
+ * Single seam for testimonial data — fetches published testimonials curated in
+ * the Pastor Testimonials CMS (/dashboard/pastor/testimonials). Falls back to a
+ * local seed on any error (network, server down) so the homepage never breaks.
  */
-export function getTestimonials(): Testimonial[] {
-  return TESTIMONIALS;
+export async function getTestimonials(): Promise<Testimonial[]> {
+  try {
+    const res = await fetch(`${BASE_URL}/testimonials/published`, {
+      next: { revalidate: 300, tags: ["testimonials"] },
+    });
+    if (!res.ok) {
+      console.warn(`[testimonials] GET returned ${res.status}, using fallbacks`);
+      return TESTIMONIALS;
+    }
+    const body = (await res.json()) as ServerEnvelope<ApiTestimonial[]>;
+    const rows = body?.data ?? [];
+    if (rows.length === 0) return TESTIMONIALS;
+
+    return rows.map((t) => ({
+      id: t.id,
+      body: t.content,
+      author: t.authorName,
+      role: t.authorRole ?? undefined,
+    }));
+  } catch (err) {
+    console.warn("[testimonials] fetch failed, using fallbacks", err);
+    return TESTIMONIALS;
+  }
 }
 
 const TESTIMONIALS: Testimonial[] = [

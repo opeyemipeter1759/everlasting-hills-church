@@ -84,10 +84,9 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           hasCheckedInToday={hasCheckedInToday}
           nextService={nextService}
         />
-        <div className="grid grid-cols-1 gap-5">
-          <ContinueListeningCard listenHistory={listenHistory} />
-          <GatheringsPanel />
-        </div>
+              <AnnouncementsPanel announcements={announcements} />
+
+     
       </div>
       <JourneyBand
         isNewMember={isNewMember}
@@ -107,8 +106,12 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         discipleshipMilestones={discipleshipMilestones}
         monthlyAttendance={monthlyAttendance}
       />
+
       {featuredSermon && <FeaturedSermonCard sermon={featuredSermon} />}
-      <AnnouncementsPanel announcements={announcements} />
+         <div className="grid grid-cols-1 gap-5">
+          <ContinueListeningCard listenHistory={listenHistory} />
+          <GatheringsPanel />
+        </div>
     </div>
   );
 }

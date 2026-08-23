@@ -152,6 +152,18 @@ const sermons: FieldDef[] = [
   { kind: "number", key: "displayCount", label: "Sermons to display" },
 ];
 
+const testimonials: FieldDef[] = [
+  { kind: "text", key: "label", label: "Section label" },
+  { kind: "text", key: "headline", label: "Headline" },
+  { kind: "textarea", key: "subtext", label: "Subtext" },
+  {
+    kind: "number",
+    key: "displayCount",
+    label: "Testimonials to display",
+    help: "Which testimonials show is curated on the Pastor Testimonials page (Pastoral → Testimonials)",
+  },
+];
+
 const community: FieldDef[] = [
   { kind: "text", key: "label", label: "Section label" },
   { kind: "text", key: "headline", label: "Headline" },
@@ -265,6 +277,7 @@ export const SITE_SETTINGS_FIELDS: Record<SiteSectionName, FieldDef[]> = {
   SCRIPTURE: scripture,
   SERVICE: service,
   SERMONS: sermons,
+  TESTIMONIALS: testimonials,
   COMMUNITY: community,
   GIVING: giving,
   CONTACT: contact,

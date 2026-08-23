@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Bell, BellRing, ChevronDown, Clock, Megaphone } from "lucide-react";
+import { Bell, BellRing, ChevronDown, Clock, MapPin, Megaphone } from "lucide-react";
 
 interface Announcement {
   id: string;
@@ -11,6 +11,8 @@ interface Announcement {
   body: string;
   imageUrl?: string | null;
   createdAt: string;
+  eventTime?: string | null;
+  venue?: string | null;
 }
 
 function relativeTime(iso: string) {
@@ -70,6 +72,23 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
         <p className={`text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed ${expanded ? "" : "line-clamp-2"}`}>
           {a.body}
         </p>
+
+        {(a.eventTime || a.venue) && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-3">
+            {a.eventTime && (
+              <p className="text-[10px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
+                <Clock size={9} className="flex-shrink-0" />
+                {a.eventTime}
+              </p>
+            )}
+            {a.venue && (
+              <p className="text-[10px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
+                <MapPin size={9} className="flex-shrink-0" />
+                {a.venue}
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="mt-1.5 flex flex-wrap items-center gap-3">
           <p className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">

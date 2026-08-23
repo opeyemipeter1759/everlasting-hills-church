@@ -189,6 +189,17 @@ export const SermonsContentSchema = z.object({
   displayCount: z.number().int().min(1).max(12),
 });
 
+/* ── TESTIMONIALS (chrome only — testimonial cards are curated on the Pastor
+   Testimonials page, /dashboard/pastor/testimonials, via the Testimonial model) ── */
+
+export const TestimonialsContentSchema = z.object({
+  label: z.string().trim().min(1).max(40),
+  headline: z.string().trim().min(1).max(80),
+  subtext: z.string().trim().min(1).max(400),
+  /** How many published testimonials to fetch for the homepage section. */
+  displayCount: z.number().int().min(1).max(20),
+});
+
 /* ── 7. COMMUNITY ──────────────────────────────────────────────────────────── */
 
 export const CommunityContentSchema = z.object({
@@ -278,6 +289,7 @@ export const SITE_SECTIONS = [
   'SCRIPTURE',
   'SERVICE',
   'SERMONS',
+  'TESTIMONIALS',
   'COMMUNITY',
   'GIVING',
   'CONTACT',
@@ -295,6 +307,7 @@ export const SECTION_SCHEMAS = {
   SCRIPTURE: ScriptureContentSchema,
   SERVICE: ServiceContentSchema,
   SERMONS: SermonsContentSchema,
+  TESTIMONIALS: TestimonialsContentSchema,
   COMMUNITY: CommunityContentSchema,
   GIVING: GivingContentSchema,
   CONTACT: ContactContentSchema,

@@ -49,7 +49,7 @@ export default async function HomePage() {
       </Suspense>
       <AttendanceSection />
       <BirthdayTeaserSection />
-      <TestimonialsSection />
+      <TestimonialsSection content={settings.TESTIMONIALS} />
       <Carousel content={settings.CAROUSEL} />
       <CommunitySection content={settings.COMMUNITY} />
       {/* <ContactSection content={settings.CONTACT} /> */}

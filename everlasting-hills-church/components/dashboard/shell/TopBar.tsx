@@ -34,6 +34,7 @@ const PATH_TITLES: Record<string, string> = {
   "/dashboard/analytics/giving":         "Giving Analytics",
   "/dashboard/pastor/reports":           "Reports & Exports",
   "/dashboard/pastor/follow-ups":        "Follow-ups",
+  "/dashboard/pastor/testimonials":      "Testimonials",
   "/dashboard/settings":                "Settings",
   "/dashboard/audit-log":               "Audit Log",
 };

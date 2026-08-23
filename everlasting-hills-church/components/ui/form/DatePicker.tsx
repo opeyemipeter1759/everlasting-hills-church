@@ -47,12 +47,25 @@ interface DropdownPortalProps {
 function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalProps) {
   const portalRef = useRef<HTMLDivElement>(null);
 
-  // Set coordinates via DOM API — avoids the style={{}} JSX prop linter warning
+  // Set coordinates via DOM API — avoids the style={{}} JSX prop linter warning.
+  // Recomputed on open AND on every scroll/resize (capture:true so it also fires
+  // for scroll on a scrollable ancestor, not just the page) so the panel tracks
+  // its trigger instead of detaching when the page/table/modal scrolls.
   useEffect(() => {
-    if (!open || !anchorRef.current || !portalRef.current) return;
-    const rect = anchorRef.current.getBoundingClientRect();
-    portalRef.current.style.setProperty("--dp-top", `${rect.bottom + 4}px`);
-    portalRef.current.style.setProperty("--dp-left", `${rect.left}px`);
+    if (!open) return;
+    const measure = () => {
+      if (!anchorRef.current || !portalRef.current) return;
+      const rect = anchorRef.current.getBoundingClientRect();
+      portalRef.current.style.setProperty("--dp-top", `${rect.bottom + 4}px`);
+      portalRef.current.style.setProperty("--dp-left", `${rect.left}px`);
+    };
+    measure();
+    window.addEventListener("scroll", measure, true);
+    window.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("scroll", measure, true);
+      window.removeEventListener("resize", measure);
+    };
   }, [open, anchorRef]);
 
   useEffect(() => {
