@@ -75,11 +75,16 @@ export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
 
   let birthdayDaysUntil: number | null = null;
   if (me.member?.dateOfBirth) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // WAT (UTC+1) calendar day, read with UTC getters throughout — dateOfBirth is
+    // stored at UTC midnight (see ehc-backend's birthday.util.ts), so mixing that
+    // with local-timezone getters would silently shift the compared day depending
+    // on the server's timezone. Mirrors ehc-backend/src/attendance/attendance.types.ts.
+    const WAT_OFFSET_MS = 60 * 60 * 1000;
+    const nowWat = new Date(Date.now() + WAT_OFFSET_MS);
+    const today = new Date(Date.UTC(nowWat.getUTCFullYear(), nowWat.getUTCMonth(), nowWat.getUTCDate()));
     const dob = new Date(me.member.dateOfBirth);
-    const thisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-    const diff = Math.ceil((thisYear.getTime() - today.getTime()) / 86_400_000);
+    const thisYear = new Date(Date.UTC(nowWat.getUTCFullYear(), dob.getUTCMonth(), dob.getUTCDate()));
+    const diff = Math.round((thisYear.getTime() - today.getTime()) / 86_400_000);
     if (diff >= 0 && diff <= 7) birthdayDaysUntil = diff;
   }
 

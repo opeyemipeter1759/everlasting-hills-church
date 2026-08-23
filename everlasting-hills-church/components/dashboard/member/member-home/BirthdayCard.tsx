@@ -241,6 +241,8 @@ export function BirthdayCard({
   const isMyBirthdayToday = birthdayDaysUntil === 0 && !!memberId;
   // Don't show myself in the "others celebrating" list.
   const others = (communityBirthdays ?? []).filter((c) => c.id !== memberId);
+  const todayOthers = others.filter((c) => c.daysUntil === 0);
+  const soonOthers = others.filter((c) => c.daysUntil > 0);
 
   if (!isMyBirthdayToday && others.length === 0) return null;
 
@@ -256,11 +258,26 @@ export function BirthdayCard({
             </span>
             <div>
               <p className={kicker}>Church Family</p>
-              <h3 className={cardTitle}>Celebrating Soon 🎈</h3>
+              <h3 className={cardTitle}>
+                {todayOthers.length > 0 && soonOthers.length === 0
+                  ? "Celebrating Today 🎂"
+                  : todayOthers.length > 0
+                    ? "Celebrating Today & Soon 🎂"
+                    : "Celebrating Soon 🎈"}
+              </h3>
             </div>
           </div>
           <div className="p-4 space-y-2.5">
-            {others.map((c) => (
+            {todayOthers.length > 0 && soonOthers.length > 0 && (
+              <p className="px-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Today</p>
+            )}
+            {todayOthers.map((c) => (
+              <CelebrantRow key={c.id} celebrant={c} />
+            ))}
+            {todayOthers.length > 0 && soonOthers.length > 0 && (
+              <p className={`px-0.5 pt-1.5 text-[10px] font-bold uppercase tracking-wider ${muted}`}>Coming up</p>
+            )}
+            {soonOthers.map((c) => (
               <CelebrantRow key={c.id} celebrant={c} />
             ))}
           </div>

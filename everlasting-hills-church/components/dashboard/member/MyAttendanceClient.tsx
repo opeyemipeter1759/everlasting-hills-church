@@ -135,7 +135,7 @@ export default function MyAttendanceClient() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto px-6 md:px-4   space-y-5">
+    <div className="mx-auto px-2 md:px-4   space-y-5">
       {/* Section label + heading */}
       <div>
         <p className="text-[10px] tracking-[0.25em] uppercase font-bold text-[#87102C] dark:text-[#FFB3C1]">
