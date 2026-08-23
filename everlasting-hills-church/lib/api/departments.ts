@@ -221,6 +221,26 @@ export function useUnassignUnit(deptId: string) {
   });
 }
 
+/** Renames/edits the unit itself (not its department assignment). Uses the
+ * units resource, not departments. */
+export function useUpdateUnit(unitId: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { name?: string; description?: string }) => api.patch(`/units/${unitId}`, body),
+    onSuccess: invalidate,
+  });
+}
+
+/** Deletes the unit outright (not just its department assignment) — its members
+ * and roster go with it. Uses the units resource, not departments. */
+export function useDeleteUnit() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (unitId: string) => api.delete<{ id: string; deleted: boolean }>(`/units/${unitId}`),
+    onSuccess: invalidate,
+  });
+}
+
 export function useCreateDepartment() {
   const invalidate = useInvalidate();
   return useMutation({
@@ -235,6 +255,14 @@ export function useUpdateDepartment(id: string) {
   return useMutation({
     mutationFn: (body: { name?: string; description?: string | null; sortOrder?: number }) =>
       api.patch(`/departments/${id}`, body),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteDepartment() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<{ id: string }>(`/departments/${id}`),
     onSuccess: invalidate,
   });
 }

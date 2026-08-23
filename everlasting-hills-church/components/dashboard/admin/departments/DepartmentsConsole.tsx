@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Building2, Users, ChevronRight, UserCog, RefreshCw, Layers, Plus, X } from "lucide-react";
-import { useDepartments, useAssignUnits, useCreateDepartment, type UnassignedUnit } from "@/lib/api/departments";
+import { Building2, Users, ChevronRight, UserCog, RefreshCw, Layers, Plus, X, Pencil, Trash2 } from "lucide-react";
+import {
+  useDepartments,
+  useAssignUnits,
+  useCreateDepartment,
+  useUpdateDepartment,
+  useDeleteDepartment,
+  type UnassignedUnit,
+  type DepartmentListItem,
+} from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
 import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast/toast";
@@ -11,6 +19,8 @@ import { showToast } from "@/components/ui/toast/toast";
 export default function DepartmentsConsole() {
   const q = useDepartments();
   const [showCreate, setShowCreate] = useState(false);
+  const [editingDept, setEditingDept] = useState<DepartmentListItem | null>(null);
+  const [deletingDept, setDeletingDept] = useState<DepartmentListItem | null>(null);
 
   return (
     <div className="px-5 space-y-6">
@@ -29,14 +39,14 @@ export default function DepartmentsConsole() {
           <button
             type="button"
             onClick={() => q.refetch()}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-3 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
           >
             <RefreshCw size={12} className={q.isFetching ? "animate-spin" : ""} /> Refresh
           </button>
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#87102C] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#6E0C24] transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#87102C] px-3 py-3 text-xs font-semibold text-white hover:bg-[#6E0C24] transition-colors"
           >
             <Plus size={13} /> Add Department
           </button>
@@ -46,6 +56,24 @@ export default function DepartmentsConsole() {
       {/* Create department modal */}
       {showCreate && (
         <CreateDepartmentForm onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); q.refetch(); }} />
+      )}
+
+      {/* Edit department modal */}
+      {editingDept && (
+        <EditDepartmentForm
+          department={editingDept}
+          onClose={() => setEditingDept(null)}
+          onUpdated={() => { setEditingDept(null); q.refetch(); }}
+        />
+      )}
+
+      {/* Delete department confirmation */}
+      {deletingDept && (
+        <DeleteDepartmentConfirm
+          department={deletingDept}
+          onClose={() => setDeletingDept(null)}
+          onDeleted={() => { setDeletingDept(null); q.refetch(); }}
+        />
       )}
 
       {/* Department grid */}
@@ -59,13 +87,31 @@ export default function DepartmentsConsole() {
             <Link
               key={d.id}
               href={`/dashboard/admin/departments/${d.id}`}
-              className="group flex flex-col rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5 transition-all hover:-translate-y-0.5 hover:border-[#87102C]/30 hover:shadow-[0_8px_30px_rgba(135,16,44,0.08)]"
+              className="group relative flex flex-col rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5 transition-all hover:-translate-y-0.5 hover:border-[#87102C]/30 hover:shadow-[0_8px_30px_rgba(135,16,44,0.08)]"
             >
               <div className="mb-3 flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#87102C]/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[#87102C] dark:bg-[#87102C]/20 dark:text-[#e8768a]">
                   <Building2 size={12} /> {d.code}
                 </span>
-                <ChevronRight size={16} className="text-gray-300 transition-transform group-hover:translate-x-0.5 dark:text-white/20" />
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingDept(d); }}
+                    className="rounded-lg p-1.5 text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-700 group-hover:opacity-100 dark:hover:bg-white/10 dark:hover:text-white"
+                    aria-label={`Edit ${d.name}`}
+                  >
+                    <Pencil size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingDept(d); }}
+                    className="rounded-lg p-1.5 text-gray-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 group-hover:opacity-100 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                    aria-label={`Delete ${d.name}`}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                  <ChevronRight size={16} className="text-gray-300 transition-transform group-hover:translate-x-0.5 dark:text-white/20" />
+                </div>
               </div>
               <h2 className="text-base font-bold leading-tight text-gray-900 dark:text-white">{d.name}</h2>
 
@@ -192,6 +238,145 @@ function CreateDepartmentForm({ onClose, onCreated }: { onClose: () => void; onC
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function EditDepartmentForm({
+  department,
+  onClose,
+  onUpdated,
+}: {
+  department: DepartmentListItem;
+  onClose: () => void;
+  onUpdated: () => void;
+}) {
+  const update = useUpdateDepartment(department.id);
+  const [name, setName] = useState(department.name);
+  const [description, setDescription] = useState(department.description ?? "");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    try {
+      await update.mutateAsync({ name: name.trim(), description: description.trim() || null });
+      showToast.success(`Department "${name.trim()}" updated`);
+      onUpdated();
+    } catch (err) {
+      showToast.error((err as { message?: string }).message ?? "Failed to update department");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Edit Department</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10">
+            <X size={16} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-white/60">
+              Department Code
+            </label>
+            <input
+              value={department.code}
+              disabled
+              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/[0.03] px-3.5 py-2.5 text-sm font-mono font-semibold uppercase text-gray-400 dark:text-white/30"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-white/60">
+              Department Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Worship & Music"
+              required
+              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#87102C]/30"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-white/60">
+              Description <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of this department's role…"
+              rows={2}
+              className="w-full resize-none rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#87102C]/30"
+            />
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-gray-200 dark:border-white/10 py-2.5 text-sm font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={update.isPending || !name.trim()}
+              className="flex-1 rounded-xl bg-[#87102C] py-2.5 text-sm font-semibold text-white hover:bg-[#6E0C24] disabled:opacity-50 transition-colors"
+            >
+              {update.isPending ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function DeleteDepartmentConfirm({
+  department,
+  onClose,
+  onDeleted,
+}: {
+  department: DepartmentListItem;
+  onClose: () => void;
+  onDeleted: () => void;
+}) {
+  const del = useDeleteDepartment();
+
+  async function handleDelete() {
+    try {
+      await del.mutateAsync(department.id);
+      showToast.success(`Department "${department.name}" deleted`);
+      onDeleted();
+    } catch (err) {
+      showToast.error((err as { message?: string }).message ?? "Failed to delete department");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-6 shadow-2xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Delete Department</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10">
+            <X size={16} />
+          </button>
+        </div>
+        <p className="mb-5 text-sm text-gray-600 dark:text-white/60">
+          Are you sure you want to delete <span className="font-semibold text-gray-900 dark:text-white">{department.name}</span>?
+          Its {department.unitCount} unit{department.unitCount === 1 ? "" : "s"} will become unassigned. This cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-gray-200 dark:border-white/10 py-2.5 text-sm font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={del.isPending}
+            onClick={handleDelete}
+            className="flex-1 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+          >
+            {del.isPending ? "Deleting…" : "Delete"}
+          </button>
+        </div>
       </div>
     </div>
   );

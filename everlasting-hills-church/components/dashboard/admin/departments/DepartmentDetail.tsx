@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Building2, Users, UserCog, UserPlus, UserMinus, Crown,
-  Layers, Plus, X, History, Megaphone, Check, Send,
+  Layers, Plus, X, History, Megaphone, Check, Send, Trash2, Pencil,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import DepartmentDetailSkeleton from "@/components/ui/skeleton/DepartmentDetailSkeleton";
@@ -12,7 +12,7 @@ import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import {
   useDepartment, useDepartments, useAssignHead, useRemoveHead,
-  useAssignUnits, useUnassignUnit, useDeptAnnouncement,
+  useAssignUnits, useUnassignUnit, useUpdateUnit, useDeleteUnit, useDeptAnnouncement,
 } from "@/lib/api/departments";
 import HeadPicker, { Avatar } from "./HeadPicker";
 import UnitLeadControl from "./UnitLeadControl";
@@ -32,9 +32,12 @@ export default function DepartmentDetail({ id }: { id: string }) {
   const removeHead = useRemoveHead(id);
   const assignUnits = useAssignUnits(id);
   const unassignUnit = useUnassignUnit(id);
+  const deleteUnit = useDeleteUnit();
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [deletingUnit, setDeletingUnit] = useState<{ id: string; name: string } | null>(null);
+  const [editingUnit, setEditingUnit] = useState<{ id: string; name: string } | null>(null);
 
   if (q.isLoading || !q.data) {
     return <DepartmentDetailSkeleton />;
@@ -81,8 +84,19 @@ export default function DepartmentDetail({ id }: { id: string }) {
     }
   }
 
+  async function handleDeleteUnit() {
+    if (!deletingUnit) return;
+    try {
+      await deleteUnit.mutateAsync(deletingUnit.id);
+      showToast.success(`${deletingUnit.name} deleted`);
+      setDeletingUnit(null);
+    } catch (err) {
+      showToast.error(errorMessage(err, "Couldn't delete unit"));
+    }
+  }
+
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="md:px-5 space-y-5">
       {/* Header */}
       <div className="flex items-start gap-3">
         <Link href="/dashboard/admin/departments" className="mt-0.5 rounded-lg p-2 text-gray-400 hover:bg-[#87102C]/5 hover:text-[#87102C]" aria-label="Back to departments">
@@ -152,9 +166,17 @@ export default function DepartmentDetail({ id }: { id: string }) {
                   {u.lead ? `Lead: ${u.lead.firstName} ${u.lead.lastName}` : "No lead"} · {u.memberCount} member{u.memberCount === 1 ? "" : "s"}
                 </p>
               </div>
-              <button type="button" onClick={() => handleUnassignUnit(u.id, u.name)} disabled={unassignUnit.isPending} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600 disabled:opacity-50">
-                <X size={13} /> Unassign
-              </button>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setEditingUnit({ id: u.id, name: u.name })} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                  <Pencil size={13} /> Edit
+                </button>
+                <button type="button" onClick={() => handleUnassignUnit(u.id, u.name)} disabled={unassignUnit.isPending} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600 disabled:opacity-50">
+                  <X size={13} /> Unassign
+                </button>
+                <button type="button" onClick={() => setDeletingUnit({ id: u.id, name: u.name })} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600">
+                  <Trash2 size={13} /> Delete
+                </button>
+              </div>
             </li>
           ))}
           {units.length === 0 && <p className="py-3 text-center text-sm text-gray-400">No units assigned yet.</p>}
@@ -224,6 +246,90 @@ export default function DepartmentDetail({ id }: { id: string }) {
         onConfirm={handleRemoveHead}
         onCancel={() => setConfirmRemove(false)}
       />
+
+      <ConfirmDialog
+        open={deletingUnit !== null}
+        title="Delete unit?"
+        description={`This permanently deletes "${deletingUnit?.name ?? ""}" and removes all its members and roles. This cannot be undone.`}
+        confirmLabel="Yes, delete"
+        tone="danger"
+        loading={deleteUnit.isPending}
+        onConfirm={handleDeleteUnit}
+        onCancel={() => setDeletingUnit(null)}
+      />
+
+      {editingUnit && (
+        <EditUnitForm
+          unit={editingUnit}
+          onClose={() => setEditingUnit(null)}
+          onUpdated={() => setEditingUnit(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditUnitForm({
+  unit,
+  onClose,
+  onUpdated,
+}: {
+  unit: { id: string; name: string };
+  onClose: () => void;
+  onUpdated: () => void;
+}) {
+  const update = useUpdateUnit(unit.id);
+  const [name, setName] = useState(unit.name);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim()) return;
+    try {
+      await update.mutateAsync({ name: name.trim() });
+      showToast.success(`Unit renamed to "${name.trim()}"`);
+      onUpdated();
+    } catch (err) {
+      showToast.error(errorMessage(err, "Couldn't update unit"));
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-sm rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-6 shadow-2xl">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Edit Unit</h2>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10">
+            <X size={16} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-gray-600 dark:text-white/60">
+              Unit Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Ushering"
+              required
+              autoFocus
+              className="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#87102C]/30"
+            />
+          </div>
+          <div className="flex gap-3 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-gray-200 dark:border-white/10 py-2.5 text-sm font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={update.isPending || !name.trim()}
+              className="flex-1 rounded-xl bg-[#87102C] py-2.5 text-sm font-semibold text-white hover:bg-[#6E0C24] disabled:opacity-50 transition-colors"
+            >
+              {update.isPending ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
