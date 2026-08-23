@@ -20,11 +20,13 @@ Here is the testimony as submitted:
 
 "${content.trim()}"
 
+Rewrite it to sound genuinely more polished and engaging — this should read like a noticeably better version, not a light copyedit. Restructure sentences, vary rhythm, tighten weak phrasing, and choose warmer, more vivid wording throughout.
+
 Guidelines:
-- Improve grammar, spelling, flow, and clarity only
-- Preserve the person's own voice, meaning, and every fact/detail exactly as given — do NOT invent new claims, events, or details that weren't mentioned
+- Do NOT invent new facts, events, names, dates, or details that weren't in the original — every claim must still be something the person actually said
+- You MAY reorder sentences, combine or split them, cut filler/repetition, and rephrase freely in their voice to improve flow and impact
 - Keep it first-person, warm, and sincere — this is someone's real story, not marketing copy
-- Keep roughly the same length (do not pad it out or drastically shorten it)
+- Length can shift moderately (tighter or a touch fuller) if it serves clarity — don't pad with fluff, and don't compress it into a stub
 - Preserve paragraph breaks (use \\n\\n between paragraphs) if the original had more than one paragraph
 - Plain text only — no markdown, no asterisks, no bullet points, no quotation marks wrapping the whole thing
 
