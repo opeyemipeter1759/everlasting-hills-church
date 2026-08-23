@@ -10,10 +10,20 @@ import { Select } from "@/components/ui/select";
 
 type Col = "name" | "service" | "date" | "markedBy" | "status";
 
+// WAT (UTC+1) day-of-week, matching how the rest of the app decides "today's
+// service" (ehc-backend/src/attendance/attendance.types.ts) — 0 = Sunday, 3 = Wednesday.
+function defaultServiceKey(): string | undefined {
+  const WAT_OFFSET_MS = 60 * 60 * 1000;
+  const dayOfWeek = new Date(Date.now() + WAT_OFFSET_MS).getUTCDay();
+  if (dayOfWeek === 0) return "sunday";
+  if (dayOfWeek === 3) return "wednesday";
+  return undefined;
+}
+
 export function AttendanceTable() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"PRESENT" | "ABSENT" | undefined>();
-  const [serviceKey, setServiceKey] = useState<string | undefined>();
+  const [serviceKey, setServiceKey] = useState<string | undefined>(defaultServiceKey);
   const [dateFilter, setDateFilter] = useState<Date | undefined>();
   const [sort, setSort] = useState<{ col: Col; dir: "asc" | "desc" }>({ col: "date", dir: "desc" });
   const [page, setPage] = useState(1);
