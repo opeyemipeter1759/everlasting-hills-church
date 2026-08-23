@@ -27,6 +27,12 @@ export const AssignUnitsSchema = z.object({
 });
 export type AssignUnitsInput = z.infer<typeof AssignUnitsSchema>;
 
+export const CreateUnitInDeptSchema = z.object({
+  name: text(80),
+  description: z.string().trim().max(400).nullish(),
+});
+export type CreateUnitInDeptInput = z.infer<typeof CreateUnitInDeptSchema>;
+
 export const DeptAnnouncementSchema = z.object({
   departmentId: z.string().trim().min(1).optional(), // required on the /mine route
   title: text(160),

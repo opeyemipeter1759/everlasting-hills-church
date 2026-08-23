@@ -1,7 +1,7 @@
 "use client";
 
 import ScrollReveal from "./ScrollReveal";
-import { ArrowRight, Users, Heart } from "lucide-react";
+import { ArrowRight, Heart } from "lucide-react";
 import { COMMUNITY_FALLBACK, type CommunityContent } from "@/lib/site-settings";
 
 export default function CommunitySection({ content }: { content?: CommunityContent }) {
@@ -39,22 +39,17 @@ export default function CommunitySection({ content }: { content?: CommunityConte
             <ScrollReveal delay={0.4}>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href={c.ctaPrimary.href}
+                  href={c.ctaSecondary.href}
+                  target={c.ctaSecondary.href.startsWith("http") ? "_blank" : undefined}
+                  rel={c.ctaSecondary.href.startsWith("http") ? "noopener noreferrer" : undefined}
                   className="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-lg bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-all duration-200 hover:shadow-lg hover:shadow-burgundy/25 hover:-translate-y-0.5"
                 >
-                  <Users size={15} />
-                  {c.ctaPrimary.label}
+                  <Heart size={15} />
+                  {c.ctaSecondary.label}
                   <ArrowRight
                     size={14}
                     className="group-hover:translate-x-1 transition-transform"
                   />
-                </a>
-                <a
-                  href={c.ctaSecondary.href}
-                  className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-lg border border-[#E7CDD3] text-[#87102C] text-sm font-semibold hover:bg-white transition-colors"
-                >
-                  <Heart size={15} />
-                  {c.ctaSecondary.label}
                 </a>
               </div>
             </ScrollReveal>

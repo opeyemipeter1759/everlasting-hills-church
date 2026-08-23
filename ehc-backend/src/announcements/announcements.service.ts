@@ -136,7 +136,7 @@ export class AnnouncementsService {
       where: { tenantId: this.tenantId, status: EventStatus.PUBLISHED },
       orderBy: { createdAt: 'desc' },
       take: 5,
-      select: { id: true, title: true, body: true, createdAt: true },
+      select: { id: true, title: true, body: true, imageUrl: true, createdAt: true },
     });
   }
 

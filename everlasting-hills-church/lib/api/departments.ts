@@ -241,6 +241,15 @@ export function useDeleteUnit() {
   });
 }
 
+export function useCreateUnitInDept(deptId: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { name: string; description?: string }) =>
+      api.post<{ id: string; name: string }>(`/departments/${deptId}/units/new`, body),
+    onSuccess: invalidate,
+  });
+}
+
 export function useCreateDepartment() {
   const invalidate = useInvalidate();
   return useMutation({
@@ -280,6 +289,15 @@ export function useMyDeptAnnouncement() {
   return useMutation({
     mutationFn: (body: { departmentId: string; title: string; body: string }) =>
       api.post<{ recipients: number }>("/departments/mine/announcements", body),
+  });
+}
+
+export function useCreateMyUnit() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: (body: { departmentId: string; name: string; description?: string }) =>
+      api.post<{ id: string; name: string }>("/departments/mine/units", body),
+    onSuccess: invalidate,
   });
 }
 

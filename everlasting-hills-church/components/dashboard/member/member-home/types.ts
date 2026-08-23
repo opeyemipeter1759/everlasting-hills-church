@@ -54,7 +54,7 @@ export interface MemberHomeProps {
   bookmarks: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; audioUrl: string | null }>;
   listenHistory: Array<{ slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; positionSec: number; completed: boolean; audioDuration: number | null }>;
   // New optional props — null/empty defaults; no backend required yet
-  announcements?: Array<{ id: string; title: string; body: string; createdAt: string }>;
+  announcements?: Array<{ id: string; title: string; body: string; imageUrl: string | null; createdAt: string }>;
   communityBirthdays?: Array<{ id: string; firstName: string; lastName: string; photoUrl: string | null; daysUntil: number }>;
   ministryUnit?: { name: string; nextServingDate: string | null } | null;
   featuredSermon?: {

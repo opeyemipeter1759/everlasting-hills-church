@@ -18,13 +18,16 @@ export class MemberSearchService {
 
   /**
    * Member-safe search for "pick a person" UI (e.g. addressing a sermon note/question to
-   * someone). Deliberately returns only display-safe fields — no email/phone/tags — since,
-   * unlike getAllMembers/getDirectory, this is reachable by any signed-in MEMBER, not just
-   * ADMIN+.
+   * someone, or a unit lead adding a member to their unit). Deliberately returns only
+   * display-safe fields — no email/phone/tags — since, unlike getAllMembers/getDirectory,
+   * this is reachable by any signed-in MEMBER, not just ADMIN+.
+   *
+   * An empty/short query lists active members (capped) rather than returning nothing, so
+   * pickers can show the full roster up front instead of forcing a search first.
    */
   async searchMembersForPicker(query: string, requestingUserId: string) {
     const q = query.trim();
-    if (q.length < 2) return [];
+    const isSearch = q.length >= 2;
 
     const profile = await this.prisma.profile.findUnique({ where: { userId: requestingUserId } });
     const self = profile ? await this.prisma.member.findUnique({ where: { profileId: profile.id } }) : null;
@@ -34,14 +37,16 @@ export class MemberSearchService {
         tenantId: this.tenantId,
         status: MemberStatus.ACTIVE,
         ...(self && { id: { not: self.id } }),
-        OR: [
-          { firstName: { contains: q, mode: 'insensitive' } },
-          { lastName: { contains: q, mode: 'insensitive' } },
-        ],
+        ...(isSearch && {
+          OR: [
+            { firstName: { contains: q, mode: 'insensitive' } },
+            { lastName: { contains: q, mode: 'insensitive' } },
+          ],
+        }),
       },
       select: { id: true, firstName: true, lastName: true, photoUrl: true },
       orderBy: [{ firstName: 'asc' }],
-      take: 15,
+      take: isSearch ? 15 : 50,
     });
 
     return members;

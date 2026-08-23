@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ScrollReveal from "./ScrollReveal";
 import { CULTURE_FALLBACK, type CultureContent } from "@/lib/site-settings";
 
@@ -46,6 +46,30 @@ export default function CultureSection({ content }: { content?: CultureContent }
     verseText: c.cards[i].verseText,
   }));
 
+  // Single shared timer drives all three cards' flip state at once — one
+  // source of truth, so there's no chance of independent per-card timers
+  // drifting out of sync with each other.
+  const [isMobile, setIsMobile] = useState(false);
+  const [autoFlip, setAutoFlip] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const start = setTimeout(() => setAutoFlip(true), 1500);
+    const interval = setInterval(() => setAutoFlip((f) => !f), 4000);
+    return () => {
+      clearTimeout(start);
+      clearInterval(interval);
+    };
+  }, [isMobile]);
+
   return (
     <section id="culture" className="py-24 w-full md:px-4  md:py-32 bg-white">
       <div className="px-8 mx-auto w-full max-w-[1400px] sm:px-8">
@@ -74,14 +98,10 @@ export default function CultureSection({ content }: { content?: CultureContent }
         <div className="grid md:grid-cols-3 gap-5 md:gap-6">
           {cards.map((card, i) => (
             <ScrollReveal key={card.id} delay={0.1 + i * 0.12}>
-              <CultureCard card={card} />
+              <CultureCard card={card} mobileAuto={isMobile} autoFlip={autoFlip} />
             </ScrollReveal>
           ))}
         </div>
-
-        <p className="text-center text-[#999] text-xs mt-10 tracking-wide md:hidden">
-          Tap a card to read the verse
-        </p>
       </div>
     </section>
   );
@@ -100,19 +120,34 @@ type ResolvedCard = {
   verseText: string;
 };
 
-function CultureCard({ card }: { card: ResolvedCard }) {
+function CultureCard({
+  card,
+  mobileAuto,
+  autoFlip,
+}: {
+  card: ResolvedCard;
+  mobileAuto: boolean;
+  autoFlip: boolean;
+}) {
   const [flipped, setFlipped] = useState(false);
+
+  // On mobile, mirror the parent's single shared timer so all three cards
+  // flip in the exact same render — no independent per-card timer to drift.
+  useEffect(() => {
+    if (mobileAuto) setFlipped(autoFlip);
+  }, [mobileAuto, autoFlip]);
 
   return (
     <div
       className="group h-full [perspective:1600px]"
-      onMouseEnter={() => setFlipped(true)}
-      onMouseLeave={() => setFlipped(false)}
-      onClick={() => setFlipped((f) => !f)}
+      onMouseEnter={() => { if (!mobileAuto) setFlipped(true); }}
+      onMouseLeave={() => { if (!mobileAuto) setFlipped(false); }}
+      onClick={() => { if (!mobileAuto) setFlipped((f) => !f); }}
       role="button"
       tabIndex={0}
       aria-label={`${card.label}: ${card.headline}. Reveal verse ${card.verse}`}
       onKeyDown={(e) => {
+        if (mobileAuto) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           setFlipped((f) => !f);

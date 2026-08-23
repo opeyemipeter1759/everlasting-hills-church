@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Users, Layers, Megaphone, Send, Check, Bell, Inbox } from "lucide-react";
+import { Building2, Users, Layers, Megaphone, Send, Check, Bell, Inbox, Plus } from "lucide-react";
 import {
-  useMyDepartments, useMyDeptAnnouncement, useNudgeLead, type MyDepartment as MyDept,
+  useMyDepartments, useMyDeptAnnouncement, useNudgeLead, useCreateMyUnit, type MyDepartment as MyDept,
 } from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
 import UnitLeadControl from "./UnitLeadControl";
+import CreateUnitForm from "../unit/CreateUnitForm";
+import { showToast } from "@/components/ui/toast/toast";
 import Link from "next/link";
 
 export default function MyDepartment() {
@@ -59,10 +61,18 @@ export default function MyDepartment() {
 function DepartmentPanel({ dept }: { dept: MyDept }) {
   const announce = useMyDeptAnnouncement();
   const nudge = useNudgeLead();
+  const createUnit = useCreateMyUnit();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [sent, setSent] = useState<number | null>(null);
   const [nudged, setNudged] = useState<string | null>(null);
+  const [creatingUnit, setCreatingUnit] = useState(false);
+
+  async function handleCreateUnit(name: string, description: string) {
+    await createUnit.mutateAsync({ departmentId: dept.id, name, description: description || undefined });
+    showToast.success(`${name} created under ${dept.name}`);
+    setCreatingUnit(false);
+  }
 
   async function submit() {
     if (!title.trim() || !body.trim()) return;
@@ -87,11 +97,28 @@ function DepartmentPanel({ dept }: { dept: MyDept }) {
           </span>
           <h2 className="text-base font-bold text-gray-900 dark:text-white">{dept.name}</h2>
         </div>
-        <div className="flex items-center gap-3 text-[11px] font-semibold text-gray-400 dark:text-white/40">
-          <span className="inline-flex items-center gap-1"><Layers size={12} /> {dept.units.length}</span>
-          <span className="inline-flex items-center gap-1"><Users size={12} /> {dept.memberCount}</span>
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-3 text-[11px] font-semibold text-gray-400 dark:text-white/40">
+            <span className="inline-flex items-center gap-1"><Layers size={12} /> {dept.units.length}</span>
+            <span className="inline-flex items-center gap-1"><Users size={12} /> {dept.memberCount}</span>
+          </span>
+          {!creatingUnit && (
+            <button
+              type="button"
+              onClick={() => setCreatingUnit(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#87102C] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#6E0C24]"
+            >
+              <Plus size={13} /> Create Unit
+            </button>
+          )}
         </div>
       </div>
+
+      {creatingUnit && (
+        <div className="mb-4">
+          <CreateUnitForm onCancel={() => setCreatingUnit(false)} onCreate={handleCreateUnit} />
+        </div>
+      )}
 
       {/* Units */}
       <ul className="space-y-2">

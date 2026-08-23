@@ -34,7 +34,7 @@ export default function NoServiceHero() {
           className="group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/8 border border-white/15 text-white text-sm font-semibold backdrop-blur-sm hover:bg-white/15 hover:-translate-y-0.5 transition-all"
         >
           <MessageCircle size={15} />
-          Prayer Wall
+          Prayer Request
           <ChevronRight size={14} className="opacity-70 group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </div>

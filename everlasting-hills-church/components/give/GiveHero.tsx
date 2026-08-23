@@ -125,13 +125,13 @@ export default function GiveHero({
             Give Now
             <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
           </button>
-          <button
+          {/* <button
             type="button"
             onClick={scrollToAccounts}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/25 px-8 py-3.5 text-sm font-bold uppercase tracking-wider text-white transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40 sm:w-auto"
           >
             View Accounts
-          </button>
+          </button> */}
         </motion.div>
       </div>
 

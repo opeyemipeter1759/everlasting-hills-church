@@ -46,7 +46,7 @@ export function TodayStayConnected() {
             <Heart size={15} className="text-violet-600 dark:text-violet-400" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-[#111] dark:text-white">Prayer Wall</p>
+            <p className="text-xs font-semibold text-[#111] dark:text-white">Prayer Request</p>
             <p className={`text-[11px] ${muted}`}>Share a request or pray for others</p>
           </div>
           <ChevronRight size={14} className="text-violet-500 ml-auto flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />

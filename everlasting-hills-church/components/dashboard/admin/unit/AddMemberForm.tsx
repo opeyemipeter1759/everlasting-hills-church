@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { api } from "@/lib/api/request";
-import type { MemberRow } from "@/types";
+import type { MemberPickerResult } from "@/lib/api/sermon-types";
 import SubmitButton from "@/components/ui/form/SubmitButton";
 
 interface AddMemberFormProps {
@@ -19,26 +19,28 @@ export default function AddMemberForm({
   onCancel,
   onAdded,
 }: AddMemberFormProps) {
-  const [allMembers, setAllMembers] = useState<MemberRow[]>([]);
-
-  useEffect(() => {
-    api.get<MemberRow[]>("/members", { status: "ACTIVE" }).then(setAllMembers).catch(() => {});
-  }, []);
+  const [results, setResults] = useState<MemberPickerResult[]>([]);
   const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [makeLead, setMakeLead] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const candidates = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return allMembers
-      .filter((m) => !existingMemberIds.includes(m.id))
-      .filter((m) =>
-        q ? `${m.firstName} ${m.lastName} ${m.email ?? ""}`.toLowerCase().includes(q) : true,
-      )
-      .slice(0, 10);
-  }, [allMembers, existingMemberIds, search]);
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      api
+        .get<MemberPickerResult[]>("/members/search", { q: search })
+        .then((res) => { if (!cancelled) setResults(res); })
+        .catch(() => { if (!cancelled) setResults([]); });
+    }, 200);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [search]);
+
+  const candidates = useMemo(
+    () => results.filter((m) => !existingMemberIds.includes(m.id)).slice(0, 10),
+    [results, existingMemberIds],
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,7 +78,7 @@ export default function AddMemberForm({
           setSearch(e.target.value);
           setSelectedId(null);
         }}
-        placeholder="Search by name or email…"
+        placeholder="Search by name…"
         className="w-full text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-gray-700 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40 transition-all"
       />
 
@@ -94,7 +96,6 @@ export default function AddMemberForm({
                 }`}
               >
                 {m.firstName} {m.lastName}
-                {m.email && <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">{m.email}</span>}
               </button>
             </li>
           ))}

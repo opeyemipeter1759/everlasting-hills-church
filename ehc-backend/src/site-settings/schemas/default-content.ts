@@ -153,7 +153,7 @@ export const SERVICE_DEFAULT: SectionContent<'SERVICE'> = {
     'Whether this is your first Sunday or your hundredth, you are welcome here. Come expecting to encounter the Word, the Spirit, and a family that genuinely cares.',
   firstTimerTitle: 'First time visiting?',
   firstTimerBody:
-    "We'd love to meet you. Come as you are — no dress code, no pressure. Just come expecting something real.",
+    "We'd love to meet you. Come as you are. Just come expecting something real.",
 };
 
 export const SERMONS_DEFAULT: SectionContent<'SERMONS'> = {
@@ -173,12 +173,15 @@ export const COMMUNITY_DEFAULT: SectionContent<'COMMUNITY'> = {
     'Whether you are taking your very first step of faith or you have walked with God for decades, there is a place for you here.',
   ],
   ctaPrimary: { label: 'I’m New Here', href: '#contact' },
-  ctaSecondary: { label: 'Join a Community', href: '#contact' },
+  ctaSecondary: {
+    label: 'Join a Community',
+    href: 'https://chat.whatsapp.com/HWAW4Cr3ByqIUJKEtRiWUX',
+  },
   visualCard: {
     eyebrow: 'You are welcome',
     headline: 'A family that prays, grows, and stays',
     tagline:
-      'No background check. No dress code. Just come, and you will belong.',
+      'No masks. No performances. Just come as you are, and you will belong.',
   },
   statCard: {
     title: 'Real Community',

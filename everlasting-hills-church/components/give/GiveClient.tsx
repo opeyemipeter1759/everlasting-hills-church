@@ -3,17 +3,29 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, Check, Search, Building2, Info } from "lucide-react";
+import { Copy, Check, Search, Building2, Info, X, Landmark } from "lucide-react";
 import ScrollReveal from "@/components/home/ScrollReveal";
 import GiveHero from "@/components/give/GiveHero";
 
 // ── Content shape (seeded from CMS `give` structured content) ────────────────
+
+export interface WireField {
+  label: string;
+  value: string;
+}
+
+export interface WireSection {
+  title: string;
+  fields: WireField[];
+}
 
 export interface GiveAccount {
   bank: string;
   purpose: string;
   number: string;
   currency: string;
+  /** International wire-routing chain (intermediary/correspondent/beneficiary bank) for domiciliary accounts. */
+  wire?: WireSection[];
 }
 
 export interface GiveContent {
@@ -58,6 +70,7 @@ export default function GiveClient({
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [wireAccount, setWireAccount] = useState<Account | null>(null);
 
   const localAccounts = useMemo<Account[]>(
     () =>
@@ -204,6 +217,7 @@ export default function GiveClient({
                       acc={acc}
                       copied={copiedId === acc.id}
                       onCopy={() => handleCopy(acc)}
+                      onShowWire={() => setWireAccount(acc)}
                       delay={i * 0.08}
                     />
                   ))}
@@ -232,7 +246,105 @@ export default function GiveClient({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Wire instructions modal */}
+      <AnimatePresence>
+        {wireAccount?.wire && (
+          <WireModal acc={wireAccount} onClose={() => setWireAccount(null)} />
+        )}
+      </AnimatePresence>
     </main>
+  );
+}
+
+// ── International wire-routing modal ────────────────────────────────────────
+
+function WireModal({ acc, onClose }: { acc: Account; onClose: () => void }) {
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  function handleFieldCopy(key: string, value: string) {
+    if (value.toLowerCase() === "to be provided") return;
+    navigator.clipboard?.writeText(value);
+    setCopiedField(key);
+    window.setTimeout(() => setCopiedField((c) => (c === key ? null : c)), 1500);
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 12, scale: 0.97 }}
+        transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-[0_20px_60px_rgba(135,16,44,0.25)]"
+      >
+        <div className="sticky top-0 flex items-center justify-between border-b border-[#E7CDD3]/70 bg-white px-6 py-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#87102C]">
+              {acc.currency} Wire Instructions
+            </p>
+            <p className="mt-0.5 text-sm text-[#8a7e80]">For transfers sent from abroad</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close wire instructions"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-[#8a7e80] transition-colors hover:bg-[#FFF4F6] hover:text-[#87102C]"
+          >
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="px-6 py-5">
+          {acc.wire!.map((section, si) => (
+            <div key={section.title} className={si === 0 ? "" : "mt-5"}>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a7e80]">
+                {section.title}
+              </p>
+              <div className="overflow-hidden rounded-xl border border-[#E7CDD3]/70">
+                {section.fields.map((f, fi) => {
+                  const key = `${si}-${fi}`;
+                  const placeholder = f.value.toLowerCase() === "to be provided";
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => handleFieldCopy(key, f.value)}
+                      disabled={placeholder}
+                      className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors ${
+                        fi !== 0 ? "border-t border-[#E7CDD3]/50" : ""
+                      } ${placeholder ? "cursor-default" : "hover:bg-[#FFF4F6]"}`}
+                    >
+                      <span className="text-xs text-[#8a7e80]">{f.label}</span>
+                      <span
+                        className={`flex items-center gap-2 text-right text-sm font-semibold ${
+                          placeholder ? "italic text-[#b8a8ac]" : "text-[#111]"
+                        }`}
+                      >
+                        {f.value}
+                        {!placeholder &&
+                          (copiedField === key ? (
+                            <Check size={13} className="shrink-0 text-[#87102C]" />
+                          ) : (
+                            <Copy size={13} className="shrink-0 text-[#b8a8ac]" />
+                          ))}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -242,24 +354,25 @@ function AccountCard({
   acc,
   copied,
   onCopy,
+  onShowWire,
   delay,
 }: {
   acc: Account;
   copied: boolean;
   onCopy: () => void;
+  onShowWire: () => void;
   delay: number;
 }) {
   const [logoErr, setLogoErr] = useState(false);
   const showLogo = Boolean(acc.logo) && !logoErr;
+  const hasNumber = acc.number.toLowerCase() !== "to be provided";
+  // Wire instructions are only meaningful once the account itself is set up —
+  // don't offer routing details for an account that's still "To be provided".
+  const hasWire = hasNumber && Boolean(acc.wire && acc.wire.length > 0);
 
   return (
     <ScrollReveal delay={delay}>
-      <button
-        type="button"
-        onClick={onCopy}
-        aria-label={`Copy ${acc.purpose} account number ${acc.number}`}
-        className="group h-full w-full rounded-2xl border border-[#E7CDD3]/60 bg-white p-6 text-left shadow-[0_1px_3px_rgba(135,16,44,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40"
-      >
+      <div className="group h-full w-full rounded-2xl border border-[#E7CDD3]/60 bg-white p-6 text-left shadow-[0_1px_3px_rgba(135,16,44,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.1)]">
         {/* Icon chip + currency */}
         <div className="mb-5 flex items-start justify-between">
           {showLogo ? (
@@ -284,31 +397,64 @@ function AccountCard({
         </div>
 
         {/* Anchor info chip: label → value */}
-        <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a7e80]">
-          {acc.bank} · {acc.purpose}
-        </p>
-        <p className="font-mono text-2xl font-bold tracking-tight text-[#111]">
-          {acc.number}
-        </p>
-        <p className="mt-1.5 truncate text-sm text-[#555]">{acc.name}</p>
+        <button
+          type="button"
+          onClick={onCopy}
+          disabled={!hasNumber}
+          aria-label={hasNumber ? `Copy ${acc.purpose} account number ${acc.number}` : undefined}
+          className={`w-full text-left ${hasNumber ? "" : "cursor-default"}`}
+        >
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a7e80]">
+            {acc.bank} · {acc.purpose}
+          </p>
+          <p
+            className={`font-mono text-2xl font-bold tracking-tight ${
+              hasNumber ? "text-[#111]" : "italic text-[#b8a8ac]"
+            }`}
+          >
+            {acc.number}
+          </p>
+          <p className="mt-1.5 truncate text-sm text-[#555]">{acc.name}</p>
+        </button>
 
-        {/* Copy affordance */}
-        <span className="mt-5 flex items-center gap-1.5 border-t border-[#E7CDD3]/50 pt-4 text-xs font-bold uppercase tracking-wider text-[#87102C]">
-          {copied ? (
-            <>
-              <Check size={14} /> Copied to clipboard
-            </>
+        {/* Footer affordances */}
+        <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#E7CDD3]/50 pt-4">
+          {hasNumber ? (
+            <button
+              type="button"
+              onClick={onCopy}
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#87102C]"
+            >
+              {copied ? (
+                <>
+                  <Check size={14} /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy
+                    size={14}
+                    className="transition-transform group-hover:-translate-y-0.5"
+                  />
+                  Tap to copy
+                </>
+              )}
+            </button>
           ) : (
-            <>
-              <Copy
-                size={14}
-                className="transition-transform group-hover:-translate-y-0.5"
-              />
-              Tap to copy
-            </>
+            <span className="text-xs font-semibold text-[#b8a8ac]">Account pending</span>
           )}
-        </span>
-      </button>
+
+          {hasWire && (
+            <button
+              type="button"
+              onClick={onShowWire}
+              className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#87102C] hover:underline"
+            >
+              <Landmark size={14} />
+              Wire Instructions
+            </button>
+          )}
+        </div>
+      </div>
     </ScrollReveal>
   );
 }

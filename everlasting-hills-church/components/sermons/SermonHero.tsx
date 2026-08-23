@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLatestSermons } from "@/lib/api";
 import Marquee from "./hero/Marquee";
 import StoryProgress from "./hero/StoryProgress";
-import SermonCarouselCard from "./hero/SermonCarouselCard";
+import SermonWaveform from "./hero/SermonWaveform";
 import HeroCopy from "./hero/HeroCopy";
 import { AUTO_ROTATE_MS, DEFAULT_SERMON_IMAGE, FALLBACK_SLIDE, type SermonHeroSlide } from "./hero/types";
 
@@ -87,11 +87,9 @@ export default function SermonHero({ slides = [], onPlay }: SermonHeroProps) {
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
           <HeroCopy slide={slide} onPlay={onPlay} />
 
-          <SermonCarouselCard
-            slides={safeSlides.length > 0 ? safeSlides : [FALLBACK_SLIDE]}
-            active={active}
+          <SermonWaveform
+            slide={slide}
             onPlay={onPlay}
-            onJump={setActive}
             className="h-[360px] sm:h-[400px] lg:h-[340px]"
           />
         </div>

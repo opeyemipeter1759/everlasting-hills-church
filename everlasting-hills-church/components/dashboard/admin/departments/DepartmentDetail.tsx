@@ -11,11 +11,12 @@ import DepartmentDetailSkeleton from "@/components/ui/skeleton/DepartmentDetailS
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import {
-  useDepartment, useDepartments, useAssignHead, useRemoveHead,
-  useAssignUnits, useUnassignUnit, useUpdateUnit, useDeleteUnit, useDeptAnnouncement,
+  useDepartment, useAssignHead, useRemoveHead,
+  useUnassignUnit, useCreateUnitInDept, useUpdateUnit, useDeleteUnit, useDeptAnnouncement,
 } from "@/lib/api/departments";
 import HeadPicker, { Avatar } from "./HeadPicker";
 import UnitLeadControl from "./UnitLeadControl";
+import CreateUnitForm from "../unit/CreateUnitForm";
 
 function fmt(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -27,24 +28,23 @@ function errorMessage(err: unknown, fallback: string): string {
 
 export default function DepartmentDetail({ id }: { id: string }) {
   const q = useDepartment(id);
-  const index = useDepartments();
   const assignHead = useAssignHead(id);
   const removeHead = useRemoveHead(id);
-  const assignUnits = useAssignUnits(id);
   const unassignUnit = useUnassignUnit(id);
   const deleteUnit = useDeleteUnit();
+  const createUnit = useCreateUnitInDept(id);
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [deletingUnit, setDeletingUnit] = useState<{ id: string; name: string } | null>(null);
   const [editingUnit, setEditingUnit] = useState<{ id: string; name: string } | null>(null);
+  const [creatingUnit, setCreatingUnit] = useState(false);
 
   if (q.isLoading || !q.data) {
     return <DepartmentDetailSkeleton />;
   }
 
   const { department: d, currentHead, units, history, memberCount } = q.data;
-  const unassigned = index.data?.unassignedUnits ?? [];
 
   async function handlePickHead(profileId: string, name: string) {
     try {
@@ -66,15 +66,6 @@ export default function DepartmentDetail({ id }: { id: string }) {
     }
   }
 
-  async function handleAssignUnit(unitId: string, unitName: string) {
-    try {
-      await assignUnits.mutateAsync([unitId]);
-      showToast.success(`${unitName} added to ${d.name}`);
-    } catch (err) {
-      showToast.error(errorMessage(err, "Couldn't assign unit"));
-    }
-  }
-
   async function handleUnassignUnit(unitId: string, unitName: string) {
     try {
       await unassignUnit.mutateAsync(unitId);
@@ -93,6 +84,12 @@ export default function DepartmentDetail({ id }: { id: string }) {
     } catch (err) {
       showToast.error(errorMessage(err, "Couldn't delete unit"));
     }
+  }
+
+  async function handleCreateUnit(name: string, description: string) {
+    await createUnit.mutateAsync({ name, description: description || undefined });
+    showToast.success(`${name} created under ${d.name}`);
+    setCreatingUnit(false);
   }
 
   return (
@@ -156,7 +153,23 @@ export default function DepartmentDetail({ id }: { id: string }) {
             <Layers size={15} className="text-[#87102C] dark:text-[#e8768a]" />
             <h2 className="text-sm font-black uppercase tracking-widest text-gray-500 dark:text-white/50">Units</h2>
           </div>
+          {!creatingUnit && (
+            <button
+              type="button"
+              onClick={() => setCreatingUnit(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#87102C] px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-[#6E0C24]"
+            >
+              <Plus size={13} /> Create Unit
+            </button>
+          )}
         </div>
+
+        {creatingUnit && (
+          <div className="mb-4">
+            <CreateUnitForm onCancel={() => setCreatingUnit(false)} onCreate={handleCreateUnit} />
+          </div>
+        )}
+
         <ul className="space-y-2">
           {units.map((u) => (
             <li key={u.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] px-4 py-3">
@@ -181,19 +194,6 @@ export default function DepartmentDetail({ id }: { id: string }) {
           ))}
           {units.length === 0 && <p className="py-3 text-center text-sm text-gray-400">No units assigned yet.</p>}
         </ul>
-
-        {unassigned.length > 0 && (
-          <div className="mt-4 border-t border-gray-100 dark:border-white/[0.06] pt-4">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">Add unassigned units</p>
-            <div className="flex flex-wrap gap-2">
-              {unassigned.map((u) => (
-                <button key={u.id} type="button" onClick={() => handleAssignUnit(u.id, u.name)} disabled={assignUnits.isPending} className="inline-flex items-center gap-1.5 rounded-full border border-[#E7CDD3] dark:border-white/10 bg-[#FFF4F6]/60 dark:bg-white/5 px-3 py-1.5 text-xs font-semibold text-[#87102C] dark:text-[#e8768a] hover:bg-[#FFE8ED] disabled:opacity-50">
-                  <Plus size={12} /> {u.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </section>
 
       {/* Announcement composer */}

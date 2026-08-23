@@ -191,7 +191,7 @@ function NextServiceTile({
 function EmailTile() {
   return (
     <a
-      href="mailto:hello@everlastinghills.org"
+      href="mailto:everlastinghillschurch@gmail.com"
       className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e0407]/70 p-5 backdrop-blur-sm hover:border-white/20 transition-colors flex items-start gap-3.5"
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center">
@@ -202,7 +202,7 @@ function EmailTile() {
           Email us
         </p>
         <p className="text-sm text-white/90 leading-snug font-medium truncate">
-          hello@everlastinghills.org
+          everlastinghillschurch@gmail.com
         </p>
       </div>
     </a>
@@ -211,7 +211,7 @@ function EmailTile() {
 
 
 function MapTile() {
-  const embedUrl = `https://www.google.com/maps?q=${CHURCH.lat},${CHURCH.lng}&z=15&output=embed`;
+  const embedUrl = `https://www.google.com/maps?q=${encodeURIComponent(CHURCH.address)}&z=16&output=embed`;
   return (
     <div className="relative rounded-2xl overflow-hidden border border-white/10 h-44">
       <iframe
