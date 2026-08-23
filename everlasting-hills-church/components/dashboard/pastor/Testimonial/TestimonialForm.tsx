@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Loader2, Sparkles, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { Field, inputCls } from "./atoms";
 import type { Testimonial } from "./types";
@@ -32,11 +32,36 @@ export default function TestimonialForm({
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [polishing, setPolishing] = useState(false);
+  const [polishError, setPolishError] = useState<string | null>(null);
 
   const isEdit = !!initial;
   const charCount = data.content.length;
   const minChars = 20;
   const maxChars = 1500;
+
+  async function polishWithAI() {
+    if (data.content.trim().length < minChars) return;
+    setPolishing(true);
+    setPolishError(null);
+    try {
+      const res = await fetch("/api/ai/testimony", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: data.content }),
+      });
+      const json = await res.json();
+      if (json.content?.trim()) {
+        setData((d) => ({ ...d, content: json.content }));
+      } else {
+        setPolishError("Gemini couldn't improve this text. Try again.");
+      }
+    } catch {
+      setPolishError("Something went wrong. Check your connection and try again.");
+    } finally {
+      setPolishing(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -130,15 +155,27 @@ export default function TestimonialForm({
           minLength={minChars}
           maxLength={maxChars}
           value={data.content}
-          onChange={(e) => setData({ ...data, content: e.target.value })}
+          onChange={(e) => { setData({ ...data, content: e.target.value }); setPolishError(null); }}
           placeholder="What has being part of Everlasting Hills meant to you?"
           className={`${inputCls} resize-none`}
         />
-        {charCount > 0 && charCount < minChars && (
-          <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
-            {minChars - charCount} more characters needed.
-          </p>
-        )}
+        <div className="mt-1.5 flex items-center justify-between gap-2">
+          {charCount > 0 && charCount < minChars ? (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400">
+              {minChars - charCount} more characters needed.
+            </p>
+          ) : <span />}
+          <button
+            type="button"
+            onClick={polishWithAI}
+            disabled={polishing || charCount < minChars}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] px-2.5 py-1 text-xs font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-500/15 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {polishing ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+            {polishing ? "Improving…" : "Improve with AI"}
+          </button>
+        </div>
+        {polishError && <p className="text-[11px] text-red-600 dark:text-red-400 mt-1">{polishError}</p>}
       </Field>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

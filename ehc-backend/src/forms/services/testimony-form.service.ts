@@ -34,13 +34,16 @@ export class TestimonyFormService {
     // Land it directly in the Testimonial table (unpublished) so it shows up as a draft on
     // the pastor's testimonials CMS page, ready for review/publish — not just a write-only
     // FormSubmission log no admin UI ever reads.
+    // Contact info goes in submitterContact (admin-only, for pastoral follow-up) — never
+    // authorRole, which is the public-facing byline shown on the live homepage.
     const [record] = await Promise.all([
       this.prisma.testimonial.create({
         data: {
           id: randomUUID(),
           tenantId: this.tenantId,
           authorName: normalizedName || 'Anonymous',
-          authorRole: contact || null,
+          authorRole: null,
+          submitterContact: contact || null,
           content,
           published: false,
           order: 0,

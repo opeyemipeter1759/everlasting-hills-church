@@ -44,6 +44,9 @@ export default function TestimonialRow({
             {t.authorRole && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{t.authorRole}</p>
             )}
+            {t.submitterContact && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Contact: {t.submitterContact}</p>
+            )}
           </div>
         </div>
 

@@ -84,7 +84,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           hasCheckedInToday={hasCheckedInToday}
           nextService={nextService}
         />
-              <AnnouncementsPanel announcements={announcements} />
+        <AnnouncementsPanel announcements={announcements} />
 
      
       </div>

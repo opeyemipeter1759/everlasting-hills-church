@@ -1393,9 +1393,13 @@ model Testimonial {
   id             String    @id
   tenantId       String
   authorName     String
-  authorRole     String?
+  authorRole     String? // public-facing byline (e.g. "Member since 2018") — never contact info
   authorPhotoUrl String?
   content        String
+  // Submitter's email/phone from the public testimony form, for the pastoral
+  // team's own follow-up only — admin-only, never selected on the public
+  // /testimonials/published endpoint. Null for admin-authored testimonials.
+  submitterContact String?
   published      Boolean   @default(false)
   publishedAt    DateTime?
   order          Int       @default(0)

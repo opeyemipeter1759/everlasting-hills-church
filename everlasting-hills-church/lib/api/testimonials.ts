@@ -9,6 +9,10 @@ export interface AdminTestimonial {
   authorRole: string | null;
   authorPhotoUrl: string | null;
   content: string;
+  /** Submitter's email/phone from the public testimony form — admin-only, for
+   * pastoral follow-up. Never shown on the public homepage. Null for
+   * admin-authored testimonials. */
+  submitterContact: string | null;
   published: boolean;
   publishedAt: string | null;
   order: number;

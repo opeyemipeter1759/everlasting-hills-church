@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import StructuredForm from "@/components/dashboard/admin/cms/structured/StructuredForm";
+import TestimonialsCmsClient from "@/components/dashboard/pastor/Testimonial/TestimonialsCmsClient";
 import { SITE_SETTINGS_FIELDS } from "./site-settings-fields";
 import type {
   SiteSectionName,
@@ -251,6 +252,15 @@ export default function SiteSettingsEditor({ initial }: Props) {
           )}
 
           <StructuredForm fields={SITE_SETTINGS_FIELDS[active]} value={draft} onChange={updateDraft} />
+
+          {active === "TESTIMONIALS" && (
+            <div className="pt-6 mt-2 border-t border-[#E7CDD3]">
+              <p className="mb-4 text-xs font-bold uppercase tracking-wider text-gray-400">
+                Testimonial stories — add, edit, and publish which stories appear
+              </p>
+              <TestimonialsCmsClient />
+            </div>
+          )}
         </div>
       </div>
     </div>

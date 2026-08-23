@@ -234,6 +234,9 @@ function TestimonialCard({ t, canTogglePublish, onDelete }: { t: AdminTestimonia
             <p className="text-[11px] text-gray-400">
               {t.authorRole ? `${t.authorRole} · ` : ""}{fmt(t.createdAt)}
             </p>
+            {t.submitterContact && (
+              <p className="text-[11px] text-gray-400">Contact: {t.submitterContact}</p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1.5">
