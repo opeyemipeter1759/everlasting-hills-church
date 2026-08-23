@@ -16,7 +16,7 @@ interface Props {
 }
 
 const ACCEPT = "image/png,image/jpeg,image/jpg";
-const MAX_BYTES = 1 * 1024 * 1024; // 1 MB
+const MAX_BYTES = 3 * 1024 * 1024; // 3 MB
 
 export default function ProfilePhotoCard({
   initialPhotoUrl,
@@ -193,7 +193,7 @@ export default function ProfilePhotoCard({
             maxSizeBytes={MAX_BYTES}
             onFile={handleFile}
             selectedName={pendingFile?.name ?? null}
-            hint="PNG, JPG or JPEG (max 1 MB)"
+            hint="PNG, JPG or JPEG (max 3 MB)"
             disabled={saving}
           />
         </div>

@@ -54,11 +54,11 @@ export class MembersSelfServiceController {
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
-      limits: { fileSize: 1024 * 1024, files: 1 },
+      limits: { fileSize: 3 * 1024 * 1024, files: 1 },
     }),
   )
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload my profile photo (PNG/JPG/JPEG, ≤ 1 MB)' })
+  @ApiOperation({ summary: 'Upload my profile photo (PNG/JPG/JPEG, ≤ 3 MB)' })
   @ApiBody({
     schema: {
       type: 'object',

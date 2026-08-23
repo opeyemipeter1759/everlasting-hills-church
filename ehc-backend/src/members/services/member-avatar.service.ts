@@ -27,9 +27,9 @@ export class MemberAvatarService {
   ) {
     const { memberId } = await this.selfLookup.getMyMember(userId, fallbackEmail);
 
-    const maxBytes = 1 * 1024 * 1024;
+    const maxBytes = 3 * 1024 * 1024;
     if (file.size > maxBytes) {
-      throw new BadRequestException('Photo must be under 1 MB');
+      throw new BadRequestException('Photo must be under 3 MB');
     }
     const allowed = ['image/png', 'image/jpeg', 'image/jpg'];
     if (!allowed.includes(file.mimetype)) {
