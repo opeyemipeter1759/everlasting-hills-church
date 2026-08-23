@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { ServiceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
-import { getTodayBounds, WAT_OFFSET_MS } from '../attendance.types';
+import { getDayBounds, getTodayBounds, WAT_OFFSET_MS } from '../attendance.types';
 import { AttendanceMemberLookupService } from './attendance-member-lookup.service';
 
 /** Resolves and manages "today's active service window" (open/close times, auto-creation). */
@@ -33,6 +33,22 @@ export class AttendanceSessionWindowService {
 
   async getTodayService() {
     const { startUtc, endUtc } = getTodayBounds();
+    return this.prisma.service.findFirst({
+      where: {
+        tenantId: this.tenantId,
+        scheduledAt: { gte: startUtc, lt: endUtc },
+      },
+    });
+  }
+
+  /**
+   * Look up the Service scheduled on the same WAT calendar day as `at`, without
+   * creating one. Used to tag a Visitor/first-timer submission with the service
+   * day it belongs to — returns null when nothing was scheduled that day (e.g.
+   * a form filled outside a normal service window).
+   */
+  async getServiceForDate(at: Date) {
+    const { startUtc, endUtc } = getDayBounds(at);
     return this.prisma.service.findFirst({
       where: {
         tenantId: this.tenantId,

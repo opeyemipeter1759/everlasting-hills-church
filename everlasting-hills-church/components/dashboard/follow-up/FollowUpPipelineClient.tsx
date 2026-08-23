@@ -5,7 +5,7 @@ import { Plus, Search, ShieldAlert, Users } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { hasMinRole } from "@/lib/auth/frontend-session";
 import { useMe, useMyUnit } from "@/lib/api";
-import { useFollowUpEntries } from "@/lib/api/follow-up-pipeline";
+import { useFollowUpEntries, useFollowUpServices } from "@/lib/api/follow-up-pipeline";
 import type { ApiError } from "@/lib/api/axios";
 import type { FollowUpEntry, FollowUpSourceType } from "@/types/follow-up";
 import { PipelineStats } from "./PipelineStats";
@@ -37,22 +37,30 @@ const SOURCE_FILTERS: { id: SourceFilter; label: string }[] = [
   { id: "ABSENTEE", label: "Absentees" },
 ];
 
+function formatServiceOption(s: { name: string; scheduledAt: string; serviceType: string }): string {
+  const date = new Date(s.scheduledAt).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  return `${date} — ${s.name}`;
+}
+
 export default function FollowUpPipelineClient() {
   const currentUser = useCurrentUser();
   const { data: me } = useMe();
   const { data: myUnit } = useMyUnit();
-  const { data: entries = [], isLoading, error } = useFollowUpEntries();
-  const accessDenied = (error as ApiError | null)?.status === 403;
+  const { data: services = [] } = useFollowUpServices();
 
   const [activeTab, setActiveTabState] = useState<StageTab>("all");
   const [sourceFilter, setSourceFilterState] = useState<SourceFilter>("all");
   const [myAssignedOnly, setMyAssignedOnlyState] = useState(false);
   const [search, setSearchState] = useState("");
+  const [serviceId, setServiceIdState] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSizeState] = useState(DEFAULT_PAGE_SIZE);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [assignTarget, setAssignTarget] = useState<FollowUpEntry | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
+
+  const { data: entries = [], isLoading, error } = useFollowUpEntries({ serviceId: serviceId || undefined });
+  const accessDenied = (error as ApiError | null)?.status === 403;
 
   // Any change to what's being filtered resets back to page 1 — otherwise a
   // narrower result set can leave the view stranded on a page past the end.
@@ -63,6 +71,7 @@ export default function FollowUpPipelineClient() {
     setPage(1);
   };
   const setSearch = (v: string) => { setSearchState(v); setPage(1); };
+  const setServiceId = (v: string) => { setServiceIdState(v); setPage(1); };
   const setPageSize = (v: number) => { setPageSizeState(v); setPage(1); };
 
   const isLeader = hasMinRole(currentUser?.role, "UNIT_LEAD");
@@ -182,6 +191,17 @@ export default function FollowUpPipelineClient() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          <Select
+            aria-label="Filter by service day"
+            value={serviceId}
+            onChange={setServiceId}
+            className="text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer flex-shrink-0"
+            options={[
+              { value: "", label: "All service days" },
+              ...services.map((s) => ({ value: s.id, label: formatServiceOption(s) })),
+            ]}
+          />
+
           <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-white/10 p-0.5 flex-shrink-0" role="tablist" aria-label="Filter by source">
             {SOURCE_FILTERS.map((f) => (
               <button

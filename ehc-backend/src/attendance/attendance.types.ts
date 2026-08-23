@@ -28,15 +28,19 @@ export interface MemberHistoryRow {
 
 export const WAT_OFFSET_MS = 60 * 60 * 1000;
 
-export function getTodayBounds() {
-  const now = new Date();
-  const localNow = new Date(now.getTime() + WAT_OFFSET_MS);
+/** WAT-calendar-day [start, end) bounds containing the given instant (defaults to now). */
+export function getDayBounds(at: Date = new Date()) {
+  const localAt = new Date(at.getTime() + WAT_OFFSET_MS);
   const midnightWAT = Date.UTC(
-    localNow.getUTCFullYear(),
-    localNow.getUTCMonth(),
-    localNow.getUTCDate(),
+    localAt.getUTCFullYear(),
+    localAt.getUTCMonth(),
+    localAt.getUTCDate(),
   );
   const startUtc = new Date(midnightWAT - WAT_OFFSET_MS);
   const endUtc = new Date(startUtc.getTime() + 24 * 60 * 60 * 1000);
   return { startUtc, endUtc };
+}
+
+export function getTodayBounds() {
+  return getDayBounds(new Date());
 }

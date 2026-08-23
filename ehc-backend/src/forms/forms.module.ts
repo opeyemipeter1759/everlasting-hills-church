@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { FormsController } from './forms.controller';
 import { FormsMiscController } from './forms-misc.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { AttendanceModule } from '../attendance/attendance.module';
 import { FormsEmailDispatchService } from './services/forms-email-dispatch.service';
 import { FirstTimerFormService } from './services/first-timer-form.service';
 import { PrayerRequestFormService } from './services/prayer-request-form.service';
@@ -13,7 +14,7 @@ import { ContactFormService } from './services/contact-form.service';
 import { HomeCellFormService } from './services/home-cell-form.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AttendanceModule],
   controllers: [FormsController, FormsMiscController],
   providers: [
     FormsEmailDispatchService,

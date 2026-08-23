@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
+import { AttendanceSessionWindowService } from '../../attendance/services/attendance-session-window.service';
 import { NotificationEvents } from '../../notifications/notification-events';
 import { buildFirstTimerWelcomeEmail } from '../../notifications/templates/first-timer-welcome.email';
 import type { VisitorImportRowDto } from '../dto/bulk-import-visitor.dto';
@@ -27,6 +28,7 @@ export class VisitorBulkImportService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
+    private readonly sessionWindow: AttendanceSessionWindowService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -73,6 +75,10 @@ export class VisitorBulkImportService {
             ? new Date(Date.UTC(2000, row.birthMonth - 1, row.birthDay)).toISOString()
             : null;
 
+        const service = await this.sessionWindow.getServiceForDate(
+          row.submittedAt ? new Date(row.submittedAt) : new Date(),
+        );
+
         await this.prisma.visitor.create({
           data: {
             id: randomUUID(),
@@ -94,6 +100,7 @@ export class VisitorBulkImportService {
             prayerPoint: row.prayerPoint ?? null,
             whatsappInterest: row.whatsappInterest ?? null,
             ...(row.submittedAt && { submittedAt: new Date(row.submittedAt) }),
+            serviceId: service?.id ?? null,
           },
         });
 

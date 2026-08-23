@@ -21,17 +21,37 @@ function errorMessage(err: unknown, fallback: string): string {
 // ── Queries ──────────────────────────────────────────────────────────────────
 
 /** Church-wide by default — every unit member sees the same entries and totals.
- * Pass unitId to narrow to one team. */
-export function useFollowUpEntries(opts: { unitId?: string; stage?: FollowUpStage; mine?: boolean } = {}) {
+ * Pass unitId to narrow to one team, serviceId to narrow to one service day. */
+export function useFollowUpEntries(
+  opts: { unitId?: string; stage?: FollowUpStage; mine?: boolean; serviceId?: string } = {}
+) {
   return useQuery({
-    queryKey: ["follow-up", "list", opts.unitId ?? null, opts.stage ?? null, !!opts.mine],
+    queryKey: ["follow-up", "list", opts.unitId ?? null, opts.stage ?? null, !!opts.mine, opts.serviceId ?? null],
     queryFn: () =>
       api.get<FollowUpEntry[]>("/follow-up", {
         unitId: opts.unitId,
         stage: opts.stage,
         mine: opts.mine ? "true" : undefined,
+        serviceId: opts.serviceId,
       }),
     enabled: typeof window !== "undefined",
+  });
+}
+
+export interface FollowUpServiceOption {
+  id: string;
+  name: string;
+  scheduledAt: string;
+  serviceType: string;
+}
+
+/** Recent services, for the service-day filter. */
+export function useFollowUpServices() {
+  return useQuery({
+    queryKey: ["follow-up", "services"],
+    queryFn: () => api.get<FollowUpServiceOption[]>("/follow-up/services"),
+    enabled: typeof window !== "undefined",
+    staleTime: 60_000,
   });
 }
 

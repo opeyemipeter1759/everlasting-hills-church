@@ -731,6 +731,7 @@ model Service {
   AttendanceRecord AttendanceRecord[]
   ServiceHeadcount ServiceHeadcount?
   Assignments      ServiceAssignment[]
+  Visitor          Visitor[]
   Tenant           Tenant              @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, scheduledAt])
@@ -1354,10 +1355,13 @@ model Visitor {
   attendanceType      String?
   convertedAt         DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
   convertedToMemberId String? // no FK; mirrors AuditLog.actorId — just an audit pointer
+  serviceId           String? // the Service day this first-timer was registered at, when resolvable
   Tenant              Tenant          @relation(fields: [tenantId], references: [id])
+  Service             Service?        @relation(fields: [serviceId], references: [id])
   FollowUpEntry       FollowUpEntry[]
 
   @@index([tenantId, convertedAt])
+  @@index([tenantId, serviceId])
 }
 
 /// Online-engagement check-ins (e.g. watching the livestream on YouTube) — tracks

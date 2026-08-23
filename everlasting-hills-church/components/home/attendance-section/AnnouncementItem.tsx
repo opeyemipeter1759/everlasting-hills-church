@@ -56,14 +56,6 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
           {announcement.body}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
-          <span
-            className="inline-flex items-center gap-1 rounded-md bg-white/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-white/90"
-            title={absoluteDate(announcement.createdAt)}
-          >
-            <Clock size={9} className="flex-shrink-0 text-[#FFB3C1]" />
-            {formatTime(announcement.createdAt)}
-          </span>
-          <p className="text-[10px] text-white/35">{relativeTime(announcement.createdAt)}</p>
           {isLong && (
             <button
               type="button"

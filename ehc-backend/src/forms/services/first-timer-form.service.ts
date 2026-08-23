@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
+import { AttendanceSessionWindowService } from '../../attendance/services/attendance-session-window.service';
 import { FirstTimerDto } from '../dto/first-timer.dto';
 import { buildFirstTimerWelcomeEmail } from '../../notifications/templates/first-timer-welcome.email';
 import { buildFirstTimerAdminEmail } from '../../notifications/templates/first-timer-admin.email';
@@ -17,6 +18,7 @@ export class FirstTimerFormService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailDispatch: FormsEmailDispatchService,
+    private readonly sessionWindow: AttendanceSessionWindowService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -43,6 +45,11 @@ export class FirstTimerFormService {
       }
     }
 
+    // find-or-create (not a plain lookup): a first-timer registering live is a real
+    // visit happening now, so it's fine to create today's Service row on demand —
+    // mirrors what attendance check-in already does for the same reason.
+    const todaysService = await this.sessionWindow.findOrCreateTodayService();
+
     const [visitor] = await Promise.all([
       this.prisma.visitor.create({
         data: {
@@ -65,6 +72,7 @@ export class FirstTimerFormService {
           serviceExperience: data.service_experience ?? null,
           prayerPoint: data.prayer_point ?? null,
           whatsappInterest: data.whatsapp_interest ?? null,
+          serviceId: todaysService?.id ?? null,
         },
       }),
       this.prisma.formSubmission.create({

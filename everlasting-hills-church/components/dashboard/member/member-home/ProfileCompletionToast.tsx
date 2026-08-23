@@ -8,9 +8,21 @@ import type { MemberHomeProps } from "./types";
 import { getProfileCompletion } from "./helpers";
 
 const TOAST_ID = "profile-completion-toast";
+const DISMISS_KEY = "profile-completion-toast-dismissed";
 
-/** Renders nothing — just pops up a persistent toast prompting the member to
- *  finish their profile, every time the dashboard home loads while it's incomplete. */
+function dismissForSession() {
+  toastLib.dismiss(TOAST_ID);
+  try {
+    sessionStorage.setItem(DISMISS_KEY, "1");
+  } catch {
+    // sessionStorage unavailable (private mode, etc.) — toast just won't persist dismissal.
+  }
+}
+
+/** Renders nothing — just pops up a toast prompting the member to finish their
+ *  profile whenever the dashboard home loads while it's incomplete. Dismissing
+ *  it suppresses the toast for the rest of the browser session (sessionStorage);
+ *  it returns on the next fresh session as long as the profile stays incomplete. */
 export function ProfileCompletionToast({ member }: { member: MemberHomeProps["member"] }) {
   const router = useRouter();
 
@@ -18,6 +30,12 @@ export function ProfileCompletionToast({ member }: { member: MemberHomeProps["me
     if (!member) return;
     const { complete, pct } = getProfileCompletion(member);
     if (complete) return;
+
+    try {
+      if (sessionStorage.getItem(DISMISS_KEY) === "1") return;
+    } catch {
+      // sessionStorage unavailable — fall through and show the toast.
+    }
 
     // Fixed id: a second call (e.g. React StrictMode's double-invoke in dev,
     // or this component remounting) replaces the same toast in place instead
@@ -37,7 +55,7 @@ export function ProfileCompletionToast({ member }: { member: MemberHomeProps["me
             <button
               type="button"
               onClick={() => {
-                toastLib.dismiss(t.id);
+                dismissForSession();
                 router.push("/dashboard/profile");
               }}
               className="mt-1 text-xs font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
@@ -47,9 +65,9 @@ export function ProfileCompletionToast({ member }: { member: MemberHomeProps["me
           </div>
           <button
             type="button"
-            onClick={() => toastLib.dismiss(t.id)}
+            onClick={() => dismissForSession()}
             aria-label="Dismiss"
-            className="ml-1 flex-shrink-0 text-gray-300 hover:text-gray-500 dark:text-white/30 dark:hover:text-white/60"
+            className="ml-1 flex-shrink-0 rounded-lg p-2 -m-2 text-gray-300 hover:text-gray-500 dark:text-white/30 dark:hover:text-white/60"
           >
             <X size={14} />
           </button>

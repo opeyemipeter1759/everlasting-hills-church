@@ -68,6 +68,12 @@ export class FollowUpController {
     return this.pickers.team(actor, unitId);
   }
 
+  @Get('services')
+  @ApiOperation({ summary: 'Recent services, for the Follow-Up page\'s service-day filter (MEMBER+)' })
+  async listServices() {
+    return this.read.listServices();
+  }
+
   @Get('access')
   @ApiOperation({
     summary:
@@ -97,13 +103,15 @@ export class FollowUpController {
   @ApiQuery({ name: 'unitId', required: false })
   @ApiQuery({ name: 'stage', required: false, enum: FollowUpStage })
   @ApiQuery({ name: 'mine', required: false, type: Boolean })
+  @ApiQuery({ name: 'serviceId', required: false, description: 'Narrow to a specific service day' })
   async list(
     @CurrentUser() actor: AuthUser,
     @Query('unitId') unitId?: string,
     @Query('stage') stage?: string,
     @Query('mine') mine?: string,
+    @Query('serviceId') serviceId?: string,
   ) {
-    return this.read.list(actor, { unitId, stage: parseStage(stage), mine: mine === 'true' });
+    return this.read.list(actor, { unitId, stage: parseStage(stage), mine: mine === 'true', serviceId });
   }
 
   @Get(':id')

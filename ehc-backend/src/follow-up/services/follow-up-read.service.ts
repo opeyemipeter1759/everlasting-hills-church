@@ -30,7 +30,7 @@ export class FollowUpReadService {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  async list(actor: AuthUser, opts: { unitId?: string; stage?: FollowUpStage; mine?: boolean }) {
+  async list(actor: AuthUser, opts: { unitId?: string; stage?: FollowUpStage; mine?: boolean; serviceId?: string }) {
     if (!(await this.auth.hasUnitAccess(actor))) {
       throw new ForbiddenException('You need to be part of a team to view the Follow-Up pipeline');
     }
@@ -41,11 +41,36 @@ export class FollowUpReadService {
         ...(opts.unitId ? { unitId: opts.unitId } : {}),
         ...(opts.stage ? { stage: opts.stage } : {}),
         ...(opts.mine && actor.memberId ? { assigneeId: actor.memberId } : {}),
+        // A first-timer entry belongs to the service its Visitor row was tagged
+        // with at intake; an absentee entry belongs to a service when that
+        // member has no PRESENT attendance record for it (works regardless of
+        // when the entry itself was created).
+        ...(opts.serviceId
+          ? {
+              OR: [
+                { sourceType: 'FIRST_TIMER' as const, Visitor: { serviceId: opts.serviceId } },
+                {
+                  sourceType: 'ABSENTEE' as const,
+                  Member: { AttendanceRecord: { none: { serviceId: opts.serviceId, present: true } } },
+                },
+              ],
+            }
+          : {}),
       },
       orderBy: { createdAt: 'desc' },
       include: ENTRY_INCLUDE,
     });
     return this.absenteeDetail.attach(entries.map((e) => this.mapper.mapEntry(e, actor)));
+  }
+
+  /** Recent services, for the Follow-Up page's service-day filter. */
+  async listServices() {
+    return this.prisma.service.findMany({
+      where: { tenantId: this.tenantId },
+      orderBy: { scheduledAt: 'desc' },
+      take: 30,
+      select: { id: true, name: true, scheduledAt: true, serviceType: true },
+    });
   }
 
   async getOne(actor: AuthUser, id: string) {
