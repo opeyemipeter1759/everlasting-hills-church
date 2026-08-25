@@ -30,6 +30,11 @@ export default function FirstTimersClient({ visitors }: Props) {
     setSearch,
     filter,
     setFilter,
+    fromDate,
+    setFromDate,
+    toDate,
+    setToDate,
+    clearDates,
     filtered,
     pagedRows,
     page,
@@ -79,6 +84,11 @@ export default function FirstTimersClient({ visitors }: Props) {
           onFilterChange={setFilter}
           search={search}
           onSearchChange={setSearch}
+          fromDate={fromDate}
+          toDate={toDate}
+          onFromDateChange={setFromDate}
+          onToDateChange={setToDate}
+          onClearDates={clearDates}
         />
 
         {filtered.length === 0 ? (

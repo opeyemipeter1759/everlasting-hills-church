@@ -643,7 +643,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publish a saved draft — fans out to members now */
+        /** Publish a saved draft — fans out to members now; sendEmail overrides the saved flag */
         post: operations["AnnouncementsController_publish"];
         delete?: never;
         options?: never;
@@ -6229,6 +6229,13 @@ export interface components {
             /** @example 120 */
             positionSec: number;
         };
+        PublishAnnouncementDto: {
+            /**
+             * @description Whether to email members as part of this publish. Omit to keep whatever the announcement was saved with. Publishing an announcement that was unpublished emails everyone a second time unless this is false.
+             * @example false
+             */
+            sendEmail?: boolean;
+        };
         QuestionDto: {
             /** @example john@example.com */
             email?: string;
@@ -8086,7 +8093,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishAnnouncementDto"];
+            };
+        };
         responses: {
             201: {
                 headers: {

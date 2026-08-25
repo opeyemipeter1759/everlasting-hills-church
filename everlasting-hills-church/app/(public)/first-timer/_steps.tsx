@@ -24,7 +24,8 @@ export type FormValues = {
   address: string;
   birth_month: string;
   birth_day: string;
-  occupation: string;
+  is_student: string; // "true" | "false"
+  occupation: string; // asked only when is_student is "false"
   born_again: string;
   service_experience: string;
   prayer_point?: string;
@@ -41,6 +42,10 @@ export type StepProps = {
 export type Step2Props = StepProps & {
   watch: UseFormWatch<FormValues>;
   setValue: UseFormSetValue<FormValues>;
+};
+
+export type Step5Props = StepProps & {
+  watch: UseFormWatch<FormValues>;
 };
 
 export type Step3Props = StepProps & {
@@ -455,7 +460,11 @@ export function Step3Interest({ register, errors, isOnline, firstName, lastName 
 
 // ── Step 4 — Details ─────────────────────────────────────────────────────────
 
-export function Step5Details({ register, errors, control }: StepProps) {
+export function Step5Details({ register, errors, control, watch }: Step5Props) {
+  // Students outnumber salaried workers in this congregation, and "Student" was
+  // the most common thing typed into a free-text occupation box. Asking first
+  // means one tap for most people and a meaningful answer from everyone else.
+  const isStudent = watch("is_student");
   return (
     <div className="space-y-5">
       <StepHeader
@@ -515,16 +524,41 @@ export function Step5Details({ register, errors, control }: StepProps) {
       </div>
 
       <div>
-        <Label htmlFor="occupation" required>Occupation</Label>
-        <input
-          id="occupation"
-          type="text"
-          placeholder="e.g. Software Engineer, Student, Teacher…"
-          className={ic(!!errors.occupation)}
-          {...register("occupation", { required: "Occupation is required" })}
-        />
-        <FieldError message={errors.occupation?.message} />
+        <GroupLabel required>Are you a student?</GroupLabel>
+        <div className="grid grid-cols-2 gap-3">
+          <RadioCard
+            value="true"
+            label="Yes, I am"
+            fieldName="is_student"
+            register={register}
+            validation={{ required: "Please answer this question" }}
+            hasError={!!errors.is_student}
+          />
+          <RadioCard
+            value="false"
+            label="No"
+            fieldName="is_student"
+            register={register}
+            validation={{ required: "Please answer this question" }}
+            hasError={!!errors.is_student}
+          />
+        </div>
+        <FieldError message={errors.is_student?.message} />
       </div>
+
+      {isStudent === "false" && (
+        <div>
+          <Label htmlFor="occupation" required>What do you do?</Label>
+          <input
+            id="occupation"
+            type="text"
+            placeholder="e.g. Software Engineer, Trader, Teacher…"
+            className={ic(!!errors.occupation)}
+            {...register("occupation", { required: "Please tell us what you do" })}
+          />
+          <FieldError message={errors.occupation?.message} />
+        </div>
+      )}
 
       <div>
         <GroupLabel required>Are you born again?</GroupLabel>

@@ -3,6 +3,7 @@ import type { InterestFilter } from "./useFirstTimersFilter";
 import FilterTabs from "./FilterTabs";
 import SearchBox from "./SearchBox";
 import VisitorImportDialog from "./VisitorImportDialog";
+import DateRangeFilter from "./DateRangeFilter";
 
 export default function PanelHeader({
   total,
@@ -11,6 +12,11 @@ export default function PanelHeader({
   onFilterChange,
   search,
   onSearchChange,
+  fromDate,
+  toDate,
+  onFromDateChange,
+  onToDateChange,
+  onClearDates,
 }: {
   total: number;
   filterTabs: { key: InterestFilter; label: string; count: number }[];
@@ -18,6 +24,11 @@ export default function PanelHeader({
   onFilterChange: (f: InterestFilter) => void;
   search: string;
   onSearchChange: (v: string) => void;
+  fromDate: string;
+  toDate: string;
+  onFromDateChange: (v: string) => void;
+  onToDateChange: (v: string) => void;
+  onClearDates: () => void;
 }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
@@ -40,6 +51,13 @@ export default function PanelHeader({
 
       <div className="flex items-center gap-2 flex-wrap">
         <FilterTabs tabs={filterTabs} active={filter} onChange={onFilterChange} />
+        <DateRangeFilter
+          from={fromDate}
+          to={toDate}
+          onFromChange={onFromDateChange}
+          onToChange={onToDateChange}
+          onClear={onClearDates}
+        />
         <SearchBox value={search} onChange={onSearchChange} />
         <VisitorImportDialog />
       </div>

@@ -11,6 +11,10 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
   const [edits, setEdits] = useState<Record<string, Partial<VisitorRow>>>({});
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InterestFilter>("all");
+  // Inclusive "YYYY-MM-DD" bounds on submittedAt. Empty means unbounded, so the
+  // usual case (no dates picked) costs nothing.
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
@@ -49,9 +53,15 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
         filter === "all" ||
         (filter === "yes" && v.membershipInterest === "Yes") ||
         (filter === "no" && v.membershipInterest !== "Yes");
-      return matchQ && matchFilter;
+      // Compared as date strings rather than Date objects so a submission at
+      // 23:30 on the "to" day still counts as that day, whatever the timezone
+      // of the browser reading it.
+      const day = v.submittedAt.slice(0, 10);
+      const matchFrom = !fromDate || day >= fromDate;
+      const matchTo = !toDate || day <= toDate;
+      return matchQ && matchFilter && matchFrom && matchTo;
     });
-  }, [active, search, filter]);
+  }, [active, search, filter, fromDate, toDate]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, pageCount);
@@ -67,6 +77,22 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
 
   function updateFilter(f: InterestFilter) {
     setFilter(f);
+    setPage(1);
+  }
+
+  function updateFromDate(v: string) {
+    setFromDate(v);
+    setPage(1);
+  }
+
+  function updateToDate(v: string) {
+    setToDate(v);
+    setPage(1);
+  }
+
+  function clearDates() {
+    setFromDate("");
+    setToDate("");
     setPage(1);
   }
 
@@ -90,6 +116,11 @@ export function useFirstTimersFilter(visitors: VisitorRow[]) {
     setSearch: updateSearch,
     filter,
     setFilter: updateFilter,
+    fromDate,
+    setFromDate: updateFromDate,
+    toDate,
+    setToDate: updateToDate,
+    clearDates,
     filtered,
     pagedRows,
     page: safePage,

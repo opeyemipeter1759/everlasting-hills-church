@@ -13,7 +13,14 @@ export interface VisitorRow {
   occupation: string | null;
   submittedAt: string;
   hasOnlineCheckIn?: boolean;
-  // Form fields used for AI analysis
+  // The rest of what the first-timer form collects. These were captured on the
+  // public form and stored all along, but the dashboard was only mapping a
+  // subset, so the person reading the record could not see who invited the
+  // visitor or where they live.
+  invitedBy?: string | null;
+  dateOfBirth?: string | null;
+  address?: string | null;
+  whatsappInterest?: boolean | null;
   serviceExperience?: string | null;
   prayerPoint?: string | null;
 }

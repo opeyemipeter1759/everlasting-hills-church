@@ -1,9 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Briefcase, ClipboardCopy, Check, Loader2, Mail, MapPin, Phone, Sparkles } from "lucide-react";
+import {
+  Briefcase,
+  Cake,
+  ClipboardCopy,
+  Check,
+  Home,
+  Loader2,
+  Mail,
+  MapPin,
+  MessageCircle,
+  Phone,
+  Sparkles,
+} from "lucide-react";
 import type { VisitorRow } from "./types";
 import type { FirstTimerAnalysis } from "@/app/api/ai/first-timer/route";
+import { postAi } from "@/lib/ai/client";
 
 const SENTIMENT_COLOR: Record<string, string> = {
   positive:   "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
@@ -27,24 +40,19 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/ai/first-timer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firstName:         visitor.firstName,
-          membershipInterest:visitor.membershipInterest,
-          howDidYouLearn:    visitor.howDidYouLearn,
-          bornAgain:         visitor.bornAgain,
-          locatedInIbadan:   visitor.locatedInIbadan,
-          attendanceType:    visitor.attendanceType,
-          serviceExperience: visitor.serviceExperience ?? null,
-          prayerPoint:       visitor.prayerPoint ?? null,
-        }),
+      const data = await postAi<FirstTimerAnalysis>("/api/ai/first-timer", {
+        firstName:         visitor.firstName,
+        membershipInterest:visitor.membershipInterest,
+        howDidYouLearn:    visitor.howDidYouLearn,
+        bornAgain:         visitor.bornAgain,
+        locatedInIbadan:   visitor.locatedInIbadan,
+        attendanceType:    visitor.attendanceType,
+        serviceExperience: visitor.serviceExperience ?? null,
+        prayerPoint:       visitor.prayerPoint ?? null,
       });
-      const data: FirstTimerAnalysis = await res.json();
       setAnalysis(data);
-    } catch {
-      setError("Couldn't reach Gemini. Check your API key or network.");
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -104,6 +112,35 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
                 <span className="text-[#b8a8ac] dark:text-white/30">Born again:</span> {visitor.bornAgain}
               </span>
             )}
+            {visitor.dateOfBirth && (
+              <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
+                <Cake size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
+                {visitor.dateOfBirth}
+              </span>
+            )}
+            {visitor.attendanceType && (
+              <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
+                <span className="text-[#b8a8ac] dark:text-white/30">Attended:</span> {visitor.attendanceType}
+              </span>
+            )}
+            {visitor.membershipInterest && (
+              <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
+                <span className="text-[#b8a8ac] dark:text-white/30">Coming back:</span>{" "}
+                {visitor.membershipInterest}
+              </span>
+            )}
+            {visitor.address && (
+              <span className="flex items-start gap-2 text-[#8a7e80] dark:text-white/45">
+                <Home size={12} className="mt-0.5 text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
+                {visitor.address}
+              </span>
+            )}
+            {visitor.whatsappInterest != null && (
+              <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
+                <MessageCircle size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
+                {visitor.whatsappInterest ? "Wants the WhatsApp group" : "Not interested in WhatsApp"}
+              </span>
+            )}
           </div>
 
           {/* How they found us */}
@@ -111,6 +148,38 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
             <div className="space-y-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">How They Found Us</p>
               <p className="text-[#555] dark:text-white/60">{visitor.howDidYouLearn}</p>
+              {visitor.invitedBy && (
+                <p className="text-[#8a7e80] dark:text-white/45">
+                  <span className="text-[#b8a8ac] dark:text-white/30">Invited by:</span>{" "}
+                  <span className="font-semibold text-[#555] dark:text-white/70">{visitor.invitedBy}</span>
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* What they wrote in their own words. These two are the reason an
+              admin opens this panel at all, and were only reachable through the
+              AI summary before. */}
+          {(visitor.serviceExperience || visitor.prayerPoint) && (
+            <div className="space-y-3">
+              {visitor.serviceExperience && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+                    How the service felt
+                  </p>
+                  <p className="whitespace-pre-line text-[#555] dark:text-white/60">
+                    {visitor.serviceExperience}
+                  </p>
+                </div>
+              )}
+              {visitor.prayerPoint && (
+                <div className="space-y-1">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+                    Prayer request
+                  </p>
+                  <p className="whitespace-pre-line text-[#555] dark:text-white/60">{visitor.prayerPoint}</p>
+                </div>
+              )}
             </div>
           )}
         </div>

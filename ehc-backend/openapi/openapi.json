@@ -1550,6 +1550,16 @@
         ],
         "type": "object"
       },
+      "PublishAnnouncementDto": {
+        "properties": {
+          "sendEmail": {
+            "description": "Whether to email members as part of this publish. Omit to keep whatever the announcement was saved with. Publishing an announcement that was unpublished emails everyone a second time unless this is false.",
+            "example": false,
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
       "QuestionDto": {
         "properties": {
           "email": {
@@ -5061,6 +5071,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishAnnouncementDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "content": {
@@ -5098,7 +5118,7 @@
             "access-token": []
           }
         ],
-        "summary": "Publish a saved draft — fans out to members now",
+        "summary": "Publish a saved draft — fans out to members now; sendEmail overrides the saved flag",
         "tags": [
           "announcements"
         ]
