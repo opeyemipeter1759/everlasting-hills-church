@@ -37,6 +37,7 @@ export default function AnnouncementList({
   onEdit,
   onDelete,
   onPublish,
+  onUnpublish,
 }: {
   items: Announcement[];
   isLoading: boolean;
@@ -45,6 +46,7 @@ export default function AnnouncementList({
   onEdit: (a: Announcement) => void;
   onDelete: (a: Announcement) => void;
   onPublish: (a: Announcement) => void;
+  onUnpublish: (a: Announcement) => void;
 }) {
   if (isLoading) return <Skeleton />;
   if (items.length === 0) return <EmptyState filter={filter} />;
@@ -59,6 +61,7 @@ export default function AnnouncementList({
           onEdit={() => onEdit(a)}
           onDelete={() => onDelete(a)}
           onPublish={() => onPublish(a)}
+          onUnpublish={() => onUnpublish(a)}
         />
       ))}
     </div>

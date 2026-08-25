@@ -50,6 +50,14 @@ export class AnnouncementsController {
     return this.announcements.publish(id);
   }
 
+  @Post(':id/unpublish')
+  @ApiOperation({
+    summary: 'Unpublish — hides it from members again, e.g. once the event has passed',
+  })
+  unpublish(@Param('id') id: string) {
+    return this.announcements.unpublish(id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an announcement' })
   remove(@Param('id') id: string) {

@@ -5104,6 +5104,62 @@
         ]
       }
     },
+    "/announcements/{id}/unpublish": {
+      "post": {
+        "operationId": "AnnouncementsController_unpublish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Unpublish — hides it from members again, e.g. once the event has passed",
+        "tags": [
+          "announcements"
+        ]
+      }
+    },
     "/announcements/feed": {
       "get": {
         "operationId": "AnnouncementsController_feed",

@@ -22,6 +22,7 @@ export function useAnnouncements() {
   const [viewTarget, setViewTarget] = useState<Announcement | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Announcement | null>(null);
   const [publishTarget, setPublishTarget] = useState<Announcement | null>(null);
+  const [unpublishTarget, setUnpublishTarget] = useState<Announcement | null>(null);
   const [justDone, setJustDone] = useState<string | null>(null);
 
   const { data: items = [], isLoading } = useQuery({
@@ -83,6 +84,15 @@ export function useAnnouncements() {
     },
   });
 
+  const unpublishMutation = useMutation({
+    mutationFn: (id: string) => apiClient.post(`/announcements/${id}/unpublish`),
+    onSuccess: () => {
+      setUnpublishTarget(null);
+      flash("Unpublished");
+      invalidate();
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/announcements/${id}`),
     onSuccess: () => {
@@ -124,10 +134,13 @@ export function useAnnouncements() {
     setDeleteTarget,
     publishTarget,
     setPublishTarget,
+    unpublishTarget,
+    setUnpublishTarget,
     justDone,
     createMutation,
     updateMutation,
     publishMutation,
+    unpublishMutation,
     deleteMutation,
   };
 }

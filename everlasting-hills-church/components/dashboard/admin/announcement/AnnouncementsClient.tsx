@@ -26,10 +26,13 @@ export default function AnnouncementsClient() {
     setDeleteTarget,
     publishTarget,
     setPublishTarget,
+    unpublishTarget,
+    setUnpublishTarget,
     justDone,
     createMutation,
     updateMutation,
     publishMutation,
+    unpublishMutation,
     deleteMutation,
   } = useAnnouncements();
 
@@ -51,6 +54,7 @@ export default function AnnouncementsClient() {
         onEdit={openEdit}
         onDelete={setDeleteTarget}
         onPublish={setPublishTarget}
+        onUnpublish={setUnpublishTarget}
       />
 
       <AnnouncementComposerModal
@@ -78,6 +82,12 @@ export default function AnnouncementsClient() {
           if (publishTarget) publishMutation.mutate(publishTarget.id);
         }}
         publishing={publishMutation.isPending}
+        unpublishTarget={unpublishTarget}
+        onCloseUnpublish={() => setUnpublishTarget(null)}
+        onConfirmUnpublish={() => {
+          if (unpublishTarget) unpublishMutation.mutate(unpublishTarget.id);
+        }}
+        unpublishing={unpublishMutation.isPending}
       />
     </div>
   );

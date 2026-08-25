@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Clock, Eye, Mail, MapPin, Pencil, Radio, Trash2, Users } from "lucide-react";
+import { Clock, Eye, EyeOff, Mail, MapPin, Pencil, Radio, Trash2, Users } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { formatRelativeDate } from "./format";
 import type { Announcement } from "./types";
@@ -11,12 +11,14 @@ export default function AnnouncementCard({
   onEdit,
   onDelete,
   onPublish,
+  onUnpublish,
 }: {
   a: Announcement;
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onPublish: () => void;
+  onUnpublish: () => void;
 }) {
   const isDraft = a.status === "DRAFT";
   return (
@@ -87,7 +89,7 @@ export default function AnnouncementCard({
             >
               <Eye size={14} />
             </button>
-            {isDraft && (
+            {isDraft ? (
               <button
                 type="button"
                 onClick={onPublish}
@@ -96,6 +98,18 @@ export default function AnnouncementCard({
                 className="p-2 rounded-lg text-gray-400 hover:text-[#87102C] hover:bg-[#87102C]/5 dark:hover:bg-white/5 transition-colors"
               >
                 <Radio size={14} />
+              </button>
+            ) : (
+              // For an event that has passed: takes it off the member dashboard
+              // without deleting the record of it.
+              <button
+                type="button"
+                onClick={onUnpublish}
+                title="Unpublish (hide from members)"
+                aria-label="Unpublish"
+                className="p-2 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-white/5 transition-colors"
+              >
+                <EyeOff size={14} />
               </button>
             )}
             <button

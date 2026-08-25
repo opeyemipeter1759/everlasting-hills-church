@@ -253,6 +253,32 @@ export class AnnouncementsService {
     return published;
   }
 
+  /**
+   * Takes a live announcement off the member surfaces by flipping it back to
+   * DRAFT — the feed, the member dashboard panel and the public list all filter
+   * on PUBLISHED. For an event that has come and gone, this is what an admin
+   * wants: it stops being shown without losing the record of it.
+   *
+   * Deliberately does NOT retract what was already delivered. The inbox
+   * notifications are independent copies with no link back to this row, and any
+   * email is long gone; deleting a member's read notifications to tidy up an
+   * expired event would be surprising, and the same reasoning already governs
+   * delete (see the copy in AnnouncementDialogs).
+   *
+   * Publishing again fans out again — that is why the admin UI warns when the
+   * announcement has been sent before.
+   */
+  async unpublish(id: string) {
+    const announcement = await this.findOwnedOrThrow(id);
+    if (announcement.status === EventStatus.DRAFT) {
+      return announcement;
+    }
+    return this.prisma.announcement.update({
+      where: { id },
+      data: { status: EventStatus.DRAFT },
+    });
+  }
+
   async remove(id: string) {
     await this.findOwnedOrThrow(id);
     await this.prisma.announcement.delete({ where: { id } });
