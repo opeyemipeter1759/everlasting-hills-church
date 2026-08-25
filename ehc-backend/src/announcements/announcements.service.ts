@@ -66,6 +66,7 @@ export class AnnouncementsService {
     body: string,
     sendEmail: boolean,
     targeting: AudienceTargeting,
+    imageUrl?: string | null,
   ): Promise<number> {
     const allProfiles = await this.prisma.profile.findMany({
       where: { tenantId: this.tenantId },
@@ -110,7 +111,9 @@ export class AnnouncementsService {
         const batch = emails.slice(i, i + BATCH);
         await Promise.all(
           batch.map((email) =>
-            this.mail.dispatch(buildAnnouncementEmail({ email, title, body, dashboardUrl })),
+            this.mail.dispatch(
+              buildAnnouncementEmail({ email, title, body, dashboardUrl, imageUrl }),
+            ),
           ),
         );
         if (i + BATCH < emails.length) {
@@ -135,7 +138,9 @@ export class AnnouncementsService {
     };
     const isTargeted = targeting.targetRoles.length > 0 || targeting.targetGenders.length > 0 || targeting.targetProfileIds.length > 0;
 
-    const recipients = shouldFanOut ? await this.fanOut(dto.title, dto.body, sendEmail, targeting) : 0;
+    const recipients = shouldFanOut
+      ? await this.fanOut(dto.title, dto.body, sendEmail, targeting, dto.imageUrl)
+      : 0;
 
     const created = await this.prisma.announcement.create({
       data: {
@@ -234,20 +239,38 @@ export class AnnouncementsService {
     });
   }
 
-  /** Publishes a saved draft: fans out now, flips status, records recipient count. */
-  async publish(id: string) {
+  /**
+   * Publishes a saved draft: fans out now, flips status, records recipient count.
+   *
+   * `sendEmail` overrides what the announcement was saved with, for this publish
+   * and from here on. It exists because publishing something that was
+   * unpublished (an event that has passed, then reinstated) otherwise emails the
+   * whole church a second time with no way to say no — the in-app fan-out is
+   * cheap and idempotent enough to repeat, a second inbox copy of the same
+   * flyer is not.
+   */
+  async publish(id: string, options: { sendEmail?: boolean } = {}) {
     const announcement = await this.findOwnedOrThrow(id);
     if (announcement.status === EventStatus.PUBLISHED) {
       return announcement;
     }
-    const recipients = await this.fanOut(announcement.title, announcement.body, announcement.sendEmail, {
-      targetRoles: announcement.targetRoles,
-      targetGenders: announcement.targetGenders,
-      targetProfileIds: announcement.targetProfileIds,
-    });
+    const sendEmail = options.sendEmail ?? announcement.sendEmail;
+    const recipients = await this.fanOut(
+      announcement.title,
+      announcement.body,
+      sendEmail,
+      {
+        targetRoles: announcement.targetRoles,
+        targetGenders: announcement.targetGenders,
+        targetProfileIds: announcement.targetProfileIds,
+      },
+      announcement.imageUrl,
+    );
     const published = await this.prisma.announcement.update({
       where: { id },
-      data: { status: EventStatus.PUBLISHED, recipients },
+      // The choice is persisted so the card's "Emailed" badge and a later edit
+      // both reflect what actually happened.
+      data: { status: EventStatus.PUBLISHED, recipients, sendEmail },
     });
     this.emitPush(published);
     return published;

@@ -52,7 +52,10 @@ export default function AnnouncementList({
   if (items.length === 0) return <EmptyState filter={filter} />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
+    // Two-up only from lg: at the sm breakpoint each card is ~300px wide, which
+    // is not enough for a title, a two-line preview, four metadata items and
+    // four action buttons.
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 items-start">
       {items.map((a) => (
         <AnnouncementCard 
           key={a.id}

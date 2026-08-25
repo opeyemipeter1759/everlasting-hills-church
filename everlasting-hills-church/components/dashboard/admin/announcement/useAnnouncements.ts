@@ -23,6 +23,10 @@ export function useAnnouncements() {
   const [deleteTarget, setDeleteTarget] = useState<Announcement | null>(null);
   const [publishTarget, setPublishTarget] = useState<Announcement | null>(null);
   const [unpublishTarget, setUnpublishTarget] = useState<Announcement | null>(null);
+  // Whether this particular publish also emails. Seeded from the announcement
+  // but overridable in the dialog, so re-publishing something that was
+  // unpublished does not silently email the church a second time.
+  const [publishSendEmail, setPublishSendEmail] = useState(false);
   const [justDone, setJustDone] = useState<string | null>(null);
 
   const { data: items = [], isLoading } = useQuery({
@@ -76,7 +80,8 @@ export function useAnnouncements() {
   });
 
   const publishMutation = useMutation({
-    mutationFn: (id: string) => apiClient.post(`/announcements/${id}/publish`),
+    mutationFn: ({ id, sendEmail }: { id: string; sendEmail: boolean }) =>
+      apiClient.post(`/announcements/${id}/publish`, { sendEmail }),
     onSuccess: () => {
       setPublishTarget(null);
       flash("Published");
@@ -100,6 +105,12 @@ export function useAnnouncements() {
       invalidate();
     },
   });
+
+  /** Opens the publish dialog with the email choice seeded from the record. */
+  function openPublish(item: Announcement) {
+    setPublishSendEmail(item.sendEmail);
+    setPublishTarget(item);
+  }
 
   function openCreate() {
     setEditingItem(null);
@@ -133,7 +144,10 @@ export function useAnnouncements() {
     deleteTarget,
     setDeleteTarget,
     publishTarget,
+    openPublish,
     setPublishTarget,
+    publishSendEmail,
+    setPublishSendEmail,
     unpublishTarget,
     setUnpublishTarget,
     justDone,

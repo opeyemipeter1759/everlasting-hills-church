@@ -10,6 +10,7 @@ import { SpecificPeoplePicker } from "./SpecificPeoplePicker";
 import { EMPTY_FORM } from "./types";
 import type { Announcement, AnnouncementFormValues, TargetGender } from "./types";
 import RichText from "@/components/ui/display/RichText";
+import { postAi } from "@/lib/ai/client";
 
 const inputCls =
   "w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#87102C]/40 focus:ring-2 focus:ring-[#87102C]/10 transition-all";
@@ -86,22 +87,20 @@ export default function AnnouncementComposerModal({
     setAiLoading(true);
     setAiError("");
     try {
-      const res = await fetch("/api/ai/announcement", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: aiIdea }),
+      const json = await postAi<{ title?: string; body?: string }>("/api/ai/announcement", {
+        idea: aiIdea,
       });
-      const json = await res.json();
       if (json.title || json.body) {
         set("title", json.title ?? values.title);
         set("body", json.body ?? values.body);
         setAiOpen(false);
         setAiIdea("");
       } else {
-        setAiError("Gemini couldn't generate a draft. Try rephrasing your idea.");
+        setAiError("Gemini returned an empty draft. Try rephrasing your idea.");
       }
-    } catch {
-      setAiError("Something went wrong. Check your connection and try again.");
+    } catch (err) {
+      // The server says why — a missing key and a refused prompt need different fixes.
+      setAiError((err as Error).message);
     } finally {
       setAiLoading(false);
     }

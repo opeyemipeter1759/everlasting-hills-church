@@ -53,33 +53,38 @@ export default function AnnouncementCard({
           </span>
         </button>
 
-        <div className="flex items-center justify-between gap-3 mt-auto pt-3">
-          <div className="flex items-center gap-4 text-[11px] text-gray-400 dark:text-white/30">
-            <span className="inline-flex items-center gap-1">
+        {/* Metadata and actions stack until there is room for both on one line.
+            Side by side in a half-width card, the metadata run (recipients,
+            emailed, time, venue) pushed the action buttons off the card edge. */}
+        <div className="mt-auto flex flex-col gap-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400 dark:text-white/30">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap">
               <Users size={12} />
               {a.recipients} recipient{a.recipients === 1 ? "" : "s"}
             </span>
             {a.sendEmail && (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 <Mail size={12} />
                 Emailed
               </span>
             )}
             {a.eventTime && (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 <Clock size={12} />
                 {a.eventTime}
               </span>
             )}
             {a.venue && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin size={12} />
-                {a.venue}
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <MapPin size={12} className="shrink-0" />
+                <span className="truncate">{a.venue}</span>
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+          {/* Always visible: hover-to-reveal hides these entirely on a phone,
+              where there is no hover. */}
+          <div className="-mr-1 flex shrink-0 items-center gap-0.5 self-end sm:self-auto">
             <button
               type="button"
               onClick={onView}
