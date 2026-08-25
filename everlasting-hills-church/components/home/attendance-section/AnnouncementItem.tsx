@@ -6,6 +6,8 @@ import { Clock, MapPin } from "lucide-react";
 import type { Announcement } from "@/hooks";
 import { absoluteDate, formatTime, relativeTime } from "./utils";
 import { getAnnouncementIcon } from "./getAnnouncementIcon";
+import RichText from "@/components/ui/display/RichText";
+import { stripMarkdown } from "@/lib/rich-text";
 
 interface AnnouncementItemProps {
   announcement: Announcement;
@@ -14,7 +16,10 @@ interface AnnouncementItemProps {
 
 export default function AnnouncementItem({ announcement, isNew }: AnnouncementItemProps) {
   const [expanded, setExpanded] = useState(false);
-  const isLong = announcement.body.length > 140;
+  // Length is measured on the plain-text form: a body that is mostly Markdown
+  // markers is shorter than it looks, and clamping it would hide nothing.
+  const preview = stripMarkdown(announcement.body);
+  const isLong = preview.length > 140;
   const Icon = getAnnouncementIcon(announcement.title);
 
   return (
@@ -52,9 +57,21 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
             </span>
           )}
         </div>
-        <p className={`mt-1.5 text-xs leading-relaxed text-white/50 ${expanded ? "" : "line-clamp-2"}`}>
-          {announcement.body}
-        </p>
+        {/* Collapsed shows the stripped single-run text: CSS line-clamp cannot
+            span the paragraphs and lists the expanded view renders. */}
+        {expanded ? (
+          <RichText
+            text={announcement.body}
+            density="tight"
+            emphasisClassName="text-white"
+            linkClassName="text-[#FFB3C1]"
+            className="mt-1.5 text-xs leading-relaxed text-white/60"
+          />
+        ) : (
+          <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-white/50 [overflow-wrap:anywhere]">
+            {preview}
+          </p>
+        )}
         {(announcement.eventTime || announcement.venue) && (
           <div className="mt-1.5 flex flex-wrap items-center gap-3">
             {announcement.eventTime && (

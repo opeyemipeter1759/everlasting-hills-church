@@ -1,5 +1,6 @@
 import type { SendEmailPayload } from '../notification-events';
 import { escapeHtml, renderEmailLayout } from './layout';
+import { markdownToEmailHtml, stripMarkdown } from '../../common/markdown.util';
 
 interface Args {
   email: string;
@@ -17,7 +18,9 @@ export function buildAnnouncementEmail({
   const text = [
     `📢 ${title}`,
     '',
-    body,
+    // Plain-text part: markers stripped so a text-only client does not show
+    // `**Date:**`.
+    stripMarkdown(body),
     '',
     'View this and all announcements in your member dashboard:',
     dashboardUrl,
@@ -29,10 +32,7 @@ export function buildAnnouncementEmail({
     <div style="background:#FFF4F6;border-left:4px solid #87102C;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:20px">
       <p style="margin:0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#87102C">Church Announcement</p>
     </div>
-    ${escapeHtml(body)
-      .split(/\n{2,}/)
-      .map((p) => `<p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.7">${p.replace(/\n/g, '<br/>')}</p>`)
-      .join('')}
+    ${markdownToEmailHtml(body, escapeHtml)}
     <p style="color:#9CA3AF;font-size:13px;margin:24px 0 0">
       You're receiving this because you're a member of Everlasting Hills Church.
     </p>

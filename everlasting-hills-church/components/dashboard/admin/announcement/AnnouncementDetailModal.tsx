@@ -5,6 +5,7 @@ import { ROLE_LABEL } from "../people/peopleShared/roleMeta";
 import StatusBadge from "./StatusBadge";
 import { formatDateTime } from "./format";
 import type { Announcement } from "./types";
+import RichText from "@/components/ui/display/RichText";
 
 const GENDER_LABEL: Record<string, string> = { MALE: "Male", FEMALE: "Female" };
 
@@ -69,9 +70,11 @@ export default function AnnouncementDetailModal({
             </div>
           )}
 
-          <p className="text-sm text-gray-700 dark:text-white/70 whitespace-pre-wrap leading-relaxed">
-            {a.body}
-          </p>
+          <RichText
+            text={a.body}
+            emphasisClassName="text-gray-900 dark:text-white"
+            className="text-sm leading-relaxed text-gray-700 dark:text-white/70"
+          />
 
           <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100 dark:border-white/8">
             <div className="flex items-start gap-2">

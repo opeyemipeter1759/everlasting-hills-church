@@ -3,6 +3,7 @@ import { Clock, Eye, Mail, MapPin, Pencil, Radio, Trash2, Users } from "lucide-r
 import StatusBadge from "./StatusBadge";
 import { formatRelativeDate } from "./format";
 import type { Announcement } from "./types";
+import { stripMarkdown } from "@/lib/rich-text";
 
 export default function AnnouncementCard({
   a,
@@ -39,8 +40,10 @@ export default function AnnouncementCard({
               <p className="font-semibold text-gray-900 dark:text-white truncate">{a.title}</p>
               <StatusBadge status={a.status} />
             </div>
-            <p className="text-sm text-gray-500 dark:text-white/50 mt-1 whitespace-pre-wrap line-clamp-2">
-              {a.body}
+            {/* Clamped preview only — the formatted body is in the detail
+                modal. line-clamp needs a single text run, so strip the syntax. */}
+            <p className="text-sm text-gray-500 dark:text-white/50 mt-1 line-clamp-2 [overflow-wrap:anywhere]">
+              {stripMarkdown(a.body)}
             </p>
           </div>
           <span className="text-[11px] text-gray-400 dark:text-white/30 flex-shrink-0">

@@ -4,6 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Bell, BellRing, ChevronDown, Clock, MapPin, Megaphone } from "lucide-react";
+import RichText from "@/components/ui/display/RichText";
+import { stripMarkdown } from "@/lib/rich-text";
 
 interface Announcement {
   id: string;
@@ -28,7 +30,10 @@ function relativeTime(iso: string) {
 
 function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: boolean; index: number }) {
   const [expanded, setExpanded] = useState(false);
-  const clampable = a.body.length > 140;
+  // Measured on the plain-text form: a body that is mostly Markdown markers is
+  // shorter than it looks, and clamping it would hide nothing.
+  const preview = stripMarkdown(a.body);
+  const clampable = preview.length > 140;
 
   return (
     <motion.div
@@ -69,9 +74,20 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
           )}
         </div>
 
-        <p className={`text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed ${expanded ? "" : "line-clamp-2"}`}>
-          {a.body}
-        </p>
+        {/* Collapsed shows the stripped single-run text: CSS line-clamp cannot
+            span the paragraphs and lists the expanded view renders. */}
+        {expanded ? (
+          <RichText
+            text={a.body}
+            density="tight"
+            emphasisClassName="text-gray-900 dark:text-white"
+            className="mt-1 text-xs leading-relaxed text-gray-600 dark:text-gray-300"
+          />
+        ) : (
+          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400 [overflow-wrap:anywhere]">
+            {preview}
+          </p>
+        )}
 
         {(a.eventTime || a.venue) && (
           <div className="mt-1.5 flex flex-wrap items-center gap-3">
