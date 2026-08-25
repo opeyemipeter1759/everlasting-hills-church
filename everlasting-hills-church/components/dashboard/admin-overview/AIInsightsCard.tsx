@@ -5,6 +5,7 @@ import { ArrowRight, Loader2, RefreshCw, Sparkles, TrendingDown, TrendingUp, Use
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
 import type { AttendancePoint } from "@/lib/mock/admin-dashboard.mock";
 import type { InsightsResponse } from "@/app/api/ai/insights/route";
+import { postAi } from "@/lib/ai/client";
 
 interface Props extends DashboardCardChrome {
   trend: AttendancePoint[];
@@ -15,22 +16,16 @@ interface Props extends DashboardCardChrome {
 export default function AIInsightsCard({ trend, fallback, ...chrome }: Props) {
   const [data, setData] = useState<InsightsResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function fetchInsights() {
     setLoading(true);
-    setError(false);
+    setError(null);
     try {
-      const res = await fetch("/api/ai/insights", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trend }),
-      });
-      if (!res.ok) throw new Error("Non-2xx");
-      const json: InsightsResponse = await res.json();
+      const json = await postAi<InsightsResponse>("/api/ai/insights", { trend });
       setData(json);
-    } catch {
-      setError(true);
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -85,7 +80,7 @@ export default function AIInsightsCard({ trend, fallback, ...chrome }: Props) {
         </div>
       ) : error ? (
         <div className="mb-4 rounded-xl border border-gray-200 dark:border-white/[0.07] px-4 py-3">
-          <p className="text-xs text-gray-400 dark:text-white/35">AI summary unavailable — showing computed metrics.</p>
+          <p className="text-xs text-gray-400 dark:text-white/35">{error} Showing computed metrics.</p>
         </div>
       ) : null}
 

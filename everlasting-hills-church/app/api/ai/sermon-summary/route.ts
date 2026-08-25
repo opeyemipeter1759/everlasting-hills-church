@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { flashModel, parseJSON } from "@/lib/ai/gemini";
+import { aiFailed, aiUnavailable, flashModel, isAiConfigured, parseJSON } from "@/lib/ai/gemini";
 
 export interface SermonSummaryResponse {
   summary: string;
@@ -31,7 +31,8 @@ export async function POST(req: NextRequest) {
       speaker?: string;
     } = await req.json();
 
-    if (!process.env.GEMINI_API_KEY || !title) {
+    if (!isAiConfigured()) return aiUnavailable();
+    if (!title) {
       return NextResponse.json(FALLBACK);
     }
 
@@ -60,7 +61,6 @@ Respond with only valid JSON, no markdown, no explanation.
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("[AI /sermon-summary]", err);
-    return NextResponse.json(FALLBACK);
+    return aiFailed("/sermon-summary", err);
   }
 }

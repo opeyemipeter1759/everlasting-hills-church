@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Plus, Trash2, BookOpen, Loader2, Save, Link, Upload, Sparkles } from 'lucide-react';
 import { useCreateSermon, useUpdateSermon, useSermon } from '@/lib/api';
 import FileUpload from '@/components/ui/form/FileUpload';
+import { postAi } from '@/lib/ai/client';
 import { Select } from '@/components/ui/select';
 import type {
   CreateSermonPayload,
@@ -200,23 +201,21 @@ export default function SermonForm({ mode }: SermonFormProps) {
     setAiLoading(true);
     setAiError('');
     try {
-      const res = await fetch('/api/ai/sermon-summary', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const data = await postAi<{ summary?: string; tags?: string[]; keyTakeaways?: string[] }>(
+        '/api/ai/sermon-summary',
+        {
           title: form.title,
           description: form.description || undefined,
           scriptureRef: form.scriptureRef || undefined,
           series: form.series || undefined,
           speaker: form.speaker || undefined,
-        }),
-      });
-      const data = await res.json();
+        },
+      );
       if (data.summary) set('description', data.summary);
-      if (data.tags?.length) set('tagsRaw', (data.tags as string[]).join(', '));
-      if (data.keyTakeaways?.length) setAiTakeaways(data.keyTakeaways as string[]);
-    } catch {
-      setAiError('Gemini unavailable. Fill in the description manually.');
+      if (data.tags?.length) set('tagsRaw', data.tags.join(', '));
+      if (data.keyTakeaways?.length) setAiTakeaways(data.keyTakeaways);
+    } catch (err) {
+      setAiError((err as Error).message);
     } finally {
       setAiLoading(false);
     }
