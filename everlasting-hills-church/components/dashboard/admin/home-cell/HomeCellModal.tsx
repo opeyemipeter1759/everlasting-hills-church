@@ -99,7 +99,7 @@ export default function HomeCellModal({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Meeting Day *" error={errors.meetingDay?.message}>
               <Controller
                 control={control}
@@ -151,7 +151,7 @@ export default function HomeCellModal({
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="City / Area" error={errors.city?.message}>
               <input
                 {...register("city")}

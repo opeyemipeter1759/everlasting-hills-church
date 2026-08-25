@@ -114,7 +114,7 @@ export default function EditVisitorModal({
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>First name</label>
               <input required value={form.firstName} onChange={(e) => set("firstName", e.target.value)} className={inputClass} />
@@ -125,7 +125,7 @@ export default function EditVisitorModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Email</label>
               <input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} className={inputClass} />
@@ -136,7 +136,7 @@ export default function EditVisitorModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={labelClass}>Gender</label>
               <Select

@@ -45,7 +45,10 @@ export default function NotificationDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
-        className="absolute mt-4 w-[480px] bg-[#0F0F0F] max-h-[520px] no-scrollbar overflow-y-auto rounded-3xl border border-[#1E1E1E] shadow-xl
+        // 480px is wider than every phone in use here, so it is capped to the
+        // viewport minus the page gutters instead of pushing the panel (and the
+        // page with it) off screen.
+        className="absolute mt-4 w-[min(480px,calc(100vw-2rem))] bg-[#0F0F0F] max-h-[520px] no-scrollbar overflow-y-auto rounded-3xl border border-[#1E1E1E] shadow-xl
         sm:left-1/2 -translate-x-1/2
         lg:left-auto lg:right-0 lg:translate-x-0"
       >
