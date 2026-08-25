@@ -133,6 +133,49 @@
         ],
         "type": "object"
       },
+      "AudienceFilterDto": {
+        "properties": {
+          "memberIds": {
+            "description": "Member ids — required when mode is SPECIFIC",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "ALL",
+              "UNIT",
+              "ROLE",
+              "SPECIFIC"
+            ],
+            "type": "string"
+          },
+          "role": {
+            "description": "Required when mode is ROLE",
+            "enum": [
+              "SUPER_ADMIN",
+              "PASTOR",
+              "ADMIN",
+              "ADMIN_HEAD",
+              "HOD",
+              "HEAD_USHER",
+              "UNIT_LEAD",
+              "MEMBER",
+              "VISITOR"
+            ],
+            "type": "string"
+          },
+          "unitId": {
+            "description": "Required when mode is UNIT",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "type": "object"
+      },
       "BulkCreateUsersDto": {
         "properties": {
           "members": {
@@ -158,6 +201,30 @@
           "sendWelcome": {
             "description": "Send each imported member a welcome email with login details",
             "example": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "type": "object"
+      },
+      "BulkImportVisitorsDto": {
+        "properties": {
+          "alsoWelcomeExisting": {
+            "default": false,
+            "description": "Also send the welcome email to rows skipped as already-existing — for re-sending to a batch that was previously imported without emails.",
+            "type": "boolean"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/VisitorImportRowDto"
+            },
+            "type": "array"
+          },
+          "sendWelcome": {
+            "default": true,
+            "description": "Email each newly-created row the first-timer welcome email. Defaults to true.",
             "type": "boolean"
           }
         },
@@ -235,6 +302,10 @@
         ],
         "type": "object"
       },
+      "CheckInDto": {
+        "properties": {},
+        "type": "object"
+      },
       "ConfirmFollowUpDto": {
         "properties": {
           "note": {
@@ -303,6 +374,11 @@
             "example": "Join us this Sunday for a special time of worship.",
             "type": "string"
           },
+          "eventTime": {
+            "description": "Event time to display alongside the announcement",
+            "example": "10:00 AM",
+            "type": "string"
+          },
           "imageUrl": {
             "description": "Image to show alongside the announcement (from /uploads/image)",
             "type": "string"
@@ -321,8 +397,56 @@
             ],
             "type": "string"
           },
+          "targetGenders": {
+            "description": "Send to members of these genders. Combined (union) with targetRoles/targetProfileIds.",
+            "example": [
+              "MALE",
+              "FEMALE"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "targetProfileIds": {
+            "description": "Specific Profile ids to always include, regardless of role/gender.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "targetProfileNames": {
+            "description": "Display-only names matching targetProfileIds, in the same order (snapshot at send time).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "targetRoles": {
+            "description": "Send to anyone holding any of these roles. Combined (union) with targetGenders/targetProfileIds. Empty = no role restriction.",
+            "items": {
+              "enum": [
+                "SUPER_ADMIN",
+                "PASTOR",
+                "ADMIN",
+                "ADMIN_HEAD",
+                "HOD",
+                "HEAD_USHER",
+                "UNIT_LEAD",
+                "MEMBER",
+                "VISITOR"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
           "title": {
             "example": "Special Sunday Service",
+            "type": "string"
+          },
+          "venue": {
+            "description": "Venue/location to display alongside the announcement",
+            "example": "Main Auditorium",
             "type": "string"
           }
         },
@@ -356,6 +480,18 @@
         ],
         "type": "object"
       },
+      "CreateBirthdayGreetingDto": {
+        "properties": {
+          "message": {
+            "example": "Happy birthday! Praying for a wonderful year ahead 🎉",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
       "CreateCellDto": {
         "properties": {},
         "type": "object"
@@ -374,6 +510,28 @@
         },
         "required": [
           "content"
+        ],
+        "type": "object"
+      },
+      "CreateEmailTemplateDto": {
+        "properties": {
+          "body": {
+            "example": "<p>Dear church family,</p>",
+            "type": "string"
+          },
+          "name": {
+            "example": "Monthly Newsletter",
+            "type": "string"
+          },
+          "subject": {
+            "example": "Here is what happened this month at EHC",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "subject",
+          "body"
         ],
         "type": "object"
       },
@@ -826,6 +984,86 @@
         },
         "required": [
           "name"
+        ],
+        "type": "object"
+      },
+      "CreateUnitExpenseDto": {
+        "properties": {
+          "amount": {
+            "example": 15000,
+            "type": "number"
+          },
+          "category": {
+            "example": "Supplies",
+            "type": "string"
+          },
+          "date": {
+            "example": "2026-08-01",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "receiptUrl": {
+            "description": "URL from POST /uploads/document",
+            "type": "string"
+          },
+          "title": {
+            "example": "Cleaning supplies",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "amount",
+          "date"
+        ],
+        "type": "object"
+      },
+      "CreateUnitPositionDto": {
+        "properties": {
+          "name": {
+            "example": "Secretary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "CreateUnitTaskCommentDto": {
+        "properties": {
+          "content": {
+            "example": "Started on this, should be done by Friday.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "type": "object"
+      },
+      "CreateUnitTaskDto": {
+        "properties": {
+          "assignedToId": {
+            "description": "Leave unset for a whole-unit task",
+            "example": "member-uuid",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dueDate": {
+            "type": "string"
+          },
+          "title": {
+            "example": "Set up chairs for Sunday service",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
         ],
         "type": "object"
       },
@@ -1413,6 +1651,49 @@
         ],
         "type": "object"
       },
+      "SendEmailDto": {
+        "properties": {
+          "audience": {
+            "$ref": "#/components/schemas/AudienceFilterDto"
+          },
+          "body": {
+            "example": "<p>Dear church family,</p>",
+            "type": "string"
+          },
+          "subject": {
+            "example": "Here is what happened this month at EHC",
+            "type": "string"
+          },
+          "templateId": {
+            "description": "Template this send originated from, for record-keeping only — subject/body below are what actually gets sent",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "body",
+          "audience"
+        ],
+        "type": "object"
+      },
+      "SendUnitMessageDto": {
+        "properties": {
+          "message": {
+            "example": "Can we get more chairs for Sunday's setup?",
+            "type": "string"
+          },
+          "recipientId": {
+            "description": "Member.id of the recipient — must be in the same unit",
+            "example": "member-uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recipientId",
+          "message"
+        ],
+        "type": "object"
+      },
       "SermonEpisodeInputDto": {
         "properties": {
           "duration": {
@@ -1471,6 +1752,16 @@
           "email",
           "unit"
         ],
+        "type": "object"
+      },
+      "SetMemberPositionDto": {
+        "properties": {
+          "positionId": {
+            "description": "null clears the position",
+            "example": "position-uuid",
+            "type": "object"
+          }
+        },
         "type": "object"
       },
       "SetMemberRoleDto": {
@@ -1635,6 +1926,10 @@
             "example": "Join us this Sunday for a special time of worship.",
             "type": "string"
           },
+          "eventTime": {
+            "example": "10:00 AM",
+            "type": "string"
+          },
           "imageUrl": {
             "description": "Image to show alongside the announcement (from /uploads/image), or \"\" to remove it",
             "type": "string"
@@ -1644,8 +1939,70 @@
             "example": false,
             "type": "boolean"
           },
+          "targetGenders": {
+            "example": [
+              "MALE",
+              "FEMALE"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "targetProfileIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "targetProfileNames": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "targetRoles": {
+            "description": "Only applies on the next publish (a change here never re-triggers a fan-out).",
+            "items": {
+              "enum": [
+                "SUPER_ADMIN",
+                "PASTOR",
+                "ADMIN",
+                "ADMIN_HEAD",
+                "HOD",
+                "HEAD_USHER",
+                "UNIT_LEAD",
+                "MEMBER",
+                "VISITOR"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
           "title": {
             "example": "Special Sunday Service",
+            "type": "string"
+          },
+          "venue": {
+            "description": "Or \"\" to remove it",
+            "example": "Main Auditorium",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateEmailTemplateDto": {
+        "properties": {
+          "body": {
+            "example": "<p>Dear church family,</p>",
+            "type": "string"
+          },
+          "name": {
+            "example": "Monthly Newsletter",
+            "type": "string"
+          },
+          "subject": {
+            "example": "Here is what happened this month at EHC",
             "type": "string"
           }
         },
@@ -2126,6 +2483,68 @@
         },
         "type": "object"
       },
+      "UpdateUnitExpenseDto": {
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "category": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "receiptUrl": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateUnitPositionDto": {
+        "properties": {
+          "name": {
+            "example": "Treasurer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "UpdateUnitTaskDto": {
+        "properties": {
+          "assignedToId": {
+            "description": "null clears the assignee",
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dueDate": {
+            "description": "null clears the due date",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "TODO",
+              "IN_PROGRESS",
+              "DONE"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "UpdateUserDto": {
         "properties": {
           "firstName": {
@@ -2159,6 +2578,124 @@
         },
         "required": [
           "role"
+        ],
+        "type": "object"
+      },
+      "UpdateVisitorDto": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "attendanceType": {
+            "type": "string"
+          },
+          "bornAgain": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string"
+          },
+          "howDidYouLearn": {
+            "type": "string"
+          },
+          "invitedBy": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "locatedInIbadan": {
+            "type": "boolean"
+          },
+          "membershipInterest": {
+            "type": "string"
+          },
+          "occupation": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "prayerPoint": {
+            "type": "string"
+          },
+          "serviceExperience": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "VisitorImportRowDto": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "birthDay": {
+            "description": "Day of birth, 1-31 (no year collected)",
+            "type": "number"
+          },
+          "birthMonth": {
+            "description": "Month of birth, 1-12",
+            "type": "number"
+          },
+          "bornAgain": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "firstName": {
+            "example": "Jane",
+            "type": "string"
+          },
+          "gender": {
+            "type": "string"
+          },
+          "howDidYouLearn": {
+            "type": "string"
+          },
+          "invitedBy": {
+            "type": "string"
+          },
+          "lastName": {
+            "example": "Doe",
+            "type": "string"
+          },
+          "locatedInIbadan": {
+            "type": "boolean"
+          },
+          "membershipInterest": {
+            "type": "string"
+          },
+          "occupation": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "prayerPoint": {
+            "type": "string"
+          },
+          "serviceExperience": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "description": "Original submission timestamp, for backfilling historical data",
+            "type": "string"
+          },
+          "whatsappInterest": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName"
         ],
         "type": "object"
       }
@@ -4505,7 +5042,7 @@
             "access-token": []
           }
         ],
-        "summary": "Edit an announcement's title/body/email flag",
+        "summary": "Edit an announcement's title/body/email flag/targeting/event details",
         "tags": [
           "announcements"
         ]
@@ -8980,6 +9517,109 @@
         ]
       }
     },
+    "/courses/categories/{id}/enroll": {
+      "post": {
+        "operationId": "CoursesController_enrollInCategory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Enroll the current user in a course category (reason + agreement form)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/courses/categories/enrolled/me": {
+      "get": {
+        "operationId": "CoursesController_myEnrolledCategoryIds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Category ids the current user has enrolled in",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
     "/courses/progress/me": {
       "get": {
         "operationId": "CoursesController_myProgress",
@@ -9681,6 +10321,62 @@
         ]
       }
     },
+    "/departments/{id}/units/new": {
+      "post": {
+        "operationId": "DepartmentsController_createUnit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create a brand-new unit directly under this department (ADMIN+)",
+        "tags": [
+          "departments"
+        ]
+      }
+    },
     "/departments/mine": {
       "get": {
         "operationId": "DepartmentsMineController_getMine",
@@ -9770,6 +10466,53 @@
           }
         ],
         "summary": "Post an announcement scoped to a department the actor leads (HOD+)",
+        "tags": [
+          "departments"
+        ]
+      }
+    },
+    "/departments/mine/units": {
+      "post": {
+        "operationId": "DepartmentsMineController_createMyUnit",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create a new unit under a department the actor heads (HOD+)",
         "tags": [
           "departments"
         ]
@@ -9884,6 +10627,460 @@
         "summary": "Roster of a unit within the actor's department (403 outside scope) (HOD+)",
         "tags": [
           "departments"
+        ]
+      }
+    },
+    "/emails/recipients/preview": {
+      "post": {
+        "operationId": "EmailsController_previewRecipients",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AudienceFilterDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Resolve an audience filter into a recipient count + short sample, before sending",
+        "tags": [
+          "emails"
+        ]
+      }
+    },
+    "/emails/send": {
+      "post": {
+        "operationId": "EmailsController_send",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendEmailDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Send an email to a resolved audience and log the send",
+        "tags": [
+          "emails"
+        ]
+      }
+    },
+    "/emails/sent": {
+      "get": {
+        "operationId": "EmailsController_listSent",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List past sends (audit/history), paginated",
+        "tags": [
+          "emails"
+        ]
+      }
+    },
+    "/emails/templates": {
+      "get": {
+        "operationId": "EmailsController_listTemplates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List saved email templates",
+        "tags": [
+          "emails"
+        ]
+      },
+      "post": {
+        "operationId": "EmailsController_createTemplate",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEmailTemplateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Save a reusable email template",
+        "tags": [
+          "emails"
+        ]
+      }
+    },
+    "/emails/templates/{id}": {
+      "delete": {
+        "operationId": "EmailsController_removeTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a template",
+        "tags": [
+          "emails"
+        ]
+      },
+      "get": {
+        "operationId": "EmailsController_getTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get one email template",
+        "tags": [
+          "emails"
+        ]
+      },
+      "patch": {
+        "operationId": "EmailsController_updateTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmailTemplateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit a template",
+        "tags": [
+          "emails"
         ]
       }
     },
@@ -10042,6 +11239,60 @@
       }
     },
     "/events/{slug}/rsvp/me": {
+      "get": {
+        "operationId": "EventsController_getMyRsvpStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Whether the signed-in member is already registered for this event",
+        "tags": [
+          "events"
+        ]
+      },
       "post": {
         "operationId": "EventsController_rsvpAsMember",
         "parameters": [
@@ -10652,6 +11903,15 @@
             "required": false,
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "description": "Narrow to a specific service day",
+            "in": "query",
+            "name": "serviceId",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -11276,6 +12536,53 @@
           }
         ],
         "summary": "Search first-timers (Visitor) or absentees (Member) to add to the Master List (UNIT_LEAD+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/services": {
+      "get": {
+        "operationId": "FollowUpController_listServices",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Recent services, for the Follow-Up page's service-day filter (MEMBER+)",
         "tags": [
           "follow-up"
         ]
@@ -14469,6 +15776,62 @@
         ]
       }
     },
+    "/members/{memberId}/birthday-greetings": {
+      "get": {
+        "operationId": "MembersBirthdayGreetingsController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memberId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List greetings left for a member (any signed-in member)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/absent": {
       "get": {
         "operationId": "MembersPastoralController_absent",
@@ -14520,6 +15883,53 @@
           }
         ],
         "summary": "Absent members",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/anniversaries/today": {
+      "get": {
+        "operationId": "MembersPastoralController_todayAnniversaries",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Members whose wedding anniversary is today",
         "tags": [
           "members"
         ]
@@ -14594,6 +16004,57 @@
           }
         ],
         "summary": "Members at risk — consecutive absences, never attended, below 50% rate (ADMIN+)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/birthdays/community": {
+      "get": {
+        "operationId": "MembersBirthdayGreetingsController_community",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "daysAhead",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Community-safe upcoming birthdays — no email/DOB (public)",
         "tags": [
           "members"
         ]
@@ -15316,6 +16777,72 @@
         ]
       }
     },
+    "/members/me/{memberId}/birthday-greetings": {
+      "post": {
+        "operationId": "MembersBirthdayGreetingsController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "memberId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBirthdayGreetingDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Leave a birthday greeting for a member",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/me/avatar": {
       "delete": {
         "operationId": "MembersSelfServiceController_clearMyAvatar",
@@ -15418,7 +16945,63 @@
             "access-token": []
           }
         ],
-        "summary": "Upload my profile photo (PNG/JPG/JPEG, ≤ 1 MB)",
+        "summary": "Upload my profile photo (PNG/JPG/JPEG, ≤ 3 MB)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/birthday-greetings/{greetingId}": {
+      "delete": {
+        "operationId": "MembersBirthdayGreetingsController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "greetingId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete my greeting (or any greeting, if PASTOR+)",
         "tags": [
           "members"
         ]
@@ -15587,7 +17170,7 @@
           {
             "in": "query",
             "name": "q",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -15630,7 +17213,7 @@
             "access-token": []
           }
         ],
-        "summary": "Search active members by name — for \"pick a person\" pickers (MEMBER+)",
+        "summary": "Search active members by name, or list them when q is empty — for \"pick a person\" pickers (MEMBER+)",
         "tags": [
           "members"
         ]
@@ -15830,6 +17413,133 @@
         "summary": "Count my unread notifications",
         "tags": [
           "notifications"
+        ]
+      }
+    },
+    "/online-attendance": {
+      "get": {
+        "operationId": "OnlineAttendanceController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "channel",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "stage",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "take",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "List online check-in records (admin)",
+        "tags": [
+          "online-attendance"
+        ]
+      }
+    },
+    "/online-attendance/check-in": {
+      "post": {
+        "operationId": "OnlineAttendanceController_checkIn",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckInDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Record an online attendance check-in (YouTube or Telegram)",
+        "tags": [
+          "online-attendance"
         ]
       }
     },
@@ -19896,6 +21606,262 @@
         ]
       }
     },
+    "/units/{unitId}/expenses": {
+      "get": {
+        "operationId": "UnitExpensesController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List expense entries for a unit (with running total)",
+        "tags": [
+          "units"
+        ]
+      },
+      "post": {
+        "operationId": "UnitExpensesController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUnitExpenseDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Log an expense for a unit (lead/assistant of unit, or ADMIN+)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/expenses/{expenseId}": {
+      "delete": {
+        "operationId": "UnitExpensesController_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "expenseId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete an expense entry",
+        "tags": [
+          "units"
+        ]
+      },
+      "patch": {
+        "operationId": "UnitExpensesController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "expenseId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUnitExpenseDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit an expense entry",
+        "tags": [
+          "units"
+        ]
+      }
+    },
     "/units/{unitId}/lead": {
       "delete": {
         "operationId": "UnitsMembersController_removeLead",
@@ -20208,6 +22174,80 @@
         ]
       }
     },
+    "/units/{unitId}/members/{memberId}/position": {
+      "patch": {
+        "operationId": "UnitPositionsController_setMemberPosition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "memberId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetMemberPositionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Set or clear a unit member's position",
+        "tags": [
+          "units"
+        ]
+      }
+    },
     "/units/{unitId}/members/{memberId}/role": {
       "patch": {
         "operationId": "UnitsMembersController_setMemberRole",
@@ -20277,6 +22317,720 @@
           }
         ],
         "summary": "Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/messages": {
+      "post": {
+        "operationId": "UnitMessagesController_send",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendUnitMessageDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Message another member of the unit — delivered as a notification (any unit member to any other)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/positions": {
+      "get": {
+        "operationId": "UnitPositionsController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List positions defined for a unit",
+        "tags": [
+          "units"
+        ]
+      },
+      "post": {
+        "operationId": "UnitPositionsController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUnitPositionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create a position for a unit (lead/assistant of unit, or ADMIN+)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/positions/{positionId}": {
+      "delete": {
+        "operationId": "UnitPositionsController_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "positionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a position",
+        "tags": [
+          "units"
+        ]
+      },
+      "patch": {
+        "operationId": "UnitPositionsController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "positionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUnitPositionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Rename a position",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/tasks": {
+      "get": {
+        "operationId": "UnitTasksController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List tasks for a unit",
+        "tags": [
+          "units"
+        ]
+      },
+      "post": {
+        "operationId": "UnitTasksController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUnitTaskDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create and assign a task within a unit (lead/assistant of unit, or ADMIN+)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/tasks/{taskId}": {
+      "delete": {
+        "operationId": "UnitTasksController_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a task",
+        "tags": [
+          "units"
+        ]
+      },
+      "patch": {
+        "operationId": "UnitTasksController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUnitTaskDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update a task. Lead/assistant can edit anything; an assignee may only change its status.",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/tasks/{taskId}/comments": {
+      "get": {
+        "operationId": "UnitTasksController_listComments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "List comments on a task (any unit member)",
+        "tags": [
+          "units"
+        ]
+      },
+      "post": {
+        "operationId": "UnitTasksController_addComment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUnitTaskCommentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Comment on a task (any unit member)",
         "tags": [
           "units"
         ]
@@ -20376,9 +23130,215 @@
         ]
       }
     },
+    "/units/mine": {
+      "get": {
+        "operationId": "UnitsController_getMyUnits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get every unit the current user leads or assists",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/mine/{unitId}": {
+      "get": {
+        "operationId": "UnitsController_getMyUnitDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get full detail for one unit the current user leads or assists (or ADMIN+)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/my-memberships": {
+      "get": {
+        "operationId": "UnitsController_getMyMemberships",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get every unit the current user is a plain member of (excludes units they lead/assist)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/my-memberships/{unitId}": {
+      "get": {
+        "operationId": "UnitsController_getMyMembershipDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get full detail for one unit the current user belongs to, in any capacity",
+        "tags": [
+          "units"
+        ]
+      }
+    },
     "/uploads/document": {
       "post": {
-        "description": "Uploads a document (docx/doc/pdf) to R2 and returns its public URL. Used by Report attachments.",
+        "description": "Uploads a document or photo (docx/doc/pdf/jpg/png/webp) to R2 and returns its public URL. Used by Report attachments and unit expense receipts.",
         "operationId": "UploadsController_uploadDocument",
         "parameters": [],
         "requestBody": {
@@ -20387,7 +23347,7 @@
               "schema": {
                 "properties": {
                   "file": {
-                    "description": "Document file (DOCX, DOC, or PDF — max 15 MB)",
+                    "description": "Document or photo (DOCX, DOC, PDF, JPG, PNG, or WebP — max 15 MB)",
                     "format": "binary",
                     "type": "string"
                   }
@@ -20452,7 +23412,7 @@
               "schema": {
                 "properties": {
                   "file": {
-                    "description": "Image file (JPG, PNG, WebP, GIF, AVIF — max 8 MB)",
+                    "description": "Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC/HEIF — max 8 MB)",
                     "format": "binary",
                     "type": "string"
                   }
@@ -20990,6 +23950,63 @@
         ]
       }
     },
+    "/users/{profileId}/resend-login": {
+      "post": {
+        "description": "Issues a fresh temporary password and re-sends the welcome email. The previous password (if any) stops working immediately.",
+        "operationId": "UsersController_resendLogin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Resend login details",
+        "tags": [
+          "users"
+        ]
+      }
+    },
     "/users/{profileId}/role": {
       "patch": {
         "operationId": "UsersRolesController_updateRole",
@@ -21339,6 +24356,60 @@
       }
     },
     "/visitors/{id}": {
+      "delete": {
+        "operationId": "VisitorsController_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a visitor record",
+        "tags": [
+          "visitors"
+        ]
+      },
       "get": {
         "operationId": "VisitorsController_getById",
         "parameters": [
@@ -21392,6 +24463,70 @@
         "tags": [
           "visitors"
         ]
+      },
+      "patch": {
+        "operationId": "VisitorsController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVisitorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit a visitor record (e.g. correct a name or phone number)",
+        "tags": [
+          "visitors"
+        ]
       }
     },
     "/visitors/count": {
@@ -21436,6 +24571,110 @@
           }
         ],
         "summary": "Total visitor count",
+        "tags": [
+          "visitors"
+        ]
+      }
+    },
+    "/visitors/import": {
+      "post": {
+        "operationId": "VisitorsController_bulkImport",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkImportVisitorsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Bulk-import visitors from parsed CSV rows",
+        "tags": [
+          "visitors"
+        ]
+      }
+    },
+    "/visitors/stats": {
+      "get": {
+        "operationId": "VisitorsController_stats",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "{ total, onsite, online }"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "First-timer count broken down by attendance type",
         "tags": [
           "visitors"
         ]
