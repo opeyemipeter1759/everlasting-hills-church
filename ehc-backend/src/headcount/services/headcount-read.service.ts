@@ -35,6 +35,9 @@ export class HeadcountReadService {
     const hc = svc ? await this.prisma.serviceHeadcount.findUnique({ where: { serviceId: svc.id } }) : null;
     return {
       date: dateStr,
+      // The server's own idea of today, so the client can explain a refusal
+      // rather than restating the rule.
+      serverDate: this.dateSvc.todayStr(),
       inferredType: this.dateSvc.typeForWeekday(this.dateSvc.weekdayOf(dateStr)),
       canRecord: this.dateSvc.canRecordDate(dateStr),
       service: svc

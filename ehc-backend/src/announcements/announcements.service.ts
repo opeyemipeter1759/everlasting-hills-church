@@ -112,7 +112,14 @@ export class AnnouncementsService {
         await Promise.all(
           batch.map((email) =>
             this.mail.dispatch(
-              buildAnnouncementEmail({ email, title, body, dashboardUrl, imageUrl }),
+              buildAnnouncementEmail({
+                email,
+                title,
+                body,
+                dashboardUrl,
+                imageUrl,
+                targeted: this.hasTargeting(targeting),
+              }),
             ),
           ),
         );

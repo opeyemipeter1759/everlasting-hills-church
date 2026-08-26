@@ -9,6 +9,12 @@ interface Args {
   dashboardUrl?: string;
   /** The flyer attached to the announcement, if any. */
   imageUrl?: string | null;
+  /**
+   * Whether this announcement was aimed at a subset of the church. Announcements
+   * can target the Visitor role, and telling a first-timer they are receiving
+   * mail "because you are a member" is both untrue and the wrong welcome.
+   */
+  targeted?: boolean;
 }
 
 export function buildAnnouncementEmail({
@@ -17,7 +23,11 @@ export function buildAnnouncementEmail({
   body,
   dashboardUrl = 'https://everlastinghills.org/dashboard',
   imageUrl,
+  targeted = false,
 }: Args): SendEmailPayload {
+  const audienceNote = targeted
+    ? 'You are receiving this because this announcement was sent to your group at Everlasting Hills Church.'
+    : 'You are receiving this because you are part of the Everlasting Hills Church family.';
   // Referenced by URL rather than attached: the flyer already lives on a public
   // R2 bucket, every mail client can render an https image, and inlining a
   // multi-MB JPEG into a church-wide blast would push messages past provider
@@ -47,7 +57,7 @@ export function buildAnnouncementEmail({
     ${flyerHtml}
     ${markdownToEmailHtml(body, escapeHtml)}
     <p style="color:#9CA3AF;font-size:13px;margin:24px 0 0">
-      You're receiving this because you're a member of Everlasting Hills Church.
+      ${escapeHtml(audienceNote)}
     </p>
   `;
 

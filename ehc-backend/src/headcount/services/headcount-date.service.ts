@@ -36,6 +36,19 @@ export class HeadcountDateService {
     return weekday === 0 ? ServiceType.SUNDAY : weekday === 3 ? ServiceType.WEDNESDAY : ServiceType.SPECIAL;
   }
 
+  /**
+   * Today in WAT as YYYY-MM-DD, from the same clock canRecordDate uses.
+   *
+   * Returned to the client so a refused date can say WHY: if the server thinks
+   * it is still yesterday (a stale ATTENDANCE_TEST_NOW, or a container whose
+   * clock has drifted), an usher standing there on Wednesday morning sees that
+   * instead of a flat "this date has not occurred yet".
+   */
+  todayStr(): string {
+    const watNow = new Date(this.clock.getNow().getTime() + WAT_OFFSET_MS);
+    return watNow.toISOString().slice(0, 10);
+  }
+
   /** A headcount can be recorded for a date that is today or earlier (WAT). */
   canRecordDate(dateStr: string): boolean {
     const { startUtc } = this.dayBoundsUtc(dateStr);
