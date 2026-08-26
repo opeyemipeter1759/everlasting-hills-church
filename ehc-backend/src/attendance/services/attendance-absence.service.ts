@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
+import { ServiceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 
@@ -29,6 +30,13 @@ export class AttendanceAbsenceService {
       }),
     ]);
     if (!service) return { marked: 0 };
+
+    // Only the services the church gathers for weekly produce absences. SPECIAL
+    // covers one-off gatherings and the placeholder rows the usher headcount
+    // flow creates for any other weekday — nobody is "absent" from a Tuesday
+    // that was never called, and writing those records is what put an ABSENT
+    // beside members for services that did not exist for them.
+    if (service.serviceType === ServiceType.SPECIAL) return { marked: 0 };
 
     const existing = await this.prisma.attendanceRecord.findMany({
       where: { serviceId, tenantId: this.tenantId, present: true },
