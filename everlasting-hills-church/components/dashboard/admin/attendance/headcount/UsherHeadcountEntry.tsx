@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, Plus, Check } from "lucide-react";
+import { ClipboardList, Plus, Check, Save } from "lucide-react";
 import FormModal from "@/components/ui/overlay/FormModal";
 import {
   useHeadcountByDate,
@@ -16,7 +16,10 @@ import { watTodayStr, prettyDate, inferType } from "./date-utils";
 export default function UsherHeadcountEntry() {
   const [date, setDate] = useState<string>(watTodayStr());
   const [modalOpen, setModalOpen] = useState(false);
-  const [justSaved, setJustSaved] = useState(false);
+  // What the last save produced, so the confirmation message can say whether the
+  // count is actually counted — a draft looks saved but is excluded from every
+  // attendance report, which is not something to leave an usher guessing at.
+  const [justSaved, setJustSaved] = useState<"CONFIRMED" | "DRAFT" | null>(null);
 
   const byDate = useHeadcountByDate(date);
   const save = useSaveHeadcountByDate(date);
@@ -40,7 +43,7 @@ export default function UsherHeadcountEntry() {
   // Picking a day pops the form modal open (per the flow).
   function pickDate(d: string) {
     setDate(d);
-    setJustSaved(false);
+    setJustSaved(null);
     setModalOpen(true);
   }
 
@@ -48,7 +51,22 @@ export default function UsherHeadcountEntry() {
     await save.mutateAsync(input);
     await byDate.refetch();
     setModalOpen(false);
-    setJustSaved(true);
+    setJustSaved(input.confirm ? "CONFIRMED" : "DRAFT");
+  }
+
+  /** Promotes an existing draft without reopening the form and retyping it. */
+  async function confirmExisting() {
+    if (!hc) return;
+    await submit({
+      men: hc.men,
+      women: hc.women,
+      boys: hc.boys,
+      girls: hc.girls,
+      firstTimers: hc.firstTimers,
+      reportedTotal: hc.reportedTotal,
+      notes: hc.notes,
+      confirm: true,
+    });
   }
 
   return (
@@ -71,10 +89,31 @@ export default function UsherHeadcountEntry() {
       <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5">
         <HeadcountDatePicker value={date} onChange={pickDate} />
 
-        {justSaved && (
+        {justSaved === "CONFIRMED" && (
           <p className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-            <Check size={15} /> Attendance saved for {prettyDate(date)}.
+            <Check size={15} /> Attendance confirmed for {prettyDate(date)}.
           </p>
+        )}
+        {justSaved === "DRAFT" && (
+          <p className="mt-4 inline-flex items-start gap-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-700 dark:text-amber-400">
+            <Save size={15} className="mt-0.5 flex-shrink-0" />
+            <span>
+              Saved as a draft for {prettyDate(date)} — drafts are left out of attendance reports until
+              they are confirmed.
+            </span>
+          </p>
+        )}
+
+        {/* A draft that is already filled in only needs one click to count. */}
+        {hc?.status === "DRAFT" && (
+          <button
+            type="button"
+            onClick={confirmExisting}
+            disabled={save.isPending}
+            className="mt-4 ml-0 inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-bold text-emerald-700 transition-colors hover:bg-emerald-100 disabled:opacity-50 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/15"
+          >
+            <Check size={15} /> {save.isPending ? "Confirming…" : "Confirm this count"}
+          </button>
         )}
 
         {/* Current record for the selected date */}
@@ -93,7 +132,7 @@ export default function UsherHeadcountEntry() {
 
           <button
             type="button"
-            onClick={() => { setJustSaved(false); setModalOpen(true); }}
+            onClick={() => { setJustSaved(null); setModalOpen(true); }}
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5"
           >
             <Plus size={16} /> {hc ? "Edit attendance" : "Record attendance"}

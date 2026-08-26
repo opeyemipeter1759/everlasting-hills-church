@@ -205,7 +205,13 @@ export default function HeadcountEntryForm({
         </p>
       )}
 
-      {/* Actions */}
+      {/* Actions. The distinction matters more than it looks: a draft is saved
+          but deliberately excluded from the attendance trend and the admin
+          comparison, so an usher who picks the wrong button has entered a count
+          that never reaches a report. */}
+      <p className="text-[11px] text-gray-400 dark:text-white/40">
+        Confirm to include this count in attendance reports. A draft is kept but left out of them.
+      </p>
       <div className="flex flex-wrap items-center gap-2.5">
         <button
           type="button"
@@ -223,6 +229,11 @@ export default function HeadcountEntryForm({
         >
           <Save size={15} /> {pending ? "Saving…" : "Save draft"}
         </button>
+        {existing?.status === "DRAFT" && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-400">
+            Draft — not counted
+          </span>
+        )}
         {existing?.status === "CONFIRMED" && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
             <Check size={12} /> Confirmed
