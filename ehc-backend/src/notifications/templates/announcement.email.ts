@@ -9,12 +9,17 @@ interface Args {
   dashboardUrl?: string;
   /** The flyer attached to the announcement, if any. */
   imageUrl?: string | null;
-  /**
-   * Whether this announcement was aimed at a subset of the church. Announcements
-   * can target the Visitor role, and telling a first-timer they are receiving
-   * mail "because you are a member" is both untrue and the wrong welcome.
-   */
+  /** Public site root, used for the visitor call-to-action. */
+  siteUrl?: string;
+  /** Whether this announcement was aimed at a subset of the church. */
   targeted?: boolean;
+  /**
+   * A first-timer from the Visitor table has no account and no dashboard, so
+   * sending them "View in Dashboard" walks them into a login wall, and telling
+   * them they are receiving mail "because you are a member" is both untrue and
+   * the wrong welcome.
+   */
+  recipientKind?: 'member' | 'visitor';
 }
 
 export function buildAnnouncementEmail({
@@ -22,12 +27,23 @@ export function buildAnnouncementEmail({
   title,
   body,
   dashboardUrl = 'https://everlastinghills.org/dashboard',
+  siteUrl = 'https://everlastinghills.org',
   imageUrl,
   targeted = false,
+  recipientKind = 'member',
 }: Args): SendEmailPayload {
-  const audienceNote = targeted
-    ? 'You are receiving this because this announcement was sent to your group at Everlasting Hills Church.'
-    : 'You are receiving this because you are part of the Everlasting Hills Church family.';
+  const isVisitor = recipientKind === 'visitor';
+  const audienceNote = isVisitor
+    ? 'You are receiving this because you filled in our first-timer form at Everlasting Hills Church. Reply to this email if you would rather not hear from us.'
+    : targeted
+      ? 'You are receiving this because this announcement was sent to your group at Everlasting Hills Church.'
+      : 'You are receiving this because you are part of the Everlasting Hills Church family.';
+  const cta = isVisitor
+    ? { label: 'Visit our website', href: siteUrl }
+    : { label: 'View in Dashboard', href: dashboardUrl };
+  const closingLine = isVisitor
+    ? ['We would love to see you again:', siteUrl]
+    : ['View this and all announcements in your member dashboard:', dashboardUrl];
   // Referenced by URL rather than attached: the flyer already lives on a public
   // R2 bucket, every mail client can render an https image, and inlining a
   // multi-MB JPEG into a church-wide blast would push messages past provider
@@ -44,8 +60,7 @@ export function buildAnnouncementEmail({
     // `**Date:**`.
     stripMarkdown(body),
     '',
-    'View this and all announcements in your member dashboard:',
-    dashboardUrl,
+    ...closingLine,
     '',
     '— Everlasting Hills Church · Ibadan',
   ].join('\n');
@@ -64,7 +79,7 @@ export function buildAnnouncementEmail({
   const html = renderEmailLayout({
     heading: escapeHtml(title),
     bodyHtml,
-    cta: { label: 'View in Dashboard', href: dashboardUrl },
+    cta,
   });
 
   return { to: email, subject: `📢 ${title}`, text, html, tag: 'announcement' };

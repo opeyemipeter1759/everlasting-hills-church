@@ -59,6 +59,67 @@ export class AnnouncementsService {
     return { tenantId: this.tenantId, OR };
   }
 
+  /**
+   * Who actually gets the email, as addresses paired with what they are to the
+   * church — the two groups get different copy and a different call to action.
+   *
+   * Targeting the VISITOR role means the first-timer list, not a role anyone
+   * holds. Visitors are rows in the Visitor table with no Profile at all, so
+   * before this they could never receive an announcement: selecting "Visitor"
+   * fell through roleFilter() to the plain-member branch and silently sent to
+   * members instead. VISITOR is therefore removed from the profile-side
+   * targeting here and resolved separately.
+   *
+   * Only unconverted visitors are included — once someone becomes a member they
+   * are reachable as a member, and mailing both rows would send them two copies.
+   */
+  private async resolveEmailAudience(
+    targeting: AudienceTargeting,
+    allProfiles: { Member: { email: string | null } | null }[],
+  ): Promise<{ email: string; kind: 'member' | 'visitor' }[]> {
+    const visitorsTargeted = targeting.targetRoles.includes(Role.VISITOR);
+    const profileTargeting: AudienceTargeting = {
+      ...targeting,
+      targetRoles: targeting.targetRoles.filter((role) => role !== Role.VISITOR),
+    };
+    const profilesTargeted = this.hasTargeting(profileTargeting);
+
+    // No targeting of any kind still means the whole church, unchanged.
+    const profileRows = !visitorsTargeted && !profilesTargeted
+      ? allProfiles
+      : profilesTargeted
+        ? await this.prisma.profile.findMany({
+            where: this.resolveAudienceWhere(profileTargeting),
+            select: { Member: { select: { email: true } } },
+          })
+        : [];
+
+    const memberEmails = profileRows
+      .map((p) => p.Member?.email)
+      .filter((e): e is string => Boolean(e));
+
+    const recipients: { email: string; kind: 'member' | 'visitor' }[] = memberEmails.map(
+      (email) => ({ email, kind: 'member' }),
+    );
+
+    if (visitorsTargeted) {
+      const visitors = await this.prisma.visitor.findMany({
+        where: { tenantId: this.tenantId, convertedAt: null, email: { not: null } },
+        select: { email: true },
+      });
+      // A first-timer who also has a member account must not get two copies.
+      const seen = new Set(memberEmails.map((e) => e.toLowerCase()));
+      for (const visitor of visitors) {
+        const email = visitor.email?.trim();
+        if (!email || seen.has(email.toLowerCase())) continue;
+        seen.add(email.toLowerCase());
+        recipients.push({ email, kind: 'visitor' as const });
+      }
+    }
+
+    return recipients;
+  }
+
   /** In-app fan-out (always church-wide) + optional, separately-targeted email
    * blast. Returns the in-app recipient count. */
   private async fanOut(
@@ -85,49 +146,43 @@ export class AnnouncementsService {
     );
 
     if (sendEmail) {
-      // Targeting only narrows the EMAIL audience — reuse the already-fetched
-      // church-wide list when there's no targeting, otherwise re-query scoped
-      // to the selected roles/gender/people.
-      const emailProfiles = this.hasTargeting(targeting)
-        ? await this.prisma.profile.findMany({
-            where: this.resolveAudienceWhere(targeting),
-            select: { Member: { select: { email: true } } },
-          })
-        : allProfiles;
+      const recipients = await this.resolveEmailAudience(targeting, allProfiles);
 
       const frontendUrl =
         this.config.get('FRONTEND_URL', { infer: true })?.replace(/\/$/, '') ??
         'https://everlastinghills.org';
       const dashboardUrl = `${frontendUrl}/dashboard`;
-
-      const emails = emailProfiles
-        .map((p) => p.Member?.email)
-        .filter((e): e is string => Boolean(e));
+      const targeted = this.hasTargeting(targeting);
 
       // Dispatch in batches of 8 with a 1-second pause between batches to stay
       // well under Resend's 10 req/s rate limit.
       const BATCH = 8;
-      for (let i = 0; i < emails.length; i += BATCH) {
-        const batch = emails.slice(i, i + BATCH);
+      for (let i = 0; i < recipients.length; i += BATCH) {
+        const batch = recipients.slice(i, i + BATCH);
         await Promise.all(
-          batch.map((email) =>
+          batch.map((recipient) =>
             this.mail.dispatch(
               buildAnnouncementEmail({
-                email,
+                email: recipient.email,
                 title,
                 body,
                 dashboardUrl,
+                siteUrl: frontendUrl,
                 imageUrl,
-                targeted: this.hasTargeting(targeting),
+                targeted,
+                recipientKind: recipient.kind,
               }),
             ),
           ),
         );
-        if (i + BATCH < emails.length) {
+        if (i + BATCH < recipients.length) {
           await new Promise((r) => setTimeout(r, 1_100));
         }
       }
-      this.logger.log(`Announcement "${title}" emailed to ${emails.length} member(s)`);
+      const visitorCount = recipients.filter((r) => r.kind === 'visitor').length;
+      this.logger.log(
+        `Announcement "${title}" emailed to ${recipients.length - visitorCount} member(s) and ${visitorCount} first-timer(s)`,
+      );
     }
 
     this.logger.log(`Announcement "${title}" fanned out → ${created} in-app notification(s)`);

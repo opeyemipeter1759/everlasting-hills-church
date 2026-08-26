@@ -16,6 +16,16 @@ const inputCls =
   "w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#87102C]/40 focus:ring-2 focus:ring-[#87102C]/10 transition-all";
 
 const ROLE_OPTIONS = Object.keys(ROLE_LABEL) as PersonRole[];
+
+/**
+ * In this one context "Visitor" does not mean a role anybody holds — it means
+ * the first-timer list, everyone still on the welcome-form table who has not
+ * become a member. Labelled for what it does, because as "Visitor" it looked
+ * like the other role chips and quietly behaved like "Member".
+ */
+const TARGET_LABEL: Partial<Record<PersonRole, string>> = {
+  VISITOR: "First-timers",
+};
 const GENDER_OPTIONS: { value: TargetGender; label: string }[] = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
@@ -283,10 +293,16 @@ export default function AnnouncementComposerModal({
                       : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
                   }`}
                 >
-                  {ROLE_LABEL[role]}
+                  {TARGET_LABEL[role] ?? ROLE_LABEL[role]}
                 </button>
               ))}
             </div>
+            {values.targetRoles.includes("VISITOR") && (
+              <p className="mt-1.5 text-[11px] text-gray-400 dark:text-white/40">
+                First-timers are emailed from the welcome-form list — they have no dashboard, so they
+                get a link to the website instead.
+              </p>
+            )}
           </div>
 
           <div>
