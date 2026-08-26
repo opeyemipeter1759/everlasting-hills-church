@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../config/env.validation';
 import type { ServiceState } from '../headcount.util';
+import { resolveNow } from '../../common/test-clock.util';
 
 @Injectable()
 export class HeadcountClockService {
@@ -9,8 +10,7 @@ export class HeadcountClockService {
 
   /** Current time, honouring ATTENDANCE_TEST_NOW so headcount + check-in share a clock. */
   getNow(): Date {
-    const override = this.config.get('ATTENDANCE_TEST_NOW', { infer: true });
-    return override?.trim() ? new Date(override.trim()) : new Date();
+    return resolveNow(this.config.get('ATTENDANCE_TEST_NOW', { infer: true }));
   }
 
   /**
