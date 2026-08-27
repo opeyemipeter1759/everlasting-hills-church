@@ -4,13 +4,18 @@ import { ChartCard } from "@/components/ui/display/ChartCard";
 import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import type { AnalyticsFilter } from "@/lib/api/analytics";
 import { useAnalyticsMemberGrowth } from "@/lib/api/analytics";
+import { downloadCsv } from "@/lib/export-csv";
 
 interface Props { filter: AnalyticsFilter }
 
 export function MemberGrowthChart({ filter }: Props) {
   const { data, isLoading } = useAnalyticsMemberGrowth(filter);
   return (
-    <ChartCard title="Member Growth Trend" onExportCsv={() => {}} onExportPng={() => {}} minHeight="min-h-[240px]">
+    <ChartCard
+      title="Member Growth Trend"
+      onExportCsv={data?.length ? () => downloadCsv("member-growth", data) : undefined}
+      minHeight="min-h-[240px]"
+    >
       {isLoading ? <ChartSkeleton /> : (
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart data={data ?? []} margin={{ top: 4, right: 8, left: -14, bottom: 0 }}>

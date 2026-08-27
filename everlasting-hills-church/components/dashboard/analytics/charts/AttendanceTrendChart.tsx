@@ -3,6 +3,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { ChartCard } from "@/components/ui/display/ChartCard";
 import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import { useAnalyticsTrend, type AnalyticsFilter } from "@/lib/api/analytics";
+import { downloadCsv } from "@/lib/export-csv";
 
 const COLORS = { present: "#10b981", absent: "#ef4444" };
 
@@ -13,8 +14,7 @@ export function AttendanceTrendChart({ filter }: Props) {
   return (
     <ChartCard
       title="Attendance Trend"
-      onExportCsv={() => {}}
-      onExportPng={() => {}}
+      onExportCsv={data?.length ? () => downloadCsv("attendance-trend", data) : undefined}
       minHeight="min-h-[240px]"
     >
       {isLoading || !data ? <ChartSkeleton /> : (
