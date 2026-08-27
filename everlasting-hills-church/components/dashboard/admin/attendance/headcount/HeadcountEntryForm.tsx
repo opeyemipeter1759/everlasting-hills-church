@@ -32,7 +32,7 @@ export default function HeadcountEntryForm({
   disabledReason?: string;
   existing: Headcount | null;
   pending: boolean;
-  onSubmit: (input: SaveHeadcountInput, confirm: boolean) => Promise<void>;
+  onSubmit: (input: SaveHeadcountInput) => Promise<void>;
 }) {
   const [counts, setCounts] = useState<Record<Cat, number>>({
     men: existing?.men ?? 0,
@@ -77,26 +77,22 @@ export default function HeadcountEntryForm({
     setError(null);
   }
 
-  async function submit(confirm: boolean) {
+  async function submit() {
     if (firstTimersTooHigh) {
       setError("First-timers cannot exceed the total present.");
       return;
     }
     setError(null);
     try {
-      await onSubmit(
-        {
-          men: counts.men,
-          women: counts.women,
-          boys: counts.boys,
-          girls: counts.girls,
-          firstTimers: counts.firstTimers,
-          reportedTotal: reported,
-          notes: notes.trim() || null,
-          confirm,
-        },
-        confirm,
-      );
+      await onSubmit({
+        men: counts.men,
+        women: counts.women,
+        boys: counts.boys,
+        girls: counts.girls,
+        firstTimers: counts.firstTimers,
+        reportedTotal: reported,
+        notes: notes.trim() || null,
+      });
     } catch (e) {
       setError((e as { message?: string }).message ?? "Could not save the headcount.");
     }
@@ -205,40 +201,24 @@ export default function HeadcountEntryForm({
         </p>
       )}
 
-      {/* Actions. The distinction matters more than it looks: a draft is saved
-          but deliberately excluded from the attendance trend and the admin
-          comparison, so an usher who picks the wrong button has entered a count
-          that never reaches a report. */}
-      <p className="text-[11px] text-gray-400 dark:text-white/40">
-        Confirm to include this count in attendance reports. A draft is kept but left out of them.
-      </p>
+      {/* One action, one outcome. There used to be a second "Save draft" button
+          beside this one, and a draft was excluded from the attendance trend and
+          the admin comparison — so the quieter of two near-identical buttons
+          silently produced counts that never reached a report. A filled-in form
+          means the room was counted. */}
       <div className="flex flex-wrap items-center gap-2.5">
         <button
           type="button"
-          onClick={() => submit(true)}
+          onClick={submit}
           disabled={pending || firstTimersTooHigh}
           className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
         >
-          <Check size={15} /> {existing?.status === "CONFIRMED" ? "Save changes" : "Confirm headcount"}
+          <Check size={15} />
+          {pending ? "Saving…" : existing ? "Save changes" : "Save attendance"}
         </button>
-        <button
-          type="button"
-          onClick={() => submit(false)}
-          disabled={pending || firstTimersTooHigh}
-          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-semibold text-gray-700 dark:text-white/80 hover:bg-gray-50 dark:hover:bg-white/10 disabled:opacity-50"
-        >
-          <Save size={15} /> {pending ? "Saving…" : "Save draft"}
-        </button>
-        {existing?.status === "DRAFT" && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:text-amber-400">
-            Draft — not counted
-          </span>
-        )}
-        {existing?.status === "CONFIRMED" && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
-            <Check size={12} /> Confirmed
-          </span>
-        )}
+        <span className="text-[11px] text-gray-400 dark:text-white/40">
+          Counts towards attendance reports as soon as you save.
+        </span>
         {existing?.edited && (
           <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-gray-400 dark:text-white/40">
             <Pencil size={11} /> Edited

@@ -17,8 +17,6 @@ export const UpsertHeadcountSchema = z.object({
   firstTimers: count.default(0),
   reportedTotal: count.nullish(),
   notes: z.string().trim().max(1000).nullish(),
-  /** When true, the record is CONFIRMED; otherwise it stays a DRAFT. */
-  confirm: z.boolean().optional(),
 });
 
 export type UpsertHeadcountInput = z.infer<typeof UpsertHeadcountSchema>;

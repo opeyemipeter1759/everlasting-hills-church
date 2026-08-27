@@ -91,7 +91,6 @@ export interface SaveHeadcountInput {
   firstTimers: number;
   reportedTotal?: number | null;
   notes?: string | null;
-  confirm?: boolean;
 }
 
 // ── Hooks ────────────────────────────────────────────────────────────────────

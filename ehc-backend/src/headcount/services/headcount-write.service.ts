@@ -72,7 +72,13 @@ export class HeadcountWriteService {
     }
 
     const existing = await this.prisma.serviceHeadcount.findUnique({ where: { serviceId } });
-    const status = body.confirm ? HeadcountStatus.CONFIRMED : existing?.status ?? HeadcountStatus.DRAFT;
+    // Every saved headcount is authoritative. There is no half-counted service:
+    // an usher who has filled the form has counted the room, and a DRAFT looked
+    // saved while being excluded from getTrend() and the admin comparison, so
+    // counts quietly went missing from every report. The status column stays for
+    // the rows written before this, and for anything that needs to distinguish
+    // them later.
+    const status = HeadcountStatus.CONFIRMED;
 
     const data = {
       men: body.men,
@@ -94,7 +100,7 @@ export class HeadcountWriteService {
         where: { serviceId },
         data,
       });
-      action = body.confirm && existing.status !== HeadcountStatus.CONFIRMED ? 'CONFIRM' : 'UPDATE';
+      action = existing.status !== HeadcountStatus.CONFIRMED ? 'CONFIRM' : 'UPDATE';
     } else {
       row = await this.prisma.serviceHeadcount.create({
         data: { id: randomUUID(), tenantId: this.tenantId, serviceId, recordedAt: new Date(), ...data },
