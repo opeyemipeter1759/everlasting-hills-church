@@ -15,12 +15,12 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 
 type MetricKey = "value" | "men" | "women" | "children" | "firstTimers";
 
-const METRICS: { key: MetricKey; label: string; color: string }[] = [
-  { key: "value",       label: "Total",        color: "#87102C" },
-  { key: "men",         label: "Men",          color: "#2563eb" },
-  { key: "women",       label: "Women",        color: "#db2777" },
-  { key: "children",    label: "Children",     color: "#d97706" },
-  { key: "firstTimers", label: "First-timers", color: "#059669" },
+const METRICS: { key: MetricKey; label: string }[] = [
+  { key: "value", label: "Total" },
+  { key: "men", label: "Men" },
+  { key: "women", label: "Women" },
+  { key: "children", label: "Children" },
+  { key: "firstTimers", label: "First-timers" },
 ];
 
 type RangeKey = "3M" | "6M" | "1Y" | "ALL";
@@ -33,58 +33,98 @@ const RANGES: { key: RangeKey; label: string; months: number | null }[] = [
 ];
 
 /**
- * Bar width, in pixels, for a given number of bars.
+ * Bars are coloured by which service they are, not by recency.
  *
- * Bars used to be pure flex-1, so ten services filled the card with columns wide
- * enough to land a plane on. Capping the width keeps a sparse chart looking like
- * a chart rather than a wall, and lets a full year of services fit without the
- * card scrolling.
+ * The chart pairs a week's services side by side, so the colour is what tells
+ * you which bar is which — the same job the legend does in any grouped bar
+ * chart. SPECIAL covers watchnights and one-off gatherings; they keep their own
+ * colour rather than being hidden, because they are real counts.
  */
-function barMaxWidth(count: number): number {
-  if (count <= 6) return 44;
-  if (count <= 12) return 32;
-  if (count <= 26) return 20;
-  if (count <= 52) return 12;
-  return 8;
-}
+const SERIES: { key: ServiceTypeKey; label: string; color: string }[] = [
+  { key: "SUNDAY", label: "Sunday", color: "#87102C" },
+  { key: "WEDNESDAY", label: "Wednesday", color: "#C9973F" },
+  { key: "SPECIAL", label: "Special", color: "#64748b" },
+];
 
-/** Show every nth x-axis label so they stop colliding as the range widens. */
-function labelStride(count: number): number {
-  if (count <= 12) return 1;
-  if (count <= 26) return 2;
-  if (count <= 52) return 4;
-  return Math.ceil(count / 14);
+const SERIES_COLOR: Record<string, string> = Object.fromEntries(
+  SERIES.map((s) => [s.key, s.color]),
+);
+
+/**
+ * The WAT calendar day a timestamp falls on, as yyyy-mm-dd.
+ *
+ * Services are not all stored the same way: some carry a real service time
+ * (Sunday 08:00Z), others were created at WAT midnight and so sit at 23:00Z on
+ * the day BEFORE. Slicing the ISO string would call those the previous day —
+ * which for a Sunday means the previous week, and the whole point of this chart
+ * is that a week's Wednesday and Sunday stand together.
+ */
+const WAT_OFFSET_MS = 60 * 60 * 1000;
+
+function watDay(iso: string): string {
+  const at = new Date(iso);
+  if (Number.isNaN(at.getTime())) return iso.slice(0, 10);
+  return new Date(at.getTime() + WAT_OFFSET_MS).toISOString().slice(0, 10);
 }
 
 /**
- * Formats the x-axis label for a bar.
- * Prefers the pre-formatted d.label (e.g. "Sun 05/04"). Only falls back to
- * parsing d.date if the label is a plain date string with no day prefix.
- * Safely handles full ISO timestamps from the backend by slicing to 10 chars first.
+ * Monday of the week a service falls in, as a sortable yyyy-mm-dd key.
+ *
+ * All UTC methods on a UTC-parsed date. Doing this in local time round-trips the
+ * key through the viewer's offset and lands a day early, so the same week would
+ * be labelled differently depending on who is looking at it.
  */
-function barLabel(d: AttendancePoint): { day: string; date: string } {
-  // If the label already has a day prefix (e.g. "Sun 05/04"), use it directly.
-  const parts = d.label.split(" ");
-  if (parts.length >= 2 && parts[0].length === 3) {
-    return { day: parts[0], date: parts.slice(1).join(" ") };
-  }
+function weekStart(iso: string): string {
+  const at = new Date(watDay(iso) + "T00:00:00Z");
+  if (Number.isNaN(at.getTime())) return iso.slice(0, 10);
+  // getUTCDay(): 0 = Sunday. Shifting to a Monday start is what puts a
+  // Wednesday service and the Sunday that follows it in the same group — the
+  // pairing the church actually thinks in.
+  const offset = (at.getUTCDay() + 6) % 7;
+  at.setUTCDate(at.getUTCDate() - offset);
+  return at.toISOString().slice(0, 10);
+}
 
-  // Try to parse from the ISO date field — slice to "yyyy-MM-dd" first to avoid
-  // "Invalid Date" when the backend returns a full timestamp like "2026-04-05T09:00:00Z".
-  if (d.date) {
-    const dateOnly = d.date.slice(0, 10); // "2026-04-05"
-    const dt = new Date(dateOnly + "T00:00:00");
-    if (!isNaN(dt.getTime())) {
-      const day = dt.toLocaleDateString("en-GB", { weekday: "short" });
-      const dd = String(dt.getDate()).padStart(2, "0");
-      const mm = String(dt.getMonth() + 1).padStart(2, "0");
-      const yy = String(dt.getFullYear()).slice(-2);
-      return { day, date: `${dd}/${mm}/${yy}` };
-    }
-  }
+/** Week keys are already plain yyyy-mm-dd, so this takes them as-is. */
+function shortDate(dayKey: string): string {
+  const at = new Date(dayKey + "T00:00:00Z");
+  if (Number.isNaN(at.getTime())) return dayKey;
+  return `${String(at.getUTCDate()).padStart(2, "0")}/${String(at.getUTCMonth() + 1).padStart(2, "0")}`;
+}
 
-  // Last resort: show the raw label on one line
-  return { day: d.label, date: "" };
+/** Tooltip date for a service timestamp, read in WAT. */
+function fullDate(iso: string): string {
+  const at = new Date(watDay(iso) + "T00:00:00Z");
+  if (Number.isNaN(at.getTime())) return iso;
+  return at.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+}
+
+interface WeekGroup {
+  key: string;
+  label: string;
+  points: AttendancePoint[];
+}
+
+/** Widths step down as more weeks fit on screen, so the chart never turns into a wall. */
+function barMaxWidth(groups: number, perGroup: number): number {
+  const bars = Math.max(groups * perGroup, 1);
+  if (bars <= 8) return 34;
+  if (bars <= 16) return 26;
+  if (bars <= 30) return 18;
+  if (bars <= 60) return 11;
+  return 7;
+}
+
+function labelStride(groups: number): number {
+  if (groups <= 14) return 1;
+  if (groups <= 28) return 2;
+  if (groups <= 60) return 4;
+  return Math.ceil(groups / 14);
 }
 
 export default function AttendanceTrendCard({
@@ -93,14 +133,14 @@ export default function AttendanceTrendCard({
 }: { data: AttendancePoint[] } & DashboardCardChrome) {
   const [filter, setFilter] = useState<FilterKey>("ALL");
   const [metric, setMetric] = useState<MetricKey>("value");
-  const [range, setRange] = useState<RangeKey>("ALL");
+  const [range, setRange] = useState<RangeKey>("3M");
 
-  const hasTypes     = useMemo(() => data.some((d) => d.serviceType), [data]);
+  const hasTypes = useMemo(() => data.some((d) => d.serviceType), [data]);
   const hasBreakdown = useMemo(() => data.some((d) => d.men !== undefined), [data]);
 
   const mv = (d: AttendancePoint) => (metric === "value" ? d.value : d[metric] ?? 0);
 
-  const filtered = useMemo(() => {
+  const points = useMemo(() => {
     const byType =
       filter === "ALL"
         ? data
@@ -113,27 +153,62 @@ export default function AttendanceTrendCard({
     cutoff.setMonth(cutoff.getMonth() - months);
     return byType.filter((d) => {
       if (!d.date) return true;
-      const at = new Date(d.date.slice(0, 10));
+      const at = new Date(watDay(d.date) + "T00:00:00Z");
       return Number.isNaN(at.getTime()) || at >= cutoff;
     });
   }, [data, filter, range]);
 
-  const maxBarWidth = barMaxWidth(filtered.length);
-  const stride = labelStride(filtered.length);
+  /**
+   * One column per week, holding that week's services in calendar order. This is
+   * the shape the church reads attendance in — "how did we do this week" — and
+   * it puts Wednesday next to the Sunday it belongs with instead of scattering
+   * them along a single row where the alternation reads as a sawtooth.
+   */
+  const groups = useMemo<WeekGroup[]>(() => {
+    // A plain record rather than a Map: this file compiles against an ES5
+    // target, where spreading a Map iterator needs downlevelIteration.
+    const byWeek: Record<string, AttendancePoint[]> = {};
+    for (const point of points) {
+      const key = weekStart(point.date ?? "");
+      if (byWeek[key]) byWeek[key].push(point);
+      else byWeek[key] = [point];
+    }
+    // yyyy-mm-dd sorts chronologically as a string.
+    return Object.keys(byWeek)
+      .sort()
+      .map((key) => ({
+        key,
+        label: shortDate(key),
+        // Calendar order within the week, read in WAT for the same reason the
+        // grouping is: a 23:00Z timestamp belongs to the next day here.
+        points: byWeek[key]
+          .slice()
+          .sort((a, b) => watDay(a.date ?? "").localeCompare(watDay(b.date ?? ""))),
+      }));
+  }, [points]);
 
-  const max = Math.max(...filtered.map(mv), 1);
+  const perGroup = Math.max(...groups.map((g) => g.points.length), 1);
+  const maxWidth = barMaxWidth(groups.length, perGroup);
+  const stride = labelStride(groups.length);
+
+  const max = Math.max(...points.map(mv), 1);
   const tickStep = max > 400 ? 100 : max > 40 ? 25 : 5;
   const ceil = Math.max(Math.ceil(max / tickStep) * tickStep, tickStep);
   const ticks = [ceil, ceil * 0.75, ceil * 0.5, ceil * 0.25, 0];
 
-  const first = filtered.length ? mv(filtered[0]) : 0;
-  const last  = filtered.length ? mv(filtered[filtered.length - 1]) : 0;
+  const first = points.length ? mv(points[0]) : 0;
+  const last = points.length ? mv(points[points.length - 1]) : 0;
   const delta = first ? Math.round(((last - first) / first) * 100) : 0;
-  const metricLabel  = METRICS.find((m) => m.key === metric)?.label ?? "Total";
-  const activeColor  = METRICS.find((m) => m.key === metric)?.color ?? "#87102C";
+  const metricLabel = METRICS.find((m) => m.key === metric)?.label ?? "Total";
+
+  // Only the series actually present get a legend entry, so a Sunday-only filter
+  // does not advertise a Wednesday colour that is nowhere on the chart.
+  const activeSeries = SERIES.filter((s) =>
+    points.some((p) => (p.serviceType ?? "SUNDAY") === s.key),
+  );
 
   const action = (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex flex-wrap items-center gap-2">
       <div className="inline-flex rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.05] p-0.5">
         {RANGES.map((r) => (
           <button
@@ -170,7 +245,7 @@ export default function AttendanceTrendCard({
           ))}
         </div>
       )}
-      {filtered.length > 1 && (
+      {points.length > 1 && (
         <span
           className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${
             delta >= 0
@@ -187,29 +262,39 @@ export default function AttendanceTrendCard({
 
   return (
     <DashboardCard kicker="Growth" title="Attendance Trend" icon={BarChart3} action={action} {...chrome}>
-      {/* Category metric tabs */}
-      {hasBreakdown && (
-        <div className="mb-4 flex flex-wrap items-center gap-1.5">
-          {METRICS.map((m) => (
-            <button
-              key={m.key}
-              type="button"
-              onClick={() => setMetric(m.key)}
-              className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors border ${
-                metric === m.key
-                  ? "border-transparent text-white shadow-sm"
-                  : "border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-500 dark:text-white/40 hover:text-gray-800 dark:hover:text-white"
-              }`}
-              style={metric === m.key ? { background: m.color } : undefined}
-              aria-pressed={metric === m.key}
-            >
-              {m.label}
-            </button>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        {/* Legend — which colour is which service */}
+        <div className="flex flex-wrap items-center gap-4">
+          {activeSeries.map((s) => (
+            <span key={s.key} className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-500 dark:text-white/50">
+              <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
+              {s.label}
+            </span>
           ))}
         </div>
-      )}
 
-      {filtered.length === 0 ? (
+        {hasBreakdown && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {METRICS.map((m) => (
+              <button
+                key={m.key}
+                type="button"
+                onClick={() => setMetric(m.key)}
+                className={`rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                  metric === m.key
+                    ? "border-transparent bg-[#87102C] text-white shadow-sm"
+                    : "border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.04] text-gray-500 dark:text-white/40 hover:text-gray-800 dark:hover:text-white"
+                }`}
+                aria-pressed={metric === m.key}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {groups.length === 0 ? (
         <div className="flex h-52 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-white/[0.09] text-sm text-gray-400 dark:text-white/40">
           No {filter === "WEDNESDAY" ? "Wednesday" : filter === "SUNDAY" ? "Sunday" : ""} services
           {range === "ALL" ? " recorded yet." : ` in the last ${RANGES.find((r) => r.key === range)?.label}.`}
@@ -231,89 +316,64 @@ export default function AttendanceTrendCard({
                   <div
                     key={i}
                     className="w-full"
-                    style={{
-                      height: 1,
-                      borderTop: "1px dashed",
-                      borderColor: "rgba(156,163,175,0.3)",
-                    }}
+                    style={{ height: 1, borderTop: "1px dashed", borderColor: "rgba(156,163,175,0.3)" }}
                   />
                 ))}
               </div>
 
-              {/* bars */}
+              {/* week columns */}
               <div
-                className="relative flex h-52 items-end justify-between gap-1.5 sm:gap-2"
+                className="relative flex h-52 items-end justify-between gap-2 sm:gap-3"
                 role="img"
-                aria-label={`${metricLabel} over the last ${filtered.length} ${
-                  filter === "ALL" ? "" : filter.toLowerCase() + " "
-                }services, from ${first} to ${last} (${delta >= 0 ? "up" : "down"} ${Math.abs(delta)} percent).`}
+                aria-label={`${metricLabel} across ${groups.length} week${groups.length === 1 ? "" : "s"}, from ${first} to ${last} (${delta >= 0 ? "up" : "down"} ${Math.abs(delta)} percent).`}
               >
-                {filtered.map((d, i) => {
-                  const pct = (mv(d) / ceil) * 100;
-                  const isLast = i === filtered.length - 1;
-                  const lbl = barLabel(d);
-                  return (
-                    <div
-                      key={`${d.label}-${i}`}
-                      className="group relative flex h-full flex-1 flex-col items-center justify-end"
-                    >
-                      {/* Tooltip. Carries the date as well as the number: once a
-                          year of services is on screen the bars are 12px wide and
-                          most x-axis labels are hidden, so the count alone would
-                          not tell you which service you are looking at. */}
-                      <span
-                        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-bold leading-tight text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
-                        style={{ background: activeColor }}
-                      >
-                        {mv(d).toLocaleString()} {metricLabel.toLowerCase()}
-                        <span className="block font-semibold opacity-80">
-                          {lbl.day} {lbl.date}
-                        </span>
-                      </span>
+                {groups.map((group, gi) => (
+                  <div key={group.key} className="flex h-full min-w-0 flex-1 flex-col justify-end">
+                    <div className="flex h-full items-end justify-center gap-[3px]">
+                      {group.points.map((d, i) => {
+                        const value = mv(d);
+                        const pct = (value / ceil) * 100;
+                        const type = (d.serviceType ?? "SUNDAY") as ServiceTypeKey;
+                        const color = SERIES_COLOR[type] ?? SERIES[0].color;
+                        return (
+                          <div
+                            key={`${group.key}-${i}`}
+                            className="group/bar relative flex h-full flex-1 flex-col justify-end"
+                            style={{ maxWidth }}
+                          >
+                            <span
+                              className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-bold leading-tight text-white opacity-0 shadow-lg transition-opacity group-hover/bar:opacity-100"
+                              style={{ background: color }}
+                            >
+                              {value.toLocaleString()} {metricLabel.toLowerCase()}
+                              <span className="block font-semibold opacity-80">
+                                {fullDate(d.date ?? group.key)}
+                              </span>
+                            </span>
 
-                      {/* bar */}
-                      <div
-                        className="w-full rounded-t-[4px] transition-all duration-200 cursor-default"
-                        style={{
-                          height: `${pct}%`,
-                          maxWidth: maxBarWidth,
-                          minHeight: pct > 0 ? 4 : 0,
-                          background: isLast
-                            ? activeColor
-                            : metric === "value"
-                            ? "rgba(156,163,175,0.45)"
-                            : "rgba(156,163,175,0.35)",
-                          // hover effect applied via JS because inline style has priority
-                        }}
-                        onMouseEnter={(e) => {
-                          (e.currentTarget as HTMLDivElement).style.background = activeColor;
-                          (e.currentTarget as HTMLDivElement).style.opacity = "0.85";
-                        }}
-                        onMouseLeave={(e) => {
-                          (e.currentTarget as HTMLDivElement).style.opacity = "1";
-                          (e.currentTarget as HTMLDivElement).style.background = isLast
-                            ? activeColor
-                            : metric === "value"
-                            ? "rgba(156,163,175,0.45)"
-                            : "rgba(156,163,175,0.35)";
-                        }}
-                      />
-
-                      {/* x-axis label — thinned out as the range widens, so the
-                          dates stay readable instead of overprinting each other. */}
-                      <div className="mt-2 flex h-6 flex-col items-center leading-none">
-                        {i % stride === 0 && (
-                          <>
-                            <span className="text-[9px] font-bold text-gray-500 dark:text-white/50">{lbl.day}</span>
-                            {lbl.date && (
-                              <span className="text-[8px] text-gray-400 dark:text-white/30 tabular-nums mt-0.5">{lbl.date}</span>
-                            )}
-                          </>
-                        )}
-                      </div>
+                            <div
+                              className="w-full rounded-t-[3px] transition-opacity duration-150 hover:opacity-80"
+                              style={{
+                                height: `${pct}%`,
+                                minHeight: pct > 0 ? 3 : 0,
+                                background: color,
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
+
+                    {/* week label, thinned as the range widens */}
+                    <div className="mt-2 flex h-4 items-start justify-center">
+                      {gi % stride === 0 && (
+                        <span className="text-[9px] tabular-nums text-gray-400 dark:text-white/35">
+                          {group.label}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -321,7 +381,7 @@ export default function AttendanceTrendCard({
       )}
 
       <ul className="sr-only">
-        {filtered.map((d, i) => (
+        {points.map((d, i) => (
           <li key={`${d.label}-${i}`}>{`${d.label}: ${mv(d)} ${metricLabel.toLowerCase()}`}</li>
         ))}
       </ul>
