@@ -14,6 +14,7 @@ export function RateLineChart({ filter }: Props) {
     <ChartCard
       title="Attendance Rate Over Time"
       onExportCsv={data?.length ? () => downloadCsv("attendance-rate", data) : undefined}
+      exportPng
       minHeight="min-h-[240px]"
     >
       {isLoading ? <ChartSkeleton /> : (

@@ -14,6 +14,7 @@ export function AbsenteeTrendChart({ filter }: Props) {
     <ChartCard
       title="Absentee Trend"
       onExportCsv={data?.length ? () => downloadCsv("absentee-trend", data) : undefined}
+      exportPng
       minHeight="min-h-[240px]"
     >
       {isLoading ? <ChartSkeleton /> : (

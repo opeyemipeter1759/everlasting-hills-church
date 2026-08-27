@@ -14,6 +14,7 @@ export function MemberGrowthChart({ filter }: Props) {
     <ChartCard
       title="Member Growth Trend"
       onExportCsv={data?.length ? () => downloadCsv("member-growth", data) : undefined}
+      exportPng
       minHeight="min-h-[240px]"
     >
       {isLoading ? <ChartSkeleton /> : (

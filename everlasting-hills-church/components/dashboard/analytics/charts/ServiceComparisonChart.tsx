@@ -33,6 +33,7 @@ export function ServiceComparisonChart({ filter }: Props) {
               )
           : undefined
       }
+      exportPng
       minHeight="min-h-[240px]"
     >
       {isLoading ? <ChartSkeleton /> : (

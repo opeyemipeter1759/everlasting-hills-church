@@ -16,6 +16,7 @@ export function PeakHoursChart({ filter }: Props) {
     <ChartCard
       title="Peak Check-in Hours"
       onExportCsv={data?.length ? () => downloadCsv("peak-check-in-hours", data) : undefined}
+      exportPng
       minHeight="min-h-[240px]"
     >
       {isLoading ? <ChartSkeleton /> : (

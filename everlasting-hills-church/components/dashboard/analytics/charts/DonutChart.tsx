@@ -24,6 +24,7 @@ export function PresentAbsentDonut({ filter }: Props) {
       onExportCsv={
         total > 0 ? () => downloadCsv("present-vs-absent", [{ present, absent, total, rate }]) : undefined
       }
+      exportPng
       minHeight="min-h-[240px]"
     >
       {isLoading ? <ChartSkeleton /> : (

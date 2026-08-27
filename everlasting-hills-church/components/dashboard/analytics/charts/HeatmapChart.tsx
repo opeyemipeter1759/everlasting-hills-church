@@ -2,6 +2,7 @@
 import { ChartCard } from "@/components/ui/display/ChartCard";
 import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import { useAnalyticsHeatmap, type HeatmapPoint, type ServiceTypeFilter } from "@/lib/api/analytics";
+import { downloadCsv } from "@/lib/export-csv";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const WEEK_ROWS = 5;
@@ -31,8 +32,15 @@ export function HeatmapChart({ serviceType }: { serviceType?: ServiceTypeFilter 
   const { data, isLoading } = useAnalyticsHeatmap(year, serviceType);
   const grid = data ? buildGrid(data) : null;
 
+  // CSV only: this grid is built from divs rather than SVG, so there is no chart
+  // element for the PNG export to rasterise. The underlying points export
+  // cleanly all the same.
   return (
-    <ChartCard title="Attendance Heatmap — Full Year" minHeight="min-h-[130px]">
+    <ChartCard
+      title="Attendance Heatmap — Full Year"
+      onExportCsv={data?.length ? () => downloadCsv(`attendance-heatmap-${year}`, data) : undefined}
+      minHeight="min-h-[130px]"
+    >
       {isLoading || !grid ? <ChartSkeleton /> : (
         <div className="overflow-x-auto">
           <div className="min-w-[540px]">
