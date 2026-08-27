@@ -1,5 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminService } from './admin.service';
@@ -55,7 +55,9 @@ export class AdminController {
       },
     },
   })
-  getAttendanceTrend() {
-    return this.adminService.getAttendanceTrend();
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Points to return (default 24, max 500)' })
+  getAttendanceTrend(@Query('limit') limit?: string) {
+    const parsed = Number(limit);
+    return this.adminService.getAttendanceTrend(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
   }
 }

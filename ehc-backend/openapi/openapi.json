@@ -2828,7 +2828,17 @@
     "/admin/attendance-trend": {
       "get": {
         "operationId": "AdminController_getAttendanceTrend",
-        "parameters": [],
+        "parameters": [
+          {
+            "description": "Points to return (default 24, max 500)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {

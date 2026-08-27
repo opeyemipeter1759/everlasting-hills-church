@@ -111,7 +111,9 @@ export class HeadcountReadService {
    * (men / women / children / first-timers) for the growth surface.
    */
   async getTrend(opts: { serviceType?: ServiceType; limit?: number } = {}) {
-    const limit = Math.min(Math.max(opts.limit ?? 24, 1), 100);
+    // Ceiling raised from 100: the growth chart now offers an "All" range, and
+    // at two services a week 100 points is barely a year of history.
+    const limit = Math.min(Math.max(opts.limit ?? 24, 1), 500);
     const rows = await this.prisma.serviceHeadcount.findMany({
       where: {
         tenantId: this.tenantId,

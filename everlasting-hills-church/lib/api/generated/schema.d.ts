@@ -6820,7 +6820,10 @@ export interface operations {
     };
     AdminController_getAttendanceTrend: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Points to return (default 24, max 500) */
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;

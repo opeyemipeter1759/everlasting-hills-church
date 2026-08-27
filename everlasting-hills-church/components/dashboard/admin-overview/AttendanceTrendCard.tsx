@@ -23,7 +23,38 @@ const METRICS: { key: MetricKey; label: string; color: string }[] = [
   { key: "firstTimers", label: "First-timers", color: "#059669" },
 ];
 
-const MAX_BARS = 10;
+type RangeKey = "3M" | "6M" | "1Y" | "ALL";
+
+const RANGES: { key: RangeKey; label: string; months: number | null }[] = [
+  { key: "3M", label: "3M", months: 3 },
+  { key: "6M", label: "6M", months: 6 },
+  { key: "1Y", label: "1Y", months: 12 },
+  { key: "ALL", label: "All", months: null },
+];
+
+/**
+ * Bar width, in pixels, for a given number of bars.
+ *
+ * Bars used to be pure flex-1, so ten services filled the card with columns wide
+ * enough to land a plane on. Capping the width keeps a sparse chart looking like
+ * a chart rather than a wall, and lets a full year of services fit without the
+ * card scrolling.
+ */
+function barMaxWidth(count: number): number {
+  if (count <= 6) return 44;
+  if (count <= 12) return 32;
+  if (count <= 26) return 20;
+  if (count <= 52) return 12;
+  return 8;
+}
+
+/** Show every nth x-axis label so they stop colliding as the range widens. */
+function labelStride(count: number): number {
+  if (count <= 12) return 1;
+  if (count <= 26) return 2;
+  if (count <= 52) return 4;
+  return Math.ceil(count / 14);
+}
 
 /**
  * Formats the x-axis label for a bar.
@@ -62,6 +93,7 @@ export default function AttendanceTrendCard({
 }: { data: AttendancePoint[] } & DashboardCardChrome) {
   const [filter, setFilter] = useState<FilterKey>("ALL");
   const [metric, setMetric] = useState<MetricKey>("value");
+  const [range, setRange] = useState<RangeKey>("ALL");
 
   const hasTypes     = useMemo(() => data.some((d) => d.serviceType), [data]);
   const hasBreakdown = useMemo(() => data.some((d) => d.men !== undefined), [data]);
@@ -69,12 +101,25 @@ export default function AttendanceTrendCard({
   const mv = (d: AttendancePoint) => (metric === "value" ? d.value : d[metric] ?? 0);
 
   const filtered = useMemo(() => {
-    const rows =
+    const byType =
       filter === "ALL"
         ? data
         : data.filter((d) => (d.serviceType ?? "SUNDAY") === (filter as ServiceTypeKey));
-    return rows.slice(-MAX_BARS);
-  }, [data, filter]);
+
+    const months = RANGES.find((r) => r.key === range)?.months ?? null;
+    if (months === null) return byType;
+
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - months);
+    return byType.filter((d) => {
+      if (!d.date) return true;
+      const at = new Date(d.date.slice(0, 10));
+      return Number.isNaN(at.getTime()) || at >= cutoff;
+    });
+  }, [data, filter, range]);
+
+  const maxBarWidth = barMaxWidth(filtered.length);
+  const stride = labelStride(filtered.length);
 
   const max = Math.max(...filtered.map(mv), 1);
   const tickStep = max > 400 ? 100 : max > 40 ? 25 : 5;
@@ -89,6 +134,23 @@ export default function AttendanceTrendCard({
 
   const action = (
     <div className="flex items-center gap-2 flex-wrap">
+      <div className="inline-flex rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.05] p-0.5">
+        {RANGES.map((r) => (
+          <button
+            key={r.key}
+            type="button"
+            onClick={() => setRange(r.key)}
+            className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors ${
+              range === r.key
+                ? "bg-gray-900 text-white shadow-sm dark:bg-white dark:text-gray-900"
+                : "text-gray-400 hover:text-gray-700 dark:text-white/40 dark:hover:text-white"
+            }`}
+            aria-pressed={range === r.key}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
       {hasTypes && (
         <div className="inline-flex rounded-full border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.05] p-0.5">
           {FILTERS.map((f) => (
@@ -149,7 +211,8 @@ export default function AttendanceTrendCard({
 
       {filtered.length === 0 ? (
         <div className="flex h-52 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-white/[0.09] text-sm text-gray-400 dark:text-white/40">
-          No {filter === "WEDNESDAY" ? "Wednesday" : filter === "SUNDAY" ? "Sunday" : ""} services recorded yet.
+          No {filter === "WEDNESDAY" ? "Wednesday" : filter === "SUNDAY" ? "Sunday" : ""} services
+          {range === "ALL" ? " recorded yet." : ` in the last ${RANGES.find((r) => r.key === range)?.label}.`}
         </div>
       ) : (
         <div className="flex gap-3">
@@ -194,12 +257,18 @@ export default function AttendanceTrendCard({
                       key={`${d.label}-${i}`}
                       className="group relative flex h-full flex-1 flex-col items-center justify-end"
                     >
-                      {/* tooltip */}
+                      {/* Tooltip. Carries the date as well as the number: once a
+                          year of services is on screen the bars are 12px wide and
+                          most x-axis labels are hidden, so the count alone would
+                          not tell you which service you are looking at. */}
                       <span
-                        className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 z-10 whitespace-nowrap rounded-md px-2 py-0.5 text-[10px] font-bold tabular-nums text-white opacity-0 transition-opacity group-hover:opacity-100 shadow"
+                        className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-1.5 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-[10px] font-bold leading-tight text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100"
                         style={{ background: activeColor }}
                       >
-                        {mv(d).toLocaleString()}
+                        {mv(d).toLocaleString()} {metricLabel.toLowerCase()}
+                        <span className="block font-semibold opacity-80">
+                          {lbl.day} {lbl.date}
+                        </span>
                       </span>
 
                       {/* bar */}
@@ -207,6 +276,7 @@ export default function AttendanceTrendCard({
                         className="w-full rounded-t-[4px] transition-all duration-200 cursor-default"
                         style={{
                           height: `${pct}%`,
+                          maxWidth: maxBarWidth,
                           minHeight: pct > 0 ? 4 : 0,
                           background: isLast
                             ? activeColor
@@ -229,11 +299,16 @@ export default function AttendanceTrendCard({
                         }}
                       />
 
-                      {/* x-axis label — two lines */}
-                      <div className="mt-2 flex flex-col items-center leading-none">
-                        <span className="text-[9px] font-bold text-gray-500 dark:text-white/50">{lbl.day}</span>
-                        {lbl.date && (
-                          <span className="text-[8px] text-gray-400 dark:text-white/30 tabular-nums mt-0.5">{lbl.date}</span>
+                      {/* x-axis label — thinned out as the range widens, so the
+                          dates stay readable instead of overprinting each other. */}
+                      <div className="mt-2 flex h-6 flex-col items-center leading-none">
+                        {i % stride === 0 && (
+                          <>
+                            <span className="text-[9px] font-bold text-gray-500 dark:text-white/50">{lbl.day}</span>
+                            {lbl.date && (
+                              <span className="text-[8px] text-gray-400 dark:text-white/30 tabular-nums mt-0.5">{lbl.date}</span>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>

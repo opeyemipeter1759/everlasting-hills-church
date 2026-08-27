@@ -1,6 +1,6 @@
 "use client";
 
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { UserPlus } from "lucide-react";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
 import { useFirstTimerStats } from "@/lib/api/visitors";
@@ -67,6 +67,27 @@ export default function FirstTimerBreakdownCard(chrome: DashboardCardChrome) {
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
+                {/* Hovering a segment names it and gives the count. The legend
+                    below shows both figures at rest, but the segments themselves
+                    were silent, which is the first thing anyone tries. */}
+                {total > 0 && (
+                  <Tooltip
+                    cursor={false}
+                    formatter={(value, name) => {
+                      const count = Number(value) || 0;
+                      return [
+                        `${count.toLocaleString()} (${Math.round((count / total) * 100)}%)`,
+                        String(name),
+                      ];
+                    }}
+                    contentStyle={{
+                      fontSize: 11,
+                      borderRadius: 8,
+                      border: "1px solid rgba(156,163,175,0.3)",
+                      padding: "6px 10px",
+                    }}
+                  />
+                )}
               </PieChart>
             </ResponsiveContainer>
 
