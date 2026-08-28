@@ -6,6 +6,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { CmsVersionsService } from './services/cms-versions.service';
 import { CmsPublishService } from './services/cms-publish.service';
+import { decodeCmsKey } from './page-registry';
 
 @ApiTags('cms')
 @Controller('cms')
@@ -20,7 +21,7 @@ export class CmsVersionsController {
   @Get('pages/:key/versions')
   @ApiOperation({ summary: 'Version history for a page (PASTOR+)' })
   listVersions(@Param('key') key: string) {
-    return this.versions.listVersions(decodeURIComponent(key));
+    return this.versions.listVersions(decodeCmsKey(key));
   }
 
   @Roles(Role.PASTOR)
@@ -28,7 +29,7 @@ export class CmsVersionsController {
   @Get('pages/:key/versions/:version')
   @ApiOperation({ summary: 'A single historical version snapshot (PASTOR+)' })
   getVersion(@Param('key') key: string, @Param('version') version: string) {
-    return this.versions.getVersion(decodeURIComponent(key), Number(version));
+    return this.versions.getVersion(decodeCmsKey(key), Number(version));
   }
 
   @Roles(Role.PASTOR)
@@ -40,6 +41,6 @@ export class CmsVersionsController {
     @Param('key') key: string,
     @Param('version') version: string,
   ) {
-    return this.publish.rollback(decodeURIComponent(key), Number(version), actor.userId);
+    return this.publish.rollback(decodeCmsKey(key), Number(version), actor.userId);
   }
 }

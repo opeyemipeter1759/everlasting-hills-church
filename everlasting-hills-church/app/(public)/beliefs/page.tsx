@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sprout, Shield, Mountain, Gift, Crown } from "lucide-react";
 import PageHero from "@/components/marketing/PageHero";
+import { getStructuredContent } from "@/lib/cms-page";
 
 export const metadata = {
   title: "What We Believe — Everlasting Hills Church",
@@ -39,28 +40,8 @@ const FALLBACK: BeliefsContent = {
   cta: { heading: "Come and see for yourself", body: "These are not just words on a page. Join us on a Sunday and experience them in a living family." },
 };
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
-  process.env.API_BASE_URL?.trim() ||
-  "http://localhost:4000";
-
 function isValid(c: unknown): c is BeliefsContent {
   return Boolean(c && Array.isArray((c as BeliefsContent).pillars) && (c as BeliefsContent).pillars.length === 5);
-}
-
-async function getContent(previewToken?: string): Promise<BeliefsContent> {
-  try {
-    const url = previewToken
-      ? `${BASE_URL}/cms/preview?token=${encodeURIComponent(previewToken)}`
-      : `${BASE_URL}/cms/public/${encodeURIComponent("about/beliefs")}`;
-    const res = await fetch(url, previewToken ? { cache: "no-store" } : { next: { revalidate: 300, tags: ["cms:about/beliefs"] } });
-    if (!res.ok) return FALLBACK;
-    const body = (await res.json()) as { data?: { content?: unknown } };
-    const content = body?.data?.content;
-    return isValid(content) ? content : FALLBACK;
-  } catch {
-    return FALLBACK;
-  }
 }
 
 export default async function BeliefsPage({
@@ -68,7 +49,7 @@ export default async function BeliefsPage({
 }: {
   searchParams: { preview?: string };
 }) {
-  const c = await getContent(searchParams.preview);
+  const c = await getStructuredContent("about/beliefs", { preview: searchParams.preview, fallback: FALLBACK, valid: isValid });
 
   return (
     <main className="bg-white">

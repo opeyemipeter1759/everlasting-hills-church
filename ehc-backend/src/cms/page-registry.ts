@@ -65,3 +65,17 @@ export function pageDef(key: string): PageDef | undefined {
 export function cacheTagFor(key: string): string {
   return `cms:${key}`;
 }
+
+/**
+ * Decode a `:key` route param back into a registry key (e.g. "about/beliefs").
+ *
+ * Some hosting front ends — Cloud Run's included — normalize a %2F-encoded
+ * slash back into a literal "/" before the request ever reaches this app, which
+ * splits what should be one `:key` path segment into several and breaks route
+ * matching entirely (a raw 404, not even hitting the handler). The frontend
+ * substitutes "~" for "/" before percent-encoding so there's no encoded slash on
+ * the wire for any proxy to "helpfully" normalize — this reverses that.
+ */
+export function decodeCmsKey(raw: string): string {
+  return decodeURIComponent(raw).replace(/~/g, '/');
+}

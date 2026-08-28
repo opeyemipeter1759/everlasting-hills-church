@@ -16,7 +16,11 @@ export async function getStructuredContent<T>(
   try {
     const url = opts.preview
       ? `${BASE_URL}/cms/preview?token=${encodeURIComponent(opts.preview)}`
-      : `${BASE_URL}/cms/public/${encodeURIComponent(key)}`;
+      // See lib/api/cms.ts's `enc` for why "/" is substituted before encoding —
+      // Cloud Run's front end (this app's production host) normalizes a %2F back
+      // into a literal "/" before the request reaches the backend, which would
+      // otherwise split a multi-segment key like "about/beliefs" and 404.
+      : `${BASE_URL}/cms/public/${encodeURIComponent(key.replace(/\//g, "~"))}`;
     const res = await fetch(
       url,
       opts.preview ? { cache: "no-store" } : { next: { revalidate: 300, tags: [`cms:${key}`] } },

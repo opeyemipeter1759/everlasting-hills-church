@@ -11,6 +11,7 @@ import { CmsSiteConfigService } from './services/cms-site-config.service';
 import { CmsPageCoreService } from './services/cms-page-core.service';
 import { CmsDraftService } from './services/cms-draft.service';
 import { CmsPublishService } from './services/cms-publish.service';
+import { decodeCmsKey } from './page-registry';
 
 /**
  * Public-site CMS: public reads, site config, and the page editor core.
@@ -35,7 +36,7 @@ export class CmsController {
   @Get('public/:key')
   @ApiOperation({ summary: 'Published content for a page (public site read)' })
   async getPublished(@Param('key') key: string) {
-    return this.publicRead.getPublishedPage(decodeURIComponent(key));
+    return this.publicRead.getPublishedPage(decodeCmsKey(key));
   }
 
   @Public()
@@ -74,7 +75,7 @@ export class CmsController {
   @Get('pages/:key')
   @ApiOperation({ summary: 'Editor view: page + working draft content (PASTOR+)' })
   getEditorPage(@CurrentUser() actor: AuthUser, @Param('key') key: string) {
-    return this.pageCore.getEditorPage(decodeURIComponent(key), actor.userId);
+    return this.pageCore.getEditorPage(decodeCmsKey(key), actor.userId);
   }
 
   @Roles(Role.PASTOR)
@@ -86,7 +87,7 @@ export class CmsController {
     @Param('key') key: string,
     @Body() body: { title?: string; content: unknown },
   ) {
-    return this.draft.saveDraft(decodeURIComponent(key), body, actor.userId);
+    return this.draft.saveDraft(decodeCmsKey(key), body, actor.userId);
   }
 
   @Roles(Role.PASTOR)
@@ -94,7 +95,7 @@ export class CmsController {
   @Post('pages/:key/publish')
   @ApiOperation({ summary: 'Publish the working draft to the live site (PASTOR+)' })
   publish(@CurrentUser() actor: AuthUser, @Param('key') key: string) {
-    return this.publish_.publish(decodeURIComponent(key), actor.userId);
+    return this.publish_.publish(decodeCmsKey(key), actor.userId);
   }
 
   @Roles(Role.PASTOR)
@@ -102,7 +103,7 @@ export class CmsController {
   @Post('pages/:key/unpublish')
   @ApiOperation({ summary: 'Take the page offline (PASTOR+)' })
   unpublish(@CurrentUser() actor: AuthUser, @Param('key') key: string) {
-    return this.publish_.unpublish(decodeURIComponent(key), actor.userId);
+    return this.publish_.unpublish(decodeCmsKey(key), actor.userId);
   }
 
   @Roles(Role.PASTOR)
@@ -110,6 +111,6 @@ export class CmsController {
   @Post('pages/:key/preview-token')
   @ApiOperation({ summary: 'Mint a signed 1-hour preview token (PASTOR+)' })
   previewToken(@Param('key') key: string) {
-    return this.preview.createPreviewToken(decodeURIComponent(key));
+    return this.preview.createPreviewToken(decodeCmsKey(key));
   }
 }
