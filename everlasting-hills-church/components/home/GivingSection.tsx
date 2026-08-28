@@ -57,7 +57,7 @@ export default function GivingSection({ content }: { content: GivingContent }) {
             </p>
 
             {/* Three "fruit" tiles — staggered, not a uniform grid */}
-            <ul className="mt-7 flex flex-wrap gap-3.5">
+            {/* <ul className="mt-7 flex flex-wrap gap-3.5">
               {content.impactTiles.map((tile, i) => (
                 <li
                   key={tile.title}
@@ -72,7 +72,7 @@ export default function GivingSection({ content }: { content: GivingContent }) {
                   <p className="mt-1 text-xs text-white/55 leading-snug">{tile.copy}</p>
                 </li>
               ))}
-            </ul>
+            </ul> */}
           </div>
 
           {/* RIGHT: How to give panel + CTA */}

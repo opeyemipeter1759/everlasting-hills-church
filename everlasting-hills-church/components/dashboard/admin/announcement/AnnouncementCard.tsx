@@ -4,6 +4,7 @@ import StatusBadge from "./StatusBadge";
 import { formatRelativeDate } from "./format";
 import type { Announcement } from "./types";
 import { stripMarkdown } from "@/lib/rich-text";
+import { formatHHMM12h } from "@/lib/utils/time";
 
 export default function AnnouncementCard({
   a,
@@ -71,7 +72,7 @@ export default function AnnouncementCard({
             {a.eventTime && (
               <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 <Clock size={12} />
-                {a.eventTime}
+                {formatHHMM12h(a.eventTime)}
               </span>
             )}
             {a.venue && (

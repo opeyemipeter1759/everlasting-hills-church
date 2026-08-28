@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Bell, BellRing, ChevronDown, Clock, MapPin, Megaphone } from "lucide-react";
 import RichText from "@/components/ui/display/RichText";
 import { stripMarkdown } from "@/lib/rich-text";
+import { formatHHMM12h } from "@/lib/utils/time";
 
 interface Announcement {
   id: string;
@@ -94,7 +95,7 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
             {a.eventTime && (
               <p className="text-[10px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
                 <Clock size={9} className="flex-shrink-0" />
-                {a.eventTime}
+                {formatHHMM12h(a.eventTime)}
               </p>
             )}
             {a.venue && (

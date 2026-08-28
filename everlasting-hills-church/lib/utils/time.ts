@@ -25,6 +25,21 @@ export function groupByDay<T>(rows: T[], dateOf: (row: T) => string): { label: s
   return groups;
 }
 
+/** Formats a 24-hour "HH:mm" time string (what a native `<input type="time">`
+ * stores) into a lean 12-hour form — "9am", "1:30pm" — omitting minutes only
+ * when they're exactly on the hour. Returns the input unchanged if it isn't
+ * in that shape, so a bad/legacy value never renders blank. */
+export function formatHHMM12h(time: string): string {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim());
+  if (!match) return time;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (hour > 23 || minute > 59) return time;
+  const period = hour < 12 ? "am" : "pm";
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return minute === 0 ? `${hour12}${period}` : `${hour12}:${String(minute).padStart(2, "0")}${period}`;
+}
+
 export function timeAgo(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diffMs / 60_000);

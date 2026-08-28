@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Clock, MapPin } from "lucide-react";
 import type { Announcement } from "@/hooks";
-import { absoluteDate, formatTime, relativeTime } from "./utils";
+import { formatHHMM12h } from "@/lib/utils/time";
 import { getAnnouncementIcon } from "./getAnnouncementIcon";
 import RichText from "@/components/ui/display/RichText";
 import { stripMarkdown } from "@/lib/rich-text";
@@ -73,17 +73,21 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
           </p>
         )}
         {(announcement.eventTime || announcement.venue) && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-3">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             {announcement.eventTime && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#FFB3C1]">
-                <Clock size={9} className="flex-shrink-0" />
-                {announcement.eventTime}
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] py-1 pl-1 pr-2.5">
+                <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#87102C]/40 text-[#FFB3C1]">
+                  <Clock size={9} />
+                </span>
+                <span className="text-[10px] font-bold text-white/75">{formatHHMM12h(announcement.eventTime)}</span>
               </span>
             )}
             {announcement.venue && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#FFB3C1]">
-                <MapPin size={9} className="flex-shrink-0" />
-                {announcement.venue}
+              <span className="inline-flex min-w-0 items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.06] py-1 pl-1 pr-2.5">
+                <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#87102C]/40 text-[#FFB3C1]">
+                  <MapPin size={9} />
+                </span>
+                <span className="truncate text-[10px] font-bold text-white/75">{announcement.venue}</span>
               </span>
             )}
           </div>

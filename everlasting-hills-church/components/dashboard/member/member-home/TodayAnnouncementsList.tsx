@@ -2,6 +2,7 @@ import { BellRing, Clock, MapPin } from "lucide-react";
 import { card, muted } from "./tokens";
 import { relativeTime } from "./helpers";
 import { stripMarkdown } from "@/lib/rich-text";
+import { formatHHMM12h } from "@/lib/utils/time";
 
 export function TodayAnnouncementsList({ announcements }: {
   announcements: Array<{ id: string; title: string; body: string; createdAt: string; eventTime?: string | null; venue?: string | null }>;
@@ -73,7 +74,7 @@ export function TodayAnnouncementsList({ announcements }: {
                   {a.eventTime && (
                     <p className="text-[10px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
                       <Clock size={9} className="flex-shrink-0" />
-                      {a.eventTime}
+                      {formatHHMM12h(a.eventTime)}
                     </p>
                   )}
                   {a.venue && (
