@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  ArrowLeft, Check, Eye, History, Plus, Rocket, Save, Undo2,
+  AlertTriangle, ArrowLeft, Check, Eye, History, Plus, Rocket, Save, Undo2,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import {
@@ -49,6 +49,11 @@ export default function PageEditor({ pageKey }: { pageKey: string }) {
 
   const isStructured = data.def.editor === "structured";
   const highImpact = data.def.highImpact;
+  // Saving only ever writes a draft — this page's own working version, not what
+  // the public site is currently serving. True whenever there's a saved (or
+  // unsaved) change sitting on top of what's live, including "never published
+  // at all". Surfaced loudly because it's easy to assume "Saved" means "live".
+  const hasUnpublishedChanges = dirty || data.working.status !== "PUBLISHED";
   const blocks: Block[] = Array.isArray((content as { blocks?: Block[] })?.blocks)
     ? (content as { blocks: Block[] }).blocks
     : [];
@@ -119,6 +124,18 @@ export default function PageEditor({ pageKey }: { pageKey: string }) {
           </button>
         </div>
       </div>
+
+      {hasUnpublishedChanges && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-6 dark:border-amber-500/20 dark:bg-amber-500/10">
+          <AlertTriangle size={16} className="mt-0.5 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+          <p className="text-sm text-amber-800 dark:text-amber-400">
+            {data.page.published
+              ? "You have changes that aren't live yet. Saving only updates the draft — click "
+              : "This page has never been published — it isn't visible on the public site yet. Click "}
+            <span className="font-bold">Publish</span> to push {data.page.published ? "them" : "it"} to {data.def.route}.
+          </p>
+        </div>
+      )}
 
       <div className="flex gap-6">
         <div className="flex-1 min-w-0">

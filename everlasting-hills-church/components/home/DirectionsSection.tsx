@@ -6,6 +6,7 @@ import { getNextService, isLiveNow } from "../../utils/ServiceUtils";
 import { useDirections } from "../../utils/UseDirection";
 import DirectionsModal from "./DirectionModal";
 import { CHURCH, SERVICES } from "@/config/config";
+import type { DirectionsContent } from "@/lib/site-settings";
 
 function fmtTime(h: number, m: number) {
   const period = h >= 12 ? "PM" : "AM";
@@ -31,8 +32,11 @@ function nextServiceTimeLabel(day: "sunday" | "wednesday"): string {
  *
  * Voice: tied to EHC's "everlasting hills" identity (Genesis 49:26) instead of
  * generic church-contact copy.
+ *
+ * `content` is CMS-editable from the homepage settings editor (Directions tab) —
+ * the address/next-service/map tiles below stay live-computed, not editable text.
  */
-export default function DirectionsSection() {
+export default function DirectionsSection({ content }: { content: DirectionsContent }) {
   const directions = useDirections();
   const [now, setNow] = useState<Date>(new Date());
 
@@ -78,27 +82,24 @@ export default function DirectionsSection() {
               id="directions-heading"
               className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.05]"
             >
-              Worship with us on the{" "}
+              {content.headline}{" "}
               <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#87102C] bg-clip-text text-transparent italic font-serif">
-                everlasting hills
+                {content.headlineAccent}
               </span>
               .
             </h2>
 
             <p className="mt-4 max-w-xl text-white/65 leading-relaxed">
-              A family, not a crowd — and there&apos;s always a seat for you.
-              We&apos;re in <span className="text-white/85 font-medium">Ibadan</span>,
-              gathered weekly to seek the One whose blessings rise higher than any
-              mountain.
+              {content.body}
             </p>
 
           </div>
 
           {/* RIGHT (2/5): address + next-service + email + map */}
           <div className="lg:col-span-2 space-y-3">
-            <AddressTile address={CHURCH.address} />
+            <AddressTile address={CHURCH.address} label={content.addressLabel} />
             <NextServiceTile next={next} live={live} />
-            <EmailTile />
+            <EmailTile email={content.email} />
             <MapTile />
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <button
@@ -107,17 +108,17 @@ export default function DirectionsSection() {
                 className="group inline-flex items-center gap-2.5 rounded-2xl bg-white text-[#87102C] px-5 py-3 font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-black/20"
               >
                 <Navigation size={15} />
-                Open directions
+                {content.ctaLabel}
                 <ArrowUpRight
                   size={14}
                   className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
                 />
               </button>
               <a
-                href="/contact"
+                href={content.secondaryCta.href}
                 className="inline-flex items-center gap-2 text-sm text-white/60 hover:text-white font-medium transition-colors"
               >
-                Full contact info
+                {content.secondaryCta.label}
                 <ArrowUpRight size={13} />
               </a>
             </div>
@@ -142,7 +143,7 @@ export default function DirectionsSection() {
 
 // ── Pieces ───────────────────────────────────────────────────────────────────
 
-function AddressTile({ address }: { address: string }) {
+function AddressTile({ address, label }: { address: string; label: string }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e0407]/70 p-5 backdrop-blur-sm hover:border-white/20 transition-colors">
       <div className="flex items-start gap-3.5">
@@ -151,7 +152,7 @@ function AddressTile({ address }: { address: string }) {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1.5">
-            The hills are here
+            {label}
           </p>
           <p className="text-sm text-white/90 leading-snug font-medium">{address}</p>
         </div>
@@ -188,10 +189,10 @@ function NextServiceTile({
   );
 }
 
-function EmailTile() {
+function EmailTile({ email }: { email: string }) {
   return (
     <a
-      href="mailto:everlastinghillschurch@gmail.com"
+      href={`mailto:${email}`}
       className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e0407]/70 p-5 backdrop-blur-sm hover:border-white/20 transition-colors flex items-start gap-3.5"
     >
       <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center">
@@ -202,7 +203,7 @@ function EmailTile() {
           Email us
         </p>
         <p className="text-sm text-white/90 leading-snug font-medium truncate">
-          everlastinghillschurch@gmail.com
+          {email}
         </p>
       </div>
     </a>

@@ -1743,6 +1743,7 @@ enum SiteSection {
   GIVING
   CONTACT
   CAROUSEL
+  DIRECTIONS
 }
 
 enum AlertType {

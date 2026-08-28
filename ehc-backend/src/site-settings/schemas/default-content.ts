@@ -281,6 +281,16 @@ export const CAROUSEL_DEFAULT: SectionContent<'CAROUSEL'> = {
   ],
 };
 
+export const DIRECTIONS_DEFAULT: SectionContent<'DIRECTIONS'> = {
+  headline: 'Worship with us on the',
+  headlineAccent: 'everlasting hills',
+  body: "A family, not a crowd — and there's always a seat for you. We're in Ibadan, gathered weekly to seek the One whose blessings rise higher than any mountain.",
+  addressLabel: 'The hills are here',
+  email: 'everlastinghillschurch@gmail.com',
+  ctaLabel: 'Open directions',
+  secondaryCta: { label: 'Full contact info', href: '/contact' },
+};
+
 export const DEFAULT_CONTENT = {
   HERO: HERO_DEFAULT,
   ABOUT: ABOUT_DEFAULT,
@@ -293,4 +303,5 @@ export const DEFAULT_CONTENT = {
   GIVING: GIVING_DEFAULT,
   CONTACT: CONTACT_DEFAULT,
   CAROUSEL: CAROUSEL_DEFAULT,
+  DIRECTIONS: DIRECTIONS_DEFAULT,
 } as const;

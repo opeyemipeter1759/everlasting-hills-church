@@ -55,6 +55,8 @@ export class SiteSettingsController {
       'COMMUNITY',
       'GIVING',
       'CONTACT',
+      'CAROUSEL',
+      'DIRECTIONS',
     ],
   })
   async getOne(@Param('section') section: string) {

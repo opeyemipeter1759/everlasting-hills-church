@@ -46,7 +46,7 @@ export default async function AuthLayout({
         </div>
       </main>
 
-      <PageFooter givingContent={settings.GIVING} />
+      <PageFooter directionsContent={settings.DIRECTIONS} givingContent={settings.GIVING} />
     </div>
   );
 }

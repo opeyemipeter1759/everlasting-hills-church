@@ -23,7 +23,7 @@ export default async function PublicLayout({
     <div>
       <Navbar />
       {children}
-      <PageFooter givingContent={settings.GIVING} />
+      <PageFooter directionsContent={settings.DIRECTIONS} givingContent={settings.GIVING} />
     </div>
   );
 }

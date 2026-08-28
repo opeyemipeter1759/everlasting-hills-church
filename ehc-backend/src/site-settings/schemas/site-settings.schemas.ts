@@ -280,6 +280,22 @@ export const CarouselContentSchema = z.object({
   images: z.array(imageUrlSchema).min(1).max(30),
 });
 
+/* ── 11. DIRECTIONS (footer-slab "Find Us" panel — address/map/next-service
+   tiles are live-computed, not editable here) ─────────────────────────────── */
+
+export const DirectionsContentSchema = z.object({
+  headline: z.string().trim().min(1).max(80),
+  /** Italic gradient phrase at the end of the headline ("everlasting hills"). */
+  headlineAccent: z.string().trim().min(1).max(60),
+  body: z.string().trim().min(1).max(500),
+  /** Small eyebrow label above the address tile ("The hills are here"). */
+  addressLabel: z.string().trim().min(1).max(40),
+  email: z.string().trim().email().max(254),
+  /** Label only — the button triggers geolocation/maps, not a URL. */
+  ctaLabel: z.string().trim().min(1).max(40),
+  secondaryCta: ctaSchema,
+});
+
 /* ── Section registry ──────────────────────────────────────────────────────── */
 
 export const SITE_SECTIONS = [
@@ -294,6 +310,7 @@ export const SITE_SECTIONS = [
   'GIVING',
   'CONTACT',
   'CAROUSEL',
+  'DIRECTIONS',
 ] as const;
 
 export const SiteSection = z.enum(SITE_SECTIONS);
@@ -312,6 +329,7 @@ export const SECTION_SCHEMAS = {
   GIVING: GivingContentSchema,
   CONTACT: ContactContentSchema,
   CAROUSEL: CarouselContentSchema,
+  DIRECTIONS: DirectionsContentSchema,
 } as const satisfies Record<SiteSectionName, z.ZodTypeAny>;
 
 export type SectionContent<S extends SiteSectionName> = z.infer<
@@ -329,4 +347,5 @@ export type AnySectionContent =
   | { section: 'COMMUNITY'; content: SectionContent<'COMMUNITY'> }
   | { section: 'GIVING'; content: SectionContent<'GIVING'> }
   | { section: 'CONTACT'; content: SectionContent<'CONTACT'> }
-  | { section: 'CAROUSEL'; content: SectionContent<'CAROUSEL'> };
+  | { section: 'CAROUSEL'; content: SectionContent<'CAROUSEL'> }
+  | { section: 'DIRECTIONS'; content: SectionContent<'DIRECTIONS'> };

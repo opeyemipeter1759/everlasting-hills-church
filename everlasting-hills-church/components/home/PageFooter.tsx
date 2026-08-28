@@ -1,7 +1,7 @@
 import DirectionsSection from "./DirectionsSection";
 import GivingSection from "./GivingSection";
 import Footer from "./Footer";
-import type { GivingContent } from "@/lib/site-settings";
+import type { DirectionsContent, GivingContent } from "@/lib/site-settings";
 
 /**
  * Site-wide bottom slab: Directions → Giving → Footer.
@@ -14,13 +14,20 @@ import type { GivingContent } from "@/lib/site-settings";
  * the white card on /sermons/[slug]) the slab visually grounds the page in the
  * brand dark palette.
  *
- * `givingContent` is threaded through from each layout's own getAllSiteSettings()
- * call rather than fetched here, since this stays a plain server component.
+ * `directionsContent`/`givingContent` are threaded through from each layout's own
+ * getAllSiteSettings() call rather than fetched here, since this stays a plain
+ * server component.
  */
-export default function PageFooter({ givingContent }: { givingContent: GivingContent }) {
+export default function PageFooter({
+  directionsContent,
+  givingContent,
+}: {
+  directionsContent: DirectionsContent;
+  givingContent: GivingContent;
+}) {
   return (
     <div className="bg-church-dark pt-16">
-      <DirectionsSection />
+      <DirectionsSection content={directionsContent} />
       <GivingSection content={givingContent} />
       <Footer />
     </div>

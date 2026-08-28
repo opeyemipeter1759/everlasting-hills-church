@@ -10,6 +10,7 @@ import {
   Globe,
   HelpingHand,
   Images,
+  MapPin,
   MessageSquareQuote,
   Mountain,
   Phone,
@@ -56,6 +57,7 @@ const SECTION_META: Record<SiteSectionName, { label: string; icon: LucideIcon }>
   GIVING: { label: "Giving", icon: HelpingHand },
   CONTACT: { label: "Contact", icon: Phone },
   CAROUSEL: { label: "Carousel", icon: Images },
+  DIRECTIONS: { label: "Directions", icon: MapPin },
 };
 
 const SECTION_ORDER: SiteSectionName[] = [
@@ -69,6 +71,7 @@ const SECTION_ORDER: SiteSectionName[] = [
   "COMMUNITY",
   "GIVING",
   "CONTACT",
+  "DIRECTIONS",
   "CAROUSEL",
 ];
 

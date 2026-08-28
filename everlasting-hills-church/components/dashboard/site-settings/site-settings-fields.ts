@@ -270,6 +270,16 @@ const carousel: FieldDef[] = [
   { kind: "imageList", key: "images", label: "Slides", help: "\"Life at EHC\" editorial slider on the homepage", max: 30 },
 ];
 
+const directions: FieldDef[] = [
+  { kind: "text", key: "headline", label: "Headline" },
+  { kind: "text", key: "headlineAccent", label: "Headline accent (highlighted words)" },
+  { kind: "textarea", key: "body", label: "Body" },
+  { kind: "text", key: "addressLabel", label: "Address tile label", help: "Small eyebrow shown above the address" },
+  { kind: "text", key: "email", label: "Email" },
+  { kind: "text", key: "ctaLabel", label: "\"Get directions\" button label", help: "The button triggers maps/geolocation directly — no link to set" },
+  cta("secondaryCta", "Secondary button"),
+];
+
 export const SITE_SETTINGS_FIELDS: Record<SiteSectionName, FieldDef[]> = {
   HERO: hero,
   ABOUT: about,
@@ -281,5 +291,6 @@ export const SITE_SETTINGS_FIELDS: Record<SiteSectionName, FieldDef[]> = {
   COMMUNITY: community,
   GIVING: giving,
   CONTACT: contact,
+  DIRECTIONS: directions,
   CAROUSEL: carousel,
 };

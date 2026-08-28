@@ -80,29 +80,37 @@ export default async function BeliefsPage({
       <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} backgroundImage={c.heroImage} />
 
       <section className="mx-auto max-w-[1000px] px-5 py-20 sm:px-8">
-        <div className="space-y-6">
+        <div className="relative space-y-5">
+          {/* Connecting thread behind the icon column — reinforces these as one
+              unbroken sequence rather than five unrelated cards. */}
+          <div
+            aria-hidden="true"
+            className="absolute bottom-10 left-[35px] top-10 hidden w-px bg-gradient-to-b from-[#87102C]/25 via-[#87102C]/10 to-transparent sm:block"
+          />
           {c.pillars.map((p, i) => {
             const Icon = PILLAR_ICONS[i] ?? Sprout;
             const n = String(i + 1).padStart(2, "0");
             return (
               <div
                 key={n}
-                className="group grid gap-6 rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-8 transition-colors hover:border-[#87102C]/30 sm:grid-cols-[auto_1fr] sm:p-10"
+                className="group relative flex flex-col gap-5 rounded-3xl border border-[#E7CDD3]/70 bg-white p-6 shadow-[0_1px_3px_rgba(135,16,44,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#87102C]/25 hover:shadow-[0_12px_28px_-8px_rgba(135,16,44,0.18)] sm:flex-row sm:items-start sm:gap-7 sm:p-8"
               >
-                <div className="flex items-start gap-4">
-                  <span className="inline-flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-[#87102C]/10 text-[#87102C]">
-                    <Icon size={24} />
+                <div className="relative z-10 flex-shrink-0 self-start">
+                  <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#87102C]/15 to-[#87102C]/5 text-[#87102C] ring-1 ring-[#87102C]/10 transition-colors group-hover:from-[#87102C]/20 group-hover:to-[#87102C]/10 sm:h-[70px] sm:w-[70px]">
+                    <Icon size={26} className="sm:h-8 sm:w-8" />
                   </span>
-                  <span className="font-display text-3xl font-black text-[#87102C]/20 sm:hidden">{n}</span>
+                  <span className="absolute -bottom-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#87102C] text-[11px] font-black text-white shadow-md ring-4 ring-white">
+                    {i + 1}
+                  </span>
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                    <h2 className="text-2xl font-bold text-[#111]">{p.title}</h2>
-                    <span className="shrink-0 rounded-full bg-[#87102C]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-[#87102C]">
+                    <h2 className="text-xl font-bold text-[#111] sm:text-2xl">{p.title}</h2>
+                    <span className="shrink-0 rounded-full bg-[#FFE8ED] px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-[#87102C]">
                       {p.verse}
                     </span>
                   </div>
-                  <p className="text-base leading-relaxed text-[#4a4a4a]">{p.text}</p>
+                  <p className="text-[15px] leading-relaxed text-[#4a4a4a] sm:text-base">{p.text}</p>
                 </div>
               </div>
             );

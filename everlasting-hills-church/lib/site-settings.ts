@@ -141,6 +141,16 @@ export interface CarouselContent {
   images: string[];
 }
 
+export interface DirectionsContent {
+  headline: string;
+  headlineAccent: string;
+  body: string;
+  addressLabel: string;
+  email: string;
+  ctaLabel: string;
+  secondaryCta: Cta;
+}
+
 export interface SiteSettingsMap {
   HERO: HeroContent;
   ABOUT: AboutContent;
@@ -153,6 +163,7 @@ export interface SiteSettingsMap {
   GIVING: GivingContent;
   CONTACT: ContactContent;
   CAROUSEL: CarouselContent;
+  DIRECTIONS: DirectionsContent;
 }
 
 export type SiteSectionName = keyof SiteSettingsMap;
@@ -454,6 +465,16 @@ export const CAROUSEL_FALLBACK: CarouselContent = {
   ],
 };
 
+export const DIRECTIONS_FALLBACK: DirectionsContent = {
+  headline: "Worship with us on the",
+  headlineAccent: "everlasting hills",
+  body: "A family, not a crowd — and there's always a seat for you. We're in Ibadan, gathered weekly to seek the One whose blessings rise higher than any mountain.",
+  addressLabel: "The hills are here",
+  email: "everlastinghillschurch@gmail.com",
+  ctaLabel: "Open directions",
+  secondaryCta: { label: "Full contact info", href: "/contact" },
+};
+
 const FALLBACKS: SiteSettingsMap = {
   HERO: HERO_FALLBACK,
   ABOUT: ABOUT_FALLBACK,
@@ -466,6 +487,7 @@ const FALLBACKS: SiteSettingsMap = {
   GIVING: GIVING_FALLBACK,
   CONTACT: CONTACT_FALLBACK,
   CAROUSEL: CAROUSEL_FALLBACK,
+  DIRECTIONS: DIRECTIONS_FALLBACK,
 };
 
 /* ── Fetcher ─────────────────────────────────────────────────────────────── */
