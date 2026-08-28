@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, Sprout } from "lucide-react";
+import { ArrowUpRight, Building2, Globe, HandCoins, Sprout, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { GivingContent } from "@/lib/site-settings";
@@ -21,6 +21,17 @@ import type { GivingContent } from "@/lib/site-settings";
  * is CMS-editable from the homepage settings editor (Giving tab) — passed down
  * as `content` from the server-rendered layout, not fetched here.
  */
+
+/** Fixed giving categories — icon + title only, not CMS-editable (the CMS's
+ * own `impactTiles` field is a different, story-driven concept with no home
+ * in this layout right now). */
+const GIVING_CATEGORIES: { title: string; icon: LucideIcon }[] = [
+  { title: "Tithe & Offering", icon: HandCoins },
+  { title: "Building Project", icon: Building2 },
+  { title: "Gospel Outreach", icon: Globe },
+  { title: "Seed", icon: Sprout },
+];
+
 export default function GivingSection({ content }: { content: GivingContent }) {
   // Redundant on the dedicated /give page — the full giving UI is already there.
   const pathname = usePathname();
@@ -56,23 +67,20 @@ export default function GivingSection({ content }: { content: GivingContent }) {
               {content.body}
             </p>
 
-            {/* Three "fruit" tiles — staggered, not a uniform grid */}
-            {/* <ul className="mt-7 flex flex-wrap gap-3.5">
-              {content.impactTiles.map((tile, i) => (
+            {/* Giving categories — icon + title only, evenly aligned 2x2 grid */}
+            <ul className="mt-7 grid grid-cols-2 gap-3">
+              {GIVING_CATEGORIES.map((category) => (
                 <li
-                  key={tile.title}
-                  className={`w-full sm:w-[calc(50%-0.4375rem)] lg:w-full xl:w-[calc(50%-0.4375rem)] rounded-2xl border border-white/8 bg-white/[0.03] p-4 hover:bg-white/[0.06] hover:border-white/15 transition-colors ${
-                    i % 2 === 1 ? "sm:translate-y-3 lg:translate-y-0 xl:translate-y-3" : ""
-                  }`}
+                  key={category.title}
+                  className="flex items-center gap-2.5 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5 hover:bg-white/[0.06] hover:border-white/15 transition-colors"
                 >
-                  <p className="text-[9px] uppercase tracking-[0.25em] text-[#e8768a]/80 font-bold">
-                    {tile.eyebrow}
-                  </p>
-                  <p className="mt-1.5 text-sm font-bold text-white">{tile.title}</p>
-                  <p className="mt-1 text-xs text-white/55 leading-snug">{tile.copy}</p>
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#87102C]/25 text-[#e8768a]">
+                    <category.icon size={15} aria-hidden="true" />
+                  </span>
+                  <p className="text-sm font-bold text-white leading-tight">{category.title}</p>
                 </li>
               ))}
-            </ul> */}
+            </ul>
           </div>
 
           {/* RIGHT: How to give panel + CTA */}
