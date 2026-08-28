@@ -3,6 +3,7 @@
 import { ArrowUpRight, Sprout } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { GivingContent } from "@/lib/site-settings";
 
 /**
  * Footer-slab "Give" — "Branches over the wall" pattern.
@@ -15,8 +16,12 @@ import { usePathname } from "next/navigation";
  * Structure: split — left has the headline + three "fruit" impact tiles arranged
  * organically (not a uniform grid). Right has a compact "ways to give" panel
  * with one prominent CTA. No tabs, no account numbers — those live on /give.
+ *
+ * Client component (needs usePathname to hide itself on /give), but all copy
+ * is CMS-editable from the homepage settings editor (Giving tab) — passed down
+ * as `content` from the server-rendered layout, not fetched here.
  */
-export default function GivingSection() {
+export default function GivingSection({ content }: { content: GivingContent }) {
   // Redundant on the dedicated /give page — the full giving UI is already there.
   const pathname = usePathname();
   if (pathname === "/give") return null;
@@ -32,30 +37,42 @@ export default function GivingSection() {
         <div className="absolute -bottom-32 -right-16 w-96 h-96 bg-amber-500/8 blur-3xl rounded-full pointer-events-none" />
         <VineMotif />
 
-        <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-10 p-8 sm:p-10 items-center">
-          {/* LEFT: headline */}
+        <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-10 p-8 sm:p-10 items-start">
+          {/* LEFT: headline + impact tiles */}
           <div className="flex flex-col">
             <span className="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-md">
               <Sprout size={12} className="text-[#e8768a]" />
-              Sow into the hills
+              {content.eyebrow}
             </span>
 
             <h2
               id="giving-heading"
               className="mt-5 text-3xl sm:text-4xl lg:text-[2.6rem] font-semibold text-white tracking-tight leading-[1.08]"
             >
-              Plant where{" "}
-              <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#87102C] bg-clip-text text-transparent italic font-serif">
-                you receive
-              </span>
-              .
+              <Headline headline={content.headline} accent={content.headlineAccent} />
             </h2>
 
             <p className="mt-4 text-white/65 leading-relaxed text-[15px]">
-              Like a vine planted near water, every gift bears fruit — and the
-              branches reach over the wall, into families, cities, and generations
-              we may never meet.
+              {content.body}
             </p>
+
+            {/* Three "fruit" tiles — staggered, not a uniform grid */}
+            <ul className="mt-7 flex flex-wrap gap-3.5">
+              {content.impactTiles.map((tile, i) => (
+                <li
+                  key={tile.title}
+                  className={`w-full sm:w-[calc(50%-0.4375rem)] lg:w-full xl:w-[calc(50%-0.4375rem)] rounded-2xl border border-white/8 bg-white/[0.03] p-4 hover:bg-white/[0.06] hover:border-white/15 transition-colors ${
+                    i % 2 === 1 ? "sm:translate-y-3 lg:translate-y-0 xl:translate-y-3" : ""
+                  }`}
+                >
+                  <p className="text-[9px] uppercase tracking-[0.25em] text-[#e8768a]/80 font-bold">
+                    {tile.eyebrow}
+                  </p>
+                  <p className="mt-1.5 text-sm font-bold text-white">{tile.title}</p>
+                  <p className="mt-1 text-xs text-white/55 leading-snug">{tile.copy}</p>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* RIGHT: How to give panel + CTA */}
@@ -64,44 +81,41 @@ export default function GivingSection() {
               <p className="text-white/50 text-[10px] uppercase tracking-[0.3em] font-bold">
                 Ways to give
               </p>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 text-[9px] uppercase tracking-wider text-emerald-300 font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Zero gateway fees
-              </span>
+              {content.badge.visible && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 text-[9px] uppercase tracking-wider text-emerald-300 font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {content.badge.text}
+                </span>
+              )}
             </div>
 
             <ul className="space-y-3">
-              <GiveRow
-                stepNumber="01"
-                title="Bank transfer"
-                description="Direct to ministry — no platform cut."
-              />
-              <GiveRow
-                stepNumber="02"
-                title="In-service offering"
-                description="Bring your gift at Sunday or Wednesday gathering."
-              />
-              <GiveRow
-                stepNumber="03"
-                title="Designated giving"
-                description="Building, outreach, or specific ministries."
-              />
+              {content.waysToGive.map((way, i) => (
+                <GiveRow
+                  key={way.title}
+                  stepNumber={String(i + 1).padStart(2, "0")}
+                  title={way.title}
+                  description={way.description}
+                />
+              ))}
             </ul>
 
             <Link
-              href="/give"
+              href={content.cta.href}
               className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white text-[#87102C] px-5 py-3.5 font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-black/20"
             >
-              See account details
+              {content.cta.label}
               <ArrowUpRight
                 size={14}
                 className="opacity-70 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
               />
             </Link>
 
-            <p className="mt-4 text-center text-[10px] uppercase tracking-[0.25em] text-white/30">
-              Stewardship statements published yearly
-            </p>
+            {content.footnote && (
+              <p className="mt-4 text-center text-[10px] uppercase tracking-[0.25em] text-white/30">
+                {content.footnote}
+              </p>
+            )}
           </aside>
         </div>
       </div>
@@ -110,6 +124,26 @@ export default function GivingSection() {
 }
 
 // ── Pieces ───────────────────────────────────────────────────────────────────
+
+/** Renders the headline with its accent phrase (if present in the string)
+ * styled as the gradient/italic treatment — falls back to a plain headline
+ * when the accent text isn't a substring of it. */
+function Headline({ headline, accent }: { headline: string; accent: string }) {
+  const index = accent ? headline.indexOf(accent) : -1;
+  if (index === -1) return <>{headline}</>;
+
+  const before = headline.slice(0, index);
+  const after = headline.slice(index + accent.length);
+  return (
+    <>
+      {before}
+      <span className="bg-gradient-to-r from-[#e8768a] via-[#c93860] to-[#87102C] bg-clip-text text-transparent italic font-serif">
+        {accent}
+      </span>
+      {after}
+    </>
+  );
+}
 
 function GiveRow({
   stepNumber,

@@ -29,6 +29,7 @@ export type FormValues = {
   service_experience: string;
   prayer_point?: string;
   whatsapp_interest: string; // "true" | "false"
+  share_for_connections: string; // "true" | "false"
 };
 
 export type StepProps = {
@@ -619,6 +620,31 @@ export function Step6Experience({ register, errors }: StepProps) {
           />
         </div>
         <FieldError message={errors.whatsapp_interest?.message} />
+      </div>
+
+      <div>
+        <GroupLabel required>
+          Can we introduce you to someone with things in common — same area, similar age?
+        </GroupLabel>
+        <div className="grid grid-cols-2 gap-3">
+          <RadioCard
+            value="true"
+            label="Yes, I'd love that"
+            fieldName="share_for_connections"
+            register={register}
+            validation={{ required: "Please make a selection" }}
+            hasError={!!errors.share_for_connections}
+          />
+          <RadioCard
+            value="false"
+            label="No, thank you"
+            fieldName="share_for_connections"
+            register={register}
+            validation={{ required: "Please make a selection" }}
+            hasError={!!errors.share_for_connections}
+          />
+        </div>
+        <FieldError message={errors.share_for_connections?.message} />
       </div>
 
       <div className="p-4 bg-[#F0FDF4] border border-green-200 rounded-xl">

@@ -105,7 +105,8 @@ export function AddToMasterListModal({ open, onClose }: AddToMasterListModalProp
           />
         </div>
 
-        {/* Optional immediate assignment */}
+        {/* Optional immediate assignment — the backend auto-assigns whenever this is
+            left blank, so leaving it blank is the recommended default, not a shortcut. */}
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
             Assign to <span className="text-gray-400 font-normal">(optional)</span>
@@ -114,10 +115,13 @@ export function AddToMasterListModal({ open, onClose }: AddToMasterListModalProp
             options={assigneeOptions}
             value={assigneeId}
             onChange={setAssigneeId}
-            placeholder="Leave unassigned for now…"
+            placeholder="Auto-assign…"
             loading={teamLoading}
             emptyText="No team members found."
           />
+          <p className="text-[11px] text-gray-400">
+            Leave blank to auto-assign — same gender as them, whoever's least busy.
+          </p>
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-2">

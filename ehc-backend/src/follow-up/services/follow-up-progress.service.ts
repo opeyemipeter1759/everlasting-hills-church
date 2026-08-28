@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { FollowUpStage } from '@prisma/client';
+import { FollowUpLogKind, FollowUpStage } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
@@ -37,27 +37,44 @@ export class FollowUpProgressService {
       throw new BadRequestException('This follow-up already has a logged outcome');
     }
 
+    const kind = dto.kind ?? FollowUpLogKind.CONTACT;
+    const isContact = kind === FollowUpLogKind.CONTACT;
+    if (isContact && (!dto.method || !dto.outcome)) {
+      throw new BadRequestException('method and outcome are required for a contact log');
+    }
+
     await this.prisma.followUpContactLog.create({
       data: {
         id: randomUUID(),
         tenantId: this.tenantId,
         entryId: id,
         byId: actor.memberId,
-        method: dto.method,
-        outcome: dto.outcome,
+        kind,
+        method: isContact ? dto.method : null,
+        outcome: isContact ? dto.outcome : null,
         note: dto.note,
+        isPastoralContact: dto.isPastoralContact ?? false,
+        isPrivate: dto.isPrivate ?? false,
       },
     });
 
-    const nextStage = WORKING_STAGES.includes(entry.stage) ? FollowUpStage.IN_PROGRESS : entry.stage;
+    // A quick update is a note for whoever picks this up next — it shouldn't
+    // pretend to be a real contact attempt, so it doesn't advance the stage or
+    // count toward the goal.
     const updated = await this.prisma.followUpEntry.update({
       where: { id },
-      data: { contactCount: { increment: 1 }, lastContactAt: new Date(), stage: nextStage },
+      data: isContact
+        ? {
+            contactCount: { increment: 1 },
+            lastContactAt: new Date(),
+            stage: WORKING_STAGES.includes(entry.stage) ? FollowUpStage.IN_PROGRESS : entry.stage,
+          }
+        : {},
       include: ENTRY_INCLUDE,
     });
 
     await this.audit.write({
-      action: 'LOG_CONTACT',
+      action: isContact ? 'LOG_CONTACT' : 'LOG_QUICK_UPDATE',
       entity: 'FollowUpEntry',
       entityId: id,
       actorId: actor.userId,
@@ -88,6 +105,23 @@ export class FollowUpProgressService {
       entityId: id,
       actorId: actor.userId,
       after: { outcome: dto.outcome },
+    });
+    return this.mapper.mapEntry(updated, actor);
+  }
+
+  /** "Call back later" — hides the entry from the default/Today views until
+   * `until` passes. Pass a null/past date to un-snooze. */
+  async snooze(actor: AuthUser, id: string, until: string | null) {
+    const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
+    if (!entry) throw new NotFoundException('Follow-up entry not found');
+    if (!actor.memberId || !this.auth.canWork(actor, entry)) {
+      throw new ForbiddenException('You are not assigned to this follow-up');
+    }
+
+    const updated = await this.prisma.followUpEntry.update({
+      where: { id },
+      data: { snoozedUntil: until ? new Date(until) : null },
+      include: ENTRY_INCLUDE,
     });
     return this.mapper.mapEntry(updated, actor);
   }

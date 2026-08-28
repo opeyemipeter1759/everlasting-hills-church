@@ -8,12 +8,19 @@ import { CreateFollowUpEntryDto } from './dto/create-follow-up-entry.dto';
 import { AssignFollowUpDto } from './dto/assign-follow-up.dto';
 import { LogContactDto } from './dto/log-contact.dto';
 import { ConfirmFollowUpDto } from './dto/confirm-follow-up.dto';
+import { QuickCaptureDto } from './dto/quick-capture.dto';
+import { BulkReassignDto } from './dto/bulk-reassign.dto';
+import { SnoozeFollowUpDto } from './dto/snooze-follow-up.dto';
+import { UpdateConnectionStatusDto } from './dto/update-connection-status.dto';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
 import { FollowUpReadService } from './services/follow-up-read.service';
 import { FollowUpIntakeService } from './services/follow-up-intake.service';
 import { FollowUpProgressService } from './services/follow-up-progress.service';
 import { FollowUpPickersService } from './services/follow-up-pickers.service';
 import { FollowUpAutoSurfaceService } from './services/follow-up-auto-surface.service';
+import { FollowUpPastorEscalationService } from './services/follow-up-pastor-escalation.service';
+import { FollowUpConnectionsService } from './services/follow-up-connections.service';
+import { FollowUpGamificationService } from './services/follow-up-gamification.service';
 
 function parseStage(stage?: string): FollowUpStage | undefined {
   if (!stage) return undefined;
@@ -48,6 +55,9 @@ export class FollowUpController {
     private readonly progress: FollowUpProgressService,
     private readonly pickers: FollowUpPickersService,
     private readonly autoSurface: FollowUpAutoSurfaceService,
+    private readonly pastorEscalation: FollowUpPastorEscalationService,
+    private readonly connections: FollowUpConnectionsService,
+    private readonly gamification: FollowUpGamificationService,
   ) {}
 
   // ── Pickers (declared before :id so Express doesn't swallow them as params) ──
@@ -93,6 +103,46 @@ export class FollowUpController {
     return this.autoSurface.autoSurfaceEntries();
   }
 
+  @Post('services/:serviceId/backfill')
+  @Roles(Role.UNIT_LEAD)
+  @ApiOperation({
+    summary:
+      'On-demand backfill for one past service (UNIT_LEAD+): surfaces whoever was absent from it and any still-unconverted first-timers from it, even if the daily sweep never covered that day. Safe to re-run — already-surfaced pairs are skipped.',
+  })
+  async backfillService(@Param('serviceId') serviceId: string) {
+    return this.autoSurface.backfillForService(serviceId);
+  }
+
+  @Post('quick-capture')
+  @ApiOperation({ summary: 'One-tap door capture: create a bare name+phone visitor and route them into the pipeline (MEMBER+)' })
+  @ApiBody({ type: QuickCaptureDto })
+  async quickCapture(@CurrentUser() actor: AuthUser, @Body() body: QuickCaptureDto) {
+    return this.intake.quickCapture(actor, body);
+  }
+
+  @Patch('bulk-reassign')
+  @Roles(Role.UNIT_LEAD)
+  @ApiOperation({ summary: "Move a whole caseload from one team member to another within one unit (UNIT_LEAD+)" })
+  @ApiBody({ type: BulkReassignDto })
+  async bulkReassign(@CurrentUser() actor: AuthUser, @Body() body: BulkReassignDto) {
+    return this.intake.bulkReassign(actor, body);
+  }
+
+  @Get('wins')
+  @ApiOperation({ summary: 'Recent wins across the church — confirmed positive outcomes and connections made (MEMBER+)' })
+  async wins() {
+    return this.gamification.wins();
+  }
+
+  @Get('leaderboard')
+  @ApiOperation({ summary: 'Contacts logged, connections made, and outcomes confirmed this week/month (MEMBER+)' })
+  @ApiQuery({ name: 'period', enum: ['week', 'month'], required: false })
+  async leaderboard(@CurrentUser() actor: AuthUser, @Query('period') period?: string) {
+    const p = period === 'month' ? 'month' : 'week';
+    const result = await this.gamification.leaderboard(p);
+    return this.gamification.withViewer(actor, result, p);
+  }
+
   // ── Read ──────────────────────────────────────────────────────────────────────
 
   @Get()
@@ -104,14 +154,16 @@ export class FollowUpController {
   @ApiQuery({ name: 'stage', required: false, enum: FollowUpStage })
   @ApiQuery({ name: 'mine', required: false, type: Boolean })
   @ApiQuery({ name: 'serviceId', required: false, description: 'Narrow to a specific service day' })
+  @ApiQuery({ name: 'pastoral', required: false, type: Boolean, description: 'Only entries sent to the Pastor' })
   async list(
     @CurrentUser() actor: AuthUser,
     @Query('unitId') unitId?: string,
     @Query('stage') stage?: string,
     @Query('mine') mine?: string,
     @Query('serviceId') serviceId?: string,
+    @Query('pastoral') pastoral?: string,
   ) {
-    return this.read.list(actor, { unitId, stage: parseStage(stage), mine: mine === 'true', serviceId });
+    return this.read.list(actor, { unitId, stage: parseStage(stage), mine: mine === 'true', serviceId, pastoral: pastoral === 'true' });
   }
 
   @Get(':id')
@@ -139,7 +191,7 @@ export class FollowUpController {
   }
 
   @Post(':id/logs')
-  @ApiOperation({ summary: 'Log a contact attempt (MEMBER+, must be the assignee or the unit leader)' })
+  @ApiOperation({ summary: 'Log a contact attempt or a lightweight quick update (MEMBER+, must be the assignee or the unit leader)' })
   @ApiBody({ type: LogContactDto })
   async logContact(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: LogContactDto) {
     return this.progress.logContact(actor, id, body);
@@ -151,5 +203,43 @@ export class FollowUpController {
   @ApiBody({ type: ConfirmFollowUpDto })
   async confirm(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: ConfirmFollowUpDto) {
     return this.progress.confirm(actor, id, body);
+  }
+
+  @Patch(':id/snooze')
+  @ApiOperation({ summary: '"Call back later" — hides the entry from Today until the given date (assignee or leader)' })
+  @ApiBody({ type: SnoozeFollowUpDto })
+  async snooze(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: SnoozeFollowUpDto) {
+    return this.progress.snooze(actor, id, body.until ?? null);
+  }
+
+  @Post(':id/send-to-pastor')
+  @Roles(Role.UNIT_LEAD)
+  @ApiOperation({ summary: "Send a first-timer's details to the Pastor by email + a pre-filled WhatsApp link (UNIT_LEAD+ of that unit)" })
+  async sendToPastor(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.pastorEscalation.sendToPastor(actor, id);
+  }
+
+  @Get(':id/connections')
+  @ApiOperation({ summary: 'Suggested (and acted-on) friend matches for this entry\'s subject (MEMBER+)' })
+  async listConnections(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.connections.list(actor, id);
+  }
+
+  @Post(':id/connections/:connectionId/introduce')
+  @ApiOperation({ summary: 'Mark a suggested connection as introduced — logs it to the entry\'s timeline (assignee or leader)' })
+  async introduceConnection(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Param('connectionId') connectionId: string) {
+    return this.connections.introduce(actor, id, connectionId);
+  }
+
+  @Patch(':id/connections/:connectionId')
+  @ApiOperation({ summary: 'Record whether an introduced connection actually stuck (assignee or leader)' })
+  @ApiBody({ type: UpdateConnectionStatusDto })
+  async updateConnection(
+    @CurrentUser() actor: AuthUser,
+    @Param('id') id: string,
+    @Param('connectionId') connectionId: string,
+    @Body() body: UpdateConnectionStatusDto,
+  ) {
+    return this.connections.updateStatus(actor, id, connectionId, body.status);
   }
 }

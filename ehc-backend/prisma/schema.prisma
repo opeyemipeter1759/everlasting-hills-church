@@ -155,60 +155,62 @@ model ListenProgress {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Member {
-  id                          String                     @id
-  tenantId                    String
-  profileId                   String                     @unique
-  firstName                   String
-  lastName                    String
-  email                       String?
-  phone                       String?
-  gender                      String?
-  dateOfBirth                 DateTime?
-  weddingAnniversary          DateTime?
-  instagram                   String?
-  facebook                    String?
-  twitter                     String?
-  linkedin                    String?
-  tiktok                      String?
-  address                     String?
-  joinedAt                    DateTime                   @default(now())
-  bio                         String?
-  photoUrl                    String?
-  status                      MemberStatus               @default(ACTIVE)
-  notifyNewSermons            Boolean                    @default(true)
-  tags                        String[]
-  householdId                 String?
-  deactivationRequestedAt     DateTime?
-  AttendanceRecord            AttendanceRecord[]
-  DiscussionResponse          DiscussionResponse[]
-  EngagementScore             EngagementScore?
-  FollowUpTask                FollowUpTask[]
-  ListenProgress              ListenProgress[]
-  Household                   Household?                 @relation(fields: [householdId], references: [id])
-  Profile                     Profile                    @relation(fields: [profileId], references: [id])
-  Tenant                      Tenant                     @relation(fields: [tenantId], references: [id])
-  PastorNote                  PastorNote[]
-  PastoralAlert               PastoralAlert[]
-  SermonBookmark              SermonBookmark[]
-  SermonComment               SermonComment[]
-  SermonDirectMessageSent     SermonDirectMessage[]      @relation("SermonDirectMessageSender")
-  SermonDirectMessageReceived SermonDirectMessage[]      @relation("SermonDirectMessageRecipient")
-  BirthdayGreetingReceived    BirthdayGreeting[]         @relation("BirthdayGreetingRecipient")
-  BirthdayGreetingAuthored    BirthdayGreeting[]         @relation("BirthdayGreetingAuthor")
-  SermonNote                  SermonNote[]
-  SermonReaction              SermonReaction[]
-  UnitMember                  UnitMember[]
-  CareAsMember                CareAssignment[]           @relation("CareMember")
-  CareAsLeader                CareAssignment[]           @relation("CareLeader")
-  FollowUpAsSubject           FollowUpEntry[]            @relation("FollowUpSubjectMember")
-  FollowUpAsAssignee          FollowUpEntry[]            @relation("FollowUpAssignee")
-  FollowUpLogs                FollowUpContactLog[]       @relation("FollowUpLoggedBy")
-  CourseEnrollment            CourseEnrollment[]
-  CourseCategoryEnrollment    CourseCategoryEnrollment[]
-  PrayerRequest               PrayerRequest[]
-  Question                    Question[]
-  UnitTaskAssigned            UnitTask[]
-  ServiceAssignment           ServiceAssignment[]
+  id                            String                     @id
+  tenantId                      String
+  profileId                     String                     @unique
+  firstName                     String
+  lastName                      String
+  email                         String?
+  phone                         String?
+  gender                        String?
+  dateOfBirth                   DateTime?
+  weddingAnniversary            DateTime?
+  instagram                     String?
+  facebook                      String?
+  twitter                       String?
+  linkedin                      String?
+  tiktok                        String?
+  address                       String?
+  joinedAt                      DateTime                   @default(now())
+  bio                           String?
+  photoUrl                      String?
+  status                        MemberStatus               @default(ACTIVE)
+  notifyNewSermons              Boolean                    @default(true)
+  tags                          String[]
+  householdId                   String?
+  deactivationRequestedAt       DateTime?
+  AttendanceRecord              AttendanceRecord[]
+  DiscussionResponse            DiscussionResponse[]
+  EngagementScore               EngagementScore?
+  FollowUpTask                  FollowUpTask[]
+  ListenProgress                ListenProgress[]
+  Household                     Household?                 @relation(fields: [householdId], references: [id])
+  Profile                       Profile                    @relation(fields: [profileId], references: [id])
+  Tenant                        Tenant                     @relation(fields: [tenantId], references: [id])
+  PastorNote                    PastorNote[]
+  PastoralAlert                 PastoralAlert[]
+  SermonBookmark                SermonBookmark[]
+  SermonComment                 SermonComment[]
+  SermonDirectMessageSent       SermonDirectMessage[]      @relation("SermonDirectMessageSender")
+  SermonDirectMessageReceived   SermonDirectMessage[]      @relation("SermonDirectMessageRecipient")
+  BirthdayGreetingReceived      BirthdayGreeting[]         @relation("BirthdayGreetingRecipient")
+  BirthdayGreetingAuthored      BirthdayGreeting[]         @relation("BirthdayGreetingAuthor")
+  SermonNote                    SermonNote[]
+  SermonReaction                SermonReaction[]
+  UnitMember                    UnitMember[]
+  CareAsMember                  CareAssignment[]           @relation("CareMember")
+  CareAsLeader                  CareAssignment[]           @relation("CareLeader")
+  FollowUpAsSubject             FollowUpEntry[]            @relation("FollowUpSubjectMember")
+  FollowUpAsAssignee            FollowUpEntry[]            @relation("FollowUpAssignee")
+  FollowUpLogs                  FollowUpContactLog[]       @relation("FollowUpLoggedBy")
+  FollowUpSuggestedAsConnection FollowUpConnection[]       @relation("FollowUpConnectionSuggested")
+  FollowUpConnectionsIntroduced FollowUpConnection[]       @relation("FollowUpConnectionIntroducedBy")
+  CourseEnrollment              CourseEnrollment[]
+  CourseCategoryEnrollment      CourseCategoryEnrollment[]
+  PrayerRequest                 PrayerRequest[]
+  Question                      Question[]
+  UnitTaskAssigned              UnitTask[]
+  ServiceAssignment             ServiceAssignment[]
 
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
@@ -276,55 +278,151 @@ enum FollowUpContactOutcome {
   SCHEDULED_VISIT
 }
 
+/// Distinguishes a formal contact attempt (CONTACT — has method/outcome) from a
+/// lightweight note (QUICK_UPDATE — note only), a connection-introduction record
+/// (CONNECTION, auto-written when a suggested match is introduced), and a
+/// system-generated timeline entry (SYSTEM). All share the same timeline so
+/// nothing a worker leaves behind gets lost in a separate table.
+enum FollowUpLogKind {
+  CONTACT
+  QUICK_UPDATE
+  CONNECTION
+  SYSTEM
+}
+
+enum FollowUpConnectionStatus {
+  SUGGESTED
+  INTRODUCED
+  CONNECTED
+  DECLINED
+}
+
+enum FollowUpReportSentVia {
+  EMAIL
+  WHATSAPP
+  BOTH
+}
+
 /// A Unit's follow-up "Master List" row: a first-timer (Visitor) or absentee
 /// (Member) tracked from first contact to confirmed follow-up. See
 /// prisma/manual/2026-07-follow-up.sql for the hand-applied migration.
 model FollowUpEntry {
-  id            String               @id
-  tenantId      String
-  unitId        String
-  sourceType    FollowUpSourceType
-  memberId      String? // subject, when sourceType = ABSENTEE
-  visitorId     String? // subject, when sourceType = FIRST_TIMER
-  addedById     String // Profile.id of the usher/leader who added them
-  assigneeId    String? // Member.id of the team member currently assigned
-  stage         FollowUpStage        @default(UNASSIGNED)
-  goalContacts  Int                  @default(3)
-  contactCount  Int                  @default(0)
-  lastContactAt DateTime?
-  outcome       FollowUpOutcome?
-  reviewNote    String?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @default(now()) @updatedAt
-  Tenant        Tenant               @relation(fields: [tenantId], references: [id])
-  Unit          Unit                 @relation(fields: [unitId], references: [id])
-  Member        Member?              @relation("FollowUpSubjectMember", fields: [memberId], references: [id])
-  Visitor       Visitor?             @relation(fields: [visitorId], references: [id])
-  Assignee      Member?              @relation("FollowUpAssignee", fields: [assigneeId], references: [id])
-  AddedBy       Profile              @relation("FollowUpAddedBy", fields: [addedById], references: [id])
-  Logs          FollowUpContactLog[]
+  id               String               @id
+  tenantId         String
+  unitId           String
+  sourceType       FollowUpSourceType
+  memberId         String? // subject, when sourceType = ABSENTEE
+  visitorId        String? // subject, when sourceType = FIRST_TIMER
+  addedById        String // Profile.id of the usher/leader who added them
+  assigneeId       String? // Member.id of the team member currently assigned
+  stage            FollowUpStage        @default(UNASSIGNED)
+  goalContacts     Int                  @default(3)
+  contactCount     Int                  @default(0)
+  lastContactAt    DateTime?
+  outcome          FollowUpOutcome?
+  reviewNote       String?
+  /// Who sent this entry's details up to the Pastor, and when — a leader's
+  /// deliberate choice, not an automatic escalation rule. Null until sent.
+  sentToPastorById String?
+  sentToPastorAt   DateTime?
+  /// "Call back later" — hides the entry from the default/Today views until
+  /// this passes, without it being contacted or closed.
+  snoozedUntil     DateTime?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @default(now()) @updatedAt
+  Tenant           Tenant               @relation(fields: [tenantId], references: [id])
+  Unit             Unit                 @relation(fields: [unitId], references: [id])
+  Member           Member?              @relation("FollowUpSubjectMember", fields: [memberId], references: [id])
+  Visitor          Visitor?             @relation(fields: [visitorId], references: [id])
+  Assignee         Member?              @relation("FollowUpAssignee", fields: [assigneeId], references: [id])
+  AddedBy          Profile              @relation("FollowUpAddedBy", fields: [addedById], references: [id])
+  SentToPastorBy   Profile?             @relation("FollowUpSentToPastorBy", fields: [sentToPastorById], references: [id])
+  Logs             FollowUpContactLog[]
+  Connections      FollowUpConnection[]
 
   @@index([tenantId, unitId])
   @@index([tenantId, stage])
   @@index([assigneeId])
 }
 
-/// One logged contact attempt against a FollowUpEntry.
+/// One entry on a FollowUpEntry's unified activity timeline. A formal contact
+/// attempt (kind = CONTACT) requires method + outcome; a QUICK_UPDATE is just a
+/// note; CONNECTION rows are auto-written when a suggested match is introduced.
 model FollowUpContactLog {
-  id        String                 @id
-  tenantId  String
-  entryId   String
-  byId      String // Member.id who logged it
-  method    FollowUpContactMethod
-  outcome   FollowUpContactOutcome
-  note      String
-  createdAt DateTime               @default(now())
-  Entry     FollowUpEntry          @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  By        Member                 @relation("FollowUpLoggedBy", fields: [byId], references: [id])
-  Tenant    Tenant                 @relation(fields: [tenantId], references: [id])
+  id                String                  @id
+  tenantId          String
+  entryId           String
+  byId              String // Member.id who logged it
+  kind              FollowUpLogKind         @default(CONTACT)
+  method            FollowUpContactMethod?
+  outcome           FollowUpContactOutcome?
+  note              String
+  /// Tagged distinctly from a team member's routine check-in — set when this
+  /// log records the Pastor's own call, not a worker's contact.
+  isPastoralContact Boolean                 @default(false)
+  /// Visible only to the author and this entry's unit leader — for anything
+  /// not meant for the whole team.
+  isPrivate         Boolean                 @default(false)
+  createdAt         DateTime                @default(now())
+  Entry             FollowUpEntry           @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  By                Member                  @relation("FollowUpLoggedBy", fields: [byId], references: [id])
+  Tenant            Tenant                  @relation(fields: [tenantId], references: [id])
 
   @@index([entryId])
   @@index([tenantId])
+}
+
+/// A suggested (or acted-on) friend match for a FollowUpEntry's subject —
+/// gender/location/age/job overlap with an existing Member or another
+/// consenting first-timer. Proven to help retention: someone with 5-10 new
+/// friends in their first 6 months is far more likely to stay.
+model FollowUpConnection {
+  id                String                   @id
+  tenantId          String
+  entryId           String
+  suggestedMemberId String
+  matchReason       String
+  sharedAttributes  String[]
+  status            FollowUpConnectionStatus @default(SUGGESTED)
+  introducedById    String? // Member.id who made the introduction
+  introducedAt      DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @default(now()) @updatedAt
+  Tenant            Tenant                   @relation(fields: [tenantId], references: [id])
+  Entry             FollowUpEntry            @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  SuggestedMember   Member                   @relation("FollowUpConnectionSuggested", fields: [suggestedMemberId], references: [id])
+  IntroducedBy      Member?                  @relation("FollowUpConnectionIntroducedBy", fields: [introducedById], references: [id])
+
+  @@unique([entryId, suggestedMemberId])
+  @@index([entryId])
+  @@index([tenantId])
+}
+
+/// A team leader's compiled report of everything their team logged for one
+/// service day, sent to the Admin Head and Pastor. Sending it is the close-out
+/// action for that service's follow-up work — entryIds records exactly which
+/// entries were covered, so anything left out stays visibly open rather than
+/// silently rolling over.
+model ServiceFollowUpReport {
+  id           String                 @id
+  tenantId     String
+  serviceId    String
+  unitId       String
+  compiledById String // Profile.id of the leader who compiled/sent it
+  summaryText  String
+  stats        Json
+  sentVia      FollowUpReportSentVia?
+  sentAt       DateTime?
+  entryIds     String[]
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @default(now()) @updatedAt
+  Tenant       Tenant                 @relation(fields: [tenantId], references: [id])
+  Service      Service                @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  Unit         Unit                   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  CompiledBy   Profile                @relation("ServiceFollowUpReportCompiledBy", fields: [compiledById], references: [id])
+
+  @@unique([tenantId, serviceId, unitId])
+  @@index([tenantId, unitId])
 }
 
 /// A device/browser a user has logged in from before. Used to alert on logins
@@ -446,38 +544,40 @@ enum QuestionStatus {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Profile {
-  id                     String                  @id
-  userId                 String                  @unique
+  id                            String                  @id
+  userId                        String                  @unique
   /// DEPRECATED: no longer the source of truth for authorization. Effective roles
   /// are derived from RoleGrant + assignments (UnitLeadAssignment, DepartmentHead,
   /// HeadUsherAssignment). Kept as a frozen pre-migration snapshot; do not read it.
-  legacyRole             Role                    @default(MEMBER)
-  tenantId               String
-  createdAt              DateTime                @default(now())
-  Member                 Member?
-  Notification           Notification[]
-  RoleAssignment         RoleAssignment[]
-  CommunityPost          CommunityPost[]
-  DepartmentHeadOf       DepartmentHead[]        @relation("DepartmentHeadUser")
-  DepartmentHeadAssigned DepartmentHead[]        @relation("DepartmentHeadAssignedBy")
-  DepartmentHodOf        DepartmentHod[]         @relation("DepartmentHodUser")
-  DepartmentHodAssigned  DepartmentHod[]         @relation("DepartmentHodAssignedBy")
-  RoleGrantOf            RoleGrant[]             @relation("RoleGrantUser")
-  RoleGrantGranted       RoleGrant[]             @relation("RoleGrantGrantedBy")
-  UnitLeadOf             UnitLeadAssignment[]    @relation("UnitLeadUser")
-  UnitLeadAssigned       UnitLeadAssignment[]    @relation("UnitLeadAssignedBy")
-  HeadUsherOf            HeadUsherAssignment[]   @relation("HeadUsherUser")
-  HeadUsherAssigned      HeadUsherAssignment[]   @relation("HeadUsherAssignedBy")
-  FollowUpAdded          FollowUpEntry[]         @relation("FollowUpAddedBy")
-  ReportSubmitted        Report[]                @relation("ReportSubmittedBy")
-  ReportReviewed         Report[]                @relation("ReportReviewedBy")
-  ReportComment          ReportComment[]
-  UnitTaskCreated        UnitTask[]
-  UnitExpenseCreated     UnitExpense[]
-  UnitTaskCommentAuthor  UnitTaskComment[]
-  CalendarFeedToken      CalendarFeedToken[]     @relation("CalendarFeedTokenUser")
-  PushSubscription       PushSubscription[]      @relation("PushSubscriptionUser")
-  NotificationPreference NotificationPreference? @relation("NotificationPreferenceUser")
+  legacyRole                    Role                    @default(MEMBER)
+  tenantId                      String
+  createdAt                     DateTime                @default(now())
+  Member                        Member?
+  Notification                  Notification[]
+  RoleAssignment                RoleAssignment[]
+  CommunityPost                 CommunityPost[]
+  DepartmentHeadOf              DepartmentHead[]        @relation("DepartmentHeadUser")
+  DepartmentHeadAssigned        DepartmentHead[]        @relation("DepartmentHeadAssignedBy")
+  DepartmentHodOf               DepartmentHod[]         @relation("DepartmentHodUser")
+  DepartmentHodAssigned         DepartmentHod[]         @relation("DepartmentHodAssignedBy")
+  RoleGrantOf                   RoleGrant[]             @relation("RoleGrantUser")
+  RoleGrantGranted              RoleGrant[]             @relation("RoleGrantGrantedBy")
+  UnitLeadOf                    UnitLeadAssignment[]    @relation("UnitLeadUser")
+  UnitLeadAssigned              UnitLeadAssignment[]    @relation("UnitLeadAssignedBy")
+  HeadUsherOf                   HeadUsherAssignment[]   @relation("HeadUsherUser")
+  HeadUsherAssigned             HeadUsherAssignment[]   @relation("HeadUsherAssignedBy")
+  FollowUpAdded                 FollowUpEntry[]         @relation("FollowUpAddedBy")
+  FollowUpSentToPastor          FollowUpEntry[]         @relation("FollowUpSentToPastorBy")
+  ServiceFollowUpReportCompiled ServiceFollowUpReport[] @relation("ServiceFollowUpReportCompiledBy")
+  ReportSubmitted               Report[]                @relation("ReportSubmittedBy")
+  ReportReviewed                Report[]                @relation("ReportReviewedBy")
+  ReportComment                 ReportComment[]
+  UnitTaskCreated               UnitTask[]
+  UnitExpenseCreated            UnitExpense[]
+  UnitTaskCommentAuthor         UnitTaskComment[]
+  CalendarFeedToken             CalendarFeedToken[]     @relation("CalendarFeedTokenUser")
+  PushSubscription              PushSubscription[]      @relation("PushSubscriptionUser")
+  NotificationPreference        NotificationPreference? @relation("NotificationPreferenceUser")
 }
 
 /// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
@@ -711,28 +811,29 @@ model SermonDirectMessage {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Service {
-  id               String              @id
-  tenantId         String
-  name             String
-  scheduledAt      DateTime
-  createdAt        DateTime            @default(now())
-  serviceType      ServiceType         @default(SUNDAY)
-  openAt           DateTime?
-  closeAt          DateTime?
-  isOpen           Boolean             @default(false)
+  id                    String                  @id
+  tenantId              String
+  name                  String
+  scheduledAt           DateTime
+  createdAt             DateTime                @default(now())
+  serviceType           ServiceType             @default(SUNDAY)
+  openAt                DateTime?
+  closeAt               DateTime?
+  isOpen                Boolean                 @default(false)
   /// Calendar export fields. scheduledAt + durationMinutes give .ics a real DTEND
   /// (there was no end time before). cancelledAt drives STATUS:CANCELLED in the
   /// subscription feed so a cancellation reaches subscribers instead of the event
   /// silently disappearing from their calendar.
-  durationMinutes  Int                 @default(120)
-  cancelledAt      DateTime?
-  cancelReason     String?
-  location         String?
-  AttendanceRecord AttendanceRecord[]
-  ServiceHeadcount ServiceHeadcount?
-  Assignments      ServiceAssignment[]
-  Visitor          Visitor[]
-  Tenant           Tenant              @relation(fields: [tenantId], references: [id])
+  durationMinutes       Int                     @default(120)
+  cancelledAt           DateTime?
+  cancelReason          String?
+  location              String?
+  AttendanceRecord      AttendanceRecord[]
+  ServiceHeadcount      ServiceHeadcount?
+  Assignments           ServiceAssignment[]
+  Visitor               Visitor[]
+  ServiceFollowUpReport ServiceFollowUpReport[]
+  Tenant                Tenant                  @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, scheduledAt])
   @@index([tenantId, serviceType, scheduledAt])
@@ -871,6 +972,8 @@ model Tenant {
   NotificationPreference NotificationPreference[]
   RecurringGathering     RecurringGathering[]
   ServiceAssignment      ServiceAssignment[]
+  FollowUpConnection     FollowUpConnection[]
+  ServiceFollowUpReport  ServiceFollowUpReport[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1084,22 +1187,23 @@ model AuditLog {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Unit {
-  id                String               @id
-  tenantId          String
-  name              String
-  description       String?
-  departmentId      String? // nullable: units can exist unassigned and the UI surfaces them
-  createdAt         DateTime             @default(now())
-  Tenant            Tenant               @relation(fields: [tenantId], references: [id])
-  Department        Department?          @relation(fields: [departmentId], references: [id])
-  UnitMember        UnitMember[]
-  LeadAssignments   UnitLeadAssignment[]
-  FollowUpEntry     FollowUpEntry[]
-  Report            Report[]
-  UnitPosition      UnitPosition[]
-  UnitTask          UnitTask[]
-  UnitExpense       UnitExpense[]
-  ServiceAssignment ServiceAssignment[]
+  id                    String                  @id
+  tenantId              String
+  name                  String
+  description           String?
+  departmentId          String? // nullable: units can exist unassigned and the UI surfaces them
+  createdAt             DateTime                @default(now())
+  Tenant                Tenant                  @relation(fields: [tenantId], references: [id])
+  Department            Department?             @relation(fields: [departmentId], references: [id])
+  UnitMember            UnitMember[]
+  LeadAssignments       UnitLeadAssignment[]
+  FollowUpEntry         FollowUpEntry[]
+  ServiceFollowUpReport ServiceFollowUpReport[]
+  Report                Report[]
+  UnitPosition          UnitPosition[]
+  UnitTask              UnitTask[]
+  UnitExpense           UnitExpense[]
+  ServiceAssignment     ServiceAssignment[]
 
   @@index([departmentId])
 }
@@ -1351,6 +1455,10 @@ model Visitor {
   serviceExperience   String?
   prayerPoint         String?
   whatsappInterest    Boolean?
+  /// Consent checkbox on the first-timer form: only when true may this person be
+  /// surfaced as a suggested friend-match for someone else (their own reason for
+  /// matching them to another guest, not a blanket "may we share your info" flag).
+  shareForConnections Boolean         @default(false)
   submittedAt         DateTime        @default(now())
   attendanceType      String?
   convertedAt         DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
@@ -1390,55 +1498,55 @@ model OnlineCheckIn {
 /// Admin/PASTOR curates these — distinct from raw form-submission testimonies (which go
 /// through FormSubmission with type='testimony' and are awaiting moderation).
 model Testimonial {
-  id             String    @id
-  tenantId       String
-  authorName     String
-  authorRole     String? // public-facing byline (e.g. "Member since 2018") — never contact info
-  authorPhotoUrl String?
-  content        String
+  id               String    @id
+  tenantId         String
+  authorName       String
+  authorRole       String? // public-facing byline (e.g. "Member since 2018") — never contact info
+  authorPhotoUrl   String?
+  content          String
   // Submitter's email/phone from the public testimony form, for the pastoral
   // team's own follow-up only — admin-only, never selected on the public
   // /testimonials/published endpoint. Null for admin-authored testimonials.
   submitterContact String?
-  published      Boolean   @default(false)
-  publishedAt    DateTime?
-  order          Int       @default(0)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @default(now())
-  Tenant         Tenant    @relation(fields: [tenantId], references: [id])
+  published        Boolean   @default(false)
+  publishedAt      DateTime?
+  order            Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @default(now())
+  Tenant           Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, published, order])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Announcement {
-  id          String      @id
-  tenantId    String
-  title       String
-  body        String
-  imageUrl    String?
-  audience    String      @default("all") // display label only ("all" or "custom"); actual targeting lives in the fields below
-  sendEmail   Boolean     @default(false)
-  status      EventStatus @default(PUBLISHED)
-  createdById String?
-  recipients  Int         @default(0)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                 String      @id
+  tenantId           String
+  title              String
+  body               String
+  imageUrl           String?
+  audience           String      @default("all") // display label only ("all" or "custom"); actual targeting lives in the fields below
+  sendEmail          Boolean     @default(false)
+  status             EventStatus @default(PUBLISHED)
+  createdById        String?
+  recipients         Int         @default(0)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
   // Audience targeting — empty on all three means "everyone" (unchanged default
   // behavior). Otherwise the recipient set is the UNION of: profiles matching any
   // of targetRoles, profiles whose Member.gender is in targetGenders, and the
   // specific profiles in targetProfileIds. targetProfileNames is a display-only
   // snapshot taken at send time so the detail view doesn't need an extra lookup
   // and stays stable even if a person's name changes later.
-  targetRoles        Role[]   @default([])
-  targetGenders      String[] @default([])
-  targetProfileIds   String[] @default([])
-  targetProfileNames String[] @default([])
+  targetRoles        Role[]      @default([])
+  targetGenders      String[]    @default([])
+  targetProfileIds   String[]    @default([])
+  targetProfileNames String[]    @default([])
   // Optional event details shown alongside the announcement — a time of day
   // (free text, e.g. "10:00 AM") and a venue/location name.
-  eventTime String?
-  venue     String?
-  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  eventTime          String?
+  venue              String?
+  Tenant             Tenant      @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, createdAt])
   @@index([tenantId, status])

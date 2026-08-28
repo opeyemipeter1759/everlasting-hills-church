@@ -26,4 +26,15 @@ export class FollowUpAutoSurfaceService {
     const firstTimersCreated = await this.firstTimers.run(leaderCache, followUpUnitId);
     return { absenteesCreated, firstTimersCreated };
   }
+
+  /** On-demand backfill for one specific past service — surfaces whoever was
+   * absent from it and any still-unconverted first-timers from it, regardless
+   * of how long ago it was or whether the daily sweep ever covered it. */
+  async backfillForService(serviceId: string): Promise<{ absenteesCreated: number; firstTimersCreated: number }> {
+    const leaderCache = new Map<string, string | null>();
+    const followUpUnitId = await this.unitLeaderLookup.getFollowUpUnitId();
+    const absenteesCreated = await this.absentees.backfillForService(serviceId, leaderCache, followUpUnitId);
+    const firstTimersCreated = await this.firstTimers.backfillForService(serviceId, leaderCache, followUpUnitId);
+    return { absenteesCreated, firstTimersCreated };
+  }
 }

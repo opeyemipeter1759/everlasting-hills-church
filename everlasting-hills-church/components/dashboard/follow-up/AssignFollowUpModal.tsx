@@ -13,9 +13,10 @@ interface AssignFollowUpModalProps {
 
 export function AssignFollowUpModal({ entry, onClose }: AssignFollowUpModalProps) {
   const [assigneeId, setAssigneeId] = useState(entry?.assignee?.id ?? "");
-  // Always the caller's own team — not the entry's current unit — so claiming
-  // someone from the shared "Follow-Up" pool assigns them to one of your people.
-  const { data: team, isLoading: teamLoading } = useFollowUpTeam();
+  // Scoped to this entry's own unit — never a different team the caller happens
+  // to also belong to (e.g. an admin's own unit membership) — so the picker can
+  // only ever offer someone who's actually on the team this entry belongs to.
+  const { data: team, isLoading: teamLoading } = useFollowUpTeam(entry?.unitId);
   const assign = useAssignFollowUp();
 
   const options: ComboOption[] = (team ?? []).map((m) => ({ id: m.id, label: m.name }));

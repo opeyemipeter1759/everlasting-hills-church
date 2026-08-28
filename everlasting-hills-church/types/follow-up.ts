@@ -29,9 +29,16 @@ export type ContactMethod = "CALL" | "SMS" | "WHATSAPP" | "VISIT" | "OTHER";
 
 export type ContactOutcome = "REACHED" | "NO_ANSWER" | "VOICEMAIL" | "WRONG_NUMBER" | "SCHEDULED_VISIT";
 
+export type ContactLogKind = "CONTACT" | "QUICK_UPDATE" | "CONNECTION" | "SYSTEM";
+
 export type AbsenteeRiskCategory = "NEVER_ATTENDED" | "CONSECUTIVE_ABSENCES" | "BELOW_50_PERCENT";
 
 export type MemberStatus = "ACTIVE" | "INACTIVE" | "TRANSFERRED" | "DECEASED" | "OPTED_OUT";
+
+/** Computed server-side per entry: whether it needs attention right now. */
+export type FollowUpDueStatus = "OVERDUE" | "DUE" | "SNOOZED" | "OK";
+
+export type ConnectionStatus = "SUGGESTED" | "INTRODUCED" | "CONNECTED" | "DECLINED";
 
 export interface MissedService {
   id: string;
@@ -60,9 +67,16 @@ export interface ContactLogEntry {
   id: string;
   by: PersonRef;
   at: string;
-  method: ContactMethod;
-  outcome: ContactOutcome;
+  kind: ContactLogKind;
+  /** Null for QUICK_UPDATE/CONNECTION/SYSTEM entries. */
+  method: ContactMethod | null;
+  /** Null for QUICK_UPDATE/CONNECTION/SYSTEM entries. */
+  outcome: ContactOutcome | null;
   note: string;
+  isPastoralContact: boolean;
+  /** Server already filters which private notes reach the viewer — this is only
+   * a display hint to show the "private" indicator on the ones you can see. */
+  isPrivate: boolean;
 }
 
 /** Extra intake detail for the drawer's "Contact & Details" section. Shape differs
@@ -81,6 +95,21 @@ export interface PersonDetail {
   howTheyHeard: string | null;
   /** FIRST_TIMER only. */
   occupation: string | null;
+  /** ABSENTEE only — used to group same-household rows in the Master List. */
+  householdId: string | null;
+}
+
+export interface FollowUpConnection {
+  id: string;
+  member: PersonRef;
+  /** e.g. "Same area, similar age" */
+  matchReason: string;
+  /** e.g. ["location", "age"] */
+  sharedAttributes: string[];
+  status: ConnectionStatus;
+  /** Name of the member who introduced them. */
+  introducedBy: string | null;
+  introducedAt: string | null;
 }
 
 export interface FollowUpEntry {
@@ -101,6 +130,11 @@ export interface FollowUpEntry {
   reviewNote: string | null;
   /** Only set for ABSENTEE entries (Member-backed) — null for FIRST_TIMER (Visitor-backed). */
   memberStatus: MemberStatus | null;
+  sentToPastorAt: string | null;
+  sentToPastorBy: PersonRef | null;
+  snoozedUntil: string | null;
+  dueStatus: FollowUpDueStatus;
+  connections: FollowUpConnection[];
   logs: ContactLogEntry[];
   /** Only set when sourceType is ABSENTEE. */
   absenteeDetail: AbsenteeDetail | null;
@@ -111,4 +145,86 @@ export interface FollowUpEntry {
   viewerCanApprove: boolean;
   /** Can the viewer log a contact / mark ready on this entry (assignee, or viewerCanApprove). */
   viewerCanWork: boolean;
+}
+
+/** Extra field only present on the single-entry GET /follow-up/:id response. */
+export interface FollowUpEntryDetail extends FollowUpEntry {
+  bestTimeHint: string | null;
+}
+
+// ── Wins & leaderboard ──────────────────────────────────────────────────────
+
+export type WinType = "CONFIRMED_OUTCOME" | "CONNECTION_MADE";
+
+export interface WinItem {
+  id: string;
+  type: WinType;
+  actorName: string;
+  subjectName: string;
+  message: string;
+  at: string;
+}
+
+export interface LeaderboardRow {
+  memberId: string;
+  name: string;
+  photoUrl: string | null;
+  contactsLogged: number;
+  connectionsMade: number;
+  confirmed: number;
+  score: number;
+  rank: number;
+}
+
+export interface LeaderboardResponse {
+  top: LeaderboardRow[];
+  viewer: LeaderboardRow | null;
+  overdueCount: number;
+}
+
+// ── Service reports ──────────────────────────────────────────────────────────
+
+export type ServiceReportSentVia = "EMAIL" | "WHATSAPP" | "BOTH";
+
+export interface ServiceReportStats {
+  total: number;
+  reached: number;
+  unreachable: number;
+  connectionsIntroduced: number;
+  outstanding: number;
+}
+
+export interface ServiceReportHistoryRow {
+  id: string;
+  tenantId: string;
+  serviceId: string;
+  unitId: string;
+  compiledById: string;
+  summaryText: string;
+  stats: ServiceReportStats;
+  sentVia: ServiceReportSentVia | null;
+  sentAt: string | null;
+  entryIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  Service: { name: string; scheduledAt: string };
+  Unit: { name: string };
+  compiledByName: string;
+}
+
+export type ServiceReportRecipientGroup = "PASTOR" | "ADMIN_HEAD";
+
+export interface ServiceReportRecipient {
+  profileId: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+}
+
+export interface ServiceReportDraft {
+  summaryText: string;
+  stats: ServiceReportStats;
+  entryIds: string[];
+  outstandingEntries: { id: string; name: string }[];
+  recipients: { pastors: ServiceReportRecipient[]; adminHeads: ServiceReportRecipient[] };
 }

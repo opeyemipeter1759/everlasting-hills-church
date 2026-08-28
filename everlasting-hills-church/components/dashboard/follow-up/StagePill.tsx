@@ -1,4 +1,5 @@
-import type { AbsenteeRiskCategory, FollowUpOutcome, FollowUpSourceType, FollowUpStage } from "@/types/follow-up";
+import { Clock3 } from "lucide-react";
+import type { AbsenteeRiskCategory, FollowUpDueStatus, FollowUpOutcome, FollowUpSourceType, FollowUpStage } from "@/types/follow-up";
 
 const STAGE_CONFIG: Record<FollowUpStage, { label: string; className: string }> = {
   UNASSIGNED: {
@@ -125,6 +126,34 @@ export function OutcomePill({ outcome }: { outcome: FollowUpOutcome }) {
   const cfg = OUTCOME_CONFIG[outcome];
   return (
     <span className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${cfg.className}`}>
+      {cfg.label}
+    </span>
+  );
+}
+
+// Only OVERDUE/DUE/SNOOZED render a pill — "OK" is the quiet default and needs
+// no visual callout.
+const DUE_STATUS_CONFIG: Partial<Record<FollowUpDueStatus, { label: string; className: string }>> = {
+  OVERDUE: {
+    label: "Overdue",
+    className: "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border-red-200 dark:border-red-500/20",
+  },
+  DUE: {
+    label: "Due",
+    className: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20",
+  },
+  SNOOZED: {
+    label: "Snoozed",
+    className: "bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-500/20",
+  },
+};
+
+export function DueStatusPill({ status }: { status: FollowUpDueStatus }) {
+  const cfg = DUE_STATUS_CONFIG[status];
+  if (!cfg) return null;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${cfg.className}`}>
+      <Clock3 size={9} aria-hidden="true" />
       {cfg.label}
     </span>
   );

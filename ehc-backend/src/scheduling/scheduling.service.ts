@@ -4,6 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
 import { FollowUpAutoSurfaceService } from '../follow-up/services/follow-up-auto-surface.service';
+import { FollowUpRemindersService } from '../follow-up/services/follow-up-reminders.service';
 import { buildBirthdayEmail } from '../notifications/templates/birthday.email';
 import { buildAnniversaryEmail } from '../notifications/templates/anniversary.email';
 import type { Env } from '../config/env.validation';
@@ -25,6 +26,7 @@ export class SchedulingService {
     private readonly mail: MailDispatcher,
     private readonly config: ConfigService<Env, true>,
     private readonly followUp: FollowUpAutoSurfaceService,
+    private readonly followUpReminders: FollowUpRemindersService,
   ) {}
 
   /**
@@ -137,6 +139,23 @@ export class SchedulingService {
     }
     this.logger.log(
       `follow-up-auto-surface: created ${absenteesCreated} absentee + ${firstTimersCreated} first-timer entries`,
+    );
+  }
+
+  /**
+   * Daily follow-up nudges. Fires at 09:30 (just after auto-surface): 48h
+   * reminders to workers, 5-day escalations to leaders, and "they're back"
+   * prompts for absentees who've now attended 3 services running.
+   */
+  @Cron('30 9 * * *', { name: 'follow-up-reminders' })
+  async sweepFollowUpReminders(): Promise<void> {
+    const { reminded, escalated, returnedPrompts } = await this.followUpReminders.run();
+    if (reminded === 0 && escalated === 0 && returnedPrompts === 0) {
+      this.logger.debug('follow-up-reminders: nothing to nudge');
+      return;
+    }
+    this.logger.log(
+      `follow-up-reminders: ${reminded} reminders, ${escalated} escalations, ${returnedPrompts} "they're back" prompts`,
     );
   }
 }

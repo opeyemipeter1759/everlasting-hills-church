@@ -28,7 +28,7 @@ const STEP_FIELDS: (keyof FormValues)[][] = [
   ["how_did_you_learn", "invited_by"],
   ["located_in_ibadan", "membership_interest"],
   ["address", "birth_month", "birth_day", "occupation", "born_again"],
-  ["service_experience", "whatsapp_interest"],
+  ["service_experience", "whatsapp_interest", "share_for_connections"],
 ];
 
 export default function FirstTimerPageWrapper() {
@@ -100,6 +100,7 @@ function FirstTimerPage() {
         ...data,
         located_in_ibadan: String(data.located_in_ibadan) === "true",
         whatsapp_interest: String(data.whatsapp_interest) === "true",
+        share_for_connections: String(data.share_for_connections) === "true",
       });
       setSubmitted(true);
     } catch (err) {

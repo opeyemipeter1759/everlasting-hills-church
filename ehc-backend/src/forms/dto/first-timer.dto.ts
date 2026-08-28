@@ -103,6 +103,11 @@ export class FirstTimerDto {
   @IsBoolean()
   whatsapp_interest?: boolean;
 
+  @ApiProperty({ example: false, required: false, description: 'Consent to be suggested as a friend-match for another guest, or to see suggested matches of their own' })
+  @IsOptional()
+  @IsBoolean()
+  share_for_connections?: boolean;
+
   @ApiProperty({ example: '27', required: false })
   @IsOptional()
   @IsString()

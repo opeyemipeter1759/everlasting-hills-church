@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Navbar from "@/components/home/Navbar";
 import PageFooter from "@/components/home/PageFooter";
+import { getAllSiteSettings } from "@/lib/site-settings";
 
 /**
  * Auth layout shell.
@@ -13,11 +14,12 @@ import PageFooter from "@/components/home/PageFooter";
  *
  * The form area uses max-w-5xl so split-screen designs (e.g. login) have room.
  */
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getAllSiteSettings();
   return (
     <div className="bg-church-dark">
       <Navbar />
@@ -44,7 +46,7 @@ export default function AuthLayout({
         </div>
       </main>
 
-      <PageFooter />
+      <PageFooter givingContent={settings.GIVING} />
     </div>
   );
 }

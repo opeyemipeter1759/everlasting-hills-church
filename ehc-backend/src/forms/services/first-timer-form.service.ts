@@ -72,6 +72,7 @@ export class FirstTimerFormService {
           serviceExperience: data.service_experience ?? null,
           prayerPoint: data.prayer_point ?? null,
           whatsappInterest: data.whatsapp_interest ?? null,
+          shareForConnections: data.share_for_connections ?? false,
           serviceId: todaysService?.id ?? null,
         },
       }),
