@@ -59,6 +59,67 @@ export class AnnouncementsService {
     return { tenantId: this.tenantId, OR };
   }
 
+  /**
+   * Who actually gets the email, as addresses paired with what they are to the
+   * church — the two groups get different copy and a different call to action.
+   *
+   * Targeting the VISITOR role means the first-timer list, not a role anyone
+   * holds. Visitors are rows in the Visitor table with no Profile at all, so
+   * before this they could never receive an announcement: selecting "Visitor"
+   * fell through roleFilter() to the plain-member branch and silently sent to
+   * members instead. VISITOR is therefore removed from the profile-side
+   * targeting here and resolved separately.
+   *
+   * Only unconverted visitors are included — once someone becomes a member they
+   * are reachable as a member, and mailing both rows would send them two copies.
+   */
+  private async resolveEmailAudience(
+    targeting: AudienceTargeting,
+    allProfiles: { Member: { email: string | null } | null }[],
+  ): Promise<{ email: string; kind: 'member' | 'visitor' }[]> {
+    const visitorsTargeted = targeting.targetRoles.includes(Role.VISITOR);
+    const profileTargeting: AudienceTargeting = {
+      ...targeting,
+      targetRoles: targeting.targetRoles.filter((role) => role !== Role.VISITOR),
+    };
+    const profilesTargeted = this.hasTargeting(profileTargeting);
+
+    // No targeting of any kind still means the whole church, unchanged.
+    const profileRows = !visitorsTargeted && !profilesTargeted
+      ? allProfiles
+      : profilesTargeted
+        ? await this.prisma.profile.findMany({
+            where: this.resolveAudienceWhere(profileTargeting),
+            select: { Member: { select: { email: true } } },
+          })
+        : [];
+
+    const memberEmails = profileRows
+      .map((p) => p.Member?.email)
+      .filter((e): e is string => Boolean(e));
+
+    const recipients: { email: string; kind: 'member' | 'visitor' }[] = memberEmails.map(
+      (email) => ({ email, kind: 'member' }),
+    );
+
+    if (visitorsTargeted) {
+      const visitors = await this.prisma.visitor.findMany({
+        where: { tenantId: this.tenantId, convertedAt: null, email: { not: null } },
+        select: { email: true },
+      });
+      // A first-timer who also has a member account must not get two copies.
+      const seen = new Set(memberEmails.map((e) => e.toLowerCase()));
+      for (const visitor of visitors) {
+        const email = visitor.email?.trim();
+        if (!email || seen.has(email.toLowerCase())) continue;
+        seen.add(email.toLowerCase());
+        recipients.push({ email, kind: 'visitor' as const });
+      }
+    }
+
+    return recipients;
+  }
+
   /** In-app fan-out (always church-wide) + optional, separately-targeted email
    * blast. Returns the in-app recipient count. */
   private async fanOut(
@@ -66,6 +127,7 @@ export class AnnouncementsService {
     body: string,
     sendEmail: boolean,
     targeting: AudienceTargeting,
+    imageUrl?: string | null,
   ): Promise<number> {
     const allProfiles = await this.prisma.profile.findMany({
       where: { tenantId: this.tenantId },
@@ -84,40 +146,43 @@ export class AnnouncementsService {
     );
 
     if (sendEmail) {
-      // Targeting only narrows the EMAIL audience — reuse the already-fetched
-      // church-wide list when there's no targeting, otherwise re-query scoped
-      // to the selected roles/gender/people.
-      const emailProfiles = this.hasTargeting(targeting)
-        ? await this.prisma.profile.findMany({
-            where: this.resolveAudienceWhere(targeting),
-            select: { Member: { select: { email: true } } },
-          })
-        : allProfiles;
+      const recipients = await this.resolveEmailAudience(targeting, allProfiles);
 
       const frontendUrl =
         this.config.get('FRONTEND_URL', { infer: true })?.replace(/\/$/, '') ??
         'https://everlastinghills.org';
       const dashboardUrl = `${frontendUrl}/dashboard`;
-
-      const emails = emailProfiles
-        .map((p) => p.Member?.email)
-        .filter((e): e is string => Boolean(e));
+      const targeted = this.hasTargeting(targeting);
 
       // Dispatch in batches of 8 with a 1-second pause between batches to stay
       // well under Resend's 10 req/s rate limit.
       const BATCH = 8;
-      for (let i = 0; i < emails.length; i += BATCH) {
-        const batch = emails.slice(i, i + BATCH);
+      for (let i = 0; i < recipients.length; i += BATCH) {
+        const batch = recipients.slice(i, i + BATCH);
         await Promise.all(
-          batch.map((email) =>
-            this.mail.dispatch(buildAnnouncementEmail({ email, title, body, dashboardUrl })),
+          batch.map((recipient) =>
+            this.mail.dispatch(
+              buildAnnouncementEmail({
+                email: recipient.email,
+                title,
+                body,
+                dashboardUrl,
+                siteUrl: frontendUrl,
+                imageUrl,
+                targeted,
+                recipientKind: recipient.kind,
+              }),
+            ),
           ),
         );
-        if (i + BATCH < emails.length) {
+        if (i + BATCH < recipients.length) {
           await new Promise((r) => setTimeout(r, 1_100));
         }
       }
-      this.logger.log(`Announcement "${title}" emailed to ${emails.length} member(s)`);
+      const visitorCount = recipients.filter((r) => r.kind === 'visitor').length;
+      this.logger.log(
+        `Announcement "${title}" emailed to ${recipients.length - visitorCount} member(s) and ${visitorCount} first-timer(s)`,
+      );
     }
 
     this.logger.log(`Announcement "${title}" fanned out → ${created} in-app notification(s)`);
@@ -135,7 +200,9 @@ export class AnnouncementsService {
     };
     const isTargeted = targeting.targetRoles.length > 0 || targeting.targetGenders.length > 0 || targeting.targetProfileIds.length > 0;
 
-    const recipients = shouldFanOut ? await this.fanOut(dto.title, dto.body, sendEmail, targeting) : 0;
+    const recipients = shouldFanOut
+      ? await this.fanOut(dto.title, dto.body, sendEmail, targeting, dto.imageUrl)
+      : 0;
 
     const created = await this.prisma.announcement.create({
       data: {
@@ -234,23 +301,67 @@ export class AnnouncementsService {
     });
   }
 
-  /** Publishes a saved draft: fans out now, flips status, records recipient count. */
-  async publish(id: string) {
+  /**
+   * Publishes a saved draft: fans out now, flips status, records recipient count.
+   *
+   * `sendEmail` overrides what the announcement was saved with, for this publish
+   * and from here on. It exists because publishing something that was
+   * unpublished (an event that has passed, then reinstated) otherwise emails the
+   * whole church a second time with no way to say no — the in-app fan-out is
+   * cheap and idempotent enough to repeat, a second inbox copy of the same
+   * flyer is not.
+   */
+  async publish(id: string, options: { sendEmail?: boolean } = {}) {
     const announcement = await this.findOwnedOrThrow(id);
     if (announcement.status === EventStatus.PUBLISHED) {
       return announcement;
     }
-    const recipients = await this.fanOut(announcement.title, announcement.body, announcement.sendEmail, {
-      targetRoles: announcement.targetRoles,
-      targetGenders: announcement.targetGenders,
-      targetProfileIds: announcement.targetProfileIds,
-    });
+    const sendEmail = options.sendEmail ?? announcement.sendEmail;
+    const recipients = await this.fanOut(
+      announcement.title,
+      announcement.body,
+      sendEmail,
+      {
+        targetRoles: announcement.targetRoles,
+        targetGenders: announcement.targetGenders,
+        targetProfileIds: announcement.targetProfileIds,
+      },
+      announcement.imageUrl,
+    );
     const published = await this.prisma.announcement.update({
       where: { id },
-      data: { status: EventStatus.PUBLISHED, recipients },
+      // The choice is persisted so the card's "Emailed" badge and a later edit
+      // both reflect what actually happened.
+      data: { status: EventStatus.PUBLISHED, recipients, sendEmail },
     });
     this.emitPush(published);
     return published;
+  }
+
+  /**
+   * Takes a live announcement off the member surfaces by flipping it back to
+   * DRAFT — the feed, the member dashboard panel and the public list all filter
+   * on PUBLISHED. For an event that has come and gone, this is what an admin
+   * wants: it stops being shown without losing the record of it.
+   *
+   * Deliberately does NOT retract what was already delivered. The inbox
+   * notifications are independent copies with no link back to this row, and any
+   * email is long gone; deleting a member's read notifications to tidy up an
+   * expired event would be surprising, and the same reasoning already governs
+   * delete (see the copy in AnnouncementDialogs).
+   *
+   * Publishing again fans out again — that is why the admin UI warns when the
+   * announcement has been sent before.
+   */
+  async unpublish(id: string) {
+    const announcement = await this.findOwnedOrThrow(id);
+    if (announcement.status === EventStatus.DRAFT) {
+      return announcement;
+    }
+    return this.prisma.announcement.update({
+      where: { id },
+      data: { status: EventStatus.DRAFT },
+    });
   }
 
   async remove(id: string) {

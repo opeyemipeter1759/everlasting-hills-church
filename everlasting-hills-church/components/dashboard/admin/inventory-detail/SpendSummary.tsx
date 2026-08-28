@@ -12,7 +12,7 @@ export default function SpendSummary({ item }: { item: InventoryItemDetail }) {
       <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-4">
         Total cost of ownership
       </p>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div>
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#FFE8ED] dark:bg-[#87102C]/25 text-[#87102C] dark:text-[#e8768a] mb-2">
             <Wallet size={14} />

@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { getDayBounds, getTodayBounds, WAT_OFFSET_MS } from '../attendance.types';
 import { AttendanceMemberLookupService } from './attendance-member-lookup.service';
+import { resolveNow } from '../../common/test-clock.util';
 
 /** Resolves and manages "today's active service window" (open/close times, auto-creation). */
 @Injectable()
@@ -22,8 +23,7 @@ export class AttendanceSessionWindowService {
 
   /** Returns the current time, substituting ATTENDANCE_TEST_NOW when set. */
   private getNow(): Date {
-    const override = this.config.get('ATTENDANCE_TEST_NOW', { infer: true });
-    return override?.trim() ? new Date(override.trim()) : new Date();
+    return resolveNow(this.config.get('ATTENDANCE_TEST_NOW', { infer: true }));
   }
 
   private parseHHMM(hhmm: string): number {

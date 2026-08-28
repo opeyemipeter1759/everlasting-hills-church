@@ -168,6 +168,8 @@ export class AdminService {
    * (men / women / children / first-timers) for the growth surface.
    */
   async getAttendanceTrend(limit = 24) {
+    // getTrend clamps to 500; the growth chart asks for everything and filters
+    // by date range client-side.
     const points = await this.headcount.getTrend({ limit });
     return { points };
   }

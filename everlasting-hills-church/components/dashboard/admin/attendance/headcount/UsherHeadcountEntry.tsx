@@ -25,6 +25,18 @@ export default function UsherHeadcountEntry() {
   const canRecord = byDate.data?.canRecord ?? false;
   const selectedType = byDate.data?.inferredType ?? inferType(date);
 
+  // A failed request and a date the server refuses are different problems, and
+  // both used to render as "You can only record a headcount for a date that has
+  // already occurred" — which is misleading when the truth is a 403, a network
+  // error, or a server whose clock says it is still yesterday.
+  const loadError = byDate.isError ? ((byDate.error as { message?: string })?.message ?? "Could not load this date.") : null;
+  const serverDate = byDate.data?.serverDate;
+  const disabledReason = loadError
+    ? `Could not load the service for this date — ${loadError}`
+    : serverDate && serverDate < date
+      ? `The server's current date is ${prettyDate(serverDate)}, so ${prettyDate(date)} is still in the future. If that date looks wrong, check ATTENDANCE_TEST_NOW and the server clock.`
+      : "You can only record a headcount for a date that has already occurred.";
+
   // Picking a day pops the form modal open (per the flow).
   function pickDate(d: string) {
     setDate(d);
@@ -61,7 +73,7 @@ export default function UsherHeadcountEntry() {
 
         {justSaved && (
           <p className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 px-3 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
-            <Check size={15} /> Attendance saved for {prettyDate(date)}.
+            <Check size={15} /> Attendance recorded for {prettyDate(date)}.
           </p>
         )}
 
@@ -103,9 +115,9 @@ export default function UsherHeadcountEntry() {
           <HeadcountEntryForm
             existing={hc}
             canRecord={canRecord}
-            disabledReason={!canRecord ? "You can only record a headcount for a date that has already occurred." : undefined}
+            disabledReason={!canRecord ? disabledReason : undefined}
             pending={save.isPending}
-            onSubmit={(input) => submit(input)}
+            onSubmit={submit}
           />
         )}
       </FormModal>

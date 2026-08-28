@@ -3,6 +3,7 @@ import { Loader2, Sparkles, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { Field, inputCls } from "./atoms";
 import type { Testimonial } from "./types";
+import { postAi } from "@/lib/ai/client";
 
 const EMPTY_FORM = {
   authorName: "",
@@ -45,19 +46,16 @@ export default function TestimonialForm({
     setPolishing(true);
     setPolishError(null);
     try {
-      const res = await fetch("/api/ai/testimony", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: data.content }),
+      const json = await postAi<{ content?: string }>("/api/ai/testimony", {
+        content: data.content,
       });
-      const json = await res.json();
       if (json.content?.trim()) {
-        setData((d) => ({ ...d, content: json.content }));
+        setData((d) => ({ ...d, content: json.content as string }));
       } else {
-        setPolishError("Gemini couldn't improve this text. Try again.");
+        setPolishError("Gemini returned nothing to use. Try again.");
       }
-    } catch {
-      setPolishError("Something went wrong. Check your connection and try again.");
+    } catch (err) {
+      setPolishError((err as Error).message);
     } finally {
       setPolishing(false);
     }

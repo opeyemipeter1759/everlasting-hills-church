@@ -1,11 +1,55 @@
+import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 if (!process.env.GEMINI_API_KEY) {
   // Warn at module load time so developers know immediately what's missing.
-  // In production the API routes gracefully return fallback data when the key is absent.
   if (process.env.NODE_ENV !== "production") {
-    console.warn("[EHC AI] GEMINI_API_KEY is not set — AI features will return fallback data.");
+    console.warn("[EHC AI] GEMINI_API_KEY is not set — AI features will report themselves unavailable.");
   }
+}
+
+/** True when a key is actually present. Whitespace-only counts as absent. */
+export function isAiConfigured(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY?.trim());
+}
+
+/**
+ * The answer every AI route gives when there is no key.
+ *
+ * These routes used to return empty fallback data with a 200, which the UI could
+ * only interpret as "the model tried and failed" — so a missing environment
+ * variable surfaced to admins as "Gemini couldn't generate a draft. Try
+ * rephrasing your idea", and they rephrased forever. An unconfigured server is a
+ * different thing from a bad prompt and now says so.
+ */
+export function aiUnavailable() {
+  return NextResponse.json(
+    {
+      error: {
+        code: "AI_NOT_CONFIGURED",
+        message: "AI features are switched off — this server has no GEMINI_API_KEY set.",
+      },
+    },
+    { status: 503 },
+  );
+}
+
+/** A real failure from the model or the network, as opposed to a missing key. */
+export function aiFailed(scope: string, err: unknown) {
+  console.error(`[AI ${scope}]`, err);
+  const detail = err instanceof Error ? err.message : String(err);
+  return NextResponse.json(
+    {
+      error: {
+        code: "AI_FAILED",
+        // Admin-only surface, so the upstream message is worth showing: an
+        // expired key, a retired model name and a quota block all need
+        // different fixes and are indistinguishable from "try again".
+        message: `Gemini could not complete this request: ${detail}`,
+      },
+    },
+    { status: 502 },
+  );
 }
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");

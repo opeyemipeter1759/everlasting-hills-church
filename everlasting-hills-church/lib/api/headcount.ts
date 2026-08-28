@@ -52,6 +52,8 @@ export interface ServiceHeadcountResponse {
 
 export interface HeadcountByDateResponse {
   date: string;
+  /** The server's own current date (WAT). Explains a refused date. */
+  serverDate?: string;
   inferredType: ServiceTypeKey;
   canRecord: boolean;
   service: HeadcountServiceInfo | null;
@@ -89,7 +91,6 @@ export interface SaveHeadcountInput {
   firstTimers: number;
   reportedTotal?: number | null;
   notes?: string | null;
-  confirm?: boolean;
 }
 
 // ── Hooks ────────────────────────────────────────────────────────────────────

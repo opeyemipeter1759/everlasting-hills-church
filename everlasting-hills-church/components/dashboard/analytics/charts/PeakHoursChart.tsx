@@ -4,6 +4,7 @@ import { ChartCard } from "@/components/ui/display/ChartCard";
 import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import type { AnalyticsFilter } from "@/lib/api/analytics";
 import { useAnalyticsPeakHours } from "@/lib/api/analytics";
+import { downloadCsv } from "@/lib/export-csv";
 
 interface Props { filter: AnalyticsFilter }
 
@@ -12,7 +13,12 @@ export function PeakHoursChart({ filter }: Props) {
   const max = Math.max(...(data ?? []).map((d) => d.count), 1);
 
   return (
-    <ChartCard title="Peak Check-in Hours" onExportCsv={() => {}} minHeight="min-h-[240px]">
+    <ChartCard
+      title="Peak Check-in Hours"
+      onExportCsv={data?.length ? () => downloadCsv("peak-check-in-hours", data) : undefined}
+      exportPng
+      minHeight="min-h-[240px]"
+    >
       {isLoading ? <ChartSkeleton /> : (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={data ?? []} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>

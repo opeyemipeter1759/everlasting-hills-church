@@ -1,6 +1,7 @@
 import { BellRing, Clock, MapPin } from "lucide-react";
 import { card, muted } from "./tokens";
 import { relativeTime } from "./helpers";
+import { stripMarkdown } from "@/lib/rich-text";
 
 export function TodayAnnouncementsList({ announcements }: {
   announcements: Array<{ id: string; title: string; body: string; createdAt: string; eventTime?: string | null; venue?: string | null }>;
@@ -62,8 +63,10 @@ export function TodayAnnouncementsList({ announcements }: {
                   </span>
                 )}
               </div>
-              <p className={`text-xs ${muted} mt-1 leading-relaxed line-clamp-2`}>
-                {a.body}
+              {/* Clamped preview only, so the Markdown is stripped rather than
+                  rendered: line-clamp needs a single text run. */}
+              <p className={`text-xs ${muted} mt-1 leading-relaxed line-clamp-2 [overflow-wrap:anywhere]`}>
+                {stripMarkdown(a.body)}
               </p>
               {(a.eventTime || a.venue) && (
                 <div className="mt-1.5 flex flex-wrap items-center gap-3">

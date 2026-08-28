@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Inter, Plus_Jakarta_Sans, Playfair_Display, Space_Grotesk, Dancing_Script } from "next/font/google";
 import { QueryProvider } from "@/lib/api/QueryProvider";
@@ -25,6 +25,26 @@ export const metadata: Metadata = {
     locale: "en_NG",
     type: "website",
   },
+};
+
+/**
+ * Next injects `width=device-width, initial-scale=1` on its own; this export
+ * exists for the two things it does not add.
+ *
+ * viewportFit: "cover" lets the page paint under the iPhone notch and home
+ * indicator, which is what makes env(safe-area-inset-*) resolve to anything
+ * other than 0 — the install prompt and the dashboard tab bar both pad
+ * themselves with it. themeColor tints the browser chrome around the installed
+ * app; the manifest's theme_color only covers the standalone window.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d0810" },
+  ],
 };
 
 export default function RootLayout({

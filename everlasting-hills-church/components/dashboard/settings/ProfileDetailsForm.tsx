@@ -138,7 +138,7 @@ export default function ProfileDetailsForm({ user }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label className={labelBase}>Gender</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(["Male", "Female"] as const).map((g) => (
                 <label key={g} className={radioCardClass}>
                   <input type="radio" value={g} {...register("gender")} className="sr-only" />
@@ -150,7 +150,7 @@ export default function ProfileDetailsForm({ user }: Props) {
 
           <div>
             <label className={labelBase}>Marital status</label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(["single", "married"] as const).map((m) => (
                 <label key={m} className={radioCardClass}>
                   <input type="radio" value={m} {...register("maritalStatus")} className="sr-only" />
@@ -167,7 +167,7 @@ export default function ProfileDetailsForm({ user }: Props) {
               <Cake size={12} className="inline mr-1 -mt-0.5" aria-hidden="true" />
               Date of birth
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Select
                 aria-label="Birth month"
                 value={birthMonth}

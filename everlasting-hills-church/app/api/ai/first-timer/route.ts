@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { flashModel, parseJSON } from "@/lib/ai/gemini";
+import { aiFailed, aiUnavailable, flashModel, isAiConfigured, parseJSON } from "@/lib/ai/gemini";
 
 export interface FirstTimerAnalysis {
   sentiment: "positive" | "neutral" | "seeking" | "distressed";
@@ -41,7 +41,8 @@ export async function POST(req: NextRequest) {
       attendanceType?: string | null;
     } = await req.json();
 
-    if (!process.env.GEMINI_API_KEY || !firstName) {
+    if (!isAiConfigured()) return aiUnavailable();
+    if (!firstName) {
       return NextResponse.json(FALLBACK);
     }
 
@@ -75,7 +76,6 @@ Respond with only valid JSON, no markdown, no explanation.
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("[AI /first-timer]", err);
-    return NextResponse.json(FALLBACK);
+    return aiFailed("/first-timer", err);
   }
 }

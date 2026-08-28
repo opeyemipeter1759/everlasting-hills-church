@@ -34,3 +34,13 @@ steps:
 
 images:
   - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/everlasting-hills-church-git'
+
+# The Developer Connect trigger runs this build as a user-specified service
+# account. Cloud Build refuses to start such a build unless it is told where the
+# logs go, because a user-owned service account has no default logs bucket:
+#   "if 'build.service_account' is specified, the build must either specify
+#    'build.logs_bucket' ... or use CLOUD_LOGGING_ONLY / NONE"
+# Cloud Logging is the right destination here — no bucket to create or pay for,
+# and the logs stay in the same place as the Cloud Run service's.
+options:
+  logging: CLOUD_LOGGING_ONLY

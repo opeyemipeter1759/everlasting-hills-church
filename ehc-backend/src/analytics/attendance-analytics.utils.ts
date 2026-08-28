@@ -59,11 +59,28 @@ export function watStr(d: Date): string {
 /** ServiceType enum → "sunday" | "wednesday" | "special" */
 export function svcKey(type: string): string { return type.toLowerCase(); }
 
-/** Build Prisma serviceType filter — returns {} if "all" or unset */
-export function svcTypeWhere(serviceType?: string): { serviceType?: 'SUNDAY' | 'WEDNESDAY' | 'SPECIAL' } {
+type ServiceTypeKey = 'SUNDAY' | 'WEDNESDAY' | 'SPECIAL';
+
+/**
+ * Prisma serviceType filter for per-member attendance analytics.
+ *
+ * "All" means the two services the church gathers for weekly, NOT literally
+ * every Service row. SPECIAL covers watchnights, one-off gatherings and the
+ * placeholder services the usher headcount flow creates for other weekdays —
+ * and nobody is marked absent from those, by design. Counting them here would
+ * divide a handful of present records by itself and report a 100% attendance
+ * rate for a service most of the church was never expected at, dragging every
+ * average up with it.
+ *
+ * Asking for 'special' explicitly still returns exactly those, for anyone who
+ * wants to look at them on purpose.
+ */
+export function svcTypeWhere(serviceType?: string): {
+  serviceType?: ServiceTypeKey | { in: ServiceTypeKey[] };
+} {
   const up = serviceType?.toUpperCase();
   if (up === 'SUNDAY' || up === 'WEDNESDAY' || up === 'SPECIAL') return { serviceType: up };
-  return {};
+  return { serviceType: { in: ['SUNDAY', 'WEDNESDAY'] } };
 }
 
 /** Parse "2026-05" into a month period range */

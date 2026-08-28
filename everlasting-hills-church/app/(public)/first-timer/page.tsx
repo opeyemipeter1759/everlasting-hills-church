@@ -27,8 +27,8 @@ const STEP_FIELDS: (keyof FormValues)[][] = [
   ["first_name", "last_name", "phone_number", "email", "attendance_type", "gender"],
   ["how_did_you_learn", "invited_by"],
   ["located_in_ibadan", "membership_interest"],
-  ["address", "birth_month", "birth_day", "occupation", "born_again"],
-  ["service_experience", "whatsapp_interest", "share_for_connections"],
+  ["address", "birth_month", "birth_day", "is_student", "occupation", "born_again"],
+  ["service_experience", "whatsapp_interest"],
 ];
 
 export default function FirstTimerPageWrapper() {
@@ -95,12 +95,19 @@ function FirstTimerPage() {
     setError("");
     try {
       // POST /forms/register is @Public — no auth needed. Coerce string radio values.
+      // is_student is a form-only field: the API runs a whitelisting
+      // ValidationPipe with forbidNonWhitelisted, so posting a property its DTO
+      // does not declare would 400 the entire submission.
+      const { is_student, ...rest } = data;
       await apiClient.post("/forms/register", {
         type: "FIRST_TIMER",
-        ...data,
+        ...rest,
         located_in_ibadan: String(data.located_in_ibadan) === "true",
         whatsapp_interest: String(data.whatsapp_interest) === "true",
-        share_for_connections: String(data.share_for_connections) === "true",
+        // The backend stores one occupation string. Students never see the
+        // free-text box, so their answer is filled in here rather than left
+        // blank in the record.
+        occupation: String(is_student) === "true" ? "Student" : data.occupation,
       });
       setSubmitted(true);
     } catch (err) {
@@ -148,7 +155,7 @@ function FirstTimerPage() {
       setValue={setValue}
     />,
     <Step3Interest key="s3" register={register} errors={errors} control={control} isOnline={isOnline} firstName={firstName} lastName={lastName} />,
-    <Step5Details key="s4" register={register} errors={errors} control={control} />,
+    <Step5Details key="s4" register={register} errors={errors} control={control} watch={watch} />,
     <Step6Experience key="s5" register={register} errors={errors} control={control} />,
   ];
 

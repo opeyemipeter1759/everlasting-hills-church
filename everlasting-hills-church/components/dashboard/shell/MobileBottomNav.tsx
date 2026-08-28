@@ -57,7 +57,10 @@ export default function MobileBottomNav({ user }: { user: SessionUser }) {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-[#0d0810]/90 dark:backdrop-blur-md border-t border-gray-200 dark:border-white/[0.07]"
+      // pb-[env(safe-area-inset-bottom)] pairs with viewportFit: "cover" in
+      // app/layout.tsx: the web view now extends under the iPhone home
+      // indicator, so the tab row has to lift itself clear of it.
+      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-[#0d0810]/90 dark:backdrop-blur-md border-t border-gray-200 dark:border-white/[0.07] pb-[env(safe-area-inset-bottom)]"
       aria-label="Mobile navigation"
     >
       <div className="flex items-center justify-around h-16 px-2">

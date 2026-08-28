@@ -24,6 +24,15 @@ export function roleFilter(role: Role): Prisma.ProfileWhereInput {
       return { UnitLeadOf: { some: { endedAt: null } } };
     case Role.HEAD_USHER:
       return { HeadUsherOf: { some: { endedAt: null } } };
+    case Role.VISITOR:
+      // Visitors are not profiles. A first-timer is a row in the Visitor table
+      // with no Profile and no account, so no profile can ever match this —
+      // returning an impossible predicate says that, instead of falling through
+      // to the plain-member branch below and quietly meaning "every member",
+      // which is what made an announcement aimed at visitors go to members.
+      // Audiences that genuinely want first-timers must read the Visitor table
+      // (see AnnouncementsService.resolveEmailAudience).
+      return { id: { in: [] } };
     case Role.MEMBER:
     default:
       // Plain members: no active grant or assignment of any kind.

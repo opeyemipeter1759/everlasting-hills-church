@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { Clock, Eye, Mail, MapPin, Pencil, Radio, Trash2, Users } from "lucide-react";
+import { Clock, Eye, EyeOff, Mail, MapPin, Pencil, Radio, Trash2, Users } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 import { formatRelativeDate } from "./format";
 import type { Announcement } from "./types";
+import { stripMarkdown } from "@/lib/rich-text";
 
 export default function AnnouncementCard({
   a,
@@ -10,12 +11,14 @@ export default function AnnouncementCard({
   onEdit,
   onDelete,
   onPublish,
+  onUnpublish,
 }: {
   a: Announcement;
   onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onPublish: () => void;
+  onUnpublish: () => void;
 }) {
   const isDraft = a.status === "DRAFT";
   return (
@@ -39,8 +42,10 @@ export default function AnnouncementCard({
               <p className="font-semibold text-gray-900 dark:text-white truncate">{a.title}</p>
               <StatusBadge status={a.status} />
             </div>
-            <p className="text-sm text-gray-500 dark:text-white/50 mt-1 whitespace-pre-wrap line-clamp-2">
-              {a.body}
+            {/* Clamped preview only — the formatted body is in the detail
+                modal. line-clamp needs a single text run, so strip the syntax. */}
+            <p className="text-sm text-gray-500 dark:text-white/50 mt-1 line-clamp-2 [overflow-wrap:anywhere]">
+              {stripMarkdown(a.body)}
             </p>
           </div>
           <span className="text-[11px] text-gray-400 dark:text-white/30 flex-shrink-0">
@@ -48,33 +53,38 @@ export default function AnnouncementCard({
           </span>
         </button>
 
-        <div className="flex items-center justify-between gap-3 mt-auto pt-3">
-          <div className="flex items-center gap-4 text-[11px] text-gray-400 dark:text-white/30">
-            <span className="inline-flex items-center gap-1">
+        {/* Metadata and actions stack until there is room for both on one line.
+            Side by side in a half-width card, the metadata run (recipients,
+            emailed, time, venue) pushed the action buttons off the card edge. */}
+        <div className="mt-auto flex flex-col gap-2 pt-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-400 dark:text-white/30">
+            <span className="inline-flex items-center gap-1 whitespace-nowrap">
               <Users size={12} />
               {a.recipients} recipient{a.recipients === 1 ? "" : "s"}
             </span>
             {a.sendEmail && (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 <Mail size={12} />
                 Emailed
               </span>
             )}
             {a.eventTime && (
-              <span className="inline-flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
                 <Clock size={12} />
                 {a.eventTime}
               </span>
             )}
             {a.venue && (
-              <span className="inline-flex items-center gap-1">
-                <MapPin size={12} />
-                {a.venue}
+              <span className="inline-flex min-w-0 items-center gap-1">
+                <MapPin size={12} className="shrink-0" />
+                <span className="truncate">{a.venue}</span>
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100 transition-opacity">
+          {/* Always visible: hover-to-reveal hides these entirely on a phone,
+              where there is no hover. */}
+          <div className="-mr-1 flex shrink-0 items-center gap-0.5 self-end sm:self-auto">
             <button
               type="button"
               onClick={onView}
@@ -84,7 +94,7 @@ export default function AnnouncementCard({
             >
               <Eye size={14} />
             </button>
-            {isDraft && (
+            {isDraft ? (
               <button
                 type="button"
                 onClick={onPublish}
@@ -93,6 +103,18 @@ export default function AnnouncementCard({
                 className="p-2 rounded-lg text-gray-400 hover:text-[#87102C] hover:bg-[#87102C]/5 dark:hover:bg-white/5 transition-colors"
               >
                 <Radio size={14} />
+              </button>
+            ) : (
+              // For an event that has passed: takes it off the member dashboard
+              // without deleting the record of it.
+              <button
+                type="button"
+                onClick={onUnpublish}
+                title="Unpublish (hide from members)"
+                aria-label="Unpublish"
+                className="p-2 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-white/5 transition-colors"
+              >
+                <EyeOff size={14} />
               </button>
             )}
             <button

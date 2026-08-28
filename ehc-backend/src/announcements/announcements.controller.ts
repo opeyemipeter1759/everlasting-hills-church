@@ -7,6 +7,7 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { AnnouncementsService } from './announcements.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
+import { PublishAnnouncementDto } from './dto/publish-announcement.dto';
 
 /**
  * Admin-authored announcements. ADMIN+ only (RolesGuard honours the hierarchy,
@@ -45,9 +46,19 @@ export class AnnouncementsController {
   }
 
   @Post(':id/publish')
-  @ApiOperation({ summary: 'Publish a saved draft — fans out to members now' })
-  publish(@Param('id') id: string) {
-    return this.announcements.publish(id);
+  @ApiOperation({
+    summary: 'Publish a saved draft — fans out to members now; sendEmail overrides the saved flag',
+  })
+  publish(@Param('id') id: string, @Body() body: PublishAnnouncementDto) {
+    return this.announcements.publish(id, { sendEmail: body?.sendEmail });
+  }
+
+  @Post(':id/unpublish')
+  @ApiOperation({
+    summary: 'Unpublish — hides it from members again, e.g. once the event has passed',
+  })
+  unpublish(@Param('id') id: string) {
+    return this.announcements.unpublish(id);
   }
 
   @Delete(':id')

@@ -37,7 +37,10 @@ export default function HeadcountDatePicker({
             value={value}
             max={watTodayStr()}
             onChange={(e) => onChange(e.target.value)}
-            className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3.5 py-2.5 text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40"
+            // color-scheme:dark keeps the native calendar popup and its icon
+            // legible on the dark dashboard; without it the browser paints a
+            // white picker with a near-invisible glyph.
+            className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-3.5 py-2.5 text-sm font-semibold text-gray-900 dark:text-white dark:[color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40"
           />
         </div>
       </div>

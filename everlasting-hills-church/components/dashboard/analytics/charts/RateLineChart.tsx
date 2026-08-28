@@ -4,13 +4,19 @@ import { ChartCard } from "@/components/ui/display/ChartCard";
 import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import type { AnalyticsFilter } from "@/lib/api/analytics";
 import { useAnalyticsRateTrend } from "@/lib/api/analytics";
+import { downloadCsv } from "@/lib/export-csv";
 
 interface Props { filter: AnalyticsFilter }
 
 export function RateLineChart({ filter }: Props) {
   const { data, isLoading } = useAnalyticsRateTrend(filter);
   return (
-    <ChartCard title="Attendance Rate Over Time" onExportCsv={() => {}} minHeight="min-h-[240px]">
+    <ChartCard
+      title="Attendance Rate Over Time"
+      onExportCsv={data?.length ? () => downloadCsv("attendance-rate", data) : undefined}
+      exportPng
+      minHeight="min-h-[240px]"
+    >
       {isLoading ? <ChartSkeleton /> : (
         <ResponsiveContainer width="100%" height={200}>
           <AreaChart data={data ?? []} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>

@@ -46,7 +46,7 @@ export default function HeadcountReportCard({
               ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
               : "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400"
           }`}>
-            {hc.status === "CONFIRMED" ? <><Check size={11} /> Confirmed</> : "Draft"}
+            {hc.status === "CONFIRMED" ? <><Check size={11} /> Confirmed</> : "Draft — not counted"}
             {hc.edited && <Pencil size={10} className="opacity-70" />}
           </span>
         ) : (

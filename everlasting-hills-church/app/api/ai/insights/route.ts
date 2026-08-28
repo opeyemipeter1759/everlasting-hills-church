@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { flashModel, parseJSON } from "@/lib/ai/gemini";
+import { aiFailed, aiUnavailable, flashModel, isAiConfigured, parseJSON } from "@/lib/ai/gemini";
 import type { AttendancePoint } from "@/lib/mock/admin-dashboard.mock";
 
 export interface InsightsResponse {
@@ -20,7 +20,8 @@ export async function POST(req: NextRequest) {
   try {
     const { trend }: { trend: AttendancePoint[] } = await req.json();
 
-    if (!process.env.GEMINI_API_KEY || !trend?.length) {
+    if (!isAiConfigured()) return aiUnavailable();
+    if (!trend?.length) {
       return NextResponse.json(FALLBACK);
     }
 
@@ -52,7 +53,6 @@ Respond with only valid JSON, no markdown, no explanation.
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("[AI /insights]", err);
-    return NextResponse.json(FALLBACK);
+    return aiFailed("/insights", err);
   }
 }

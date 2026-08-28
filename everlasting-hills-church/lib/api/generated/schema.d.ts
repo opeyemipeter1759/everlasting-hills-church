@@ -630,7 +630,7 @@ export interface paths {
         delete: operations["AnnouncementsController_remove"];
         options?: never;
         head?: never;
-        /** Edit an announcement's title/body/email flag */
+        /** Edit an announcement's title/body/email flag/targeting/event details */
         patch: operations["AnnouncementsController_update"];
         trace?: never;
     };
@@ -643,8 +643,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Publish a saved draft — fans out to members now */
+        /** Publish a saved draft — fans out to members now; sendEmail overrides the saved flag */
         post: operations["AnnouncementsController_publish"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/announcements/{id}/unpublish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unpublish — hides it from members again, e.g. once the event has passed */
+        post: operations["AnnouncementsController_unpublish"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1831,6 +1848,40 @@ export interface paths {
         patch: operations["CoursesController_updateCategory"];
         trace?: never;
     };
+    "/courses/categories/{id}/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Enroll the current user in a course category (reason + agreement form) */
+        post: operations["CoursesController_enrollInCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/courses/categories/enrolled/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Category ids the current user has enrolled in */
+        get: operations["CoursesController_myEnrolledCategoryIds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/courses/progress/me": {
         parameters: {
             query?: never;
@@ -1988,6 +2039,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/departments/{id}/units/new": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a brand-new unit directly under this department (ADMIN+) */
+        post: operations["DepartmentsController_createUnit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/departments/mine": {
         parameters: {
             query?: never;
@@ -2016,6 +2084,23 @@ export interface paths {
         put?: never;
         /** Post an announcement scoped to a department the actor leads (HOD+) */
         post: operations["DepartmentsMineController_postMyAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/departments/mine/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a new unit under a department the actor heads (HOD+) */
+        post: operations["DepartmentsMineController_createMyUnit"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2054,6 +2139,94 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/emails/recipients/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve an audience filter into a recipient count + short sample, before sending */
+        post: operations["EmailsController_previewRecipients"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/emails/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send an email to a resolved audience and log the send */
+        post: operations["EmailsController_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/emails/sent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List past sends (audit/history), paginated */
+        get: operations["EmailsController_listSent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/emails/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List saved email templates */
+        get: operations["EmailsController_listTemplates"];
+        put?: never;
+        /** Save a reusable email template */
+        post: operations["EmailsController_createTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/emails/templates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one email template */
+        get: operations["EmailsController_getTemplate"];
+        put?: never;
+        post?: never;
+        /** Delete a template */
+        delete: operations["EmailsController_removeTemplate"];
+        options?: never;
+        head?: never;
+        /** Edit a template */
+        patch: operations["EmailsController_updateTemplate"];
         trace?: never;
     };
     "/events": {
@@ -2114,7 +2287,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Whether the signed-in member is already registered for this event */
+        get: operations["EventsController_getMyRsvpStatus"];
         put?: never;
         /** RSVP as the signed-in member — uses their own record, no form */
         post: operations["EventsController_rsvpAsMember"];
@@ -2392,6 +2566,23 @@ export interface paths {
         };
         /** Search first-timers (Visitor) or absentees (Member) to add to the Master List (UNIT_LEAD+) */
         get: operations["FollowUpController_candidates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/services": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent services, for the Follow-Up page's service-day filter (MEMBER+) */
+        get: operations["FollowUpController_listServices"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3217,6 +3408,23 @@ export interface paths {
         patch: operations["MembersController_setTags"];
         trace?: never;
     };
+    "/members/{memberId}/birthday-greetings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List greetings left for a member (any signed-in member) */
+        get: operations["MembersBirthdayGreetingsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/absent": {
         parameters: {
             query?: never;
@@ -3234,6 +3442,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/anniversaries/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Members whose wedding anniversary is today */
+        get: operations["MembersPastoralController_todayAnniversaries"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/at-risk": {
         parameters: {
             query?: never;
@@ -3243,6 +3468,23 @@ export interface paths {
         };
         /** Members at risk — consecutive absences, never attended, below 50% rate (ADMIN+) */
         get: operations["MembersPastoralController_getAtRisk"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/birthdays/community": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Community-safe upcoming birthdays — no email/DOB (public) */
+        get: operations["MembersBirthdayGreetingsController_community"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3422,6 +3664,23 @@ export interface paths {
         patch: operations["MembersSelfServiceController_updateMyProfile"];
         trace?: never;
     };
+    "/members/me/{memberId}/birthday-greetings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Leave a birthday greeting for a member */
+        post: operations["MembersBirthdayGreetingsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/me/avatar": {
         parameters: {
             query?: never;
@@ -3431,10 +3690,27 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload my profile photo (PNG/JPG/JPEG, ≤ 1 MB) */
+        /** Upload my profile photo (PNG/JPG/JPEG, ≤ 3 MB) */
         post: operations["MembersSelfServiceController_uploadMyAvatar"];
         /** Remove my profile photo */
         delete: operations["MembersSelfServiceController_clearMyAvatar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/birthday-greetings/{greetingId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete my greeting (or any greeting, if PASTOR+) */
+        delete: operations["MembersBirthdayGreetingsController_remove"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3498,7 +3774,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Search active members by name — for "pick a person" pickers (MEMBER+) */
+        /** Search active members by name, or list them when q is empty — for "pick a person" pickers (MEMBER+) */
         get: operations["MembersSelfServiceController_search_"];
         put?: never;
         post?: never;
@@ -3570,6 +3846,40 @@ export interface paths {
         get: operations["InboxController_unreadCount"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/online-attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List online check-in records (admin) */
+        get: operations["OnlineAttendanceController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/online-attendance/check-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an online attendance check-in (YouTube or Telegram) */
+        post: operations["OnlineAttendanceController_checkIn"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4571,6 +4881,42 @@ export interface paths {
         patch: operations["UnitsController_update"];
         trace?: never;
     };
+    "/units/{unitId}/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List expense entries for a unit (with running total) */
+        get: operations["UnitExpensesController_list"];
+        put?: never;
+        /** Log an expense for a unit (lead/assistant of unit, or ADMIN+) */
+        post: operations["UnitExpensesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}/expenses/{expenseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an expense entry */
+        delete: operations["UnitExpensesController_delete"];
+        options?: never;
+        head?: never;
+        /** Edit an expense entry */
+        patch: operations["UnitExpensesController_update"];
+        trace?: never;
+    };
     "/units/{unitId}/lead": {
         parameters: {
             query?: never;
@@ -4624,6 +4970,23 @@ export interface paths {
         patch: operations["UnitsMembersController_setMemberRoleShort"];
         trace?: never;
     };
+    "/units/{unitId}/members/{memberId}/position": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Set or clear a unit member's position */
+        patch: operations["UnitPositionsController_setMemberPosition"];
+        trace?: never;
+    };
     "/units/{unitId}/members/{memberId}/role": {
         parameters: {
             query?: never;
@@ -4639,6 +5002,113 @@ export interface paths {
         head?: never;
         /** Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only) */
         patch: operations["UnitsMembersController_setMemberRole"];
+        trace?: never;
+    };
+    "/units/{unitId}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Message another member of the unit — delivered as a notification (any unit member to any other) */
+        post: operations["UnitMessagesController_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List positions defined for a unit */
+        get: operations["UnitPositionsController_list"];
+        put?: never;
+        /** Create a position for a unit (lead/assistant of unit, or ADMIN+) */
+        post: operations["UnitPositionsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}/positions/{positionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a position */
+        delete: operations["UnitPositionsController_delete"];
+        options?: never;
+        head?: never;
+        /** Rename a position */
+        patch: operations["UnitPositionsController_update"];
+        trace?: never;
+    };
+    "/units/{unitId}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List tasks for a unit */
+        get: operations["UnitTasksController_list"];
+        put?: never;
+        /** Create and assign a task within a unit (lead/assistant of unit, or ADMIN+) */
+        post: operations["UnitTasksController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}/tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a task */
+        delete: operations["UnitTasksController_delete"];
+        options?: never;
+        head?: never;
+        /** Update a task. Lead/assistant can edit anything; an assignee may only change its status. */
+        patch: operations["UnitTasksController_update"];
+        trace?: never;
+    };
+    "/units/{unitId}/tasks/{taskId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List comments on a task (any unit member) */
+        get: operations["UnitTasksController_listComments"];
+        put?: never;
+        /** Comment on a task (any unit member) */
+        post: operations["UnitTasksController_addComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/units/directory": {
@@ -4675,6 +5145,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/units/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get every unit the current user leads or assists */
+        get: operations["UnitsController_getMyUnits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/mine/{unitId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get full detail for one unit the current user leads or assists (or ADMIN+) */
+        get: operations["UnitsController_getMyUnitDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/my-memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get every unit the current user is a plain member of (excludes units they lead/assist) */
+        get: operations["UnitsController_getMyMemberships"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/my-memberships/{unitId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get full detail for one unit the current user belongs to, in any capacity */
+        get: operations["UnitsController_getMyMembershipDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/uploads/document": {
         parameters: {
             query?: never;
@@ -4686,7 +5224,7 @@ export interface paths {
         put?: never;
         /**
          * Upload a document
-         * @description Uploads a document (docx/doc/pdf) to R2 and returns its public URL. Used by Report attachments.
+         * @description Uploads a document or photo (docx/doc/pdf/jpg/png/webp) to R2 and returns its public URL. Used by Report attachments and unit expense receipts.
          */
         post: operations["UploadsController_uploadDocument"];
         delete?: never;
@@ -4804,6 +5342,26 @@ export interface paths {
         post: operations["UsersGrantsController_assignHeadUsher"];
         /** End an active Head Usher assignment */
         delete: operations["UsersGrantsController_removeHeadUsher"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{profileId}/resend-login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resend login details
+         * @description Issues a fresh temporary password and re-sends the welcome email. The previous password (if any) stops working immediately.
+         */
+        post: operations["UsersController_resendLogin"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -4928,10 +5486,12 @@ export interface paths {
         get: operations["VisitorsController_getById"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete a visitor record */
+        delete: operations["VisitorsController_delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** Edit a visitor record (e.g. correct a name or phone number) */
+        patch: operations["VisitorsController_update"];
         trace?: never;
     };
     "/visitors/count": {
@@ -4943,6 +5503,40 @@ export interface paths {
         };
         /** Total visitor count */
         get: operations["VisitorsController_count"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/visitors/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk-import visitors from parsed CSV rows */
+        post: operations["VisitorsController_bulkImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/visitors/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** First-timer count broken down by attendance type */
+        get: operations["VisitorsController_stats"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5018,6 +5612,19 @@ export interface components {
              */
             total: number;
         };
+        AudienceFilterDto: {
+            /** @description Member ids — required when mode is SPECIFIC */
+            memberIds?: string[];
+            /** @enum {string} */
+            mode: "ALL" | "UNIT" | "ROLE" | "SPECIFIC";
+            /**
+             * @description Required when mode is ROLE
+             * @enum {string}
+             */
+            role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "UNIT_LEAD" | "MEMBER" | "VISITOR";
+            /** @description Required when mode is UNIT */
+            unitId?: string;
+        };
         BulkCreateUsersDto: {
             members: components["schemas"]["CreateUserDto"][];
         };
@@ -5028,6 +5635,19 @@ export interface components {
              * @example false
              */
             sendWelcome?: boolean;
+        };
+        BulkImportVisitorsDto: {
+            /**
+             * @description Also send the welcome email to rows skipped as already-existing — for re-sending to a batch that was previously imported without emails.
+             * @default false
+             */
+            alsoWelcomeExisting: boolean;
+            rows: components["schemas"]["VisitorImportRowDto"][];
+            /**
+             * @description Email each newly-created row the first-timer welcome email. Defaults to true.
+             * @default true
+             */
+            sendWelcome: boolean;
         };
         BulkMarkAttendanceDto: {
             /**
@@ -5055,6 +5675,7 @@ export interface components {
             /** @example newpassword123 */
             password: string;
         };
+        CheckInDto: Record<string, never>;
         ConfirmFollowUpDto: {
             /** @example Great work — she joined the membership class. */
             note?: string;
@@ -5084,6 +5705,11 @@ export interface components {
             audience?: string;
             /** @example Join us this Sunday for a special time of worship. */
             body: string;
+            /**
+             * @description Event time to display alongside the announcement
+             * @example 10:00 AM
+             */
+            eventTime?: string;
             /** @description Image to show alongside the announcement (from /uploads/image) */
             imageUrl?: string;
             /**
@@ -5097,8 +5723,27 @@ export interface components {
              * @enum {string}
              */
             status: "DRAFT" | "PUBLISHED";
+            /**
+             * @description Send to members of these genders. Combined (union) with targetRoles/targetProfileIds.
+             * @example [
+             *       "MALE",
+             *       "FEMALE"
+             *     ]
+             */
+            targetGenders?: string[];
+            /** @description Specific Profile ids to always include, regardless of role/gender. */
+            targetProfileIds?: string[];
+            /** @description Display-only names matching targetProfileIds, in the same order (snapshot at send time). */
+            targetProfileNames?: string[];
+            /** @description Send to anyone holding any of these roles. Combined (union) with targetGenders/targetProfileIds. Empty = no role restriction. */
+            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "UNIT_LEAD" | "MEMBER" | "VISITOR")[];
             /** @example Special Sunday Service */
             title: string;
+            /**
+             * @description Venue/location to display alongside the announcement
+             * @example Main Auditorium
+             */
+            venue?: string;
         };
         CreateAssignmentDto: {
             /** @description Member id of the leader who will shepherd them */
@@ -5107,6 +5752,10 @@ export interface components {
             memberIds: string[];
             /** @example New convert — weekly follow-up */
             note?: string;
+        };
+        CreateBirthdayGreetingDto: {
+            /** @example Happy birthday! Praying for a wonderful year ahead 🎉 */
+            message: string;
         };
         CreateCellDto: Record<string, never>;
         CreateCommentDto: {
@@ -5117,6 +5766,14 @@ export interface components {
              * @example comment-id-123
              */
             parentId?: string;
+        };
+        CreateEmailTemplateDto: {
+            /** @example <p>Dear church family,</p> */
+            body: string;
+            /** @example Monthly Newsletter */
+            name: string;
+            /** @example Here is what happened this month at EHC */
+            subject: string;
         };
         CreateEventDto: {
             /** @description Max attendees across all RSVPs. */
@@ -5327,6 +5984,38 @@ export interface components {
             description?: string;
             /** @example Hospitality */
             name: string;
+        };
+        CreateUnitExpenseDto: {
+            /** @example 15000 */
+            amount: number;
+            /** @example Supplies */
+            category?: string;
+            /** @example 2026-08-01 */
+            date: string;
+            description?: string;
+            /** @description URL from POST /uploads/document */
+            receiptUrl?: string;
+            /** @example Cleaning supplies */
+            title: string;
+        };
+        CreateUnitPositionDto: {
+            /** @example Secretary */
+            name: string;
+        };
+        CreateUnitTaskCommentDto: {
+            /** @example Started on this, should be done by Friday. */
+            content: string;
+        };
+        CreateUnitTaskDto: {
+            /**
+             * @description Leave unset for a whole-unit task
+             * @example member-uuid
+             */
+            assignedToId?: string;
+            description?: string;
+            dueDate?: string;
+            /** @example Set up chairs for Sunday service */
+            title: string;
         };
         CreateUserDto: {
             /** @example jane.doe@example.com */
@@ -5540,6 +6229,13 @@ export interface components {
             /** @example 120 */
             positionSec: number;
         };
+        PublishAnnouncementDto: {
+            /**
+             * @description Whether to email members as part of this publish. Omit to keep whatever the announcement was saved with. Publishing an announcement that was unpublished emails everyone a second time unless this is false.
+             * @example false
+             */
+            sendEmail?: boolean;
+        };
         QuestionDto: {
             /** @example john@example.com */
             email?: string;
@@ -5586,6 +6282,24 @@ export interface components {
              */
             type: "NOTE" | "QUESTION";
         };
+        SendEmailDto: {
+            audience: components["schemas"]["AudienceFilterDto"];
+            /** @example <p>Dear church family,</p> */
+            body: string;
+            /** @example Here is what happened this month at EHC */
+            subject: string;
+            /** @description Template this send originated from, for record-keeping only — subject/body below are what actually gets sent */
+            templateId?: string;
+        };
+        SendUnitMessageDto: {
+            /** @example Can we get more chairs for Sunday's setup? */
+            message: string;
+            /**
+             * @description Member.id of the recipient — must be in the same unit
+             * @example member-uuid
+             */
+            recipientId: string;
+        };
         SermonEpisodeInputDto: {
             /** @example 1800 */
             duration: number;
@@ -5609,6 +6323,13 @@ export interface components {
             phone?: string;
             /** @example Worship Team */
             unit: string;
+        };
+        SetMemberPositionDto: {
+            /**
+             * @description null clears the position
+             * @example position-uuid
+             */
+            positionId?: Record<string, never>;
         };
         SetMemberRoleDto: {
             /**
@@ -5690,6 +6411,8 @@ export interface components {
         UpdateAnnouncementDto: {
             /** @example Join us this Sunday for a special time of worship. */
             body?: string;
+            /** @example 10:00 AM */
+            eventTime?: string;
             /** @description Image to show alongside the announcement (from /uploads/image), or "" to remove it */
             imageUrl?: string;
             /**
@@ -5697,8 +6420,32 @@ export interface components {
              * @example false
              */
             sendEmail?: boolean;
+            /**
+             * @example [
+             *       "MALE",
+             *       "FEMALE"
+             *     ]
+             */
+            targetGenders?: string[];
+            targetProfileIds?: string[];
+            targetProfileNames?: string[];
+            /** @description Only applies on the next publish (a change here never re-triggers a fan-out). */
+            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "UNIT_LEAD" | "MEMBER" | "VISITOR")[];
             /** @example Special Sunday Service */
             title?: string;
+            /**
+             * @description Or "" to remove it
+             * @example Main Auditorium
+             */
+            venue?: string;
+        };
+        UpdateEmailTemplateDto: {
+            /** @example <p>Dear church family,</p> */
+            body?: string;
+            /** @example Monthly Newsletter */
+            name?: string;
+            /** @example Here is what happened this month at EHC */
+            subject?: string;
         };
         UpdateEventDto: {
             /** @description Max attendees across all RSVPs. */
@@ -5911,6 +6658,28 @@ export interface components {
             description?: string;
             name?: string;
         };
+        UpdateUnitExpenseDto: {
+            amount?: number;
+            category?: string;
+            date?: string;
+            description?: string;
+            receiptUrl?: string;
+            title?: string;
+        };
+        UpdateUnitPositionDto: {
+            /** @example Treasurer */
+            name: string;
+        };
+        UpdateUnitTaskDto: {
+            /** @description null clears the assignee */
+            assignedToId?: Record<string, never>;
+            description?: string;
+            /** @description null clears the due date */
+            dueDate?: Record<string, never>;
+            /** @enum {string} */
+            status?: "TODO" | "IN_PROGRESS" | "DONE";
+            title?: string;
+        };
         UpdateUserDto: {
             firstName?: string;
             lastName?: string;
@@ -5922,6 +6691,48 @@ export interface components {
              * @enum {string}
              */
             role: "MEMBER" | "UNIT_LEAD" | "HEAD_USHER" | "HOD" | "ADMIN_HEAD" | "ADMIN" | "PASTOR" | "SUPER_ADMIN";
+        };
+        UpdateVisitorDto: {
+            address?: string;
+            attendanceType?: string;
+            bornAgain?: string;
+            email?: string;
+            firstName?: string;
+            gender?: string;
+            howDidYouLearn?: string;
+            invitedBy?: string;
+            lastName?: string;
+            locatedInIbadan?: boolean;
+            membershipInterest?: string;
+            occupation?: string;
+            phone?: string;
+            prayerPoint?: string;
+            serviceExperience?: string;
+        };
+        VisitorImportRowDto: {
+            address?: string;
+            /** @description Day of birth, 1-31 (no year collected) */
+            birthDay?: number;
+            /** @description Month of birth, 1-12 */
+            birthMonth?: number;
+            bornAgain?: string;
+            email?: string;
+            /** @example Jane */
+            firstName: string;
+            gender?: string;
+            howDidYouLearn?: string;
+            invitedBy?: string;
+            /** @example Doe */
+            lastName: string;
+            locatedInIbadan?: boolean;
+            membershipInterest?: string;
+            occupation?: string;
+            phone?: string;
+            prayerPoint?: string;
+            serviceExperience?: string;
+            /** @description Original submission timestamp, for backfilling historical data */
+            submittedAt?: string;
+            whatsappInterest?: boolean;
         };
     };
     responses: never;
@@ -6009,7 +6820,10 @@ export interface operations {
     };
     AdminController_getAttendanceTrend: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Points to return (default 24, max 500) */
+                limit?: number;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7274,6 +8088,43 @@ export interface operations {
         };
     };
     AnnouncementsController_publish: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishAnnouncementDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AnnouncementsController_unpublish: {
         parameters: {
             query?: never;
             header?: never;
@@ -10033,6 +10884,70 @@ export interface operations {
             };
         };
     };
+    CoursesController_enrollInCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    CoursesController_myEnrolledCategoryIds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     CoursesController_myProgress: {
         parameters: {
             query?: never;
@@ -10457,6 +11372,39 @@ export interface operations {
             };
         };
     };
+    DepartmentsController_createUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     DepartmentsMineController_getMine: {
         parameters: {
             query?: never;
@@ -10489,6 +11437,37 @@ export interface operations {
         };
     };
     DepartmentsMineController_postMyAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DepartmentsMineController_createMyUnit: {
         parameters: {
             query?: never;
             header?: never;
@@ -10562,6 +11541,279 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_previewRecipients: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AudienceFilterDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_send: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendEmailDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_listSent: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_listTemplates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_createTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateEmailTemplateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_getTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_removeTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_updateTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEmailTemplateDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -10667,6 +11919,39 @@ export interface operations {
         responses: {
             /** @description RSVP received */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EventsController_getMyRsvpStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11036,6 +12321,8 @@ export interface operations {
                 unitId?: string;
                 stage?: "UNASSIGNED" | "ASSIGNED" | "IN_PROGRESS" | "AWAITING_REVIEW" | "CONFIRMED" | "REOPENED";
                 mine?: boolean;
+                /** @description Narrow to a specific service day */
+                serviceId?: string;
             };
             header?: never;
             path?: never;
@@ -11378,6 +12665,37 @@ export interface operations {
                 type: "FIRST_TIMER" | "ABSENTEE";
                 q?: string;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_listServices: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -13416,11 +14734,75 @@ export interface operations {
             };
         };
     };
+    MembersBirthdayGreetingsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersPastoralController_absent: {
         parameters: {
             query?: {
                 missedSundays?: string;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersPastoralController_todayAnniversaries: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -13492,6 +14874,39 @@ export interface operations {
                          *       ]
                          *     }
                          */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersBirthdayGreetingsController_community: {
+        parameters: {
+            query?: {
+                daysAhead?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
                         data: unknown;
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
@@ -13897,6 +15312,43 @@ export interface operations {
             };
         };
     };
+    MembersBirthdayGreetingsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBirthdayGreetingDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersSelfServiceController_uploadMyAvatar: {
         parameters: {
             query?: never;
@@ -13941,6 +15393,39 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersBirthdayGreetingsController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                greetingId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -14072,8 +15557,8 @@ export interface operations {
     };
     MembersSelfServiceController_search_: {
         parameters: {
-            query: {
-                q: string;
+            query?: {
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -14206,6 +15691,77 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    OnlineAttendanceController_list: {
+        parameters: {
+            query: {
+                channel: string;
+                stage: string;
+                take: string;
+                skip: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    OnlineAttendanceController_checkIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckInDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -16717,6 +18273,148 @@ export interface operations {
             };
         };
     };
+    UnitExpensesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitExpensesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUnitExpenseDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitExpensesController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                expenseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitExpensesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                expenseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUnitExpenseDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     UnitsMembersController_appointLead: {
         parameters: {
             query?: never;
@@ -16893,6 +18591,44 @@ export interface operations {
             };
         };
     };
+    UnitPositionsController_setMemberPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetMemberPositionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     UnitsMembersController_setMemberRole: {
         parameters: {
             query?: never;
@@ -16910,6 +18646,399 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitMessagesController_send: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendUnitMessageDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitPositionsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitPositionsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUnitPositionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitPositionsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                positionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitPositionsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                positionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUnitPositionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUnitTaskDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUnitTaskDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_listComments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_addComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUnitTaskCommentDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -16994,6 +19123,134 @@ export interface operations {
             };
         };
     };
+    UnitsController_getMyUnits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_getMyUnitDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_getMyMemberships: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitsController_getMyMembershipDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     UploadsController_uploadDocument: {
         parameters: {
             query?: never;
@@ -17006,7 +19263,7 @@ export interface operations {
                 "multipart/form-data": {
                     /**
                      * Format: binary
-                     * @description Document file (DOCX, DOC, or PDF — max 15 MB)
+                     * @description Document or photo (DOCX, DOC, PDF, JPG, PNG, or WebP — max 15 MB)
                      */
                     file?: string;
                 };
@@ -17048,7 +19305,7 @@ export interface operations {
                 "multipart/form-data": {
                     /**
                      * Format: binary
-                     * @description Image file (JPG, PNG, WebP, GIF, AVIF — max 8 MB)
+                     * @description Image file (JPG, PNG, WebP, GIF, AVIF, BMP, SVG, ICO, HEIC/HEIF — max 8 MB)
                      */
                     file?: string;
                 };
@@ -17354,6 +19611,39 @@ export interface operations {
             };
         };
     };
+    UsersController_resendLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     UsersRolesController_updateRole: {
         parameters: {
             query?: never;
@@ -17609,6 +19899,76 @@ export interface operations {
             };
         };
     };
+    VisitorsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    VisitorsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVisitorDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     VisitorsController_count: {
         parameters: {
             query?: never;
@@ -17619,6 +19979,73 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Total visitors for this tenant */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    VisitorsController_bulkImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkImportVisitorsDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    VisitorsController_stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description { total, onsite, online } */
             200: {
                 headers: {
                     [name: string]: unknown;

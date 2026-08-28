@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { PushDispatchService } from './push-dispatch.service';
 import { localMinutes } from './quiet-hours.util';
+import { stripMarkdown } from '../../common/markdown.util';
 import { localCalendarDate, ruleOccursOn } from '../../calendar/services/recurrence.util';
 import {
   PushEvents,
@@ -84,7 +85,9 @@ export class PushTriggersService {
         { tenantId: payload.tenantId, userIds },
         {
           title: payload.title,
-          body: truncate(payload.body, 140),
+          // Strip Markdown before truncating: a lock screen shows the raw
+          // text, and `**Date:**` reads as a typo to a member.
+          body: truncate(stripMarkdown(payload.body), 140),
           url: '/dashboard',
           tag: `announcement-${payload.announcementId}`,
         },

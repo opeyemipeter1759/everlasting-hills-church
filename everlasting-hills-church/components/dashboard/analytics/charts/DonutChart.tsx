@@ -4,6 +4,7 @@ import { ChartCard } from "@/components/ui/display/ChartCard";
 import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import type { AnalyticsFilter } from "@/lib/api/analytics";
 import { useAnalyticsSplit } from "@/lib/api/analytics";
+import { downloadCsv } from "@/lib/export-csv";
 
 const COLORS = ["#10b981", "#ef4444"];
 
@@ -18,7 +19,14 @@ export function PresentAbsentDonut({ filter }: Props) {
   const chartData = [{ name: "Present", value: present }, { name: "Absent", value: absent }];
 
   return (
-    <ChartCard title="Present vs Absent" onExportPng={() => {}} minHeight="min-h-[240px]">
+    <ChartCard
+      title="Present vs Absent"
+      onExportCsv={
+        total > 0 ? () => downloadCsv("present-vs-absent", [{ present, absent, total, rate }]) : undefined
+      }
+      exportPng
+      minHeight="min-h-[240px]"
+    >
       {isLoading ? <ChartSkeleton /> : (
         <div className="flex flex-col items-center h-full">
           <ResponsiveContainer width="100%" height={160}>

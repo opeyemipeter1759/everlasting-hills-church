@@ -1,7 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+/**
+ * Constructed per request, not at module scope. `new Resend(undefined)` throws
+ * "Missing API key", and Next executes route modules while collecting page data
+ * during `next build` — so a module-scope client made the whole production build
+ * depend on a runtime secret being present. CI has no RESEND_API_KEY, which is
+ * exactly what broke the frontend build.
+ */
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY?.trim();
+  return key ? new Resend(key) : null;
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -9,6 +19,14 @@ export async function POST(req: NextRequest) {
 
   if (!name || !email || !phone) {
     return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
+  }
+
+  const resend = getResend();
+  if (!resend) {
+    return NextResponse.json(
+      { error: "Email is not configured on this server." },
+      { status: 503 },
+    );
   }
 
   try {

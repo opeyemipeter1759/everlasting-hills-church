@@ -97,7 +97,9 @@ export function useAdminDashboardData() {
         audit,
       ] = await Promise.all([
         apiClient.get<{ stats: SummaryStat[] }>("/admin/dashboard-summary"),
-        apiClient.get<{ points: AttendancePoint[] }>("/admin/attendance-trend"),
+        // Every recorded headcount; the chart offers its own date-range filter,
+        // so trimming the history here would just hide counts that were taken.
+        apiClient.get<{ points: AttendancePoint[] }>("/admin/attendance-trend?limit=500"),
         apiClient.get<UpcomingBirthday[]>("/members/birthdays/upcoming?daysAhead=7"),
         apiClient.get<unknown[]>("/members/anniversaries/today"),
         apiClient.get<{ thisMonthNaira: number; momChange: number }>("/admin/giving/summary"),

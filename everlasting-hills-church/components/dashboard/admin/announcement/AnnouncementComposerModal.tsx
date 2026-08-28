@@ -9,11 +9,23 @@ import { ROLE_LABEL } from "../people/peopleShared/roleMeta";
 import { SpecificPeoplePicker } from "./SpecificPeoplePicker";
 import { EMPTY_FORM } from "./types";
 import type { Announcement, AnnouncementFormValues, TargetGender } from "./types";
+import RichText from "@/components/ui/display/RichText";
+import { postAi } from "@/lib/ai/client";
 
 const inputCls =
   "w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#87102C]/40 focus:ring-2 focus:ring-[#87102C]/10 transition-all";
 
 const ROLE_OPTIONS = Object.keys(ROLE_LABEL) as PersonRole[];
+
+/**
+ * In this one context "Visitor" does not mean a role anybody holds — it means
+ * the first-timer list, everyone still on the welcome-form table who has not
+ * become a member. Labelled for what it does, because as "Visitor" it looked
+ * like the other role chips and quietly behaved like "Member".
+ */
+const TARGET_LABEL: Partial<Record<PersonRole, string>> = {
+  VISITOR: "First-timers",
+};
 const GENDER_OPTIONS: { value: TargetGender; label: string }[] = [
   { value: "MALE", label: "Male" },
   { value: "FEMALE", label: "Female" },
@@ -45,6 +57,7 @@ export default function AnnouncementComposerModal({
   const [aiOpen, setAiOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (!open) { setAiOpen(false); setAiIdea(""); setAiError(""); return; }
@@ -84,22 +97,20 @@ export default function AnnouncementComposerModal({
     setAiLoading(true);
     setAiError("");
     try {
-      const res = await fetch("/api/ai/announcement", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea: aiIdea }),
+      const json = await postAi<{ title?: string; body?: string }>("/api/ai/announcement", {
+        idea: aiIdea,
       });
-      const json = await res.json();
       if (json.title || json.body) {
         set("title", json.title ?? values.title);
         set("body", json.body ?? values.body);
         setAiOpen(false);
         setAiIdea("");
       } else {
-        setAiError("Gemini couldn't generate a draft. Try rephrasing your idea.");
+        setAiError("Gemini returned an empty draft. Try rephrasing your idea.");
       }
-    } catch {
-      setAiError("Something went wrong. Check your connection and try again.");
+    } catch (err) {
+      // The server says why — a missing key and a refused prompt need different fixes.
+      setAiError((err as Error).message);
     } finally {
       setAiLoading(false);
     }
@@ -184,7 +195,37 @@ export default function AnnouncementComposerModal({
           className={`${inputCls} resize-y`}
         />
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* The AI composer returns Markdown and admins paste it in, so the
+            formatting members will see is worth showing before publishing. */}
+        <div className="-mt-1 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[11px] text-gray-400 dark:text-white/40">
+            Formatting: **bold**, *italics*, - bullets, ### heading. Links are detected automatically.
+          </p>
+          {values.body.trim().length > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowPreview((v) => !v)}
+              className="text-[11px] font-bold text-[#87102C] hover:underline dark:text-[#e8768a]"
+            >
+              {showPreview ? "Hide preview" : "Preview"}
+            </button>
+          )}
+        </div>
+
+        {showPreview && values.body.trim().length > 0 && (
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 dark:text-white/30">
+              How members will see it
+            </p>
+            <RichText
+              text={values.body}
+              emphasisClassName="text-gray-900 dark:text-white"
+              className="text-sm leading-relaxed text-gray-700 dark:text-white/70"
+            />
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="relative">
             <Clock size={14} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -252,10 +293,16 @@ export default function AnnouncementComposerModal({
                       : "border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5"
                   }`}
                 >
-                  {ROLE_LABEL[role]}
+                  {TARGET_LABEL[role] ?? ROLE_LABEL[role]}
                 </button>
               ))}
             </div>
+            {values.targetRoles.includes("VISITOR") && (
+              <p className="mt-1.5 text-[11px] text-gray-400 dark:text-white/40">
+                First-timers are emailed from the welcome-form list — they have no dashboard, so they
+                get a link to the website instead.
+              </p>
+            )}
           </div>
 
           <div>

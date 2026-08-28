@@ -4,6 +4,7 @@ import { ChartCard } from "@/components/ui/display/ChartCard";
 import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import type { AnalyticsFilter } from "@/lib/api/analytics";
 import { useAnalyticsSvcCompare } from "@/lib/api/analytics";
+import { downloadCsv } from "@/lib/export-csv";
 
 const SVC_COLORS: Record<string, string> = { sunday: "#87102C", wednesday: "#3b82f6", special: "#10b981" };
 
@@ -21,7 +22,20 @@ export function ServiceComparisonChart({ filter }: Props) {
   }));
 
   return (
-    <ChartCard title="Service Comparison" onExportCsv={() => {}} onExportPng={() => {}} minHeight="min-h-[240px]">
+    <ChartCard
+      title="Service Comparison"
+      onExportCsv={
+        chartData.length
+          ? () =>
+              downloadCsv(
+                "service-comparison",
+                chartData.map(({ label, present, absent }) => ({ label, present, absent })),
+              )
+          : undefined
+      }
+      exportPng
+      minHeight="min-h-[240px]"
+    >
       {isLoading ? <ChartSkeleton /> : (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barCategoryGap="28%">

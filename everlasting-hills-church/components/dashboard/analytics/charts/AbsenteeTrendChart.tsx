@@ -4,13 +4,19 @@ import { ChartCard } from "@/components/ui/display/ChartCard";
 import { ChartSkeleton } from "@/components/ui/display/SkeletonBlock";
 import type { AnalyticsFilter } from "@/lib/api/analytics";
 import { useAnalyticsAbsentee } from "@/lib/api/analytics";
+import { downloadCsv } from "@/lib/export-csv";
 
 interface Props { filter: AnalyticsFilter }
 
 export function AbsenteeTrendChart({ filter }: Props) {
   const { data, isLoading } = useAnalyticsAbsentee(filter);
   return (
-    <ChartCard title="Absentee Trend" onExportCsv={() => {}} minHeight="min-h-[240px]">
+    <ChartCard
+      title="Absentee Trend"
+      onExportCsv={data?.length ? () => downloadCsv("absentee-trend", data) : undefined}
+      exportPng
+      minHeight="min-h-[240px]"
+    >
       {isLoading ? <ChartSkeleton /> : (
         <ResponsiveContainer width="100%" height={200}>
           <ComposedChart data={data ?? []} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>

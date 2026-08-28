@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Bell } from "lucide-react";
 import PersonalInformationForm, {
   type PersonalFormUser,
 } from "./PersonalInformationForm";
@@ -41,6 +42,15 @@ export default function SettingsClient({ user }: Props) {
             Member Portal
           </p>
           <h1 className="text-3xl font-bold text-[#111] dark:text-white tracking-tight">Settings</h1>
+          {/* Notification settings live on their own page because every control
+              there depends on browser state. Nothing linked to it, which is why
+              no member had ever reached it to turn push on. */}
+          <Link
+            href="/dashboard/settings/notifications"
+            className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+          >
+            <Bell size={14} /> Notification settings
+          </Link>
         </div>
         <nav
           aria-label="Breadcrumb"

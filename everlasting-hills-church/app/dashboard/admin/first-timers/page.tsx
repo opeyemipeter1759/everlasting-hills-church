@@ -20,6 +20,10 @@ interface VisitorApi {
   bornAgain: string | null;
   occupation: string | null;
   submittedAt: string;
+  invitedBy?: string | null;
+  dateOfBirth?: string | null;
+  address?: string | null;
+  whatsappInterest?: boolean | null;
   serviceExperience?: string | null;
   prayerPoint?: string | null;
 }
@@ -56,6 +60,10 @@ export default async function FirstTimersPage() {
     bornAgain: v.bornAgain,
     occupation: v.occupation,
     submittedAt: v.submittedAt,
+    invitedBy: v.invitedBy ?? null,
+    dateOfBirth: v.dateOfBirth ?? null,
+    address: v.address ?? null,
+    whatsappInterest: v.whatsappInterest ?? null,
     hasOnlineCheckIn: v.email ? onlineEmails.has(v.email.toLowerCase()) : false,
     serviceExperience: v.serviceExperience ?? null,
     prayerPoint: v.prayerPoint ?? null,

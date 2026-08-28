@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { flashModel, parseJSON } from "@/lib/ai/gemini";
+import { aiFailed, aiUnavailable, flashModel, isAiConfigured, parseJSON } from "@/lib/ai/gemini";
 
 export interface TestimonyPolishResponse {
   content: string;
@@ -9,7 +9,8 @@ export async function POST(req: NextRequest) {
   try {
     const { content }: { content: string } = await req.json();
 
-    if (!process.env.GEMINI_API_KEY || !content?.trim()) {
+    if (!isAiConfigured()) return aiUnavailable();
+    if (!content?.trim()) {
       return NextResponse.json({ content: content ?? "" });
     }
 
@@ -42,7 +43,6 @@ Respond with only valid JSON, no markdown fence, no explanation.
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("[AI /testimony]", err);
-    return NextResponse.json({ content: "" });
+    return aiFailed("/testimony", err);
   }
 }

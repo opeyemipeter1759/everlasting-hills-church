@@ -35,6 +35,9 @@ export class HeadcountReadService {
     const hc = svc ? await this.prisma.serviceHeadcount.findUnique({ where: { serviceId: svc.id } }) : null;
     return {
       date: dateStr,
+      // The server's own idea of today, so the client can explain a refusal
+      // rather than restating the rule.
+      serverDate: this.dateSvc.todayStr(),
       inferredType: this.dateSvc.typeForWeekday(this.dateSvc.weekdayOf(dateStr)),
       canRecord: this.dateSvc.canRecordDate(dateStr),
       service: svc
@@ -108,7 +111,9 @@ export class HeadcountReadService {
    * (men / women / children / first-timers) for the growth surface.
    */
   async getTrend(opts: { serviceType?: ServiceType; limit?: number } = {}) {
-    const limit = Math.min(Math.max(opts.limit ?? 24, 1), 100);
+    // Ceiling raised from 100: the growth chart now offers an "All" range, and
+    // at two services a week 100 points is barely a year of history.
+    const limit = Math.min(Math.max(opts.limit ?? 24, 1), 500);
     const rows = await this.prisma.serviceHeadcount.findMany({
       where: {
         tenantId: this.tenantId,
