@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Controller, useForm } from "react-hook-form";
 import { X, Compass, Loader2 } from "lucide-react";
 import type { HomeCellFormValues } from "./useHomeCells";
@@ -53,7 +54,7 @@ export default function HomeCellModal({
     if (e.target === overlayRef.current) onClose();
   }
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       onClick={onOverlayClick}
@@ -191,6 +192,7 @@ export default function HomeCellModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

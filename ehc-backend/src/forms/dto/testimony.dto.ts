@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class TestimonyDto {
   @ApiProperty({ example: 'God answered my prayer', required: false })
@@ -32,4 +32,14 @@ export class TestimonyDto {
   @IsString()
   @MaxLength(40)
   phone?: string;
+
+  @ApiProperty({ example: false, required: false, description: 'Submitter wants this testimony kept anonymous' })
+  @IsOptional()
+  @IsBoolean()
+  is_anonymous?: boolean;
+
+  @ApiProperty({ example: true, required: false, description: 'Submitter is willing to share this testimony physically/in-person at a service' })
+  @IsOptional()
+  @IsBoolean()
+  share_physically?: boolean;
 }

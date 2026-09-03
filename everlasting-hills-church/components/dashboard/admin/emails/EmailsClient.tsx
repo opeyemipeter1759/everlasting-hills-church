@@ -30,7 +30,7 @@ export default function EmailsClient() {
   const sendMutation = useSendEmail();
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="max-w-full mx-auto p-4 md:p-6 space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Emails</h1>

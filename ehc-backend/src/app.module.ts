@@ -5,12 +5,13 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SentryModule } from '@sentry/nestjs/setup';
-import { ThrottlerGuard, ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerModuleOptions } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { AccountAwareThrottlerGuard } from './auth/guards/account-aware-throttler.guard';
 import { FormsModule } from './forms/forms.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { HeadcountModule } from './headcount/headcount.module';
@@ -156,7 +157,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
   controllers: [AppController],
   providers: [
     AppService,
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: AccountAwareThrottlerGuard },
   ],
 })
 export class AppModule {}

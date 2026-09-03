@@ -1,9 +1,9 @@
 import { format } from "date-fns";
 import { Sparkles } from "lucide-react";
 import { Avatar } from "@/components/dashboard/admin/people/peopleShared";
-import type { PersonRow } from "@/lib/api/people";
+import type { VisitorListRow } from "@/lib/api/visitors";
 
-export default function VisitorsList({ visitors }: { visitors: PersonRow[] }) {
+export default function VisitorsList({ visitors }: { visitors: VisitorListRow[] }) {
   return (
     <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5">
       <div className="mb-3 flex items-center gap-2">
@@ -22,11 +22,13 @@ export default function VisitorsList({ visitors }: { visitors: PersonRow[] }) {
               key={v.id}
               className="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-white/8 bg-gray-50/50 dark:bg-white/[0.02] px-3 py-2.5"
             >
-              <Avatar photoUrl={v.photoUrl} firstName={v.firstName} lastName={v.lastName} size={34} />
+              <Avatar photoUrl={null} firstName={v.firstName} lastName={v.lastName} size={34} />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{v.name}</p>
+                <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                  {v.firstName} {v.lastName}
+                </p>
                 <p className="text-[11px] text-gray-400 dark:text-white/40">
-                  Visited {format(new Date(v.joinedAt), "d MMM")}
+                  Visited {format(new Date(v.submittedAt), "d MMM")}
                   {v.phone && ` · ${v.phone}`}
                 </p>
               </div>

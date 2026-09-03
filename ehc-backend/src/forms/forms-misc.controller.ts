@@ -1,7 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import type { AuthUser } from '../auth/types/auth-user';
 import { ContactDto } from './dto/contact.dto';
 import { HomeCellDto } from './dto/home-cell.dto';
 import { ServeTeamDto } from './dto/serve-team.dto';
@@ -23,17 +26,21 @@ export class FormsMiscController {
   ) {}
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('testimony')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Submit Testimony',
-    description: 'Save a testimony submission and notify the church team by email.',
+    description:
+      'Save a testimony submission and notify the church team by email. Public — works with no session. ' +
+      'If the submitter is signed in, their member is linked on the record even when marked anonymous (same ' +
+      'optional-auth semantics as prayer-request/question).',
   })
   @ApiCreatedResponse({ description: 'Testimony submitted successfully' })
   @ApiBadRequestResponse({ description: 'Validation failed' })
-  async testimony(@Body() body: TestimonyDto) {
-    return this.testimonySvc.submitTestimony(body);
+  async testimony(@Body() body: TestimonyDto, @CurrentUser() user?: AuthUser) {
+    return this.testimonySvc.submitTestimony(body, user?.memberId ?? null);
   }
 
   @Public()

@@ -96,6 +96,7 @@ export interface DirectoryParams {
 export interface UnitOption {
   id: string;
   name: string;
+  memberCount: number;
 }
 
 export interface CreatePersonInput {
@@ -145,8 +146,8 @@ export function useUnitOptions() {
   return useQuery({
     queryKey: ["units", "options"],
     queryFn: async () => {
-      const units = await api.get<UnitOption[]>("/units");
-      return units.map((u) => ({ id: u.id, name: u.name }));
+      const units = await api.get<Array<{ id: string; name: string; _count: { UnitMember: number } }>>("/units");
+      return units.map((u) => ({ id: u.id, name: u.name, memberCount: u._count.UnitMember }));
     },
   });
 }
@@ -156,6 +157,18 @@ export function useUnitOptions() {
 function useInvalidatePeople() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: PEOPLE_KEY });
+}
+
+/** Unit-membership changes move a person in/out of a unit's roster, which also
+ * shifts that unit's member count (["units"]) and its department's rollup
+ * (["departments"]) — not just the person's own directory row. */
+function useInvalidateUnitMembership() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: PEOPLE_KEY });
+    qc.invalidateQueries({ queryKey: ["units"] });
+    qc.invalidateQueries({ queryKey: ["departments"] });
+  };
 }
 
 /** Role changes affect more than the directory list — the Roles page's rollup
@@ -190,7 +203,7 @@ export function useUpdateMember() {
 /** Add a member to a unit from the People screens (ADMIN+, via the same
  * endpoint the unit lead's own "Add member" form uses). */
 export function useAddMemberToUnit() {
-  const invalidate = useInvalidatePeople();
+  const invalidate = useInvalidateUnitMembership();
   return useMutation({
     mutationFn: ({ unitId, memberId }: { unitId: string; memberId: string }) =>
       api.post(`/units/${unitId}/members`, { memberId }),
@@ -199,7 +212,7 @@ export function useAddMemberToUnit() {
 }
 
 export function useRemoveMemberFromUnit() {
-  const invalidate = useInvalidatePeople();
+  const invalidate = useInvalidateUnitMembership();
   return useMutation({
     mutationFn: ({ unitId, memberId }: { unitId: string; memberId: string }) =>
       api.delete(`/units/${unitId}/members/${memberId}`),

@@ -40,7 +40,7 @@ export default function MyCoursesClient() {
       : 0;
 
   return (
-    <div className="max-w-6xl space-y-7 sm:space-y-9">
+    <div className="max-w-full space-y-7 sm:space-y-9">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-start gap-3">
           <span aria-hidden="true" className="mt-1.5 h-9 w-1 flex-shrink-0 rounded-full bg-[#87102C]" />

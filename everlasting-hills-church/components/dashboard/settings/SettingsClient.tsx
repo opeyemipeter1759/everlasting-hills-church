@@ -97,17 +97,27 @@ export default function SettingsClient({ user }: Props) {
           </motion.div>
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.18, ease: easeOut }}
-        >
-          <ProfilePhotoCard
-            initialPhotoUrl={user.photoUrl}
-            fallbackInitials={initialsOf(user.firstName, user.lastName)}
-            displayName={displayName}
-          />
-        </motion.div>
+        <div className="space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.18, ease: easeOut }}
+          >
+            <ProfilePhotoCard
+              initialPhotoUrl={user.photoUrl}
+              fallbackInitials={initialsOf(user.firstName, user.lastName)}
+              displayName={displayName}
+            />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.24, ease: easeOut }}
+          >
+            <CalendarSubscriptionCard />
+          </motion.div>
+        </div>
       </div>
     </div>
   );

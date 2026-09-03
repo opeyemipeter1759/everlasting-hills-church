@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ClipboardList, RefreshCw, Users, UserCheck, UserPlus } from "lucide-react";
 import {
@@ -9,9 +9,14 @@ import {
   useTodayHeadcount,
 } from "@/lib/api/headcount";
 import { useAdminStatsOverview } from "@/lib/api";
+import { Pagination } from "@/components/ui/navigation/Pagination";
+import { Select } from "@/components/ui/select";
 import HeadcountDatePicker from "./HeadcountDatePicker";
 import HeadcountReportCard from "./HeadcountReportCard";
 import { watTodayStr, inferType } from "./date-utils";
+
+const PAGE_SIZE_OPTIONS = [12, 24, 48];
+const DEFAULT_PAGE_SIZE = 12;
 
 export default function UshersReport() {
   const [date, setDate] = useState<string>(watTodayStr());
@@ -19,6 +24,19 @@ export default function UshersReport() {
   const history = useHeadcountHistory(500); // large limit to capture all records for the total
   const today = useTodayHeadcount();
   const stats = useAdminStatsOverview();
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const reports = useMemo(() => history.data ?? [], [history.data]);
+  const pageCount = Math.max(1, Math.ceil(reports.length / pageSize));
+  // Clamp back if a refetch shrinks the list below the page we were sitting on.
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
+  const pagedReports = useMemo(
+    () => reports.slice((page - 1) * pageSize, page * pageSize),
+    [reports, page, pageSize],
+  );
 
   const selectedType = byDate.data?.inferredType ?? inferType(date);
 
@@ -30,7 +48,7 @@ export default function UshersReport() {
       : undefined;
 
   return (
-    <div className="max-w-5xl space-y-5">
+    <div className="max-w-full space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
@@ -58,7 +76,7 @@ export default function UshersReport() {
       </div>
 
       {/* Triple signal */}
-      <div className="grid grid-cols-3 gap-3 sm:max-w-2xl">
+      <div className="grid grid-cols-3 gap-3 w-full">
         <Signal label="Today's headcount" hint="usher total" value={today.data?.total ?? "—"} icon={<Users size={14} />} tone="burgundy" loading={today.isLoading} />
         <Signal label="Today's check-ins" hint="individual app" value={stats.data?.todayPresent ?? 0} icon={<UserCheck size={14} />} tone="slate" loading={stats.isLoading} />
         <Signal label="All-time first timers" hint="across all services" value={allTimeFirstTimers ?? "—"} icon={<UserPlus size={14} />} tone="green" loading={history.isLoading} />
@@ -91,19 +109,37 @@ export default function UshersReport() {
           <div className="grid gap-4 sm:grid-cols-2">
             {[0, 1, 2, 3].map((i) => <div key={i} className="h-40 rounded-2xl bg-gray-100 dark:bg-white/5 animate-pulse" />)}
           </div>
-        ) : history.data && history.data.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {history.data.map((h) => (
-              <HeadcountReportCard
-                key={h.id}
-                hc={h}
-                serviceName={h.serviceName}
-                serviceType={h.serviceType}
-                serviceDate={h.serviceDate.slice(0, 10)}
-                onClick={() => setDate(h.serviceDate.slice(0, 10))}
-              />
-            ))}
-          </div>
+        ) : reports.length > 0 ? (
+          <>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {pagedReports.map((h) => (
+                <HeadcountReportCard
+                  key={h.id}
+                  hc={h}
+                  serviceName={h.serviceName}
+                  serviceType={h.serviceType}
+                  serviceDate={h.serviceDate.slice(0, 10)}
+                  onClick={() => setDate(h.serviceDate.slice(0, 10))}
+                />
+              ))}
+            </div>
+
+            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <p className="text-xs text-gray-400 dark:text-white/40 order-2 sm:order-1">
+                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, reports.length)} of {reports.length}
+              </p>
+              <div className="flex items-center gap-3 order-1 sm:order-2">
+                <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+                <Select
+                  aria-label="Rows per page"
+                  value={String(pageSize)}
+                  onChange={(v) => { setPageSize(Number(v)); setPage(1); }}
+                  className="text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 py-1.5 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer"
+                  options={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: `${n} / page` }))}
+                />
+              </div>
+            </div>
+          </>
         ) : (
           <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-10 text-center">
             <ClipboardList size={24} className="mx-auto mb-2 text-gray-300 dark:text-white/20" />

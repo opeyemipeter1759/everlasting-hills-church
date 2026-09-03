@@ -47,7 +47,7 @@ export default function CourseDetailClient({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="max-w-full space-y-6">
       <button
         type="button"
         onClick={() => router.push("/dashboard/explore-courses")}

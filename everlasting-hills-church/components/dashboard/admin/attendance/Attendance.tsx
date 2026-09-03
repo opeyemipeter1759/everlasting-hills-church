@@ -23,7 +23,7 @@ export default function Attendance() {
   }, [queryClient]);
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5 max-w-full">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">Attendance</h1>

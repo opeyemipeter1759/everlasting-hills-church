@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Building2, Users, UserCog, UserPlus, UserMinus, Crown,
-  Layers, Plus, X, History, Megaphone, Check, Send, Trash2, Pencil,
+  Layers, Plus, X, History, Megaphone, Check, Send, Trash2, Pencil, Settings2, FolderMinus,
 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import DepartmentDetailSkeleton from "@/components/ui/skeleton/DepartmentDetailSkeleton";
@@ -15,7 +15,7 @@ import {
   useUnassignUnit, useCreateUnitInDept, useUpdateUnit, useDeleteUnit, useDeptAnnouncement,
 } from "@/lib/api/departments";
 import HeadPicker, { Avatar } from "./HeadPicker";
-import UnitLeadControl from "./UnitLeadControl";
+import UnitManageModal from "./UnitManageModal";
 import CreateUnitForm from "../unit/CreateUnitForm";
 
 function fmt(d: string) {
@@ -39,12 +39,16 @@ export default function DepartmentDetail({ id }: { id: string }) {
   const [deletingUnit, setDeletingUnit] = useState<{ id: string; name: string } | null>(null);
   const [editingUnit, setEditingUnit] = useState<{ id: string; name: string } | null>(null);
   const [creatingUnit, setCreatingUnit] = useState(false);
+  const [managingUnitId, setManagingUnitId] = useState<string | null>(null);
 
   if (q.isLoading || !q.data) {
     return <DepartmentDetailSkeleton />;
   }
 
   const { department: d, currentHead, units, history, memberCount } = q.data;
+  // Derived live from `units` (not a click-time snapshot) so the modal reflects
+  // a lead change made inside it without having to be closed and reopened.
+  const managingUnit = units.find((u) => u.id === managingUnitId) ?? null;
 
   async function handlePickHead(profileId: string, name: string) {
     try {
@@ -179,16 +183,51 @@ export default function DepartmentDetail({ id }: { id: string }) {
                   {u.lead ? `Lead: ${u.lead.firstName} ${u.lead.lastName}` : "No lead"} · {u.memberCount} member{u.memberCount === 1 ? "" : "s"}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <button type="button" onClick={() => setEditingUnit({ id: u.id, name: u.name })} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-gray-700 dark:hover:text-white">
-                  <Pencil size={13} /> Edit
+              <div className="flex items-center gap-2">
+                {/* Primary action, styled like the "Replace"/"Remove" head buttons
+                    above so the page reads as one consistent system. */}
+                <button
+                  type="button"
+                  onClick={() => setManagingUnitId(u.id)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#87102C]/20 dark:border-[#e8768a]/20 bg-[#87102C]/5 dark:bg-[#e8768a]/5 px-2.5 py-1.5 text-xs font-bold text-[#87102C] dark:text-[#e8768a] hover:bg-[#87102C]/10 dark:hover:bg-[#e8768a]/10 transition-colors"
+                >
+                  <Settings2 size={13} /> Manage
                 </button>
-                <button type="button" onClick={() => handleUnassignUnit(u.id, u.name)} disabled={unassignUnit.isPending} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600 disabled:opacity-50">
-                  <X size={13} /> Unassign
-                </button>
-                <button type="button" onClick={() => setDeletingUnit({ id: u.id, name: u.name })} className="inline-flex items-center gap-1 text-xs font-semibold text-gray-400 hover:text-rose-600">
-                  <Trash2 size={13} /> Delete
-                </button>
+
+                {/* Secondary/rare actions — icon-only with a tooltip so the row
+                    doesn't read as four equally-weighted actions. Unassign (amber,
+                    reversible: just detaches the unit from this department) is
+                    kept visually distinct from Delete (rose, permanent). */}
+                <div className="flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setEditingUnit({ id: u.id, name: u.name })}
+                    title="Rename unit"
+                    aria-label="Rename unit"
+                    className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/5 dark:hover:text-white transition-colors"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUnassignUnit(u.id, u.name)}
+                    disabled={unassignUnit.isPending}
+                    title="Unassign from this department"
+                    aria-label="Unassign from this department"
+                    className="rounded-lg p-1.5 text-gray-400 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-500/10 dark:hover:text-amber-400 transition-colors disabled:opacity-50"
+                  >
+                    <FolderMinus size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingUnit({ id: u.id, name: u.name })}
+                    title="Delete unit permanently"
+                    aria-label="Delete unit permanently"
+                    className="rounded-lg p-1.5 text-gray-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             </li>
           ))}
@@ -265,6 +304,13 @@ export default function DepartmentDetail({ id }: { id: string }) {
           onUpdated={() => setEditingUnit(null)}
         />
       )}
+
+      <UnitManageModal
+        unitId={managingUnitId}
+        unitName={managingUnit?.name ?? ""}
+        leadName={managingUnit?.lead ? `${managingUnit.lead.firstName} ${managingUnit.lead.lastName}` : null}
+        onClose={() => setManagingUnitId(null)}
+      />
     </div>
   );
 }

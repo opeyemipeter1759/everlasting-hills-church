@@ -1,17 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, Info, Bell } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { SectionCard } from "@/components/ui/cards/SectionCard";
 import { EmptyState } from "@/components/ui/display/EmptyState";
 import { SkeletonLines } from "@/components/ui/display/SkeletonBlock";
 import { MemberAvatar } from "@/components/ui/display/MemberAvatar";
+import { Pagination } from "@/components/ui/navigation/Pagination";
 import { useAnalyticsAlerts, type AnalyticsAlert } from "@/lib/api/analytics";
 
 const TYPE_LABELS: Record<AnalyticsAlert["type"], string> = {
   LOW_TURNOUT: "Low Turnout", MILESTONE: "Milestone", AT_RISK: "At Risk", SESSION: "Session",
 };
 const ALL_TYPES = ["ALL", "AT_RISK", "MILESTONE", "LOW_TURNOUT", "SESSION"] as const;
+const PAGE_SIZE = 5;
 
 function AlertRow({ a }: { a: AnalyticsAlert }) {
   const isWarn = a.severity === "warning";
@@ -41,6 +43,12 @@ export function AlertsPanel() {
   const { data, isLoading } = useAnalyticsAlerts();
   const filtered = filter === "ALL" ? (data ?? []) : (data ?? []).filter((a) => a.type === filter);
 
+  const [page, setPage] = useState(1);
+  useEffect(() => setPage(1), [filter]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <SectionCard title="Alerts & Notifications" iconEl={<Bell size={13} />}
       action={
@@ -56,7 +64,19 @@ export function AlertsPanel() {
     >
       {isLoading ? <SkeletonLines lines={3} /> : filtered.length === 0
         ? <EmptyState compact title="No alerts" description="All clear for this filter." />
-        : <div className="space-y-2">{filtered.map((a) => <AlertRow key={a.id} a={a} />)}</div>
+        : (
+          <>
+            <div className="space-y-2">{paged.map((a) => <AlertRow key={a.id} a={a} />)}</div>
+            {pageCount > 1 && (
+              <div className="mt-3 flex flex-col items-center gap-1.5">
+                <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+                <p className="text-[10px] text-gray-400">
+                  {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+                </p>
+              </div>
+            )}
+          </>
+        )
       }
     </SectionCard>
   );

@@ -201,7 +201,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Emails",        href: "/dashboard/admin/emails",        icon: Mail,          minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
-      { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
+      // { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Roles",         href: "/dashboard/admin/roles",         icon: Shield,        minRole: "ADMIN" },
       { label: "Courses",       href: "/dashboard/admin/courses",       icon: GraduationCap, minRole: "ADMIN" },
       { label: "Home Cell",     href: "/dashboard/admin/home-cell",     icon: Compass,       minRole: "ADMIN" },

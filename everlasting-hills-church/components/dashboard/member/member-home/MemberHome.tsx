@@ -57,7 +57,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
   const isNewMember = attendanceCount === 0 && prayerCount === 0;
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5 max-w-full">
       <ProfileCompletionToast member={member} />
       <QrCheckinBanner />
       <WelcomeHero

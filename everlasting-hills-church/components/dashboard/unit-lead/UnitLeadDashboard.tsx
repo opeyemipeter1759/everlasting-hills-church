@@ -59,7 +59,7 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
   // no unit assigned
   if (!summary) {
     return (
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-full mx-auto">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">My Unit</h1>
         <div className="mt-6 bg-white dark:bg-[#1c1c1e] border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-12 text-center">
           <Users size={28} className="text-gray-200 dark:text-gray-700 mx-auto mb-3" />
@@ -75,7 +75,7 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
   }
 
   return (
-    <div className="space-y-5 mx-auto max-w-6xl">
+    <div className="space-y-5 mx-auto max-w-full">
       {/* Header */}
       <div>
         <div className="flex justify-between">

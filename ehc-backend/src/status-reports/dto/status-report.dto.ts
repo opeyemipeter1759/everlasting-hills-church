@@ -10,7 +10,7 @@ export type WritableReportStatus = (typeof WRITABLE_STATUSES)[number];
 
 export class CreateReportDto {
   @ApiProperty({ enum: ReportScope, example: 'UNIT' })
-  // @IsIn(ReportScope)
+  @IsEnum(ReportScope)
   scope!: ReportScope;
 
   @ApiProperty({ required: false, description: 'Required when scope = DEPARTMENT' })

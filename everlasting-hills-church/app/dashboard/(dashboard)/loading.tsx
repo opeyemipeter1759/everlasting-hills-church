@@ -1,13 +1,7 @@
-/**
- * Dashboard skeleton shown while /auth/me + role-specific data loads.
- *
- * One generic skeleton serves all three roles (member/unit-lead/admin) because they all
- * roughly follow: welcome banner → stat row → 2-col content. Close enough that role-specific
- * skeletons aren't worth maintaining separately.
- */
+
 export default function Loading() {
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5 max-w-full">
       {/* Welcome banner skeleton */}
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl px-5 py-4 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-gray-200 dark:bg-white/10 animate-pulse" />

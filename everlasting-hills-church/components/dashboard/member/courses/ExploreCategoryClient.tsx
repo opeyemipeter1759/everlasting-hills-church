@@ -32,7 +32,7 @@ export default function ExploreCategoryClient({ categoryId }: { categoryId: stri
 
   if (!category) {
     return (
-      <div className="max-w-6xl space-y-4">
+      <div className="max-w-full space-y-4">
         <Link href="/dashboard/explore-courses" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
           <ArrowLeft size={14} /> Explore Courses
         </Link>

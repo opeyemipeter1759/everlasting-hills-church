@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getMemberDisplayId, normalizeRole } from "./shared";
 
-/**
- * Pure-function tests for the dashboard's role-routing helpers.
- *
- * `normalizeRole` here is local to the dashboard module; the broader `frontend-session`
- * normalizer covers role-hint cookie strings. Keep both in sync.
- */
-
 describe("getMemberDisplayId", () => {
   it('returns "EHC-NEW" for null/undefined id', () => {
     expect(getMemberDisplayId(null)).toBe("EHC-NEW");

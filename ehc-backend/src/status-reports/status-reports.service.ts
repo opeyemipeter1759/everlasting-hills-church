@@ -47,8 +47,12 @@ export class StatusReportsService {
         throw new ForbiddenException('You do not lead this unit');
       }
     } else {
-      // PASTOR — a personal report, not tied to any department/unit.
-      if (actor.role !== Role.PASTOR) {
+      // PASTOR — a personal report, not tied to any department/unit. Checked
+      // against the full effective-role set, not the single highest-ranked
+      // `role` — someone who is both Pastor and Admin has `role` resolve to
+      // Admin, but still genuinely holds the Pastor role and must be able to
+      // submit here.
+      if (!actor.effectiveRoles?.includes(Role.PASTOR)) {
         throw new ForbiddenException('Only a Pastor can submit a pastoral report');
       }
     }

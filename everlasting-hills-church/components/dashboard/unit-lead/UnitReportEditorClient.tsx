@@ -22,7 +22,7 @@ export default function UnitReportEditorClient({
 
   if (!summary) {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-full">
         <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
           <Users size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">You are not assigned as lead of any unit.</p>

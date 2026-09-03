@@ -42,12 +42,19 @@ export class TestimonialsService {
     });
   }
 
-  /** Admin: all testimonials including drafts. */
+  /** Admin: all testimonials including drafts. `member` is set only when the
+   * submitter was signed in (regardless of isAnonymous — see submitTestimony). */
   async listAll() {
-    return this.prisma.testimonial.findMany({
+    const rows = await this.prisma.testimonial.findMany({
       where: { tenantId: this.tenantId },
       orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
+      include: {
+        Member: {
+          select: { id: true, firstName: true, lastName: true, email: true, phone: true, photoUrl: true },
+        },
+      },
     });
+    return rows.map(({ Member, ...t }) => ({ ...t, member: Member }));
   }
 
   async getById(id: string) {

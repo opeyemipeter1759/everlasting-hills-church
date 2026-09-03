@@ -43,7 +43,7 @@ export default function CoursesAdminClient() {
   if (coursesLoading || categoriesLoading) return <CoursesAdminSkeleton />;
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="max-w-full space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#e8768a] mb-1.5">

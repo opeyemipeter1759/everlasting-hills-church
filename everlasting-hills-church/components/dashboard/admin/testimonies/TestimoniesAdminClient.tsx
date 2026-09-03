@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, Clock, MessageSquare, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, Clock, EyeOff, MessageSquare, RefreshCw, Search, ShieldCheck, Trash2, Users, X } from "lucide-react";
 import { useAdminTestimonials, useDeleteTestimonial, useTogglePublishTestimonial, type AdminTestimonial } from "@/lib/api/testimonials";
 import { Avatar } from "@/components/dashboard/admin/departments/HeadPicker";
 import TestimoniesSkeleton from "@/components/ui/skeleton/TestimoniesSkeleton";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { Pagination } from "@/components/ui/navigation/Pagination";
+import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import { groupByDay } from "@/lib/utils/time";
@@ -28,6 +30,17 @@ const STATUS_TABS: { label: string; value: StatusFilter }[] = [
   { label: "Draft", value: "DRAFT" },
 ];
 
+type ShareFilter = "" | "SHARED" | "NOT_SHARED";
+
+const SHARE_TABS: { label: string; value: ShareFilter }[] = [
+  { label: "All", value: "" },
+  { label: "Willing to Share", value: "SHARED" },
+  { label: "Not Willing to Share", value: "NOT_SHARED" },
+];
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50];
+const DEFAULT_PAGE_SIZE = 10;
+
 export default function TestimoniesAdminClient() {
   const q = useAdminTestimonials();
   const deleteTestimonial = useDeleteTestimonial();
@@ -35,14 +48,11 @@ export default function TestimoniesAdminClient() {
   const [confirmTarget, setConfirmTarget] = useState<AdminTestimonial | null>(null);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("");
+  const [share, setShare] = useState<ShareFilter>("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-
-  if (q.isLoading) return <TestimoniesSkeleton />;
-
-  // Backend gates publish/unpublish at PASTOR+ — hide the toggle for plain
-  // ADMIN viewers of this page rather than let them hit a 403.
-  const canTogglePublish = hasMinRole(currentUser?.role, "PASTOR");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const testimonials = q.data ?? [];
   const term = search.trim().toLowerCase();
@@ -52,6 +62,8 @@ export default function TestimoniesAdminClient() {
   const filtered = testimonials.filter((t) => {
     if (status === "PUBLISHED" && !t.published) return false;
     if (status === "DRAFT" && t.published) return false;
+    if (share === "SHARED" && t.sharePhysically !== true) return false;
+    if (share === "NOT_SHARED" && t.sharePhysically !== false) return false;
     const created = new Date(t.createdAt);
     if (from && created < from) return false;
     if (to && created > to) return false;
@@ -62,12 +74,19 @@ export default function TestimoniesAdminClient() {
     return true;
   });
 
-  const groups = groupByDay(filtered, (t) => t.createdAt);
-  const hasFilters = !!(search || status || dateFrom || dateTo);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => setPage(1), [search, status, share, dateFrom, dateTo]);
+  // Clamp back if a filter shrinks the result set below the page we were sitting on.
+  useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
+  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  const groups = groupByDay(paged, (t) => t.createdAt);
+  const hasFilters = !!(search || status || share || dateFrom || dateTo);
 
   function clearFilters() {
     setSearch("");
     setStatus("");
+    setShare("");
     setDateFrom("");
     setDateTo("");
   }
@@ -82,6 +101,12 @@ export default function TestimoniesAdminClient() {
       showToast.error(errorMessage(err, "Couldn't delete testimonial"));
     }
   }
+
+  if (q.isLoading) return <TestimoniesSkeleton />;
+
+  // Backend gates publish/unpublish at PASTOR+ — hide the toggle for plain
+  // ADMIN viewers of this page rather than let them hit a 403.
+  const canTogglePublish = hasMinRole(currentUser?.role, "PASTOR");
 
   return (
     <div className="px-5 space-y-6">
@@ -157,6 +182,23 @@ export default function TestimoniesAdminClient() {
             </button>
           ))}
         </div>
+
+        <div className="flex flex-wrap gap-2">
+          {SHARE_TABS.map((t) => (
+            <button
+              key={t.label}
+              type="button"
+              onClick={() => setShare(t.value)}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
+                share === t.value
+                  ? "bg-sky-600 text-white"
+                  : "border border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/60 hover:border-sky-400/50"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {q.isError ? (
@@ -194,6 +236,24 @@ export default function TestimoniesAdminClient() {
         </div>
       )}
 
+      {filtered.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-xs text-gray-400 dark:text-white/40 order-2 sm:order-1">
+            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
+          </p>
+          <div className="flex items-center gap-3 order-1 sm:order-2">
+            <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+            <Select
+              aria-label="Rows per page"
+              value={String(pageSize)}
+              onChange={(v) => { setPageSize(Number(v)); setPage(1); }}
+              className="text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 py-1.5 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer"
+              options={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: `${n} / page` }))}
+            />
+          </div>
+        </div>
+      )}
+
       <ConfirmDialog
         open={!!confirmTarget}
         title="Delete testimonial?"
@@ -210,6 +270,11 @@ export default function TestimoniesAdminClient() {
 
 function TestimonialCard({ t, canTogglePublish, onDelete }: { t: AdminTestimonial; canTogglePublish: boolean; onDelete: () => void }) {
   const togglePublish = useTogglePublishTestimonial();
+
+  // A signed-in member is always linked (even when isAnonymous — see submitTestimony)
+  // so admins can identify who really submitted, distinct from a public guest.
+  const displayName = t.member ? `${t.member.firstName} ${t.member.lastName}` : t.authorName;
+  const avatarPhoto = t.member?.photoUrl ?? t.authorPhotoUrl;
 
   async function toggleStatus() {
     try {
@@ -228,15 +293,46 @@ function TestimonialCard({ t, canTogglePublish, onDelete }: { t: AdminTestimonia
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <Avatar name={t.authorName} photoUrl={t.authorPhotoUrl} px={36} />
+          <Avatar name={displayName} photoUrl={avatarPhoto} px={36} />
           <div>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">{t.authorName}</p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <p className="text-sm font-bold text-gray-900 dark:text-white">{displayName}</p>
+              {t.member && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400"
+                  title="Signed in when submitted"
+                >
+                  <ShieldCheck size={9} /> Verified
+                </span>
+              )}
+            </div>
             <p className="text-[11px] text-gray-400">
               {t.authorRole ? `${t.authorRole} · ` : ""}{fmt(t.createdAt)}
             </p>
+            {t.member?.email && (
+              <p className="text-[11px] text-gray-400">Member contact: {t.member.email}{t.member.phone ? ` · ${t.member.phone}` : ""}</p>
+            )}
             {t.submitterContact && (
               <p className="text-[11px] text-gray-400">Contact: {t.submitterContact}</p>
             )}
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              {t.isAnonymous && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:text-white/60">
+                  <EyeOff size={10} /> Wants to stay anonymous
+                </span>
+              )}
+              {t.sharePhysically !== null && (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    t.sharePhysically
+                      ? "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400"
+                      : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"
+                  }`}
+                >
+                  <Users size={10} /> {t.sharePhysically ? "Willing to share physically" : "Prefers not to share physically"}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1.5">

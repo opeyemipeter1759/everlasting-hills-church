@@ -8,6 +8,7 @@ type FormValues = {
   name?: string;
   phone_number?: string;
   content: string;
+  is_anonymous: "true" | "false";
   share_physically: string;
 };
 
@@ -21,7 +22,7 @@ function RadioCard({
 }: {
   value: string;
   label: string;
-  fieldName: "share_physically";
+  fieldName: "is_anonymous" | "share_physically";
   register: UseFormRegister<FormValues>;
   hasError?: boolean;
 }) {
@@ -34,7 +35,7 @@ function RadioCard({
       }
     >
       <input
-        id={`testimony-share-${value.toLowerCase()}`}
+        id={`testimony-${fieldName}-${value.toLowerCase()}`}
         type="radio"
         value={value}
         aria-invalid={hasError || undefined}
@@ -54,21 +55,34 @@ export default function TestimonyForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>();
+  } = useForm<FormValues>({
+    defaultValues: {
+      is_anonymous: "false",
+    },
+  });
+
+  const isAnonymous = watch("is_anonymous") === "true";
 
   const onSubmit = async (data: FormValues) => {
     setServerError("");
 
     try {
       // POST /forms/testimony is @Public. Backend's TestimonyDto expects:
-      //   { title?, testimony, name?, email?, phone? }
+      //   { title?, testimony, name?, email?, phone?, is_anonymous?, share_physically? }
       // This form's FormValues use `content` for the body and `phone_number` —
-      // remap so the backend DTO validates.
+      // remap so the backend DTO validates. Anonymous submissions never send
+      // name/phone at all, same as the prayer request form.
+      const anonymous = data.is_anonymous === "true";
       const payload: Record<string, unknown> = {
-        name: data.name,
-        phone: data.phone_number,
         testimony: data.content,
+        is_anonymous: anonymous,
+        share_physically: data.share_physically === "Yes",
+        ...(!anonymous && {
+          name: data.name?.trim() || undefined,
+          phone: data.phone_number?.trim() || undefined,
+        }),
       };
       await apiClient.post("/forms/testimony", payload);
       setSubmitted(true);
@@ -128,30 +142,55 @@ export default function TestimonyForm() {
         className="bg-white text-black border border-gray-200 rounded-xl p-5 shadow-sm space-y-5"
       >
 
-        {/* INPUTS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="testimony-name" className="block text-sm font-semibold mb-2">Name</label>
-            <input
-              id="testimony-name"
-              autoComplete="name"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
-              {...register("name")}
-            />
-          </div>
+        {/* ANONYMITY */}
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-semibold">
+            Include your name? <span className="text-red-500">*</span>
+          </legend>
 
-          <div>
-            <label htmlFor="testimony-phone" className="block text-sm font-semibold mb-2">Phone</label>
-            <input
-              id="testimony-phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
-              {...register("phone_number")}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <RadioCard
+              value="false"
+              label="Yes (Include my name)"
+              fieldName="is_anonymous"
+              register={register}
+            />
+
+            <RadioCard
+              value="true"
+              label="No, keep me anonymous"
+              fieldName="is_anonymous"
+              register={register}
             />
           </div>
-        </div>
+        </fieldset>
+
+        {/* INPUTS */}
+        {!isAnonymous && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="testimony-name" className="block text-sm font-semibold mb-2">Name</label>
+              <input
+                id="testimony-name"
+                autoComplete="name"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
+                {...register("name")}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="testimony-phone" className="block text-sm font-semibold mb-2">Phone</label>
+              <input
+                id="testimony-phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-church-maroon focus:outline-none"
+                {...register("phone_number")}
+              />
+            </div>
+          </div>
+        )}
 
         {/* TEXTAREA FIXED */}
         <div>

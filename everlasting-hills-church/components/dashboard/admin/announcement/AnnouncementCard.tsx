@@ -24,7 +24,7 @@ export default function AnnouncementCard({
   const isDraft = a.status === "DRAFT";
   return (
     <div
-      className={`group flex gap-4 rounded-2xl border p-4 sm:p-5 transition-all ${
+      className={`group  h-full flex gap-4 rounded-2xl border p-4 sm:p-5 transition-all ${
         isDraft
           ? "border-amber-200/60 dark:border-amber-500/20 bg-amber-50/40 dark:bg-amber-500/[0.04] hover:bg-amber-50 dark:hover:bg-amber-500/[0.07]"
           : "border-gray-200 dark:border-white/10 bg-white dark:bg-[#140b10] hover:border-gray-300 dark:hover:border-white/20 hover:shadow-sm"

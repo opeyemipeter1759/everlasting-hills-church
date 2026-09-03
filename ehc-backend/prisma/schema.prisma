@@ -209,6 +209,7 @@ model Member {
   CourseCategoryEnrollment      CourseCategoryEnrollment[]
   PrayerRequest                 PrayerRequest[]
   Question                      Question[]
+  Testimonial                   Testimonial[]
   UnitTaskAssigned              UnitTask[]
   ServiceAssignment             ServiceAssignment[]
 
@@ -1508,14 +1509,27 @@ model Testimonial {
   // team's own follow-up only — admin-only, never selected on the public
   // /testimonials/published endpoint. Null for admin-authored testimonials.
   submitterContact String?
+  // Submitter's stated preferences from the public testimony form — never
+  // auto-applied to authorName/published; the pastoral team reviews and
+  // decides how to publish accordingly.
+  isAnonymous      Boolean   @default(false)
+  // Null = not asked (admin-authored testimonials, or submissions from
+  // before this field existed).
+  sharePhysically  Boolean?
+  /// Set only when a signed-in member submits (optional auth on the public form)
+  /// — same convention as PrayerRequest/Question.memberId. Kept even when
+  /// isAnonymous, so admins can always see who a signed-in submitter really is.
+  memberId         String?
   published        Boolean   @default(false)
   publishedAt      DateTime?
   order            Int       @default(0)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @default(now())
   Tenant           Tenant    @relation(fields: [tenantId], references: [id])
+  Member           Member?   @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, published, order])
+  @@index([memberId])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

@@ -12,7 +12,7 @@ function SectionCard({ children }: { children: React.ReactNode }) {
 
 export default function DepartmentDetailSkeleton() {
   return (
-    <div className="max-w-4xl space-y-5">
+    <div className="max-w-full space-y-5">
       {/* Header */}
       <div className="flex items-start gap-3">
         <Block className="h-9 w-9 rounded-lg flex-shrink-0" />

@@ -94,7 +94,7 @@ export default function EventsCmsClient() {
   const draftCount = items?.filter((e) => e.status === "DRAFT").length ?? 0;
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5 max-w-full">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Events</h1>

@@ -74,7 +74,7 @@ export default function ReportsPageShell({
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="mx-auto max-w-full space-y-6">
       {/* Header */}
       <div className="flex items-center gap-1">
       <ArrowLeft size={16} className="text-[#87102C] dark:text-[#e8768a]" />

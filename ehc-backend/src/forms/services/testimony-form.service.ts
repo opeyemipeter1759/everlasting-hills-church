@@ -20,7 +20,10 @@ export class TestimonyFormService {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  async submitTestimony(data: TestimonyDto) {
+  /** memberId is populated only when the submitter is signed in (optional auth
+   * on this public route) — kept even when is_anonymous, so admins can always
+   * see who a signed-in member really is; anonymous only hides the free-text name. */
+  async submitTestimony(data: TestimonyDto, memberId: string | null = null) {
     const normalizedEmail = data.email?.trim();
     const normalizedName = data.name?.trim();
     const normalizedPhone = data.phone?.trim();
@@ -41,10 +44,13 @@ export class TestimonyFormService {
         data: {
           id: randomUUID(),
           tenantId: this.tenantId,
-          authorName: normalizedName || 'Anonymous',
+          authorName: data.is_anonymous ? 'Anonymous' : normalizedName || 'Anonymous',
           authorRole: null,
           submitterContact: contact || null,
           content,
+          isAnonymous: data.is_anonymous ?? false,
+          sharePhysically: data.share_physically ?? null,
+          memberId,
           published: false,
           order: 0,
           updatedAt: new Date(),

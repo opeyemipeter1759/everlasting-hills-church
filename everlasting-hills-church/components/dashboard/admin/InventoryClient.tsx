@@ -22,7 +22,7 @@ export default function InventoryClient() {
   }
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-5 max-w-full">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Inventory</h1>

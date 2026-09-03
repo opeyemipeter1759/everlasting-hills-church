@@ -44,7 +44,7 @@ export default function ExploreCoursesClient() {
   if (coursesLoading || categoriesLoading) return <ExploreCoursesSkeleton />;
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="max-w-full space-y-6">
       <ExploreCoursesHero courseCount={catalog.length} categoryCount={categories.length} studentCount={totalStudents} />
 
       <CourseFilters search={search} onSearchChange={setSearch} />

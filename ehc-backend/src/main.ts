@@ -2,6 +2,7 @@
 import './observability/instrument';
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import helmet from 'helmet';
@@ -12,7 +13,7 @@ import type { Env } from './config/env.validation';
 import { setupOpenApi } from './openapi/openapi-document';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     /**
      * bufferLogs: hold log records until pino is wired so we don't lose bootstrap output
      * to the default console logger.
@@ -32,6 +33,16 @@ async function bootstrap() {
 
   const config = app.get<ConfigService<Env, true>>(ConfigService);
   const logger = new Logger('Bootstrap');
+
+  /**
+   * Deployed behind exactly one reverse proxy (Cloud Run's front end). Without
+   * this, Express's req.ip is always the proxy's internal address — identical
+   * for every request — so anything keyed on it (rate limiting, audit IPs)
+   * either does nothing useful or, worse, throttles the whole site as one
+   * bucket instead of per real visitor. Trusting one hop makes req.ip resolve
+   * from X-Forwarded-For correctly.
+   */
+  app.set('trust proxy', 1);
 
   /**
    * HTTP security headers (CSP, HSTS, X-Frame-Options, etc.).

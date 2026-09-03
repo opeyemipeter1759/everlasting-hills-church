@@ -47,7 +47,7 @@ export default function AuditLogClient() {
   }, [all.data]);
 
   return (
-    <div className="max-w-6xl space-y-6">
+    <div className="max-w-full space-y-6">
       {/* Header */}
       <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#161618]">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#87102C] via-[#c23a5b] to-[#87102C]/30" />

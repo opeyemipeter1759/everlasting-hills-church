@@ -13,6 +13,22 @@ export interface AdminTestimonial {
    * pastoral follow-up. Never shown on the public homepage. Null for
    * admin-authored testimonials. */
   submitterContact: string | null;
+  /** Submitter's stated preference from the public form — never auto-applied,
+   * for the moderator to see and respect when publishing. */
+  isAnonymous: boolean;
+  /** Willing to share this testimony physically/in-person at a service.
+   * Null = not asked (admin-authored, or submitted before this field existed). */
+  sharePhysically: boolean | null;
+  /** Set only when the submitter was signed in when they submitted — kept even
+   * when isAnonymous (anonymous only hides the free-text name shown publicly). */
+  member: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string | null;
+    phone: string | null;
+    photoUrl: string | null;
+  } | null;
   published: boolean;
   publishedAt: string | null;
   order: number;

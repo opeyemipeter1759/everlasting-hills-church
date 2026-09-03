@@ -28,6 +28,33 @@ export function useFirstTimerStats() {
   });
 }
 
+// ── Raw visitor rows (first-timers) ──────────────────────────────────────────
+
+export interface VisitorListRow {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  submittedAt: string;
+}
+
+/**
+ * First-timer registrations (the `Visitor` model — a distinct table from
+ * `Member`, with no `role` field). Ordered by `submittedAt` desc.
+ *
+ * "Visitors" and "first-timers" are the same thing in this app — anything
+ * asking `/members/directory` for `role: "VISITOR"` will always come back
+ * empty, since a Visitor has no Member/Profile record until they convert.
+ */
+export function useVisitorsList(limit = 1000) {
+  return useQuery({
+    queryKey: ["visitors", "list", limit],
+    queryFn: () => api.get<VisitorListRow[]>("/visitors", { limit }),
+    staleTime: 60_000,
+  });
+}
+
 // ── Pipeline stages (existing endpoint) ──────────────────────────────────────
 
 export interface PipelineStage {

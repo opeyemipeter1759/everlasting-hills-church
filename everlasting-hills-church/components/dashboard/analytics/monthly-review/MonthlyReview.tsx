@@ -32,7 +32,7 @@ export default function MonthlyReview() {
   const teams = review.cards.find((c) => c.key === "teams")?.value ?? 0;
 
   return (
-    <div className="max-w-6xl space-y-5">
+    <div className="max-w-full space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Monthly Review</h1>

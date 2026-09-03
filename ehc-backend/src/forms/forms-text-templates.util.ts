@@ -52,10 +52,13 @@ export function buildQuestionVisitorText(d: QuestionDto): string {
 }
 
 export function buildTestimonyAdminText(d: TestimonyDto): string {
+  const displayName = d.is_anonymous ? 'Anonymous' : d.name?.trim() || 'Anonymous';
   return [
-    `Name: ${d.name?.trim() || 'Anonymous'}`,
+    `Name: ${displayName}`,
     `Email: ${d.email ?? '—'}`,
     `Phone: ${d.phone ?? '—'}`,
+    `Wants to stay anonymous: ${d.is_anonymous ? 'Yes' : 'No'}`,
+    `Willing to share physically: ${d.share_physically === undefined ? 'Not answered' : d.share_physically ? 'Yes' : 'No'}`,
     '',
     `Title: ${d.title ?? 'N/A'}`,
     '',

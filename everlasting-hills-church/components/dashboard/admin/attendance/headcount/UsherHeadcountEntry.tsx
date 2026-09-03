@@ -52,7 +52,7 @@ export default function UsherHeadcountEntry() {
   }
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="max-w-full space-y-5">
       {/* Header */}
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-[#87102C]/10 dark:bg-[#87102C]/15">
