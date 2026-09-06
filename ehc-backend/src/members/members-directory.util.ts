@@ -9,17 +9,25 @@ export function roleFilter(role: Role): Prisma.ProfileWhereInput {
       return { RoleGrantOf: { some: { role, endedAt: null } } };
     case Role.ADMIN:
     case Role.ADMIN_HEAD:
-      // ADMIN merged into ADMIN_HEAD (same level) — match either grant, or an
-      // active DepartmentHead row (department-scoped admin heads).
+      // ADMIN merged into ADMIN_HEAD (same level) — match either grant.
+      // Deliberately NOT DepartmentHead: heading a department makes someone an
+      // HOD of that department, not an administrator of the church. Matching it
+      // here listed department heads as admins in the directory, which is the
+      // same conflation that let them through every ADMIN gate.
       return {
         OR: [
           { RoleGrantOf: { some: { role: Role.ADMIN_HEAD, endedAt: null } } },
           { RoleGrantOf: { some: { role: Role.ADMIN, endedAt: null } } },
-          { DepartmentHeadOf: { some: { endedAt: null } } },
         ],
       };
     case Role.HOD:
-      return { DepartmentHodOf: { some: { endedAt: null } } };
+      // Either assignment table: both mean "heads a department".
+      return {
+        OR: [
+          { DepartmentHodOf: { some: { endedAt: null } } },
+          { DepartmentHeadOf: { some: { endedAt: null } } },
+        ],
+      };
     case Role.UNIT_LEAD:
       return { UnitLeadOf: { some: { endedAt: null } } };
     case Role.HEAD_USHER:

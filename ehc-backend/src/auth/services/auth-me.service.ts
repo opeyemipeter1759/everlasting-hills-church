@@ -101,7 +101,6 @@ export class AuthMeService {
       role: eff.primaryRole,
       effectiveRoles: eff.roles,
       unitLeadOf: eff.unitLeadOf,
-      adminHeadOf: eff.adminHeadOf,
       hodOf: eff.hodOf,
       headUsher: eff.headUsher,
       tenantId: profile.tenantId,

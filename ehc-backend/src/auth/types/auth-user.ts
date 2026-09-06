@@ -11,7 +11,7 @@ export interface AuthUser {
   effectiveRoles: Role[];
   /** Scopes for the derived roles. */
   unitLeadOf: string[];
-  adminHeadOf: string[];
+  /** Department ids this person heads. Heading one is an HOD scope, not admin. */
   hodOf: string[];
   headUsher: boolean;
   profileId: string | null;

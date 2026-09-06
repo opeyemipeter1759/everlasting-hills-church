@@ -24,12 +24,13 @@ export class UnitLeadAppointmentService {
 
   /**
    * Resolve who the actor is acting as when appointing a lead. PASTOR/ADMIN act
-   * church-wide; an ADMIN_HEAD may act only on units in a department they head.
-   * Returns the delegated attribution for the audit trail.
+   * church-wide; an HOD may act only on units in a department they head — that
+   * oversight is what being head of a department means. Returns the delegated
+   * attribution for the audit trail.
    */
-  private appointAuthority(actor: AuthUser, departmentId: string | null): 'ADMIN' | 'ADMIN_HEAD' {
+  private appointAuthority(actor: AuthUser, departmentId: string | null): 'ADMIN' | 'HOD' {
     if (actor.effectiveRoles?.some((r) => ADMIN_ROLES.includes(r))) return 'ADMIN';
-    if (departmentId && actor.adminHeadOf?.includes(departmentId)) return 'ADMIN_HEAD';
+    if (departmentId && actor.hodOf?.includes(departmentId)) return 'HOD';
     throw new ForbiddenException('You can only appoint leads for units in a department you head');
   }
 

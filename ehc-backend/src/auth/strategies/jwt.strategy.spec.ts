@@ -20,7 +20,6 @@ function makeStrategy(profileFinder: jest.Mock, effectiveRole: Role = Role.MEMBE
     getEffectiveRoles: jest.fn().mockResolvedValue({
       roles: [effectiveRole],
       unitLeadOf: [],
-      adminHeadOf: [],
       hodOf: [],
       headUsher: false,
       primaryRole: effectiveRole,
@@ -57,7 +56,6 @@ describe('JwtStrategy', () => {
       role: null,
       effectiveRoles: [],
       unitLeadOf: [],
-      adminHeadOf: [],
       hodOf: [],
       headUsher: false,
       profileId: null,
@@ -84,7 +82,6 @@ describe('JwtStrategy', () => {
       role: Role.ADMIN,
       effectiveRoles: [Role.ADMIN],
       unitLeadOf: [],
-      adminHeadOf: [],
       hodOf: [],
       headUsher: false,
       profileId: 'profile-1',

@@ -22,8 +22,12 @@ export interface MeResponse {
   effectiveRoles?: string[];
   /** Unit ids the user actively leads. */
   unitLeadOf?: string[];
-  /** Department ids the user actively heads. */
-  adminHeadOf?: string[];
+  /**
+   * Department ids the user heads. Heading a department makes someone an HOD of
+   * it — overseeing its unit leads — not an administrator of the church, which
+   * is what ADMIN_HEAD means and comes from a role grant.
+   */
+  hodOf?: string[];
   /** Whether the user has an active head-usher assignment. */
   headUsher?: boolean;
   tenantId: string | null;
