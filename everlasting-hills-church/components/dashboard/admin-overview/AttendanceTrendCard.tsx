@@ -92,6 +92,22 @@ function shortDate(dayKey: string): string {
   return `${String(at.getUTCDate()).padStart(2, "0")}/${String(at.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
+/**
+ * A week column is labelled by its Sunday, not the Monday it is keyed on.
+ *
+ * Keying on Monday is what pairs a Wednesday with the Sunday that follows it,
+ * but showing that Monday makes the chart look like it stops days before it
+ * does: the column holding Wednesday 2 September and Sunday 6 September read
+ * "31/08", so the most recent count looked missing when it was on screen all
+ * along. A church names a week by its Sunday, and it is the last service in the
+ * column besides.
+ */
+function weekLabel(mondayKey: string): string {
+  const monday = new Date(mondayKey + "T00:00:00Z");
+  if (Number.isNaN(monday.getTime())) return shortDate(mondayKey);
+  return shortDate(new Date(monday.getTime() + 6 * 86_400_000).toISOString().slice(0, 10));
+}
+
 /** Tooltip date for a service timestamp, read in WAT. */
 function fullDate(iso: string): string {
   const at = new Date(watDay(iso) + "T00:00:00Z");
@@ -178,7 +194,7 @@ export default function AttendanceTrendCard({
       .sort()
       .map((key) => ({
         key,
-        label: shortDate(key),
+        label: weekLabel(key),
         // Calendar order within the week, read in WAT for the same reason the
         // grouping is: a 23:00Z timestamp belongs to the next day here.
         points: byWeek[key]

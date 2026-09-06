@@ -37,6 +37,14 @@ export type NavItem = {
   minRole: UserRole;
   /** If set, hide this item when user role >= maxRole (exclusive upper bound). */
   maxRole?: UserRole;
+  /**
+   * Show only to people actually on a follow-up team, as answered by
+   * GET /follow-up/access. Role alone cannot decide this: being on the team is
+   * a unit assignment, not a rank, and the pipeline carries pastoral notes
+   * about named people — it has no business appearing for every member who
+   * happens to be in a unit.
+   */
+  requiresFollowUpAccess?: boolean;
 };
 
 export type NavGroup = {
@@ -60,6 +68,8 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "My Unit",
     items: [
       { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD" },
+      // Follow-up belongs to the unit that does it, not to a module of its own.
+      { label: "Follow-ups", href: "/dashboard/follow-up", icon: PhoneForwarded, minRole: "MEMBER", requiresFollowUpAccess: true },
     ],
   },
   {
