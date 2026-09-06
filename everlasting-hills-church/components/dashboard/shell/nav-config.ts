@@ -24,6 +24,8 @@ import {
   Activity,
   Building2,
   Bell,
+  ListChecks,
+  History,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -64,6 +66,18 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "My Department",
     items: [
       { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "HOD" },
+    ],
+  },
+  {
+    // Ushering is its own module, not an administrative screen: HEAD_USHER is a
+    // role in its own right, and the people who hold it are not admins. Before
+    // this the two usher pages sat under /dashboard/admin with no nav entry at
+    // all, so a head usher signing in had no way to reach their own work.
+    section: "Ushering",
+    items: [
+      { label: "Record Attendance", href: "/dashboard/usher",         icon: ClipboardList, minRole: "HEAD_USHER" },
+      { label: "Missing Counts",    href: "/dashboard/usher/backlog", icon: ListChecks,    minRole: "HEAD_USHER" },
+      { label: "Headcount History", href: "/dashboard/usher/history", icon: History,       minRole: "HEAD_USHER" },
     ],
   },
   {

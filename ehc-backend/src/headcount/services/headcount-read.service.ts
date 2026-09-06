@@ -87,6 +87,42 @@ export class HeadcountReadService {
     }));
   }
 
+  /**
+   * Services that have already happened and still have no headcount — the
+   * usher's backlog.
+   *
+   * Cancelled services are left out: nobody gathered, so there is nothing to
+   * count. Everything else is included, watchnights among them, because the
+   * question here is whether anyone wrote down who was in the room — not
+   * whether the service counts towards an attendance average.
+   */
+  async getPending(limit = 20) {
+    const now = this.clock.getNow();
+    const services = await this.prisma.service.findMany({
+      where: {
+        tenantId: this.tenantId,
+        scheduledAt: { lte: now },
+        cancelledAt: null,
+        ServiceHeadcount: { is: null },
+      },
+      orderBy: { scheduledAt: 'desc' },
+      take: Math.min(Math.max(limit, 1), 100),
+      select: { id: true, name: true, serviceType: true, scheduledAt: true },
+    });
+
+    return services.map((svc) => ({
+      id: svc.id,
+      name: svc.name,
+      serviceType: svc.serviceType,
+      scheduledAt: svc.scheduledAt.toISOString(),
+      // The date an usher would pick on the record screen. Derived in WAT: a
+      // service stored at 23:00Z belongs to the next day here, and sending the
+      // UTC date would deep-link them to the wrong day.
+      date: new Date(svc.scheduledAt.getTime() + WAT_OFFSET_MS).toISOString().slice(0, 10),
+      daysAgo: Math.max(0, Math.floor((now.getTime() - svc.scheduledAt.getTime()) / 86_400_000)),
+    }));
+  }
+
   /** Today's service headcount total (congregation-level "present today" number). */
   async getTodayHeadcount() {
     const now = this.clock.getNow();

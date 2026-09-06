@@ -1,7 +1,10 @@
-import UsherHeadcountEntry from "@/components/dashboard/admin/attendance/headcount/UsherHeadcountEntry";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Usher — Record Attendance" };
-
-export default function UsherPage() {
-  return <UsherHeadcountEntry />;
+/**
+ * Ushering moved out of Administration into its own module: HEAD_USHER is a role
+ * in its own right, and the people who hold it are not administrators. This
+ * redirect keeps old links and bookmarks working.
+ */
+export default function LegacyUsherPage() {
+  redirect("/dashboard/usher");
 }

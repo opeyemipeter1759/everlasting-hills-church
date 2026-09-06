@@ -136,6 +136,9 @@ describe("getRequiredRole (route → minimum-role map)", () => {
     expect(getRequiredRole("/dashboard/my-department")).toBe("HOD");
     expect(getRequiredRole("/dashboard/my-department/reports/new")).toBe("ADMIN_HEAD");
     expect(getRequiredRole("/dashboard/admin/usher")).toBe("HEAD_USHER");
+    expect(getRequiredRole("/dashboard/usher")).toBe("HEAD_USHER");
+    expect(getRequiredRole("/dashboard/usher/backlog")).toBe("HEAD_USHER");
+    expect(getRequiredRole("/dashboard/usher/history")).toBe("HEAD_USHER");
     expect(getRequiredRole("/dashboard/admin/attendance/ushers-report")).toBe("HEAD_USHER");
   });
 

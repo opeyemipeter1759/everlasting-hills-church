@@ -3006,6 +3006,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/headcount/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Services that have happened with no headcount yet — the usher backlog (HEAD_USHER+) */
+        get: operations["HeadcountController_getPending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/headcount/service/{serviceId}": {
         parameters: {
             query?: never;
@@ -13650,6 +13667,39 @@ export interface operations {
         };
     };
     HeadcountController_getHistory: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    HeadcountController_getPending: {
         parameters: {
             query?: {
                 limit?: number;

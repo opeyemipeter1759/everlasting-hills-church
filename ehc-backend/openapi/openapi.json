@@ -14117,6 +14117,62 @@
         ]
       }
     },
+    "/headcount/pending": {
+      "get": {
+        "operationId": "HeadcountController_getPending",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Services that have happened with no headcount yet — the usher backlog (HEAD_USHER+)",
+        "tags": [
+          "headcount"
+        ]
+      }
+    },
     "/headcount/service/{serviceId}": {
       "get": {
         "operationId": "HeadcountController_getForService",
