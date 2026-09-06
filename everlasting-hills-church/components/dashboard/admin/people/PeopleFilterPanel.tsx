@@ -14,8 +14,25 @@ const MONTHS = [
 
 type Adv = Pick<
   DirectoryParams,
-  "status" | "gender" | "unit" | "birthMonth" | "joinedFrom" | "joinedTo"
+  "role" | "status" | "gender" | "unit" | "birthMonth" | "joinedFrom" | "joinedTo"
 >;
+
+/**
+ * Roles worth filtering the directory by.
+ *
+ * The API has always accepted ?role= and resolved it against real grants and
+ * assignments, but no control ever sent one — so "show me every unit lead" had
+ * no answer short of opening each unit in turn. Ordered by responsibility, and
+ * MEMBER is left out because it is the whole directory.
+ */
+const ROLE_FILTERS: { value: string; label: string }[] = [
+  { value: "SUPER_ADMIN", label: "Super Admin" },
+  { value: "PASTOR", label: "Pastor" },
+  { value: "ADMIN_HEAD", label: "Admin Head" },
+  { value: "HOD", label: "Head of Department" },
+  { value: "HEAD_USHER", label: "Head Usher" },
+  { value: "UNIT_LEAD", label: "Unit Lead" },
+];
 
 export default function PeopleFilterPanel({
   open,
@@ -45,6 +62,7 @@ export default function PeopleFilterPanel({
 
   function reset() {
     const cleared: Adv = {
+      role: "",
       status: "",
       gender: "",
       unit: "",
@@ -62,7 +80,7 @@ export default function PeopleFilterPanel({
       open={open}
       onClose={onClose}
       title="Filter people"
-      subtitle="Narrow the directory by status, service team, gender, birth month, or join date."
+      subtitle="Narrow the directory by role, status, service team, gender, birth month, or join date."
       footer={
         <>
           <button type="button" className={btnGhost} onClick={reset}>
@@ -82,6 +100,16 @@ export default function PeopleFilterPanel({
       }
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <Field label="Role">
+          <Select
+            className={fieldCls}
+            aria-label="Role"
+            value={draft.role ?? ""}
+            onChange={(v) => set({ role: v })}
+            options={[{ value: "", label: "Any role" }, ...ROLE_FILTERS]}
+          />
+        </Field>
+
         <Field label="Status">
           <Select
             className={fieldCls}

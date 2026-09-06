@@ -5,7 +5,7 @@ import EditMemberDialog from "../EditMemberDialog";
 import TagDialog from "../TagDialog";
 import PeopleFilterPanel from "../PeopleFilterPanel";
 
-type FilterValue = Pick<DirectoryParams, "status" | "gender" | "unit" | "birthMonth" | "joinedFrom" | "joinedTo">;
+type FilterValue = Pick<DirectoryParams, "role" | "status" | "gender" | "unit" | "birthMonth" | "joinedFrom" | "joinedTo">;
 
 export default function PeopleDialogs({
   createOpen,
