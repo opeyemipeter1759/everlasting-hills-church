@@ -2472,6 +2472,57 @@ export interface paths {
         patch: operations["FollowUpController_confirm"];
         trace?: never;
     };
+    "/follow-up/{id}/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suggested (and acted-on) friend matches for this entry's subject (MEMBER+) */
+        get: operations["FollowUpController_listConnections"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/{id}/connections/{connectionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Record whether an introduced connection actually stuck (assignee or leader) */
+        patch: operations["FollowUpController_updateConnection"];
+        trace?: never;
+    };
+    "/follow-up/{id}/connections/{connectionId}/introduce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a suggested connection as introduced — logs it to the entry's timeline (assignee or leader) */
+        post: operations["FollowUpController_introduceConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/follow-up/{id}/logs": {
         parameters: {
             query?: never;
@@ -2481,7 +2532,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Log a contact attempt (MEMBER+, must be the assignee or the unit leader) */
+        /** Log a contact attempt or a lightweight quick update (MEMBER+, must be the assignee or the unit leader) */
         post: operations["FollowUpController_logContact"];
         delete?: never;
         options?: never;
@@ -2523,6 +2574,40 @@ export interface paths {
         patch: operations["FollowUpMemberStatusController_restore"];
         trace?: never;
     };
+    "/follow-up/{id}/send-to-pastor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a first-timer's details to the Pastor by email + a pre-filled WhatsApp link (UNIT_LEAD+ of that unit) */
+        post: operations["FollowUpController_sendToPastor"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/{id}/snooze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** "Call back later" — hides the entry from Today until the given date (assignee or leader) */
+        patch: operations["FollowUpController_snooze"];
+        trace?: never;
+    };
     "/follow-up/access": {
         parameters: {
             query?: never;
@@ -2557,6 +2642,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/bulk-reassign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Move a whole caseload from one team member to another within one unit (UNIT_LEAD+) */
+        patch: operations["FollowUpController_bulkReassign"];
+        trace?: never;
+    };
     "/follow-up/candidates": {
         parameters: {
             query?: never;
@@ -2568,6 +2670,91 @@ export interface paths {
         get: operations["FollowUpController_candidates"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Contacts logged, connections made, and outcomes confirmed this week/month (MEMBER+) */
+        get: operations["FollowUpController_leaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/quick-capture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** One-tap door capture: create a bare name+phone visitor and route them into the pipeline (MEMBER+) */
+        post: operations["FollowUpController_quickCapture"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/service-reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History of sent service reports (MEMBER+, own team's unless unitId omitted for ADMIN+ scope) */
+        get: operations["FollowUpServiceReportsController_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/service-reports/{serviceId}/{unitId}/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Compile a draft report for one unit + service day — never auto-sent (UNIT_LEAD+ of that unit) */
+        get: operations["FollowUpServiceReportsController_draft"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/service-reports/{serviceId}/{unitId}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send the report to the Admin Head + Pastor — this closes out that service's follow-up work (UNIT_LEAD+ of that unit) */
+        post: operations["FollowUpServiceReportsController_send"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2591,6 +2778,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/services/{serviceId}/backfill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** On-demand backfill for one past service (UNIT_LEAD+): surfaces whoever was absent from it and any still-unconverted first-timers from it, even if the daily sweep never covered that day. Safe to re-run — already-surfaced pairs are skipped. */
+        post: operations["FollowUpController_backfillService"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/follow-up/team": {
         parameters: {
             query?: never;
@@ -2600,6 +2804,23 @@ export interface paths {
         };
         /** This unit's roster, for the assignee picker (MEMBER+, defaults to caller's own unit) */
         get: operations["FollowUpController_team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/wins": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent wins across the church — confirmed positive outcomes and connections made (MEMBER+) */
+        get: operations["FollowUpController_wins"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2841,7 +3062,7 @@ export interface paths {
         put?: never;
         /**
          * Submit Testimony
-         * @description Save a testimony submission and notify the church team by email.
+         * @description Save a testimony submission and notify the church team by email. Public — works with no session. If the submitter is signed in, their member is linked on the record even when marked anonymous (same optional-auth semantics as prayer-request/question).
          */
         post: operations["FormsMiscController_testimony"];
         delete?: never;
@@ -5688,6 +5909,11 @@ export interface components {
             /** @description For op=status: ACTIVE|INACTIVE|TRANSFERRED|DECEASED. For tags: the tag string. */
             value: string;
         };
+        BulkReassignDto: {
+            fromAssigneeId: string;
+            toAssigneeId: string;
+            unitId: string;
+        };
         ChangePasswordDto: {
             /** @example newpassword123 */
             password: string;
@@ -6093,6 +6319,11 @@ export interface components {
             prayer_point?: string;
             /** @example In placeat nostrum */
             service_experience?: string;
+            /**
+             * @description Consent to be suggested as a friend-match for another guest, or to see suggested matches of their own
+             * @example false
+             */
+            share_for_connections?: boolean;
             /** @example FIRST_TIMER */
             type?: string;
             /** @example false */
@@ -6154,18 +6385,29 @@ export interface components {
         };
         JoinDto: Record<string, never>;
         LogContactDto: {
+            /** @description Tags this as the Pastor's own call, distinct from a worker's routine check-in */
+            isPastoralContact?: boolean;
+            /** @description Visible only to the author and this entry's unit leader */
+            isPrivate?: boolean;
             /**
+             * @default CONTACT
+             * @enum {string}
+             */
+            kind: "CONTACT" | "QUICK_UPDATE";
+            /**
+             * @description Required when kind = CONTACT
              * @example CALL
              * @enum {string}
              */
-            method: "CALL" | "SMS" | "WHATSAPP" | "VISIT" | "OTHER";
+            method?: "CALL" | "SMS" | "WHATSAPP" | "VISIT" | "OTHER";
             /** @example Spoke with her, she plans to visit again this Sunday. */
             note: string;
             /**
+             * @description Required when kind = CONTACT
              * @example REACHED
              * @enum {string}
              */
-            outcome: "REACHED" | "NO_ANSWER" | "VOICEMAIL" | "WRONG_NUMBER" | "SCHEDULED_VISIT";
+            outcome?: "REACHED" | "NO_ANSWER" | "VOICEMAIL" | "WRONG_NUMBER" | "SCHEDULED_VISIT";
         };
         LoginDto: {
             /** @example user@example.com */
@@ -6265,6 +6507,15 @@ export interface components {
             /** @example What time is the Sunday second service? */
             question: string;
         };
+        QuickCaptureDto: {
+            /** @example Ada */
+            firstName: string;
+            /** @example Okafor */
+            lastName: string;
+            /** @example 08031234567 */
+            phone: string;
+            serviceId?: string;
+        };
         ReactionDto: {
             /**
              * @example LIKE
@@ -6307,6 +6558,17 @@ export interface components {
             subject: string;
             /** @description Template this send originated from, for record-keeping only — subject/body below are what actually gets sent */
             templateId?: string;
+        };
+        SendServiceReportDto: {
+            /** @description Who to notify. Omit to send to both (default). */
+            recipients?: ("PASTOR" | "ADMIN_HEAD")[];
+            /**
+             * @default BOTH
+             * @enum {string}
+             */
+            sentVia: "EMAIL" | "WHATSAPP" | "BOTH";
+            /** @example Followed up with 6 first-timers today... */
+            summaryText: string;
         };
         SendUnitMessageDto: {
             /** @example Can we get more chairs for Sunday's setup? */
@@ -6374,6 +6636,10 @@ export interface components {
              */
             tags: string[];
         };
+        SnoozeFollowUpDto: {
+            /** @example 2026-09-04T09:00:00.000Z */
+            until?: Record<string, never>;
+        };
         StreakDto: {
             /** @description Every level already cleared, oldest first */
             history: components["schemas"]["PassedLevelDto"][];
@@ -6416,10 +6682,20 @@ export interface components {
         TestimonyDto: {
             /** @example jane@example.com */
             email?: string;
+            /**
+             * @description Submitter wants this testimony kept anonymous
+             * @example false
+             */
+            is_anonymous?: boolean;
             /** @example Jane Doe */
             name?: string;
             /** @example +1 (555) 987-6543 */
             phone?: string;
+            /**
+             * @description Submitter is willing to share this testimony physically/in-person at a service
+             * @example true
+             */
+            share_physically?: boolean;
             /** @example God healed me after the Sunday service. */
             testimony: string;
             /** @example God answered my prayer */
@@ -6455,6 +6731,10 @@ export interface components {
              * @example Main Auditorium
              */
             venue?: string;
+        };
+        UpdateConnectionStatusDto: {
+            /** @enum {string} */
+            status: "CONNECTED" | "DECLINED";
         };
         UpdateEmailTemplateDto: {
             /** @example <p>Dear church family,</p> */
@@ -12340,6 +12620,8 @@ export interface operations {
                 mine?: boolean;
                 /** @description Narrow to a specific service day */
                 serviceId?: string;
+                /** @description Only entries sent to the Pastor */
+                pastoral?: boolean;
             };
             header?: never;
             path?: never;
@@ -12511,6 +12793,111 @@ export interface operations {
             };
         };
     };
+    FollowUpController_listConnections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_updateConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                connectionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateConnectionStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_introduceConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                connectionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_logContact: {
         parameters: {
             query?: never;
@@ -12614,6 +13001,76 @@ export interface operations {
             };
         };
     };
+    FollowUpController_sendToPastor: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_snooze: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SnoozeFollowUpDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_checkAccess: {
         parameters: {
             query?: never;
@@ -12676,6 +13133,41 @@ export interface operations {
             };
         };
     };
+    FollowUpController_bulkReassign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkReassignDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_candidates: {
         parameters: {
             query: {
@@ -12689,6 +13181,179 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_leaderboard: {
+        parameters: {
+            query?: {
+                period?: "week" | "month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_quickCapture: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickCaptureDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpServiceReportsController_history: {
+        parameters: {
+            query?: {
+                unitId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpServiceReportsController_draft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpServiceReportsController_send: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendServiceReportDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12741,11 +13406,75 @@ export interface operations {
             };
         };
     };
+    FollowUpController_backfillService: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_team: {
         parameters: {
             query?: {
                 unitId?: string;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_wins: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -17568,7 +18297,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                section: "HERO" | "ABOUT" | "CULTURE" | "SCRIPTURE" | "SERVICE" | "SERMONS" | "COMMUNITY" | "GIVING" | "CONTACT";
+                section: "HERO" | "ABOUT" | "CULTURE" | "SCRIPTURE" | "SERVICE" | "SERMONS" | "COMMUNITY" | "GIVING" | "CONTACT" | "CAROUSEL" | "DIRECTIONS";
             };
             cookie?: never;
         };
