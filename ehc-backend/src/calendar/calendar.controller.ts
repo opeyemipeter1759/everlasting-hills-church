@@ -126,6 +126,17 @@ export class CalendarController {
   }
 
   /**
+   * Same content as the .ics feed, as JSON — so the app can show "what's on my
+   * calendar" immediately instead of waiting on Google's own polling schedule.
+   */
+  @Get('me/upcoming')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My upcoming services and events, as JSON' })
+  async myUpcoming(@CurrentUser() actor: AuthUser) {
+    return this.feed.getUpcomingForMember(actor);
+  }
+
+  /**
    * Writes the calendar body directly. Bypasses the response envelope
    * interceptor on purpose: a calendar client needs raw text/calendar, and
    * wrapping it in the API's JSON envelope would make the feed unparseable.

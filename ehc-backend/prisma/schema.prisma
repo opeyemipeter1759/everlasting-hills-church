@@ -579,6 +579,7 @@ model Profile {
   CalendarFeedToken             CalendarFeedToken[]     @relation("CalendarFeedTokenUser")
   PushSubscription              PushSubscription[]      @relation("PushSubscriptionUser")
   NotificationPreference        NotificationPreference? @relation("NotificationPreferenceUser")
+  GoogleCalendarConnection      GoogleCalendarConnection[] @relation("GoogleCalendarConnectionUser")
 }
 
 /// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
@@ -975,6 +976,7 @@ model Tenant {
   ServiceAssignment      ServiceAssignment[]
   FollowUpConnection     FollowUpConnection[]
   ServiceFollowUpReport  ServiceFollowUpReport[]
+  GoogleCalendarConnection GoogleCalendarConnection[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1650,6 +1652,60 @@ model CalendarFeedToken {
 
   @@index([tenantId])
   @@index([userId])
+}
+
+/// One row per (member, tenant) that has connected their personal Google
+/// Calendar. Both directions of sync share this one connection: reading the
+/// member's own events for the in-app view, and writing church services,
+/// events and gatherings into a dedicated secondary calendar in their Google
+/// account (see GoogleCalendarSyncService / googleCalendarId below).
+/// Revocable rather than deletable, mirroring CalendarFeedToken above:
+/// disconnecting sets revokedAt so history survives, and a race between two
+/// tabs reconnecting re-reads the winner instead of erroring.
+/// accessToken/refreshToken are encrypted at rest (see GoogleTokenCipher) —
+/// unlike the .ics feed token, these are live Google API credentials with
+/// write access, so a DB leak must not hand over the member's whole Google
+/// Calendar.
+model GoogleCalendarConnection {
+  id             String    @id
+  tenantId       String
+  userId         String // Profile.id
+  googleEmail    String?
+  accessToken    String
+  refreshToken   String
+  tokenExpiry    DateTime
+  scope          String
+  /// The id of the "Everlasting Hills Church" secondary calendar this app
+  /// created in the member's Google account. Null until the first sync
+  /// creates it; if Google reports it deleted, the sync recreates it and
+  /// updates this field rather than falling over.
+  googleCalendarId String?
+  connectedAt    DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  revokedAt      DateTime? // null = active
+  Tenant         Tenant    @relation(fields: [tenantId], references: [id])
+  User           Profile   @relation("GoogleCalendarConnectionUser", fields: [userId], references: [id], onDelete: Cascade)
+  SyncedEvents   GoogleCalendarSyncedEvent[]
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+/// Maps one church item (a service, event or recurring gathering) to the
+/// Google Calendar event it was pushed to, so a re-sync updates the existing
+/// event instead of creating a duplicate every time. `itemKey` mirrors the
+/// kind-prefixed ids already used elsewhere for these items (e.g.
+/// "service-<id>"), so the two stay easy to cross-reference by inspection.
+model GoogleCalendarSyncedEvent {
+  id            String   @id
+  connectionId  String
+  itemKey       String
+  googleEventId String
+  updatedAt     DateTime @updatedAt
+  Connection    GoogleCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@unique([connectionId, itemKey])
+  @@index([connectionId])
 }
 
 /// One row per browser/device push endpoint. endpoint is globally unique (the

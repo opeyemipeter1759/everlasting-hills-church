@@ -132,6 +132,7 @@ import {
   Compass,
   Users2,
   Wifi,
+  CalendarClock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -245,6 +246,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "My Course",           href: "/dashboard/courses",            icon: GraduationCap,       minRole: "MEMBER" },
       { label: "Explore Course",           href: "/dashboard/explore-courses",            icon: Compass,       minRole: "MEMBER" },
       { label: "Unit", href: "/dashboard/unit", icon: Users2, minRole: "MEMBER", requiresAccess: "unitMember", dynamicUnits: "member" },
+      { label: "Calendar",     href: "/dashboard/calendar",   icon: CalendarClock, minRole: "MEMBER" },
 
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
 

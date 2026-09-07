@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Calendar, Check, Copy, RefreshCw } from "lucide-react";
+import { Calendar, Check, Copy, ExternalLink, RefreshCw } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 
@@ -72,6 +72,11 @@ export default function CalendarSubscriptionCard() {
   // API, and a calendar client fetches it directly with no app in between.
   const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
   const feedUrl = token ? `${apiBase}/calendar/${token}.ics` : "";
+  // "cid" is Google's own param for a one-click "From URL" subscribe — this
+  // skips the copy/paste flow entirely for members who use Google Calendar.
+  const googleAddUrl = feedUrl
+    ? `https://calendar.google.com/calendar/render?cid=${encodeURIComponent(feedUrl)}`
+    : "";
 
   async function copy() {
     if (!feedUrl) return;
@@ -124,6 +129,25 @@ export default function CalendarSubscriptionCard() {
             {error}
           </div>
         )}
+
+        <a
+          href={googleAddUrl || undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-disabled={!googleAddUrl}
+          onClick={(e) => {
+            if (!googleAddUrl) e.preventDefault();
+          }}
+          className="flex items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50"
+        >
+          <Calendar className="h-4 w-4" />
+          Sync to Google Calendar
+          <ExternalLink className="h-3.5 w-3.5 opacity-70" />
+        </a>
+        <p className="-mt-2 text-[12px] leading-relaxed text-[#8a7e80] dark:text-white/45">
+          Opens Google Calendar and adds this feed for you. Once it&apos;s added, new services and
+          events appear on your Google Calendar automatically — no need to sync again.
+        </p>
 
         <div>
           <label

@@ -25,6 +25,21 @@ export interface CalendarSummary {
   counts: { thisWeek: number; thisMonth: number; drafts: number };
 }
 
+/** Mirrors `MemberCalendarItem` in ehc-backend/src/calendar/services/calendar-feed.service.ts. */
+export interface MemberCalendarItem {
+  id: string;
+  kind: "service" | "event";
+  title: string;
+  /** ISO 8601 */
+  start: string;
+  /** ISO 8601 */
+  end: string;
+  location: string | null;
+  cancelled: boolean;
+  servingRoles: string[] | null;
+  slug: string | null;
+}
+
 const KEY = ["calendar"] as const;
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
@@ -45,5 +60,13 @@ export function useCalendarSummary() {
   return useQuery({
     queryKey: [...KEY, "summary"],
     queryFn: () => api.get<CalendarSummary>("/events/admin/calendar/summary"),
+  });
+}
+
+/** The signed-in member's own upcoming services and events. Any signed-in member. */
+export function useMyUpcomingCalendar() {
+  return useQuery({
+    queryKey: [...KEY, "me", "upcoming"],
+    queryFn: () => api.get<MemberCalendarItem[]>("/calendar/me/upcoming"),
   });
 }

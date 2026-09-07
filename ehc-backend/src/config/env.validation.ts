@@ -118,6 +118,27 @@ export const envSchema = z.object({
     .string()
     .regex(/^(mailto:|https:\/\/)/, 'VAPID_SUBJECT must start with mailto: or https://')
     .optional(),
+
+  /**
+   * Google Calendar OAuth (import the member's own personal calendar).
+   * Absent → the connect/disconnect/status/events endpoints return 503,
+   * following the same optional-integration pattern as Paystack/R2/VAPID above.
+   *
+   * Create the OAuth client in Google Cloud Console (APIs & Services →
+   * Credentials → OAuth client ID → Web application), enable the Google
+   * Calendar API, and add GOOGLE_OAUTH_REDIRECT_URI as an authorized redirect
+   * URI. Scope requested is calendar.readonly — this feature only ever reads.
+   *
+   * GOOGLE_TOKEN_ENCRYPTION_KEY is a 32-byte key, base64-encoded, used to
+   * encrypt stored access/refresh tokens at rest (AES-256-GCM). Generate with:
+   *   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   * Required alongside the OAuth client vars — rotating it invalidates every
+   * stored connection, which then reconnects on next use.
+   */
+  GOOGLE_OAUTH_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1).optional(),
+  GOOGLE_OAUTH_REDIRECT_URI: z.url().optional(),
+  GOOGLE_TOKEN_ENCRYPTION_KEY: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
