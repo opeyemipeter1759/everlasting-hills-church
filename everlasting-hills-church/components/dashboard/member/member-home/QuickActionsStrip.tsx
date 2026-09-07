@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Send, Youtube, Heart, Home, Users2 } from "lucide-react";
+import { Send, Youtube, Heart, Home, Users2, Mic, HelpCircle } from "lucide-react";
 import { CHURCH } from "@/config/config";
 import { useAutoScroll } from "./useAutoScroll";
 
@@ -12,14 +12,14 @@ export function QuickActionsStrip() {
       iconCls: "text-violet-600 dark:text-violet-400",
     },
         {
-      icon: Send, label: "Share your testimony", href: "/testimony", external: false,
-      cls: "bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-500/20 hover:bg-violet-100 dark:hover:bg-violet-500/25",
-      iconCls: "text-violet-600 dark:text-violet-400",
+      icon: Mic, label: "Share your testimony", href: "/testimony", external: false,
+      cls: "bg-fuchsia-50 dark:bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-200/60 dark:border-fuchsia-500/20 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-500/25",
+      iconCls: "text-fuchsia-600 dark:text-fuchsia-400",
     },
           {
-      icon: Send, label: "Ask Questions", href: "/questions", external: false,
-      cls: "bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-500/20 hover:bg-violet-100 dark:hover:bg-violet-500/25",
-      iconCls: "text-violet-600 dark:text-violet-400",
+      icon: HelpCircle, label: "Ask Questions", href: "/questions", external: false,
+      cls: "bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-500/20 hover:bg-indigo-100 dark:hover:bg-indigo-500/25",
+      iconCls: "text-indigo-600 dark:text-indigo-400",
     },
     {
       icon: Youtube, label: "Watch Sermon", href: CHURCH.youtubeUrl, external: true,
