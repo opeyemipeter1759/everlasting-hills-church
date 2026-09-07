@@ -102,6 +102,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",   icon: Network,       minRole: "ADMIN" },
+      // The Roles page existed with no way in but the URL — the third screen in
+      // this app built and then left unreachable.
+      { label: "Roles",         href: "/dashboard/admin/roles",   icon: Shield,        minRole: "ADMIN" },
       { label: "Settings",      href: "/dashboard/settings",      icon: Settings,      minRole: "ADMIN" },
     ],
   },

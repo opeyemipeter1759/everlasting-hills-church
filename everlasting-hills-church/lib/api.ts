@@ -601,6 +601,43 @@ export interface RoleEntry {
   count: number;
 }
 
+export interface UnitDirectoryPerson {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  photoUrl: string | null;
+}
+
+export interface UnitDirectoryUnit {
+  id: string;
+  name: string;
+  description: string | null;
+  department: { id: string; name: string } | null;
+  totalMembers: number;
+  lead: UnitDirectoryPerson | null;
+  assistant: UnitDirectoryPerson | null;
+}
+
+export interface UnitsDirectory {
+  units: UnitDirectoryUnit[];
+  leadership: { profileId: string; role: string; member: UnitDirectoryPerson | null }[];
+}
+
+/**
+ * Every unit with its lead and assistant. The endpoint is ADMIN+ only, which is
+ * Super Admin, Pastor and Admin Head — the people who need to see who leads
+ * what without being able to change it from here.
+ */
+export function useUnitsDirectory() {
+  return useQuery({
+    queryKey: ["units", "directory"],
+    queryFn: () => api.get<UnitsDirectory>("/units/directory"),
+    enabled: typeof window !== "undefined",
+  });
+}
+
 export function useUserRoles() {
   return useQuery({
     queryKey: ['users', 'roles'],

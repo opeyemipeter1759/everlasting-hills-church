@@ -35,6 +35,9 @@ export class UnitsDirectoryService {
             },
           },
           _count: { select: { UnitMember: true } },
+          // Which department a unit sits under, so the roles view can group
+          // leads the way the church is actually organised.
+          Department: { select: { id: true, name: true } },
         },
         orderBy: { name: 'asc' },
       }),
@@ -65,6 +68,7 @@ export class UnitsDirectoryService {
         id: u.id,
         name: u.name,
         description: u.description,
+        department: u.Department ? { id: u.Department.id, name: u.Department.name } : null,
         totalMembers: u._count.UnitMember,
         lead: u.UnitMember.find((m) => m.isLead)?.Member ?? null,
         assistant: u.UnitMember.find((m) => m.isAssistant)?.Member ?? null,
