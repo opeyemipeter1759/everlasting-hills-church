@@ -11,6 +11,16 @@ export function QuickActionsStrip() {
       cls: "bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-500/20 hover:bg-violet-100 dark:hover:bg-violet-500/25",
       iconCls: "text-violet-600 dark:text-violet-400",
     },
+        {
+      icon: Send, label: "Share your testimony", href: "/testimony", external: false,
+      cls: "bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-500/20 hover:bg-violet-100 dark:hover:bg-violet-500/25",
+      iconCls: "text-violet-600 dark:text-violet-400",
+    },
+          {
+      icon: Send, label: "Ask Questions", href: "/questions", external: false,
+      cls: "bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-500/20 hover:bg-violet-100 dark:hover:bg-violet-500/25",
+      iconCls: "text-violet-600 dark:text-violet-400",
+    },
     {
       icon: Youtube, label: "Watch Sermon", href: CHURCH.youtubeUrl, external: true,
       cls: "bg-[#FFE8ED] dark:bg-[#87102C]/25 text-[#87102C] dark:text-[#FFB3C1] border-[#E7CDD3]/60 dark:border-[#87102C]/30 hover:bg-rose-100 dark:hover:bg-[#87102C]/35",

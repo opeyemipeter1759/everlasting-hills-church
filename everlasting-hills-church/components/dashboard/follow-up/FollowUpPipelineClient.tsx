@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ClipboardCheck, Clock3, ListChecks, Plus, RefreshCw, Search, ShieldAlert, Trophy, Users, UsersRound } from "lucide-react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { hasMinRole } from "@/lib/auth/frontend-session";
 import { useMe, useMyUnit } from "@/lib/api";
 import { useBackfillFollowUpService, useFollowUpEntries, useFollowUpServices } from "@/lib/api/follow-up-pipeline";
@@ -51,12 +50,11 @@ function formatServiceOption(s: { name: string; scheduledAt: string; serviceType
 }
 
 export default function FollowUpPipelineClient() {
-  const currentUser = useCurrentUser();
   const { data: me } = useMe();
   const { data: myUnit } = useMyUnit();
   const { data: services = [] } = useFollowUpServices();
 
-  const isLeader = hasMinRole(currentUser?.role, "UNIT_LEAD");
+  const isLeader = hasMinRole(me?.role, "UNIT_LEAD");
 
   const [mainView, setMainView] = useState<MainView>("master");
   const [activeTab, setActiveTabState] = useState<StageTab>("all");

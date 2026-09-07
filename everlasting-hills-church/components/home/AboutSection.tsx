@@ -13,7 +13,7 @@ export default function AboutSection({ content }: { content?: AboutContent }) {
   return (
     <section id="about" className="pt-24 px-2 md:px-4 md:pt-32 bg-white overflow-hidden">
       <div className=" mx-auto max-w-[1400px] px-5 sm:px-8">
-        <div className="grid md:grid-cols-2 gap-14 md:gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-14 md:gap-20 items-center">
           {/* ── Left: animated gallery carousel ── */}
           <ScrollReveal direction="left">
             <EhcSlider images={sliderImages} word="EHC" />

@@ -95,7 +95,7 @@ export default function CultureSection({ content }: { content?: CultureContent }
         </div>
 
         {/* Cards */}
-        <div className="grid md:grid-cols-3 gap-5 md:gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
           {cards.map((card, i) => (
             <ScrollReveal key={card.id} delay={0.1 + i * 0.12}>
               <CultureCard card={card} mobileAuto={isMobile} autoFlip={autoFlip} />
