@@ -84,15 +84,27 @@ export class MemberDirectoryQueryService {
     // ADMIN merged into ADMIN_HEAD (same level) — one combined, deduplicated count.
     const distinctGrantCount = (role: Role) =>
       new Set(grantRows.filter((g) => g.role === role).map((g) => g.userId)).size;
-    const adminHeadUserIds = new Set<string>([
-      ...grantRows.filter((g) => g.role === Role.ADMIN || g.role === Role.ADMIN_HEAD).map((g) => g.userId),
+
+    // ADMIN_HEAD is the church-wide administrator and comes from a grant alone.
+    // Department heads used to be counted here as well, which is why the console
+    // reported four Admin Heads for two real ones and no Heads of Department at
+    // all — the same conflation that let heading a department clear every admin
+    // gate in the app.
+    const adminHeadUserIds = new Set<string>(
+      grantRows
+        .filter((g) => g.role === Role.ADMIN || g.role === Role.ADMIN_HEAD)
+        .map((g) => g.userId),
+    );
+    // Both assignment tables mean the same office: head of a department.
+    const hodUserIds = new Set<string>([
       ...deptHeads.map((d) => d.userId),
+      ...deptHods.map((d) => d.userId),
     ]);
     const byRole: Record<string, number> = {
       SUPER_ADMIN: distinctGrantCount(Role.SUPER_ADMIN),
       PASTOR: distinctGrantCount(Role.PASTOR),
       ADMIN_HEAD: adminHeadUserIds.size,
-      HOD: deptHods.length,
+      HOD: hodUserIds.size,
       HEAD_USHER: ushers.length,
       UNIT_LEAD: unitLeads.length,
       MEMBER: total,

@@ -7,6 +7,7 @@ import { X, LogOut, ChevronRight } from "lucide-react";
 import { auth } from "@/lib/api";
 import { hasMinRole, ROLE_LABELS, ROLE_BADGE_CLASS } from "./role-utils";
 import { NAV_GROUPS } from "./nav-config";
+import { useFollowUpAccess } from "@/lib/api/follow-up-pipeline";
 import type { SessionUser } from "./DashboardShell";
 
 type Props = {
@@ -39,11 +40,17 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
     router.refresh();
   };
 
+  // Being on a follow-up team is a unit assignment rather than a rank, so the
+  // server answers it. Until it does, the item stays hidden: showing a link that
+  // turns out to be refused is worse than showing it a moment late.
+  const followUpAccess = useFollowUpAccess();
+
   const visibleGroups = NAV_GROUPS.map((group) => ({
     ...group,
     items: group.items.filter((item) => {
       if (!hasMinRole(user.role, item.minRole)) return false;
       if (item.maxRole && hasMinRole(user.role, item.maxRole)) return false;
+      if (item.requiresFollowUpAccess && !followUpAccess.data?.hasAccess) return false;
       return true;
     }),
   })).filter((g) => g.items.length > 0);

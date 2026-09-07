@@ -38,7 +38,7 @@ export class StatusReportsService {
   private async assertCanSubmit(actor: AuthUser, dto: CreateReportDto) {
     if (dto.scope === 'DEPARTMENT') {
       if (!dto.departmentId) throw new BadRequestException('departmentId is required for a department report');
-      if (!actor.adminHeadOf?.includes(dto.departmentId)) {
+      if (!actor.hodOf?.includes(dto.departmentId)) {
         throw new ForbiddenException('You do not head this department');
       }
     } else if (dto.scope === 'UNIT') {

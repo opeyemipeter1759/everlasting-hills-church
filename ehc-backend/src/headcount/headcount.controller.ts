@@ -66,6 +66,15 @@ export class HeadcountController {
     return this.read.getHistory(limit ? Number(limit) : 30);
   }
 
+  @Get('pending')
+  @ApiOperation({
+    summary: 'Services that have happened with no headcount yet — the usher backlog (HEAD_USHER+)',
+  })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  getPending(@Query('limit') limit?: string) {
+    return this.read.getPending(limit ? Number(limit) : 20);
+  }
+
   @Get('today')
   @ApiOperation({ summary: "Today's congregation headcount total (HEAD_USHER+)" })
   getToday() {

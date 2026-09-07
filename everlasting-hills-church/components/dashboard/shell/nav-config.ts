@@ -24,6 +24,8 @@ import {
   Activity,
   Building2,
   Bell,
+  ListChecks,
+  History,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -35,6 +37,14 @@ export type NavItem = {
   minRole: UserRole;
   /** If set, hide this item when user role >= maxRole (exclusive upper bound). */
   maxRole?: UserRole;
+  /**
+   * Show only to people actually on a follow-up team, as answered by
+   * GET /follow-up/access. Role alone cannot decide this: being on the team is
+   * a unit assignment, not a rank, and the pipeline carries pastoral notes
+   * about named people — it has no business appearing for every member who
+   * happens to be in a unit.
+   */
+  requiresFollowUpAccess?: boolean;
 };
 
 export type NavGroup = {
@@ -58,12 +68,26 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "My Unit",
     items: [
       { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD" },
+      // Follow-up belongs to the unit that does it, not to a module of its own.
+      { label: "Follow-ups", href: "/dashboard/follow-up", icon: PhoneForwarded, minRole: "MEMBER", requiresFollowUpAccess: true },
     ],
   },
   {
     section: "My Department",
     items: [
       { label: "My Department", href: "/dashboard/my-department", icon: Building2, minRole: "HOD" },
+    ],
+  },
+  {
+    // Ushering is its own module, not an administrative screen: HEAD_USHER is a
+    // role in its own right, and the people who hold it are not admins. Before
+    // this the two usher pages sat under /dashboard/admin with no nav entry at
+    // all, so a head usher signing in had no way to reach their own work.
+    section: "Ushering",
+    items: [
+      { label: "Record Attendance", href: "/dashboard/usher",         icon: ClipboardList, minRole: "HEAD_USHER" },
+      { label: "Missing Counts",    href: "/dashboard/usher/backlog", icon: ListChecks,    minRole: "HEAD_USHER" },
+      { label: "Headcount History", href: "/dashboard/usher/history", icon: History,       minRole: "HEAD_USHER" },
     ],
   },
   {
@@ -78,6 +102,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",   icon: Network,       minRole: "ADMIN" },
+      // The Roles page existed with no way in but the URL — the third screen in
+      // this app built and then left unreachable.
+      { label: "Roles",         href: "/dashboard/admin/roles",   icon: Shield,        minRole: "ADMIN" },
       { label: "Settings",      href: "/dashboard/settings",      icon: Settings,      minRole: "ADMIN" },
     ],
   },

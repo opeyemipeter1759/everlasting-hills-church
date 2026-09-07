@@ -8,9 +8,15 @@ export interface EffectiveRoles {
   roles: Role[];
   /** Unit ids the user actively leads (UnitLeadAssignment). */
   unitLeadOf: string[];
-  /** Department ids the user actively heads (DepartmentHead). */
-  adminHeadOf: string[];
-  /** Department ids the user is an active HOD of (DepartmentHod). */
+  /**
+   * Department ids the user heads, from either assignment table.
+   *
+   * There is one concept here, not two: the head of a department. It was split
+   * across `adminHeadOf` (DepartmentHead) and `hodOf` (DepartmentHod), and the
+   * first name invited exactly the confusion it caused — an ADMIN_HEAD is the
+   * overall administrator of the church and the application, which is a
+   * RoleGrant, while heading a department is a departmental scope.
+   */
   hodOf: string[];
   /** Whether the user has an active head-usher assignment. */
   headUsher: boolean;
@@ -57,11 +63,28 @@ export class EffectiveRolesService {
   ): EffectiveRoles {
     const roles = new Set<Role>([Role.MEMBER, ...grants]);
     if (unitLeadOf.length) roles.add(Role.UNIT_LEAD);
-    if (adminHeadOf.length) roles.add(Role.ADMIN_HEAD);
-    if (hodOf.length) roles.add(Role.HOD);
+    // Heading a department makes someone an HOD of that department — never a
+    // church-wide administrator. ADMIN_HEAD is the overall admin of the church
+    // and the application, and it comes from a RoleGrant alone.
+    //
+    // This line used to add ADMIN_HEAD, which sits in CHURCH_WIDE_ROLES at the
+    // same level as ADMIN, so heading one department cleared every @Roles(ADMIN)
+    // gate in the app — the whole member directory, announcements, services,
+    // inventory, emails. An HOD oversees the unit leads in their own department;
+    // that is the entire scope, and the department id lists below are how it is
+    // enforced.
+    if (adminHeadOf.length || hodOf.length) roles.add(Role.HOD);
     if (headUsher) roles.add(Role.HEAD_USHER);
     const list = [...roles];
-    return { roles: list, unitLeadOf, adminHeadOf, hodOf, headUsher, primaryRole: this.primaryOf(list) };
+    return {
+      roles: list,
+      unitLeadOf,
+      // Union of both assignment tables: DepartmentHead and DepartmentHod mean
+      // the same thing to a caller — departments this person heads.
+      hodOf: [...new Set([...adminHeadOf, ...hodOf])],
+      headUsher,
+      primaryRole: this.primaryOf(list),
+    };
   }
 
   /** Effective roles for one user. */

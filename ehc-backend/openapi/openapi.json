@@ -289,6 +289,25 @@
         ],
         "type": "object"
       },
+      "BulkReassignDto": {
+        "properties": {
+          "fromAssigneeId": {
+            "type": "string"
+          },
+          "toAssigneeId": {
+            "type": "string"
+          },
+          "unitId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "unitId",
+          "fromAssigneeId",
+          "toAssigneeId"
+        ],
+        "type": "object"
+      },
       "ChangePasswordDto": {
         "properties": {
           "password": {
@@ -1199,6 +1218,11 @@
             "example": "In placeat nostrum ",
             "type": "string"
           },
+          "share_for_connections": {
+            "description": "Consent to be suggested as a friend-match for another guest, or to see suggested matches of their own",
+            "example": false,
+            "type": "boolean"
+          },
           "type": {
             "example": "FIRST_TIMER",
             "type": "string"
@@ -1332,7 +1356,24 @@
       },
       "LogContactDto": {
         "properties": {
+          "isPastoralContact": {
+            "description": "Tags this as the Pastor's own call, distinct from a worker's routine check-in",
+            "type": "boolean"
+          },
+          "isPrivate": {
+            "description": "Visible only to the author and this entry's unit leader",
+            "type": "boolean"
+          },
+          "kind": {
+            "default": "CONTACT",
+            "enum": [
+              "CONTACT",
+              "QUICK_UPDATE"
+            ],
+            "type": "string"
+          },
           "method": {
+            "description": "Required when kind = CONTACT",
             "enum": [
               "CALL",
               "SMS",
@@ -1348,6 +1389,7 @@
             "type": "string"
           },
           "outcome": {
+            "description": "Required when kind = CONTACT",
             "enum": [
               "REACHED",
               "NO_ANSWER",
@@ -1360,8 +1402,6 @@
           }
         },
         "required": [
-          "method",
-          "outcome",
           "note"
         ],
         "type": "object"
@@ -1588,6 +1628,31 @@
         ],
         "type": "object"
       },
+      "QuickCaptureDto": {
+        "properties": {
+          "firstName": {
+            "example": "Ada",
+            "type": "string"
+          },
+          "lastName": {
+            "example": "Okafor",
+            "type": "string"
+          },
+          "phone": {
+            "example": "08031234567",
+            "type": "string"
+          },
+          "serviceId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "phone"
+        ],
+        "type": "object"
+      },
       "ReactionDto": {
         "properties": {
           "type": {
@@ -1683,6 +1748,38 @@
           "subject",
           "body",
           "audience"
+        ],
+        "type": "object"
+      },
+      "SendServiceReportDto": {
+        "properties": {
+          "recipients": {
+            "description": "Who to notify. Omit to send to both (default).",
+            "items": {
+              "enum": [
+                "PASTOR",
+                "ADMIN_HEAD"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "sentVia": {
+            "default": "BOTH",
+            "enum": [
+              "EMAIL",
+              "WHATSAPP",
+              "BOTH"
+            ],
+            "type": "string"
+          },
+          "summaryText": {
+            "example": "Followed up with 6 first-timers today...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summaryText"
         ],
         "type": "object"
       },
@@ -1820,6 +1917,15 @@
         ],
         "type": "object"
       },
+      "SnoozeFollowUpDto": {
+        "properties": {
+          "until": {
+            "example": "2026-09-04T09:00:00.000Z",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "StreakDto": {
         "properties": {
           "history": {
@@ -1908,6 +2014,11 @@
             "example": "jane@example.com",
             "type": "string"
           },
+          "is_anonymous": {
+            "description": "Submitter wants this testimony kept anonymous",
+            "example": false,
+            "type": "boolean"
+          },
           "name": {
             "example": "Jane Doe",
             "type": "string"
@@ -1915,6 +2026,11 @@
           "phone": {
             "example": "+1 (555) 987-6543",
             "type": "string"
+          },
+          "share_physically": {
+            "description": "Submitter is willing to share this testimony physically/in-person at a service",
+            "example": true,
+            "type": "boolean"
           },
           "testimony": {
             "example": "God healed me after the Sunday service.",
@@ -1999,6 +2115,21 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "UpdateConnectionStatusDto": {
+        "properties": {
+          "status": {
+            "enum": [
+              "CONNECTED",
+              "DECLINED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
         "type": "object"
       },
       "UpdateEmailTemplateDto": {
@@ -11999,6 +12130,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Only entries sent to the Pastor",
+            "in": "query",
+            "name": "pastoral",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -12287,6 +12427,200 @@
         ]
       }
     },
+    "/follow-up/{id}/connections": {
+      "get": {
+        "operationId": "FollowUpController_listConnections",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Suggested (and acted-on) friend matches for this entry's subject (MEMBER+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/{id}/connections/{connectionId}": {
+      "patch": {
+        "operationId": "FollowUpController_updateConnection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "connectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateConnectionStatusDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Record whether an introduced connection actually stuck (assignee or leader)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/{id}/connections/{connectionId}/introduce": {
+      "post": {
+        "operationId": "FollowUpController_introduceConnection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "connectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Mark a suggested connection as introduced — logs it to the entry's timeline (assignee or leader)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/{id}/logs": {
       "post": {
         "operationId": "FollowUpController_logContact",
@@ -12347,7 +12681,7 @@
             "access-token": []
           }
         ],
-        "summary": "Log a contact attempt (MEMBER+, must be the assignee or the unit leader)",
+        "summary": "Log a contact attempt or a lightweight quick update (MEMBER+, must be the assignee or the unit leader)",
         "tags": [
           "follow-up"
         ]
@@ -12465,6 +12799,128 @@
         ]
       }
     },
+    "/follow-up/{id}/send-to-pastor": {
+      "post": {
+        "operationId": "FollowUpController_sendToPastor",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Send a first-timer's details to the Pastor by email + a pre-filled WhatsApp link (UNIT_LEAD+ of that unit)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/{id}/snooze": {
+      "patch": {
+        "operationId": "FollowUpController_snooze",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnoozeFollowUpDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "\"Call back later\" — hides the entry from Today until the given date (assignee or leader)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/access": {
       "get": {
         "operationId": "FollowUpController_checkAccess",
@@ -12559,6 +13015,63 @@
         ]
       }
     },
+    "/follow-up/bulk-reassign": {
+      "patch": {
+        "operationId": "FollowUpController_bulkReassign",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkReassignDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Move a whole caseload from one team member to another within one unit (UNIT_LEAD+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/candidates": {
       "get": {
         "operationId": "FollowUpController_candidates",
@@ -12627,6 +13140,317 @@
         ]
       }
     },
+    "/follow-up/leaderboard": {
+      "get": {
+        "operationId": "FollowUpController_leaderboard",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "period",
+            "required": false,
+            "schema": {
+              "enum": [
+                "week",
+                "month"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Contacts logged, connections made, and outcomes confirmed this week/month (MEMBER+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/quick-capture": {
+      "post": {
+        "operationId": "FollowUpController_quickCapture",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuickCaptureDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "One-tap door capture: create a bare name+phone visitor and route them into the pipeline (MEMBER+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/service-reports": {
+      "get": {
+        "operationId": "FollowUpServiceReportsController_history",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "unitId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "History of sent service reports (MEMBER+, own team's unless unitId omitted for ADMIN+ scope)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/service-reports/{serviceId}/{unitId}/draft": {
+      "get": {
+        "operationId": "FollowUpServiceReportsController_draft",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Compile a draft report for one unit + service day — never auto-sent (UNIT_LEAD+ of that unit)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/service-reports/{serviceId}/{unitId}/send": {
+      "post": {
+        "operationId": "FollowUpServiceReportsController_send",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendServiceReportDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Send the report to the Admin Head + Pastor — this closes out that service's follow-up work (UNIT_LEAD+ of that unit)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/services": {
       "get": {
         "operationId": "FollowUpController_listServices",
@@ -12669,6 +13493,62 @@
           }
         ],
         "summary": "Recent services, for the Follow-Up page's service-day filter (MEMBER+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/services/{serviceId}/backfill": {
+      "post": {
+        "operationId": "FollowUpController_backfillService",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "On-demand backfill for one past service (UNIT_LEAD+): surfaces whoever was absent from it and any still-unconverted first-timers from it, even if the daily sweep never covered that day. Safe to re-run — already-surfaced pairs are skipped.",
         "tags": [
           "follow-up"
         ]
@@ -12725,6 +13605,53 @@
           }
         ],
         "summary": "This unit's roster, for the assignee picker (MEMBER+, defaults to caller's own unit)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/wins": {
+      "get": {
+        "operationId": "FollowUpController_wins",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Recent wins across the church — confirmed positive outcomes and connections made (MEMBER+)",
         "tags": [
           "follow-up"
         ]
@@ -13438,7 +14365,7 @@
     },
     "/forms/testimony": {
       "post": {
-        "description": "Save a testimony submission and notify the church team by email.",
+        "description": "Save a testimony submission and notify the church team by email. Public — works with no session. If the submitter is signed in, their member is linked on the record even when marked anonymous (same optional-auth semantics as prayer-request/question).",
         "operationId": "FormsMiscController_testimony",
         "parameters": [],
         "requestBody": {
@@ -14112,6 +15039,62 @@
           }
         ],
         "summary": "Recent headcounts across services, newest first (HEAD_USHER+)",
+        "tags": [
+          "headcount"
+        ]
+      }
+    },
+    "/headcount/pending": {
+      "get": {
+        "operationId": "HeadcountController_getPending",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Services that have happened with no headcount yet — the usher backlog (HEAD_USHER+)",
         "tags": [
           "headcount"
         ]
@@ -20459,7 +21442,9 @@
                 "SERMONS",
                 "COMMUNITY",
                 "GIVING",
-                "CONTACT"
+                "CONTACT",
+                "CAROUSEL",
+                "DIRECTIONS"
               ],
               "type": "string"
             }

@@ -7,6 +7,7 @@ import { useUserRoles, type RoleEntry } from "@/lib/api";
 import { useAssignableRoles, type PersonRole } from "@/lib/api/people";
 import RolesPageSkeleton from "@/components/ui/skeleton/RolesPageSkeleton";
 import GlobalRolesSection from "./GlobalRolesSection";
+import UnitLeadsSection from "./UnitLeadsSection";
 
 
 const GRANTABLE: PersonRole[] = ["SUPER_ADMIN", "PASTOR", "ADMIN_HEAD", "HEAD_USHER"];
@@ -61,6 +62,9 @@ export default function RolesAdminClient() {
 
       {/* Global role grants */}
       <GlobalRolesSection grantable={grantable} />
+
+      {/* Who leads which unit — read only */}
+      <UnitLeadsSection />
     </div>
   );
 }

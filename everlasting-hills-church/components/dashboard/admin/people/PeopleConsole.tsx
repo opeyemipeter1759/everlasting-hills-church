@@ -114,6 +114,7 @@ export default function PeopleConsole() {
         filterOpen={actions.filterOpen}
         onCloseFilter={() => actions.setFilterOpen(false)}
         filterValue={{
+          role: params.role,
           status: params.status,
           gender: params.gender,
           unit: params.unit,

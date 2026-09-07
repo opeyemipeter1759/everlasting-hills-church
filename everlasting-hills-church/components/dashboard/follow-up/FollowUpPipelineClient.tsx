@@ -4,7 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { ClipboardCheck, Clock3, ListChecks, Plus, RefreshCw, Search, ShieldAlert, Trophy, Users, UsersRound } from "lucide-react";
 import { hasMinRole } from "@/lib/auth/frontend-session";
 import { useMe, useMyUnit } from "@/lib/api";
-import { useBackfillFollowUpService, useFollowUpEntries, useFollowUpServices } from "@/lib/api/follow-up-pipeline";
+import {
+  useBackfillFollowUpService,
+  useFollowUpAccess,
+  useFollowUpEntries,
+  useFollowUpServices,
+} from "@/lib/api/follow-up-pipeline";
 import type { ApiError } from "@/lib/api/axios";
 import type { FollowUpEntry, FollowUpSourceType } from "@/types/follow-up";
 import { PipelineStats } from "./PipelineStats";
@@ -71,7 +76,13 @@ export default function FollowUpPipelineClient() {
   const [teamRosterOpen, setTeamRosterOpen] = useState(false);
 
   const { data: entries = [], isLoading, error } = useFollowUpEntries({ serviceId: serviceId || undefined });
-  const accessDenied = (error as ApiError | null)?.status === 403;
+  // The server decides. Being in a unit is not the same as being on a
+  // follow-up team, and the entries query can answer 200 for someone who should
+  // not be reading pastoral notes about named people — so the dedicated access
+  // check is the gate, with a 403 from the list as a backstop.
+  const access = useFollowUpAccess();
+  const accessDenied =
+    access.data?.hasAccess === false || (error as ApiError | null)?.status === 403;
   const backfillService = useBackfillFollowUpService();
 
   // Any change to what's being filtered resets back to page 1 — otherwise a
@@ -137,7 +148,7 @@ export default function FollowUpPipelineClient() {
     ...(isLeader && myUnit ? [{ id: "reports" as const, label: "Service Report", icon: ClipboardCheck }] : []),
   ];
 
-  if (isLoading) return <FollowUpPipelineSkeleton />;
+  if (isLoading || access.isPending) return <FollowUpPipelineSkeleton />;
 
   if (accessDenied) {
     return (

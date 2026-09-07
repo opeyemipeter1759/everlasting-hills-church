@@ -22,8 +22,12 @@ export interface MeResponse {
   effectiveRoles?: string[];
   /** Unit ids the user actively leads. */
   unitLeadOf?: string[];
-  /** Department ids the user actively heads. */
-  adminHeadOf?: string[];
+  /**
+   * Department ids the user heads. Heading a department makes someone an HOD of
+   * it — overseeing its unit leads — not an administrator of the church, which
+   * is what ADMIN_HEAD means and comes from a role grant.
+   */
+  hodOf?: string[];
   /** Whether the user has an active head-usher assignment. */
   headUsher?: boolean;
   tenantId: string | null;
@@ -595,6 +599,43 @@ export interface RoleEntry {
   label: string;
   level: number;
   count: number;
+}
+
+export interface UnitDirectoryPerson {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+  phone: string | null;
+  photoUrl: string | null;
+}
+
+export interface UnitDirectoryUnit {
+  id: string;
+  name: string;
+  description: string | null;
+  department: { id: string; name: string } | null;
+  totalMembers: number;
+  lead: UnitDirectoryPerson | null;
+  assistant: UnitDirectoryPerson | null;
+}
+
+export interface UnitsDirectory {
+  units: UnitDirectoryUnit[];
+  leadership: { profileId: string; role: string; member: UnitDirectoryPerson | null }[];
+}
+
+/**
+ * Every unit with its lead and assistant. The endpoint is ADMIN+ only, which is
+ * Super Admin, Pastor and Admin Head — the people who need to see who leads
+ * what without being able to change it from here.
+ */
+export function useUnitsDirectory() {
+  return useQuery({
+    queryKey: ["units", "directory"],
+    queryFn: () => api.get<UnitsDirectory>("/units/directory"),
+    enabled: typeof window !== "undefined",
+  });
 }
 
 export function useUserRoles() {

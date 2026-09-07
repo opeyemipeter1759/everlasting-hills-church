@@ -124,6 +124,24 @@ export function useSaveHeadcountByDate(date: string) {
   });
 }
 
+export interface PendingService {
+  id: string;
+  name: string;
+  serviceType: ServiceTypeKey;
+  scheduledAt: string;
+  /** WAT calendar day, ready to deep-link into the record screen. */
+  date: string;
+  daysAgo: number;
+}
+
+/** Services that have happened with no headcount recorded — the usher backlog. */
+export function usePendingHeadcounts(limit = 20) {
+  return useQuery({
+    queryKey: [...KEY, "pending", limit],
+    queryFn: () => api.get<PendingService[]>(`/headcount/pending?limit=${limit}`),
+  });
+}
+
 export function useHeadcountHistory(limit = 30) {
   return useQuery({
     queryKey: [...KEY, "history", limit],

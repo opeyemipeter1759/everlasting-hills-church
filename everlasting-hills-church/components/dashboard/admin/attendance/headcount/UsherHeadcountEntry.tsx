@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ClipboardList, Plus, Check } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import FormModal from "@/components/ui/overlay/FormModal";
 import {
   useHeadcountByDate,
@@ -13,8 +13,10 @@ import HeadcountReportCard from "./HeadcountReportCard";
 import HeadcountEntryForm from "./HeadcountEntryForm";
 import { watTodayStr, prettyDate, inferType } from "./date-utils";
 
-export default function UsherHeadcountEntry() {
-  const [date, setDate] = useState<string>(watTodayStr());
+export default function UsherHeadcountEntry({ initialDate }: { initialDate?: string } = {}) {
+  // A date handed over from the backlog or history screen opens on that service
+  // instead of today, so the usher never has to find it in the picker twice.
+  const [date, setDate] = useState<string>(initialDate ?? watTodayStr());
   const [modalOpen, setModalOpen] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
 
@@ -52,21 +54,10 @@ export default function UsherHeadcountEntry() {
   }
 
   return (
+    // The title and description live in UsherShell now, which frames all three
+    // ushering screens. max-w-full comes from master, where the screen was
+    // widened — kept, since the shell handles the reading width.
     <div className="max-w-full space-y-5">
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-[#87102C]/10 dark:bg-[#87102C]/15">
-          <ClipboardList size={16} className="text-[#87102C] dark:text-[#e8768a]" />
-        </span>
-        <div>
-          <h1 className="text-xl font-black tracking-tight text-gray-900 dark:text-white">Usher — Record Attendance</h1>
-          <p className="mt-0.5 max-w-md text-xs text-gray-400 dark:text-gray-500">
-            Pick the service date, then fill in the congregation headcount. This is the authoritative
-            count of everyone present.
-          </p>
-        </div>
-      </div>
-
       {/* Date picker */}
       <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5">
         <HeadcountDatePicker value={date} onChange={pickDate} />

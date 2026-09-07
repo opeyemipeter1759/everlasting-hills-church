@@ -121,6 +121,9 @@ export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
   ["/dashboard/admin/roles", "ADMIN"],
   ["/dashboard/admin/attendance/ushers-report", "HEAD_USHER"],
   ["/dashboard/admin/usher", "HEAD_USHER"],
+  // Ushering moved out of /dashboard/admin into its own module. The old path
+  // stays above so bookmarks keep resolving to the redirect.
+  ["/dashboard/usher", "HEAD_USHER"],
   ["/dashboard/my-department/reports", "ADMIN_HEAD"],
   ["/dashboard/my-department", "HOD"],
   ["/dashboard/unit-lead", "UNIT_LEAD"],
