@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, BookOpen, Check, Clock, Loader2 } from "lucide-react";
+import { BookOpen, Check, Clock, Loader2 } from "lucide-react";
+import WordTabs from "./WordTabs";
 import Link from "next/link";
 import {
   useReadingPlans,
@@ -55,12 +56,7 @@ export default function PlanChooser() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-6">
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-[#87102C] dark:text-white/50 dark:hover:text-[#FFB3C1]"
-      >
-        <ArrowLeft size={14} /> Dashboard
-      </Link>
+      <WordTabs />
 
       <header className="mt-4">
         <h1 className="text-2xl font-black tracking-tight text-[#111] dark:text-white">

@@ -145,3 +145,80 @@ export function useUncompleteDay() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ME_KEY }),
   });
 }
+
+export interface PlanDayRow {
+  dayIndex: number;
+  title: string | null;
+  referenceLabel: string;
+  estimatedMinutes: number;
+  totalWordCount: number;
+}
+
+/**
+ * The whole plan, a page at a time.
+ *
+ * Every established reading plan puts the full schedule somewhere a reader can
+ * see it. Knowing what day 200 holds is part of trusting the plan, and a member
+ * who missed a week wants to look at what they missed rather than be told a
+ * number.
+ */
+export function usePlanDays(planId?: string, page = 1, limit = 60) {
+  return useQuery({
+    queryKey: ["reading-plan", "days", planId, page, limit],
+    queryFn: () =>
+      api.get<{ days: PlanDayRow[]; meta: { page: number; limit: number; total: number } }>(
+        `/reading-plans/${planId}/days?page=${page}&limit=${limit}`,
+      ),
+    enabled: Boolean(planId),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+/** One day of a plan, for reading a day other than today. */
+export function usePlanDay(planId?: string, dayIndex?: number) {
+  return useQuery({
+    queryKey: ["reading-plan", "day", planId, dayIndex],
+    queryFn: () => api.get<PlanDay>(`/reading-plans/${planId}/days/${dayIndex}`),
+    enabled: Boolean(planId && dayIndex),
+    staleTime: 60 * 60 * 1000,
+  });
+}
+
+/** Day indexes already read, for ticking off the schedule. */
+export function useCompletedDays(subscriptionId?: string) {
+  return useQuery({
+    queryKey: ["reading-plan", "completed", subscriptionId],
+    queryFn: () =>
+      api.get<{ dayIndexes: number[] }>(
+        `/me/reading-plan/subscriptions/${subscriptionId}/days/completed`,
+      ),
+    enabled: Boolean(subscriptionId),
+  });
+}
+
+export function useTranslations() {
+  return useQuery({
+    queryKey: ["bible", "translations"],
+    queryFn: () =>
+      api.get<{ id: number; code: string; name: string; isDefault: boolean }[]>(
+        "/bible/translations",
+      ),
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+}
+
+/** Changes the translation a member reads in, on their active subscription. */
+export function useSetTranslation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      subscriptionId,
+      translationCode,
+    }: {
+      subscriptionId: string;
+      translationCode: string;
+    }) =>
+      api.patch(`/me/reading-plan/subscriptions/${subscriptionId}`, { translationCode }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ME_KEY }),
+  });
+}

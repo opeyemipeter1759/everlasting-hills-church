@@ -2,27 +2,59 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Check, Flame, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  BookOpen,
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  Loader2,
+} from "lucide-react";
+import WordTabs from "./WordTabs";
 import {
   useCompleteDay,
+  useCompletedDays,
   usePassage,
+  usePlanDay,
+  useSetTranslation,
   useTodayReading,
+  useTranslations,
   useUncompleteDay,
   type DayPortion,
+  type PlanDay,
 } from "@/lib/api/reading-plan";
 
 /**
  * The reading screen: scripture, then one button.
  *
- * Text loads here rather than on the dashboard, which is what keeps the
- * dashboard query small. Each portion is its own request against an endpoint
- * cached for a year, so a passage read twice costs nothing the second time.
+ * Any day of the plan can be opened, not only today's. A member who missed a
+ * week wants to read what they missed rather than be told a number, and one
+ * with ten spare minutes wants to read ahead. Both are addressed by day index,
+ * so completing an earlier day is the same idempotent call as completing today.
  */
 export default function ReadingScreen() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const requestedDay = Number(params.get("day")) || null;
+
   const { data, isLoading } = useTodayReading();
   const complete = useCompleteDay();
   const uncomplete = useUncompleteDay();
-  const [justRead, setJustRead] = useState(false);
+  const setTranslation = useSetTranslation();
+  const { data: translations } = useTranslations();
+  const { data: completed } = useCompletedDays(data?.subscriptionId);
+
+  const [justChanged, setJustChanged] = useState<number | null>(null);
+
+  // A day other than the current one comes from the plan itself, which is
+  // immutable and cached for a year.
+  const browsing = requestedDay !== null && requestedDay !== data?.currentDayIndex;
+  const { data: browsedDay, isLoading: browsedLoading } = usePlanDay(
+    browsing ? data?.plan.id : undefined,
+    browsing ? requestedDay : undefined,
+  );
 
   if (isLoading) {
     return (
@@ -33,66 +65,170 @@ export default function ReadingScreen() {
     );
   }
 
-  if (!data || !data.day) {
+  if (!data) return <NoPlan />;
+
+  const dayIndex = requestedDay ?? data.currentDayIndex;
+  const day: PlanDay | null | undefined = browsing ? browsedDay : data.day;
+  const { plan, subscriptionId, translation, currentDayIndex, currentStreak, completedDays } = data;
+
+  const completedSet = new Set(completed?.dayIndexes ?? []);
+  const isDone =
+    justChanged === dayIndex
+      ? true
+      : completedSet.has(dayIndex) || (!browsing && data.completedToday);
+
+  function goToDay(next: number) {
+    if (next < 1 || next > plan.durationDays) return;
+    setJustChanged(null);
+    router.push(next === currentDayIndex ? "/dashboard/reading" : `/dashboard/reading?day=${next}`);
+  }
+
+  async function markRead() {
+    await complete.mutateAsync({ subscriptionId, dayIndex });
+    setJustChanged(dayIndex);
+  }
+
+  async function undo() {
+    await uncomplete.mutateAsync({ subscriptionId, dayIndex });
+    setJustChanged(null);
+  }
+
+  if (browsing && browsedLoading) {
     return (
-      <div className="mx-auto max-w-2xl px-5 py-10 text-center">
-        <BookOpen size={22} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
-        <p className="text-sm font-semibold text-gray-700 dark:text-white/80">
-          {data ? "You have finished this plan." : "You have not chosen a reading plan yet."}
-        </p>
-        <Link
-          href="/dashboard/reading/plans"
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#6E0C24]"
-        >
-          {data ? "Start another plan" : "Choose a plan"}
-        </Link>
+      <div className="mx-auto max-w-2xl space-y-4 px-5 py-8">
+        <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
     );
   }
 
-  const { day, plan, subscriptionId, translation, currentDayIndex, currentStreak, completedToday } =
-    data;
-  const done = completedToday || justRead;
-
-  async function markRead() {
-    await complete.mutateAsync({ subscriptionId, dayIndex: currentDayIndex });
-    setJustRead(true);
-  }
-
-  async function undo() {
-    await uncomplete.mutateAsync({ subscriptionId, dayIndex: currentDayIndex });
-    setJustRead(false);
-  }
+  if (!day) return <NoPlan finished />;
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-6">
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-[#87102C] dark:text-white/50 dark:hover:text-[#FFB3C1]"
-        >
-          <ArrowLeft size={14} /> Dashboard
-        </Link>
-        {currentStreak > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-            <Flame size={12} /> {currentStreak} day{currentStreak === 1 ? "" : "s"}
-          </span>
-        )}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <WordTabs />
+        <div className="flex items-center gap-2">
+          {currentStreak > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+              <Flame size={12} /> {currentStreak} day{currentStreak === 1 ? "" : "s"}
+            </span>
+          )}
+          {/* Translation belongs on the reading screen, where a verse that reads
+              oddly is the reason somebody reaches for another one. */}
+          {translations && translations.length > 1 && (
+            <select
+              aria-label="Translation"
+              value={translation.code}
+              onChange={(e) =>
+                setTranslation.mutate({ subscriptionId, translationCode: e.target.value })
+              }
+              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70"
+            >
+              {translations.map((t) => (
+                <option key={t.code} value={t.code}>
+                  {t.code}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       </div>
 
-      <header className="mt-4">
+      {/* Day stepper. Every established plan has one; theirs walks the calendar,
+          this one walks the plan, because a plan here advances when somebody
+          reads rather than when the date turns. */}
+      <div className="mt-5 flex items-center justify-between gap-2 rounded-2xl border border-gray-200 bg-white px-2 py-2 dark:border-white/10 dark:bg-white/[0.03]">
+        <button
+          type="button"
+          onClick={() => goToDay(dayIndex - 1)}
+          disabled={dayIndex <= 1}
+          aria-label="Previous day"
+          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-30 dark:text-white/50 dark:hover:bg-white/5"
+        >
+          <ChevronLeft size={18} />
+        </button>
+
+        <div className="min-w-0 text-center">
+          <p className="text-xs font-bold text-[#111] dark:text-white">
+            Day {dayIndex} of {plan.durationDays}
+          </p>
+          {browsing && (
+            <button
+              type="button"
+              onClick={() => goToDay(currentDayIndex)}
+              className="text-[10px] font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+            >
+              Back to today (day {currentDayIndex})
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => goToDay(dayIndex + 1)}
+          disabled={dayIndex >= plan.durationDays}
+          aria-label="Next day"
+          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-30 dark:text-white/50 dark:hover:bg-white/5"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      <header className="mt-5">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
-          {plan.title} · Day {currentDayIndex} of {plan.durationDays}
+          {plan.title}
         </p>
         <h1 className="mt-1 text-2xl font-black tracking-tight text-[#111] dark:text-white">
           {day.referenceLabel}
         </h1>
         <p className="mt-1 text-xs text-[#8a7e80] dark:text-white/45">
-          About {day.estimatedMinutes} minute{day.estimatedMinutes === 1 ? "" : "s"} · {translation.code}
+          About {day.estimatedMinutes} minute{day.estimatedMinutes === 1 ? "" : "s"} ·{" "}
+          {translation.code}
         </p>
+
+        {/* Progress as a line rather than a number: on day 253 of 365 a counter
+            barely moves and a bar still does. */}
+        <div className="mt-4">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/[0.08]">
+            <div
+              className="h-full rounded-full bg-[#87102C] transition-all duration-500 dark:bg-[#FFB3C1]"
+              style={{ width: `${Math.min(100, (completedDays / plan.durationDays) * 100)}%` }}
+            />
+          </div>
+          <div className="mt-1.5 flex items-center justify-between gap-3">
+            <p className="text-[11px] text-[#8a7e80] dark:text-white/40">
+              {completedDays} of {plan.durationDays} days read
+            </p>
+            <Link
+              href="/dashboard/reading/schedule"
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+            >
+              <CalendarDays size={11} /> Whole plan
+            </Link>
+          </div>
+        </div>
       </header>
 
-      <div className="mt-6 space-y-6">
+      {/* What the day holds, before the text of it. On a four portion morning a
+          reader sees the shape and can jump to the part they want. */}
+      {day.Portions.length > 1 && (
+        <nav className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Today's passages">
+          {day.Portions.map((portion) => (
+            <a
+              key={portion.sequence}
+              href={`#portion-${portion.sequence}`}
+              className="rounded-xl border border-gray-200 bg-white p-3 text-center transition-colors hover:border-[#87102C]/40 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-[#FFB3C1]/30"
+            >
+              <BookOpen size={14} className="mx-auto text-[#87102C]/70 dark:text-[#FFB3C1]/70" />
+              <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-white/35">
+                {portion.label ?? `Reading ${portion.sequence}`}
+              </p>
+            </a>
+          ))}
+        </nav>
+      )}
+
+      <div className="mt-6 space-y-8">
         {day.Portions.map((portion) => (
           <Portion key={portion.sequence} portion={portion} translation={translation.code} />
         ))}
@@ -107,10 +243,8 @@ export default function ReadingScreen() {
         </div>
       )}
 
-      {/* One button, at the end of the reading rather than the top, so it is
-          reached by finishing rather than by scrolling past. */}
       <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-6 dark:border-white/10">
-        {done ? (
+        {isDone ? (
           <>
             <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
               <Check size={16} /> Read
@@ -123,6 +257,15 @@ export default function ReadingScreen() {
             >
               {uncomplete.isPending ? "Undoing..." : "Undo"}
             </button>
+            {dayIndex < plan.durationDays && (
+              <button
+                type="button"
+                onClick={() => goToDay(dayIndex + 1)}
+                className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+              >
+                Next day <ChevronRight size={14} />
+              </button>
+            )}
           </>
         ) : (
           <button
@@ -131,19 +274,34 @@ export default function ReadingScreen() {
             disabled={complete.isPending}
             className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
           >
-            {complete.isPending ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+            {complete.isPending ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Check size={16} />
+            )}
             {complete.isPending ? "Saving..." : "Mark as read"}
           </button>
         )}
+      </div>
+    </div>
+  );
+}
 
-        {done && (
-          <Link
-            href="/dashboard"
-            className="ml-auto text-xs font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
-          >
-            Back to dashboard
-          </Link>
-        )}
+function NoPlan({ finished }: { finished?: boolean }) {
+  return (
+    <div className="mx-auto max-w-2xl px-5 py-6">
+      <WordTabs />
+      <div className="mt-10 text-center">
+        <BookOpen size={22} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
+        <p className="text-sm font-semibold text-gray-700 dark:text-white/80">
+          {finished ? "You have finished this plan." : "You have not chosen a reading plan yet."}
+        </p>
+        <Link
+          href="/dashboard/reading/plans"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#6E0C24]"
+        >
+          {finished ? "Start another plan" : "Choose a plan"}
+        </Link>
       </div>
     </div>
   );
@@ -174,7 +332,7 @@ function Portion({ portion, translation }: { portion: DayPortion; translation: s
   }
 
   return (
-    <section>
+    <section id={`portion-${portion.sequence}`} className="scroll-mt-6">
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-bold text-[#111] dark:text-white">{data.reference}</h2>
         {portion.label && (

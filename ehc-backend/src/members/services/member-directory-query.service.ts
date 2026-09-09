@@ -95,18 +95,27 @@ export class MemberDirectoryQueryService {
         .filter((g) => g.role === Role.ADMIN || g.role === Role.ADMIN_HEAD)
         .map((g) => g.userId),
     );
+    // A role is held either by grant or by assignment, and these counts must
+    // agree with the lists under them on the same screen. Counting assignments
+    // alone made the Head of Department card read 0 while the list beneath it
+    // named somebody.
+    const holdersOf = (role: Role, assigned: { userId: string }[] = []) =>
+      new Set<string>([
+        ...grantRows.filter((g) => g.role === role).map((g) => g.userId),
+        ...assigned.map((a) => a.userId),
+      ]);
+
     // Both assignment tables mean the same office: head of a department.
-    const hodUserIds = new Set<string>([
-      ...deptHeads.map((d) => d.userId),
-      ...deptHods.map((d) => d.userId),
-    ]);
+    const hodUserIds = holdersOf(Role.HOD, [...deptHeads, ...deptHods]);
+    const headUsherIds = holdersOf(Role.HEAD_USHER, ushers);
+    const unitLeadIds = holdersOf(Role.UNIT_LEAD, unitLeads);
     const byRole: Record<string, number> = {
       SUPER_ADMIN: distinctGrantCount(Role.SUPER_ADMIN),
       PASTOR: distinctGrantCount(Role.PASTOR),
       ADMIN_HEAD: adminHeadUserIds.size,
       HOD: hodUserIds.size,
-      HEAD_USHER: ushers.length,
-      UNIT_LEAD: unitLeads.length,
+      HEAD_USHER: headUsherIds.size,
+      UNIT_LEAD: unitLeadIds.size,
       MEMBER: total,
     };
     return { total, active, withUnit, thisMonth, byRole };
