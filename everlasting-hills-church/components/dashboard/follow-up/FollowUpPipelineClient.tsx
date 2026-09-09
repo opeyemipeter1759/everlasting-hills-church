@@ -9,6 +9,7 @@ import {
   useBackfillFollowUpService,
   useFollowUpAccess,
   useFollowUpEntries,
+  useFollowUpReportsUnit,
   useFollowUpServices,
   useMyFollowUpUnit,
 } from "@/lib/api/follow-up-pipeline";
@@ -58,6 +59,7 @@ export default function FollowUpPipelineClient() {
   const queryClient = useQueryClient();
   const { data: me } = useMe();
   const { data: myUnit } = useMyFollowUpUnit();
+  const { data: reportsUnit } = useFollowUpReportsUnit();
   const { data: services = [] } = useFollowUpServices();
 
   const isLeader = hasMinRole(me?.role, "UNIT_LEAD");
@@ -152,7 +154,7 @@ export default function FollowUpPipelineClient() {
     { id: "master", label: "Master List", icon: ListChecks },
     { id: "today", label: "Today", icon: Clock3 },
     { id: "wins", label: "Wins & Leaderboard", icon: Trophy },
-    ...(isLeader && myUnit ? [{ id: "reports" as const, label: "Service Report", icon: ClipboardCheck }] : []),
+    ...(reportsUnit ? [{ id: "reports" as const, label: "Service Report", icon: ClipboardCheck }] : []),
   ];
 
   if (isLoading || access.isPending) return <FollowUpPipelineSkeleton />;
@@ -386,9 +388,9 @@ export default function FollowUpPipelineClient() {
         </FadeIn>
       )}
 
-      {mainView === "reports" && isLeader && myUnit && (
+      {mainView === "reports" && reportsUnit && (
         <FadeIn key="reports" duration={0.25}>
-          <ServiceReportPanel unitId={myUnit.id} unitName={myUnit.name} />
+          <ServiceReportPanel unitId={reportsUnit.id} unitName={reportsUnit.name} />
         </FadeIn>
       )}
 

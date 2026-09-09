@@ -97,10 +97,19 @@ export class FollowUpController {
   @Get('my-unit')
   @ApiOperation({
     summary:
-      "The unit whose leader controls (Team roster, Bulk reassign, Service report) the caller should see: their own led/assisted unit, or the \"Follow-Up\" unit for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own (MEMBER+ auth, null for anyone else).",
+      "The unit whose leader controls (Team roster, Bulk reassign) the caller should see: their own led/assisted unit, or the \"Follow-Up\" unit for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own (MEMBER+ auth, null for anyone else).",
   })
   async myUnit(@CurrentUser() actor: AuthUser) {
     return this.auth.resolveMyUnit(actor);
+  }
+
+  @Get('reports-unit')
+  @ApiOperation({
+    summary:
+      'Whether the caller may see Follow-Up Service Reports: the "Follow-Up" unit, only for its own lead or PASTOR/ADMIN_HEAD/ADMIN/SUPER_ADMIN — unlike my-unit, a lead of some other team does not qualify (MEMBER+ auth, null for anyone else).',
+  })
+  async reportsUnit(@CurrentUser() actor: AuthUser) {
+    return this.auth.resolveReportsUnit(actor);
   }
 
   @Post('auto-surface/run')

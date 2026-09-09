@@ -79,6 +79,27 @@ export class FollowUpAuthService {
     return null;
   }
 
+  /**
+   * The Follow-Up unit, if this actor is allowed to see its Service Reports —
+   * specifically the Follow-Up unit's own lead, or PASTOR/ADMIN_HEAD/ADMIN/
+   * SUPER_ADMIN. Deliberately narrower than `resolveMyUnit()`: a report is
+   * about Follow-Up activity specifically, so a lead of some *other* team
+   * (Ushering, Choir, Audio Production...) has no reason to see it just
+   * because they lead a unit — unlike Team Roster/Bulk Reassign, which are
+   * legitimately about "your own team", whichever one that is.
+   */
+  async resolveReportsUnit(actor: AuthUser): Promise<{ id: string; name: string } | null> {
+    const followUpUnit = await this.prisma.unit.findFirst({
+      where: { tenantId: this.tenantId, name: 'Follow-Up' },
+      select: { id: true, name: true },
+    });
+    if (!followUpUnit) return null;
+
+    if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return followUpUnit;
+    if (actor.unitLeadOf.includes(followUpUnit.id)) return followUpUnit;
+    return null;
+  }
+
   /** Resolves the unit to operate on and authorizes the actor for it in one pass.
    * With no `requestedUnitId`, resolves to the actor's own unit membership. With one,
    * admins/leaders of that unit pass through; a plain member must actually belong to it. */

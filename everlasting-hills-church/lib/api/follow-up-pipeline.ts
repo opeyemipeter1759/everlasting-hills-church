@@ -95,14 +95,27 @@ export function useFollowUpAccess() {
   });
 }
 
-/** The unit whose leader controls (Team roster, Bulk reassign, Service report) the
- * caller should see: their own led/assisted unit, or the "Follow-Up" unit itself
- * for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own — giving them the same
+/** The unit whose leader controls (Team roster, Bulk reassign) the caller should
+ * see: their own led/assisted unit, or the "Follow-Up" unit itself for
+ * ADMIN+/PASTOR/SUPER_ADMIN with no team of their own — giving them the same
  * access a Follow-Up unit lead has, rather than one only reachable via the API. */
 export function useMyFollowUpUnit() {
   return useQuery({
     queryKey: ["follow-up", "my-unit"],
     queryFn: () => api.get<{ id: string; name: string } | null>("/follow-up/my-unit"),
+    enabled: typeof window !== "undefined",
+    staleTime: 5 * 60_000,
+  });
+}
+
+/** Whether the caller may see Follow-Up Service Reports: the "Follow-Up" unit,
+ * but only for its own lead or PASTOR/ADMIN_HEAD/ADMIN/SUPER_ADMIN — narrower
+ * than useMyFollowUpUnit, since a lead of some other team has no reason to see
+ * reports about Follow-Up activity specifically. Null hides the Reports tab. */
+export function useFollowUpReportsUnit() {
+  return useQuery({
+    queryKey: ["follow-up", "reports-unit"],
+    queryFn: () => api.get<{ id: string; name: string } | null>("/follow-up/reports-unit"),
     enabled: typeof window !== "undefined",
     staleTime: 5 * 60_000,
   });
