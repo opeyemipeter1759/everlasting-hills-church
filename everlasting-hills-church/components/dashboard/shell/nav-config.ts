@@ -59,6 +59,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Home",            href: "/dashboard",                  icon: LayoutDashboard, minRole: "MEMBER" },
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
       { label: "My Attendance",   href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "MEMBER", maxRole: "ADMIN" },
+      { label: "Daily Reading",   href: "/dashboard/reading",          icon: BookOpen,        minRole: "MEMBER" },
       { label: "Notifications",   href: "/dashboard/settings/notifications", icon: Bell,      minRole: "MEMBER" },
       { label: "Prayer Requests", href: "/prayer-request",             icon: Heart,           minRole: "MEMBER" },
       { label: "Testimonies",     href: "/testimony",                  icon: MessageSquare,   minRole: "MEMBER" },

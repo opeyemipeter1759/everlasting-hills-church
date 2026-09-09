@@ -12,6 +12,7 @@ import { ContinueListeningCard } from "./ContinueListeningCard";
 import { GatheringsPanel } from "./GatheringsPanel";
 import { AnnouncementsPanel } from "../AnnouncementsPanel";
 import { ProfileCompletionToast } from "./ProfileCompletionToast";
+import TodayReadingCard from "../reading-plan/TodayReadingCard";
 
 const DEFAULT_STREAK: StreakState = {
   level: 1,
@@ -77,6 +78,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
       />
 
       <QuickActionsStrip />
+
+      <TodayReadingCard />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CheckInPanel
