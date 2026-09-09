@@ -4,6 +4,7 @@ import { createHmac, randomUUID, timingSafeEqual } from 'crypto';
 import { google } from 'googleapis';
 import type { OAuth2Client } from 'google-auth-library';
 import type { Env } from '../../config/env.validation';
+import { isAllowedOrigin } from '../../common/allowed-origins.util';
 
 /**
  * Full read/write scope. This app both reads the member's own events (for the
@@ -20,6 +21,11 @@ const STATE_TTL_MS = 10 * 60 * 1000;
 interface StatePayload {
   userId: string;
   tenantId: string;
+  /** The frontend origin to redirect back to once the callback finishes — the
+   * caller's own Origin header at connect-time, not a static server config,
+   * so this keeps working across previews/environments without redeploying
+   * the backend. Validated against the same allowlist CORS trusts. */
+  origin: string;
   nonce: string;
   exp: number;
 }
@@ -40,6 +46,11 @@ export class GoogleCalendarOAuthService {
   private readonly clientSecret?: string;
   private readonly redirectUri?: string;
   private readonly stateSecret?: string;
+  /** Fallback redirect target when the connect request carried no (or an
+   * untrusted) Origin header — keeps the flow working for non-browser callers
+   * and old links, same as before this was origin-driven. */
+  private readonly fallbackFrontendUrl: string;
+  private readonly allowedOriginsConfig: { frontendUrl?: string; extraOrigins: string[]; allowVercelPreviews: boolean; isProd: boolean };
 
   constructor(config: ConfigService<Env, true>) {
     this.clientId = config.get('GOOGLE_OAUTH_CLIENT_ID', { infer: true });
@@ -49,6 +60,28 @@ export class GoogleCalendarOAuthService {
     // "a 32-byte secret only this server knows" and adding a second one buys
     // nothing.
     this.stateSecret = config.get('GOOGLE_TOKEN_ENCRYPTION_KEY', { infer: true });
+
+    const frontendUrl = config.get('FRONTEND_URL', { infer: true });
+    this.fallbackFrontendUrl = (frontendUrl ?? 'http://localhost:3000').replace(/\/$/, '');
+    this.allowedOriginsConfig = {
+      frontendUrl,
+      extraOrigins: (config.get('CORS_EXTRA_ORIGINS', { infer: true }) ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+      allowVercelPreviews: config.get('CORS_ALLOW_VERCEL_PREVIEWS', { infer: true }) !== 'false',
+      isProd: config.get('NODE_ENV', { infer: true }) === 'production',
+    };
+  }
+
+  /** The origin to carry through the OAuth round trip — the caller's own
+   * Origin header if it's one we already trust for CORS, otherwise the
+   * static fallback. Never trusts an arbitrary caller-supplied origin. */
+  resolveReturnOrigin(requestOrigin: string | undefined): string {
+    if (requestOrigin && isAllowedOrigin(requestOrigin, this.allowedOriginsConfig)) {
+      return requestOrigin.replace(/\/$/, '');
+    }
+    return this.fallbackFrontendUrl;
   }
 
   get isConfigured(): boolean {
@@ -68,7 +101,7 @@ export class GoogleCalendarOAuthService {
     return new google.auth.OAuth2(this.clientId, this.clientSecret, this.redirectUri);
   }
 
-  buildConsentUrl(userId: string, tenantId: string): string {
+  buildConsentUrl(userId: string, tenantId: string, requestOrigin: string | undefined): string {
     this.requireConfigured();
     const client = this.createClient();
     return client.generateAuthUrl({
@@ -77,14 +110,15 @@ export class GoogleCalendarOAuthService {
       // otherwise a member who disconnects and reconnects gets none.
       prompt: 'consent',
       scope: [CALENDAR_SCOPE, 'https://www.googleapis.com/auth/userinfo.email'],
-      state: this.signState(userId, tenantId),
+      state: this.signState(userId, tenantId, this.resolveReturnOrigin(requestOrigin)),
     });
   }
 
-  signState(userId: string, tenantId: string): string {
+  signState(userId: string, tenantId: string, origin: string): string {
     const payload: StatePayload = {
       userId,
       tenantId,
+      origin,
       nonce: randomUUID(),
       exp: Date.now() + STATE_TTL_MS,
     };
@@ -94,7 +128,7 @@ export class GoogleCalendarOAuthService {
     return `${body}.${signature}`;
   }
 
-  verifyState(state: string): { userId: string; tenantId: string } {
+  verifyState(state: string): { userId: string; tenantId: string; origin: string } {
     this.requireConfigured();
     const [body, signature] = state.split('.');
     if (!body || !signature) throw new UnauthorizedException('Invalid state');
@@ -117,7 +151,10 @@ export class GoogleCalendarOAuthService {
       throw new UnauthorizedException('This connection link expired — please try again');
     }
 
-    return { userId: payload.userId, tenantId: payload.tenantId };
+    // Older, pre-origin state tokens (signed before this field existed) would
+    // decode with origin undefined — falling back keeps any in-flight link
+    // from breaking across a deploy, at worst redirecting to the static URL.
+    return { userId: payload.userId, tenantId: payload.tenantId, origin: payload.origin ?? this.fallbackFrontendUrl };
   }
 
   private sign(body: string): string {

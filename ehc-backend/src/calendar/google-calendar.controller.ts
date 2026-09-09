@@ -1,12 +1,10 @@
-import { Controller, Get, Logger, Post, Query, Res, ServiceUnavailableException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Controller, Get, Headers, Logger, Post, Query, Res, ServiceUnavailableException } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { google } from 'googleapis';
 import type { Response } from 'express';
 import { Public } from '../auth/decorators/public.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import type { Env } from '../config/env.validation';
 import { GoogleCalendarConnectionService } from './services/google-calendar-connection.service';
 import { GoogleCalendarEventsService } from './services/google-calendar-events.service';
 import { GoogleCalendarOAuthService } from './services/google-calendar-oauth.service';
@@ -26,29 +24,25 @@ import { GoogleCalendarSyncService } from './services/google-calendar-sync.servi
 @Controller('calendar/google')
 export class GoogleCalendarController {
   private readonly logger = new Logger(GoogleCalendarController.name);
-  private readonly frontendUrl: string;
 
   constructor(
     private readonly oauth: GoogleCalendarOAuthService,
     private readonly connections: GoogleCalendarConnectionService,
     private readonly events: GoogleCalendarEventsService,
     private readonly sync: GoogleCalendarSyncService,
-    config: ConfigService<Env, true>,
-  ) {
-    this.frontendUrl = (config.get('FRONTEND_URL', { infer: true }) ?? 'http://localhost:3000').replace(
-      /\/$/,
-      '',
-    );
-  }
+  ) {}
 
   @Get('connect')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get the Google consent URL to connect my calendar' })
-  connect(@CurrentUser() actor: AuthUser) {
+  connect(@CurrentUser() actor: AuthUser, @Headers('origin') origin: string | undefined) {
     if (!actor.profileId || !actor.tenantId) {
       throw new ServiceUnavailableException('No profile is linked to this account');
     }
-    const url = this.oauth.buildConsentUrl(actor.profileId, actor.tenantId);
+    // The frontend's own Origin header decides where the callback eventually
+    // redirects back to (validated against the same allowlist CORS trusts) —
+    // no static FRONTEND_URL to keep in sync with wherever it's deployed.
+    const url = this.oauth.buildConsentUrl(actor.profileId, actor.tenantId, origin);
     return { url };
   }
 
@@ -66,15 +60,26 @@ export class GoogleCalendarController {
     @Query('error') error: string | undefined,
     @Res() res: Response,
   ) {
-    const redirect = (status: 'connected' | 'error') =>
-      res.redirect(`${this.frontendUrl}/dashboard/calendar?google=${status}`);
+    // Before state is verified there's no trustworthy origin yet to redirect
+    // to — a bare failure at this point (missing code/state, or a state that
+    // fails verification) has nowhere safe to send the browser but the
+    // server's own fallback default.
+    const fallbackRedirect = (status: 'connected' | 'error') =>
+      res.redirect(`${this.oauth.resolveReturnOrigin(undefined)}/dashboard/calendar?google=${status}`);
 
     if (error || !code || !state) {
-      return redirect('error');
+      return fallbackRedirect('error');
     }
 
+    let userId: string, tenantId: string, origin: string;
     try {
-      const { userId, tenantId } = this.oauth.verifyState(state);
+      ({ userId, tenantId, origin } = this.oauth.verifyState(state));
+    } catch {
+      return fallbackRedirect('error');
+    }
+    const redirect = (status: 'connected' | 'error') => res.redirect(`${origin}/dashboard/calendar?google=${status}`);
+
+    try {
       const client = this.oauth.createClient();
       const { tokens } = await client.getToken(code);
 

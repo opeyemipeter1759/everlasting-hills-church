@@ -11,6 +11,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseEnvelopeInterceptor } from './common/interceptors/response-envelope.interceptor';
 import type { Env } from './config/env.validation';
 import { setupOpenApi } from './openapi/openapi-document';
+import { isAllowedOrigin } from './common/allowed-origins.util';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -74,20 +75,13 @@ async function bootstrap() {
     .map((s) => s.trim())
     .filter(Boolean);
   const allowVercelPreviews = process.env.CORS_ALLOW_VERCEL_PREVIEWS !== 'false';
-
-  const staticAllowed = new Set<string>(
-    [frontendUrl, ...extraOrigins, !isProd && 'http://localhost:3000', !isProd && 'http://localhost:3001', !isProd && 'http://localhost:3002']
-      .filter(Boolean) as string[],
-  );
+  const originConfig = { frontendUrl, extraOrigins, allowVercelPreviews, isProd };
 
   app.enableCors({
     origin: (origin, callback) => {
       // Same-origin / non-browser requests (no Origin header) → allow
       if (!origin) return callback(null, true);
-      if (staticAllowed.has(origin)) return callback(null, true);
-      if (allowVercelPreviews && /^https:\/\/[a-z0-9-]+\.vercel\.app$/.test(origin)) {
-        return callback(null, true);
-      }
+      if (isAllowedOrigin(origin, originConfig)) return callback(null, true);
       logger.warn(`CORS blocked origin: ${origin}`);
       return callback(new Error(`Origin ${origin} not allowed by CORS`), false);
     },

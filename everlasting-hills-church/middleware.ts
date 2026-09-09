@@ -185,8 +185,18 @@ function withSessionCookies(response: NextResponse, session: BackendSession | nu
   return response;
 }
 
+// Google's OAuth redirect_uri — lands here so the flow stays on the app's own
+// branded domain (see app/dashboard/calendar/google/callback/route.ts), which
+// just forwards on to the real Nest handler. It sits under /dashboard/* (so
+// the config.matcher below applies) but needs none of the checks that path
+// prefix normally requires: identity travels in Google's signed `state`, not
+// a session cookie, and a session that lapsed during the consent round trip
+// shouldn't stall the connection on a login redirect.
+const GOOGLE_CALENDAR_CALLBACK_PATH = "/dashboard/calendar/google/callback";
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (pathname === GOOGLE_CALENDAR_CALLBACK_PATH) return NextResponse.next();
   if (isLogoutPending(request.cookies.get(LOGOUT_PENDING_COOKIE)?.value)) {
     const response = AUTH_PAGES.has(pathname)
       ? NextResponse.next()
