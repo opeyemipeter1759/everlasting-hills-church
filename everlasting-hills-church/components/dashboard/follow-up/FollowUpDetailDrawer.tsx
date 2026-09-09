@@ -6,7 +6,7 @@ import { addDays, format } from "date-fns";
 import {
   X, Phone, MessageCircle, MapPin, Mail, Check, UserPlus,
   ShieldOff, ShieldCheck, History, Flag, Contact, Cake, Home, HeartHandshake, Briefcase,
-  MessageSquareQuote, CalendarX, Clock3, Send, Lock, BadgeCheck, Handshake, Lightbulb,
+  MessageSquareQuote, CalendarX, Clock3, Lock, BadgeCheck, Handshake, Lightbulb,
   ChevronDown, ChevronUp, UserCheck, UserX, Users2,
 } from "lucide-react";
 import type {
@@ -16,9 +16,9 @@ import type {
 import { timeAgo } from "@/lib/utils/time";
 import { useMe } from "@/lib/api";
 import {
-  useConfirmFollowUp, useFollowUpConnections, useFollowUpEntryDetail, useIntroduceConnection,
-  useLogFollowUpContact, useOptOutFollowUpMember, useRestoreFollowUpMember, useSendToPastor,
-  useSnoozeFollowUp, useUpdateConnectionStatus,
+  useConfirmFollowUp, useFollowUpConnections, useFollowUpEntryDetail, useFollowUpServices,
+  useIntroduceConnection, useLogFollowUpContact, useOptOutFollowUpMember,
+  useRestoreFollowUpMember, useSnoozeFollowUp, useUpdateConnectionStatus,
 } from "@/lib/api/follow-up-pipeline";
 import { getOpeningLines } from "@/lib/followUpOpeningLines";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -26,9 +26,19 @@ import { PersonAvatar } from "./PersonAvatar";
 import { DueStatusPill, RiskCategoryPill, SourceTypePill } from "./StagePill";
 import { Select } from "@/components/ui/select";
 
+// Connections and Outcome-logging are disabled for now — the whole feature is
+// intentionally kept (not deleted) behind these flags so either can come back
+// with a one-line change instead of being rebuilt from scratch.
+const SHOW_CONNECTIONS = false;
+const SHOW_OUTCOME = false;
+
 interface FollowUpDetailDrawerProps {
   entry: FollowUpEntry | null;
   viewerId: string;
+  /** The service currently selected in the page's filter — defaults the "Log
+   * activity" form to it, since that's almost always the service being worked
+   * right now. The leader can still change it per log. */
+  defaultServiceId?: string;
   onClose: () => void;
   onAssign: (entry: FollowUpEntry) => void;
 }
@@ -165,6 +175,12 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+// Date of birth is collected as day + month only — the year on the stored
+// value is a sentinel, never a real birth year — so it must never be shown.
+function formatBirthday(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+}
+
 function initials(name: string): string {
   return name
     .split(" ")
@@ -263,19 +279,20 @@ function ConnectionCard({
 }
 
 export function FollowUpDetailDrawer({
-  entry: entryProp, viewerId, onClose, onAssign,
+  entry: entryProp, viewerId, defaultServiceId, onClose, onAssign,
 }: FollowUpDetailDrawerProps) {
   const { data: me } = useMe();
+  const { data: services = [] } = useFollowUpServices();
   const logContact = useLogFollowUpContact();
   const confirmEntry = useConfirmFollowUp();
   const optOutMember = useOptOutFollowUpMember();
   const restoreMember = useRestoreFollowUpMember();
   const snoozeEntry = useSnoozeFollowUp();
-  const sendToPastor = useSendToPastor();
 
   const [logMode, setLogMode] = useState<"CONTACT" | "QUICK_UPDATE">("CONTACT");
   const [method, setMethod] = useState<ContactMethod>("CALL");
   const [outcome, setOutcome] = useState<ContactOutcome>("REACHED");
+  const [logServiceId, setLogServiceId] = useState(defaultServiceId ?? "");
   const [note, setNote] = useState("");
   const [notePrivate, setNotePrivate] = useState(false);
   const [openingLinesOpen, setOpeningLinesOpen] = useState(false);
@@ -285,7 +302,6 @@ export function FollowUpDetailDrawer({
   const [optOutConfirmOpen, setOptOutConfirmOpen] = useState(false);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   const [customSnoozeDate, setCustomSnoozeDate] = useState("");
-  const [sendToPastorConfirmOpen, setSendToPastorConfirmOpen] = useState(false);
 
   // Keep the last entry mounted through the close animation instead of unmounting the
   // instant the parent clears its selection, so the panel actually slides out rather
@@ -296,7 +312,7 @@ export function FollowUpDetailDrawer({
   // Richer single-entry fetch — only this response carries `bestTimeHint`. While it's
   // loading (or for the closing-animation tail) we fall back to the list row.
   const { data: detailData } = useFollowUpEntryDetail(entryProp?.id);
-  const connectionsQuery = useFollowUpConnections(entryProp?.id);
+  const connectionsQuery = useFollowUpConnections(SHOW_CONNECTIONS ? entryProp?.id : undefined);
 
   useEffect(() => {
     if (entryProp) {
@@ -313,6 +329,7 @@ export function FollowUpDetailDrawer({
     setLogMode("CONTACT");
     setMethod("CALL");
     setOutcome("REACHED");
+    setLogServiceId(defaultServiceId ?? "");
     setNote("");
     setNotePrivate(false);
     setOpeningLinesOpen(false);
@@ -322,8 +339,7 @@ export function FollowUpDetailDrawer({
     setOptOutConfirmOpen(false);
     setSnoozeOpen(false);
     setCustomSnoozeDate("");
-    setSendToPastorConfirmOpen(false);
-  }, [entryProp?.id]);
+  }, [entryProp?.id, defaultServiceId]);
 
   useEffect(() => {
     if (!entryProp) return;
@@ -351,8 +367,7 @@ export function FollowUpDetailDrawer({
   const isOptedOut = entry.memberStatus === "OPTED_OUT";
   const canManageAccount = entry.sourceType === "ABSENTEE" && entry.viewerCanApprove;
   const canLog = entry.viewerCanWork && entry.assignee && !isOptedOut && entry.stage !== "CONFIRMED";
-  const canLogOutcome = entry.viewerCanApprove && !isOptedOut;
-  const canSendToPastor = entry.sourceType === "FIRST_TIMER" && entry.viewerCanApprove;
+  const canLogOutcome = SHOW_OUTCOME && entry.viewerCanApprove && !isOptedOut;
   const detail = entry.personDetail;
   const isSnoozed = !!entry.snoozedUntil && new Date(entry.snoozedUntil).getTime() > Date.now();
 
@@ -381,6 +396,7 @@ export function FollowUpDetailDrawer({
         kind: logMode,
         method: logMode === "CONTACT" ? method : undefined,
         outcome: logMode === "CONTACT" ? outcome : undefined,
+        serviceId: logServiceId || undefined,
         isPrivate: notePrivate,
       },
       { onSuccess: () => { setNote(""); setNotePrivate(false); } },
@@ -407,16 +423,6 @@ export function FollowUpDetailDrawer({
     );
   }
 
-  function handleSendToPastor() {
-    sendToPastor.mutate(entry.id, {
-      onSuccess: ({ whatsappLink }) => {
-        setSendToPastorConfirmOpen(false);
-        if (whatsappLink) window.open(whatsappLink, "_blank");
-      },
-    });
-  }
-
-  const latestNote = [...entry.logs].reverse().find((l) => !l.isPrivate)?.note ?? null;
 
   return createPortal(
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50">
@@ -552,7 +558,7 @@ export function FollowUpDetailDrawer({
                 <DetailRow icon={Mail} label="Email" value={entry.person.email} href={`mailto:${entry.person.email}`} />
               )}
               {detail?.gender && <DetailRow icon={Contact} label="Gender" value={detail.gender} />}
-              {detail?.dateOfBirth && <DetailRow icon={Cake} label="Date of Birth" value={formatDate(detail.dateOfBirth)} />}
+              {detail?.dateOfBirth && <DetailRow icon={Cake} label="Date of Birth" value={formatBirthday(detail.dateOfBirth)} />}
               {detail?.occupation && <DetailRow icon={Briefcase} label="Occupation" value={detail.occupation} />}
               {detail?.memberSince && <DetailRow icon={Contact} label="Member Since" value={formatDate(detail.memberSince)} />}
               {detail?.invitedBy && <DetailRow icon={HeartHandshake} label="Invited By" value={detail.invitedBy} />}
@@ -757,6 +763,20 @@ export function FollowUpDetailDrawer({
                 </>
               )}
 
+              <Select
+                aria-label="Which service this relates to"
+                value={logServiceId}
+                onChange={setLogServiceId}
+                className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs px-2.5 py-2 outline-none focus:ring-2 focus:ring-[#87102C]/25"
+                options={[
+                  { value: "", label: "Which service?" },
+                  ...services.map((s) => ({
+                    value: s.id,
+                    label: `${new Date(s.scheduledAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} — ${s.name}`,
+                  })),
+                ]}
+              />
+
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -787,47 +807,27 @@ export function FollowUpDetailDrawer({
             </form>
           )}
 
-          {/* Send to Pastor */}
-          {canSendToPastor && (
-            entry.sentToPastorAt ? (
-              <div className="rounded-xl border border-[#E7CDD3]/60 dark:border-white/[0.09] px-4 py-3 flex items-center gap-2.5">
-                <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[#FFE8ED] dark:bg-[#87102C]/25 text-[#87102C] dark:text-[#FFB3C1]">
-                  <Send size={13} aria-hidden="true" />
-                </span>
-                <p className="text-xs text-gray-600 dark:text-white/50">
-                  Sent to Pastor by <span className="font-semibold text-[#111] dark:text-white">{entry.sentToPastorBy?.name ?? "a team member"}</span>
-                  {" · "}{timeAgo(entry.sentToPastorAt)}
-                </p>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setSendToPastorConfirmOpen(true)}
-                className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-[#87102C]/25 dark:border-[#FFB3C1]/20 bg-[#FFF4F6] dark:bg-white/[0.03] px-4 py-2.5 text-xs font-bold text-[#87102C] dark:text-[#FFB3C1] hover:bg-[#FFE8ED] dark:hover:bg-white/[0.06] transition-colors"
-              >
-                <Send size={13} aria-hidden="true" />
-                Send to Pastor
-              </button>
-            )
+          {/* Connections — friend/member matches for this person. Disabled for
+              now (see SHOW_CONNECTIONS at the top of this file) but kept intact
+              rather than deleted. */}
+          {SHOW_CONNECTIONS && (
+            <div>
+              <SectionLabel icon={Users2}>
+                Connections {connectionsQuery.data && connectionsQuery.data.length > 0 && `(${connectionsQuery.data.length})`}
+              </SectionLabel>
+              {connectionsQuery.isLoading ? (
+                <p className="text-xs text-[#8a7e80] dark:text-white/35 text-center py-6">Loading suggestions…</p>
+              ) : !connectionsQuery.data || connectionsQuery.data.length === 0 ? (
+                <p className="text-xs text-[#8a7e80] dark:text-white/35 text-center py-6">No suggested connections yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {connectionsQuery.data.map((c) => (
+                    <ConnectionCard key={c.id} connection={c} entryId={entry.id} />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
-
-          {/* Connections — friend/member matches for this person */}
-          <div>
-            <SectionLabel icon={Users2}>
-              Connections {connectionsQuery.data && connectionsQuery.data.length > 0 && `(${connectionsQuery.data.length})`}
-            </SectionLabel>
-            {connectionsQuery.isLoading ? (
-              <p className="text-xs text-[#8a7e80] dark:text-white/35 text-center py-6">Loading suggestions…</p>
-            ) : !connectionsQuery.data || connectionsQuery.data.length === 0 ? (
-              <p className="text-xs text-[#8a7e80] dark:text-white/35 text-center py-6">No suggested connections yet.</p>
-            ) : (
-              <div className="space-y-2">
-                {connectionsQuery.data.map((c) => (
-                  <ConnectionCard key={c.id} connection={c} entryId={entry.id} />
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Contact log timeline — every review, with who left it */}
           <div>
@@ -852,6 +852,13 @@ export function FollowUpDetailDrawer({
                         <p className="text-xs font-bold text-[#111] dark:text-white">{log.by.name}</p>
                         <span className="text-[10px] text-[#8a7e80] dark:text-white/35">{timeAgo(log.at)}</span>
                       </div>
+
+                      {log.service && (
+                        <p className="text-[10px] text-[#87102C] dark:text-[#FFB3C1] font-semibold mt-0.5">
+                          {new Date(log.service.scheduledAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                          {" — "}{log.service.name}
+                        </p>
+                      )}
 
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         {log.kind === "CONTACT" && log.method && (
@@ -981,33 +988,6 @@ export function FollowUpDetailDrawer({
           optOutMember.mutate(entry.id, { onSuccess: () => setOptOutConfirmOpen(false) });
         }}
         onCancel={() => setOptOutConfirmOpen(false)}
-      />
-
-      <ConfirmDialog
-        open={sendToPastorConfirmOpen}
-        tone="info"
-        title="Send to Pastor?"
-        description={
-          <div className="space-y-2">
-            <p>This will share the following with the Pastor:</p>
-            <dl className="text-xs bg-gray-50 dark:bg-white/5 rounded-lg p-3 space-y-1.5">
-              <div className="flex gap-2"><dt className="font-semibold w-20 flex-shrink-0">Name</dt><dd className="min-w-0 break-words">{entry.person.name}</dd></div>
-              {entry.person.phone && (
-                <div className="flex gap-2"><dt className="font-semibold w-20 flex-shrink-0">Phone</dt><dd>{entry.person.phone}</dd></div>
-              )}
-              {detail?.howTheyHeard && (
-                <div className="flex gap-2"><dt className="font-semibold w-20 flex-shrink-0">Heard via</dt><dd className="min-w-0 break-words">{detail.howTheyHeard}</dd></div>
-              )}
-              {latestNote && (
-                <div className="flex gap-2"><dt className="font-semibold w-20 flex-shrink-0">Latest note</dt><dd className="min-w-0 break-words">{latestNote}</dd></div>
-              )}
-            </dl>
-          </div>
-        }
-        confirmLabel="Send to Pastor"
-        loading={sendToPastor.isPending}
-        onConfirm={handleSendToPastor}
-        onCancel={() => setSendToPastorConfirmOpen(false)}
       />
     </div>,
     document.body,

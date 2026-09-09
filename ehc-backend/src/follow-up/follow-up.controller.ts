@@ -11,6 +11,7 @@ import { ConfirmFollowUpDto } from './dto/confirm-follow-up.dto';
 import { QuickCaptureDto } from './dto/quick-capture.dto';
 import { BulkReassignDto } from './dto/bulk-reassign.dto';
 import { SnoozeFollowUpDto } from './dto/snooze-follow-up.dto';
+import { MarkPresentDto } from './dto/mark-present.dto';
 import { UpdateConnectionStatusDto } from './dto/update-connection-status.dto';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
 import { FollowUpReadService } from './services/follow-up-read.service';
@@ -91,6 +92,15 @@ export class FollowUpController {
   })
   async checkAccess(@CurrentUser() actor: AuthUser) {
     return this.auth.checkAccess(actor);
+  }
+
+  @Get('my-unit')
+  @ApiOperation({
+    summary:
+      "The unit whose leader controls (Team roster, Bulk reassign, Service report) the caller should see: their own led/assisted unit, or the \"Follow-Up\" unit for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own (MEMBER+ auth, null for anyone else).",
+  })
+  async myUnit(@CurrentUser() actor: AuthUser) {
+    return this.auth.resolveMyUnit(actor);
   }
 
   @Post('auto-surface/run')
@@ -203,6 +213,13 @@ export class FollowUpController {
   @ApiBody({ type: ConfirmFollowUpDto })
   async confirm(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: ConfirmFollowUpDto) {
     return this.progress.confirm(actor, id, body);
+  }
+
+  @Post(':id/mark-present')
+  @ApiOperation({ summary: "Mark this entry's subject present for a service — for a missed check-in (assignee or leader)" })
+  @ApiBody({ type: MarkPresentDto })
+  async markPresent(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: MarkPresentDto) {
+    return this.progress.markPresent(actor, id, body.serviceId);
   }
 
   @Patch(':id/snooze')

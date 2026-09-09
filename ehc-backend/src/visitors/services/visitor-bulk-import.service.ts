@@ -8,6 +8,7 @@ import { AttendanceSessionWindowService } from '../../attendance/services/attend
 import { NotificationEvents } from '../../notifications/notification-events';
 import { buildFirstTimerWelcomeEmail } from '../../notifications/templates/first-timer-welcome.email';
 import type { VisitorImportRowDto } from '../dto/bulk-import-visitor.dto';
+import { BIRTHDAY_SENTINEL_YEAR } from '../../forms/birthday.util';
 
 /**
  * Bulk-import Visitor (first-timer) records from parsed CSV rows — e.g. backfilling
@@ -72,7 +73,7 @@ export class VisitorBulkImportService {
 
         const dateOfBirth =
           row.birthDay && row.birthMonth
-            ? new Date(Date.UTC(2000, row.birthMonth - 1, row.birthDay)).toISOString()
+            ? new Date(Date.UTC(BIRTHDAY_SENTINEL_YEAR, row.birthMonth - 1, row.birthDay)).toISOString()
             : null;
 
         const service = await this.sessionWindow.getServiceForDate(

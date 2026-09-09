@@ -30,6 +30,12 @@ const SCORE_COLOR = (score: number) =>
   score >= 5 ? "text-amber-600 dark:text-amber-400" :
                "text-rose-600 dark:text-rose-400";
 
+// Date of birth is collected as day + month only — the year on the stored
+// value is a sentinel, never a real birth year — so it must never be shown.
+function formatBirthday(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "UTC" });
+}
+
 export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
   const [analysis, setAnalysis] = useState<FirstTimerAnalysis | null>(null);
   const [loading, setLoading]   = useState(false);
@@ -115,7 +121,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
             {visitor.dateOfBirth && (
               <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
                 <Cake size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
-                {visitor.dateOfBirth}
+                {formatBirthday(visitor.dateOfBirth)}
               </span>
             )}
             {visitor.attendanceType && (

@@ -144,8 +144,10 @@ export type NavItem = {
   maxRole?: UserRole;
   /** Extra data-driven visibility check beyond the static role gate — e.g. a
    * UNIT_LEAD-role user who doesn't actually lead a real unit shouldn't see
-   * "My Unit"; a plain MEMBER who is genuinely on a team should see "Follow Up". */
-  requiresAccess?: "unitLead" | "unitMember" | "followUp";
+   * "My Unit"; a plain MEMBER who is genuinely on a team should see "Follow Up".
+   * "audioProduction" shows the item to PASTOR+ (as usual) OR any plain member
+   * of the "Audio Production" unit specifically — see AppSidebar.tsx. */
+  requiresAccess?: "unitLead" | "unitMember" | "followUp" | "audioProduction";
   /** Expanded into one nav item per unit (label = unit name, href =
    * `${href}/${unit.id}`) instead of rendered as a single static link — see
    * AppSidebar.tsx. "lead" sources from units the user leads/assists, "member"
@@ -224,7 +226,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "Pastoral",
     items: [
-      { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "PASTOR" },
+      { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "MEMBER", requiresAccess: "audioProduction" },
       { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR" },/* 
       { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },
       { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },

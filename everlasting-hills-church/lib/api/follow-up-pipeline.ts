@@ -95,6 +95,19 @@ export function useFollowUpAccess() {
   });
 }
 
+/** The unit whose leader controls (Team roster, Bulk reassign, Service report) the
+ * caller should see: their own led/assisted unit, or the "Follow-Up" unit itself
+ * for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own — giving them the same
+ * access a Follow-Up unit lead has, rather than one only reachable via the API. */
+export function useMyFollowUpUnit() {
+  return useQuery({
+    queryKey: ["follow-up", "my-unit"],
+    queryFn: () => api.get<{ id: string; name: string } | null>("/follow-up/my-unit"),
+    enabled: typeof window !== "undefined",
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useFollowUpCandidates(type: FollowUpSourceType, q: string) {
   return useQuery({
     queryKey: ["follow-up", "candidates", type, q],
@@ -190,21 +203,37 @@ export function useLogFollowUpContact() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
-      id, method, outcome, note, kind, isPastoralContact, isPrivate,
+      id, method, outcome, note, kind, serviceId, isPastoralContact, isPrivate,
     }: {
       id: string;
       note: string;
       method?: ContactMethod;
       outcome?: ContactOutcome;
       kind?: ContactLogKind;
+      serviceId?: string;
       isPastoralContact?: boolean;
       isPrivate?: boolean;
-    }) => api.post<FollowUpEntry>(`/follow-up/${id}/logs`, { method, outcome, note, kind, isPastoralContact, isPrivate }),
+    }) => api.post<FollowUpEntry>(`/follow-up/${id}/logs`, { method, outcome, note, kind, serviceId, isPastoralContact, isPrivate }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["follow-up"] });
-      showToast.success("Contact logged");
+      showToast.success("Activity logged");
     },
-    onError: (err) => showToast.error(errorMessage(err, "Couldn't log this contact")),
+    onError: (err) => showToast.error(errorMessage(err, "Couldn't log this activity")),
+  });
+}
+
+/** Marks this entry's subject present for a service — for when they showed up
+ * but weren't checked in through the normal attendance flow. */
+export function useMarkFollowUpPresent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, serviceId }: { id: string; serviceId: string }) =>
+      api.post<FollowUpEntry>(`/follow-up/${id}/mark-present`, { serviceId }),
+    onSuccess: (entry) => {
+      qc.invalidateQueries({ queryKey: ["follow-up"] });
+      showToast.success(`Marked ${entry.person.name} present`);
+    },
+    onError: (err) => showToast.error(errorMessage(err, "Couldn't mark this person present")),
   });
 }
 
@@ -259,18 +288,6 @@ export function useSnoozeFollowUp() {
       showToast.success(entry.snoozedUntil ? "Snoozed" : "Un-snoozed");
     },
     onError: (err) => showToast.error(errorMessage(err, "Couldn't update the snooze")),
-  });
-}
-
-export function useSendToPastor() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => api.post<{ entry: FollowUpEntry; whatsappLink: string | null }>(`/follow-up/${id}/send-to-pastor`),
-    onSuccess: ({ entry }) => {
-      qc.invalidateQueries({ queryKey: ["follow-up"] });
-      showToast.success(`Sent ${entry.person.name} to the Pastor`);
-    },
-    onError: (err) => showToast.error(errorMessage(err, "Couldn't send to the Pastor")),
   });
 }
 

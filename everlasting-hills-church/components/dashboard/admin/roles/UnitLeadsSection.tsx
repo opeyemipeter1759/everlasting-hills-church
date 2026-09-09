@@ -1,23 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, UserX, Users } from "lucide-react";
-import { useUnitsDirectory, type UnitDirectoryUnit } from "@/lib/api";
+import { Search, Trash2, UserX, Users, UsersRound } from "lucide-react";
+import { useDeleteUnit, useUnitDetail, useUnitsDirectory, type UnitDirectoryUnit } from "@/lib/api";
 import { downloadCsv } from "@/lib/export-csv";
+import { showToast } from "@/components/ui/toast/toast";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import Modal from "@/components/ui/overlay/Modal";
 
 /**
- * Read-only roster of who leads which unit.
- *
- * The Roles page could say how many unit leads exist but never who they were,
- * so answering "who leads Ushering" meant opening units one at a time. This
- * lists every unit with its lead, grouped by department, and says plainly where
- * a unit has none — an unled unit is the thing an admin most needs to see, and
- * it is exactly what a count of leads hides.
- *
- * Deliberately without actions. Appointing and standing down leads belongs to
- * the unit and department screens, where the person doing it has the context;
- * this is the overview for Super Admin, Pastor and Admin Head. The endpoint
- * behind it is ADMIN+ only, so no one below them can read it either.
+ * Who leads each unit, across every department — plus two actions an admin
+ * reaches for from the same screen: seeing everyone on a unit without opening
+ * it separately, and deleting a unit that's run its course. Appointing and
+ * standing down leads still belongs to the unit and department screens, where
+ * the person doing it has the context; this is the overview for Super Admin,
+ * Pastor and Admin Head. The endpoint behind it is ADMIN+ only, so no one
+ * below them can read it either.
  */
 function fullName(person: { firstName: string; lastName: string }): string {
   return `${person.firstName} ${person.lastName}`.trim();
@@ -58,6 +56,22 @@ function LeadCell({ unit }: { unit: UnitDirectoryUnit }) {
 export default function UnitLeadsSection() {
   const { data, isLoading, isError, error } = useUnitsDirectory();
   const [search, setSearch] = useState("");
+  const [membersUnit, setMembersUnit] = useState<UnitDirectoryUnit | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<UnitDirectoryUnit | null>(null);
+
+  const deleteUnit = useDeleteUnit();
+  const { data: membersDetail, isLoading: membersLoading } = useUnitDetail(membersUnit?.id ?? null);
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    try {
+      await deleteUnit.mutateAsync(deleteTarget.id);
+      showToast.success(`${deleteTarget.name} deleted`);
+      setDeleteTarget(null);
+    } catch (err) {
+      showToast.error((err as { message?: string })?.message ?? "Couldn't delete this unit");
+    }
+  }
 
   const units = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -166,6 +180,7 @@ export default function UnitLeadsSection() {
                 <th className="px-4 py-3 text-left font-bold">Lead</th>
                 <th className="px-4 py-3 text-left font-bold">Assistant</th>
                 <th className="px-4 py-3 text-right font-bold">Members</th>
+                <th className="px-4 py-3 text-right font-bold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white dark:divide-white/[0.06] dark:bg-[#161618]">
@@ -186,12 +201,94 @@ export default function UnitLeadsSection() {
                   <td className="px-4 py-3 text-right tabular-nums text-gray-600 dark:text-white/60">
                     {unit.totalMembers}
                   </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setMembersUnit(unit)}
+                        title="View members"
+                        className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1.5 text-[11px] font-bold text-gray-600 transition-colors hover:bg-gray-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
+                      >
+                        <UsersRound size={12} aria-hidden="true" />
+                        Members
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDeleteTarget(unit)}
+                        disabled={unit.totalMembers > 0}
+                        title={
+                          unit.totalMembers > 0
+                            ? "Remove every member from this unit before deleting it"
+                            : "Delete this unit"
+                        }
+                        className="flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-[11px] font-bold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:border-red-500/25 dark:text-red-400 dark:hover:bg-red-500/10"
+                      >
+                        <Trash2 size={12} aria-hidden="true" />
+                        Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      <Modal
+        open={!!membersUnit}
+        onClose={() => setMembersUnit(null)}
+        title={membersUnit ? `${membersUnit.name} — members` : "Members"}
+        description={membersUnit ? `${membersUnit.totalMembers} member${membersUnit.totalMembers === 1 ? "" : "s"}` : undefined}
+      >
+        {membersLoading ? (
+          <p className="py-6 text-center text-sm text-gray-400 dark:text-white/40">Loading…</p>
+        ) : !membersDetail || membersDetail.UnitMember.length === 0 ? (
+          <p className="py-6 text-center text-sm text-gray-400 dark:text-white/40">No members on this unit yet.</p>
+        ) : (
+          <ul className="max-h-96 space-y-1 overflow-y-auto">
+            {membersDetail.UnitMember.map((m) => (
+              <li key={m.id} className="flex items-center gap-2.5 rounded-xl px-2 py-2 hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#87102C]/10 text-[10px] font-black text-[#87102C] dark:bg-[#87102C]/25 dark:text-[#e8768a]">
+                  {initials(m.Member)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{fullName(m.Member)}</p>
+                  {m.Member.email && (
+                    <p className="truncate text-[11px] text-gray-400 dark:text-white/40">{m.Member.email}</p>
+                  )}
+                </div>
+                {m.isLead && (
+                  <span className="flex-shrink-0 rounded-full bg-[#87102C]/10 px-2 py-0.5 text-[10px] font-bold text-[#87102C] dark:bg-[#87102C]/25 dark:text-[#e8768a]">
+                    Lead
+                  </span>
+                )}
+                {m.isAssistant && (
+                  <span className="flex-shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-500 dark:bg-white/10 dark:text-white/50">
+                    Assistant
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </Modal>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        tone="danger"
+        title="Delete this unit?"
+        description={
+          <>
+            <span className="font-semibold">{deleteTarget?.name}</span> will be permanently removed. This
+            cannot be undone.
+          </>
+        }
+        confirmLabel="Delete"
+        loading={deleteUnit.isPending}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </section>
   );
 }

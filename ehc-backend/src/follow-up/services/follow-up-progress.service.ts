@@ -11,6 +11,7 @@ import { ENTRY_INCLUDE, WORKING_STAGES } from '../follow-up.types';
 import { FollowUpAuthService } from './follow-up-auth.service';
 import { FollowUpEntryMapperService } from './follow-up-entry-mapper.service';
 import { FollowUpAuditService } from './follow-up-audit.service';
+import { AttendanceOverrideService } from '../../attendance/services/attendance-override.service';
 
 /** Logging contact attempts and final outcomes on a Master List entry. */
 @Injectable()
@@ -22,9 +23,38 @@ export class FollowUpProgressService {
     private readonly auth: FollowUpAuthService,
     private readonly mapper: FollowUpEntryMapperService,
     private readonly audit: FollowUpAuditService,
+    private readonly attendanceOverride: AttendanceOverrideService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
+
+  /** Marks this entry's subject present for a service — for when they showed
+   * up but weren't checked in through the normal attendance flow. Only makes
+   * sense for a Member-backed (ABSENTEE) entry; a first-timer Visitor has no
+   * Member row for AttendanceRecord to point at. */
+  async markPresent(actor: AuthUser, id: string, serviceId: string) {
+    const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
+    if (!entry) throw new NotFoundException('Follow-up entry not found');
+    if (!actor.memberId || !this.auth.canWork(actor, entry)) {
+      throw new ForbiddenException('You are not assigned to this follow-up');
+    }
+    if (!entry.memberId) {
+      throw new BadRequestException('Only a member can be marked present for a service');
+    }
+
+    await this.attendanceOverride.overrideAttendance(serviceId, entry.memberId, 'PRESENT');
+
+    await this.audit.write({
+      action: 'MARK_PRESENT',
+      entity: 'FollowUpEntry',
+      entityId: id,
+      actorId: actor.userId,
+      after: { serviceId },
+    });
+
+    const updated = await this.prisma.followUpEntry.findFirst({ where: { id }, include: ENTRY_INCLUDE });
+    return this.mapper.mapEntry(updated!, actor);
   }
 
   async logContact(actor: AuthUser, id: string, dto: LogContactDto) {
@@ -53,6 +83,7 @@ export class FollowUpProgressService {
         method: isContact ? dto.method : null,
         outcome: isContact ? dto.outcome : null,
         note: dto.note,
+        serviceId: dto.serviceId ?? null,
         isPastoralContact: dto.isPastoralContact ?? false,
         isPrivate: dto.isPrivate ?? false,
       },

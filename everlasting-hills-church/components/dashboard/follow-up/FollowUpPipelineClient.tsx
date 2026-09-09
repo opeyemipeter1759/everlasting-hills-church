@@ -1,25 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ClipboardCheck, Clock3, ListChecks, Plus, RefreshCw, Search, ShieldAlert, Trophy, Users, UsersRound } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ClipboardCheck, Clock3, ListChecks, RefreshCw, Search, ShieldAlert, Trophy, Users, UsersRound } from "lucide-react";
 import { hasMinRole } from "@/lib/auth/frontend-session";
-import { useMe, useMyUnit } from "@/lib/api";
+import { useMe } from "@/lib/api";
 import {
   useBackfillFollowUpService,
   useFollowUpAccess,
   useFollowUpEntries,
   useFollowUpServices,
+  useMyFollowUpUnit,
 } from "@/lib/api/follow-up-pipeline";
 import type { ApiError } from "@/lib/api/axios";
 import type { FollowUpEntry, FollowUpSourceType } from "@/types/follow-up";
 import { PipelineStats } from "./PipelineStats";
 import { MasterListTable } from "./MasterListTable";
 import { FollowUpDetailDrawer } from "./FollowUpDetailDrawer";
-import { AddToMasterListModal } from "./AddToMasterListModal";
 import { AssignFollowUpModal } from "./AssignFollowUpModal";
 import { BulkReassignModal } from "./BulkReassignModal";
 import { TeamRosterModal } from "./TeamRosterModal";
-import { QuickCaptureButton } from "./QuickCaptureButton";
 import { TodayView } from "./TodayView";
 import { WinsLeaderboardPanel } from "./WinsLeaderboardPanel";
 import { ServiceReportPanel } from "./ServiceReportPanel";
@@ -55,8 +55,9 @@ function formatServiceOption(s: { name: string; scheduledAt: string; serviceType
 }
 
 export default function FollowUpPipelineClient() {
+  const queryClient = useQueryClient();
   const { data: me } = useMe();
-  const { data: myUnit } = useMyUnit();
+  const { data: myUnit } = useMyFollowUpUnit();
   const { data: services = [] } = useFollowUpServices();
 
   const isLeader = hasMinRole(me?.role, "UNIT_LEAD");
@@ -71,11 +72,17 @@ export default function FollowUpPipelineClient() {
   const [pageSize, setPageSizeState] = useState(DEFAULT_PAGE_SIZE);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
   const [assignTarget, setAssignTarget] = useState<FollowUpEntry | null>(null);
-  const [addModalOpen, setAddModalOpen] = useState(false);
   const [bulkReassignOpen, setBulkReassignOpen] = useState(false);
   const [teamRosterOpen, setTeamRosterOpen] = useState(false);
 
-  const { data: entries = [], isLoading, error } = useFollowUpEntries({ serviceId: serviceId || undefined });
+  // There's no "all service days" view — activity is logged per service, so the
+  // page always has one concrete service in scope. Defaults to the most recent
+  // one that's already happened; the picker just moves between past services.
+  useEffect(() => {
+    if (!serviceId && services.length > 0) setServiceIdState(services[0].id);
+  }, [serviceId, services]);
+
+  const { data: entries = [], isLoading, isFetching, error } = useFollowUpEntries({ serviceId: serviceId || undefined });
   // The server decides. Being in a unit is not the same as being on a
   // follow-up team, and the entries query can answer 200 for someone who should
   // not be reading pastoral notes about named people — so the dedicated access
@@ -186,17 +193,15 @@ export default function FollowUpPipelineClient() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <QuickCaptureButton />
-          {isLeader && (
-            <button
-              type="button"
-              onClick={() => setAddModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white bg-[#87102C] hover:bg-[#6E0C24] transition-colors flex-shrink-0"
-            >
-              <Plus size={15} aria-hidden="true" />
-              Add to Master List
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["follow-up"] })}
+            disabled={isFetching}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-[#87102C] dark:text-[#FFB3C1] border border-[#87102C]/30 dark:border-[#FFB3C1]/25 hover:bg-[#FFF4F6] dark:hover:bg-white/5 transition-colors flex-shrink-0 disabled:opacity-50"
+          >
+            <RefreshCw size={15} className={isFetching ? "animate-spin" : ""} aria-hidden="true" />
+            Refresh
+          </button>
         </div>
       </div>
 
@@ -252,10 +257,7 @@ export default function FollowUpPipelineClient() {
                   value={serviceId}
                   onChange={setServiceId}
                   className="text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer w-full sm:w-56 sm:flex-shrink-0"
-                  options={[
-                    { value: "", label: "All service days" },
-                    ...services.map((s) => ({ value: s.id, label: formatServiceOption(s) })),
-                  ]}
+                  options={services.map((s) => ({ value: s.id, label: formatServiceOption(s) }))}
                 />
 
                 <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-white/10 p-0.5" role="tablist" aria-label="Filter by source">
@@ -345,6 +347,7 @@ export default function FollowUpPipelineClient() {
               <MasterListTable
                 entries={paged}
                 viewerId={viewerId}
+                serviceId={serviceId || undefined}
                 onSelect={(entry) => setSelectedEntryId(entry.id)}
                 onAssign={(entry) => setAssignTarget(entry)}
               />
@@ -392,13 +395,12 @@ export default function FollowUpPipelineClient() {
       <FollowUpDetailDrawer
         entry={selectedEntry}
         viewerId={viewerId}
+        defaultServiceId={serviceId || undefined}
         onClose={() => setSelectedEntryId(null)}
         onAssign={(entry) => setAssignTarget(entry)}
       />
 
       <AssignFollowUpModal entry={assignTarget} onClose={() => setAssignTarget(null)} />
-
-      <AddToMasterListModal open={addModalOpen} onClose={() => setAddModalOpen(false)} />
 
       {myUnit && (
         <>

@@ -44,7 +44,9 @@ import { AttendanceAbsenceService } from './services/attendance-absence.service'
   ],
   // SessionsService (sessions.module.ts) depends on AttendanceAbsenceService (to mark
   // absentees when a session auto-closes) and AttendanceSessionWindowService (force-open
-  // today's service). Everything else here is attendance-module-internal.
-  exports: [AttendanceAbsenceService, AttendanceSessionWindowService],
+  // today's service). FollowUpModule depends on AttendanceOverrideService for its own
+  // "Mark Present" action, so a leader can fix a missed check-in without leaving the
+  // pipeline. Everything else here is attendance-module-internal.
+  exports: [AttendanceAbsenceService, AttendanceSessionWindowService, AttendanceOverrideService],
 })
 export class AttendanceModule {}

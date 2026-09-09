@@ -17,6 +17,7 @@ import { SermonsDirectMessageController } from './controllers/sermons-direct-mes
 import { SermonsMemberStatsController } from './controllers/sermons-member-stats.controller';
 import { SermonsUploadController } from './controllers/sermons-upload.controller';
 
+import { SermonsAuthService } from './services/sermons-auth.service';
 import { SermonMemberLookupService } from './services/sermon-member-lookup.service';
 import { SermonAdminReadService } from './services/sermon-admin-read.service';
 import { SermonCreateService } from './services/sermon-create.service';
@@ -55,6 +56,7 @@ import { SermonMemberStatsService } from './services/sermon-member-stats.service
     InMemorySermonRepository,
     { provide: SERMON_REPOSITORY, useClass: PrismaSermonRepository },
 
+    SermonsAuthService,
     SermonMemberLookupService,
     SermonAdminReadService,
     SermonCreateService,

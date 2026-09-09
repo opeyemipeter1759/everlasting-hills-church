@@ -26,6 +26,11 @@ export class LogContactDto {
   @MaxLength(1000)
   note!: string;
 
+  @ApiPropertyOptional({ description: 'The service day this activity relates to' })
+  @IsOptional()
+  @IsString()
+  serviceId?: string;
+
   @ApiPropertyOptional({ description: "Tags this as the Pastor's own call, distinct from a worker's routine check-in" })
   @IsOptional()
   @IsBoolean()

@@ -29,7 +29,10 @@ export const ENTRY_INCLUDE = {
   SentToPastorBy: { select: { id: true, Member: { select: { firstName: true, lastName: true } } } },
   Logs: {
     orderBy: { createdAt: 'asc' as const },
-    include: { By: { select: { id: true, firstName: true, lastName: true, photoUrl: true } } },
+    include: {
+      By: { select: { id: true, firstName: true, lastName: true, photoUrl: true } },
+      Service: { select: { id: true, name: true, scheduledAt: true } },
+    },
   },
   Connections: {
     orderBy: { createdAt: 'desc' as const },

@@ -11,8 +11,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import type { AuthUser } from '../../auth/types/auth-user';
 import { hasValidFileSignature } from '../../uploads/file-signature.util';
+import { SermonsAuthService } from '../services/sermons-auth.service';
 
 const MAX_AUDIO_BYTES = 100 * 1024 * 1024;
 const AUDIO_MIME = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/ogg', 'audio/aac'];
@@ -27,8 +30,10 @@ const AUDIO_EXT: Record<string, string> = {
 @ApiTags('sermons')
 @Controller('sermons')
 export class SermonsUploadController {
+  constructor(private readonly sermonsAuth: SermonsAuthService) {}
+
   @Post('upload-audio')
-  @Roles(Role.PASTOR)
+  @Roles(Role.MEMBER)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
@@ -36,7 +41,7 @@ export class SermonsUploadController {
     }),
   )
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Upload sermon audio', description: 'Uploads an audio file to R2 and returns a public URL.' })
+  @ApiOperation({ summary: 'Upload sermon audio (PASTOR+ or Audio Production)', description: 'Uploads an audio file to R2 and returns a public URL.' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -48,8 +53,11 @@ export class SermonsUploadController {
   })
   @ApiCreatedResponse({ description: 'Audio uploaded successfully' })
   async uploadAudio(
+    @CurrentUser() actor: AuthUser,
     @UploadedFile() file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
   ) {
+    await this.sermonsAuth.requireManage(actor);
+
     if (!file) {
       throw new BadRequestException('No file provided');
     }

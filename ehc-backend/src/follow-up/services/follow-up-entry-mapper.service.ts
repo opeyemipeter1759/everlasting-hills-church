@@ -125,6 +125,7 @@ export class FollowUpEntryMapperService {
         method: l.method,
         outcome: l.outcome,
         note: l.note,
+        service: l.Service ? { id: l.Service.id, name: l.Service.name, scheduledAt: l.Service.scheduledAt.toISOString() } : null,
         isPastoralContact: l.isPastoralContact,
         isPrivate: l.isPrivate,
       })),

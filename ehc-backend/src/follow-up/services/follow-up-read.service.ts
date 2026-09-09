@@ -64,10 +64,12 @@ export class FollowUpReadService {
     return this.absenteeDetail.attach(entries.map((e) => this.mapper.mapEntry(e, actor)));
   }
 
-  /** Recent services, for the Follow-Up page's service-day filter. */
+  /** Recent PAST services, for the Follow-Up page's service-day filter. Only
+   * services that have already happened — there's nothing to follow up on or
+   * log activity against for one that hasn't occurred yet. */
   async listServices() {
     return this.prisma.service.findMany({
-      where: { tenantId: this.tenantId },
+      where: { tenantId: this.tenantId, scheduledAt: { lte: new Date() } },
       orderBy: { scheduledAt: 'desc' },
       take: 30,
       select: { id: true, name: true, scheduledAt: true, serviceType: true },

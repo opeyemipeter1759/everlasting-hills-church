@@ -1,7 +1,7 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { FollowUpSourceType, FollowUpStage, MemberStatus } from '@prisma/client';
+import { FollowUpSourceType, FollowUpStage, MemberStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
@@ -77,25 +77,53 @@ export class FollowUpIntakeService {
       if (!isMember) throw new BadRequestException('Assignee must be a member of this unit');
     }
 
+    // One entry per person, full stop — not per team. Without this, a leader
+    // adding someone already auto-surfaced (or added by another team) creates
+    // a second card for the same person with a second, independent assignee.
+    const duplicate = await this.prisma.followUpEntry.findFirst({
+      where: {
+        tenantId: this.tenantId,
+        ...(dto.sourceType === FollowUpSourceType.FIRST_TIMER
+          ? { visitorId: dto.visitorId }
+          : { memberId: dto.memberId }),
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      throw new ConflictException('This person already has a follow-up entry');
+    }
+
     // Assignment happens the moment the entry is created — same gender as the
     // subject, whoever on the team has the lightest load — unless the caller
     // picked someone specific.
     const assigneeId = dto.assigneeId ?? (await this.autoAssign.pickAssignee(unitId, subjectGender));
 
-    const entry = await this.prisma.followUpEntry.create({
-      data: {
-        id: randomUUID(),
-        tenantId: this.tenantId,
-        unitId,
-        sourceType: dto.sourceType,
-        memberId: dto.sourceType === FollowUpSourceType.ABSENTEE ? dto.memberId : null,
-        visitorId: dto.sourceType === FollowUpSourceType.FIRST_TIMER ? dto.visitorId : null,
-        addedById: actor.profileId,
-        assigneeId,
-        stage: assigneeId ? FollowUpStage.ASSIGNED : FollowUpStage.UNASSIGNED,
-      },
-      include: ENTRY_INCLUDE,
-    });
+    let entry;
+    try {
+      entry = await this.prisma.followUpEntry.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          unitId,
+          sourceType: dto.sourceType,
+          memberId: dto.sourceType === FollowUpSourceType.ABSENTEE ? dto.memberId : null,
+          visitorId: dto.sourceType === FollowUpSourceType.FIRST_TIMER ? dto.visitorId : null,
+          addedById: actor.profileId,
+          assigneeId,
+          stage: assigneeId ? FollowUpStage.ASSIGNED : FollowUpStage.UNASSIGNED,
+        },
+        include: ENTRY_INCLUDE,
+      });
+    } catch (err) {
+      // Two leaders submitting the same person at nearly the same moment both
+      // pass the check above — the DB's unique constraint is what actually
+      // decides the race; this just turns the loser's error into the same
+      // friendly message rather than a raw 500.
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictException('This person already has a follow-up entry');
+      }
+      throw err;
+    }
 
     await this.audit.write({
       action: 'CREATE',

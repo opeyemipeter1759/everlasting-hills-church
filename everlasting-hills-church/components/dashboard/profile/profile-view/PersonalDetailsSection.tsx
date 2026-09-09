@@ -3,7 +3,7 @@ import ScrollReveal from "@/components/home/ScrollReveal";
 import type { ProfileViewModel } from "@/components/dashboard/profile/profile-view-model";
 import { ChipCard } from "./ChipCard";
 import { MaritalStatusCard } from "./MaritalStatusCard";
-import { computeAge, fmtDayMonth } from "./helpers";
+import { fmtDayMonth } from "./helpers";
 
 /**
  * Section 3b — Gender, birthday + age, marital status, anniversary, household.
@@ -52,14 +52,7 @@ export function PersonalDetailsSection({ profile }: { profile: ProfileViewModel 
             label="Birthday"
             value={
               birthday ? (
-                <span>
-                  {birthday}
-                  {computeAge(profile.dateOfBirth) !== null && (
-                    <span className="ml-2 text-xs font-normal text-[#8a7e80] dark:text-white/40">
-                      · {computeAge(profile.dateOfBirth)} yrs
-                    </span>
-                  )}
-                </span>
+                <span>{birthday}</span>
               ) : (
                 <span className="text-[#b8a8ac] dark:text-white/30 italic font-normal text-sm">Not on file</span>
               )

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { FollowUpSourceType, FollowUpStage, MemberStatus } from '@prisma/client';
+import { FollowUpSourceType, FollowUpStage, MemberStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { FollowUpUnitLeaderLookupService } from './follow-up-unit-leader-lookup.service';
@@ -96,36 +96,43 @@ export class FollowUpAutoSurfaceAbsenteesService {
   ): Promise<number> {
     if (absentees.length === 0) return 0;
 
+    // One entry per PERSON, not per unit they happen to belong to — a member
+    // on three teams still only ever has one follow-up entry, one assignee.
+    // Not scoped to sourceType: ABSENTEE either — a member who converted from
+    // a visitor carries their original entry forward (see
+    // MemberOnboardingService), and a member can also already have a
+    // manually-added entry. Either way, "does this person have any entry at
+    // all" is the real question.
     const existing = await this.prisma.followUpEntry.findMany({
       where: {
         tenantId: this.tenantId,
-        sourceType: FollowUpSourceType.ABSENTEE,
         memberId: { in: absentees.map((a) => a.id) },
       },
-      select: { unitId: true, memberId: true },
+      select: { memberId: true },
     });
-    const existingKeys = new Set(existing.map((e) => `${e.unitId}:${e.memberId}`));
+    const existingIds = new Set(existing.map((e) => e.memberId));
 
     let created = 0;
     for (const member of absentees) {
-      const targetUnitIds = member.UnitMember.length > 0
-        ? member.UnitMember.map((um) => um.unitId)
-        : fallbackUnitId
-          ? [fallbackUnitId]
-          : [];
+      if (existingIds.has(member.id)) continue;
 
-      for (const unitId of targetUnitIds) {
-        const key = `${unitId}:${member.id}`;
-        if (existingKeys.has(key)) continue;
+      // Their own team if they have one, otherwise the generic "Follow-Up"
+      // fallback. A member on several teams only gets tracked by the first —
+      // which one is somewhat arbitrary, but arbitrary-and-singular beats
+      // "all of them, each with their own assignee".
+      const unitId = member.UnitMember[0]?.unitId ?? fallbackUnitId;
+      if (!unitId) continue;
 
-        const leaderProfileId = await this.unitLeaderLookup.getUnitLeaderProfileId(unitId, leaderCache);
-        if (!leaderProfileId) {
-          this.logger.warn(`auto-surface: unit ${unitId} has no active leader, skipping absentee ${member.id}`);
-          continue;
-        }
+      const leaderProfileId = await this.unitLeaderLookup.getUnitLeaderProfileId(unitId, leaderCache);
+      if (!leaderProfileId) {
+        this.logger.warn(`auto-surface: unit ${unitId} has no active leader, skipping absentee ${member.id}`);
+        continue;
+      }
 
-        const assigneeId = await this.autoAssign.pickAssignee(unitId, member.gender);
-        const created_ = await this.prisma.followUpEntry.create({
+      const assigneeId = await this.autoAssign.pickAssignee(unitId, member.gender);
+      let created_;
+      try {
+        created_ = await this.prisma.followUpEntry.create({
           data: {
             id: randomUUID(),
             tenantId: this.tenantId,
@@ -137,12 +144,21 @@ export class FollowUpAutoSurfaceAbsenteesService {
             stage: assigneeId ? FollowUpStage.ASSIGNED : FollowUpStage.UNASSIGNED,
           },
         });
-        if (assigneeId) {
-          await this.notify.notifyAssigned(assigneeId, `${member.firstName} ${member.lastName}`.trim(), created_.id);
+      } catch (err) {
+        // Another process (e.g. an overlapping run of this same sweep) won the
+        // race and inserted this member's entry first — the DB's unique
+        // constraint is the real guard here, this check is just the fast path.
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+          existingIds.add(member.id);
+          continue;
         }
-        existingKeys.add(key);
-        created += 1;
+        throw err;
       }
+      if (assigneeId) {
+        await this.notify.notifyAssigned(assigneeId, `${member.firstName} ${member.lastName}`.trim(), created_.id);
+      }
+      existingIds.add(member.id);
+      created += 1;
     }
     return created;
   }

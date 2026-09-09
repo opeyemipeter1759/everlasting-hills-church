@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { FollowUpSourceType } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import type { Env } from '../../config/env.validation';
 import { NotificationEvents } from '../../notifications/notification-events';
@@ -83,6 +84,17 @@ export class MemberOnboardingService {
         await tx.visitor.update({
           where: { id: visitor.id },
           data: { convertedAt: new Date(), convertedToMemberId: createdMember.id },
+        });
+
+        // Carry this visitor's follow-up entry (and its contact history) over to
+        // the new member record rather than leaving it stranded. Without this, the
+        // old FIRST_TIMER entry keeps showing in the pipeline forever under the
+        // visitor identity, and the absentee sweep later creates a second,
+        // member-backed entry for the same person the first time they miss a
+        // service — the person then appears twice with no link between the cards.
+        await tx.followUpEntry.updateMany({
+          where: { tenantId: this.tenantId, visitorId: visitor.id },
+          data: { sourceType: FollowUpSourceType.ABSENTEE, memberId: createdMember.id, visitorId: null },
         });
         return createdMember;
       });

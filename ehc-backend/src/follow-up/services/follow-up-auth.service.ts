@@ -47,6 +47,38 @@ export class FollowUpAuthService {
     return { hasAccess: await this.hasUnitAccess(actor) };
   }
 
+  /**
+   * The unit whose leader-only controls (Team roster, Bulk reassign, Service
+   * report) this actor should see on the Follow-Up page.
+   *
+   * A real unit lead sees their own team, unchanged. ADMIN+/PASTOR/SUPER_ADMIN
+   * already pass `canLead()` for every unit — including Follow-Up — but with
+   * no team of their own they'd otherwise never see those controls at all,
+   * since the page only renders them once it has a concrete unit to scope to.
+   * Resolving that unit to "Follow-Up" here is what actually gives them the
+   * same access a Follow-Up unit lead has, rather than authorization that
+   * exists on the backend but nothing in the UI ever exposes.
+   */
+  async resolveMyUnit(actor: AuthUser): Promise<{ id: string; name: string } | null> {
+    if (actor.unitLeadOf.length > 0) {
+      const unit = await this.prisma.unit.findFirst({
+        where: { id: { in: actor.unitLeadOf }, tenantId: this.tenantId },
+        select: { id: true, name: true },
+      });
+      if (unit) return unit;
+    }
+
+    if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) {
+      const followUpUnit = await this.prisma.unit.findFirst({
+        where: { tenantId: this.tenantId, name: 'Follow-Up' },
+        select: { id: true, name: true },
+      });
+      if (followUpUnit) return followUpUnit;
+    }
+
+    return null;
+  }
+
   /** Resolves the unit to operate on and authorizes the actor for it in one pass.
    * With no `requestedUnitId`, resolves to the actor's own unit membership. With one,
    * admins/leaders of that unit pass through; a plain member must actually belong to it. */

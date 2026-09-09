@@ -63,6 +63,12 @@ export interface PersonRef {
   email?: string | null;
 }
 
+export interface LogService {
+  id: string;
+  name: string;
+  scheduledAt: string;
+}
+
 export interface ContactLogEntry {
   id: string;
   by: PersonRef;
@@ -73,6 +79,8 @@ export interface ContactLogEntry {
   /** Null for QUICK_UPDATE/CONNECTION/SYSTEM entries. */
   outcome: ContactOutcome | null;
   note: string;
+  /** The service day this activity relates to — null on logs from before this was tracked. */
+  service: LogService | null;
   isPastoralContact: boolean;
   /** Server already filters which private notes reach the viewer — this is only
    * a display hint to show the "private" indicator on the ones you can see. */

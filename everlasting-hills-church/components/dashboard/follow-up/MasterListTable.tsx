@@ -1,34 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, ChevronRight, Home, List, MapPin, Phone, ShieldOff, UserPlus } from "lucide-react";
+import { CalendarCheck2, ChevronDown, ChevronRight, Home, List, MapPin, Phone, ShieldOff, UserPlus } from "lucide-react";
 import type { FollowUpEntry } from "@/types/follow-up";
 import { EmptyState } from "@/components/ui/display/EmptyState";
 import { timeAgo } from "@/lib/utils/time";
+import { useMarkFollowUpPresent } from "@/lib/api/follow-up-pipeline";
 import { PersonAvatar } from "./PersonAvatar";
 import { DueStatusPill, OutcomePill, RiskCategoryPill, SourceTypePill, StagePill } from "./StagePill";
 
 interface MasterListTableProps {
   entries: FollowUpEntry[];
   viewerId: string;
+  /** The service currently in view — lets a leader mark someone present for it
+   * right from the list, for a missed check-in. Undefined hides the action. */
+  serviceId?: string;
   onSelect: (entry: FollowUpEntry) => void;
   onAssign: (entry: FollowUpEntry) => void;
 }
 
 type ViewMode = "list" | "area";
-
-function ContactDots({ count, goal }: { count: number; goal: number }) {
-  return (
-    <div className="flex items-center gap-1" aria-label={`${count} of ${goal} contacts logged`}>
-      {Array.from({ length: goal }).map((_, i) => (
-        <span
-          key={i}
-          className={`w-1.5 h-1.5 rounded-full ${i < count ? "bg-[#87102C] dark:bg-[#FFB3C1]" : "bg-[#E7CDD3]/60 dark:bg-white/15"}`}
-        />
-      ))}
-    </div>
-  );
-}
 
 function titleCase(s: string): string {
   return s.replace(/\w\S*/g, (t) => t.charAt(0).toUpperCase() + t.substring(1).toLowerCase());
@@ -44,10 +35,27 @@ function areaOf(entry: FollowUpEntry): string {
 }
 
 function EntryRow({
-  entry, viewerId, onSelect, onAssign,
-}: { entry: FollowUpEntry; viewerId: string; onSelect: (e: FollowUpEntry) => void; onAssign: (e: FollowUpEntry) => void }) {
+  entry, viewerId, serviceId, onSelect, onAssign,
+}: {
+  entry: FollowUpEntry;
+  viewerId: string;
+  serviceId?: string;
+  onSelect: (e: FollowUpEntry) => void;
+  onAssign: (e: FollowUpEntry) => void;
+}) {
   const isMine = entry.assignee?.id === viewerId;
   const isOptedOut = entry.memberStatus === "OPTED_OUT";
+  const markPresent = useMarkFollowUpPresent();
+  // Only a Member-backed (ABSENTEE) entry has an AttendanceRecord to mark —
+  // a first-timer Visitor has no attendance history at all yet.
+  const canMarkPresent = entry.sourceType === "ABSENTEE" && !!serviceId && entry.viewerCanWork && !isOptedOut;
+
+  function handleMarkPresent(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!serviceId) return;
+    markPresent.mutate({ id: entry.id, serviceId });
+  }
+
   return (
     <button
       type="button"
@@ -118,12 +126,20 @@ function EntryRow({
         {entry.outcome ? <OutcomePill outcome={entry.outcome} /> : <StagePill stage={entry.stage} />}
       </div>
 
-      {/* Progress */}
-      <div className="hidden lg:flex items-center gap-2 w-24 flex-shrink-0">
-        <ContactDots count={entry.contactCount} goal={entry.goalContacts} />
-        <span className="text-[10px] text-[#8a7e80] dark:text-white/35 tabular-nums">
-          {entry.contactCount}/{entry.goalContacts}
-        </span>
+      {/* Mark present — for someone who showed up but wasn't checked in */}
+      <div className="hidden lg:flex w-32 flex-shrink-0">
+        {canMarkPresent && (
+          <button
+            type="button"
+            onClick={handleMarkPresent}
+            disabled={markPresent.isPending}
+            title="Mark present for this service"
+            className="flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/25 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-2.5 py-1.5 text-[11px] font-bold hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+          >
+            <CalendarCheck2 size={12} aria-hidden="true" />
+            {markPresent.isPending ? "Marking…" : "Mark Present"}
+          </button>
+        )}
       </div>
 
       {/* Last contact */}
@@ -170,7 +186,7 @@ function buildHouseholdRows(entries: FollowUpEntry[]): ListRow[] {
   return rows;
 }
 
-export function MasterListTable({ entries, viewerId, onSelect, onAssign }: MasterListTableProps) {
+export function MasterListTable({ entries, viewerId, serviceId, onSelect, onAssign }: MasterListTableProps) {
   const [view, setView] = useState<ViewMode>("list");
   const [collapsedAreas, setCollapsedAreas] = useState<Record<string, boolean>>({});
 
@@ -241,7 +257,7 @@ export function MasterListTable({ entries, viewerId, onSelect, onAssign }: Maste
           {householdRows.map((row) =>
             row.type === "single" ? (
               <li key={row.entry.id} className={row.entry.memberStatus === "OPTED_OUT" ? "border-l-2 border-rose-400 dark:border-rose-500/50" : ""}>
-                <EntryRow entry={row.entry} viewerId={viewerId} onSelect={onSelect} onAssign={onAssign} />
+                <EntryRow entry={row.entry} viewerId={viewerId} serviceId={serviceId} onSelect={onSelect} onAssign={onAssign} />
               </li>
             ) : (
               <li key={row.householdId} className="bg-gray-50/60 dark:bg-white/[0.02]">
@@ -254,7 +270,7 @@ export function MasterListTable({ entries, viewerId, onSelect, onAssign }: Maste
                 <ul className="divide-y divide-[#E7CDD3]/20 dark:divide-white/[0.05]">
                   {row.entries.map((entry) => (
                     <li key={entry.id} className="pl-3 border-l-2 border-[#87102C]/20 dark:border-[#FFB3C1]/15 ml-3">
-                      <EntryRow entry={entry} viewerId={viewerId} onSelect={onSelect} onAssign={onAssign} />
+                      <EntryRow entry={entry} viewerId={viewerId} serviceId={serviceId} onSelect={onSelect} onAssign={onAssign} />
                     </li>
                   ))}
                 </ul>
@@ -290,7 +306,7 @@ export function MasterListTable({ entries, viewerId, onSelect, onAssign }: Maste
                   <ul className="divide-y divide-[#E7CDD3]/20 dark:divide-white/[0.05]">
                     {items.map((entry) => (
                       <li key={entry.id}>
-                        <EntryRow entry={entry} viewerId={viewerId} onSelect={onSelect} onAssign={onAssign} />
+                        <EntryRow entry={entry} viewerId={viewerId} serviceId={serviceId} onSelect={onSelect} onAssign={onAssign} />
                       </li>
                     ))}
                   </ul>

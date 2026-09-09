@@ -111,6 +111,15 @@ const AppSidebar: React.FC = () => {
             if (item.requiresAccess === 'unitLead' && !myUnits?.length) return false;
             if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
             if (item.requiresAccess === 'followUp' && !followUpAccess?.hasAccess) return false;
+            // PASTOR+ already sees this via the (now-lowered) minRole check above —
+            // this only needs to additionally admit a plain Audio Production member.
+            if (
+              item.requiresAccess === 'audioProduction' &&
+              !canAccessRole('PASTOR') &&
+              !myMemberships?.some((u) => u.name === 'Audio Production')
+            ) {
+              return false;
+            }
             return true;
           })
           // A person can lead/belong to more than one unit — expand into one

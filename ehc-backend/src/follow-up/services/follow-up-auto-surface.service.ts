@@ -5,11 +5,11 @@ import { FollowUpAutoSurfaceFirstTimersService } from './follow-up-auto-surface-
 
 /**
  * Daily job (see SchedulingService) + a manual ADMIN+ trigger. Creates entries for
- * every at-risk absentee — in every unit they belong to, or in the fallback
- * "Follow-Up" unit if they're not on any team — and every new visitor (always
- * routed to "Follow-Up", since visitors have no unit of their own). Once a
- * (unit, person) pair has ever had an entry, it is skipped permanently — no
- * re-creation, even after a CONFIRMED outcome.
+ * every at-risk absentee — in their own team if they're on one, or the fallback
+ * "Follow-Up" unit if not — and every new visitor (always routed to "Follow-Up",
+ * since visitors have no unit of their own). One entry per person, period, even
+ * if they belong to several teams. Once a person has ever had an entry, it is
+ * skipped permanently — no re-creation, even after a CONFIRMED outcome.
  */
 @Injectable()
 export class FollowUpAutoSurfaceService {

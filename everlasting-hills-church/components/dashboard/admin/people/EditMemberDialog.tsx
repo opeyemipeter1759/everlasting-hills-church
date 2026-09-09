@@ -12,6 +12,28 @@ import {
 import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
 import { Select } from "@/components/ui/select";
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+// Date of birth is collected as day + month only (no year, since it's only ever
+// used for birthday matching) — the year on the stored value is a carry-over
+// sentinel, defaulted to 2000 for members who never had one, and preserved
+// as-is here rather than shown or edited.
+function dayMonthFromIso(iso: string | null): { day: string; month: string; year: number } {
+  if (!iso) return { day: "", month: "", year: 2000 };
+  const d = new Date(iso);
+  return { day: String(d.getUTCDate()), month: MONTH_NAMES[d.getUTCMonth()], year: d.getUTCFullYear() };
+}
+
+function composeDobIso(day: string, month: string, year: number): string | null {
+  const mi = MONTH_NAMES.indexOf(month);
+  const d = parseInt(day, 10);
+  if (mi === -1 || !d || d < 1 || d > 31) return null;
+  return new Date(Date.UTC(year, mi, d)).toISOString();
+}
+
 export default function EditMemberDialog({
   person,
   onClose,
@@ -30,7 +52,7 @@ export default function EditMemberDialog({
     email: person?.email ?? "",
     phone: person?.phone ?? "",
     gender: (person?.gender?.toUpperCase() as "" | "MALE" | "FEMALE") ?? "",
-    dateOfBirth: person?.dateOfBirth ? person.dateOfBirth.slice(0, 10) : "",
+    ...dayMonthFromIso(person?.dateOfBirth ?? null),
     address: person?.address ?? "",
   }));
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +67,7 @@ export default function EditMemberDialog({
       email: person.email ?? "",
       phone: person.phone ?? "",
       gender: (person.gender?.toUpperCase() as "" | "MALE" | "FEMALE") ?? "",
-      dateOfBirth: person.dateOfBirth ? person.dateOfBirth.slice(0, 10) : "",
+      ...dayMonthFromIso(person.dateOfBirth ?? null),
       address: person.address ?? "",
     });
     setError(null);
@@ -92,7 +114,7 @@ export default function EditMemberDialog({
           email: form.email.trim(),
           phone: form.phone.trim(),
           gender: form.gender || null,
-          dateOfBirth: form.dateOfBirth || null,
+          dateOfBirth: composeDobIso(form.day, form.month, form.year),
           address: form.address.trim(),
         } as Partial<PersonRow> & { dateOfBirth?: string | null },
       });
@@ -146,7 +168,27 @@ export default function EditMemberDialog({
           />
         </Labeled>
         <Labeled label="Birthday">
-          <input className={fieldCls} type="date" value={form.dateOfBirth} onChange={(e) => set({ dateOfBirth: e.target.value })} />
+          <div className="flex gap-2">
+            <input
+              className={fieldCls}
+              type="number"
+              min={1}
+              max={31}
+              placeholder="Day"
+              value={form.day}
+              onChange={(e) => set({ day: e.target.value })}
+            />
+            <Select
+              className={fieldCls}
+              aria-label="Birth month"
+              value={form.month}
+              onChange={(v) => set({ month: v })}
+              options={[
+                { value: "", label: "Month" },
+                ...MONTH_NAMES.map((m) => ({ value: m, label: m })),
+              ]}
+            />
+          </div>
         </Labeled>
         <div className="sm:col-span-2">
           <Labeled label="Address">

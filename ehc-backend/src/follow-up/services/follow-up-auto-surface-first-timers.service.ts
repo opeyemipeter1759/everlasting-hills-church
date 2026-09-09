@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { FollowUpSourceType, FollowUpStage } from '@prisma/client';
+import { FollowUpSourceType, FollowUpStage, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { FollowUpUnitLeaderLookupService } from './follow-up-unit-leader-lookup.service';
@@ -65,11 +65,13 @@ export class FollowUpAutoSurfaceFirstTimersService {
       return 0;
     }
 
+    // Not scoped to unitId or sourceType — one entry per PERSON is the
+    // invariant, not one per team. A visitor a "First Timer Team" leader
+    // already added manually must not also get a second entry from this daily
+    // sweep just because that manual one lives in a different unit.
     const existing = await this.prisma.followUpEntry.findMany({
       where: {
         tenantId: this.tenantId,
-        unitId: followUpUnitId,
-        sourceType: FollowUpSourceType.FIRST_TIMER,
         visitorId: { in: visitors.map((v) => v.id) },
       },
       select: { visitorId: true },
@@ -80,21 +82,34 @@ export class FollowUpAutoSurfaceFirstTimersService {
     for (const visitor of visitors) {
       if (existingIds.has(visitor.id)) continue;
       const assigneeId = await this.autoAssign.pickAssignee(followUpUnitId, visitor.gender);
-      const entry = await this.prisma.followUpEntry.create({
-        data: {
-          id: randomUUID(),
-          tenantId: this.tenantId,
-          unitId: followUpUnitId,
-          sourceType: FollowUpSourceType.FIRST_TIMER,
-          visitorId: visitor.id,
-          addedById: leaderProfileId,
-          assigneeId,
-          stage: assigneeId ? FollowUpStage.ASSIGNED : FollowUpStage.UNASSIGNED,
-        },
-      });
+      let entry;
+      try {
+        entry = await this.prisma.followUpEntry.create({
+          data: {
+            id: randomUUID(),
+            tenantId: this.tenantId,
+            unitId: followUpUnitId,
+            sourceType: FollowUpSourceType.FIRST_TIMER,
+            visitorId: visitor.id,
+            addedById: leaderProfileId,
+            assigneeId,
+            stage: assigneeId ? FollowUpStage.ASSIGNED : FollowUpStage.UNASSIGNED,
+          },
+        });
+      } catch (err) {
+        // Another process (e.g. an overlapping run of this same sweep) won the
+        // race and inserted this (unit, visitor) pair first — the DB's unique
+        // constraint is the real guard here, this check is just the fast path.
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+          existingIds.add(visitor.id);
+          continue;
+        }
+        throw err;
+      }
       if (assigneeId) {
         await this.notify.notifyAssigned(assigneeId, `${visitor.firstName} ${visitor.lastName}`.trim(), entry.id);
       }
+      existingIds.add(visitor.id);
       created += 1;
     }
     return created;

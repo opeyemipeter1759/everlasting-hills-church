@@ -27,6 +27,38 @@ import { resolveTrustedRoutingRole } from "@/lib/auth/routing-role";
 const AUTH_PAGES = new Set(["/login", "/register", "/forgot-password"]);
 const ROLELESS_LANDING = "/dashboard/profile";
 
+// Sermon management is PASTOR+ by role, but a plain member of the "Audio
+// Production" unit gets the same access to these specific pages (list, new,
+// edit — not analytics, which stays PASTOR-only). Mirrors the same carve-out
+// already enforced on the backend by SermonsAuthService.
+const AUDIO_PRODUCTION_SERMON_PATHS = [
+  /^\/dashboard\/pastor\/sermons$/,
+  /^\/dashboard\/pastor\/sermons\/new$/,
+  /^\/dashboard\/pastor\/sermons\/[^/]+\/edit$/,
+];
+
+function isAudioProductionSermonPath(pathname: string): boolean {
+  return AUDIO_PRODUCTION_SERMON_PATHS.some((re) => re.test(pathname));
+}
+
+async function isAudioProductionMember(accessToken: string): Promise<boolean> {
+  try {
+    const response = await fetch(`${getBackendBaseUrl()}/units/my-memberships`, {
+      method: "GET",
+      headers: { authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!response.ok) return false;
+    const payload = unwrapBackendPayload(await response.json());
+    if (!Array.isArray(payload)) return false;
+    return payload.some(
+      (unit) => unit && typeof unit === "object" && (unit as { name?: unknown }).name === "Audio Production",
+    );
+  } catch {
+    return false;
+  }
+}
+
 async function refreshSession(refreshToken: string): Promise<BackendSession | null> {
   try {
     const response = await fetch(`${getBackendBaseUrl()}/auth/refresh`, {
@@ -174,6 +206,9 @@ export async function middleware(request: NextRequest) {
   if (!roleAllowed) {
     const liveRoles = await loadLiveRoles();
     roleAllowed = hasAnyMinRole(liveRoles?.effectiveRoles ?? [], requiredRole);
+  }
+  if (!roleAllowed && accessToken && isAudioProductionSermonPath(pathname)) {
+    roleAllowed = await isAudioProductionMember(accessToken);
   }
 
   if (!roleAllowed) {

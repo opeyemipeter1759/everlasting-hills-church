@@ -1,3 +1,11 @@
+/**
+ * Placeholder year for a day+month-only birthday. Deliberately 2000, not some
+ * other arbitrary year — it's a leap year, so a February 29 birthday round-trips
+ * correctly instead of silently becoming invalid or shifting to March 1.
+ * Never meaningful on its own; every reader of dateOfBirth must ignore it.
+ */
+export const BIRTHDAY_SENTINEL_YEAR = 2000;
+
 const MONTH_INDEX: Record<string, number> = {
   january: 0, jan: 0, february: 1, feb: 1, march: 2, mar: 2, april: 3, apr: 3,
   may: 4, june: 5, jun: 5, july: 6, jul: 6, august: 7, aug: 7,
@@ -7,8 +15,8 @@ const MONTH_INDEX: Record<string, number> = {
 
 /**
  * The first-timer form collects a birthday as day + month name (no year).
- * Compose them into an ISO date string (sentinel year 2000 — only day/month
- * are meaningful) so it can be stored on the Visitor and later carried to the
+ * Compose them into an ISO date string (sentinel year — only day/month are
+ * meaningful) so it can be stored on the Visitor and later carried to the
  * Member on conversion. Returns null when either part is missing/invalid.
  */
 export function composeBirthdayIso(day?: string, month?: string): string | null {
@@ -16,5 +24,5 @@ export function composeBirthdayIso(day?: string, month?: string): string | null 
   const mi = MONTH_INDEX[month.trim().toLowerCase()];
   const d = parseInt(day, 10);
   if (mi === undefined || !d || d < 1 || d > 31) return null;
-  return new Date(Date.UTC(2000, mi, d)).toISOString();
+  return new Date(Date.UTC(BIRTHDAY_SENTINEL_YEAR, mi, d)).toISOString();
 }
