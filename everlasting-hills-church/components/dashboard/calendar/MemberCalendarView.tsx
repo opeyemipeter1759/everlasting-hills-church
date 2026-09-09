@@ -24,17 +24,32 @@ export default function MemberCalendarView() {
   const [view, setView] = useState<CalendarView>("month");
   const [cursor, setCursor] = useState<Date>(() => new Date());
 
-  const { data: calendarItems, isLoading: loadingCalendar, isError: calendarErrored, refetch: refetchCalendar } =
-    useMyUpcomingCalendar();
-  const { data: gatherings, isLoading: loadingGatherings } = useGatherings();
+  const {
+    data: calendarItems,
+    isLoading: loadingCalendar,
+    isError: calendarErrored,
+    isFetching: fetchingCalendar,
+    refetch: refetchCalendar,
+  } = useMyUpcomingCalendar();
+  const { data: gatherings, isLoading: loadingGatherings, isFetching: fetchingGatherings, refetch: refetchGatherings } =
+    useGatherings();
   const { data: googleStatus } = useGoogleCalendarStatus();
   const {
     data: personalEvents,
     isLoading: loadingPersonal,
     isError: personalErrored,
+    isFetching: fetchingPersonal,
+    refetch: refetchPersonal,
   } = useGoogleCalendarEvents(Boolean(googleStatus?.connected));
 
   const loading = loadingCalendar || loadingGatherings || (Boolean(googleStatus?.connected) && loadingPersonal);
+  const refreshing = fetchingCalendar || fetchingGatherings || fetchingPersonal;
+
+  function refreshAll() {
+    refetchCalendar();
+    refetchGatherings();
+    if (googleStatus?.connected) refetchPersonal();
+  }
 
   const items: CalendarItem[] = useMemo(
     () => [
@@ -147,6 +162,16 @@ export default function MemberCalendarView() {
             className="ml-1 rounded-lg border border-[#E7CDD3]/60 bg-white px-3 py-2 text-xs font-semibold text-[#111] transition-colors hover:bg-[#FFF4F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40 dark:border-white/[0.09] dark:bg-white/[0.03] dark:text-white dark:hover:bg-white/[0.07]"
           >
             Today
+          </button>
+          <button
+            type="button"
+            onClick={refreshAll}
+            disabled={refreshing}
+            aria-label="Refresh calendar"
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-[#E7CDD3]/60 bg-white px-3 py-2 text-xs font-semibold text-[#111] transition-colors hover:bg-[#FFF4F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40 disabled:opacity-50 dark:border-white/[0.09] dark:bg-white/[0.03] dark:text-white dark:hover:bg-white/[0.07]"
+          >
+            <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} aria-hidden="true" />
+            Refresh
           </button>
         </div>
       </div>

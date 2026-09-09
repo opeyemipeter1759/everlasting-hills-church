@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { GoneException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { randomUUID } from 'crypto';
 import { calendar_v3, google } from 'googleapis';
@@ -52,10 +52,17 @@ export class GoogleCalendarSyncService {
     const connection = await this.connections.findActive(userId, tenantId);
     const tokens = await this.connections.getDecryptedTokens(userId, tenantId);
     if (!connection || !tokens) {
-      throw new UnauthorizedException('Google Calendar is not connected');
+      // Not an app-session problem — just this integration not being
+      // connected. Must not be a 401: the frontend's global interceptor
+      // treats any 401 from anywhere as "the login session is dead" and logs
+      // the member out, which is exactly what disconnecting used to trigger
+      // (this runs automatically on every calendar page visit while
+      // connected — see the auto-sync effect in
+      // ConnectPersonalGoogleCalendarCard.tsx).
+      throw new NotFoundException('Google Calendar is not connected');
     }
     if (!tokens.refreshToken) {
-      throw new UnauthorizedException(
+      throw new ServiceUnavailableException(
         'Your Google Calendar connection is incomplete — please disconnect and reconnect.',
       );
     }
@@ -126,7 +133,7 @@ export class GoogleCalendarSyncService {
     }
 
     if (authFailed) {
-      throw new UnauthorizedException('Google Calendar access was revoked — please reconnect.');
+      throw new GoneException('Google Calendar access was revoked — please reconnect.');
     }
 
     return { synced, removed };
@@ -186,7 +193,7 @@ export class GoogleCalendarSyncService {
   private throwIfAuthError(err: unknown): void {
     const status = statusOf(err);
     if (status === 401 || status === 403) {
-      throw new UnauthorizedException('Google Calendar access was revoked — please reconnect.');
+      throw new GoneException('Google Calendar access was revoked — please reconnect.');
     }
   }
 

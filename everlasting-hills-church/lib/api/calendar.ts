@@ -68,5 +68,8 @@ export function useMyUpcomingCalendar() {
   return useQuery({
     queryKey: [...KEY, "me", "upcoming"],
     queryFn: () => api.get<MemberCalendarItem[]>("/calendar/me/upcoming"),
+    // Keeps the page current on its own (new services/events, cancellations)
+    // without the member needing to remember to hit refresh.
+    refetchInterval: 5 * 60 * 1000,
   });
 }

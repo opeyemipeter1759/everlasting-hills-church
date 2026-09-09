@@ -58,6 +58,12 @@ export default function ConnectPersonalGoogleCalendarCard() {
     try {
       await disconnect.mutateAsync();
       toast.success("Google Calendar disconnected");
+      // A hard reload rather than relying on query invalidation — simplest
+      // way to guarantee every hook on this page (status, personal events,
+      // the auto-sync effect above) starts clean from the now-disconnected
+      // state, with nothing left mid-flight that could still be pointed at
+      // the connection that just got revoked.
+      window.location.reload();
     } catch {
       toast.error("We couldn't disconnect. Please try again.");
     }

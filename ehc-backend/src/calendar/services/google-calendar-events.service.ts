@@ -1,4 +1,4 @@
-import { Injectable, Logger, ServiceUnavailableException, UnauthorizedException } from '@nestjs/common';
+import { GoneException, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { google } from 'googleapis';
 import { GoogleCalendarConnectionService } from './google-calendar-connection.service';
 import { GoogleCalendarOAuthService } from './google-calendar-oauth.service';
@@ -35,7 +35,12 @@ export class GoogleCalendarEventsService {
   async listUpcoming(userId: string, tenantId: string): Promise<PersonalCalendarEvent[]> {
     const tokens = await this.connections.getDecryptedTokens(userId, tenantId);
     if (!tokens) {
-      throw new UnauthorizedException('Google Calendar is not connected');
+      // Not the caller's *app* session being invalid — just this one
+      // integration not being connected. 401 here would tell the frontend's
+      // global interceptor to nuke the real login session, which is wrong:
+      // it already happened once, when disconnecting raced this endpoint's
+      // refetch against the connection actually being revoked.
+      throw new NotFoundException('Google Calendar is not connected');
     }
     if (!tokens.refreshToken) {
       throw new ServiceUnavailableException(
@@ -78,9 +83,10 @@ export class GoogleCalendarEventsService {
     } catch (err) {
       const status = (err as { code?: number }).code;
       if (status === 401 || status === 403) {
-        throw new UnauthorizedException(
-          'Google Calendar access was revoked — please reconnect.',
-        );
+        // Same reasoning as above: this is Google's grant being stale, not
+        // this app's own session — must not be a 401 the frontend's
+        // interceptor could mistake for that.
+        throw new GoneException('Google Calendar access was revoked — please reconnect.');
       }
       this.logger.error(`Google Calendar events.list failed: ${(err as Error).message}`);
       throw new ServiceUnavailableException('Could not reach Google Calendar. Please try again later.');

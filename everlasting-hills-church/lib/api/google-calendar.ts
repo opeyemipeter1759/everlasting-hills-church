@@ -68,5 +68,9 @@ export function useGoogleCalendarEvents(enabled: boolean) {
     queryFn: () => api.get<PersonalCalendarEvent[]>("/calendar/google/events"),
     enabled,
     retry: false,
+    // This hits Google's API live on every call, so the interval is longer
+    // than the church-calendar side — frequent enough to feel current,
+    // not so tight it burns quota for a view nobody's actively watching.
+    refetchInterval: 5 * 60 * 1000,
   });
 }
