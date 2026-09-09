@@ -24,6 +24,7 @@ import {
   Activity,
   Building2,
   Bell,
+  Headphones,
   ListChecks,
   History,
 } from "lucide-react";
@@ -59,9 +60,12 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Home",            href: "/dashboard",                  icon: LayoutDashboard, minRole: "MEMBER" },
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
       { label: "My Attendance",   href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "MEMBER", maxRole: "ADMIN" },
-      // Sermons and the reading plan are one section, tabbed. Members had no
-      // nav entry for either: sermons were reachable only from a dashboard card.
-      { label: "Word",            href: "/dashboard/sermon",           icon: BookOpen,        minRole: "MEMBER" },
+      // Members had no nav entry for either of these: sermons were reachable
+      // only from a dashboard card. They are tabbed together as one section,
+      // and both are named here because a member looking for their reading plan
+      // should not have to know it lives behind Sermons.
+      { label: "Sermons",         href: "/dashboard/sermon",           icon: Headphones,      minRole: "MEMBER" },
+      { label: "Bible Reading",   href: "/dashboard/reading",          icon: BookOpen,        minRole: "MEMBER" },
       { label: "Notifications",   href: "/dashboard/settings/notifications", icon: Bell,      minRole: "MEMBER" },
       { label: "Prayer Requests", href: "/prayer-request",             icon: Heart,           minRole: "MEMBER" },
       { label: "Testimonies",     href: "/testimony",                  icon: MessageSquare,   minRole: "MEMBER" },

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Headphones } from "lucide-react";
+import { BookOpen, CalendarDays, Headphones, Library } from "lucide-react";
 
 /**
  * One section, two ways in: the preaching you listen to and the scripture you
@@ -11,7 +11,9 @@ import { BookOpen, Headphones } from "lucide-react";
  */
 const TABS = [
   { href: "/dashboard/sermon", label: "Sermons", icon: Headphones },
-  { href: "/dashboard/reading", label: "Daily Reading", icon: BookOpen },
+  { href: "/dashboard/reading", label: "Today", icon: BookOpen },
+  { href: "/dashboard/reading/schedule", label: "Whole plan", icon: CalendarDays },
+  { href: "/dashboard/reading/plans", label: "Plans", icon: Library },
 ];
 
 export default function WordTabs() {
@@ -23,7 +25,13 @@ export default function WordTabs() {
         const Icon = tab.icon;
         // The reading plan chooser lives under /dashboard/reading, so a prefix
         // match keeps the tab lit while a member is picking a plan.
-        const active = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+        // Exact match for the reading tabs, since /dashboard/reading is a
+        // prefix of both the schedule and the chooser and would otherwise stay
+        // lit on all three.
+        const active =
+          tab.href === "/dashboard/reading"
+            ? pathname === tab.href
+            : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
         return (
           <Link
             key={tab.href}
