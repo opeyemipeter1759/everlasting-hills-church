@@ -112,10 +112,15 @@ const AppSidebar: React.FC = () => {
             if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
             if (item.requiresAccess === 'followUp' && !followUpAccess?.hasAccess) return false;
             // PASTOR+ already sees this via the (now-lowered) minRole check above —
-            // this only needs to additionally admit a plain Audio Production member.
+            // this only needs to additionally admit Audio Production, lead or plain
+            // member. myUnits (leads/assists) and myMemberships (plain member) are
+            // two disjoint lists — a lead is deliberately excluded from
+            // myMemberships, so both must be checked or the unit's own lead would
+            // be the one person Audio Production locked out.
             if (
               item.requiresAccess === 'audioProduction' &&
               !canAccessRole('PASTOR') &&
+              !myUnits?.some((u) => u.name === 'Audio Production') &&
               !myMemberships?.some((u) => u.name === 'Audio Production')
             ) {
               return false;

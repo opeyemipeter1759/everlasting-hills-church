@@ -41,9 +41,9 @@ function isAudioProductionSermonPath(pathname: string): boolean {
   return AUDIO_PRODUCTION_SERMON_PATHS.some((re) => re.test(pathname));
 }
 
-async function isAudioProductionMember(accessToken: string): Promise<boolean> {
+async function unitListIncludesAudioProduction(path: string, accessToken: string): Promise<boolean> {
   try {
-    const response = await fetch(`${getBackendBaseUrl()}/units/my-memberships`, {
+    const response = await fetch(`${getBackendBaseUrl()}${path}`, {
       method: "GET",
       headers: { authorization: `Bearer ${accessToken}` },
       cache: "no-store",
@@ -57,6 +57,15 @@ async function isAudioProductionMember(accessToken: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+// "/units/my-memberships" deliberately excludes units a person leads or
+// assists (it's the plain-member list), so the unit's own lead must be
+// checked separately via "/units/mine" — otherwise Audio Production's leader
+// would be the one person this carve-out locks out.
+async function isAudioProductionMember(accessToken: string): Promise<boolean> {
+  if (await unitListIncludesAudioProduction("/units/mine", accessToken)) return true;
+  return unitListIncludesAudioProduction("/units/my-memberships", accessToken);
 }
 
 async function refreshSession(refreshToken: string): Promise<BackendSession | null> {
