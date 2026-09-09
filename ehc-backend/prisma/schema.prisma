@@ -581,6 +581,8 @@ model Profile {
   DepartmentHeadAssigned        DepartmentHead[]        @relation("DepartmentHeadAssignedBy")
   DepartmentHodOf               DepartmentHod[]         @relation("DepartmentHodUser")
   DepartmentHodAssigned         DepartmentHod[]         @relation("DepartmentHodAssignedBy")
+  ReadingPlanCreated            ReadingPlan[]           @relation("ReadingPlanCreatedBy")
+  MemberPlanSubscription        MemberPlanSubscription[]
   RoleGrantOf                   RoleGrant[]             @relation("RoleGrantUser")
   RoleGrantGranted              RoleGrant[]             @relation("RoleGrantGrantedBy")
   UnitLeadOf                    UnitLeadAssignment[]    @relation("UnitLeadUser")
@@ -924,6 +926,8 @@ model Tenant {
   name                   String
   slug                   String                   @unique
   createdAt              DateTime                 @default(now())
+  ReadingPlan            ReadingPlan[]
+  MemberPlanSubscription MemberPlanSubscription[]
   Announcement           Announcement[]
   EmailTemplate          EmailTemplate[]
   EmailSend              EmailSend[]
@@ -2103,4 +2107,213 @@ model HomeCell {
   Tenant      Tenant   @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, state, city])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Daily Bible reading plans
+// ─────────────────────────────────────────────────────────────────────────────
+// DDL lives in prisma/manual/2026-09-reading-plan.sql and is applied with
+// `prisma db execute`. These models mirror it by hand. Do not run `db push`.
+//
+// Scripture tables carry a Bible prefix and are global, never tenant scoped.
+// A verseId is bookId * 1000000 + chapter * 1000 + verse, so any passage,
+// however it spans chapters or books, is one range scan on the primary key.
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model BibleTranslation {
+  id                     Int                      @id @default(autoincrement()) @db.SmallInt
+  code                   String                   @unique
+  name                   String
+  language               String                   @default("en")
+  licence                String
+  isDefault              Boolean                  @default(false)
+  createdAt              DateTime                 @default(now()) @db.Timestamptz(6)
+  BibleVerse             BibleVerse[]
+  MemberPlanSubscription MemberPlanSubscription[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model BibleBook {
+  id           Int          @id @db.SmallInt
+  osisCode     String       @unique
+  name         String
+  shortName    String
+  testament    String
+  chapterCount Int          @db.SmallInt
+  BibleVerse   BibleVerse[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model BibleVerse {
+  translationId    Int              @db.SmallInt
+  verseId          Int
+  bookId           Int              @db.SmallInt
+  chapter          Int              @db.SmallInt
+  verse            Int              @db.SmallInt
+  text             String
+  /// Populated at ingest. Time balanced plan generation reads this.
+  wordCount        Int              @db.SmallInt
+  BibleTranslation BibleTranslation @relation(fields: [translationId], references: [id], onDelete: Cascade)
+  BibleBook        BibleBook        @relation(fields: [bookId], references: [id])
+
+  @@id([translationId, verseId])
+}
+
+enum ReadingTrack {
+  NEW_BELIEVER
+  GROWING
+  MATURE
+  SEASONAL
+}
+
+enum PlanStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ABANDONED
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ReadingPlan {
+  id               String                   @id
+  /// null means a global template every church starts with. A church forks it.
+  tenantId         String?
+  sourcePlanId     String?
+  slug             String
+  title            String
+  subtitle         String?
+  description      String?
+  track            ReadingTrack
+  durationDays     Int                      @db.SmallInt
+  avgMinutesPerDay Int?                     @db.SmallInt
+  status           PlanStatus               @default(DRAFT)
+  version          Int                      @default(1) @db.SmallInt
+  coverImageUrl    String?
+  createdById      String?
+  createdAt        DateTime                 @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime                 @default(now()) @updatedAt @db.Timestamptz(6)
+  Tenant           Tenant?                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  SourcePlan       ReadingPlan?             @relation("ReadingPlanFork", fields: [sourcePlanId], references: [id], onDelete: SetNull)
+  Forks            ReadingPlan[]            @relation("ReadingPlanFork")
+  CreatedBy        Profile?                 @relation("ReadingPlanCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  Days             ReadingPlanDay[]
+  Subscriptions    MemberPlanSubscription[]
+
+  @@index([tenantId, track, status])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ReadingPlanDay {
+  id               String               @id
+  planId           String
+  /// Denormalised from the plan so a policy never needs a join back.
+  tenantId         String?
+  dayIndex         Int                  @db.SmallInt
+  title            String?
+  reflectionPrompt String?
+  /// Precomputed at generation time. The dashboard card must never work out a
+  /// reading estimate at request time.
+  referenceLabel   String
+  totalWordCount   Int                  @default(0)
+  estimatedMinutes Int                  @default(0) @db.SmallInt
+  Plan             ReadingPlan          @relation(fields: [planId], references: [id], onDelete: Cascade)
+  Portions         ReadingPlanPortion[]
+
+  @@unique([planId, dayIndex], map: "ReadingPlanDay_plan_day")
+  @@index([tenantId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ReadingPlanPortion {
+  id           String         @id
+  planDayId    String
+  tenantId     String?
+  sequence     Int            @db.SmallInt
+  label        String?
+  startVerseId Int
+  endVerseId   Int
+  isOptional   Boolean        @default(false)
+  wordCount    Int            @default(0)
+  Day          ReadingPlanDay @relation(fields: [planDayId], references: [id], onDelete: Cascade)
+
+  @@unique([planDayId, sequence], map: "ReadingPlanPortion_day_sequence")
+  @@index([tenantId])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model MemberPlanSubscription {
+  id              String                 @id
+  tenantId        String
+  profileId       String
+  planId          String
+  planVersion     Int                    @db.SmallInt
+  translationId   Int                    @db.SmallInt
+  status          SubscriptionStatus     @default(ACTIVE)
+  startedOn       DateTime               @db.Date
+  /// Reserved. Non null marks a calendar anchored church wide plan, which can
+  /// then coexist with a personal plan without a schema change.
+  anchorDate      DateTime?              @db.Date
+  timezone        String                 @default("Africa/Lagos")
+  currentDayIndex Int                    @default(1) @db.SmallInt
+  completedDays   Int                    @default(0) @db.SmallInt
+  currentStreak   Int                    @default(0) @db.SmallInt
+  longestStreak   Int                    @default(0) @db.SmallInt
+  /// Member local date, never UTC.
+  lastReadOn      DateTime?              @db.Date
+  graceUsedOn     DateTime?              @db.Date
+  reminderHour    Int?                   @db.SmallInt
+  completedAt     DateTime?              @db.Timestamptz(6)
+  createdAt       DateTime               @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  Tenant          Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Profile         Profile                @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  Plan            ReadingPlan            @relation(fields: [planId], references: [id])
+  Translation     BibleTranslation       @relation(fields: [translationId], references: [id])
+  Progress        MemberPlanProgress[]
+  Reflections     MemberPlanReflection[]
+
+  @@index([profileId, status])
+}
+
+/// Sparse by design: only completed days get a row. The unique constraint is
+/// what makes completion idempotent, so a double tap, a retried request and an
+/// offline replay all settle to the same state.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model MemberPlanProgress {
+  id             String                 @id
+  subscriptionId String
+  tenantId       String
+  profileId      String
+  dayIndex       Int                    @db.SmallInt
+  /// Member local date, not UTC.
+  completedOn    DateTime               @db.Date
+  completedAt    DateTime               @default(now()) @db.Timestamptz(6)
+  portionsDone   Int                    @default(0) @db.SmallInt
+  Subscription   MemberPlanSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, dayIndex], map: "MemberPlanProgress_sub_day")
+  @@index([subscriptionId, dayIndex(sort: Desc)], map: "MemberPlanProgress_recent")
+}
+
+/// Pastoral class data. The writer reads it and nobody else: no leader role, no
+/// AI pipeline, scrubbed from error reporting. Same guardrail as prayer requests.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model MemberPlanReflection {
+  id             String                 @id
+  subscriptionId String
+  tenantId       String
+  profileId      String
+  dayIndex       Int                    @db.SmallInt
+  body           String
+  createdAt      DateTime               @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime               @default(now()) @updatedAt @db.Timestamptz(6)
+  Subscription   MemberPlanSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, dayIndex], map: "MemberPlanReflection_sub_day")
 }
