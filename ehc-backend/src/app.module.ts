@@ -24,6 +24,7 @@ import { FollowUpModule } from './follow-up/follow-up.module';
 import { CmsModule } from './cms/cms.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { UnitsModule } from './units/units.module';
+import { NavPermissionsModule } from './nav-permissions/nav-permissions.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { UsersModule } from './users/users.module';
@@ -129,6 +130,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     CmsModule,
     VisitorsModule,
     UnitsModule,
+    NavPermissionsModule,
     NotificationsModule,
     TestimonialsModule,
     UsersModule,

@@ -121,6 +121,7 @@ import {
   PhoneForwarded,
   Settings,
   Shield,
+  Lock,
   Mail,
   TrendingUp,
   Bell,
@@ -142,16 +143,7 @@ export type NavItem = {
   icon: LucideIcon;
   minRole: UserRole;
   maxRole?: UserRole;
-  /** Extra data-driven visibility check beyond the static role gate — e.g. a
-   * UNIT_LEAD-role user who doesn't actually lead a real unit shouldn't see
-   * "My Unit"; a plain MEMBER who is genuinely on a team should see "Follow Up".
-   * "audioProduction" shows the item to PASTOR+ (as usual) OR any plain member
-   * of the "Audio Production" unit specifically — see AppSidebar.tsx. */
   requiresAccess?: "unitLead" | "unitMember" | "followUp" | "audioProduction";
-  /** Expanded into one nav item per unit (label = unit name, href =
-   * `${href}/${unit.id}`) instead of rendered as a single static link — see
-   * AppSidebar.tsx. "lead" sources from units the user leads/assists, "member"
-   * from units they're a plain member of. */
   dynamicUnits?: "lead" | "member";
 };
 
@@ -206,6 +198,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
       // { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Roles",         href: "/dashboard/admin/roles",         icon: Shield,        minRole: "ADMIN" },
+      { label: "Permissions",   href: "/dashboard/admin/permissions",   icon: Lock,          minRole: "SUPER_ADMIN" },
       { label: "Courses",       href: "/dashboard/admin/courses",       icon: GraduationCap, minRole: "ADMIN" },
       { label: "Home Cell",     href: "/dashboard/admin/home-cell",     icon: Compass,       minRole: "ADMIN" },
       // { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
@@ -254,5 +247,9 @@ export const NAV_GROUPS: NavGroup[] = [
 
     ],
   },
-  
+
 ];
+
+export const NAV_ITEMS_FLAT: { href: string; minRole: UserRole }[] = NAV_GROUPS.flatMap((group) =>
+  group.items.map((item) => ({ href: item.href, minRole: item.minRole })),
+);

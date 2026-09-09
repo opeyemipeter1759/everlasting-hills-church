@@ -23,6 +23,14 @@ import {
 import { verifySupabaseJwt } from "@/lib/auth/verify-jwt";
 import { getBackendBaseUrl } from "@/lib/api/backend-url";
 import { resolveTrustedRoutingRole } from "@/lib/auth/routing-role";
+import { NAV_ITEMS_FLAT, type UserRole as ConfigUserRole } from "@/config/config";
+import {
+  canRoleAccessItem,
+  matchNavItemForPath,
+  toNavPermissionsMap,
+  type NavPermissionEntry,
+  type NavPermissionsMap,
+} from "@/lib/nav-permissions-core";
 
 const AUTH_PAGES = new Set(["/login", "/register", "/forgot-password"]);
 const ROLELESS_LANDING = "/dashboard/profile";
@@ -68,6 +76,31 @@ async function isAudioProductionMember(accessToken: string): Promise<boolean> {
   return unitListIncludesAudioProduction("/units/my-memberships", accessToken);
 }
 
+// Admin-configured overrides from the Role Access Permissions screen. When an
+// item has no saved override this returns a map simply lacking that key, so
+// callers can tell "no override" (fall through to default hierarchy) apart
+// from "override explicitly set" (authoritative, replaces the default).
+async function fetchNavPermissionsMap(accessToken: string): Promise<NavPermissionsMap | null> {
+  try {
+    const response = await fetch(`${getBackendBaseUrl()}/nav-permissions`, {
+      method: "GET",
+      headers: { authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const payload = unwrapBackendPayload(await response.json());
+    if (!Array.isArray(payload)) return null;
+    const entries = payload.filter((item): item is NavPermissionEntry => {
+      if (!item || typeof item !== "object") return false;
+      const value = item as { itemHref?: unknown; roles?: unknown };
+      return typeof value.itemHref === "string" && Array.isArray(value.roles);
+    });
+    return toNavPermissionsMap(entries);
+  } catch {
+    return null;
+  }
+}
+
 async function refreshSession(refreshToken: string): Promise<BackendSession | null> {
   try {
     const response = await fetch(`${getBackendBaseUrl()}/auth/refresh`, {
@@ -105,6 +138,29 @@ async function getLiveBackendRoles(accessToken: string): Promise<BackendRoleSnap
       : [];
     if (role && !effectiveRoles.includes(role)) effectiveRoles.push(role);
     return { role, effectiveRoles };
+  } catch {
+    return null;
+  }
+}
+
+// Named exceptions (Permissions page): specific person / unit members / unit
+// leader, resolved self-scoped by the backend from the caller's own token —
+// never the full grants table, so this stays cheap and reveals nothing about
+// other people's exceptions. Only ever widens access, so it's safe to call
+// only when the role-based checks above have already failed.
+async function fetchMyGrantedHrefs(accessToken: string): Promise<Set<string> | null> {
+  try {
+    const response = await fetch(`${getBackendBaseUrl()}/nav-permissions/my-grants`, {
+      method: "GET",
+      headers: { authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!response.ok) return null;
+    const payload = unwrapBackendPayload(await response.json());
+    if (!payload || typeof payload !== "object") return null;
+    const hrefs = (payload as { hrefs?: unknown }).hrefs;
+    if (!Array.isArray(hrefs)) return null;
+    return new Set(hrefs.filter((href): href is string => typeof href === "string"));
   } catch {
     return null;
   }
@@ -218,6 +274,42 @@ export async function middleware(request: NextRequest) {
   }
   if (!roleAllowed && accessToken && isAudioProductionSermonPath(pathname)) {
     roleAllowed = await isAudioProductionMember(accessToken);
+  }
+
+  // Admin-configured Role Access Permissions: if the matched nav item has a
+  // saved override, that explicit role set is authoritative for this request
+  // — it replaces (not adds to) the hierarchy-based result above, so an admin
+  // can both grant beyond the default minRole and revoke below it. Items no
+  // admin has ever touched have no map entry, so this leaves roleAllowed
+  // exactly as already computed.
+  if (accessToken) {
+    const matchedItem = matchNavItemForPath(pathname, NAV_ITEMS_FLAT);
+    if (matchedItem) {
+      const overrides = await fetchNavPermissionsMap(accessToken);
+      if (overrides?.has(matchedItem.href)) {
+        const liveRoles = await loadLiveRoles();
+        const candidateRoles = new Set<ConfigUserRole>();
+        const normalizedEffective = normalizeRole(effectiveRole);
+        if (normalizedEffective) candidateRoles.add(normalizedEffective);
+        for (const role of liveRoles?.effectiveRoles ?? []) {
+          const normalized = normalizeRole(role);
+          if (normalized) candidateRoles.add(normalized);
+        }
+        roleAllowed = Array.from(candidateRoles).some((role) =>
+          canRoleAccessItem(role, matchedItem, overrides),
+        );
+      }
+    }
+  }
+
+  // Named exceptions: only consulted once every role-based path above has
+  // already said no, since these only ever widen access, never narrow it.
+  if (!roleAllowed && accessToken) {
+    const matchedItem = matchNavItemForPath(pathname, NAV_ITEMS_FLAT);
+    if (matchedItem) {
+      const grantedHrefs = await fetchMyGrantedHrefs(accessToken);
+      if (grantedHrefs?.has(matchedItem.href)) roleAllowed = true;
+    }
   }
 
   if (!roleAllowed) {

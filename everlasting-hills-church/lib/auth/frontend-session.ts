@@ -118,6 +118,7 @@ export function getLandingPage(role: string | null | undefined): string {
  */
 export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
   ["/dashboard/audit-log", "SUPER_ADMIN"],
+  ["/dashboard/admin/permissions", "SUPER_ADMIN"],
   ["/dashboard/admin/roles", "ADMIN"],
   ["/dashboard/admin/attendance/ushers-report", "HEAD_USHER"],
   ["/dashboard/admin/usher", "HEAD_USHER"],

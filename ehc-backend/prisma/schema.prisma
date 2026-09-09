@@ -1002,6 +1002,8 @@ model Tenant {
   FollowUpConnection     FollowUpConnection[]
   ServiceFollowUpReport  ServiceFollowUpReport[]
   GoogleCalendarConnection GoogleCalendarConnection[]
+  NavPermission          NavPermission[]
+  NavPermissionGrant     NavPermissionGrant[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1731,6 +1733,55 @@ model GoogleCalendarSyncedEvent {
 
   @@unique([connectionId, itemKey])
   @@index([connectionId])
+}
+
+/// Admin-configurable override of who can see/reach one sidebar nav item —
+/// keyed by that item's href (the same string as NavItem.href in the
+/// frontend's config.ts). Absent means "not customized": the item's static
+/// `minRole` in config.ts is still the effective rule. Present means this
+/// exact set of roles, full stop — not a hierarchy minimum, since the whole
+/// point is letting an admin grant/revoke per role independently (e.g. Pastor
+/// yes, Admin Head no). SUPER_ADMIN is never actually consulted here — every
+/// check treats it as an unconditional bypass, so a super admin can never
+/// lock themselves out by misconfiguring this table.
+model NavPermission {
+  id        String   @id
+  tenantId  String
+  itemHref  String
+  roles     Role[]
+  updatedAt DateTime @updatedAt
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, itemHref])
+  @@index([tenantId])
+}
+
+enum NavGrantType {
+  MEMBER
+  UNIT_MEMBER
+  UNIT_LEAD
+}
+
+/// Additive, per-item exceptions layered on top of NavPermission's role table
+/// — grant-only by design (see NavPermission's own comment: role revocation
+/// still goes through that table, never through this one). `targetId` is
+/// polymorphic by `type` rather than two nullable FK columns, specifically so
+/// the compound unique index below can't be defeated by NULL — Postgres
+/// treats NULL <> NULL, so two nullable columns would let duplicate
+/// UNIT_MEMBER/UNIT_LEAD rows for the same unit slip past a unique
+/// constraint. MEMBER stores Profile.id; UNIT_MEMBER/UNIT_LEAD store Unit.id.
+model NavPermissionGrant {
+  id        String       @id
+  tenantId  String
+  itemHref  String
+  type      NavGrantType
+  targetId  String
+  createdAt DateTime     @default(now())
+  Tenant    Tenant       @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, itemHref, type, targetId])
+  @@index([tenantId, itemHref])
+  @@index([tenantId, targetId])
 }
 
 /// One row per browser/device push endpoint. endpoint is globally unique (the

@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
@@ -11,6 +11,7 @@ import Image from 'next/image';
 import { useCurrentUser, useNavDropdown } from '@/hooks';
 import { useMe, useMyUnits, useMyMemberships } from '@/lib/api';
 import { useFollowUpAccess } from '@/lib/api/follow-up-pipeline';
+import { canRoleAccessItem, toNavPermissionsMap, useMyNavGrantedHrefs, useNavPermissions } from '@/lib/nav-permissions';
 import { getInitials, truncateText } from '@/utils/stringUtils';
 import { SidebarSkeleton } from '@/components/ui/skeleton/SidebarSkeleton';
 
@@ -100,13 +101,27 @@ const AppSidebar: React.FC = () => {
   const { data: myUnits } = useMyUnits();
   const { data: myMemberships } = useMyMemberships();
   const { data: followUpAccess } = useFollowUpAccess();
+  // Admin-configurable per-item role overrides (Roles > Permissions page).
+  // Undefined/empty while loading just means every item falls back to its
+  // static minRole for now — the same behavior as before this existed.
+  const { data: navPermissionEntries } = useNavPermissions();
+  const navPermissionsMap = useMemo(() => toNavPermissionsMap(navPermissionEntries ?? []), [navPermissionEntries]);
+  // Named exceptions (Permissions page > Individual & Unit Exceptions): lets a
+  // specific person, or a specific unit's members/leader, in on top of the
+  // role table above — additive only, never used to hide something a role
+  // would otherwise show.
+  const { data: grantedHrefsData } = useMyNavGrantedHrefs();
+  const grantedHrefs = useMemo(() => new Set(grantedHrefsData ?? []), [grantedHrefsData]);
 
   const visibleGroups = activeRoles.length > 0
     ? NAV_GROUPS.map((group) => ({
         ...group,
         items: group.items
           .filter((item) => {
-            if (!canAccessRole(item.minRole)) return false;
+            if (
+              !activeRoles.some((role) => canRoleAccessItem(role, item, navPermissionsMap)) &&
+              !grantedHrefs.has(item.href)
+            ) return false;
             if (item.maxRole && canAccessRole(item.maxRole)) return false;
             if (item.requiresAccess === 'unitLead' && !myUnits?.length) return false;
             if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
