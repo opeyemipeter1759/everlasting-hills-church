@@ -12,6 +12,6 @@ import { getBackendBaseUrl } from "@/lib/api/backend-url";
  * back shouldn't be able to strand the user on a login wall mid-flow).
  */
 export async function GET(request: NextRequest) {
-  const target = `${getBackendBaseUrl()}/calendar/google/callback${request.nextUrl.search}`;
+  const target = `${getBackendBaseUrl()}/calendar${request.nextUrl.search}`;
   return NextResponse.redirect(target);
 }
