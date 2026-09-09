@@ -80,6 +80,15 @@ export class UsersListByRoleService {
       const eff = effByProfile.get(p.id);
       const primaryRole = eff?.primaryRole ?? Role.MEMBER;
       const role = primaryRole === Role.ADMIN ? Role.ADMIN_HEAD : primaryRole;
+
+      // Every role held, not just the highest. Filing somebody under one role
+      // made this list contradict the counts above it on the same screen: a
+      // church admin who also heads a department was counted as a head of
+      // department and listed only as an admin, so the card read 3 and the
+      // column showed 1. Multi role is real here and the page should say so.
+      const heldRoles = new Set<string>(
+        (eff?.roles ?? [Role.MEMBER]).map((r) => (r === Role.ADMIN ? Role.ADMIN_HEAD : r)),
+      );
       const member = p.Member
         ? {
             id: p.Member.id,
@@ -102,7 +111,19 @@ export class UsersListByRoleService {
           }
         : null;
 
-      (grouped[role] ?? grouped[Role.MEMBER]).push({ profileId: p.id, userId: p.userId, role, roles: eff?.roles ?? [Role.MEMBER], member });
+      const entry = {
+        profileId: p.id,
+        userId: p.userId,
+        role,
+        roles: eff?.roles ?? [Role.MEMBER],
+        member,
+      };
+      for (const held of heldRoles) {
+        if (grouped[held]) grouped[held].push(entry);
+      }
+      // Everyone with a profile counts as a member, which is what the Member
+      // card counts, so the two agree.
+      if (!heldRoles.has(Role.MEMBER)) grouped[Role.MEMBER].push(entry);
     }
 
     grouped['VISITOR'] = visitors.map((v) => ({

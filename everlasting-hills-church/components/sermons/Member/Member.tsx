@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { History, Bookmark, Play, BookOpen, Loader2, CheckCircle2, Clock, Sparkles, Heart, MessageCircle, Layers, Mic2 } from 'lucide-react';
+import WordTabs from '@/components/dashboard/member/reading-plan/WordTabs';
 import {
   useMemberSermonHistory,
   useMemberSermonBookmarks,
@@ -223,6 +224,7 @@ export default function Member() {
 
   return (
     <div className="space-y-8">
+      <WordTabs />
       <div>
         <h1 className="text-xl font-black text-gray-900 dark:text-white tracking-tight">My Sermons</h1>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">

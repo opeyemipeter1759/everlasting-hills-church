@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Check, Flame, Loader2 } from "lucide-react";
+import { BookOpen, Check, Flame, Loader2 } from "lucide-react";
+import WordTabs from "./WordTabs";
 import {
   useCompleteDay,
   usePassage,
@@ -50,8 +51,16 @@ export default function ReadingScreen() {
     );
   }
 
-  const { day, plan, subscriptionId, translation, currentDayIndex, currentStreak, completedToday } =
-    data;
+  const {
+    day,
+    plan,
+    subscriptionId,
+    translation,
+    currentDayIndex,
+    currentStreak,
+    completedToday,
+    completedDays,
+  } = data;
   const done = completedToday || justRead;
 
   async function markRead() {
@@ -66,13 +75,8 @@ export default function ReadingScreen() {
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-6">
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-[#87102C] dark:text-white/50 dark:hover:text-[#FFB3C1]"
-        >
-          <ArrowLeft size={14} /> Dashboard
-        </Link>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <WordTabs />
         {currentStreak > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
             <Flame size={12} /> {currentStreak} day{currentStreak === 1 ? "" : "s"}
@@ -90,9 +94,43 @@ export default function ReadingScreen() {
         <p className="mt-1 text-xs text-[#8a7e80] dark:text-white/45">
           About {day.estimatedMinutes} minute{day.estimatedMinutes === 1 ? "" : "s"} · {translation.code}
         </p>
+
+        {/* Progress as a line rather than a number, so a year long plan still
+            shows movement on a day when the count barely changes. */}
+        <div className="mt-4">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-white/[0.08]">
+            <div
+              className="h-full rounded-full bg-[#87102C] transition-all duration-500 dark:bg-[#FFB3C1]"
+              style={{ width: `${Math.min(100, (completedDays / plan.durationDays) * 100)}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] text-[#8a7e80] dark:text-white/40">
+            {completedDays} of {plan.durationDays} days read
+          </p>
+        </div>
       </header>
 
-      <div className="mt-6 space-y-6">
+      {/* What today holds, before the text of it. Borrowed from the way the
+          established plans open: a reader sees the whole shape of the day, and
+          on a four portion morning can jump to the part they want. */}
+      {day.Portions.length > 1 && (
+        <nav className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4" aria-label="Today&apos;s passages">
+          {day.Portions.map((portion) => (
+            <a
+              key={portion.sequence}
+              href={`#portion-${portion.sequence}`}
+              className="rounded-xl border border-gray-200 bg-white p-3 text-center transition-colors hover:border-[#87102C]/40 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-[#FFB3C1]/30"
+            >
+              <BookOpen size={14} className="mx-auto text-[#87102C]/70 dark:text-[#FFB3C1]/70" />
+              <p className="mt-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-white/35">
+                {portion.label ?? `Reading ${portion.sequence}`}
+              </p>
+            </a>
+          ))}
+        </nav>
+      )}
+
+      <div className="mt-6 space-y-8">
         {day.Portions.map((portion) => (
           <Portion key={portion.sequence} portion={portion} translation={translation.code} />
         ))}
@@ -174,7 +212,7 @@ function Portion({ portion, translation }: { portion: DayPortion; translation: s
   }
 
   return (
-    <section>
+    <section id={`portion-${portion.sequence}`} className="scroll-mt-6">
       <div className="mb-2 flex items-baseline justify-between gap-3">
         <h2 className="text-sm font-bold text-[#111] dark:text-white">{data.reference}</h2>
         {portion.label && (
