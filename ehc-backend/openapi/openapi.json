@@ -6620,6 +6620,14 @@
                         "noSession": {
                           "value": {
                             "canMark": false,
+                            "opensAt": null,
+                            "reason": "NO_OPEN_SESSION"
+                          }
+                        },
+                        "upcomingToday": {
+                          "value": {
+                            "canMark": false,
+                            "opensAt": "2026-05-31T07:30:00.000Z",
                             "reason": "NO_OPEN_SESSION"
                           }
                         }
