@@ -52,6 +52,7 @@ import type { Env } from './config/env.validation';
 import { CalendarModule } from './calendar/calendar.module';
 import { PushModule } from './push/push.module';
 import { ReadingPlanModule } from './reading-plan/reading-plan.module';
+import { ArticlesModule } from './articles/articles.module';
 import { GatheringsModule } from './gatherings/gatherings.module';
 
 @Module({
@@ -153,6 +154,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     CalendarModule,
     PushModule,
     ReadingPlanModule,
+    ArticlesModule,
     GatheringsModule,
     CoursesModule,
     StatusReportsModule,

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   BookOpen,
@@ -11,6 +12,7 @@ import {
   ChevronRight,
   Flame,
   Loader2,
+  PenLine,
 } from "lucide-react";
 import WordTabs from "./WordTabs";
 import {
@@ -175,10 +177,19 @@ export default function ReadingScreen() {
       </div>
 
       <header className="mt-5">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
-          {plan.title}
-        </p>
-        <h1 className="mt-1 text-2xl font-black tracking-tight text-[#111] dark:text-white">
+        {/* The plan mark, small. On the reading screen the passage is the
+            headline; the artwork is only here to say which plan you are in. */}
+        <div className="flex items-center gap-2.5">
+          {plan.coverImageUrl && (
+            <span className="relative h-7 w-7 flex-shrink-0 overflow-hidden rounded-md bg-[#4A0817]">
+              <Image src={plan.coverImageUrl} alt="" fill sizes="28px" className="object-cover" unoptimized />
+            </span>
+          )}
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+            {plan.title}
+          </p>
+        </div>
+        <h1 className="mt-2 font-serif text-3xl font-bold tracking-tight text-[#111] dark:text-white">
           {day.referenceLabel}
         </h1>
         <p className="mt-1 text-xs text-[#8a7e80] dark:text-white/45">
@@ -243,6 +254,8 @@ export default function ReadingScreen() {
         </div>
       )}
 
+      <WriteAboutThis day={day} />
+
       <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-6 dark:border-white/10">
         {isDone ? (
           <>
@@ -284,6 +297,52 @@ export default function ReadingScreen() {
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * The bridge from reading to writing.
+ *
+ * A member who has just finished a passage is the person most likely to have
+ * something to say about it, and this is the only moment they will have the
+ * reference to hand. The citation travels in the query string so the editor
+ * opens with the passage already attached.
+ *
+ * The range spans the whole day rather than one portion, which is what
+ * referenceLabel already describes — on a four portion morning it is the day
+ * that was read, not any single reading.
+ */
+function WriteAboutThis({ day }: { day: PlanDay }) {
+  if (!day.Portions.length) return null;
+
+  const start = Math.min(...day.Portions.map((p) => p.startVerseId));
+  const end = Math.max(...day.Portions.map((p) => p.endVerseId));
+  const href = `/dashboard/articles/write?start=${start}&end=${end}&label=${encodeURIComponent(
+    day.referenceLabel,
+  )}`;
+
+  return (
+    <Link
+      href={href}
+      className="group mt-6 flex items-center gap-3 rounded-2xl border border-dashed border-gray-200 p-4 transition-colors hover:border-[#87102C]/40 hover:bg-[#FFF4F6]/40 dark:border-white/10 dark:hover:border-[#FFB3C1]/30 dark:hover:bg-white/[0.03]"
+    >
+      <PenLine
+        size={17}
+        className="flex-shrink-0 text-gray-400 group-hover:text-[#87102C] dark:text-white/30 dark:group-hover:text-[#FFB3C1]"
+      />
+      <div className="min-w-0">
+        <p className="text-sm font-bold text-[#111] dark:text-white">
+          Write about {day.referenceLabel}
+        </p>
+        <p className="mt-0.5 text-[11px] text-[#8a7e80] dark:text-white/40">
+          Share what you saw with the church. A few paragraphs is plenty.
+        </p>
+      </div>
+      <ChevronRight
+        size={15}
+        className="ml-auto flex-shrink-0 text-gray-300 group-hover:text-[#87102C] dark:text-white/20 dark:group-hover:text-[#FFB3C1]"
+      />
+    </Link>
   );
 }
 

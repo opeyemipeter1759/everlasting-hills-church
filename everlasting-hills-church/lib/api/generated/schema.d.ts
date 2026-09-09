@@ -685,6 +685,112 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/articles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The church feed: published articles, featured first */
+        get: operations["ArticlesController_feed"];
+        put?: never;
+        /** Write an article, as a draft or published straight away */
+        post: operations["ArticlesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete your own article */
+        delete: operations["ArticlesController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit your own article, or archive somebody else's if you are a pastor or admin. Moderation is after the fact, never a gate before publishing. */
+        patch: operations["ArticlesController_update"];
+        trace?: never;
+    };
+    "/articles/{id}/feature": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lift an article to the top of the church feed (PASTOR+) */
+        post: operations["ArticlesController_feature"];
+        /** Remove an article from the featured slot (PASTOR+) */
+        delete: operations["ArticlesController_unfeature"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}/like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Like an article. Idempotent: a double tap counts once. */
+        post: operations["ArticlesController_like"];
+        /** Remove your like */
+        delete: operations["ArticlesController_unlike"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One article. A draft is visible to its author alone. */
+        get: operations["ArticlesController_bySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Everything the caller has written, drafts included */
+        get: operations["ArticlesController_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/assignments": {
         parameters: {
             query?: never;
@@ -2693,6 +2799,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/{id}/mark-present": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark this entry's subject present for a service — for a missed check-in (assignee or leader) */
+        post: operations["FollowUpController_markPresent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/follow-up/{id}/opt-out": {
         parameters: {
             query?: never;
@@ -2846,6 +2969,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/my-unit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The unit whose leader controls (Team roster, Bulk reassign) the caller should see: their own led/assisted unit, or the "Follow-Up" unit for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own (MEMBER+ auth, null for anyone else). */
+        get: operations["FollowUpController_myUnit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/follow-up/quick-capture": {
         parameters: {
             query?: never;
@@ -2857,6 +2997,23 @@ export interface paths {
         put?: never;
         /** One-tap door capture: create a bare name+phone visitor and route them into the pipeline (MEMBER+) */
         post: operations["FollowUpController_quickCapture"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/reports-unit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the caller may see Follow-Up Service Reports: the "Follow-Up" unit, only for its own lead or PASTOR/ADMIN_HEAD/ADMIN/SUPER_ADMIN — unlike my-unit, a lead of some other team does not qualify (MEMBER+ auth, null for anyone else). */
+        get: operations["FollowUpController_reportsUnit"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4261,6 +4418,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/nav-permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current per-item role overrides (MEMBER+ — needed by every sidebar/route check) */
+        get: operations["NavPermissionsController_getAll"];
+        /** Replace the role overrides for the given items (SUPER_ADMIN only) */
+        put: operations["NavPermissionsController_setAll"];
+        post?: never;
+        /** Revert one item to its static default (SUPER_ADMIN only) */
+        delete: operations["NavPermissionsController_resetOne"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nav-permissions/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every named person/unit exception, with display names resolved (SUPER_ADMIN only) */
+        get: operations["NavPermissionsController_listGrants"];
+        put?: never;
+        /** Add a named exception granting one person/unit access to one item (SUPER_ADMIN only) */
+        post: operations["NavPermissionsController_addGrant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nav-permissions/grants/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a named exception (SUPER_ADMIN only) */
+        delete: operations["NavPermissionsController_removeGrant"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/nav-permissions/my-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Nav items the caller can reach via a named person/unit exception (MEMBER+, self-scoped only) */
+        get: operations["NavPermissionsController_myGrants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/notifications": {
         parameters: {
             query?: never;
@@ -4627,10 +4855,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List all sermons (admin) */
+        /** List all sermons (PASTOR+ or Audio Production) */
         get: operations["SermonsAdminController_getAllSermons"];
         put?: never;
-        /** Create sermon */
+        /** Create sermon (PASTOR+ or Audio Production) */
         post: operations["SermonsAdminController_createSermon"];
         delete?: never;
         options?: never;
@@ -4645,15 +4873,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get sermon by id (admin) */
+        /** Get sermon by id (PASTOR+ or Audio Production) */
         get: operations["SermonsAdminController_getSermonById"];
         put?: never;
         post?: never;
-        /** Delete sermon */
+        /** Delete sermon (PASTOR+ or Audio Production) */
         delete: operations["SermonsAdminController_deleteSermon"];
         options?: never;
         head?: never;
-        /** Update sermon */
+        /** Update sermon (PASTOR+ or Audio Production) */
         patch: operations["SermonsAdminController_updateSermon"];
         trace?: never;
     };
@@ -4715,7 +4943,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get sermon overview totals (admin) */
+        /** Get sermon overview totals (PASTOR+ or Audio Production) */
         get: operations["SermonsAdminController_getAdminOverview"];
         put?: never;
         post?: never;
@@ -5145,7 +5373,7 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Upload sermon audio
+         * Upload sermon audio (PASTOR+ or Audio Production)
          * @description Uploads an audio file to R2 and returns a public URL.
          */
         post: operations["SermonsUploadController_uploadAudio"];
@@ -6295,6 +6523,23 @@ export interface components {
              */
             venue?: string;
         };
+        CreateArticleDto: {
+            /** @description Markdown, the same subset announcements use */
+            body: string;
+            /** @example 45008039 */
+            endVerseId?: number;
+            /** @description Publish immediately rather than saving a draft */
+            publish?: boolean;
+            /** @example Romans 8 */
+            scriptureLabel?: string;
+            /**
+             * @description First verse of the passage this came from
+             * @example 45001001
+             */
+            startVerseId?: number;
+            /** @example What Romans 8 showed me this week */
+            title: string;
+        };
         CreateAssignmentDto: {
             /** @description Member id of the leader who will shepherd them */
             leaderId: string;
@@ -6418,6 +6663,7 @@ export interface components {
              */
             vendor?: string;
         };
+        CreateNavGrantDto: Record<string, never>;
         CreatePostDto: Record<string, never>;
         CreateReportDto: {
             attachmentName?: string;
@@ -6715,6 +6961,8 @@ export interface components {
              * @enum {string}
              */
             outcome?: "REACHED" | "NO_ANSWER" | "VOICEMAIL" | "WRONG_NUMBER" | "SCHEDULED_VISIT";
+            /** @description The service day this activity relates to */
+            serviceId?: string;
         };
         LoginDto: {
             /** @example user@example.com */
@@ -6736,6 +6984,10 @@ export interface components {
              * @enum {string}
              */
             status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+        };
+        MarkPresentDto: {
+            /** @description The service to mark this person present for */
+            serviceId: string;
         };
         MemberOverviewResponseDto: {
             attendance: components["schemas"]["AttendanceOverviewDto"];
@@ -6929,6 +7181,7 @@ export interface components {
              */
             isLead?: boolean;
         };
+        SetNavPermissionsDto: Record<string, never>;
         SetRsvpCheckedInDto: {
             /** @example true */
             checkedIn: boolean;
@@ -7054,6 +7307,15 @@ export interface components {
              * @example Main Auditorium
              */
             venue?: string;
+        };
+        UpdateArticleDto: {
+            body?: string;
+            endVerseId?: Record<string, never>;
+            scriptureLabel?: Record<string, never>;
+            startVerseId?: Record<string, never>;
+            /** @enum {string} */
+            status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+            title?: string;
         };
         UpdateConnectionStatusDto: {
             /** @enum {string} */
@@ -8787,6 +9049,342 @@ export interface operations {
         };
     };
     AnnouncementsController_feed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_feed: {
+        parameters: {
+            query?: {
+                page?: number;
+                limit?: number;
+                authorId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateArticleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateArticleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_feature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_unfeature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_like: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_unlike: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_bySlug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_mine: {
         parameters: {
             query?: never;
             header?: never;
@@ -13550,6 +14148,43 @@ export interface operations {
             };
         };
     };
+    FollowUpController_markPresent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkPresentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpMemberStatusController_optOut: {
         parameters: {
             query?: never;
@@ -13850,6 +14485,37 @@ export interface operations {
             };
         };
     };
+    FollowUpController_myUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_quickCapture: {
         parameters: {
             query?: never;
@@ -13864,6 +14530,37 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_reportsUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -17158,6 +17855,235 @@ export interface operations {
             query?: {
                 q?: string;
             };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_getAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_setAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetNavPermissionsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_resetOne: {
+        parameters: {
+            query: {
+                itemHref: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_listGrants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_addGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNavGrantDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_removeGrant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    NavPermissionsController_myGrants: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
