@@ -48,7 +48,20 @@ export function useDisconnectGoogleCalendar() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => api.post<{ disconnected: boolean }>("/calendar/google/disconnect"),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+    onSuccess: () => {
+      // Deliberately not invalidateQueries: that would mark the events query
+      // stale and refetch it immediately, right as the connection it depends
+      // on is being revoked — a race that used to surface as a spurious
+      // error from that endpoint. Setting status directly is instant (no
+      // reload needed) and removing the events query drops it from the
+      // cache without ever re-requesting it.
+      qc.setQueryData<GoogleCalendarStatus>([...KEY, "status"], {
+        connected: false,
+        googleEmail: null,
+        connectedAt: null,
+      });
+      qc.removeQueries({ queryKey: [...KEY, "events"] });
+    },
   });
 }
 

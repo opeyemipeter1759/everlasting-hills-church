@@ -6,6 +6,7 @@ import { Hand, CheckCircle2, Youtube, MessageCircle, ChevronRight } from "lucide
 import { CHURCH } from "@/config/config";
 import { useCanMark, useCheckIn } from "@/lib/api";
 import type { MemberHomeProps } from "@/types";
+import ServiceCountdownHero from "@/components/home/attendance-section/ServiceCountdownHero";
 
 
 function CosmicBackdrop() {
@@ -170,7 +171,7 @@ function CheckedInCenter() {
 export function CheckInPanel({
   todayService, hasCheckedInToday,
 }: { todayService: MemberHomeProps["todayService"]; hasCheckedInToday: boolean }) {
-  const { data: canMarkData, isLoading: canMarkLoading } = useCanMark();
+  const { data: canMarkData, isLoading: canMarkLoading, refetch: refetchCanMark } = useCanMark();
   const checkIn = useCheckIn();
   const [checkedIn, setCheckedIn] = useState(hasCheckedInToday);
   const [error, setError] = useState("");
@@ -186,6 +187,7 @@ export function CheckInPanel({
   }
 
   const canMark = canMarkData?.canMark === true;
+  const opensAt = canMarkData?.opensAt ?? null;
   const serviceName = todayService?.name ?? "Everlasting Hills";
 
   return (
@@ -210,6 +212,8 @@ export function CheckInPanel({
             <CheckedInCenter />
           ) : canMark ? (
             <ServiceDayCenter onClick={handleCheckIn} loading={checkIn.isPending} />
+          ) : opensAt ? (
+            <ServiceCountdownHero opensAt={opensAt} onComplete={() => refetchCanMark()} compact />
           ) : (
             <NoServiceCenter />
           )}

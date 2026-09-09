@@ -10,6 +10,7 @@ import { fmtDate, fmtTime } from "./helpers";
 import { CosmicBackdrop } from "./CosmicBackdrop";
 import { ServiceDayCenter, CheckedInCenter } from "./CheckInCenters";
 import { NoServiceCenter } from "./NoServiceCenter";
+import ServiceCountdownHero from "@/components/home/attendance-section/ServiceCountdownHero";
 
 export function CheckInPanel({
   todayService, hasCheckedInToday, nextService,
@@ -19,16 +20,18 @@ export function CheckInPanel({
   nextService: MemberHomeProps["nextService"];
 }) {
   const router = useRouter();
-  const { data: canMarkData, isLoading: canMarkLoading } = useCanMark();
+  const { data: canMarkData, isLoading: canMarkLoading, refetch: refetchCanMark } = useCanMark();
   const checkIn = useCheckIn();
   const [error, setError] = useState("");
 
   const canMark = canMarkData?.canMark === true;
   const alreadyMarked = canMarkData?.reason === "ALREADY_MARKED";
   const checkedIn = hasCheckedInToday || alreadyMarked || checkIn.isSuccess;
+  const opensAt = canMarkData?.opensAt ?? null;
 
-  // Derive service context from the API response or props
-  const isServiceDay = canMark || checkedIn || !!todayService;
+  // Derive service context from the API response or props. opensAt means
+  // check-in isn't open yet, but it's still today's service, not some future one.
+  const isServiceDay = canMark || checkedIn || !!todayService || !!opensAt;
   const serviceName = todayService?.name ?? "Everlasting Hills";
   const todayDay = new Date().getDay();
   const serviceTime = todayDay === 0 ? "9:00 AM" : todayDay === 3 ? "5:30 PM" : null;
@@ -102,6 +105,8 @@ export function CheckInPanel({
             ? <CheckedInCenter />
             : canMark
             ? <ServiceDayCenter onClick={handleCheckIn} loading={checkIn.isPending} />
+            : opensAt
+            ? <ServiceCountdownHero opensAt={opensAt} onComplete={() => refetchCanMark()} compact />
             : <NoServiceCenter nextService={nextService} />}
         </div>
 

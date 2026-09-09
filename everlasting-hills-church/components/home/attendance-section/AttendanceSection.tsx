@@ -19,7 +19,7 @@ export default function AttendanceSection() {
 
   const isLoggedIn = !!session?.loggedIn;
   const { announcements, loading: announcementsLoading } = useAnnouncementsFeed(isLoggedIn);
-  const { data: canMarkData, isLoading: canMarkLoading } = useCanMark({ enabled: isLoggedIn });
+  const { data: canMarkData, isLoading: canMarkLoading, refetch: refetchCanMark } = useCanMark({ enabled: isLoggedIn });
   const checkIn = useCheckIn();
 
   async function handleCheckIn() {
@@ -48,16 +48,21 @@ export default function AttendanceSection() {
     );
   }
 
+  const opensAt = isLoggedIn ? canMarkData?.opensAt ?? null : null;
   const attendanceState: AttendanceState = alreadyMarked
     ? "checked-in"
     : canMark
       ? "can-check-in"
-      : "no-service";
+      : opensAt
+        ? "opens-soon"
+        : "no-service";
   const attendanceHeading = alreadyMarked
     ? "You're in. God bless you."
     : canMark
       ? "Mark your presence."
-      : "Stay close even on quiet days.";
+      : opensAt
+        ? "Almost there."
+        : "Stay close even on quiet days.";
 
   return (
     <section
@@ -84,6 +89,8 @@ export default function AttendanceSection() {
               onCheckIn={handleCheckIn}
               loading={checkIn.isPending}
               error={error}
+              opensAt={opensAt}
+              onCountdownComplete={() => refetchCanMark()}
             />
             <AnnouncementsPanel announcements={announcements} loading={announcementsLoading} />
           </div>

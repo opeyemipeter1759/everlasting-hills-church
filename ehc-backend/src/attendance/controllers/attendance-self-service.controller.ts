@@ -63,7 +63,10 @@ export class AttendanceSelfServiceController {
     schema: {
       examples: {
         canMark: { value: { canMark: true } },
-        noSession: { value: { canMark: false, reason: 'NO_OPEN_SESSION' } },
+        noSession: { value: { canMark: false, reason: 'NO_OPEN_SESSION', opensAt: null } },
+        upcomingToday: {
+          value: { canMark: false, reason: 'NO_OPEN_SESSION', opensAt: '2026-05-31T07:30:00.000Z' },
+        },
         alreadyMarked: { value: { canMark: false, reason: 'ALREADY_MARKED' } },
       },
     },

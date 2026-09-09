@@ -25,20 +25,43 @@ export default function ConnectPersonalGoogleCalendarCard() {
     const result = searchParams.get("google");
     if (!result || handledRedirect.current) return;
     handledRedirect.current = true;
-
-    if (result === "connected") {
-      toast.success("Google Calendar connected!");
-    } else if (result === "error") {
-      toast.error("We couldn't connect your Google Calendar. Please try again.");
-    }
     router.replace("/dashboard/calendar");
+
+    if (result === "error") {
+      toast.error("We couldn't connect your Google Calendar. Please try again.");
+      return;
+    }
+    if (result !== "connected") return;
+
+    // The backend already saved the connection before redirecting here, so
+    // kick off the first sync immediately instead of waiting on the status
+    // query to separately notice it's connected — one visible progress toast
+    // (connecting → syncing → done) instead of a silent background sync with
+    // no feedback. Marks autoSynced so the effect below doesn't fire a
+    // redundant second sync moments later once status catches up.
+    autoSynced.current = true;
+    const toastId = toast.loading("Connected! Syncing your calendar…");
+    sync
+      .mutateAsync()
+      .then((result) => {
+        toast.success(
+          `Connected — synced ${result.synced} item${result.synced === 1 ? "" : "s"} to your Google Calendar`,
+          { id: toastId },
+        );
+      })
+      .catch(() => {
+        toast.error('Connected, but the first sync failed — try "Sync now" below.', { id: toastId });
+      });
+    // sync is a stable mutation object across renders; including it would refire this on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, router]);
 
-  // Keeps the sync feeling automatic: a member who is already connected
-  // doesn't have to remember to press "Sync now" every time they check —
-  // visiting the page is enough. Runs once per visit; the periodic backend
-  // job covers freshness the rest of the time. Silent on purpose — a toast
-  // every single page load would get old fast.
+  // Keeps the sync feeling automatic on ordinary visits too: a member who's
+  // already connected doesn't have to remember to press "Sync now" every
+  // time they check. Runs once per visit; the periodic backend job covers
+  // freshness the rest of the time. Silent on purpose — a toast every single
+  // page load would get old fast (the fresh-connect case above already gets
+  // its own loud, explicit progress toast).
   useEffect(() => {
     if (!status?.connected || autoSynced.current) return;
     autoSynced.current = true;
@@ -58,12 +81,6 @@ export default function ConnectPersonalGoogleCalendarCard() {
     try {
       await disconnect.mutateAsync();
       toast.success("Google Calendar disconnected");
-      // A hard reload rather than relying on query invalidation — simplest
-      // way to guarantee every hook on this page (status, personal events,
-      // the auto-sync effect above) starts clean from the now-disconnected
-      // state, with nothing left mid-flight that could still be pointed at
-      // the connection that just got revoked.
-      window.location.reload();
     } catch {
       toast.error("We couldn't disconnect. Please try again.");
     }

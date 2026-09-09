@@ -347,6 +347,8 @@ export function useMemberSermonStats() {
 export interface CanMarkResponse {
   canMark: boolean;
   reason?: 'NO_OPEN_SESSION' | 'ALREADY_MARKED';
+  /** ISO instant check-in opens, when today is a service day and the window just hasn't opened yet. Only present alongside NO_OPEN_SESSION. */
+  opensAt?: string | null;
 }
 
 export function useCanMark(options?: { enabled?: boolean }) {

@@ -133,14 +133,20 @@ export class AttendanceSessionWindowService {
    * Check whether the current user is allowed to mark attendance right now.
    *
    * Order of checks:
-   *  1. Is there an active session window? → NO_OPEN_SESSION
+   *  1. Is there an active session window? → NO_OPEN_SESSION (+ opensAt if
+   *     today is a service day and the window just hasn't opened yet, so the
+   *     homepage can show a countdown instead of a flat "no service" message)
    *  2. Has the user already checked in?  → ALREADY_MARKED
    *  3. Otherwise                          → canMark: true
    */
   async canMark(userId: string) {
     const session = await this.getActiveSession();
     if (!session) {
-      return { canMark: false as const, reason: 'NO_OPEN_SESSION' as const };
+      return {
+        canMark: false as const,
+        reason: 'NO_OPEN_SESSION' as const,
+        opensAt: this.getUpcomingWindowOpen(),
+      };
     }
 
     const member = await this.memberLookup.getMemberByUserId(userId);
@@ -160,5 +166,34 @@ export class AttendanceSessionWindowService {
     }
 
     return { canMark: true as const };
+  }
+
+  /**
+   * ISO instant the check-in window opens, when today is a scheduled service
+   * day (Sunday/Wednesday) and that window hasn't opened yet. Null on a
+   * non-service day, or once today's window has already opened (including
+   * after it's closed again) — a countdown to a time already in the past
+   * would be nonsensical, and getActiveSession() already covers "open now".
+   */
+  private getUpcomingWindowOpen(): string | null {
+    if (this.config.get('ATTENDANCE_FORCE_OPEN', { infer: true }) === true) return null;
+
+    const now = this.getNow();
+    const watNow = new Date(now.getTime() + WAT_OFFSET_MS);
+    const dayOfWeek = watNow.getUTCDay();
+    const openHHMM =
+      dayOfWeek === 0
+        ? this.config.get('ATTENDANCE_SUNDAY_OPEN', { infer: true })
+        : dayOfWeek === 3
+          ? this.config.get('ATTENDANCE_WEDNESDAY_OPEN', { infer: true })
+          : null;
+    if (!openHHMM) return null;
+
+    const openMin = this.parseHHMM(openHHMM);
+    const minutesNow = watNow.getUTCHours() * 60 + watNow.getUTCMinutes();
+    if (minutesNow >= openMin) return null;
+
+    const { startUtc } = getDayBounds(now);
+    return new Date(startUtc.getTime() + openMin * 60_000).toISOString();
   }
 }
