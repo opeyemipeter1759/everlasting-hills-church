@@ -185,18 +185,22 @@ function withSessionCookies(response: NextResponse, session: BackendSession | nu
   return response;
 }
 
-// Google's OAuth redirect_uri — lands here so the flow stays on the app's own
-// branded domain (see app/dashboard/calendar/google/callback/route.ts), which
-// just forwards on to the real Nest handler. It sits under /dashboard/* (so
-// the config.matcher below applies) but needs none of the checks that path
-// prefix normally requires: identity travels in Google's signed `state`, not
-// a session cookie, and a session that lapsed during the consent round trip
-// shouldn't stall the connection on a login redirect.
-const GOOGLE_CALENDAR_CALLBACK_PATH = "/dashboard/calendar/google/callback";
+// Google's OAuth redirect_uri points at the calendar page itself (see
+// app/dashboard/(member)/calendar/page.tsx), which forwards code+state on to
+// the real Nest handler, so the flow stays on the app's own branded domain
+// instead of a separate route. That page normally requires a session like
+// any other /dashboard/* route — but identity for this one specific request
+// shape travels in Google's signed `state`, not a session cookie, so a
+// session that lapsed during the consent round trip shouldn't strand the
+// user on a login redirect instead of completing the connection. Scoped to
+// exactly this path + query shape so a normal calendar visit is unaffected.
+function isGoogleCalendarCallback(pathname: string, searchParams: URLSearchParams): boolean {
+  return pathname === "/dashboard/calendar" && searchParams.has("code") && searchParams.has("state");
+}
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  if (pathname === GOOGLE_CALENDAR_CALLBACK_PATH) return NextResponse.next();
+  const { pathname, searchParams } = request.nextUrl;
+  if (isGoogleCalendarCallback(pathname, searchParams)) return NextResponse.next();
   if (isLogoutPending(request.cookies.get(LOGOUT_PENDING_COOKIE)?.value)) {
     const response = AUTH_PAGES.has(pathname)
       ? NextResponse.next()
