@@ -45,7 +45,13 @@ export interface PlanDay {
 
 export interface TodayReading {
   subscriptionId: string;
-  plan: { id: string; slug: string; title: string; durationDays: number };
+  plan: {
+    id: string;
+    slug: string;
+    title: string;
+    durationDays: number;
+    coverImageUrl: string | null;
+  };
   translation: { id: number; code: string; name: string };
   timezone: string;
   currentDayIndex: number;

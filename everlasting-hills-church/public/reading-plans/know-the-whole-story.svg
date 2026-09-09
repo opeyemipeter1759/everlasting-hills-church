@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" role="img">
+<defs><linearGradient id="page" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#87102C"/>
+    <stop offset="1" stop-color="#4A0817"/>
+  </linearGradient>
+  <linearGradient id="thread" gradientUnits="userSpaceOnUse" x1="70" y1="0" x2="730" y2="0">
+    <stop offset="0" stop-color="#E8B44A"/>
+    <stop offset="0.5" stop-color="#FFF4F6"/>
+    <stop offset="1" stop-color="#FFB3C1"/>
+  </linearGradient></defs>
+<rect width="800" height="400" fill="url(#page)"/>
+  <g><line x1="0" y1="40" x2="800" y2="40" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="68" x2="800" y2="68" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="96" x2="800" y2="96" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="124" x2="800" y2="124" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="152" x2="800" y2="152" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="180" x2="800" y2="180" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="208" x2="800" y2="208" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="236" x2="800" y2="236" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="264" x2="800" y2="264" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="292" x2="800" y2="292" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="320" x2="800" y2="320" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="348" x2="800" y2="348" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/>
+  <line x1="0" y1="376" x2="800" y2="376" stroke="#FFF4F6" stroke-opacity="0.045" stroke-width="1"/></g>
+  <path d="M 70.0 200.0 Q 111.3 200.0 111.3 232.0 Q 111.3 264.0 152.5 264.0 Q 193.8 264.0 193.8 271.4 Q 193.8 278.8 235.0 278.8 Q 276.3 278.8 276.3 260.3 Q 276.3 241.8 317.5 241.8 Q 358.8 241.8 358.8 213.1 Q 358.8 184.4 400.0 184.4 Q 441.3 184.4 441.3 165.6 Q 441.3 146.8 482.5 146.8 Q 523.8 146.8 523.8 148.0 Q 523.8 149.3 565.0 149.3 Q 606.3 149.3 606.3 165.9 Q 606.3 182.6 647.5 182.6 Q 688.8 182.6 688.8 200.7 Q 688.8 218.8 730.0 218.8" fill="none" stroke="#4A0817" stroke-opacity="0.5" stroke-width="9" stroke-linecap="round" transform="translate(0,5)"/>
+  <path d="M 70.0 200.0 Q 111.3 200.0 111.3 232.0 Q 111.3 264.0 152.5 264.0 Q 193.8 264.0 193.8 271.4 Q 193.8 278.8 235.0 278.8 Q 276.3 278.8 276.3 260.3 Q 276.3 241.8 317.5 241.8 Q 358.8 241.8 358.8 213.1 Q 358.8 184.4 400.0 184.4 Q 441.3 184.4 441.3 165.6 Q 441.3 146.8 482.5 146.8 Q 523.8 146.8 523.8 148.0 Q 523.8 149.3 565.0 149.3 Q 606.3 149.3 606.3 165.9 Q 606.3 182.6 647.5 182.6 Q 688.8 182.6 688.8 200.7 Q 688.8 218.8 730.0 218.8" fill="none" stroke="url(#thread)" stroke-width="4.5" stroke-linecap="round"/>
+  <g><circle cx="70.0" cy="200.0" r="9" fill="#E8B44A" fill-opacity="1"/>
+  <circle cx="152.5" cy="264.0" r="5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="235.0" cy="278.8" r="5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="317.5" cy="241.8" r="5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="400.0" cy="184.4" r="5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="482.5" cy="146.8" r="5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="565.0" cy="149.3" r="5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="647.5" cy="182.6" r="5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="730.0" cy="218.8" r="9" fill="#E8B44A" fill-opacity="1"/></g>
+</svg>

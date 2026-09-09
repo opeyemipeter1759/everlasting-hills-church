@@ -54,7 +54,7 @@ export class MeReadingPlanService {
       where: { profileId, status: SubscriptionStatus.ACTIVE },
       orderBy: { createdAt: 'desc' },
       include: {
-        Plan: { select: { id: true, slug: true, title: true, durationDays: true } },
+        Plan: { select: { id: true, slug: true, title: true, durationDays: true, coverImageUrl: true } },
         Translation: { select: { id: true, code: true, name: true } },
       },
     });
