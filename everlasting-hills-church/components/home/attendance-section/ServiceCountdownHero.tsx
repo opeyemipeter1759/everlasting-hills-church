@@ -23,7 +23,17 @@ const UNITS: { key: "hours" | "minutes" | "seconds"; label: string }[] = [
 
 export default function ServiceCountdownHero({ opensAt, onComplete, compact = false }: ServiceCountdownHeroProps) {
   const countdown = useCountdown(opensAt, onComplete);
-  const openTime = new Date(opensAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  // Fixed to the church's own timezone (WAT), not the renderer's — without an
+  // explicit timeZone this depends on wherever the code happens to run, so
+  // the server (building the initial HTML) and the visitor's browser
+  // (hydrating moments later, in whatever timezone they're in) can compute
+  // two different strings for the same instant. That mismatch is exactly
+  // the kind of thing dev mode hides and a production build does not.
+  const openTime = new Date(opensAt).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "Africa/Lagos",
+  });
 
   return (
     <div className={`flex flex-col items-center text-center ${compact ? "gap-4" : "gap-8 py-6"}`}>

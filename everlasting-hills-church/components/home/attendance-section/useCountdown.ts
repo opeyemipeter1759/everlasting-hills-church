@@ -11,32 +11,43 @@ export interface Countdown {
 
 /**
  * Ticks down to `targetIso` once a second; null whenever there's nothing to
- * count down to. Fires `onComplete` exactly once, the instant it crosses
- * zero — lets the caller refetch "can I check in now?" right as the window
- * opens instead of leaving a stale countdown frozen at 00:00:00.
+ * count down to, or before the client has actually mounted.
+ *
+ * That mounted-gate matters: seeding `now` from Date.now() during the very
+ * first render would make the server-rendered HTML (built the instant the
+ * request hit the server) disagree with the client's first render (built
+ * moments later, at hydration time) — a hydration mismatch. Dev mode papers
+ * over that silently; a production build does not, and can abort hydrating
+ * that subtree, which is exactly what "works locally, broken in prod" looks
+ * like for anything Date.now()-seeded. Returning null until mount keeps the
+ * server and client's first paint byte-for-byte identical (all zeros); the
+ * real countdown only starts ticking after hydration has already succeeded.
  */
 export function useCountdown(targetIso: string | null, onComplete?: () => void): Countdown | null {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
   const firedRef = useRef(false);
 
   useEffect(() => {
     firedRef.current = false;
-    if (!targetIso) return;
+    if (!targetIso) {
+      setNow(null);
+      return;
+    }
     setNow(Date.now());
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [targetIso]);
 
-  const totalMs = targetIso ? Math.max(0, new Date(targetIso).getTime() - now) : 0;
+  const totalMs = targetIso && now !== null ? Math.max(0, new Date(targetIso).getTime() - now) : null;
 
   useEffect(() => {
-    if (targetIso && totalMs <= 0 && !firedRef.current) {
+    if (targetIso && totalMs !== null && totalMs <= 0 && !firedRef.current) {
       firedRef.current = true;
       onComplete?.();
     }
   }, [targetIso, totalMs, onComplete]);
 
-  if (!targetIso) return null;
+  if (!targetIso || totalMs === null) return null;
 
   const totalSeconds = Math.floor(totalMs / 1000);
   return {
