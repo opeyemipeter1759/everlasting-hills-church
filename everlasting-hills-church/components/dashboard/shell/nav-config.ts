@@ -67,7 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // and both are named here because a member looking for their reading plan
       // should not have to know it lives behind Sermons.
       { label: "Sermons",         href: "/dashboard/sermon",           icon: Headphones,      minRole: "MEMBER" },
-      { label: "Bible Reading",   href: "/dashboard/reading",          icon: BookOpen,        minRole: "MEMBER" },
+      { label: "Bible Plan",      href: "/dashboard/reading",          icon: BookOpen,        minRole: "MEMBER" },
       // Member-written articles: what people are learning, published to the
       // church. It sits beside the reading plan because that is where most of
       // them start.
@@ -108,6 +108,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Members",       href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
+      { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
@@ -115,10 +116,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",   icon: Network,       minRole: "ADMIN" },
-      // Units is organised by team; this is the same memberships read
-      // person-first, which is the only way to see that somebody serves on
-      // three of them. ADMIN admits ADMIN_HEAD, PASTOR and SUPER_ADMIN too.
-      { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog, minRole: "ADMIN" },
       // The Roles page existed with no way in but the URL — the third screen in
       // this app built and then left unreachable.
       { label: "Roles",         href: "/dashboard/admin/roles",   icon: Shield,        minRole: "ADMIN" },
