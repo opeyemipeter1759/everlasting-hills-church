@@ -101,7 +101,7 @@ async function fetchNavPermissionsMap(accessToken: string): Promise<NavPermissio
   }
 }
 
-async function refreshSession(refreshToken: string): Promise<BackendSession | null> {
+async function refreshSessionRaw(refreshToken: string): Promise<BackendSession | null> {
   try {
     const response = await fetch(`${getBackendBaseUrl()}/auth/refresh`, {
       method: "POST",
@@ -114,6 +114,24 @@ async function refreshSession(refreshToken: string): Promise<BackendSession | nu
   } catch {
     return null;
   }
+}
+
+// Supabase refresh tokens are single-use — redeeming one invalidates it and
+// issues a new one. Several requests can land on the same warm edge isolate
+// around the same moment (a navigation plus its prefetches, say) all holding
+// the same stale-looking refresh token; without de-duping, all but the first
+// would get rejected by Supabase and read as "refresh failed", clearing a
+// session that had just been renewed a moment earlier by its sibling.
+const inFlightRefreshes = new Map<string, Promise<BackendSession | null>>();
+
+async function refreshSession(refreshToken: string): Promise<BackendSession | null> {
+  const existing = inFlightRefreshes.get(refreshToken);
+  if (existing) return existing;
+  const attempt = refreshSessionRaw(refreshToken).finally(() => {
+    inFlightRefreshes.delete(refreshToken);
+  });
+  inFlightRefreshes.set(refreshToken, attempt);
+  return attempt;
 }
 
 interface BackendRoleSnapshot {

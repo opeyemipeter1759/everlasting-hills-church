@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClipboardCheck, Clock3, ListChecks, RefreshCw, Search, ShieldAlert, Trophy, Users, UsersRound } from "lucide-react";
 import { hasMinRole } from "@/lib/auth/frontend-session";
@@ -77,12 +77,17 @@ export default function FollowUpPipelineClient() {
   const [bulkReassignOpen, setBulkReassignOpen] = useState(false);
   const [teamRosterOpen, setTeamRosterOpen] = useState(false);
 
-  // There's no "all service days" view — activity is logged per service, so the
-  // page always has one concrete service in scope. Defaults to the most recent
-  // one that's already happened; the picker just moves between past services.
+  // Defaults to the most recent past service so the page opens somewhere
+  // useful, but only once — "All Services" is itself a legitimate, explicit
+  // choice (value ""), so this must not keep snapping back to a specific day
+  // every time serviceId happens to be empty.
+  const hasSetDefaultService = useRef(false);
   useEffect(() => {
-    if (!serviceId && services.length > 0) setServiceIdState(services[0].id);
-  }, [serviceId, services]);
+    if (!hasSetDefaultService.current && services.length > 0) {
+      hasSetDefaultService.current = true;
+      setServiceIdState(services[0].id);
+    }
+  }, [services]);
 
   const { data: entries = [], isLoading, isFetching, error } = useFollowUpEntries({ serviceId: serviceId || undefined });
   // The server decides. Being in a unit is not the same as being on a
@@ -259,7 +264,10 @@ export default function FollowUpPipelineClient() {
                   value={serviceId}
                   onChange={setServiceId}
                   className="text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer w-full sm:w-56 sm:flex-shrink-0"
-                  options={services.map((s) => ({ value: s.id, label: formatServiceOption(s) }))}
+                  options={[
+                    { value: "", label: "All Services" },
+                    ...services.map((s) => ({ value: s.id, label: formatServiceOption(s) })),
+                  ]}
                 />
 
                 <div className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-white/10 p-0.5" role="tablist" aria-label="Filter by source">

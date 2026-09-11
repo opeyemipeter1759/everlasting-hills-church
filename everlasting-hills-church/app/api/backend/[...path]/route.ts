@@ -96,11 +96,13 @@ async function readProxyBody(request: NextRequest): Promise<{ body: ProxyBody; r
   return { body: await request.arrayBuffer(), replayable: true };
 }
 
-async function refreshBackend(refreshToken: string): Promise<{
+interface RefreshResult {
   upstream: Response;
   json: unknown | null;
   session: BackendSession | null;
-}> {
+}
+
+async function refreshBackendRaw(refreshToken: string): Promise<RefreshResult> {
   const upstream = await fetch(`${getBackendBaseUrl()}/auth/refresh`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -114,6 +116,28 @@ async function refreshBackend(refreshToken: string): Promise<{
     // Preserve the status even if an upstream proxy returned non-JSON.
   }
   return { upstream, json, session: upstream.ok ? getBackendSession(json) : null };
+}
+
+// Supabase refresh tokens are single-use: redeeming one invalidates it and
+// issues a new one. A page normally fires several requests at once (a
+// dashboard's parallel queries, say), and each one independently notices the
+// access token is due for renewal — without this, they'd all race to redeem
+// the SAME refresh token. Exactly one call wins; Supabase rejects the rest,
+// which used to read as "refresh failed" and clear a session that had, in
+// fact, just been renewed a moment earlier by its sibling request. Keyed by
+// the token value and shared across concurrent requests hitting the same
+// warm instance — not a distributed lock, but it's exactly the concurrent
+// requests *within one instance* that reproduce this every time.
+const inFlightRefreshes = new Map<string, Promise<RefreshResult>>();
+
+async function refreshBackend(refreshToken: string): Promise<RefreshResult> {
+  const existing = inFlightRefreshes.get(refreshToken);
+  if (existing) return existing;
+  const attempt = refreshBackendRaw(refreshToken).finally(() => {
+    inFlightRefreshes.delete(refreshToken);
+  });
+  inFlightRefreshes.set(refreshToken, attempt);
+  return attempt;
 }
 
 function jsonProxyResponse(upstream: Response, value: unknown): NextResponse {

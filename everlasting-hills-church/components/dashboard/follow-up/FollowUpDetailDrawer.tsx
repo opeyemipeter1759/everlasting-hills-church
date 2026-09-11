@@ -768,8 +768,13 @@ export function FollowUpDetailDrawer({
                 value={logServiceId}
                 onChange={setLogServiceId}
                 className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs px-2.5 py-2 outline-none focus:ring-2 focus:ring-[#87102C]/25"
+                // Not every contact happens around a service day — a regular
+                // check-up call, or reaching out ahead of one — so leaving
+                // this unset is a real, intentional choice, not an
+                // incomplete field. Labeled that way rather than as a bare
+                // placeholder that reads like something you forgot to pick.
                 options={[
-                  { value: "", label: "Which service?" },
+                  { value: "", label: "General check-in (not tied to a service)" },
                   ...services.map((s) => ({
                     value: s.id,
                     label: `${new Date(s.scheduledAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} — ${s.name}`,

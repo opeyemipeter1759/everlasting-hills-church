@@ -97,12 +97,29 @@ function EntryRow({
       {/* Assignee */}
       <div className="hidden sm:flex items-center gap-2 w-40 flex-shrink-0">
         {entry.assignee ? (
-          <>
-            <PersonAvatar person={entry.assignee} size="sm" />
-            <span className="text-xs font-medium text-[#111] dark:text-white/80 truncate">
-              {isMine ? "You" : entry.assignee.name}
-            </span>
-          </>
+          entry.viewerCanApprove ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAssign(entry);
+              }}
+              className="group flex min-w-0 items-center gap-2 text-left"
+              title="Reassign"
+            >
+              <PersonAvatar person={entry.assignee} size="sm" />
+              <span className="truncate text-xs font-medium text-[#111] group-hover:underline dark:text-white/80">
+                {isMine ? "You" : entry.assignee.name}
+              </span>
+            </button>
+          ) : (
+            <>
+              <PersonAvatar person={entry.assignee} size="sm" />
+              <span className="text-xs font-medium text-[#111] dark:text-white/80 truncate">
+                {isMine ? "You" : entry.assignee.name}
+              </span>
+            </>
+          )
         ) : entry.viewerCanApprove ? (
           <button
             type="button"
