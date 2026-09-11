@@ -1,9 +1,15 @@
-import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
+import { deletePersonRecords } from '../../common/person-deletion.util';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import { canActOnRole } from '../../users/role-hierarchy';
 import { createAdminClient } from '../members-supabase-admin.util';
@@ -39,9 +45,10 @@ export class MemberDeletionService {
     }
 
     const targetRole = member.Profile
-      ? (await this.effectiveRoles.getEffectiveRoles(member.Profile.id)).primaryRole
+      ? (await this.effectiveRoles.getEffectiveRoles(member.Profile.id))
+          .primaryRole
       : Role.MEMBER;
-    if (!canActOnRole(actor.role as any, targetRole as any)) {
+    if (!canActOnRole(actor.role, targetRole)) {
       throw new ForbiddenException(
         `Your role (${actor.role ?? 'none'}) cannot delete a ${targetRole}.`,
       );
@@ -50,32 +57,10 @@ export class MemberDeletionService {
     const profileId = member.Profile?.id;
     const supabaseUserId = member.Profile?.userId;
 
-    await this.prisma.$transaction(async (tx) => {
-      // Children that reference Member.id (schema declares no onDelete cascades, so
-      // we delete them explicitly). Keep this list in sync with members of the Member
-      // model in schema.prisma.
-      await tx.careAssignment.deleteMany({
-        where: { OR: [{ memberId }, { leaderId: memberId }] },
-      });
-      await tx.attendanceRecord.deleteMany({ where: { memberId } });
-      await tx.discussionResponse.deleteMany({ where: { memberId } });
-      await tx.engagementScore.deleteMany({ where: { memberId } });
-      await tx.followUpTask.deleteMany({ where: { memberId } });
-      await tx.listenProgress.deleteMany({ where: { memberId } });
-      await tx.pastorNote.deleteMany({ where: { memberId } });
-      await tx.pastoralAlert.deleteMany({ where: { memberId } });
-      await tx.sermonBookmark.deleteMany({ where: { memberId } });
-      await tx.sermonNote.deleteMany({ where: { memberId } });
-      await tx.sermonReaction.deleteMany({ where: { memberId } });
-      await tx.unitMember.deleteMany({ where: { memberId } });
-
-      await tx.member.delete({ where: { id: memberId } });
-
-      if (profileId) {
-        await tx.roleAssignment.deleteMany({ where: { profileId } });
-        await tx.profile.delete({ where: { id: profileId } });
-      }
-    });
+    await this.prisma.$transaction(
+      (tx) => deletePersonRecords(tx, { memberId, profileId }),
+      { timeout: 30_000 },
+    );
 
     if (supabaseUserId) {
       try {
