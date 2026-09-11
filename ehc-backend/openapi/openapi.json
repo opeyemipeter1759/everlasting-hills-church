@@ -475,6 +475,40 @@
         ],
         "type": "object"
       },
+      "CreateArticleDto": {
+        "properties": {
+          "body": {
+            "description": "Markdown, the same subset announcements use",
+            "type": "string"
+          },
+          "endVerseId": {
+            "example": 45008039,
+            "type": "number"
+          },
+          "publish": {
+            "description": "Publish immediately rather than saving a draft",
+            "type": "boolean"
+          },
+          "scriptureLabel": {
+            "example": "Romans 8",
+            "type": "string"
+          },
+          "startVerseId": {
+            "description": "First verse of the passage this came from",
+            "example": 45001001,
+            "type": "number"
+          },
+          "title": {
+            "example": "What Romans 8 showed me this week",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "type": "object"
+      },
       "CreateAssignmentDto": {
         "properties": {
           "leaderId": {
@@ -768,6 +802,10 @@
           "name",
           "category"
         ],
+        "type": "object"
+      },
+      "CreateNavGrantDto": {
+        "properties": {},
         "type": "object"
       },
       "CreatePostDto": {
@@ -1399,6 +1437,10 @@
             ],
             "example": "REACHED",
             "type": "string"
+          },
+          "serviceId": {
+            "description": "The service day this activity relates to",
+            "type": "string"
           }
         },
         "required": [
@@ -1455,6 +1497,18 @@
         "required": [
           "description",
           "status"
+        ],
+        "type": "object"
+      },
+      "MarkPresentDto": {
+        "properties": {
+          "serviceId": {
+            "description": "The service to mark this person present for",
+            "type": "string"
+          }
+        },
+        "required": [
+          "serviceId"
         ],
         "type": "object"
       },
@@ -1886,6 +1940,10 @@
         },
         "type": "object"
       },
+      "SetNavPermissionsDto": {
+        "properties": {},
+        "type": "object"
+      },
       "SetRsvpCheckedInDto": {
         "properties": {
           "checkedIn": {
@@ -2140,6 +2198,34 @@
           "venue": {
             "description": "Or \"\" to remove it",
             "example": "Main Auditorium",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateArticleDto": {
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "endVerseId": {
+            "type": "object"
+          },
+          "scriptureLabel": {
+            "type": "object"
+          },
+          "startVerseId": {
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "DRAFT",
+              "PUBLISHED",
+              "ARCHIVED"
+            ],
+            "type": "string"
+          },
+          "title": {
             "type": "string"
           }
         },
@@ -5422,6 +5508,576 @@
         ]
       }
     },
+    "/articles": {
+      "get": {
+        "operationId": "ArticlesController_feed",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "authorId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The church feed: published articles, featured first",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "ArticlesController_create",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArticleDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Write an article, as a draft or published straight away",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}": {
+      "delete": {
+        "operationId": "ArticlesController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete your own article",
+        "tags": [
+          "articles"
+        ]
+      },
+      "patch": {
+        "operationId": "ArticlesController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArticleDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit your own article, or archive somebody else's if you are a pastor or admin. Moderation is after the fact, never a gate before publishing.",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}/feature": {
+      "delete": {
+        "operationId": "ArticlesController_unfeature",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove an article from the featured slot (PASTOR+)",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "ArticlesController_feature",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Lift an article to the top of the church feed (PASTOR+)",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}/like": {
+      "delete": {
+        "operationId": "ArticlesController_unlike",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove your like",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "ArticlesController_like",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Like an article. Idempotent: a double tap counts once.",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{slug}": {
+      "get": {
+        "operationId": "ArticlesController_bySlug",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "One article. A draft is visible to its author alone.",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/mine": {
+      "get": {
+        "operationId": "ArticlesController_mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Everything the caller has written, drafts included",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
     "/assignments": {
       "get": {
         "operationId": "AssignmentsController_list",
@@ -5964,6 +6620,14 @@
                         "noSession": {
                           "value": {
                             "canMark": false,
+                            "opensAt": null,
+                            "reason": "NO_OPEN_SESSION"
+                          }
+                        },
+                        "upcomingToday": {
+                          "value": {
+                            "canMark": false,
+                            "opensAt": "2026-05-31T07:30:00.000Z",
                             "reason": "NO_OPEN_SESSION"
                           }
                         }
@@ -13187,6 +13851,72 @@
         ]
       }
     },
+    "/follow-up/{id}/mark-present": {
+      "post": {
+        "operationId": "FollowUpController_markPresent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkPresentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Mark this entry's subject present for a service — for a missed check-in (assignee or leader)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/{id}/opt-out": {
       "patch": {
         "operationId": "FollowUpMemberStatusController_optOut",
@@ -13700,6 +14430,53 @@
         ]
       }
     },
+    "/follow-up/my-unit": {
+      "get": {
+        "operationId": "FollowUpController_myUnit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The unit whose leader controls (Team roster, Bulk reassign) the caller should see: their own led/assisted unit, or the \"Follow-Up\" unit for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own (MEMBER+ auth, null for anyone else).",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/quick-capture": {
       "post": {
         "operationId": "FollowUpController_quickCapture",
@@ -13752,6 +14529,53 @@
           }
         ],
         "summary": "One-tap door capture: create a bare name+phone visitor and route them into the pipeline (MEMBER+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/reports-unit": {
+      "get": {
+        "operationId": "FollowUpController_reportsUnit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Whether the caller may see Follow-Up Service Reports: the \"Follow-Up\" unit, only for its own lead or PASTOR/ADMIN_HEAD/ADMIN/SUPER_ADMIN — unlike my-unit, a lead of some other team does not qualify (MEMBER+ auth, null for anyone else).",
         "tags": [
           "follow-up"
         ]
@@ -19140,6 +19964,367 @@
         ]
       }
     },
+    "/nav-permissions": {
+      "delete": {
+        "operationId": "NavPermissionsController_resetOne",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "itemHref",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Revert one item to its static default (SUPER_ADMIN only)",
+        "tags": [
+          "nav-permissions"
+        ]
+      },
+      "get": {
+        "operationId": "NavPermissionsController_getAll",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Current per-item role overrides (MEMBER+ — needed by every sidebar/route check)",
+        "tags": [
+          "nav-permissions"
+        ]
+      },
+      "put": {
+        "operationId": "NavPermissionsController_setAll",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetNavPermissionsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Replace the role overrides for the given items (SUPER_ADMIN only)",
+        "tags": [
+          "nav-permissions"
+        ]
+      }
+    },
+    "/nav-permissions/grants": {
+      "get": {
+        "operationId": "NavPermissionsController_listGrants",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Every named person/unit exception, with display names resolved (SUPER_ADMIN only)",
+        "tags": [
+          "nav-permissions"
+        ]
+      },
+      "post": {
+        "operationId": "NavPermissionsController_addGrant",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNavGrantDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Add a named exception granting one person/unit access to one item (SUPER_ADMIN only)",
+        "tags": [
+          "nav-permissions"
+        ]
+      }
+    },
+    "/nav-permissions/grants/{id}": {
+      "delete": {
+        "operationId": "NavPermissionsController_removeGrant",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove a named exception (SUPER_ADMIN only)",
+        "tags": [
+          "nav-permissions"
+        ]
+      }
+    },
+    "/nav-permissions/my-grants": {
+      "get": {
+        "operationId": "NavPermissionsController_myGrants",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Nav items the caller can reach via a named person/unit exception (MEMBER+, self-scoped only)",
+        "tags": [
+          "nav-permissions"
+        ]
+      }
+    },
     "/notifications": {
       "get": {
         "operationId": "InboxController_list",
@@ -20397,7 +21582,7 @@
             "access-token": []
           }
         ],
-        "summary": "List all sermons (admin)",
+        "summary": "List all sermons (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
         ]
@@ -20462,7 +21647,7 @@
             "access-token": []
           }
         ],
-        "summary": "Create sermon",
+        "summary": "Create sermon (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
         ]
@@ -20518,7 +21703,7 @@
             "access-token": []
           }
         ],
-        "summary": "Delete sermon",
+        "summary": "Delete sermon (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
         ]
@@ -20572,7 +21757,7 @@
             "access-token": []
           }
         ],
-        "summary": "Get sermon by id (admin)",
+        "summary": "Get sermon by id (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
         ]
@@ -20636,7 +21821,7 @@
             "access-token": []
           }
         ],
-        "summary": "Update sermon",
+        "summary": "Update sermon (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
         ]
@@ -20859,7 +22044,7 @@
             "access-token": []
           }
         ],
-        "summary": "Get sermon overview totals (admin)",
+        "summary": "Get sermon overview totals (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
         ]
@@ -22359,7 +23544,7 @@
             "access-token": []
           }
         ],
-        "summary": "Upload sermon audio",
+        "summary": "Upload sermon audio (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
         ]

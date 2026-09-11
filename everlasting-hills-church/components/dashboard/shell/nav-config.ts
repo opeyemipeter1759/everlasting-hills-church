@@ -27,6 +27,7 @@ import {
   Headphones,
   ListChecks,
   History,
+  Newspaper,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -66,6 +67,10 @@ export const NAV_GROUPS: NavGroup[] = [
       // should not have to know it lives behind Sermons.
       { label: "Sermons",         href: "/dashboard/sermon",           icon: Headphones,      minRole: "MEMBER" },
       { label: "Bible Reading",   href: "/dashboard/reading",          icon: BookOpen,        minRole: "MEMBER" },
+      // Member-written articles: what people are learning, published to the
+      // church. It sits beside the reading plan because that is where most of
+      // them start.
+      { label: "Articles",        href: "/dashboard/articles",         icon: Newspaper,       minRole: "MEMBER" },
       { label: "Notifications",   href: "/dashboard/settings/notifications", icon: Bell,      minRole: "MEMBER" },
       { label: "Prayer Requests", href: "/prayer-request",             icon: Heart,           minRole: "MEMBER" },
       { label: "Testimonies",     href: "/testimony",                  icon: MessageSquare,   minRole: "MEMBER" },

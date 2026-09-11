@@ -582,6 +582,8 @@ model Profile {
   DepartmentHodOf               DepartmentHod[]         @relation("DepartmentHodUser")
   DepartmentHodAssigned         DepartmentHod[]         @relation("DepartmentHodAssignedBy")
   ReadingPlanCreated            ReadingPlan[]           @relation("ReadingPlanCreatedBy")
+  MemberArticlesAuthored        MemberArticle[]         @relation("MemberArticleAuthor")
+  MemberArticleLikes            MemberArticleLike[]     @relation("MemberArticleLiker")
   MemberPlanSubscription        MemberPlanSubscription[]
   RoleGrantOf                   RoleGrant[]             @relation("RoleGrantUser")
   RoleGrantGranted              RoleGrant[]             @relation("RoleGrantGrantedBy")
@@ -928,6 +930,8 @@ model Tenant {
   createdAt              DateTime                 @default(now())
   ReadingPlan            ReadingPlan[]
   MemberPlanSubscription MemberPlanSubscription[]
+  MemberArticle          MemberArticle[]
+  MemberArticleLike      MemberArticleLike[]
   Announcement           Announcement[]
   EmailTemplate          EmailTemplate[]
   EmailSend              EmailSend[]
@@ -2367,4 +2371,61 @@ model MemberPlanReflection {
   Subscription   MemberPlanSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@unique([subscriptionId, dayIndex], map: "MemberPlanReflection_sub_day")
+}
+
+/// Status of a member written article.
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+/// What a member is learning, written for the church to read.
+///
+/// Sits beside the reading plan rather than in a generic blog table because an
+/// article may cite the passage it came from, and that citation is a verse
+/// range addressed exactly the way every other passage in this system is.
+model MemberArticle {
+  id             String              @id
+  tenantId       String
+  authorId       String
+  slug           String
+  title          String
+  /// The same small Markdown subset the announcements use.
+  body           String
+  excerpt        String?
+  coverImageUrl  String?
+  status         ArticleStatus       @default(DRAFT)
+  /// Optional scripture citation.
+  startVerseId   Int?
+  endVerseId     Int?
+  scriptureLabel String?
+  readingMinutes Int                 @default(1) @db.SmallInt
+  viewCount      Int                 @default(0)
+  likeCount      Int                 @default(0)
+  featuredAt     DateTime?           @db.Timestamptz(6)
+  publishedAt    DateTime?           @db.Timestamptz(6)
+  createdAt      DateTime            @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
+  Tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Author         Profile             @relation("MemberArticleAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  Likes          MemberArticleLike[]
+
+  @@unique([tenantId, slug], map: "MemberArticle_tenant_slug")
+  @@index([tenantId, status, publishedAt(sort: Desc)], map: "MemberArticle_feed")
+  @@index([authorId, status, updatedAt(sort: Desc)], map: "MemberArticle_author")
+}
+
+/// One row per reader per article, so a double tap cannot inflate a count.
+model MemberArticleLike {
+  id        String        @id
+  tenantId  String
+  articleId String
+  profileId String
+  createdAt DateTime      @default(now()) @db.Timestamptz(6)
+  Tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Article   MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  Profile   Profile       @relation("MemberArticleLiker", fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, profileId], map: "MemberArticleLike_once")
 }

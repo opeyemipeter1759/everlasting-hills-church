@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, CalendarDays, Headphones, Library } from "lucide-react";
+import { BookOpen, CalendarDays, Library } from "lucide-react";
 
 /**
- * One section, two ways in: the preaching you listen to and the scripture you
- * read. Reading sits beside sermons rather than in a module of its own, because
- * that is where a member already goes for the Word.
+ * Tabs within Bible reading. Sermons is a separate destination with its own nav
+ * entry: listening to preaching and keeping a daily reading are different
+ * habits, and pairing them made the reading plan look like a sub feature of the
+ * sermon library.
  */
 const TABS = [
-  { href: "/dashboard/sermon", label: "Sermons", icon: Headphones },
   { href: "/dashboard/reading", label: "Today", icon: BookOpen },
   { href: "/dashboard/reading/schedule", label: "Whole plan", icon: CalendarDays },
   { href: "/dashboard/reading/plans", label: "Plans", icon: Library },

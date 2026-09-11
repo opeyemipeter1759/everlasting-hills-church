@@ -61,7 +61,7 @@ export default function PlanSchedule() {
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
           {me.plan.title}
         </p>
-        <h1 className="mt-1 text-2xl font-black tracking-tight text-[#111] dark:text-white">
+        <h1 className="mt-1 font-serif text-3xl font-bold tracking-tight text-[#111] dark:text-white">
           The whole plan
         </h1>
         <p className="mt-1 text-sm text-[#8a7e80] dark:text-white/45">

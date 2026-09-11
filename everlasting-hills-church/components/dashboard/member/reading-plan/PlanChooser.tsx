@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Check, Clock, Loader2 } from "lucide-react";
 import WordTabs from "./WordTabs";
 import Link from "next/link";
+import Image from "next/image";
 import {
   useReadingPlans,
   useSubscribeToPlan,
@@ -59,7 +60,7 @@ export default function PlanChooser() {
       <WordTabs />
 
       <header className="mt-4">
-        <h1 className="text-2xl font-black tracking-tight text-[#111] dark:text-white">
+        <h1 className="font-serif text-3xl font-bold tracking-tight text-[#111] dark:text-white">
           Choose a reading plan
         </h1>
         <p className="mt-1 text-sm text-[#8a7e80] dark:text-white/45">
@@ -112,57 +113,86 @@ export default function PlanChooser() {
             return (
               <article
                 key={plan.id}
-                className={`rounded-2xl border p-5 transition-colors ${
+                className={`overflow-hidden rounded-2xl border transition-colors ${
                   recommended
-                    ? "border-[#87102C]/40 bg-[#FFF4F6]/60 dark:border-[#FFB3C1]/30 dark:bg-[#87102C]/10"
-                    : "border-gray-200 bg-white dark:border-white/10 dark:bg-white/[0.03]"
-                }`}
+                    ? "border-[#87102C]/40 dark:border-[#FFB3C1]/30"
+                    : "border-gray-200 dark:border-white/10"
+                } bg-white dark:bg-white/[0.03]`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-base font-bold text-[#111] dark:text-white">{plan.title}</h2>
+                {/* The cover carries the title. Each plan's art says something
+                    true about it — a sunrise for the Gospels, one thread for the
+                    whole story, a bar per book for the whole Bible — so a member
+                    can tell them apart before reading a word of the copy.
+
+                    unoptimized because the covers are first-party SVGs: the
+                    image optimizer refuses SVG unless dangerouslyAllowSVG is
+                    set globally, which would also apply to member uploads, and
+                    a four kilobyte vector has nothing to optimize anyway. */}
+                <div className="relative aspect-[16/6] w-full overflow-hidden bg-[#4A0817]">
+                  {plan.coverImageUrl && (
+                    <Image
+                      src={plan.coverImageUrl}
+                      alt=""
+                      fill
+                      sizes="(max-width: 768px) 100vw, 700px"
+                      className="object-cover"
+                      priority={recommended}
+                      unoptimized
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+
+                  <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-2 p-4">
+                    <h2 className="font-serif text-xl font-bold leading-tight text-white drop-shadow-sm sm:text-2xl">
+                      {plan.title}
+                    </h2>
+                    <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-sm">
+                      <Clock size={11} />
+                      {plan.durationDays} days
+                    </span>
+                  </div>
+
+                  {(recommended || isCurrent) && (
+                    <div className="absolute left-4 top-4 flex flex-wrap gap-1.5">
                       {recommended && (
                         <span className="rounded-full bg-[#87102C] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                           Suggested
                         </span>
                       )}
                       {isCurrent && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-bold text-white">
                           <Check size={10} /> Current
                         </span>
                       )}
                     </div>
-                    {plan.subtitle && (
-                      <p className="mt-1 text-sm text-[#8a7e80] dark:text-white/50">{plan.subtitle}</p>
-                    )}
-                  </div>
-
-                  <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold text-gray-600 dark:bg-white/[0.06] dark:text-white/50">
-                    <Clock size={11} />
-                    {plan.durationDays} days
-                  </span>
+                  )}
                 </div>
 
-                {plan.description && (
-                  <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-white/40">
-                    {plan.description}
-                  </p>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => choose(plan)}
-                  disabled={subscribe.isPending || isCurrent}
-                  className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
-                >
-                  {subscribe.isPending ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : (
-                    <BookOpen size={15} />
+                <div className="p-5">
+                  {plan.subtitle && (
+                    <p className="text-sm text-[#8a7e80] dark:text-white/50">{plan.subtitle}</p>
                   )}
-                  {isCurrent ? "You are reading this" : "Start this plan"}
-                </button>
+
+                  {plan.description && (
+                    <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-white/40">
+                      {plan.description}
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => choose(plan)}
+                    disabled={subscribe.isPending || isCurrent}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24] disabled:opacity-50 disabled:hover:translate-y-0"
+                  >
+                    {subscribe.isPending ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <BookOpen size={15} />
+                    )}
+                    {isCurrent ? "You are reading this" : "Start this plan"}
+                  </button>
+                </div>
               </article>
             );
           })}
