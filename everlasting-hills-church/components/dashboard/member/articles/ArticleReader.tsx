@@ -38,7 +38,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 px-5 py-10">
+      <div className="mx-auto max-w-full space-y-4 px-5 py-10">
         <div className="h-4 w-32 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-9 w-3/4 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
@@ -48,7 +48,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
 
   if (error || !article) {
     return (
-      <div className="mx-auto max-w-2xl px-5 py-16 text-center">
+      <div className="mx-auto max-w-full md:px-5 py-16 text-center">
         <BookOpen size={22} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
         <p className="font-serif text-lg font-bold text-[#111] dark:text-white">
           This article is not here.

@@ -28,14 +28,7 @@ import {
   type PlanDay,
 } from "@/lib/api/reading-plan";
 
-/**
- * The reading screen: scripture, then one button.
- *
- * Any day of the plan can be opened, not only today's. A member who missed a
- * week wants to read what they missed rather than be told a number, and one
- * with ten spare minutes wants to read ahead. Both are addressed by day index,
- * so completing an earlier day is the same idempotent call as completing today.
- */
+
 export default function ReadingScreen() {
   const router = useRouter();
   const params = useSearchParams();
@@ -60,7 +53,7 @@ export default function ReadingScreen() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 px-5 py-8">
+      <div className="mx-auto max-w-full space-y-4 px-5 py-8">
         <div className="h-5 w-40 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
@@ -97,7 +90,7 @@ export default function ReadingScreen() {
 
   if (browsing && browsedLoading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 px-5 py-8">
+      <div className="mx-auto max-w-full space-y-4 md:px-5 py-8">
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
     );
@@ -106,7 +99,7 @@ export default function ReadingScreen() {
   if (!day) return <NoPlan finished />;
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-6">
+    <div className="max-w-full md:px-5 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <WordTabs />
         <div className="flex items-center gap-2">

@@ -83,7 +83,7 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
     <div className="space-y-5 mx-auto max-w-full">
       {/* Header */}
       <div>
-        <div className="flex justify-between">
+        <div className="flex flex-col md:flex-row gap-3 justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{summary.name}</h1>
             <span

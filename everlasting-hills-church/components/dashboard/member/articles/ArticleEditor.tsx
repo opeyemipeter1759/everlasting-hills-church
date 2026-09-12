@@ -152,7 +152,7 @@ export default function ArticleEditor() {
 
   if (editingSlug && isLoading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 px-5 py-10">
+      <div className="mx-auto max-w-full space-y-4 md:px-5 py-10">
         <div className="h-9 w-3/4 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
@@ -162,7 +162,7 @@ export default function ArticleEditor() {
   const isPublished = existing?.status === "PUBLISHED";
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-6">
+    <div className="mx-auto max-w-full md:px-5 py-6">
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/dashboard/articles/mine"

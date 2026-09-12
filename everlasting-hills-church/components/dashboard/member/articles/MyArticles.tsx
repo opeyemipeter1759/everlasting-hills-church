@@ -42,7 +42,7 @@ export default function MyArticles() {
   const totalLikes = published.reduce((sum, a) => sum + a.likeCount, 0);
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-6">
+    <div className="mx-auto max-w-full md:px-5 py-6">
       <ArticleTabs />
 
       <header className="mt-6">
