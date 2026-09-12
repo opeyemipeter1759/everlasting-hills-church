@@ -134,6 +134,9 @@ import {
   Users2,
   Wifi,
   CalendarClock,
+  BookMarked,
+  Newspaper,
+  UserCog,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -186,6 +189,10 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "People",        href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
+      // Everyone serving, read person-first — the same UnitMember rows the unit
+      // screens show team-first. Sits with People and First Timers because all
+      // three answer "who", not "what".
+      { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
@@ -238,6 +245,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Home",           href: "/dashboard",            icon: BookOpen,       minRole: "MEMBER" },
       { label: "Attendance",     href: "/dashboard/attendance", icon: CheckCircle,    minRole: "MEMBER" },
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
+      // The daily reading plan, and the articles members write about what they
+      // read. Both were reachable only from a dashboard card before this.
+      { label: "Bible Plan",          href: "/dashboard/reading",            icon: BookMarked,          minRole: "MEMBER" },
+      { label: "Articles",            href: "/dashboard/articles",           icon: Newspaper,           minRole: "MEMBER" },
       { label: "My Course",           href: "/dashboard/courses",            icon: GraduationCap,       minRole: "MEMBER" },
       { label: "Explore Course",           href: "/dashboard/explore-courses",            icon: Compass,       minRole: "MEMBER" },
       { label: "Unit", href: "/dashboard/unit", icon: Users2, minRole: "MEMBER", requiresAccess: "unitMember", dynamicUnits: "member" },

@@ -5383,6 +5383,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/service-teams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Everyone on at least one service team, with every team they are on */
+        get: operations["ServiceTeamsController_roster"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sessions/banner": {
         parameters: {
             query?: never;
@@ -20058,6 +20075,43 @@ export interface operations {
         responses: {
             /** @description Audio uploaded successfully */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceTeamsController_roster: {
+        parameters: {
+            query?: {
+                search?: string;
+                departmentId?: string;
+                unitId?: string;
+                role?: "LEAD" | "ASSISTANT" | "MEMBER";
+                status?: "ACTIVE" | "INACTIVE" | "TRANSFERRED" | "DECEASED" | "OPTED_OUT";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -201,12 +201,32 @@ export function useUpdateMember() {
 }
 
 /** Add a member to a unit from the People screens (ADMIN+, via the same
- * endpoint the unit lead's own "Add member" form uses). */
+ * endpoint the unit lead's own "Add member" form uses).
+ *
+ * isLead rides on the create rather than a follow-up call: the endpoint syncs
+ * the UnitLeadAssignment when it creates a row with isLead set, so doing it in
+ * one request is what keeps the roster and the role grant in step. The service
+ * teams screen only offers it for a team that has no lead — replacing a lead is
+ * a different decision, with its own history trail, and stays on Units. */
 export function useAddMemberToUnit() {
   const invalidate = useInvalidateUnitMembership();
   return useMutation({
-    mutationFn: ({ unitId, memberId }: { unitId: string; memberId: string }) =>
-      api.post(`/units/${unitId}/members`, { memberId }),
+    mutationFn: ({
+      unitId,
+      memberId,
+      isLead,
+      isAssistant,
+    }: {
+      unitId: string;
+      memberId: string;
+      isLead?: boolean;
+      isAssistant?: boolean;
+    }) =>
+      api.post(`/units/${unitId}/members`, {
+        memberId,
+        ...(isLead ? { isLead: true } : {}),
+        ...(isAssistant ? { isAssistant: true } : {}),
+      }),
     onSuccess: invalidate,
   });
 }

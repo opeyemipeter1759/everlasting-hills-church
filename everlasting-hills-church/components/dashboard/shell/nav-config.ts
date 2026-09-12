@@ -28,6 +28,7 @@ import {
   ListChecks,
   History,
   Newspaper,
+  UserCog,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -66,7 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // and both are named here because a member looking for their reading plan
       // should not have to know it lives behind Sermons.
       { label: "Sermons",         href: "/dashboard/sermon",           icon: Headphones,      minRole: "MEMBER" },
-      { label: "Bible Reading",   href: "/dashboard/reading",          icon: BookOpen,        minRole: "MEMBER" },
+      { label: "Bible Plan",      href: "/dashboard/reading",          icon: BookOpen,        minRole: "MEMBER" },
       // Member-written articles: what people are learning, published to the
       // church. It sits beside the reading plan because that is where most of
       // them start.
@@ -107,6 +108,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Members",       href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
+      { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },

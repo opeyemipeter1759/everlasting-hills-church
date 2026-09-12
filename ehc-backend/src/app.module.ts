@@ -53,6 +53,7 @@ import { CalendarModule } from './calendar/calendar.module';
 import { PushModule } from './push/push.module';
 import { ReadingPlanModule } from './reading-plan/reading-plan.module';
 import { ArticlesModule } from './articles/articles.module';
+import { ServiceTeamsModule } from './service-teams/service-teams.module';
 import { GatheringsModule } from './gatherings/gatherings.module';
 
 @Module({
@@ -155,6 +156,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     PushModule,
     ReadingPlanModule,
     ArticlesModule,
+    ServiceTeamsModule,
     GatheringsModule,
     CoursesModule,
     StatusReportsModule,

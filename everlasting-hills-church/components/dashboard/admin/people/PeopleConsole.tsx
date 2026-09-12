@@ -1,6 +1,8 @@
 "use client";
 
-import { downloadPeopleExport, useAssignableRoles, usePeople } from "@/lib/api/people";
+import { useState } from "react";
+import { downloadPeopleExport, useAssignableRoles, usePeople, useUnitOptions } from "@/lib/api/people";
+import AddToTeamDialog from "@/components/dashboard/admin/service-teams/AddToTeamDialog";
 import PeopleConsoleSkeleton from "@/components/ui/skeleton/PeopleConsoleSkeleton";
 import PeopleTable from "./PeopleTable";
 import BulkActionBar from "./BulkActionBar";
@@ -24,6 +26,14 @@ export default function PeopleConsole() {
   const rows = data?.data ?? [];
   const meta = data?.meta;
   const { data: assignableRoles = [] } = useAssignableRoles();
+
+  // Putting people on a service team, from the screen where you are already
+  // looking at them. The team list comes from the unit options endpoint, which
+  // carries no lead information — so the dialog does not offer to make somebody
+  // a lead here. That decision belongs on Service Teams, where it is visible
+  // which teams have none.
+  const [addToTeamOpen, setAddToTeamOpen] = useState(false);
+  const { data: unitOptions = [] } = useUnitOptions();
 
   const { selectedRows, selectedIds, allSelected, toggleRow, toggleAll, clearSelection } = useSelection(rows);
   const actions = usePeopleActions(selectedRows, clearSelection);
@@ -98,6 +108,7 @@ export default function PeopleConsole() {
         busy={actions.bulkOp.isPending || actions.deletePerson.isPending}
         onClear={clearSelection}
         onAssign={() => actions.openAssign(Object.values(selectedRows))}
+        onAddToTeam={() => setAddToTeamOpen(true)}
         onSetStatus={actions.bulkStatus}
         onTag={actions.bulkTag}
         onExport={() => exportRowsCsv(Object.values(selectedRows))}
@@ -127,6 +138,16 @@ export default function PeopleConsole() {
         onCloseEdit={() => actions.setEditTarget(null)}
         tagTarget={actions.tagTarget}
         onCloseTag={() => actions.setTagTarget(null)}
+      />
+
+      <AddToTeamDialog
+        open={addToTeamOpen}
+        onClose={() => {
+          setAddToTeamOpen(false);
+          clearSelection();
+        }}
+        teams={unitOptions.map((u) => ({ id: u.id, name: u.name, memberCount: u.memberCount }))}
+        preselected={Object.values(selectedRows).map((row) => ({ id: row.id, name: row.name }))}
       />
 
       <PeopleConfirmDialogs

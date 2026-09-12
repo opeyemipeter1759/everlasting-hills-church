@@ -10,6 +10,7 @@ import {
   Users,
   UserPlus,
   BookOpen,
+  BookMarked,
   BarChart3,
   MessageSquare,
   Network,
@@ -26,8 +27,21 @@ type BottomTab = {
   maxRole?: UserRole;
 };
 
+/**
+ * The phone's primary navigation. Note this is a SEPARATE list from
+ * nav-config.ts: an item added to the sidebar does not appear here, which is
+ * how Bible Reading came to be in the sidebar and unreachable on a phone.
+ *
+ * Only the first five that a role qualifies for are rendered, so order is the
+ * real decision — anything sixth exists only behind the hamburger.
+ */
 const BOTTOM_TABS: BottomTab[] = [
   { label: "Home",       href: "/dashboard",                         icon: LayoutDashboard, minRole: "MEMBER" },
+  // Second, because it is the one thing here somebody opens every day. maxRole
+  // ADMIN keeps it off an admin's bar, where the five slots are already taken
+  // by work they can only do from a phone in a pinch — they still have it in
+  // the sidebar.
+  { label: "Reading",    href: "/dashboard/reading",                 icon: BookMarked,      minRole: "MEMBER",    maxRole: "ADMIN" },
   { label: "Profile",    href: "/dashboard/profile",                 icon: User,            minRole: "MEMBER",    maxRole: "ADMIN" },
   { label: "Attendance", href: "/dashboard/attendance",              icon: CheckCircle,     minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
   { label: "Prayer",     href: "/prayer-request",                    icon: Heart,           minRole: "MEMBER" },

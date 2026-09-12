@@ -2,20 +2,26 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Tag, Trash2, UserCheck, X } from "lucide-react";
+import { Download, Tag, Trash2, UserCheck, Users, X } from "lucide-react";
 import { STATUS_OPTIONS } from "./peopleShared";
 import { Select } from "@/components/ui/select";
 
 /**
  * Sticky bottom bar shown when one or more people are selected. Provides
  * bulk operations: change status, add/remove tag, assign to a leader,
- * export the selection, or delete.
+ * add to a service team, export the selection, or delete.
+ *
+ * "Assign" and "Add to team" are different things and sit next to each other on
+ * purpose: the first hands people to a leader for follow-up, the second puts
+ * them on a unit that serves. They used to be confusable because only the first
+ * existed.
  */
 export default function BulkActionBar({
   count,
   busy,
   onClear,
   onAssign,
+  onAddToTeam,
   onSetStatus,
   onTag,
   onExport,
@@ -25,6 +31,7 @@ export default function BulkActionBar({
   busy: boolean;
   onClear: () => void;
   onAssign: () => void;
+  onAddToTeam: () => void;
   onSetStatus: (status: string) => void;
   onTag: (op: "addTag" | "removeTag", tag: string) => void;
   onExport: () => void;
@@ -55,6 +62,10 @@ export default function BulkActionBar({
 
             <button type="button" onClick={onAssign} disabled={busy} className={chip}>
               <UserCheck size={14} /> Assign
+            </button>
+
+            <button type="button" onClick={onAddToTeam} disabled={busy} className={chip}>
+              <Users size={14} /> Add to team
             </button>
 
             <div className="relative">
