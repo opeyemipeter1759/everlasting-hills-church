@@ -27,7 +27,7 @@ export default function SectionCard({
   return (
     <motion.div
       {...fadeUp(delay)}
-      className="bg-white dark:bg-[#1c1c1e] border border-gray-200/80 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm"
+      className="flex h-full flex-col overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-sm dark:border-white/10 dark:bg-[#1c1c1e]"
     >
       <div className="px-5 py-4 border-b border-gray-100 dark:border-white/8 flex items-center gap-2">
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 flex-shrink-0">
@@ -38,7 +38,7 @@ export default function SectionCard({
           {count !== undefined ? ` (${count})` : ""}
         </p>
       </div>
-      <div className="p-5">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-5">{children}</div>
     </motion.div>
   );
 }

@@ -211,6 +211,8 @@ model Member {
   Question                      Question[]
   Testimonial                   Testimonial[]
   UnitTaskAssigned              UnitTask[]
+  UnitMessageSent               UnitMessage[]            @relation("UnitMessageSender")
+  UnitMessageReceived           UnitMessage[]            @relation("UnitMessageRecipient")
   ServiceAssignment             ServiceAssignment[]
 
   @@index([tenantId, status])
@@ -998,6 +1000,7 @@ model Tenant {
   UnitTask               UnitTask[]
   UnitExpense            UnitExpense[]
   UnitTaskComment        UnitTaskComment[]
+  UnitMessage             UnitMessage[]
   CalendarFeedToken      CalendarFeedToken[]
   PushSubscription       PushSubscription[]
   NotificationPreference NotificationPreference[]
@@ -1237,6 +1240,7 @@ model Unit {
   UnitPosition          UnitPosition[]
   UnitTask              UnitTask[]
   UnitExpense           UnitExpense[]
+  UnitMessage            UnitMessage[]
   ServiceAssignment     ServiceAssignment[]
 
   @@index([departmentId])
@@ -1446,6 +1450,31 @@ model UnitTaskComment {
   Author    Profile  @relation(fields: [authorId], references: [id])
 
   @@index([taskId])
+}
+
+/// A direct message between two members of the same unit.
+model UnitMessage {
+  id          String   @id
+  tenantId    String
+  unitId      String
+  senderId    String
+  recipientId String
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  editedAt    DateTime?
+  deletedAt   DateTime?
+  readAt      DateTime?
+  replyToId   String?
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  Unit        Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  Sender      Member   @relation("UnitMessageSender", fields: [senderId], references: [id])
+  Recipient   Member   @relation("UnitMessageRecipient", fields: [recipientId], references: [id])
+  ReplyTo     UnitMessage? @relation("UnitMessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  Replies     UnitMessage[] @relation("UnitMessageReplies")
+
+  @@index([tenantId, unitId, createdAt])
+  @@index([unitId, senderId, recipientId, createdAt])
 }
 
 /// A simple expense record a unit lead logs for their unit — no approval
