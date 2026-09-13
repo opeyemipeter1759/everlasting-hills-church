@@ -350,6 +350,21 @@ export interface UnitDetail extends Unit {
   UnitMember: UnitMemberEntry[];
 }
 
+export interface UnitMessage {
+  id: string;
+  content: string;
+  senderId: string;
+  recipientId: string;
+  createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
+  readAt: string | null;
+  isRead: boolean;
+  replyToId: string | null;
+  ReplyTo: { id: string; content: string; senderId: string; deletedAt: string | null } | null;
+  isMine: boolean;
+}
+
 export interface UnitPosition {
   id: string;
   unitId: string;

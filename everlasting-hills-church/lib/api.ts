@@ -4,7 +4,7 @@ import { queryKeys } from "@/lib/api/queryKeys";
 import { notifyFrontendSessionChanged } from "@/lib/auth/frontend-session";
 import { logoutFrontendSession } from "@/lib/auth/logout";
 import { setServiceWorkerUser } from "@/lib/pwa/service-worker";
-import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry, UnitPosition, UnitTask, UnitTaskStatus, UnitExpense, UnitTaskComment } from "@/types";
+import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry, UnitPosition, UnitTask, UnitTaskStatus, UnitExpense, UnitTaskComment, UnitMessage } from "@/types";
 import type {
   SermonDetailRaw,
   MemberSermonContext,
@@ -780,11 +780,50 @@ export function useMyMembershipDetail(unitId: string | null) {
   });
 }
 
-/** Send a message to another member of the unit — delivered as a notification. */
+/** Conversation messages between the current member and another unit member. */
+export function useUnitMessages(unitId: string | null, recipientId: string | null) {
+  return useQuery({
+    queryKey: ["units", unitId, "messages", recipientId],
+    queryFn: () => api.get<UnitMessage[]>(`/units/${unitId}/messages?recipientId=${recipientId}`),
+    enabled: !!unitId && !!recipientId,
+    refetchInterval: 3000,
+  });
+}
+
+export function useUnitUnreadCounts(unitId: string | null) {
+  return useQuery({
+    queryKey: ["units", unitId, "messages", "unread-counts"],
+    queryFn: () => api.get<Record<string, number>>(`/units/${unitId}/messages/unread-counts`),
+    enabled: !!unitId,
+    refetchInterval: 3000,
+  });
+}
+
+export function useMarkUnitConversationRead() {
+  return useMutation({
+    mutationFn: ({ unitId, recipientId }: { unitId: string; recipientId: string }) =>
+      api.patch<{ read: boolean }>(`/units/${unitId}/messages/read?recipientId=${recipientId}`),
+  });
+}
+
 export function useSendUnitMessage() {
   return useMutation({
-    mutationFn: ({ unitId, recipientId, message }: { unitId: string; recipientId: string; message: string }) =>
-      api.post<{ sent: boolean }>(`/units/${unitId}/messages`, { recipientId, message }),
+    mutationFn: ({ unitId, recipientId, message, replyToId }: { unitId: string; recipientId: string; message: string; replyToId?: string }) =>
+      api.post<{ sent: boolean; message: UnitMessage }>(`/units/${unitId}/messages`, { recipientId, message, replyToId }),
+  });
+}
+
+export function useUpdateUnitMessage() {
+  return useMutation({
+    mutationFn: ({ unitId, messageId, message }: { unitId: string; messageId: string; message: string }) =>
+      api.patch<UnitMessage>(`/units/${unitId}/messages/${messageId}`, { message }),
+  });
+}
+
+export function useDeleteUnitMessage() {
+  return useMutation({
+    mutationFn: ({ unitId, messageId }: { unitId: string; messageId: string }) =>
+      api.delete<UnitMessage>(`/units/${unitId}/messages/${messageId}`),
   });
 }
 

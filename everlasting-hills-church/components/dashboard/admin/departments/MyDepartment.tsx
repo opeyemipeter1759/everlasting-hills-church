@@ -22,7 +22,7 @@ export default function MyDepartment() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
-      <div className="flex  items-start justify-between gap-4">
+      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
 
       <div className="flex items-start gap-3">
         <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-[#87102C]/10 dark:bg-[#87102C]/15">
@@ -90,7 +90,7 @@ function DepartmentPanel({ dept }: { dept: MyDept }) {
 
   return (
     <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-[#87102C]/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[#87102C] dark:bg-[#87102C]/20 dark:text-[#e8768a]">
             <Building2 size={12} /> {dept.code}

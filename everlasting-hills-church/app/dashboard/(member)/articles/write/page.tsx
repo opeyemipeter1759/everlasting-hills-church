@@ -9,7 +9,7 @@ export const metadata = { title: "Write — Dashboard" };
  */
 export default function WriteArticlePage() {
   return (
-    <Suspense fallback={<div className="mx-auto max-w-2xl px-5 py-10" />}>
+    <Suspense fallback={<div className="mx-auto max-w-full md:px-5 py-10" />}>
       <ArticleEditor />
     </Suspense>
   );

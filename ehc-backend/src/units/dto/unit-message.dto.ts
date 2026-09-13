@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class SendUnitMessageDto {
   @ApiProperty({ example: 'member-uuid', description: 'Member.id of the recipient — must be in the same unit' })
@@ -12,4 +12,9 @@ export class SendUnitMessageDto {
   @IsNotEmpty()
   @MaxLength(1000)
   message!: string;
+
+  @ApiProperty({ required: false, description: 'Message.id being replied to' })
+  @IsOptional()
+  @IsString()
+  replyToId?: string;
 }

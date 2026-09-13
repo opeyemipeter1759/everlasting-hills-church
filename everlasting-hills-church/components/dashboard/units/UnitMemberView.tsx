@@ -1,13 +1,13 @@
 "use client";
-
 import { useState } from "react";
-import { useMe, useMyMembershipDetail, useUnitTasks, useUpdateUnitTask } from "@/lib/api";
+import { useMe, useMyMembershipDetail, useUnitTasks, useUnitUnreadCounts, useUpdateUnitTask } from "@/lib/api";
 import type { UnitMemberEntry, UnitTaskStatus } from "@/types";
 import UnitHero from "./UnitHero";
 import UnitTaskList from "./UnitTaskList";
 import UnitRolesCard from "./UnitRolesCard";
 import UnitRoster from "./UnitRoster";
 import MessageMemberModal from "./MessageMemberModal";
+import UnitConversationPanel from "./UnitConversationPanel";
 import { nextStatus } from "./taskStatus";
 
 type MessageTarget = { id: string; name: string; photoUrl: string | null };
@@ -27,6 +27,7 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
   const { data: unit, isLoading, refetch: refetchUnit, isFetching: unitFetching } = useMyMembershipDetail(unitId);
   const { data: tasks, refetch: refetchTasks, isFetching: tasksFetching } = useUnitTasks(unitId);
   const updateTask = useUpdateUnitTask();
+  const unreadMessages = useUnitUnreadCounts(unitId);
 
   const [messageTarget, setMessageTarget] = useState<MessageTarget | null>(null);
   const [showPicker, setShowPicker] = useState(false);
@@ -65,7 +66,7 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
   }
 
   return (
-    <div className="space-y-5 mx-auto max-w-6xl">
+    <div className="space-y-5 mx-auto max-w-full">
       <UnitHero
         unit={unit}
         myTasksTotal={myTasks.length}
@@ -77,16 +78,29 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
         isRefreshing={unitFetching || tasksFetching}
       />
 
+      <div className="grid items-stretch gap-5 lg:h-[calc(100dvh-10rem)] lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.6fr)]">
+        <div className={`${messageTarget ? "hidden lg:block" : "block"} order-2 min-h-0 lg:order-1 lg:h-full lg:overflow-y-auto`}>
+          <UnitRoster unit={unit} myMemberId={myMemberId} onMessage={setMessageTarget} unreadCounts={unreadMessages.data ?? {}} delay={0.2} />
+        </div>
+        <div className={`${messageTarget ? "block" : "hidden lg:block"} order-1 h-[calc(100dvh-9rem)] min-h-[32rem] lg:order-2 lg:sticky lg:top-5 lg:h-full lg:min-h-0`}>
+          <UnitConversationPanel unitId={unitId} recipient={messageTarget} onClose={() => setMessageTarget(null)} />
+        </div>
+      </div>
+
       <UnitTaskList unitId={unitId} title="My tasks" tasks={myTasks} delay={0.05} onCycleStatus={cycleStatus} />
       <UnitTaskList unitId={unitId} title="Unit tasks" tasks={unitTasks} delay={0.1} />
       <UnitRolesCard roles={roles} delay={0.15} />
-      <UnitRoster unit={unit} myMemberId={myMemberId} onMessage={setMessageTarget} delay={0.2} />
 
-      {messageTarget && (
-        <MessageMemberModal unitId={unitId} recipient={messageTarget} onClose={() => setMessageTarget(null)} />
-      )}
       {showPicker && (
-        <MessageMemberModal unitId={unitId} recipients={otherMembers} onClose={() => setShowPicker(false)} />
+        <MessageMemberModal
+          unitId={unitId}
+          recipients={otherMembers}
+          onClose={() => setShowPicker(false)}
+          onSent={(recipientId) => {
+            const target = otherMembers.find((member) => member.id === recipientId);
+            if (target) setMessageTarget(target);
+          }}
+        />
       )}
     </div>
   );

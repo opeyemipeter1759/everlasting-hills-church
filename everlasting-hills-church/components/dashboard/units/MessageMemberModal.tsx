@@ -23,11 +23,13 @@ export default function MessageMemberModal({
   recipient,
   recipients,
   onClose,
+  onSent,
 }: {
   unitId: string;
   recipient?: Recipient;
   recipients?: Recipient[];
   onClose: () => void;
+  onSent?: (recipientId: string) => void;
 }) {
   const [recipientId, setRecipientId] = useState(recipient?.id ?? "");
   const [message, setMessage] = useState("");
@@ -40,6 +42,7 @@ export default function MessageMemberModal({
     try {
       await send.mutateAsync({ unitId, recipientId, message: message.trim() });
       showToast.success("Message sent");
+      onSent?.(recipientId);
       onClose();
     } catch (err) {
       showToast.error((err as { message?: string })?.message ?? "Couldn't send message");

@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { Crown, Shield, UserMinus, UserPlus, Users } from "lucide-react";
 import { useUnitLeadContext } from "./useUnitLeadContext";
-import { useUnitPositions, useSetMemberPosition } from "@/lib/api";
+import { useMe, useUnitPositions, useSetMemberPosition, useUnitUnreadCounts } from "@/lib/api";
+import UnitRoster from "@/components/dashboard/units/UnitRoster";
+import UnitConversationPanel from "@/components/dashboard/units/UnitConversationPanel";
 import AddMemberForm from "@/components/dashboard/admin/unit/AddMemberForm";
 import UnitLeadTabs from "./UnitLeadTabs";
 import RefreshButton from "@/components/ui/button/RefreshButton";
@@ -43,6 +45,9 @@ function MemberPositionPicker({
 
 export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
   const { summary, unit, addMember, removeMember, refresh, isRefreshing } = useUnitLeadContext(unitId);
+  const { data: me } = useMe();
+  const unreadMessages = useUnitUnreadCounts(unitId);
+  const [messageTarget, setMessageTarget] = useState<{ id: string; name: string; photoUrl: string | null } | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
   // loading
@@ -78,7 +83,7 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
     <div className="space-y-5 mx-auto max-w-full">
       {/* Header */}
       <div>
-        <div className="flex justify-between">
+        <div className="flex flex-col md:flex-row gap-3 justify-between">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">{summary.name}</h1>
             <span
@@ -111,6 +116,23 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
       </div>
 
       <UnitLeadTabs unitId={unitId} active="members" />
+
+      {unit && (
+        <div className="grid items-stretch gap-5 lg:h-[calc(100dvh-17rem)] lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.6fr)]">
+          <div className={`${messageTarget ? "hidden lg:block" : "block"} min-h-0 lg:overflow-y-auto`}>
+            <UnitRoster
+              unit={unit}
+              myMemberId={me?.member?.id ?? null}
+              onMessage={setMessageTarget}
+              unreadCounts={unreadMessages.data ?? {}}
+              delay={0.05}
+            />
+          </div>
+          <div className={`${messageTarget ? "block" : "hidden lg:block"} h-[calc(100dvh-13rem)] min-h-[32rem] lg:h-full lg:min-h-0`}>
+            <UnitConversationPanel unitId={unitId} recipient={messageTarget} onClose={() => setMessageTarget(null)} />
+          </div>
+        </div>
+      )}
 
       {/* Member panel */}
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">

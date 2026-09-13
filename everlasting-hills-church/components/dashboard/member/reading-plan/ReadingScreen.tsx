@@ -28,14 +28,7 @@ import {
   type PlanDay,
 } from "@/lib/api/reading-plan";
 
-/**
- * The reading screen: scripture, then one button.
- *
- * Any day of the plan can be opened, not only today's. A member who missed a
- * week wants to read what they missed rather than be told a number, and one
- * with ten spare minutes wants to read ahead. Both are addressed by day index,
- * so completing an earlier day is the same idempotent call as completing today.
- */
+
 export default function ReadingScreen() {
   const router = useRouter();
   const params = useSearchParams();
@@ -62,7 +55,7 @@ export default function ReadingScreen() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto min-w-0 max-w-2xl space-y-4 py-8">
+      <div className="mx-auto min-w-0 max-w-full space-y-4 py-8 md:px-5">
         <div className="h-5 w-40 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
@@ -113,7 +106,7 @@ export default function ReadingScreen() {
 
   if (browsing && browsedLoading) {
     return (
-      <div className="mx-auto min-w-0 max-w-2xl space-y-4 py-8">
+      <div className="mx-auto min-w-0 max-w-full space-y-4 py-8 md:px-5">
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
     );
@@ -123,7 +116,7 @@ export default function ReadingScreen() {
   if (!day) return <NoPlan finished />;
 
   return (
-    <div className="mx-auto min-w-0 max-w-2xl break-words py-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-3 sm:py-6">
+    <div className="mx-auto min-w-0 max-w-full break-words py-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:py-6 md:px-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <WordTabs />
         <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 sm:w-auto">

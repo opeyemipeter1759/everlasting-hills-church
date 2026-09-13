@@ -38,7 +38,7 @@ export default function ArticleFeed() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-6">
+    <div className="mx-auto max-w-full md:px-5 py-6">
       <ArticleTabs />
 
       <header className="mt-6 border-b border-gray-100 pb-6 dark:border-white/10">
