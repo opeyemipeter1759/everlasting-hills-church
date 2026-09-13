@@ -6,6 +6,8 @@ import { ReadingPlanCatalogueService } from './services/reading-plan-catalogue.s
 import { BiblePassageService } from './services/bible-passage.service';
 import { MeReadingPlanService } from './services/me-reading-plan.service';
 import { PlanProgressRepository } from './services/plan-progress.repository';
+import { DailyScriptureController } from './daily-scripture.controller';
+import { DailyScriptureService } from './services/daily-scripture.service';
 
 /**
  * Daily scripture reading.
@@ -16,12 +18,13 @@ import { PlanProgressRepository } from './services/plan-progress.repository';
  */
 @Module({
   imports: [PrismaModule],
-  controllers: [ReadingPlanController, MeReadingPlanController],
+  controllers: [ReadingPlanController, MeReadingPlanController, DailyScriptureController],
   providers: [
     ReadingPlanCatalogueService,
     BiblePassageService,
     MeReadingPlanService,
     PlanProgressRepository,
+    DailyScriptureService,
   ],
   exports: [PlanProgressRepository],
 })
