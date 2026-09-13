@@ -39,34 +39,37 @@ import {
 export default function ReadingScreen() {
   const router = useRouter();
   const params = useSearchParams();
-  const requestedDay = Number(params.get("day")) || null;
-
-  const { data, isLoading } = useTodayReading();
+  const parsedDay = Number(params.get("day"));
+  const { data, isLoading, isError, refetch } = useTodayReading();
+  const requestedDay = Number.isInteger(parsedDay) && parsedDay > 0 &&
+    parsedDay <= (data?.plan.durationDays ?? 0) ? parsedDay : null;
   const complete = useCompleteDay();
   const uncomplete = useUncompleteDay();
   const setTranslation = useSetTranslation();
   const { data: translations } = useTranslations();
   const { data: completed } = useCompletedDays(data?.subscriptionId);
 
-  const [justChanged, setJustChanged] = useState<number | null>(null);
+  const [justChanged, setJustChanged] = useState<{ subscriptionId: string; dayIndex: number; done: boolean } | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // A day other than the current one comes from the plan itself, which is
   // immutable and cached for a year.
   const browsing = requestedDay !== null && requestedDay !== data?.currentDayIndex;
-  const { data: browsedDay, isLoading: browsedLoading } = usePlanDay(
+  const { data: browsedDay, isLoading: browsedLoading, isError: browsedError, refetch: retryDay } = usePlanDay(
     browsing ? data?.plan.id : undefined,
     browsing ? requestedDay : undefined,
   );
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 px-5 py-8">
+      <div className="mx-auto min-w-0 max-w-2xl space-y-4 py-8">
         <div className="h-5 w-40 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
     );
   }
 
+  if (isError) return <ReadingError onRetry={() => refetch()} />;
   if (!data) return <NoPlan />;
 
   const dayIndex = requestedDay ?? data.currentDayIndex;
@@ -75,41 +78,55 @@ export default function ReadingScreen() {
 
   const completedSet = new Set(completed?.dayIndexes ?? []);
   const isDone =
-    justChanged === dayIndex
-      ? true
-      : completedSet.has(dayIndex) || (!browsing && data.completedToday);
+    justChanged?.subscriptionId === subscriptionId && justChanged.dayIndex === dayIndex
+      ? justChanged.done
+      : completedSet.has(dayIndex);
 
   function goToDay(next: number) {
     if (next < 1 || next > plan.durationDays) return;
     setJustChanged(null);
+    setActionError(null);
     router.push(next === currentDayIndex ? "/dashboard/reading" : `/dashboard/reading?day=${next}`);
   }
 
   async function markRead() {
-    await complete.mutateAsync({ subscriptionId, dayIndex });
-    setJustChanged(dayIndex);
+    setActionError(null);
+    try {
+      await complete.mutateAsync({ subscriptionId, dayIndex });
+      setJustChanged({ subscriptionId, dayIndex, done: true });
+      // Stay on the passage just read even when the server advances the plan.
+      router.replace(`/dashboard/reading?day=${dayIndex}`, { scroll: false });
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : "Could not save your reading. Please try again.");
+    }
   }
 
   async function undo() {
-    await uncomplete.mutateAsync({ subscriptionId, dayIndex });
-    setJustChanged(null);
+    setActionError(null);
+    try {
+      await uncomplete.mutateAsync({ subscriptionId, dayIndex });
+      setJustChanged({ subscriptionId, dayIndex, done: false });
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : "Could not undo this reading. Please try again.");
+    }
   }
 
   if (browsing && browsedLoading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 px-5 py-8">
+      <div className="mx-auto min-w-0 max-w-2xl space-y-4 py-8">
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
     );
   }
 
+  if (browsing && (browsedError || !day)) return <ReadingError onRetry={() => retryDay()} />;
   if (!day) return <NoPlan finished />;
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-6">
+    <div className="mx-auto min-w-0 max-w-2xl break-words py-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-3 sm:py-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <WordTabs />
-        <div className="flex items-center gap-2">
+        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 sm:w-auto">
           {currentStreak > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
               <Flame size={12} /> {currentStreak} day{currentStreak === 1 ? "" : "s"}
@@ -121,10 +138,11 @@ export default function ReadingScreen() {
             <select
               aria-label="Translation"
               value={translation.code}
+              disabled={setTranslation.isPending}
               onChange={(e) =>
                 setTranslation.mutate({ subscriptionId, translationCode: e.target.value })
               }
-              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/70"
+              className="min-h-11 max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-700 dark:border-white/10 dark:bg-gray-900 dark:text-white/70"
             >
               {translations.map((t) => (
                 <option key={t.code} value={t.code}>
@@ -135,6 +153,7 @@ export default function ReadingScreen() {
           )}
         </div>
       </div>
+      {setTranslation.isError && <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">Could not change translation. Please try again.</p>}
 
       {/* Day stepper. Every established plan has one; theirs walks the calendar,
           this one walks the plan, because a plan here advances when somebody
@@ -145,7 +164,7 @@ export default function ReadingScreen() {
           onClick={() => goToDay(dayIndex - 1)}
           disabled={dayIndex <= 1}
           aria-label="Previous day"
-          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-30 dark:text-white/50 dark:hover:bg-white/5"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-30 dark:text-white/50 dark:hover:bg-white/5"
         >
           <ChevronLeft size={18} />
         </button>
@@ -158,7 +177,7 @@ export default function ReadingScreen() {
             <button
               type="button"
               onClick={() => goToDay(currentDayIndex)}
-              className="text-[10px] font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+              className="min-h-11 text-xs font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
             >
               Back to today (day {currentDayIndex})
             </button>
@@ -170,7 +189,7 @@ export default function ReadingScreen() {
           onClick={() => goToDay(dayIndex + 1)}
           disabled={dayIndex >= plan.durationDays}
           aria-label="Next day"
-          className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-30 dark:text-white/50 dark:hover:bg-white/5"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-30 dark:text-white/50 dark:hover:bg-white/5"
         >
           <ChevronRight size={18} />
         </button>
@@ -189,7 +208,7 @@ export default function ReadingScreen() {
             {plan.title}
           </p>
         </div>
-        <h1 className="mt-2 font-serif text-3xl font-bold tracking-tight text-[#111] dark:text-white">
+        <h1 className="mt-2 break-words font-serif text-2xl font-bold tracking-tight text-[#111] dark:text-white sm:text-3xl">
           {day.referenceLabel}
         </h1>
         <p className="mt-1 text-xs text-[#8a7e80] dark:text-white/45">
@@ -206,17 +225,18 @@ export default function ReadingScreen() {
               style={{ width: `${Math.min(100, (completedDays / plan.durationDays) * 100)}%` }}
             />
           </div>
-          <div className="mt-1.5 flex items-center justify-between gap-3">
+          <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3">
             <p className="text-[11px] text-[#8a7e80] dark:text-white/40">
               {completedDays} of {plan.durationDays} days read
             </p>
             <Link
               href="/dashboard/reading/schedule"
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+              className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
             >
               <CalendarDays size={11} /> Whole plan
             </Link>
           </div>
+          <p className="text-xs leading-relaxed text-[#8a7e80] dark:text-white/45">Your pace, your progress. Read ahead or return to any day in the plan.</p>
         </div>
       </header>
 
@@ -255,6 +275,7 @@ export default function ReadingScreen() {
       )}
 
       <WriteAboutThis day={day} />
+      {actionError && <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">{actionError}</p>}
 
       <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-6 dark:border-white/10">
         {isDone ? (
@@ -266,7 +287,7 @@ export default function ReadingScreen() {
               type="button"
               onClick={undo}
               disabled={uncomplete.isPending}
-              className="text-xs font-semibold text-gray-400 hover:text-gray-700 disabled:opacity-50 dark:text-white/40 dark:hover:text-white"
+              className="min-h-11 px-2 text-sm font-semibold text-gray-500 hover:text-gray-700 disabled:opacity-50 dark:text-white/50 dark:hover:text-white"
             >
               {uncomplete.isPending ? "Undoing..." : "Undo"}
             </button>
@@ -274,7 +295,7 @@ export default function ReadingScreen() {
               <button
                 type="button"
                 onClick={() => goToDay(dayIndex + 1)}
-                className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+                className="ml-auto inline-flex min-h-11 items-center gap-1.5 text-sm font-bold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
               >
                 Next day <ChevronRight size={14} />
               </button>
@@ -285,7 +306,7 @@ export default function ReadingScreen() {
             type="button"
             onClick={markRead}
             disabled={complete.isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-5 py-3 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5 disabled:opacity-60 disabled:hover:translate-y-0"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-60 sm:w-auto"
           >
             {complete.isPending ? (
               <Loader2 size={16} className="animate-spin" />
@@ -346,9 +367,13 @@ function WriteAboutThis({ day }: { day: PlanDay }) {
   );
 }
 
+function ReadingError({ onRetry }: { onRetry: () => void }) {
+  return <div className="mx-auto max-w-2xl py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]"><WordTabs /><div role="alert" className="mt-6 rounded-2xl border border-red-200 p-4 text-sm dark:border-red-900"><p>Could not load your reading. Check your connection and try again.</p><button type="button" onClick={onRetry} className="mt-2 min-h-11 font-bold text-[#87102C] dark:text-[#FFB3C1]">Try again</button></div></div>;
+}
+
 function NoPlan({ finished }: { finished?: boolean }) {
   return (
-    <div className="mx-auto max-w-2xl px-5 py-6">
+    <div className="mx-auto max-w-2xl py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       <WordTabs />
       <div className="mt-10 text-center">
         <BookOpen size={22} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
@@ -357,7 +382,7 @@ function NoPlan({ finished }: { finished?: boolean }) {
         </p>
         <Link
           href="/dashboard/reading/plans"
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#6E0C24]"
+          className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#6E0C24]"
         >
           {finished ? "Start another plan" : "Choose a plan"}
         </Link>
@@ -391,8 +416,8 @@ function Portion({ portion, translation }: { portion: DayPortion; translation: s
   }
 
   return (
-    <section id={`portion-${portion.sequence}`} className="scroll-mt-6">
-      <div className="mb-2 flex items-baseline justify-between gap-3">
+    <section id={`portion-${portion.sequence}`} className="scroll-mt-6 break-words">
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2 className="text-sm font-bold text-[#111] dark:text-white">{data.reference}</h2>
         {portion.label && (
           <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-white/30">

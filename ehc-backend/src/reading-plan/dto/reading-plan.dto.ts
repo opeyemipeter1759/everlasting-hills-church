@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReadingTrack } from '@prisma/client';
+import { READING_INTENSITIES, type ReadingIntensity } from '../reading-intensity';
 import {
   IsEnum,
   IsIn,
@@ -72,4 +73,12 @@ export class ListPlansQueryDto {
   @IsOptional()
   @IsEnum(ReadingTrack)
   track?: ReadingTrack;
+
+  @ApiPropertyOptional({
+    enum: [...READING_INTENSITIES],
+    description: 'Daily reading load: LOW up to 5 minutes, MEDIUM 6–15 minutes, HIGH over 15 minutes.',
+  })
+  @IsOptional()
+  @IsIn(READING_INTENSITIES)
+  intensity?: ReadingIntensity;
 }

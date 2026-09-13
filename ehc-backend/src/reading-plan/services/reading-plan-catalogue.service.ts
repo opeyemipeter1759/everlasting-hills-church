@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PlanStatus, ReadingTrack } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
+import { readingIntensity, type ReadingIntensity } from '../reading-intensity';
 
 /**
  * The public half of the reading plan API: plans, days and portions.
@@ -27,7 +28,7 @@ export class ReadingPlanCatalogueService {
    * Published plans available to this church: the global templates plus
    * anything the church has forked for itself.
    */
-  async list(track?: ReadingTrack) {
+  async list(track?: ReadingTrack, intensity?: ReadingIntensity) {
     const plans = await this.prisma.readingPlan.findMany({
       where: {
         status: PlanStatus.PUBLISHED,
@@ -53,9 +54,19 @@ export class ReadingPlanCatalogueService {
     // A church's own fork replaces the template it came from, so a member is
     // never offered both.
     const forkedSlugs = new Set(plans.filter((p) => p.tenantId).map((p) => p.slug));
-    return plans
-      .filter((plan) => plan.tenantId !== null || !forkedSlugs.has(plan.slug))
-      .map(({ tenantId, ...plan }) => plan);
+    const available = plans.filter((plan) => plan.tenantId !== null || !forkedSlugs.has(plan.slug));
+    // Old versions remain accessible by ID for existing subscribers, but new
+    // readers should choose the newest published version of each plan only.
+    const latest = new Map<string, (typeof available)[number]>();
+    for (const plan of available) {
+      if (!latest.has(plan.slug) || latest.get(plan.slug)!.version < plan.version) {
+        latest.set(plan.slug, plan);
+      }
+    }
+    return available
+      .filter((plan) => latest.get(plan.slug)?.id === plan.id)
+      .map(({ tenantId, ...plan }) => ({ ...plan, intensity: readingIntensity(plan.avgMinutesPerDay) }))
+      .filter((plan) => !intensity || plan.intensity === intensity);
   }
 
   async detail(planId: string) {
@@ -79,7 +90,7 @@ export class ReadingPlanCatalogueService {
       },
     });
     if (!plan) throw new NotFoundException('Reading plan not found');
-    return plan;
+    return { ...plan, intensity: readingIntensity(plan.avgMinutesPerDay) };
   }
 
   /** A page of the day list, for browsing a plan before subscribing. */

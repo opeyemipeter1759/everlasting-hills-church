@@ -12,6 +12,7 @@ import { api } from "@/lib/api/request";
  */
 
 export type ReadingTrack = "NEW_BELIEVER" | "GROWING" | "MATURE";
+export type ReadingIntensity = "LOW" | "MEDIUM" | "HIGH";
 
 export interface ReadingPlanSummary {
   id: string;
@@ -22,6 +23,7 @@ export interface ReadingPlanSummary {
   track: ReadingTrack;
   durationDays: number;
   avgMinutesPerDay: number | null;
+  intensity: ReadingIntensity | null;
   coverImageUrl: string | null;
   version: number;
 }
@@ -137,7 +139,10 @@ export function useCompleteDay() {
       api.put<{ currentDayIndex: number; completedDays: number; currentStreak: number }>(
         `/me/reading-plan/subscriptions/${subscriptionId}/days/${dayIndex}/complete`,
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ME_KEY }),
+    onSuccess: () => Promise.all([
+      qc.invalidateQueries({ queryKey: ME_KEY }),
+      qc.invalidateQueries({ queryKey: ["reading-plan", "completed"] }),
+    ]),
   });
 }
 
@@ -148,7 +153,10 @@ export function useUncompleteDay() {
       api.delete<{ currentDayIndex: number; completedDays: number }>(
         `/me/reading-plan/subscriptions/${subscriptionId}/days/${dayIndex}/complete`,
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ME_KEY }),
+    onSuccess: () => Promise.all([
+      qc.invalidateQueries({ queryKey: ME_KEY }),
+      qc.invalidateQueries({ queryKey: ["reading-plan", "completed"] }),
+    ]),
   });
 }
 
