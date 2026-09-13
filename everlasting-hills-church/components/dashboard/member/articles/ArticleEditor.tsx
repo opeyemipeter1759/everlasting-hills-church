@@ -47,7 +47,7 @@ export default function ArticleEditor() {
   const params = useSearchParams();
 
   const editingSlug = params.get("slug");
-  const { data: existing, isLoading } = useArticle(editingSlug ?? undefined);
+  const { data: existing, isLoading, error: loadError } = useArticle(editingSlug ?? undefined);
 
   const create = useCreateArticle();
   const update = useUpdateArticle();
@@ -70,6 +70,7 @@ export default function ArticleEditor() {
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [loadedRevision, setLoadedRevision] = useState<number | undefined>();
 
   // Loaded once. Re-syncing on every refetch would throw away what somebody is
   // in the middle of typing.
@@ -77,6 +78,7 @@ export default function ArticleEditor() {
     if (!existing || loaded) return;
     setTitle(existing.title);
     setBody(existing.body);
+    setLoadedRevision(existing.revision);
     setScripture(
       existing.scriptureLabel
         ? {
@@ -113,13 +115,14 @@ export default function ArticleEditor() {
       if (existing) {
         const result = await update.mutateAsync({
           id: existing.id,
+          revision: loadedRevision,
           title: title.trim(),
           body,
           // Explicit null, so removing the citation actually removes it.
           scriptureLabel: scripture?.label ?? null,
           startVerseId: scripture?.startVerseId ?? null,
           endVerseId: scripture?.endVerseId ?? null,
-          ...(publish ? { status: "PUBLISHED" as const } : {}),
+          status: publish ? "PENDING_REVIEW" : "DRAFT",
         });
         router.push(`/dashboard/articles/${result.slug}`);
       } else {
@@ -133,15 +136,19 @@ export default function ArticleEditor() {
         });
         router.push(publish ? `/dashboard/articles/${result.slug}` : "/dashboard/articles/mine");
       }
-    } catch {
-      setError("That did not save. Check your connection and try again.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "That did not save. Check your connection and try again.");
     }
   }
 
   async function unpublish() {
     if (!existing) return;
-    await update.mutateAsync({ id: existing.id, status: "DRAFT" });
-    router.push("/dashboard/articles/mine");
+    try {
+      await update.mutateAsync({ id: existing.id, revision: loadedRevision, status: "DRAFT" });
+      router.push("/dashboard/articles/mine");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "The article could not be withdrawn. Please try again.");
+    }
   }
 
   async function destroy() {
@@ -160,6 +167,11 @@ export default function ArticleEditor() {
   }
 
   const isPublished = existing?.status === "PUBLISHED";
+  const isPending = existing?.status === "PENDING_REVIEW";
+
+  if (editingSlug && (loadError || !existing || !existing.isAuthor)) {
+    return <p role="alert" className="mx-auto max-w-2xl px-5 py-10 text-sm">This article could not be opened for editing. <Link href="/dashboard/articles/mine" className="underline">Back to my writing</Link></p>;
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-6">
@@ -179,6 +191,17 @@ export default function ArticleEditor() {
           {preview ? <PencilLine size={11} /> : <Eye size={11} />}
           {preview ? "Keep writing" : "Preview"}
         </button>
+      </div>
+
+      <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
+        {isPending
+          ? "Your article is awaiting approval. You can update your submission or save it as a draft to withdraw it."
+          : isPublished
+            ? "Changes to a published article need approval again. Submitting will hide it from the church feed until it is approved."
+            : "Submit your article for approval by the HOD overseeing the Content Writing Team. It appears in the church feed after approval."}
+        {existing?.status === "DRAFT" && existing.reviewNote && (
+          <p className="mt-3 whitespace-pre-wrap break-words"><strong>Changes requested:</strong> {existing.reviewNote}</p>
+        )}
       </div>
 
       {/* The passage this came from. Removable, because not everything somebody
@@ -278,7 +301,7 @@ export default function ArticleEditor() {
           ) : (
             <Send size={15} />
           )}
-          {isPublished ? "Save and republish" : "Publish"}
+          {isPending ? "Update submission" : isPublished ? "Submit changes for approval" : "Submit for approval"}
         </button>
 
         {!isPublished && (
@@ -288,7 +311,7 @@ export default function ArticleEditor() {
             disabled={busy}
             className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-700 hover:border-gray-300 disabled:opacity-60 dark:border-white/10 dark:text-white/70"
           >
-            Save draft
+            {isPending ? "Withdraw and save draft" : "Save draft"}
           </button>
         )}
 

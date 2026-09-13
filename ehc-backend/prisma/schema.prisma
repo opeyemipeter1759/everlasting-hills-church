@@ -583,6 +583,7 @@ model Profile {
   DepartmentHodAssigned         DepartmentHod[]         @relation("DepartmentHodAssignedBy")
   ReadingPlanCreated            ReadingPlan[]           @relation("ReadingPlanCreatedBy")
   MemberArticlesAuthored        MemberArticle[]         @relation("MemberArticleAuthor")
+  MemberArticlesReviewed        MemberArticle[]            @relation("MemberArticleReviewer")
   MemberArticleLikes            MemberArticleLike[]     @relation("MemberArticleLiker")
   MemberPlanSubscription        MemberPlanSubscription[]
   RoleGrantOf                   RoleGrant[]             @relation("RoleGrantUser")
@@ -2376,6 +2377,7 @@ model MemberPlanReflection {
 /// Status of a member written article.
 enum ArticleStatus {
   DRAFT
+  PENDING_REVIEW
   PUBLISHED
   ARCHIVED
 }
@@ -2396,6 +2398,8 @@ model MemberArticle {
   excerpt        String?
   coverImageUrl  String?
   status         ArticleStatus       @default(DRAFT)
+  /// Changes whenever the author or reviewer changes the article, not on reads/likes.
+  revision       Int                 @default(1)
   /// Optional scripture citation.
   startVerseId   Int?
   endVerseId     Int?
@@ -2405,10 +2409,17 @@ model MemberArticle {
   likeCount      Int                 @default(0)
   featuredAt     DateTime?           @db.Timestamptz(6)
   publishedAt    DateTime?           @db.Timestamptz(6)
+  /// When the author last sent it for review.
+  submittedAt    DateTime?           @db.Timestamptz(6)
+  reviewedAt     DateTime?           @db.Timestamptz(6)
+  reviewedById   String?
+  /// The reviewer's note: why it came back, or a word with the approval.
+  reviewNote     String?
   createdAt      DateTime            @default(now()) @db.Timestamptz(6)
   updatedAt      DateTime            @default(now()) @updatedAt @db.Timestamptz(6)
   Tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   Author         Profile             @relation("MemberArticleAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  ReviewedBy     Profile?            @relation("MemberArticleReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, map: "MemberArticle_reviewer_fkey")
   Likes          MemberArticleLike[]
 
   @@unique([tenantId, slug], map: "MemberArticle_tenant_slug")
