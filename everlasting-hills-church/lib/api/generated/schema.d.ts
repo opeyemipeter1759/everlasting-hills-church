@@ -695,7 +695,7 @@ export interface paths {
         /** The church feed: published articles, featured first */
         get: operations["ArticlesController_feed"];
         put?: never;
-        /** Write an article, as a draft or published straight away */
+        /** Write an article as a draft or submit it for approval */
         post: operations["ArticlesController_create"];
         delete?: never;
         options?: never;
@@ -717,8 +717,25 @@ export interface paths {
         delete: operations["ArticlesController_remove"];
         options?: never;
         head?: never;
-        /** Edit your own article, or archive somebody else's if you are a pastor or admin. Moderation is after the fact, never a gate before publishing. */
+        /** Edit your own article, or archive somebody else's if you are a pastor or admin. Publication requires approval by another reviewer. */
         patch: operations["ArticlesController_update"];
+        trace?: never;
+    };
+    "/articles/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a piece waiting for review, which publishes it */
+        post: operations["ArticlesController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/articles/{id}/feature": {
@@ -757,6 +774,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/articles/{id}/request-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a piece back to its author with a note */
+        post: operations["ArticlesController_requestChanges"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/articles/{slug}": {
         parameters: {
             query?: never;
@@ -783,6 +817,40 @@ export interface paths {
         };
         /** Everything the caller has written, drafts included */
         get: operations["ArticlesController_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Articles waiting for review (content department head, pastors, admins) */
+        get: operations["ArticlesController_reviewQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/review/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the caller reviews articles, and how many are waiting */
+        get: operations["ArticlesController_reviewAccess"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1379,6 +1447,23 @@ export interface paths {
         };
         /** Scripture text for a verse range. The highest leverage cache in the feature: the text never changes. */
         get: operations["ReadingPlanController_passage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bible/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today’s scripture for the church, changing at midnight in Lagos */
+        get: operations["DailyScriptureController_today"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5801,10 +5886,63 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Get the conversation between the current member and another unit member */
+        get: operations["UnitMessagesController_conversation"];
         put?: never;
         /** Message another member of the unit — delivered as a notification (any unit member to any other) */
         post: operations["UnitMessagesController_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}/messages/{messageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a message sent by the current member */
+        delete: operations["UnitMessagesController_remove"];
+        options?: never;
+        head?: never;
+        /** Edit a message sent by the current member */
+        patch: operations["UnitMessagesController_update"];
+        trace?: never;
+    };
+    "/units/{unitId}/messages/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark a conversation as read */
+        patch: operations["UnitMessagesController_markRead"];
+        trace?: never;
+    };
+    "/units/{unitId}/messages/unread-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get unread message counts grouped by sender */
+        get: operations["UnitMessagesController_unreadCounts"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -6545,7 +6683,7 @@ export interface components {
             body: string;
             /** @example 45008039 */
             endVerseId?: number;
-            /** @description Publish immediately rather than saving a draft */
+            /** @description Submit for approval by another reviewer rather than saving a draft */
             publish?: boolean;
             /** @example Romans 8 */
             scriptureLabel?: string;
@@ -6850,6 +6988,20 @@ export interface components {
              */
             role: "MEMBER" | "UNIT_LEAD" | "HEAD_USHER" | "HOD" | "ADMIN_HEAD" | "ADMIN" | "PASTOR" | "SUPER_ADMIN";
         };
+        DailyScriptureDto: {
+            /** @example 2026-09-12 */
+            date: string;
+            /** @example Psalm 23:1 */
+            reference: string;
+            /** @description The complete quotation from the stored Bible text */
+            text: string;
+            /** @example Africa/Lagos */
+            timezone: string;
+            /** @example WEB */
+            translationCode: string;
+            /** @example World English Bible */
+            translationName: string;
+        };
         DiscussionResponseDto: {
             /** @example I want to start applying this by praying daily. */
             content: string;
@@ -7103,9 +7255,21 @@ export interface components {
             /** @description The Supabase refresh token issued at login. */
             refresh_token: string;
         };
+        RequestChangesDto: {
+            /** @description What the author should change. Required: a piece sent back without a reason cannot be fixed. */
+            note: string;
+            /** @description The revision the reviewer read */
+            revision: number;
+        };
         RequestCorrectionDto: {
             /** @example Please add attendance numbers for each service. */
             comment: string;
+        };
+        ReviewArticleDto: {
+            /** @description A word to the author with the approval */
+            note?: string;
+            /** @description The revision the reviewer read */
+            revision: number;
         };
         SendDirectMessageDto: {
             /** @example What did you mean by "living sacrifice"? */
@@ -7154,6 +7318,8 @@ export interface components {
              * @example member-uuid
              */
             recipientId: string;
+            /** @description Message.id being replied to */
+            replyToId?: string;
         };
         SermonEpisodeInputDto: {
             /** @example 1800 */
@@ -7328,10 +7494,12 @@ export interface components {
         UpdateArticleDto: {
             body?: string;
             endVerseId?: Record<string, never>;
+            /** @description The revision loaded by the editor; prevents overwriting later changes */
+            revision?: number;
             scriptureLabel?: Record<string, never>;
             startVerseId?: Record<string, never>;
             /** @enum {string} */
-            status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+            status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "ARCHIVED";
             title?: string;
         };
         UpdateConnectionStatusDto: {
@@ -9236,6 +9404,43 @@ export interface operations {
             };
         };
     };
+    ArticlesController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewArticleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     ArticlesController_feature: {
         parameters: {
             query?: never;
@@ -9368,6 +9573,43 @@ export interface operations {
             };
         };
     };
+    ArticlesController_requestChanges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestChangesDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     ArticlesController_bySlug: {
         parameters: {
             query?: never;
@@ -9402,6 +9644,68 @@ export interface operations {
         };
     };
     ArticlesController_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_reviewQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_reviewAccess: {
         parameters: {
             query?: never;
             header?: never;
@@ -10844,6 +11148,37 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    DailyScriptureController_today: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DailyScriptureDto"];
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
                 };
@@ -18556,6 +18891,8 @@ export interface operations {
         parameters: {
             query?: {
                 track?: "NEW_BELIEVER" | "GROWING" | "MATURE" | "SEASONAL";
+                /** @description Daily reading load: LOW up to 5 minutes, MEDIUM 6–15 minutes, HIGH over 15 minutes. */
+                intensity?: "LOW" | "MEDIUM" | "HIGH";
             };
             header?: never;
             path?: never;
@@ -21381,6 +21718,41 @@ export interface operations {
             };
         };
     };
+    UnitMessagesController_conversation: {
+        parameters: {
+            query: {
+                recipientId: string;
+            };
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     UnitMessagesController_send: {
         parameters: {
             query?: never;
@@ -21397,6 +21769,142 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitMessagesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitMessagesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitMessagesController_markRead: {
+        parameters: {
+            query: {
+                recipientId: string;
+            };
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitMessagesController_unreadCounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
