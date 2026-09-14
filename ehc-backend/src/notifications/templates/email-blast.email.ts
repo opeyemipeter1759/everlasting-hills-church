@@ -1,5 +1,5 @@
 import type { SendEmailPayload } from '../notification-events';
-import { escapeHtml, renderEmailLayout } from './layout';
+import { renderEmailLayout } from './layout';
 
 interface Args {
   email: string;
@@ -28,7 +28,9 @@ function toPlainText(html: string): string {
 /** Admin-authored, freely-targeted email (the "Emails" admin feature) — no fixed CTA/destination. */
 export function buildEmailBlast({ email, subject, body, attachments }: Args): SendEmailPayload {
   const text = [toPlainText(body), '', '— Everlasting Hills Church · Ibadan'].join('\n');
-  const html = renderEmailLayout({ heading: escapeHtml(subject), bodyHtml: styleInlineImages(body) });
+  // No card heading: the subject line already carries it, and the composer's
+  // body is the whole message — repeating it read like a duplicated title.
+  const html = renderEmailLayout({ bodyHtml: styleInlineImages(body) });
 
   return {
     to: email,

@@ -40,8 +40,9 @@ export function escapeHtml(s: string): string {
 }
 
 interface LayoutArgs {
-  /** Preheader-style heading inside the card. */
-  heading: string;
+  /** Heading inside the card. Omit when the body is a complete message on
+   * its own (the admin composer) — otherwise it just repeats the subject. */
+  heading?: string;
   /** Inner HTML body (already escaped where needed). */
   bodyHtml: string;
   /** Optional single call-to-action button. */
@@ -77,7 +78,7 @@ export function renderEmailLayout({ heading, bodyHtml, cta }: LayoutArgs): strin
   </tr>
 </table>
 
-      <h2 style="font-family:${FONT};color:#111827;font-size:25px;font-weight:700;letter-spacing:-0.3px;line-height:1.3;margin:0 0 14px">${heading}</h2>
+      ${heading ? `<h2 style="font-family:${FONT};color:#111827;font-size:25px;font-weight:700;letter-spacing:-0.3px;line-height:1.3;margin:0 0 14px">${heading}</h2>` : ''}
       <div style="font-family:${FONT};color:#4B5563;font-size:${BODY_SIZE};line-height:1.7">${bodyHtml}</div>
       ${ctaHtml}
 
