@@ -66,14 +66,14 @@ describe("BirthdayCelebration", () => {
     expect(useMe).toHaveBeenCalledWith({ enabled: false });
   });
 
-  it("plays once a day, not on every page", () => {
+  it("comes back on every page load for the whole day", () => {
     signedIn(BIRTHDAY);
     const first = render(<BirthdayCelebration />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     first.unmount();
 
     render(<BirthdayCelebration />);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
   it("closes with Thank you", async () => {

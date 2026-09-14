@@ -1,29 +1,15 @@
 "use client";
-
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 import { useMe } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { isBirthdayToday, watDate } from "@/lib/birthday";
-
-/**
- * Balloons and bubbles on a member's birthday, anywhere on the site while they
- * are signed in.
- *
- * It reads the same /auth/me query the site header and the dashboard sidebar
- * already use, behind the same sign-in gate, so it adds no request and no new
- * way to be signed out. The day is Lagos's, by the rule the dashboard's
- * birthday card uses. It plays once a day on each device, and it gets out of
- * the way: a close button, "Thank you", or Escape. Anyone who has asked their
- * device for reduced motion gets the greeting with nothing flying past.
- */
+import { isBirthdayToday } from "@/lib/birthday";
 
 const PALETTE = ["#87102C", "#E8B44A", "#FFB3C1", "#3B82F6", "#22C55E", "#A855F7", "#F97316", "#EF4444"];
 const BALLOON_COUNT = 14;
 const BUBBLE_COUNT = 18;
 const BURST_ANGLES = Array.from({ length: 8 }, (_, index) => (index / 8) * Math.PI * 2);
-const seenKey = (memberId: string, date: string) => `ehc:birthday-celebrated:${memberId}:${date}`;
 
 type Floater = { id: number; left: number; size: number; delay: number; duration: number; sway: number; color: string };
 
@@ -35,7 +21,6 @@ function makeFloaters(
 ): Floater[] {
   return Array.from({ length: count }, (_, id) => ({
     id,
-    // Spread across the width, jittered so they never rise in a neat row.
     left: (id / count) * 92 + Math.random() * 6,
     size: minSize + Math.random() * (maxSize - minSize),
     delay: Math.random() * maxDelay,
@@ -56,7 +41,6 @@ function BalloonShape({ color, size }: { color: string; size: number }) {
   );
 }
 
-/** Eight bits flying out from where a balloon was. */
 function Burst({ color }: { color: string }) {
   return (
     <>
@@ -75,6 +59,7 @@ function Burst({ color }: { color: string }) {
   );
 }
 
+
 export default function BirthdayCelebration() {
   const user = useCurrentUser();
   const { data: me } = useMe({ enabled: Boolean(user?.loggedIn) });
@@ -87,21 +72,14 @@ export default function BirthdayCelebration() {
 
   useEffect(() => {
     if (!member?.id || !isBirthdayToday(member.dateOfBirth)) return;
-    const key = seenKey(member.id, watDate());
-    try {
-      if (window.localStorage.getItem(key)) return;
-      window.localStorage.setItem(key, "1");
-    } catch {
-      // Storage blocked (private browsing): celebrate anyway. The only cost is
-      // that it may play again on the next page today.
-    }
+    // No "seen today" memory on purpose: the celebration greets them on every
+    // visit and every refresh for as long as it's their birthday. Closing it
+    // only clears it from the page they're on.
     setOpen(true);
   }, [member?.id, member?.dateOfBirth]);
 
   useEffect(() => {
     if (!open) return;
-    // The dismiss button takes focus, so a keyboard or screen reader user
-    // meets the greeting and can close it in one step.
     thanksRef.current?.focus();
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") setOpen(false);
