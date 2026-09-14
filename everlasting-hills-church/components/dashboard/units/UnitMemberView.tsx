@@ -25,8 +25,11 @@ function groupByRole(members: UnitMemberEntry[]): Record<string, UnitMemberEntry
 
 export default function UnitMemberView({ unitId }: { unitId: string }) {
   const { data: me } = useMe();
-  const { data: unit, isLoading, refetch: refetchUnit, isFetching: unitFetching } = useMyMembershipDetail(unitId);
-  const { data: tasks, refetch: refetchTasks, isFetching: tasksFetching } = useUnitTasks(unitId);
+  const { data: unit, isLoading, refetch: refetchUnit } = useMyMembershipDetail(unitId);
+  const { data: tasks, refetch: refetchTasks } = useUnitTasks(unitId);
+  // Tasks also refresh quietly in the background; only a deliberate tap on
+  // Refresh should show the spinner, not every poll.
+  const [manualRefreshing, setManualRefreshing] = useState(false);
   const updateTask = useUpdateUnitTask();
   const unreadMessages = useUnitUnreadCounts(unitId);
 
@@ -63,9 +66,13 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
     updateTask.mutate({ unitId, taskId, status: nextStatus(current) });
   }
 
-  function refresh() {
-    refetchUnit();
-    refetchTasks();
+  async function refresh() {
+    setManualRefreshing(true);
+    try {
+      await Promise.all([refetchUnit(), refetchTasks()]);
+    } finally {
+      setManualRefreshing(false);
+    }
   }
 
   return (
@@ -78,7 +85,7 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
         canMessage={otherMembers.length > 0}
         onMessageSomeone={() => setShowPicker(true)}
         onRefresh={refresh}
-        isRefreshing={unitFetching || tasksFetching}
+        isRefreshing={manualRefreshing}
       />
 
       <div className="grid items-stretch gap-5 lg:h-[calc(100dvh-10rem)] lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.6fr)]">

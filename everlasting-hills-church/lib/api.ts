@@ -829,11 +829,30 @@ export function useDeleteUnitMessage() {
 
 // ── Unit task comments ──────────────────────────────────────────────────────
 
+// ── Live refresh for task work ──────────────────────────────────────────
+// A task assigned to you, a comment on it, or a report filed on it should
+// simply appear — nobody should have to reload. The list polls on its own
+// (it carries comment/report counts and the latest report), and an open
+// thread or reports panel polls a little faster while it's on screen.
+// Polling pauses in background tabs and resumes (with an immediate refetch)
+// when you come back or reconnect.
+const TASK_LIST_REFRESH_MS = 15_000;
+const TASK_THREAD_REFRESH_MS = 8_000;
+
+const liveTaskQuery = {
+  refetchIntervalInBackground: false,
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
+  staleTime: 0,
+} as const;
+
 export function useUnitTaskComments(unitId: string | null, taskId: string | null) {
   return useQuery({
     queryKey: ["units", unitId, "tasks", taskId, "comments"],
     queryFn: () => api.get<UnitTaskComment[]>(`/units/${unitId}/tasks/${taskId}/comments`),
     enabled: !!unitId && !!taskId,
+    refetchInterval: TASK_THREAD_REFRESH_MS,
+    ...liveTaskQuery,
   });
 }
 
@@ -949,6 +968,11 @@ export function useUnitTasks(unitId: string | null) {
     queryKey: ["units", unitId, "tasks"],
     queryFn: () => api.get<UnitTask[]>(`/units/${unitId}/tasks`),
     enabled: !!unitId,
+    refetchInterval: TASK_LIST_REFRESH_MS,
+    ...liveTaskQuery,
+    // Keep the current list on screen while a background refresh is in flight
+    // so rows never flicker out and back in.
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -1002,6 +1026,8 @@ export function useUnitTaskReports(unitId: string | null, taskId: string | null)
     queryKey: ["units", unitId, "tasks", taskId, "reports"],
     queryFn: () => api.get<UnitTaskReport[]>(`/units/${unitId}/tasks/${taskId}/reports`),
     enabled: !!unitId && !!taskId,
+    refetchInterval: TASK_THREAD_REFRESH_MS,
+    ...liveTaskQuery,
   });
 }
 
