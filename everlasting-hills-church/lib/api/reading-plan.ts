@@ -45,8 +45,11 @@ export interface PlanDay {
   Portions: DayPortion[];
 }
 
-export interface TodayReading {
+export interface ReadingSubscription {
   subscriptionId: string;
+  status: "ACTIVE" | "PAUSED" | "COMPLETED";
+  startedOn: string;
+  completedAt: string | null;
   plan: {
     id: string;
     slug: string;
@@ -65,6 +68,9 @@ export interface TodayReading {
   /** Drift for encouragement. Never rendered as days behind. */
   paceDelta: number;
   completedToday: boolean;
+}
+
+export interface TodayReading extends ReadingSubscription {
   day: PlanDay | null;
 }
 
@@ -79,10 +85,36 @@ export interface Passage {
 const ME_KEY = ["reading-plan", "me"] as const;
 
 /** Today's reading. Null is a normal answer: the member has not chosen a plan. */
-export function useTodayReading() {
+export function useTodayReading(subscriptionId?: string) {
   return useQuery({
-    queryKey: ME_KEY,
-    queryFn: () => api.get<TodayReading | null>("/me/reading-plan"),
+    queryKey: [...ME_KEY, "today", subscriptionId ?? "active"],
+    queryFn: () => api.get<TodayReading | null>(
+      `/me/reading-plan${subscriptionId ? `?subscriptionId=${encodeURIComponent(subscriptionId)}` : ""}`,
+    ),
+  });
+}
+
+/** Every plan keeps its own progress, including paused and finished plans. */
+export function useReadingSubscriptions() {
+  return useQuery({
+    queryKey: [...ME_KEY, "subscriptions"],
+    queryFn: () => api.get<ReadingSubscription[]>("/me/reading-plan/subscriptions"),
+  });
+}
+
+/** Keep the selected subscription attached when moving between its days and schedule. */
+export function readingHref(subscriptionId: string, dayIndex?: number, page: "reading" | "schedule" = "reading") {
+  const params = new URLSearchParams({ subscription: subscriptionId });
+  if (dayIndex !== undefined) params.set("day", String(dayIndex));
+  return `/dashboard/reading${page === "schedule" ? "/schedule" : ""}?${params}`;
+}
+
+export function useSetPlanStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ subscriptionId, status }: { subscriptionId: string; status: "ACTIVE" | "PAUSED" }) =>
+      api.patch(`/me/reading-plan/subscriptions/${subscriptionId}`, { status }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ME_KEY }),
   });
 }
 
@@ -218,6 +250,27 @@ export function useTranslations() {
         "/bible/translations",
       ),
     staleTime: 24 * 60 * 60 * 1000,
+  });
+}
+
+export interface ReadingActivity {
+  timezone: string;
+  /** First date of the calendar window, member-local. */
+  from: string;
+  today: string;
+  /** Only dates with at least one reading; the calendar fills the gaps. */
+  days: { date: string; readings: number }[];
+  totals: { readings: number; activeDays: number; activeDaysLast30: number; minutes: number };
+}
+
+/**
+ * Reading effort across every plan. Keyed under the member's own progress, so
+ * marking a day read, pausing or starting a plan refreshes it with the rest.
+ */
+export function useReadingActivity() {
+  return useQuery({
+    queryKey: [...ME_KEY, "activity"],
+    queryFn: () => api.get<ReadingActivity>("/me/reading-plan/activity"),
   });
 }
 

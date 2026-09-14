@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, CalendarDays, Library } from "lucide-react";
+import { BarChart3, BookOpen, CalendarDays, Library } from "lucide-react";
+import { readingHref } from "@/lib/api/reading-plan";
 
 /**
  * Tabs within Bible reading. Sermons is a separate destination with its own nav
@@ -12,11 +13,12 @@ import { BookOpen, CalendarDays, Library } from "lucide-react";
  */
 const TABS = [
   { href: "/dashboard/reading", label: "Today", icon: BookOpen },
+  { href: "/dashboard/reading/overview", label: "Overview", icon: BarChart3 },
   { href: "/dashboard/reading/schedule", label: "Whole plan", icon: CalendarDays },
   { href: "/dashboard/reading/plans", label: "Plans", icon: Library },
 ];
 
-export default function WordTabs() {
+export default function WordTabs({ subscriptionId }: { subscriptionId?: string }) {
   const pathname = usePathname();
 
   return (
@@ -27,7 +29,7 @@ export default function WordTabs() {
         // match keeps the tab lit while a member is picking a plan.
         // Exact match for the reading tabs, since /dashboard/reading is a
         // prefix of both the schedule and the chooser and would otherwise stay
-        // lit on all three.
+        // lit on every tab.
         const active =
           tab.href === "/dashboard/reading"
             ? pathname === tab.href
@@ -35,7 +37,9 @@ export default function WordTabs() {
         return (
           <Link
             key={tab.href}
-            href={tab.href}
+            href={subscriptionId && (tab.href === "/dashboard/reading" || tab.href === "/dashboard/reading/schedule")
+              ? readingHref(subscriptionId, undefined, tab.href.endsWith("/schedule") ? "schedule" : "reading")
+              : tab.href}
             aria-current={active ? "page" : undefined}
             className={`inline-flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-bold transition-colors sm:min-h-11 sm:flex-auto sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-3.5 sm:text-xs ${
               active

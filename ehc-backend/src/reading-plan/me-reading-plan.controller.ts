@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
@@ -16,7 +17,11 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { MeReadingPlanService } from './services/me-reading-plan.service';
-import { SubscribeDto, UpdateSubscriptionDto } from './dto/reading-plan.dto';
+import {
+  MyReadingPlanQueryDto,
+  SubscribeDto,
+  UpdateSubscriptionDto,
+} from './dto/reading-plan.dto';
 
 /**
  * A member's own plan. Private, never cached, never shared.
@@ -36,20 +41,44 @@ export class MeReadingPlanController {
   @Header('Cache-Control', 'no-store')
   @ApiOperation({
     summary:
-      "Today's reading for the current member, or null when they have not chosen a plan. References only, no scripture text.",
+      "Current reading for a selected plan, or the member's newest active plan. References only, no scripture text.",
   })
-  today(@CurrentUser() actor: AuthUser) {
-    return this.service.today(actor);
+  today(@CurrentUser() actor: AuthUser, @Query() query: MyReadingPlanQueryDto) {
+    return this.service.today(actor, query.subscriptionId);
+  }
+
+  @Get('subscriptions')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({
+    summary:
+      'All your reading plans and progress, including paused and completed plans',
+  })
+  subscriptions(@CurrentUser() actor: AuthUser) {
+    return this.service.subscriptions(actor);
+  }
+
+  @Get('activity')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({
+    summary:
+      'Your reading effort across every plan: a 12-week calendar, days read and estimated time',
+  })
+  activity(@CurrentUser() actor: AuthUser) {
+    return this.service.activity(actor);
   }
 
   @Post('subscriptions')
-  @ApiOperation({ summary: 'Start a plan. Any active plan is paused, never deleted.' })
+  @ApiOperation({
+    summary: 'Start or resume a plan while keeping your other plans active.',
+  })
   subscribe(@CurrentUser() actor: AuthUser, @Body() body: SubscribeDto) {
     return this.service.subscribe(actor, body);
   }
 
   @Patch('subscriptions/:id')
-  @ApiOperation({ summary: 'Pause, resume, change translation, timezone or reminder hour' })
+  @ApiOperation({
+    summary: 'Pause, resume, change translation, timezone or reminder hour',
+  })
   update(
     @CurrentUser() actor: AuthUser,
     @Param('id') id: string,
@@ -60,7 +89,9 @@ export class MeReadingPlanController {
 
   @Get('subscriptions/:id/days/completed')
   @Header('Cache-Control', 'no-store')
-  @ApiOperation({ summary: 'Day indexes already read, for ticking off a day list' })
+  @ApiOperation({
+    summary: 'Day indexes already read, for ticking off a day list',
+  })
   completedDays(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
     return this.service.completedDays(actor, id);
   }

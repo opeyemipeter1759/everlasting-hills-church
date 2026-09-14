@@ -2197,8 +2197,8 @@ model HomeCell {
 // ─────────────────────────────────────────────────────────────────────────────
 // Daily Bible reading plans
 // ─────────────────────────────────────────────────────────────────────────────
-// DDL lives in prisma/manual/2026-09-reading-plan.sql and is applied with
-// `prisma db execute`. These models mirror it by hand. Do not run `db push`.
+// DDL is managed by the ordered 20260913005000_reading_plan_schema migration.
+// The file in prisma/manual is retained only as historical reference.
 //
 // Scripture tables carry a Bible prefix and are global, never tenant scoped.
 // A verseId is bookId * 1000000 + chapter * 1000 + verse, so any passage,
@@ -2290,7 +2290,7 @@ model ReadingPlan {
   Days             ReadingPlanDay[]
   Subscriptions    MemberPlanSubscription[]
 
-  @@index([tenantId, track, status])
+  @@index([tenantId, track, status], map: "ReadingPlan_catalog")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -2311,7 +2311,7 @@ model ReadingPlanDay {
   Portions         ReadingPlanPortion[]
 
   @@unique([planId, dayIndex], map: "ReadingPlanDay_plan_day")
-  @@index([tenantId])
+  @@index([tenantId], map: "ReadingPlanDay_tenant")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -2328,11 +2328,14 @@ model ReadingPlanPortion {
   Day          ReadingPlanDay @relation(fields: [planDayId], references: [id], onDelete: Cascade)
 
   @@unique([planDayId, sequence], map: "ReadingPlanPortion_day_sequence")
-  @@index([tenantId])
+  @@index([tenantId], map: "ReadingPlanPortion_tenant")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model MemberPlanSubscription {
+  /// One ACTIVE personal subscription per tenant/profile/plan is enforced by
+  /// the partial index in 20260913010000_multiple_reading_plans. Completed and
+  /// paused readings retain their own progress and may coexist with it.
   id              String                 @id
   tenantId        String
   profileId       String
@@ -2363,7 +2366,7 @@ model MemberPlanSubscription {
   Progress        MemberPlanProgress[]
   Reflections     MemberPlanReflection[]
 
-  @@index([profileId, status])
+  @@index([profileId, status], map: "MemberPlanSubscription_profile")
 }
 
 /// Sparse by design: only completed days get a row. The unique constraint is

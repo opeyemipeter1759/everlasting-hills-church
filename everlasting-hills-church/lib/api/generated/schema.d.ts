@@ -3941,8 +3941,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Today's reading for the current member, or null when they have not chosen a plan. References only, no scripture text. */
+        /** Current reading for a selected plan, or the member's newest active plan. References only, no scripture text. */
         get: operations["MeReadingPlanController_today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/reading-plan/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your reading effort across every plan: a 12-week calendar, days read and estimated time */
+        get: operations["MeReadingPlanController_activity"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3958,9 +3975,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** All your reading plans and progress, including paused and completed plans */
+        get: operations["MeReadingPlanController_subscriptions"];
         put?: never;
-        /** Start a plan. Any active plan is paused, never deleted. */
+        /** Start or resume a plan while keeping your other plans active. */
         post: operations["MeReadingPlanController_subscribe"];
         delete?: never;
         options?: never;
@@ -16897,6 +16915,71 @@ export interface operations {
         };
     };
     MeReadingPlanController_today: {
+        parameters: {
+            query?: {
+                /** @description Your subscription to open. Defaults to your newest active plan. */
+                subscriptionId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MeReadingPlanController_activity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MeReadingPlanController_subscriptions: {
         parameters: {
             query?: never;
             header?: never;

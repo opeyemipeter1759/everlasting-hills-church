@@ -19,26 +19,40 @@ function makeService(options: {
   completed?: number[];
 }) {
   const completed = new Set(options.completed ?? []);
-  const subscription = options.subscription === undefined ? baseSubscription() : options.subscription;
+  const subscription =
+    options.subscription === undefined
+      ? baseSubscription()
+      : options.subscription;
   const updates: Record<string, unknown>[] = [];
 
   const tx = {
+    $queryRaw: jest.fn(async () => []),
+    readingPlanPortion: { count: jest.fn(async () => 2) },
     memberPlanProgress: {
-      createMany: jest.fn(async ({ data }: { data: { dayIndex: number }[] }) => {
-        const day = data[0].dayIndex;
-        if (completed.has(day)) return { count: 0 };
-        completed.add(day);
-        return { count: 1 };
-      }),
+      createMany: jest.fn(
+        async ({ data }: { data: { dayIndex: number }[] }) => {
+          const day = data[0].dayIndex;
+          if (completed.has(day)) return { count: 0 };
+          completed.add(day);
+          return { count: 1 };
+        },
+      ),
       count: jest.fn(async () => completed.size),
-      deleteMany: jest.fn(async ({ where }: { where: { dayIndex: number } }) => {
-        const had = completed.delete(where.dayIndex);
-        return { count: had ? 1 : 0 };
-      }),
+      findMany: jest.fn(async () =>
+        [...completed].sort((a, b) => a - b).map((dayIndex) => ({ dayIndex })),
+      ),
+      deleteMany: jest.fn(
+        async ({ where }: { where: { dayIndex: number } }) => {
+          const had = completed.delete(where.dayIndex);
+          return { count: had ? 1 : 0 };
+        },
+      ),
     },
     memberPlanSubscription: {
+      findFirst: jest.fn(async () => subscription),
       update: jest.fn(async ({ data }: { data: Record<string, unknown> }) => {
         updates.push(data);
+        if (subscription) Object.assign(subscription, data);
         return { id: 'sub-1', ...data };
       }),
     },
@@ -57,7 +71,9 @@ function makeService(options: {
       })),
     },
     readingPlanPortion: { count: jest.fn(async () => 2) },
-    $transaction: jest.fn(async (fn: (client: unknown) => Promise<unknown>) => fn(tx)),
+    $transaction: jest.fn(async (fn: (client: unknown) => Promise<unknown>) =>
+      fn(tx),
+    ),
   };
 
   const service = new MeReadingPlanService(
@@ -114,7 +130,7 @@ describe('completing a day', () => {
     expect(replay.completedDays).toBe(first.completedDays);
   });
 
-  it('advances the day index to the day after the last completed one', async () => {
+  it('advances the day index to the first unread day', async () => {
     const { service, updates } = makeService({ completed: [1, 2] });
 
     await service.completeDay(ACTOR, 'sub-1', 3);
@@ -122,15 +138,29 @@ describe('completing a day', () => {
     expect(updates[0]).toMatchObject({ completedDays: 3, currentDayIndex: 4 });
   });
 
+  it('does not skip an unread day when reading ahead', async () => {
+    const { service, updates } = makeService({ completed: [1, 3] });
+    await service.completeDay(ACTOR, 'sub-1', 5);
+    expect(updates[0]).toMatchObject({ completedDays: 3, currentDayIndex: 2 });
+    await service.completeDay(ACTOR, 'sub-1', 2);
+    expect(updates[1]).toMatchObject({ completedDays: 4, currentDayIndex: 4 });
+  });
+
   it('marks the plan finished on the final day', async () => {
     const { service, updates } = makeService({
-      subscription: baseSubscription({ Plan: { durationDays: 3 }, completedDays: 2 }),
+      subscription: baseSubscription({
+        Plan: { durationDays: 3 },
+        completedDays: 2,
+      }),
       completed: [1, 2],
     });
 
     await service.completeDay(ACTOR, 'sub-1', 3);
 
-    expect(updates[0]).toMatchObject({ status: 'COMPLETED', currentDayIndex: 3 });
+    expect(updates[0]).toMatchObject({
+      status: 'COMPLETED',
+      currentDayIndex: 3,
+    });
     expect(updates[0].completedAt).toBeInstanceOf(Date);
   });
 
@@ -147,10 +177,12 @@ describe('completing a day', () => {
   it('refuses a day outside the plan', async () => {
     const { service } = makeService({});
 
-    await expect(service.completeDay(ACTOR, 'sub-1', 0)).rejects.toBeInstanceOf(BadRequestException);
-    await expect(service.completeDay(ACTOR, 'sub-1', 91)).rejects.toBeInstanceOf(
+    await expect(service.completeDay(ACTOR, 'sub-1', 0)).rejects.toBeInstanceOf(
       BadRequestException,
     );
+    await expect(
+      service.completeDay(ACTOR, 'sub-1', 91),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('refuses a subscription belonging to somebody else', async () => {
@@ -158,13 +190,22 @@ describe('completing a day', () => {
     // cannot probe for subscriptions that are not theirs.
     const { service } = makeService({ subscription: null });
 
-    await expect(service.completeDay(ACTOR, 'someone-else', 1)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
+    await expect(
+      service.completeDay(ACTOR, 'someone-else', 1),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });
 
 describe('undoing a completion', () => {
+  it('returns to an earlier unread day after undoing out-of-order reading', async () => {
+    const { service } = makeService({ completed: [1, 2, 4, 6] });
+    expect(await service.uncompleteDay(ACTOR, 'sub-1', 2)).toMatchObject({
+      completedDays: 3,
+      currentDayIndex: 2,
+      removed: true,
+    });
+  });
+
   it('removes the day and steps the index back', async () => {
     const { service, completed } = makeService({ completed: [1, 2, 3] });
 

@@ -18035,6 +18035,63 @@
     "/me/reading-plan": {
       "get": {
         "operationId": "MeReadingPlanController_today",
+        "parameters": [
+          {
+            "description": "Your subscription to open. Defaults to your newest active plan.",
+            "in": "query",
+            "name": "subscriptionId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Current reading for a selected plan, or the member's newest active plan. References only, no scripture text.",
+        "tags": [
+          "reading-plans"
+        ]
+      }
+    },
+    "/me/reading-plan/activity": {
+      "get": {
+        "operationId": "MeReadingPlanController_activity",
         "parameters": [],
         "responses": {
           "200": {
@@ -18073,13 +18130,58 @@
             "access-token": []
           }
         ],
-        "summary": "Today's reading for the current member, or null when they have not chosen a plan. References only, no scripture text.",
+        "summary": "Your reading effort across every plan: a 12-week calendar, days read and estimated time",
         "tags": [
           "reading-plans"
         ]
       }
     },
     "/me/reading-plan/subscriptions": {
+      "get": {
+        "operationId": "MeReadingPlanController_subscriptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "All your reading plans and progress, including paused and completed plans",
+        "tags": [
+          "reading-plans"
+        ]
+      },
       "post": {
         "operationId": "MeReadingPlanController_subscribe",
         "parameters": [],
@@ -18130,7 +18232,7 @@
             "access-token": []
           }
         ],
-        "summary": "Start a plan. Any active plan is paused, never deleted.",
+        "summary": "Start or resume a plan while keeping your other plans active.",
         "tags": [
           "reading-plans"
         ]

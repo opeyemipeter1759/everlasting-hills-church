@@ -1,10 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReadingTrack } from '@prisma/client';
-import { READING_INTENSITIES, type ReadingIntensity } from '../reading-intensity';
+import {
+  READING_INTENSITIES,
+  type ReadingIntensity,
+} from '../reading-intensity';
 import {
   IsEnum,
   IsIn,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   Max,
@@ -12,13 +16,28 @@ import {
   Min,
 } from 'class-validator';
 
+export class MyReadingPlanQueryDto {
+  @ApiPropertyOptional({
+    description:
+      'Your subscription to open. Defaults to your newest active plan.',
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(64)
+  subscriptionId?: string;
+}
+
 export class SubscribeDto {
   @ApiProperty({ description: 'Plan to read, from GET /reading-plans' })
   @IsString()
   @MaxLength(64)
   planId!: string;
 
-  @ApiPropertyOptional({ example: 'WEB', description: 'Defaults to the default translation' })
+  @ApiPropertyOptional({
+    example: 'WEB',
+    description: 'Defaults to the default translation',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(16)
@@ -34,7 +53,11 @@ export class SubscribeDto {
   @MaxLength(64)
   timezone?: string;
 
-  @ApiPropertyOptional({ minimum: 0, maximum: 23, description: 'Local hour for a reminder' })
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 23,
+    description: 'Local hour for a reminder',
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -76,7 +99,8 @@ export class ListPlansQueryDto {
 
   @ApiPropertyOptional({
     enum: [...READING_INTENSITIES],
-    description: 'Daily reading load: LOW up to 5 minutes, MEDIUM 6–15 minutes, HIGH over 15 minutes.',
+    description:
+      'Daily reading load: LOW up to 5 minutes, MEDIUM 6–15 minutes, HIGH over 15 minutes.',
   })
   @IsOptional()
   @IsIn(READING_INTENSITIES)

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { BookOpen, Check, ChevronRight, Flame } from "lucide-react";
-import { useTodayReading } from "@/lib/api/reading-plan";
+import { readingHref, useReadingSubscriptions, useTodayReading } from "@/lib/api/reading-plan";
 import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle, muted, linkCl } from "../member-home/tokens";
 
 /**
@@ -12,13 +12,14 @@ import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle, muted, linkCl } from "
  * The whole feature is one loop: open the dashboard, see today's reading, read
  * it, mark it done, come back tomorrow. This card is the first step of that
  * loop, so it carries a reference and a promise of how long it takes, and
- * nothing else. Scripture text loads on the reading screen, which is why the
- * dashboard query stays one small request.
+ * nothing else. Scripture text loads on the reading screen; the dashboard only
+ * requests plan references and the member's lightweight progress summaries.
  */
 export default function TodayReadingCard() {
-  const { data, isLoading } = useTodayReading();
+  const { data, isLoading, isError, refetch } = useTodayReading();
+  const { data: subscriptions, isLoading: plansLoading, isError: plansError, refetch: retryPlans } = useReadingSubscriptions();
 
-  if (isLoading) {
+  if (isLoading || plansLoading) {
     return (
       <section className={`${card} p-5`}>
         <div className="h-4 w-32 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
@@ -26,6 +27,13 @@ export default function TodayReadingCard() {
         <div className="mt-4 h-9 w-36 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5" />
       </section>
     );
+  }
+
+  if (isError || plansError) {
+    return <section className={`${card} p-5`}><h3 className={cardTitle}>Your Bible plans</h3><p role="alert" className={`mt-3 text-sm ${muted}`}>
+      Could not load your reading progress.{" "}
+      <button type="button" onClick={() => { refetch(); retryPlans(); }} className={`${linkCl} min-h-11`}>Try again</button>
+    </p></section>;
   }
 
   // No plan yet. An invitation, not an empty state: this is the moment the
@@ -38,27 +46,29 @@ export default function TodayReadingCard() {
             <BookOpen size={15} className={iconCl} aria-hidden="true" />
           </span>
           <div>
-            <p className={kicker}>Daily scripture</p>
-            <h3 className={cardTitle}>Start a reading plan</h3>
+            <p className={kicker}>Bible plans</p>
+            <h3 className={cardTitle}>{subscriptions?.length ? "Your reading journey" : "Start a reading plan"}</h3>
           </div>
         </div>
         <div className="px-5 py-5">
           <p className={`text-sm ${muted}`}>
-            A passage a day, matched to where you are. Nothing to fall behind on: your plan moves
-            when you read, not when the calendar does.
+            {subscriptions?.length
+              ? "Your progress is saved. Revisit a finished plan, resume a paused one, or start something new."
+              : "Find a rhythm that fits your life. Read one plan or several together, with your progress saved for each."}
           </p>
           <Link
-            href="/dashboard/reading/plans"
+            href={subscriptions?.length ? "/dashboard/reading/overview" : "/dashboard/reading/plans"}
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5"
           >
-            Choose a plan <ChevronRight size={15} />
+            {subscriptions?.length ? "View your progress" : "Choose a plan"} <ChevronRight size={15} />
           </Link>
         </div>
       </section>
     );
   }
 
-  const { day, currentDayIndex, plan, currentStreak, completedToday, completedDays } = data;
+  const { day, subscriptionId, currentDayIndex, plan, currentStreak, completedToday, completedDays } = data;
+  const otherPlans = (subscriptions ?? []).filter((subscription) => subscription.status === "ACTIVE" && subscription.subscriptionId !== subscriptionId);
 
   return (
     <section className={`${card} overflow-hidden`}>
@@ -126,10 +136,10 @@ export default function TodayReadingCard() {
 
         <div className="mt-4 flex flex-wrap items-center gap-2.5">
           <Link
-            href="/dashboard/reading"
+            href={readingHref(subscriptionId)}
             className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5"
           >
-            {completedToday ? "Read again" : "Read now"} <ChevronRight size={15} />
+            {completedToday ? "Keep reading" : "Read now"} <ChevronRight size={15} />
           </Link>
 
           {completedToday && (
@@ -139,9 +149,24 @@ export default function TodayReadingCard() {
           )}
 
           <Link href="/dashboard/reading/plans" className={`${linkCl} ml-auto`}>
-            Change plan
+            Add a plan
           </Link>
         </div>
+      </div>
+      <div className={`px-5 py-4 border-t border-gray-100 dark:border-white/10`}>
+        {otherPlans.length > 0 && <div className="mb-3 space-y-2">
+          <p className={`${kicker} mb-2`}>Also reading</p>
+          {otherPlans.slice(0, 2).map((subscription) => (
+            <Link key={subscription.subscriptionId} href={readingHref(subscription.subscriptionId)} className="flex min-h-11 items-center gap-3 rounded-xl bg-[#FFF4F6]/60 px-3 py-2.5 transition-colors hover:bg-[#FFE8ED] dark:bg-white/[0.03] dark:hover:bg-white/[0.07]">
+              <BookOpen size={15} aria-hidden="true" className="shrink-0 text-[#87102C] dark:text-[#FFB3C1]" />
+              <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#111] dark:text-white">{subscription.plan.title}</p><p className={`mt-0.5 text-xs ${muted}`}>{subscription.completedDays} of {subscription.plan.durationDays} days read</p></div>
+              <ChevronRight size={15} aria-hidden="true" className="shrink-0 text-gray-400" />
+            </Link>
+          ))}
+        </div>}
+        <Link href="/dashboard/reading/overview" className={`${linkCl} inline-flex min-h-11 items-center gap-1.5`}>
+          View all plans and progress <ChevronRight size={13} aria-hidden="true" />
+        </Link>
       </div>
     </section>
   );

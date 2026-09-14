@@ -70,18 +70,24 @@ export class PlanProgressRepository {
     return count > 0;
   }
 
-  async countCompleted(subscriptionId: string, tx?: Prisma.TransactionClient): Promise<number> {
+  async countCompleted(
+    subscriptionId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<number> {
     const client = tx ?? this.prisma;
     return client.memberPlanProgress.count({ where: { subscriptionId } });
   }
 
   /** Day indexes already completed, for rendering ticks against a day list. */
-  async completedDayIndexes(subscriptionId: string, limit = 400): Promise<number[]> {
-    const rows = await this.prisma.memberPlanProgress.findMany({
+  async completedDayIndexes(
+    subscriptionId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<number[]> {
+    const client = tx ?? this.prisma;
+    const rows = await client.memberPlanProgress.findMany({
       where: { subscriptionId },
       select: { dayIndex: true },
       orderBy: { dayIndex: 'asc' },
-      take: limit,
     });
     return rows.map((row) => row.dayIndex);
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -15,7 +15,10 @@ import {
   PenLine,
 } from "lucide-react";
 import WordTabs from "./WordTabs";
+import ReadingPlanSelector from "./ReadingPlanSelector";
+import { ChapterPassage } from "./ChapterPassage";
 import {
+  readingHref,
   useCompleteDay,
   useCompletedDays,
   usePassage,
@@ -32,15 +35,18 @@ import {
 export default function ReadingScreen() {
   const router = useRouter();
   const params = useSearchParams();
+  const selectedSubscriptionId = params.get("subscription") || undefined;
+  const [pinnedSubscriptionId, setPinnedSubscriptionId] = useState<string>();
   const parsedDay = Number(params.get("day"));
-  const { data, isLoading, isError, refetch } = useTodayReading();
+  const querySubscriptionId = selectedSubscriptionId ?? pinnedSubscriptionId;
+  const { data, isLoading, isError, refetch } = useTodayReading(querySubscriptionId);
   const requestedDay = Number.isInteger(parsedDay) && parsedDay > 0 &&
     parsedDay <= (data?.plan.durationDays ?? 0) ? parsedDay : null;
   const complete = useCompleteDay();
   const uncomplete = useUncompleteDay();
   const setTranslation = useSetTranslation();
   const { data: translations } = useTranslations();
-  const { data: completed } = useCompletedDays(data?.subscriptionId);
+  const { data: completed, isLoading: completedLoading, isError: completedError, refetch: retryCompleted } = useCompletedDays(data?.subscriptionId);
 
   const [justChanged, setJustChanged] = useState<{ subscriptionId: string; dayIndex: number; done: boolean } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -52,6 +58,18 @@ export default function ReadingScreen() {
     browsing ? data?.plan.id : undefined,
     browsing ? requestedDay : undefined,
   );
+
+  // Pin the selected plan so finishing it cannot silently open another plan.
+  useEffect(() => {
+    if (selectedSubscriptionId) {
+      setPinnedSubscriptionId(undefined);
+      return;
+    }
+    if (data?.subscriptionId && !selectedSubscriptionId) {
+      setPinnedSubscriptionId(data.subscriptionId);
+      router.replace(readingHref(data.subscriptionId, requestedDay ?? undefined), { scroll: false });
+    }
+  }, [data?.subscriptionId, selectedSubscriptionId, requestedDay, router]);
 
   if (isLoading) {
     return (
@@ -79,16 +97,16 @@ export default function ReadingScreen() {
     if (next < 1 || next > plan.durationDays) return;
     setJustChanged(null);
     setActionError(null);
-    router.push(next === currentDayIndex ? "/dashboard/reading" : `/dashboard/reading?day=${next}`);
+    router.push(readingHref(subscriptionId, next));
   }
 
   async function markRead() {
     setActionError(null);
+    // Keep this passage open while its own plan advances, including the last day.
+    router.replace(readingHref(subscriptionId, dayIndex), { scroll: false });
     try {
       await complete.mutateAsync({ subscriptionId, dayIndex });
       setJustChanged({ subscriptionId, dayIndex, done: true });
-      // Stay on the passage just read even when the server advances the plan.
-      router.replace(`/dashboard/reading?day=${dayIndex}`, { scroll: false });
     } catch (cause) {
       setActionError(cause instanceof Error ? cause.message : "Could not save your reading. Please try again.");
     }
@@ -118,7 +136,7 @@ export default function ReadingScreen() {
   return (
     <div className="mx-auto min-w-0 max-w-full break-words py-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:py-6 md:px-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <WordTabs />
+        <WordTabs subscriptionId={subscriptionId} />
         <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 sm:w-auto">
           {currentStreak > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
@@ -147,6 +165,19 @@ export default function ReadingScreen() {
         </div>
       </div>
       {setTranslation.isError && <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">Could not change translation. Please try again.</p>}
+
+      <ReadingPlanSelector subscriptionId={subscriptionId} />
+      {data.status === "COMPLETED" && (
+        <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
+          Plan complete. You have read all {plan.durationDays} days. You can revisit any passage below.
+        </p>
+      )}
+      {data.status === "PAUSED" && (
+        <p className="mt-4 text-sm text-gray-600 dark:text-white/60">
+          This plan is paused.{" "}
+          <Link href="/dashboard/reading/overview" className="font-semibold text-[#87102C] underline dark:text-[#FFB3C1]">Resume it from your overview</Link> whenever you are ready.
+        </p>
+      )}
 
       {/* Day stepper. Every established plan has one; theirs walks the calendar,
           this one walks the plan, because a plan here advances when somebody
@@ -223,7 +254,7 @@ export default function ReadingScreen() {
               {completedDays} of {plan.durationDays} days read
             </p>
             <Link
-              href="/dashboard/reading/schedule"
+              href={readingHref(subscriptionId, undefined, "schedule")}
               className="inline-flex min-h-11 items-center gap-1 text-xs font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
             >
               <CalendarDays size={11} /> Whole plan
@@ -269,6 +300,12 @@ export default function ReadingScreen() {
 
       <WriteAboutThis day={day} />
       {actionError && <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">{actionError}</p>}
+      {completedError && (
+        <p role="alert" className="mt-4 text-sm text-red-600 dark:text-red-400">
+          Could not check which days you have read.{" "}
+          <button type="button" onClick={() => retryCompleted()} className="min-h-11 font-semibold underline">Try again</button>
+        </p>
+      )}
 
       <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-6 dark:border-white/10">
         {isDone ? (
@@ -279,7 +316,7 @@ export default function ReadingScreen() {
             <button
               type="button"
               onClick={undo}
-              disabled={uncomplete.isPending}
+              disabled={!querySubscriptionId || uncomplete.isPending || complete.isPending || completedLoading || completedError}
               className="min-h-11 px-2 text-sm font-semibold text-gray-500 hover:text-gray-700 disabled:opacity-50 dark:text-white/50 dark:hover:text-white"
             >
               {uncomplete.isPending ? "Undoing..." : "Undo"}
@@ -294,11 +331,21 @@ export default function ReadingScreen() {
               </button>
             )}
           </>
+        ) : data.status === "PAUSED" ? (
+          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+            <p className="text-sm text-gray-600 dark:text-white/60">Resume this plan before tracking another reading.</p>
+            <Link
+              href="/dashboard/reading/overview"
+              className="inline-flex min-h-11 items-center rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#6E0C24]"
+            >
+              Resume plan
+            </Link>
+          </div>
         ) : (
           <button
             type="button"
             onClick={markRead}
-            disabled={complete.isPending}
+            disabled={!querySubscriptionId || complete.isPending || uncomplete.isPending || completedLoading || completedError}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-60 sm:w-auto"
           >
             {complete.isPending ? (
@@ -379,13 +426,16 @@ function NoPlan({ finished }: { finished?: boolean }) {
         >
           {finished ? "Start another plan" : "Choose a plan"}
         </Link>
+        <Link href="/dashboard/reading/overview" className="mt-3 flex min-h-11 items-center justify-center text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
+          View your plans and progress
+        </Link>
       </div>
     </div>
   );
 }
 
 function Portion({ portion, translation }: { portion: DayPortion; translation: string }) {
-  const { data, isLoading, error } = usePassage(
+  const { data, isLoading, error, refetch } = usePassage(
     portion.startVerseId,
     portion.endVerseId,
     translation,
@@ -402,9 +452,10 @@ function Portion({ portion, translation }: { portion: DayPortion; translation: s
 
   if (error || !data) {
     return (
-      <p className="rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-400 dark:border-white/10 dark:text-white/40">
+      <div role="alert" className="rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-500 dark:border-white/10 dark:text-white/60">
         Could not load this passage. Check your connection and try again.
-      </p>
+        <button type="button" onClick={() => refetch()} className="ml-2 min-h-11 font-semibold text-[#87102C] underline dark:text-[#FFB3C1]">Try again</button>
+      </div>
     );
   }
 
@@ -419,18 +470,7 @@ function Portion({ portion, translation }: { portion: DayPortion; translation: s
         )}
       </div>
 
-      {/* Verse numbers sit inline and small: present enough to find a verse,
-          quiet enough to read a paragraph without tripping over them. */}
-      <div className="space-y-2 text-[15px] leading-relaxed text-gray-800 dark:text-white/80">
-        {data.verses.map((verse) => (
-          <p key={verse.verseId}>
-            <span className="mr-1.5 align-super text-[10px] font-bold text-[#87102C]/70 dark:text-[#FFB3C1]/70">
-              {verse.verse}
-            </span>
-            {verse.text}
-          </p>
-        ))}
-      </div>
+      <ChapterPassage verses={data.verses} />
     </section>
   );
 }
