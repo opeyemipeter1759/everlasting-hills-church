@@ -9,7 +9,18 @@
 // Email clients need a real, publicly reachable URL; there's no local-asset
 // embedding. Set FRONTEND_URL in .env so this resolves correctly in production.
 const FRONTEND_URL = (process.env.FRONTEND_URL ?? 'https://www.everlastinghills.church').replace(/\/$/, '');
-const LOGO_URL = `${FRONTEND_URL}/logo.png`;
+const DEFAULT_LOGO_URL = `${FRONTEND_URL}/logo.png`;
+
+// Admins can swap the header logo from the Emails page (EmailSettings.logoUrl).
+// Templates render synchronously from many places, so the override lives here
+// as module state: EmailsService loads it on boot and updates it on save.
+let logoUrlOverride: string | null = null;
+export function setEmailLogoUrl(url: string | null | undefined): void {
+  logoUrlOverride = url?.trim() || null;
+}
+export function getEmailLogoUrl(): string {
+  return logoUrlOverride ?? DEFAULT_LOGO_URL;
+}
 
 // House style for every email: Arial, 11pt body copy. Web fonts aren't
 // reliable across email clients (Outlook desktop strips them outright), and
@@ -54,7 +65,7 @@ export function renderEmailLayout({ heading, bodyHtml, cta }: LayoutArgs): strin
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto">
         <tr>
           <td style="padding-right:14px;vertical-align:middle;width:52px;height:52px;text-align:center">
-            <img src="${LOGO_URL}" alt="Everlasting Hills Church" style="display:block;border:0;border-radius:8px;max-width:52px;max-height:52px;width:auto;height:auto;object-fit:contain;margin:0 auto" />
+            <img src="${getEmailLogoUrl()}" alt="Everlasting Hills Church" style="display:block;border:0;border-radius:8px;max-width:52px;max-height:52px;width:auto;height:auto;object-fit:contain;margin:0 auto" />
           </td>
           <td style="vertical-align:middle;text-align:left">
             <p style="font-family:${FONT};color:#fff;margin:0 0 3px;font-size:18px;text-transform:uppercase;font-weight:700">Everlasting Hills</p>

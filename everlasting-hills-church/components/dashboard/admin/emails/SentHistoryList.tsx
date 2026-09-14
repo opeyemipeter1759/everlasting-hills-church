@@ -1,4 +1,4 @@
-import { Send, Users } from "lucide-react";
+import { Paperclip, Send, Users } from "lucide-react";
 import { formatDateTime } from "../announcement/format";
 import type { EmailSend } from "@/lib/api/emails";
 import { Pagination } from "@/components/ui/navigation/Pagination";
@@ -62,6 +62,15 @@ export default function SentHistoryList({
               >
                 <td className={TD}>
                   <p className="font-semibold text-gray-900 dark:text-white truncate max-w-xs">{s.subject}</p>
+                  {s.attachments && s.attachments.length > 0 && (
+                    <span
+                      className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-gray-400 dark:text-white/35"
+                      title={s.attachments.map((a) => a.name).join(", ")}
+                    >
+                      <Paperclip size={11} />
+                      {s.attachments.length} {s.attachments.length === 1 ? "attachment" : "attachments"}
+                    </span>
+                  )}
                 </td>
                 <td className={TD}>
                   <span className="text-xs text-gray-500 dark:text-white/50">{s.audienceLabel}</span>

@@ -943,6 +943,7 @@ model Tenant {
   Announcement           Announcement[]
   EmailTemplate          EmailTemplate[]
   EmailSend              EmailSend[]
+  EmailSettings          EmailSettings?
   Course                 Course[]
   CommunityPost          CommunityPost[]
   AttendanceRecord       AttendanceRecord[]
@@ -1660,14 +1661,28 @@ model EmailSend {
   templateId    String?
   subject       String
   body          String
-  audienceMode  String // ALL | UNIT | ROLE | SPECIFIC
+  audienceMode  String // ALL | WORKERS | UNIT | ROLE | SPECIFIC
   audienceLabel String // human-readable snapshot, e.g. "Unit: Media Team"
   recipients    Int      @default(0)
+  /// Files sent along with this email — [{ name, url }] pointing at R2. Kept
+  /// for the send history; the mailer fetches them by URL at send time.
+  attachments   Json?
   sentById      String?
   createdAt     DateTime @default(now())
   Tenant        Tenant   @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, createdAt])
+}
+
+/// Branding shared by every outgoing email (one row per tenant). Only the
+/// header logo for now; null falls back to the site's own /logo.png.
+model EmailSettings {
+  id        String   @id
+  tenantId  String   @unique
+  logoUrl   String?
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy String?
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

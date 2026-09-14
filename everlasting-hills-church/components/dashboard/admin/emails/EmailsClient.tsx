@@ -15,6 +15,7 @@ import type { EmailTemplate } from "@/lib/api/emails";
 import EmailTemplateList from "./EmailTemplateList";
 import SentHistoryList from "./SentHistoryList";
 import SendEmailModal from "./SendEmailModal";
+import EmailLogoCard from "./EmailLogoCard";
 
 export default function EmailsClient() {
   const [tab, setTab] = useState<"TEMPLATES" | "SENT">("TEMPLATES");
@@ -45,6 +46,8 @@ export default function EmailsClient() {
           <Plus size={16} /> New Template
         </Link>
       </div>
+
+      <EmailLogoCard />
 
       <div className="flex items-center gap-1 border-b border-gray-200 dark:border-white/10">
         {(["TEMPLATES", "SENT"] as const).map((t) => (

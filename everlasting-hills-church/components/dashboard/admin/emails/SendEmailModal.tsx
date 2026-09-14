@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { Loader2, Search, Send, Users } from "lucide-react";
+import { FileText, ImageIcon, Loader2, Paperclip, Search, Send, Users, X } from "lucide-react";
 import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
 import { useUnitsList } from "@/lib/api";
 import { usePeople, type PersonRow } from "@/lib/api/people";
@@ -8,8 +8,9 @@ import { ROLE_LABEL } from "@/components/dashboard/admin/people/peopleShared";
 import ResultList from "@/components/dashboard/admin/people/assign-members-dialog/ResultList";
 import { textLength } from "@/components/dashboard/reports/report-text-utils";
 import { SkeletonBlock } from "@/components/ui/display/SkeletonBlock";
-import { EMPTY_AUDIENCE } from "@/lib/api/emails";
-import type { AudienceFilter, AudienceMode, EmailTemplate, RecipientPreview } from "@/lib/api/emails";
+import { EMPTY_AUDIENCE, MAX_EMAIL_ATTACHMENTS, uploadEmailFile } from "@/lib/api/emails";
+import type { AudienceFilter, AudienceMode, EmailAttachment, EmailTemplate, RecipientPreview } from "@/lib/api/emails";
+import { showToast } from "@/components/ui/toast/toast";
 
 const ReportEditor = dynamic(() => import("@/components/dashboard/reports/ReportEditor"), {
   ssr: false,
@@ -18,6 +19,7 @@ const ReportEditor = dynamic(() => import("@/components/dashboard/reports/Report
 
 const MODES: { value: AudienceMode; label: string }[] = [
   { value: "ALL", label: "All members" },
+  { value: "WORKERS", label: "All workers" },
   { value: "UNIT", label: "A unit" },
   { value: "ROLE", label: "A role" },
   { value: "SPECIFIC", label: "Specific people" },
@@ -35,7 +37,13 @@ export default function SendEmailModal({
   open: boolean;
   target: EmailTemplate | "BLANK" | null;
   onClose: () => void;
-  onSend: (args: { templateId?: string; subject: string; body: string; audience: AudienceFilter }) => void;
+  onSend: (args: {
+    templateId?: string;
+    subject: string;
+    body: string;
+    audience: AudienceFilter;
+    attachments?: EmailAttachment[];
+  }) => void;
   sending: boolean;
   preview: RecipientPreview | undefined;
   onPreview: (audience: AudienceFilter) => void;
@@ -45,6 +53,9 @@ export default function SendEmailModal({
   const [audience, setAudience] = useState<AudienceFilter>(EMPTY_AUDIENCE);
   const [search, setSearch] = useState("");
   const [selectedPeople, setSelectedPeople] = useState<PersonRow[]>([]);
+  const [attachments, setAttachments] = useState<EmailAttachment[]>([]);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
 
   const { data: units } = useUnitsList();
   const peopleQuery = usePeople({ search, limit: 12, sortBy: "name", sortOrder: "asc" });
@@ -57,6 +68,7 @@ export default function SendEmailModal({
     setSubject(isTemplate ? target.subject : "");
     setBody(isTemplate ? target.body : "");
     setAudience(EMPTY_AUDIENCE);
+    setAttachments([]);
     setSearch("");
     setSelectedPeople([]);
   }, [open, target, isTemplate]);
@@ -84,6 +96,28 @@ export default function SendEmailModal({
     });
   }
 
+  async function handleAttachmentPicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (files.length === 0) return;
+    const room = MAX_EMAIL_ATTACHMENTS - attachments.length;
+    if (room <= 0) {
+      showToast.error(`You can attach up to ${MAX_EMAIL_ATTACHMENTS} files`);
+      return;
+    }
+    setUploadingAttachment(true);
+    try {
+      const uploaded: EmailAttachment[] = [];
+      for (const file of files.slice(0, room)) uploaded.push(await uploadEmailFile(file));
+      setAttachments((prev) => [...prev, ...uploaded]);
+      if (files.length > room) showToast.error(`Only the first ${room} added — ${MAX_EMAIL_ATTACHMENTS} files max`);
+    } catch (err) {
+      showToast.error((err as Error).message || "Couldn't upload that file");
+    } finally {
+      setUploadingAttachment(false);
+    }
+  }
+
   const canSubmit = useMemo(() => {
     if (subject.trim().length < 2 || textLength(body) < 2) return false;
     if (audience.mode === "UNIT" && !audience.unitId) return false;
@@ -106,13 +140,14 @@ export default function SendEmailModal({
           </button>
           <button
             type="button"
-            disabled={!canSubmit || sending}
+            disabled={!canSubmit || sending || uploadingAttachment}
             onClick={() =>
               onSend({
                 templateId: isTemplate ? target.id : undefined,
                 subject,
                 body,
                 audience,
+                attachments: attachments.length ? attachments : undefined,
               })
             }
             className={btnPrimary}
@@ -140,9 +175,60 @@ export default function SendEmailModal({
 
         <div>
           <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">
+            Attachments
+          </label>
+          <input
+            ref={attachmentInputRef}
+            type="file"
+            multiple
+            accept="image/*,.pdf,.doc,.docx"
+            onChange={handleAttachmentPicked}
+            className="hidden"
+          />
+          {attachments.length > 0 && (
+            <ul className="mb-2 space-y-1.5">
+              {attachments.map((a) => (
+                <li
+                  key={a.url}
+                  className="flex items-center gap-2 rounded-xl border border-[#E7CDD3] dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-xs text-gray-700 dark:text-white/70"
+                >
+                  {/\.(png|jpe?g|gif|webp|avif|bmp|svg)$/i.test(a.name) ? (
+                    <ImageIcon size={14} className="shrink-0 text-[#87102C] dark:text-[#e8768a]" />
+                  ) : (
+                    <FileText size={14} className="shrink-0 text-[#87102C] dark:text-[#e8768a]" />
+                  )}
+                  <span className="min-w-0 flex-1 truncate">{a.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAttachments((prev) => prev.filter((x) => x.url !== a.url))}
+                    aria-label={`Remove ${a.name}`}
+                    className="rounded-md p-0.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-white"
+                  >
+                    <X size={13} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button
+            type="button"
+            onClick={() => attachmentInputRef.current?.click()}
+            disabled={uploadingAttachment || attachments.length >= MAX_EMAIL_ATTACHMENTS}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-[#E7CDD3] dark:border-white/15 px-3 py-2 text-xs font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors disabled:opacity-50"
+          >
+            {uploadingAttachment ? <Loader2 size={14} className="animate-spin" /> : <Paperclip size={14} />}
+            {uploadingAttachment ? "Uploading…" : "Attach images or files"}
+            <span className="font-normal text-gray-400 dark:text-white/35">
+              ({attachments.length}/{MAX_EMAIL_ATTACHMENTS})
+            </span>
+          </button>
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">
             Send to
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
             {MODES.map((m) => (
               <button
                 key={m.value}

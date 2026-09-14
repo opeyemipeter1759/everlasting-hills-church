@@ -16,6 +16,7 @@ export function textLength(html: string): number {
 /** Shared with the read-only report view so edited and displayed content look identical. */
 export const PROSE_CLASSES =
   "break-words [&_.ProseMirror]:outline-none " +
+  "[&_img]:my-3 [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_img.ProseMirror-selectednode]:ring-2 [&_img.ProseMirror-selectednode]:ring-[#87102C]/50 " +
   "[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none [&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left [&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0 [&_.ProseMirror_p.is-editor-empty:first-child::before]:text-gray-400 dark:[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-white/25 [&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] " +
   "[&_h2]:mb-1.5 [&_h2]:mt-3 [&_h2]:text-base [&_h2]:font-bold [&_h2]:text-gray-900 dark:[&_h2]:text-white [&_h2]:first:mt-0 " +
   "[&_p]:my-1.5 [&_p]:first:mt-0 " +

@@ -1,19 +1,20 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
 import { buildEmailBlast } from '../notifications/templates/email-blast.email';
-import { escapeHtml } from '../notifications/templates/layout';
+import { escapeHtml, getEmailLogoUrl, setEmailLogoUrl } from '../notifications/templates/layout';
 import { EmailsRecipientsService } from './emails-recipients.service';
 import { CreateEmailTemplateDto } from './dto/create-email-template.dto';
 import { UpdateEmailTemplateDto } from './dto/update-email-template.dto';
 import { SendEmailDto } from './dto/send-email.dto';
+import { UpdateEmailSettingsDto } from './dto/update-email-settings.dto';
 import type { Env } from '../config/env.validation';
 
 
 @Injectable()
-export class EmailsService {
+export class EmailsService implements OnModuleInit {
   private readonly logger = new Logger(EmailsService.name);
   private readonly tenantId: string;
   private readonly frontendUrl: string;
@@ -26,6 +27,35 @@ export class EmailsService {
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
     this.frontendUrl = (config.get('FRONTEND_URL', { infer: true }) as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:3000';
+  }
+
+  /** Push the saved header logo into the shared layout so every template —
+   * not just admin blasts — renders with it from the first email after boot. */
+  async onModuleInit() {
+    try {
+      const row = await this.prisma.emailSettings.findUnique({ where: { tenantId: this.tenantId } });
+      setEmailLogoUrl(row?.logoUrl);
+    } catch (err) {
+      this.logger.warn(`Could not load email settings: ${(err as Error).message}`);
+    }
+  }
+
+  // ── Settings (branding) ────────────────────────────────────────────────
+
+  async getSettings() {
+    const row = await this.prisma.emailSettings.findUnique({ where: { tenantId: this.tenantId } });
+    return { logoUrl: row?.logoUrl ?? null, effectiveLogoUrl: getEmailLogoUrl() };
+  }
+
+  async updateSettings(dto: UpdateEmailSettingsDto, updatedBy: string | null) {
+    const logoUrl = dto.logoUrl?.trim() || null;
+    await this.prisma.emailSettings.upsert({
+      where: { tenantId: this.tenantId },
+      create: { id: randomUUID(), tenantId: this.tenantId, logoUrl, updatedBy },
+      update: { logoUrl, updatedBy },
+    });
+    setEmailLogoUrl(logoUrl);
+    return this.getSettings();
   }
 
   // ── Templates ──────────────────────────────────────────────────────────
@@ -98,7 +128,11 @@ export class EmailsService {
     for (let i = 0; i < rows.length; i += BATCH) {
       const batch = rows.slice(i, i + BATCH);
       await Promise.all(
-        batch.map((r) => this.mail.dispatch(buildEmailBlast({ email: r.email, subject: dto.subject, body: dto.body }))),
+        batch.map((r) =>
+          this.mail.dispatch(
+            buildEmailBlast({ email: r.email, subject: dto.subject, body: dto.body, attachments: dto.attachments }),
+          ),
+        ),
       );
       if (i + BATCH < rows.length) {
         await new Promise((r) => setTimeout(r, 1_100));
@@ -117,6 +151,7 @@ export class EmailsService {
         audienceMode: dto.audience.mode,
         audienceLabel,
         recipients: rows.length,
+        attachments: dto.attachments?.length ? dto.attachments.map((a) => ({ name: a.name, url: a.url })) : undefined,
         sentById,
       },
     });
