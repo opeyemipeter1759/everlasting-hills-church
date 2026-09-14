@@ -12,7 +12,7 @@ import { api } from "@/lib/api/request";
  * server is idempotent in both directions so a failed one can simply roll back.
  */
 
-export type ArticleStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type ArticleStatus = "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "ARCHIVED";
 
 export interface ArticleAuthor {
   id: string;
@@ -35,6 +35,11 @@ export interface ArticleCard {
 }
 
 export interface Article extends ArticleCard {
+  revision: number;
+  canReview: boolean;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
   body: string;
   status: ArticleStatus;
   startVerseId: number | null;
@@ -46,6 +51,9 @@ export interface Article extends ArticleCard {
 }
 
 export interface MyArticle {
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  reviewNote: string | null;
   id: string;
   slug: string;
   title: string;
@@ -66,6 +74,42 @@ export interface ArticleFeed {
 
 const FEED_KEY = ["articles", "feed"] as const;
 const MINE_KEY = ["articles", "mine"] as const;
+
+export function useArticleReviewAccess() {
+  return useQuery({
+    queryKey: ["articles", "review", "access"],
+    queryFn: () => api.get<{ canReview: boolean; pending: number }>("/articles/review/access"),
+    staleTime: 30_000,
+  });
+}
+
+export interface PendingArticle {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  scriptureLabel: string | null;
+  readingMinutes: number;
+  submittedAt: string | null;
+  Author: ArticleAuthor | null;
+}
+
+export function useArticleReviewQueue(enabled: boolean) {
+  return useQuery({
+    queryKey: ["articles", "review", "queue"],
+    queryFn: () => api.get<PendingArticle[]>("/articles/review"),
+    enabled,
+  });
+}
+
+export function useReviewArticle() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, decision, ...input }: { id: string; revision: number; decision: "approve" | "request-changes"; note?: string }) =>
+      api.post<{ id: string; slug: string; status: ArticleStatus }>(`/articles/${id}/${decision}`, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["articles"] }),
+  });
+}
 
 export function useArticleFeed(page = 1, authorId?: string) {
   return useQuery({
@@ -112,6 +156,7 @@ export function useCreateArticle() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: FEED_KEY });
       qc.invalidateQueries({ queryKey: MINE_KEY });
+      qc.invalidateQueries({ queryKey: ["articles", "review"] });
     },
   });
 }
@@ -124,6 +169,7 @@ export function useCreateArticle() {
  * undefined keys from the body, so the two really do reach the server apart.
  */
 export interface ArticleEdit {
+  revision?: number;
   id: string;
   title?: string;
   body?: string;
@@ -142,6 +188,7 @@ export function useUpdateArticle() {
       qc.invalidateQueries({ queryKey: FEED_KEY });
       qc.invalidateQueries({ queryKey: MINE_KEY });
       qc.invalidateQueries({ queryKey: ["articles", "one"] });
+      qc.invalidateQueries({ queryKey: ["articles", "review"] });
     },
   });
 }
@@ -153,6 +200,7 @@ export function useDeleteArticle() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: FEED_KEY });
       qc.invalidateQueries({ queryKey: MINE_KEY });
+      qc.invalidateQueries({ queryKey: ["articles", "review"] });
     },
   });
 }

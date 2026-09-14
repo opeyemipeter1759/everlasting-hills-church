@@ -23,7 +23,7 @@ export function HeroCard({ photoUrl, displayName, initials, role, bio, tenure, j
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, delay: 0.08, ease }}
       aria-labelledby="profile-hero-name"
-      className="lg:col-span-2 relative overflow-hidden rounded-2xl"
+      className="lg:col-span-2 relative min-w-0 overflow-hidden rounded-[1.75rem]"
       style={{ background: "linear-gradient(155deg, #2a0410 0%, #4a0819 35%, #87102C 75%, #a01535 100%)" }}
     >
       <div
@@ -36,15 +36,15 @@ export function HeroCard({ photoUrl, displayName, initials, role, bio, tenure, j
       <div aria-hidden="true" className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-3xl pointer-events-none" />
       <div aria-hidden="true" className="absolute -bottom-28 -left-16 w-64 h-64 rounded-full bg-amber-300/10 blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 h-full p-7 sm:p-9 lg:p-10 flex flex-col gap-7">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-7">
+      <div className="relative z-10 h-full px-6 py-9 sm:p-9 lg:p-10 flex flex-col gap-8">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-8">
           <HeroAvatar photoUrl={photoUrl} displayName={displayName} initials={initials} />
 
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1 basis-56">
             <p className="text-[10px] tracking-[0.32em] uppercase font-bold text-[#FFB3C1] mb-2">
               Everlasting Hills Church · {role}
             </p>
-            <h2 id="profile-hero-name" className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-[1.1] text-balance">
+            <h2 id="profile-hero-name" className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-[1.1] text-balance break-words">
               {displayName}
             </h2>
             {bio ? (

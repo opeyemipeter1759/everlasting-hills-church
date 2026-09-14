@@ -31,6 +31,13 @@ export async function deletePersonRecords(
     await tx.sermonDirectMessage.deleteMany({
       where: { OR: [{ senderId: memberId }, { recipientId: memberId }] },
     });
+    // Unit chat between a member and their unit lead. Both columns are required
+    // and RESTRICT, so the thread goes with either party. A reply elsewhere
+    // that pointed at one of these messages keeps its own text: replyToId is
+    // ON DELETE SET NULL.
+    await tx.unitMessage.deleteMany({
+      where: { OR: [{ senderId: memberId }, { recipientId: memberId }] },
+    });
 
     // Contact-log authors reference Member.id, not Profile.id.
     await tx.followUpContactLog.deleteMany({ where: { byId: memberId } });

@@ -7,6 +7,10 @@ import { formatDate } from "./ArticleMeta";
 import { useMyArticles, type ArticleStatus, type MyArticle } from "@/lib/api/articles";
 
 const STATUS_STYLE: Record<ArticleStatus, { label: string; className: string }> = {
+  PENDING_REVIEW: {
+    label: "Awaiting approval",
+    className: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  },
   DRAFT: {
     label: "Draft",
     className:
@@ -31,10 +35,11 @@ const STATUS_STYLE: Record<ArticleStatus, { label: string; className: string }> 
  * only evidence a writer gets that anybody is out there.
  */
 export default function MyArticles() {
-  const { data, isLoading } = useMyArticles();
+  const { data, isLoading, error, refetch } = useMyArticles();
   const articles = data ?? [];
 
   const drafts = articles.filter((a) => a.status === "DRAFT");
+  const pending = articles.filter((a) => a.status === "PENDING_REVIEW");
   const published = articles.filter((a) => a.status === "PUBLISHED");
   const archived = articles.filter((a) => a.status === "ARCHIVED");
 
@@ -63,11 +68,16 @@ export default function MyArticles() {
             <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5" />
           ))}
         </div>
+      ) : error ? (
+        <div role="alert" className="mt-8 text-sm text-red-600">
+          Your writing could not be loaded. <button type="button" onClick={() => void refetch()} className="underline">Try again</button>
+        </div>
       ) : articles.length === 0 ? (
         <Empty />
       ) : (
         <div className="mt-8 space-y-8">
           <Section title="Drafts" articles={drafts} />
+          <Section title="Awaiting approval" articles={pending} />
           <Section title="Published" articles={published} />
           <Section title="Archived" articles={archived} />
         </div>
@@ -104,7 +114,7 @@ function Section({ title, articles }: { title: string; articles: MyArticle[] }) 
                     <span
                       className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${status.className}`}
                     >
-                      {status.label}
+                      {article.status === "DRAFT" && article.reviewNote ? "Changes requested" : status.label}
                     </span>
                     {article.publishedAt && <span>{formatDate(article.publishedAt)}</span>}
                     {article.scriptureLabel && <span>{article.scriptureLabel}</span>}
@@ -119,6 +129,9 @@ function Section({ title, articles }: { title: string; articles: MyArticle[] }) 
                       </>
                     )}
                   </p>
+                  {article.status === "DRAFT" && article.reviewNote && (
+                    <p className="mt-2 whitespace-pre-wrap break-words text-xs text-amber-800 dark:text-amber-300">Reviewer: {article.reviewNote}</p>
+                  )}
                 </Link>
 
                 <Link

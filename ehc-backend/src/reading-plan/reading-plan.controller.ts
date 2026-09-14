@@ -29,7 +29,7 @@ export class ReadingPlanController {
   // Shorter than the rest: the catalogue changes when a church forks a plan.
   @Header('Cache-Control', 'private, max-age=300')
   list(@Query() query: ListPlansQueryDto) {
-    return this.catalogue.list(query.track);
+    return this.catalogue.list(query.track, query.intensity);
   }
 
   @Get('reading-plans/:planId')

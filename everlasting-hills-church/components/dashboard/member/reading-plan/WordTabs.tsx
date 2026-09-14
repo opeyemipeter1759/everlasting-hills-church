@@ -20,7 +20,7 @@ export default function WordTabs() {
   const pathname = usePathname();
 
   return (
-    <div className="inline-flex rounded-full border border-gray-200 bg-gray-50 p-1 dark:border-white/10 dark:bg-white/[0.04]">
+    <nav aria-label="Bible plan navigation" className="fixed inset-x-0 bottom-0 z-30 flex border-t border-gray-200 bg-white px-2 pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_12px_rgba(0,0,0,0.04)] dark:border-white/10 dark:bg-gray-950 sm:static sm:inline-flex sm:w-auto sm:rounded-full sm:border sm:bg-gray-50 sm:p-1 sm:shadow-none sm:dark:bg-white/[0.04]">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         // The reading plan chooser lives under /dashboard/reading, so a prefix
@@ -37,17 +37,17 @@ export default function WordTabs() {
             key={tab.href}
             href={tab.href}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
+            className={`inline-flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-bold transition-colors sm:min-h-11 sm:flex-auto sm:flex-row sm:gap-1.5 sm:rounded-full sm:px-3.5 sm:text-xs ${
               active
                 ? "bg-[#87102C] text-white shadow-sm"
                 : "text-gray-500 hover:text-gray-800 dark:text-white/45 dark:hover:text-white"
             }`}
           >
-            <Icon size={13} />
+            <Icon size={16} aria-hidden="true" />
             {tab.label}
           </Link>
         );
       })}
-    </div>
+    </nav>
   );
 }

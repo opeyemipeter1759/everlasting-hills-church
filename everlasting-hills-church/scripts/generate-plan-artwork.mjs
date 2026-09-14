@@ -208,10 +208,208 @@ function theWholeCounsel() {
   );
 }
 
+// ── The familiar shapes ─────────────────────────────────────────────────────
+// Same rule as the first three: each picture is a fact about its plan.
+
+const DAYS_BEFORE_MONTH = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+
+// A year as a wheel: one tick per day, the twelve month starts in gold.
+function bibleInAYear() {
+  const cx = W * 0.62;
+  const cy = H / 2;
+  const ticks = [];
+  for (let d = 0; d < 365; d += 1) {
+    const a = -Math.PI / 2 + (d / 365) * Math.PI * 2;
+    const month = DAYS_BEFORE_MONTH.includes(d);
+    const r1 = month ? 108 : 124;
+    const r2 = month ? 170 : 150;
+    const opacity = month ? 0.95 : 0.16 + (d / 364) * 0.6;
+    ticks.push(
+      `<line x1="${(cx + Math.cos(a) * r1).toFixed(1)}" y1="${(cy + Math.sin(a) * r1).toFixed(1)}" x2="${(cx + Math.cos(a) * r2).toFixed(1)}" y2="${(cy + Math.sin(a) * r2).toFixed(1)}" stroke="${month ? GOLD : CREAM}" stroke-opacity="${opacity.toFixed(2)}" stroke-width="${month ? 2.4 : 1.1}" stroke-linecap="round"/>`,
+    );
+  }
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#year)"/>
+  <circle cx="${cx}" cy="${cy}" r="96" fill="${WINE_DEEP}" fill-opacity="0.45"/>
+  <g>${ticks.join("\n  ")}</g>
+  <circle cx="${cx}" cy="${cy}" r="7" fill="${GOLD}"/>`,
+    `<radialGradient id="year" cx="0.62" cy="0.5" r="0.75">
+    <stop offset="0" stop-color="${WINE}"/>
+    <stop offset="1" stop-color="${WINE_DEEP}"/>
+  </radialGradient>`,
+  );
+}
+
+// Four ridges, each as tall as its section of the Old Testament has chapters:
+// Law 187, History 249, Poetry 243, Prophets 250 — 929 in all.
+const OT_SECTIONS = [
+  ["LAW", 187],
+  ["HISTORY", 249],
+  ["POETRY", 243],
+  ["PROPHETS", 250],
+];
+
+function oldTestamentInAYear() {
+  const base = H - 58;
+  const centres = [210, 360, 510, 655];
+  const width = 330;
+  const ridges = OT_SECTIONS.map(([label, chapters], i) => {
+    const x = centres[i];
+    const peak = base - (chapters / 250) * 250;
+    const d = `M ${x - width / 2} ${base} L ${x - width * 0.11} ${peak + 16} Q ${x} ${peak - 8} ${x + width * 0.11} ${peak + 16} L ${x + width / 2} ${base} Z`;
+    const cap = `M ${x - width * 0.075} ${peak + 26} Q ${x} ${peak - 2} ${x + width * 0.075} ${peak + 26} Q ${x} ${peak + 14} ${x - width * 0.075} ${peak + 26} Z`;
+    return `<path d="${d}" fill="url(#ridge${i})"/>
+  <path d="${cap}" fill="${CREAM}" fill-opacity="0.8"/>
+  <text x="${x}" y="${base + 30}" text-anchor="middle" font-family="Georgia, serif" font-size="12" letter-spacing="3" fill="${CREAM}" fill-opacity="0.6">${label}</text>`;
+  });
+  const ridgeGradients = OT_SECTIONS.map(
+    (_, i) => `<linearGradient id="ridge${i}" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${i % 2 ? WINE : BLUSH}" stop-opacity="${i % 2 ? 0.95 : 0.55}"/>
+    <stop offset="1" stop-color="${WINE_DEEP}" stop-opacity="0.95"/>
+  </linearGradient>`,
+  );
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#dusk)"/>
+  <circle cx="${W - 110}" cy="86" r="30" fill="${GOLD}" fill-opacity="0.9"/>
+  <g>${ridges.join("\n  ")}</g>
+  <line x1="40" y1="${base}" x2="${W - 40}" y2="${base}" stroke="${GOLD}" stroke-opacity="0.45" stroke-width="1.5"/>`,
+    `<linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${WINE_DEEP}"/>
+    <stop offset="1" stop-color="${WINE_DARK}"/>
+  </linearGradient>
+  ${ridgeGradients.join("\n  ")}`,
+  );
+}
+
+// Ninety days as ninety cells, brightening as the season goes on.
+function newTestamentIn90Days() {
+  const cols = 15;
+  const cell = 26;
+  const gap = 8;
+  const x0 = W - (cols * (cell + gap) - gap) - 56;
+  const y0 = 66;
+  const cells = [];
+  for (let i = 0; i < 90; i += 1) {
+    const x = x0 + (i % cols) * (cell + gap);
+    const y = y0 + Math.floor(i / cols) * (cell + gap);
+    const last = i >= 84;
+    cells.push(
+      `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="6" fill="${last ? GOLD : CREAM}" fill-opacity="${(last ? 0.95 : 0.1 + (i / 89) * 0.7).toFixed(2)}"/>`,
+    );
+  }
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#season)"/>
+  <g>${cells.join("\n  ")}</g>`,
+    `<linearGradient id="season" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${WINE}"/>
+    <stop offset="1" stop-color="${WINE_DEEP}"/>
+  </linearGradient>`,
+  );
+}
+
+// A harp of thirty strings, one for each day of the month.
+function psalmsIn30Days() {
+  const left = 300;
+  const right = W - 70;
+  const base = H - 56;
+  const strings = [];
+  const tops = [];
+  for (let i = 0; i < 30; i += 1) {
+    const t = i / 29;
+    const x = left + t * (right - left);
+    const top = 62 + Math.pow(t, 1.4) * 190;
+    tops.push([x, top]);
+    strings.push(
+      `<line x1="${x.toFixed(1)}" y1="${top.toFixed(1)}" x2="${x.toFixed(1)}" y2="${base}" stroke="${GOLD}" stroke-opacity="${(i % 2 ? 0.55 : 0.9).toFixed(2)}" stroke-width="${i % 5 === 0 ? 2.2 : 1.3}"/>`,
+    );
+  }
+  const frame = tops
+    .map(([x, y], i) => `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${(y - 6).toFixed(1)}`)
+    .join(" ");
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#harp)"/>
+  <g>${strings.join("\n  ")}</g>
+  <path d="${frame}" fill="none" stroke="${CREAM}" stroke-opacity="0.85" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="${left - 14}" y1="${base}" x2="${right + 14}" y2="${base}" stroke="${CREAM}" stroke-opacity="0.85" stroke-width="7" stroke-linecap="round"/>`,
+    `<linearGradient id="harp" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="${WINE_DEEP}"/>
+    <stop offset="1" stop-color="${WINE}"/>
+  </linearGradient>`,
+  );
+}
+
+// Four witnesses, each a column as tall as their book has chapters.
+const GOSPEL_CHAPTERS = [
+  ["MATTHEW", 28],
+  ["MARK", 16],
+  ["LUKE", 24],
+  ["JOHN", 21],
+];
+
+function gospelsIn30Days() {
+  const base = H - 64;
+  const barH = 7;
+  const step = 10;
+  const colW = 64;
+  const x0 = W - 4 * 104 - 34;
+  const cols = GOSPEL_CHAPTERS.map(([name, chapters], c) => {
+    const x = x0 + c * 104;
+    const bars = [];
+    for (let k = 0; k < chapters; k += 1) {
+      const top = k === chapters - 1;
+      bars.push(
+        `<rect x="${x}" y="${base - (k + 1) * step}" width="${colW}" height="${barH}" rx="3" fill="${top ? GOLD : CREAM}" fill-opacity="${top ? 0.95 : (0.25 + (k / 28) * 0.55).toFixed(2)}"/>`,
+      );
+    }
+    return `${bars.join("\n  ")}
+  <text x="${x + colW / 2}" y="${base + 26}" text-anchor="middle" font-family="Georgia, serif" font-size="11" letter-spacing="2.5" fill="${CREAM}" fill-opacity="0.6">${name}</text>`;
+  });
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#witness)"/>
+  <g>${cols.join("\n  ")}</g>`,
+    `<linearGradient id="witness" x1="0" y1="0" x2="0.5" y2="1">
+    <stop offset="0" stop-color="${WINE_DARK}"/>
+    <stop offset="1" stop-color="${WINE_DEEP}"/>
+  </linearGradient>`,
+  );
+}
+
+// A month on the wall: chapter N is the reading on day N.
+function proverbsInAMonth() {
+  const cell = 44;
+  const gap = 8;
+  const x0 = W - (7 * (cell + gap) - gap) - 64;
+  const y0 = 70;
+  const cells = [];
+  for (let day = 1; day <= 31; day += 1) {
+    const i = day - 1;
+    const x = x0 + (i % 7) * (cell + gap);
+    const y = y0 + Math.floor(i / 7) * (cell + gap);
+    cells.push(
+      `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="8" fill="${CREAM}" fill-opacity="${(0.08 + (i / 30) * 0.2).toFixed(2)}" stroke="${CREAM}" stroke-opacity="0.18"/>
+  <text x="${x + cell / 2}" y="${y + cell / 2 + 6}" text-anchor="middle" font-family="Georgia, serif" font-size="17" fill="${day === 31 ? GOLD : CREAM}" fill-opacity="0.85">${day}</text>`,
+    );
+  }
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#month)"/>
+  <g>${cells.join("\n  ")}</g>`,
+    `<linearGradient id="month" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${WINE}"/>
+    <stop offset="1" stop-color="${WINE_DEEP}"/>
+  </linearGradient>`,
+  );
+}
+
 const COVERS = {
   "start-with-jesus": startWithJesus,
   "know-the-whole-story": knowTheWholeStory,
   "the-whole-counsel": theWholeCounsel,
+  "bible-in-a-year": bibleInAYear,
+  "old-testament-in-a-year": oldTestamentInAYear,
+  "new-testament-in-90-days": newTestamentIn90Days,
+  "psalms-in-30-days": psalmsIn30Days,
+  "gospels-in-30-days": gospelsIn30Days,
+  "proverbs-in-a-month": proverbsInAMonth,
 };
 
 mkdirSync(OUT, { recursive: true });

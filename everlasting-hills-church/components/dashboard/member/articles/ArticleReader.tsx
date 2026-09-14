@@ -15,6 +15,7 @@ import {
 } from "@/lib/api/articles";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { normalizeRole } from "@/lib/auth/frontend-session";
+import ArticleReviewActions from "./ArticleReviewActions";
 
 const MODERATOR_ROLES = new Set(["PASTOR", "ADMIN", "ADMIN_HEAD", "SUPER_ADMIN"]);
 
@@ -88,7 +89,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
               <Pencil size={11} /> Edit
             </Link>
           )}
-          {canModerate && (
+          {canModerate && article.status === "PUBLISHED" && (
             <button
               type="button"
               onClick={() =>
@@ -110,7 +111,12 @@ export default function ArticleReader({ slug }: { slug: string }) {
 
       {article.status === "DRAFT" && (
         <p className="mt-5 rounded-xl border border-dashed border-amber-300 bg-amber-50/60 px-4 py-2.5 text-xs font-semibold text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">
-          This is a draft. Only you can see it.
+          {article.reviewNote ? `Changes requested: ${article.reviewNote}` : "This is a draft. Only you can see it."}
+        </p>
+      )}
+      {article.status === "PENDING_REVIEW" && (
+        <p className="mt-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-200">
+          {article.canReview ? "Awaiting your review. Read the article and use the review form below." : "Awaiting approval by the HOD overseeing the Content Writing Team. Your article will appear in the church feed after approval."}
         </p>
       )}
 
@@ -136,14 +142,14 @@ export default function ArticleReader({ slug }: { slug: string }) {
               )}
             </p>
           </div>
-          <LikeButton
+          {article.status === "PUBLISHED" && <LikeButton
             liked={article.likedByMe}
             count={article.likeCount}
             disabled={like.isPending}
             onToggle={() =>
               like.mutate({ id: article.id, liked: !article.likedByMe, slug: article.slug })
             }
-          />
+          />}
         </div>
       </header>
 
@@ -171,6 +177,8 @@ export default function ArticleReader({ slug }: { slug: string }) {
         />
       </div>
 
+      {article.canReview && <ArticleReviewActions article={article} />}
+
       {article.startVerseId && article.endVerseId && (
         <Link
           href="/dashboard/reading"
@@ -188,7 +196,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
         </Link>
       )}
 
-      <footer className="mt-12 border-t border-gray-100 pt-8 dark:border-white/10">
+      {article.status === "PUBLISHED" && <footer className="mt-12 border-t border-gray-100 pt-8 dark:border-white/10">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-[#8a7e80] dark:text-white/45">
             Did this help you? Let {authorName(article.Author).split(" ")[0]} know.
@@ -229,7 +237,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
             </ul>
           </>
         )}
-      </footer>
+      </footer>}
     </article>
   );
 }

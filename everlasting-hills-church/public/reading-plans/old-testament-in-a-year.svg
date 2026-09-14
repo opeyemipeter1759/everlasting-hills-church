@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" role="img">
+<defs><linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4A0817"/>
+    <stop offset="1" stop-color="#6E0C24"/>
+  </linearGradient>
+  <linearGradient id="ridge0" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFB3C1" stop-opacity="0.55"/>
+    <stop offset="1" stop-color="#4A0817" stop-opacity="0.95"/>
+  </linearGradient>
+  <linearGradient id="ridge1" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#87102C" stop-opacity="0.95"/>
+    <stop offset="1" stop-color="#4A0817" stop-opacity="0.95"/>
+  </linearGradient>
+  <linearGradient id="ridge2" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#FFB3C1" stop-opacity="0.55"/>
+    <stop offset="1" stop-color="#4A0817" stop-opacity="0.95"/>
+  </linearGradient>
+  <linearGradient id="ridge3" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#87102C" stop-opacity="0.95"/>
+    <stop offset="1" stop-color="#4A0817" stop-opacity="0.95"/>
+  </linearGradient></defs>
+<rect width="800" height="400" fill="url(#dusk)"/>
+  <circle cx="690" cy="86" r="30" fill="#E8B44A" fill-opacity="0.9"/>
+  <g><path d="M 45 342 L 173.7 171 Q 210 147 246.3 171 L 375 342 Z" fill="url(#ridge0)"/>
+  <path d="M 185.25 181 Q 210 153 234.75 181 Q 210 169 185.25 181 Z" fill="#FFF4F6" fill-opacity="0.8"/>
+  <text x="210" y="372" text-anchor="middle" font-family="Georgia, serif" font-size="12" letter-spacing="3" fill="#FFF4F6" fill-opacity="0.6">LAW</text>
+  <path d="M 195 342 L 323.7 109 Q 360 85 396.3 109 L 525 342 Z" fill="url(#ridge1)"/>
+  <path d="M 335.25 119 Q 360 91 384.75 119 Q 360 107 335.25 119 Z" fill="#FFF4F6" fill-opacity="0.8"/>
+  <text x="360" y="372" text-anchor="middle" font-family="Georgia, serif" font-size="12" letter-spacing="3" fill="#FFF4F6" fill-opacity="0.6">HISTORY</text>
+  <path d="M 345 342 L 473.7 115 Q 510 91 546.3 115 L 675 342 Z" fill="url(#ridge2)"/>
+  <path d="M 485.25 125 Q 510 97 534.75 125 Q 510 113 485.25 125 Z" fill="#FFF4F6" fill-opacity="0.8"/>
+  <text x="510" y="372" text-anchor="middle" font-family="Georgia, serif" font-size="12" letter-spacing="3" fill="#FFF4F6" fill-opacity="0.6">POETRY</text>
+  <path d="M 490 342 L 618.7 108 Q 655 84 691.3 108 L 820 342 Z" fill="url(#ridge3)"/>
+  <path d="M 630.25 118 Q 655 90 679.75 118 Q 655 106 630.25 118 Z" fill="#FFF4F6" fill-opacity="0.8"/>
+  <text x="655" y="372" text-anchor="middle" font-family="Georgia, serif" font-size="12" letter-spacing="3" fill="#FFF4F6" fill-opacity="0.6">PROPHETS</text></g>
+  <line x1="40" y1="342" x2="760" y2="342" stroke="#E8B44A" stroke-opacity="0.45" stroke-width="1.5"/>
+</svg>

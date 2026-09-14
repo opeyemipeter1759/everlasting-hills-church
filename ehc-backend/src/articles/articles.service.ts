@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -11,11 +12,17 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
 import { stripMarkdown } from '../common/markdown.util';
+import { ArticleReviewService } from './article-review.service';
 
 /** Words a minute, the same figure the reading plan estimates with. */
 const WORDS_PER_MINUTE = 200;
 
-const ADMIN_ROLES: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN];
+const ADMIN_ROLES: Role[] = [
+  Role.ADMIN,
+  Role.ADMIN_HEAD,
+  Role.PASTOR,
+  Role.SUPER_ADMIN,
+];
 
 /**
  * Member written articles.
@@ -25,11 +32,10 @@ const ADMIN_ROLES: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPE
  * passage it came from cited as a verse range so everything written about a
  * chapter can be found together later.
  *
- * Drafts are private to their author. Publishing is the member's own decision,
- * not a queue for approval, because a church that makes people wait for
- * permission to say what they are learning gets silence. Pastors and admins can
- * archive a published piece, which is moderation after the fact rather than a
- * gate before it.
+ * Drafts are private to their author. Publishing goes through review: a member
+ * submits, and the head of the department that owns the Content Writing Team
+ * approves it or sends it back with a note (see ArticleReviewService). Pastors
+ * and admins can review too, and can still archive a published piece.
  */
 @Injectable()
 export class ArticlesService {
@@ -38,17 +44,23 @@ export class ArticlesService {
   constructor(
     private readonly prisma: PrismaService,
     config: ConfigService<Env, true>,
+    private readonly review: ArticleReviewService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
   private profileOrThrow(actor: AuthUser): string {
-    if (!actor.profileId) throw new ForbiddenException('No profile linked to this account');
+    if (!actor.profileId)
+      throw new ForbiddenException('No profile linked to this account');
+    if (actor.tenantId !== this.tenantId)
+      throw new ForbiddenException('This account belongs to another church');
     return actor.profileId;
   }
 
   private isModerator(actor: AuthUser): boolean {
-    return (actor.effectiveRoles ?? []).some((role) => ADMIN_ROLES.includes(role));
+    return (actor.effectiveRoles ?? []).some((role) =>
+      ADMIN_ROLES.includes(role),
+    );
   }
 
   /**
@@ -78,7 +90,12 @@ export class ArticlesService {
     const plain = stripMarkdown(body);
     return {
       excerpt: plain.slice(0, 280),
-      readingMinutes: Math.max(1, Math.round(plain.split(/\s+/).filter(Boolean).length / WORDS_PER_MINUTE)),
+      readingMinutes: Math.max(
+        1,
+        Math.round(
+          plain.split(/\s+/).filter(Boolean).length / WORDS_PER_MINUTE,
+        ),
+      ),
     };
   }
 
@@ -90,7 +107,10 @@ export class ArticlesService {
   }
 
   /** The church's feed: published pieces, newest first, featured ones lifted. */
-  async feed(actor: AuthUser, options: { page?: number; limit?: number; authorId?: string } = {}) {
+  async feed(
+    actor: AuthUser,
+    options: { page?: number; limit?: number; authorId?: string } = {},
+  ) {
     const profileId = this.profileOrThrow(actor);
     const take = Math.min(Math.max(options.limit ?? 20, 1), 50);
     const skip = (Math.max(options.page ?? 1, 1) - 1) * take;
@@ -104,7 +124,10 @@ export class ArticlesService {
     const [articles, total] = await Promise.all([
       this.prisma.memberArticle.findMany({
         where,
-        orderBy: [{ featuredAt: { sort: 'desc', nulls: 'last' } }, { publishedAt: 'desc' }],
+        orderBy: [
+          { featuredAt: { sort: 'desc', nulls: 'last' } },
+          { publishedAt: 'desc' },
+        ],
         skip,
         take,
         select: {
@@ -126,12 +149,15 @@ export class ArticlesService {
     ]);
 
     return {
-      articles: articles.map(({ Likes, ...article }) => ({ ...article, likedByMe: Likes.length > 0 })),
+      articles: articles.map(({ Likes, ...article }) => ({
+        ...article,
+        likedByMe: Likes.length > 0,
+      })),
       meta: { page: Math.max(options.page ?? 1, 1), limit: take, total },
     };
   }
 
-  /** One article by slug. Drafts are visible to their author alone. */
+  /** Authors see their drafts; authorized reviewers can read pending submissions. */
   async bySlug(actor: AuthUser, slug: string) {
     const profileId = this.profileOrThrow(actor);
     const article = await this.prisma.memberArticle.findFirst({
@@ -144,8 +170,14 @@ export class ArticlesService {
     if (!article) throw new NotFoundException('Article not found');
 
     const isAuthor = article.authorId === profileId;
-    if (article.status !== ArticleStatus.PUBLISHED && !isAuthor && !this.isModerator(actor)) {
-      // A draft that is not yours does not exist, as far as you are concerned.
+    // Whoever reviews a piece has to be able to read it while it waits.
+    const canReview =
+      article.status === ArticleStatus.PENDING_REVIEW && !isAuthor
+        ? await this.review.canReview(actor)
+        : false;
+    if (article.status !== ArticleStatus.PUBLISHED && !isAuthor && !canReview) {
+      // Anything unpublished that is not yours to write or review does not
+      // exist, as far as you are concerned.
       throw new NotFoundException('Article not found');
     }
 
@@ -159,14 +191,22 @@ export class ArticlesService {
     }
 
     const { Likes, ...rest } = article;
-    return { ...rest, likedByMe: Likes.length > 0, isAuthor };
+    return {
+      ...rest,
+      // Editorial feedback belongs to the author and their reviewer.
+      reviewNote: isAuthor || canReview ? rest.reviewNote : null,
+      reviewedById: isAuthor || canReview ? rest.reviewedById : null,
+      likedByMe: Likes.length > 0,
+      isAuthor,
+      canReview,
+    };
   }
 
   /** Everything the caller has written, drafts included. */
   async mine(actor: AuthUser) {
     const profileId = this.profileOrThrow(actor);
     return this.prisma.memberArticle.findMany({
-      where: { authorId: profileId },
+      where: { tenantId: this.tenantId, authorId: profileId },
       orderBy: [{ status: 'asc' }, { updatedAt: 'desc' }],
       select: {
         id: true,
@@ -180,6 +220,9 @@ export class ArticlesService {
         viewCount: true,
         publishedAt: true,
         updatedAt: true,
+        submittedAt: true,
+        reviewedAt: true,
+        reviewNote: true,
       },
     });
   }
@@ -199,9 +242,13 @@ export class ArticlesService {
     this.assertVerseRange(input.startVerseId, input.endVerseId);
 
     const { excerpt, readingMinutes } = this.summarise(input.body);
-    const publish = input.publish ?? false;
+    // Every author submits for another person's approval, including reviewers.
+    const status = input.publish
+      ? ArticleStatus.PENDING_REVIEW
+      : ArticleStatus.DRAFT;
+    const now = new Date();
 
-    return this.prisma.memberArticle.create({
+    const created = await this.prisma.memberArticle.create({
       data: {
         id: randomUUID(),
         tenantId: this.tenantId,
@@ -214,11 +261,20 @@ export class ArticlesService {
         startVerseId: input.startVerseId ?? null,
         endVerseId: input.endVerseId ?? null,
         scriptureLabel: input.scriptureLabel ?? null,
-        status: publish ? ArticleStatus.PUBLISHED : ArticleStatus.DRAFT,
-        publishedAt: publish ? new Date() : null,
+        status,
+        publishedAt: null,
+        submittedAt: status === ArticleStatus.PENDING_REVIEW ? now : null,
       },
       select: { id: true, slug: true, status: true },
     });
+
+    if (status === ArticleStatus.PENDING_REVIEW) {
+      await this.review.notifyReviewers({
+        title: input.title.trim(),
+        authorId: profileId,
+      });
+    }
+    return created;
   }
 
   private async ownedOrThrow(actor: AuthUser, id: string) {
@@ -244,21 +300,33 @@ export class ArticlesService {
       startVerseId?: number | null;
       endVerseId?: number | null;
       scriptureLabel?: string | null;
-      status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+      status?: 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'ARCHIVED';
+      revision?: number;
     },
   ) {
     const { article, isAuthor } = await this.ownedOrThrow(actor, id);
+    if (input.revision !== undefined && input.revision !== article.revision) {
+      throw new ConflictException(
+        'This article has changed. Reload it before saving.',
+      );
+    }
 
     // A moderator may archive somebody's piece. They may not rewrite it.
     if (!isAuthor) {
       if (input.status !== 'ARCHIVED') {
-        throw new ForbiddenException('You can archive this article, but not edit it');
+        throw new ForbiddenException(
+          'You can archive this article, but not edit it',
+        );
       }
-      return this.prisma.memberArticle.update({
-        where: { id },
-        data: { status: ArticleStatus.ARCHIVED },
-        select: { id: true, slug: true, status: true },
+      const { count } = await this.prisma.memberArticle.updateMany({
+        where: { id, tenantId: this.tenantId, revision: article.revision },
+        data: { status: ArticleStatus.ARCHIVED, revision: { increment: 1 } },
       });
+      if (!count)
+        throw new ConflictException(
+          'This article has changed. Reload it before saving.',
+        );
+      return { id, slug: article.slug, status: ArticleStatus.ARCHIVED };
     }
 
     if (input.startVerseId !== undefined || input.endVerseId !== undefined) {
@@ -266,38 +334,87 @@ export class ArticlesService {
       // same as what was sent: null clears a verse and undefined leaves it
       // alone, and clearing only one end would fail the CHECK constraint at the
       // database rather than here.
-      const nextStart = input.startVerseId !== undefined ? input.startVerseId : article.startVerseId;
-      const nextEnd = input.endVerseId !== undefined ? input.endVerseId : article.endVerseId;
+      const nextStart =
+        input.startVerseId !== undefined
+          ? input.startVerseId
+          : article.startVerseId;
+      const nextEnd =
+        input.endVerseId !== undefined ? input.endVerseId : article.endVerseId;
       this.assertVerseRange(nextStart ?? undefined, nextEnd ?? undefined);
     }
 
     const summary = input.body ? this.summarise(input.body) : null;
-    const publishing =
-      input.status === 'PUBLISHED' && article.status !== ArticleStatus.PUBLISHED;
 
-    return this.prisma.memberArticle.update({
-      where: { id },
+    // Content and citation edits to a published article require fresh approval.
+    let status = input.status as ArticleStatus | undefined;
+    const rewritten =
+      (input.title !== undefined && input.title.trim() !== article.title) ||
+      (input.body !== undefined && input.body !== article.body) ||
+      (input.scriptureLabel !== undefined &&
+        input.scriptureLabel !== article.scriptureLabel) ||
+      (input.startVerseId !== undefined &&
+        input.startVerseId !== article.startVerseId) ||
+      (input.endVerseId !== undefined &&
+        input.endVerseId !== article.endVerseId);
+    if (status === ArticleStatus.PUBLISHED) {
+      status = ArticleStatus.PENDING_REVIEW;
+    } else if (
+      status === undefined &&
+      article.status === ArticleStatus.PUBLISHED &&
+      rewritten
+    ) {
+      status = ArticleStatus.PENDING_REVIEW;
+    }
+    const submitting =
+      status === ArticleStatus.PENDING_REVIEW &&
+      article.status !== ArticleStatus.PENDING_REVIEW;
+
+    const { count } = await this.prisma.memberArticle.updateMany({
+      where: { id, tenantId: this.tenantId, revision: article.revision },
       data: {
+        revision: { increment: 1 },
         ...(input.title !== undefined && { title: input.title.trim() }),
         ...(input.body !== undefined && { body: input.body }),
-        ...(summary && { excerpt: summary.excerpt, readingMinutes: summary.readingMinutes }),
-        ...(input.startVerseId !== undefined && { startVerseId: input.startVerseId }),
+        ...(summary && {
+          excerpt: summary.excerpt,
+          readingMinutes: summary.readingMinutes,
+        }),
+        ...(input.startVerseId !== undefined && {
+          startVerseId: input.startVerseId,
+        }),
         ...(input.endVerseId !== undefined && { endVerseId: input.endVerseId }),
-        ...(input.scriptureLabel !== undefined && { scriptureLabel: input.scriptureLabel }),
-        ...(input.status !== undefined && { status: input.status as ArticleStatus }),
-        // The first publish stamps the date. Re-publishing something that was
-        // archived keeps the original date, because that is when the church
-        // first read it.
-        ...(publishing && !article.publishedAt && { publishedAt: new Date() }),
+        ...(input.scriptureLabel !== undefined && {
+          scriptureLabel: input.scriptureLabel,
+        }),
+        ...(status !== undefined && { status }),
+        ...(submitting && { submittedAt: new Date() }),
+        ...(submitting && {
+          reviewedAt: null,
+          reviewedById: null,
+          reviewNote: null,
+        }),
       },
-      select: { id: true, slug: true, status: true },
     });
+    if (!count)
+      throw new ConflictException(
+        'This article has changed. Reload it before saving.',
+      );
+
+    if (submitting) {
+      await this.review.notifyReviewers({
+        title: input.title?.trim() || article.title,
+        authorId: article.authorId,
+      });
+    }
+    return { id, slug: article.slug, status: status ?? article.status };
   }
 
   async remove(actor: AuthUser, id: string) {
     const { isAuthor } = await this.ownedOrThrow(actor, id);
     if (!isAuthor) {
-      throw new ForbiddenException('Only the author can delete an article. Archive it instead.');
+      throw new ForbiddenException(
+        'Only the author can delete an article. Archive it instead.',
+      );
     }
     await this.prisma.memberArticle.delete({ where: { id } });
     return { id, deleted: true };
@@ -306,7 +423,9 @@ export class ArticlesService {
   /** Feature or unfeature a piece, which lifts it to the top of the feed. */
   async setFeatured(actor: AuthUser, id: string, featured: boolean) {
     if (!this.isModerator(actor)) {
-      throw new ForbiddenException('Only a pastor or admin can feature an article');
+      throw new ForbiddenException(
+        'Only a pastor or admin can feature an article',
+      );
     }
     const article = await this.prisma.memberArticle.findFirst({
       where: { id, tenantId: this.tenantId },
@@ -339,7 +458,14 @@ export class ArticlesService {
     return this.prisma.$transaction(async (tx) => {
       if (liked) {
         const created = await tx.memberArticleLike.createMany({
-          data: [{ id: randomUUID(), tenantId: this.tenantId, articleId: id, profileId }],
+          data: [
+            {
+              id: randomUUID(),
+              tenantId: this.tenantId,
+              articleId: id,
+              profileId,
+            },
+          ],
           skipDuplicates: true,
         });
         if (created.count === 0) {
@@ -379,10 +505,14 @@ export class ArticlesService {
   private assertVerseRange(start?: number, end?: number) {
     if (start === undefined && end === undefined) return;
     if (start === undefined || end === undefined) {
-      throw new BadRequestException('A scripture citation needs both a start and an end verse');
+      throw new BadRequestException(
+        'A scripture citation needs both a start and an end verse',
+      );
     }
     if (end < start) {
-      throw new BadRequestException('The end of the passage is before its start');
+      throw new BadRequestException(
+        'The end of the passage is before its start',
+      );
     }
   }
 }

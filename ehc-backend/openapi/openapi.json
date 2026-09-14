@@ -486,7 +486,7 @@
             "type": "number"
           },
           "publish": {
-            "description": "Publish immediately rather than saving a draft",
+            "description": "Submit for approval by another reviewer rather than saving a draft",
             "type": "boolean"
           },
           "scriptureLabel": {
@@ -1174,6 +1174,43 @@
         ],
         "type": "object"
       },
+      "DailyScriptureDto": {
+        "properties": {
+          "date": {
+            "example": "2026-09-12",
+            "type": "string"
+          },
+          "reference": {
+            "example": "Psalm 23:1",
+            "type": "string"
+          },
+          "text": {
+            "description": "The complete quotation from the stored Bible text",
+            "type": "string"
+          },
+          "timezone": {
+            "example": "Africa/Lagos",
+            "type": "string"
+          },
+          "translationCode": {
+            "example": "WEB",
+            "type": "string"
+          },
+          "translationName": {
+            "example": "World English Bible",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "timezone",
+          "reference",
+          "text",
+          "translationCode",
+          "translationName"
+        ],
+        "type": "object"
+      },
       "DiscussionResponseDto": {
         "properties": {
           "content": {
@@ -1736,6 +1773,24 @@
         ],
         "type": "object"
       },
+      "RequestChangesDto": {
+        "properties": {
+          "note": {
+            "description": "What the author should change. Required: a piece sent back without a reason cannot be fixed.",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The revision the reviewer read",
+            "minimum": 1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "revision",
+          "note"
+        ],
+        "type": "object"
+      },
       "RequestCorrectionDto": {
         "properties": {
           "comment": {
@@ -1745,6 +1800,23 @@
         },
         "required": [
           "comment"
+        ],
+        "type": "object"
+      },
+      "ReviewArticleDto": {
+        "properties": {
+          "note": {
+            "description": "A word to the author with the approval",
+            "type": "string"
+          },
+          "revision": {
+            "description": "The revision the reviewer read",
+            "minimum": 1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "revision"
         ],
         "type": "object"
       },
@@ -1846,6 +1918,10 @@
           "recipientId": {
             "description": "Member.id of the recipient — must be in the same unit",
             "example": "member-uuid",
+            "type": "string"
+          },
+          "replyToId": {
+            "description": "Message.id being replied to",
             "type": "string"
           }
         },
@@ -2211,6 +2287,10 @@
           "endVerseId": {
             "type": "object"
           },
+          "revision": {
+            "description": "The revision loaded by the editor; prevents overwriting later changes",
+            "type": "number"
+          },
           "scriptureLabel": {
             "type": "object"
           },
@@ -2220,6 +2300,7 @@
           "status": {
             "enum": [
               "DRAFT",
+              "PENDING_REVIEW",
               "PUBLISHED",
               "ARCHIVED"
             ],
@@ -5629,7 +5710,7 @@
             "access-token": []
           }
         ],
-        "summary": "Write an article, as a draft or published straight away",
+        "summary": "Write an article as a draft or submit it for approval",
         "tags": [
           "articles"
         ]
@@ -5749,7 +5830,73 @@
             "access-token": []
           }
         ],
-        "summary": "Edit your own article, or archive somebody else's if you are a pastor or admin. Moderation is after the fact, never a gate before publishing.",
+        "summary": "Edit your own article, or archive somebody else's if you are a pastor or admin. Publication requires approval by another reviewer.",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}/approve": {
+      "post": {
+        "operationId": "ArticlesController_approve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewArticleDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Approve a piece waiting for review, which publishes it",
         "tags": [
           "articles"
         ]
@@ -5975,6 +6122,72 @@
         ]
       }
     },
+    "/articles/{id}/request-changes": {
+      "post": {
+        "operationId": "ArticlesController_requestChanges",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestChangesDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Send a piece back to its author with a note",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
     "/articles/{slug}": {
       "get": {
         "operationId": "ArticlesController_bySlug",
@@ -6073,6 +6286,100 @@
           }
         ],
         "summary": "Everything the caller has written, drafts included",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/review": {
+      "get": {
+        "operationId": "ArticlesController_reviewQueue",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Articles waiting for review (content department head, pastors, admins)",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/review/access": {
+      "get": {
+        "operationId": "ArticlesController_reviewAccess",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Whether the caller reviews articles, and how many are waiting",
         "tags": [
           "articles"
         ]
@@ -8419,6 +8726,55 @@
           }
         ],
         "summary": "Scripture text for a verse range. The highest leverage cache in the feature: the text never changes.",
+        "tags": [
+          "reading-plans"
+        ]
+      }
+    },
+    "/bible/today": {
+      "get": {
+        "operationId": "DailyScriptureController_today",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/DailyScriptureDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Today’s scripture for the church, changing at midnight in Lagos",
         "tags": [
           "reading-plans"
         ]
@@ -21003,6 +21359,20 @@
               ],
               "type": "string"
             }
+          },
+          {
+            "description": "Daily reading load: LOW up to 5 minutes, MEDIUM 6–15 minutes, HIGH over 15 minutes.",
+            "in": "query",
+            "name": "intensity",
+            "required": false,
+            "schema": {
+              "enum": [
+                "LOW",
+                "MEDIUM",
+                "HIGH"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -25785,6 +26155,68 @@
       }
     },
     "/units/{unitId}/messages": {
+      "get": {
+        "operationId": "UnitMessagesController_conversation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recipientId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get the conversation between the current member and another unit member",
+        "tags": [
+          "units"
+        ]
+      },
       "post": {
         "operationId": "UnitMessagesController_send",
         "parameters": [
@@ -25845,6 +26277,252 @@
           }
         ],
         "summary": "Message another member of the unit — delivered as a notification (any unit member to any other)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/messages/{messageId}": {
+      "delete": {
+        "operationId": "UnitMessagesController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a message sent by the current member",
+        "tags": [
+          "units"
+        ]
+      },
+      "patch": {
+        "operationId": "UnitMessagesController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit a message sent by the current member",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/messages/read": {
+      "patch": {
+        "operationId": "UnitMessagesController_markRead",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recipientId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Mark a conversation as read",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/messages/unread-counts": {
+      "get": {
+        "operationId": "UnitMessagesController_unreadCounts",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get unread message counts grouped by sender",
         "tags": [
           "units"
         ]
