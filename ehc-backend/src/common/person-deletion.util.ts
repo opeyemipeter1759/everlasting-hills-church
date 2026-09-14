@@ -65,6 +65,10 @@ export async function deletePersonRecords(
     // Task/report children cascade; nullable reviewer/assigner references
     // set null so unrelated records and assignments are retained.
     await tx.unitTaskComment.deleteMany({ where: { authorId: profileId } });
+    // Task reports are authored work, like the comments above: the author is
+    // required and RESTRICT, so they go with the person. Reports they only
+    // reviewed keep their text; reviewedById is ON DELETE SET NULL.
+    await tx.unitTaskReport.deleteMany({ where: { authorId: profileId } });
     await tx.reportComment.deleteMany({ where: { authorId: profileId } });
     await tx.unitTask.deleteMany({ where: { createdById: profileId } });
     await tx.unitExpense.deleteMany({ where: { createdById: profileId } });
