@@ -1,9 +1,10 @@
 "use client";
 import { useState } from "react";
 import { useMe, useMyMembershipDetail, useUnitTasks, useUnitUnreadCounts, useUpdateUnitTask } from "@/lib/api";
-import type { UnitMemberEntry, UnitTaskStatus } from "@/types";
+import type { UnitMemberEntry, UnitTask, UnitTaskReport, UnitTaskStatus } from "@/types";
 import UnitHero from "./UnitHero";
 import UnitTaskList from "./UnitTaskList";
+import TaskReportModal from "./TaskReportModal";
 import UnitRolesCard from "./UnitRolesCard";
 import UnitRoster from "./UnitRoster";
 import MessageMemberModal from "./MessageMemberModal";
@@ -31,8 +32,10 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
 
   const [messageTarget, setMessageTarget] = useState<MessageTarget | null>(null);
   const [showPicker, setShowPicker] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ task: UnitTask; existing: UnitTaskReport | null } | null>(null);
 
   const myMemberId = me?.member?.id ?? null;
+  const myProfileId = me?.profileId ?? null;
 
   if (isLoading) {
     return (
@@ -87,8 +90,34 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
         </div>
       </div>
 
-      <UnitTaskList unitId={unitId} title="My tasks" tasks={myTasks} delay={0.05} onCycleStatus={cycleStatus} />
-      <UnitTaskList unitId={unitId} title="Unit tasks" tasks={unitTasks} delay={0.1} />
+      <UnitTaskList
+        unitId={unitId}
+        title="My tasks"
+        tasks={myTasks}
+        delay={0.05}
+        viewerMemberId={myMemberId}
+        viewerProfileId={myProfileId}
+        onCycleStatus={cycleStatus}
+        onReport={(task) => setReportTarget({ task, existing: null })}
+        onEditReport={(task, existing) => setReportTarget({ task, existing })}
+      />
+      <UnitTaskList
+        unitId={unitId}
+        title="Unit tasks"
+        tasks={unitTasks}
+        delay={0.1}
+        viewerMemberId={myMemberId}
+        viewerProfileId={myProfileId}
+        onReport={(task) => setReportTarget({ task, existing: null })}
+        onEditReport={(task, existing) => setReportTarget({ task, existing })}
+      />
+
+      <TaskReportModal
+        unitId={unitId}
+        task={reportTarget?.task ?? null}
+        existing={reportTarget?.existing ?? null}
+        onClose={() => setReportTarget(null)}
+      />
       <UnitRolesCard roles={roles} delay={0.15} />
 
       {showPicker && (

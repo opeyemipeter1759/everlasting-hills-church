@@ -14,6 +14,34 @@ const MEMBER_SELECT = {
   photoUrl: true,
 } as const;
 
+/** What a task row carries besides its own columns: the assignee, how much
+ * discussion and reporting it has attracted, and the most recent report so
+ * the list can show where things stand without a second request. */
+const TASK_INCLUDE = {
+  AssignedTo: { select: MEMBER_SELECT },
+  _count: { select: { Comments: true, Reports: true } },
+  Reports: {
+    orderBy: { createdAt: 'desc' as const },
+    take: 1,
+    select: { id: true, outcome: true, status: true, createdAt: true, authorId: true },
+  },
+} as const;
+
+type TaskRow = {
+  Reports: { id: string; outcome: string; status: string; createdAt: Date; authorId: string }[];
+  _count: { Comments: number; Reports: number };
+};
+
+function shapeTask<T extends TaskRow>({ Reports, ...task }: T) {
+  const latest = Reports[0];
+  return {
+    ...task,
+    latestReport: latest
+      ? { id: latest.id, outcome: latest.outcome, status: latest.status, createdAt: latest.createdAt, authorId: latest.authorId }
+      : null,
+  };
+}
+
 @Injectable()
 export class UnitTasksService {
   private readonly tenantId: string;
@@ -30,11 +58,12 @@ export class UnitTasksService {
     // Any member of the unit can view tasks (not just lead/assistant) — a plain
     // member needs to see what's assigned to them.
     await this.membership.assertIsUnitMember(actor, unitId);
-    return this.prisma.unitTask.findMany({
+    const rows = await this.prisma.unitTask.findMany({
       where: { unitId, tenantId: this.tenantId },
-      include: { AssignedTo: { select: MEMBER_SELECT } },
+      include: TASK_INCLUDE,
       orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
     });
+    return rows.map(shapeTask);
   }
 
   async create(actor: AuthUser, unitId: string, dto: CreateUnitTaskDto) {
@@ -48,7 +77,7 @@ export class UnitTasksService {
       if (!inUnit) throw new NotFoundException('Assignee is not a member of this unit');
     }
 
-    return this.prisma.unitTask.create({
+    const created = await this.prisma.unitTask.create({
       data: {
         id: randomUUID(),
         tenantId: this.tenantId,
@@ -59,8 +88,9 @@ export class UnitTasksService {
         dueDate: dto.dueDate ? new Date(dto.dueDate) : null,
         createdById: actor.profileId!,
       },
-      include: { AssignedTo: { select: MEMBER_SELECT } },
+      include: TASK_INCLUDE,
     });
+    return shapeTask(created);
   }
 
   /**
@@ -102,7 +132,7 @@ export class UnitTasksService {
       if (!inUnit) throw new NotFoundException('Assignee is not a member of this unit');
     }
 
-    return this.prisma.unitTask.update({
+    const updated = await this.prisma.unitTask.update({
       where: { id: taskId },
       data: {
         ...(dto.title !== undefined && { title: dto.title.trim() }),
@@ -114,8 +144,9 @@ export class UnitTasksService {
           completedAt: dto.status === 'DONE' ? new Date() : null,
         }),
       },
-      include: { AssignedTo: { select: MEMBER_SELECT } },
+      include: TASK_INCLUDE,
     });
+    return shapeTask(updated);
   }
 
   async delete(actor: AuthUser, unitId: string, taskId: string) {
