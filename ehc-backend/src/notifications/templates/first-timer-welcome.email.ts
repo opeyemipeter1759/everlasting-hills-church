@@ -38,7 +38,7 @@ export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl }: Args):
   const serviceRows = CHURCH_INFO.services
     .map(
       (s) =>
-        `<tr><td style="padding:6px 0;font-weight:700;color:#111;font-size:14px">${escapeHtml(s.name)}</td><td style="padding:6px 0;color:#4B5563;text-align:right;font-size:14px">${escapeHtml(s.time)}</td></tr>`,
+        `<tr><td style="padding:6px 0;font-weight:700;color:#111;font-size:11pt">${escapeHtml(s.name)}</td><td style="padding:6px 0;color:#4B5563;text-align:right;font-size:11pt">${escapeHtml(s.time)}</td></tr>`,
     )
     .join('');
 

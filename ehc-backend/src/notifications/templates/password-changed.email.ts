@@ -43,8 +43,8 @@ export function buildPasswordChangedEmail({ email, firstName, when, ip, appUrl }
   const bodyHtml = `
     <p style="margin:0 0 16px">This confirms that the password for your Everlasting Hills member account was just changed.</p>
     <div style="background:#FFF;border:1px solid #E5E7EB;border-radius:12px;padding:16px 20px;margin:0 0 20px">
-      <p style="margin:0 0 ${ip ? '8px' : '0'};font-size:14px;color:#111"><strong>When:</strong> ${escapeHtml(ts)}</p>
-      ${ip ? `<p style="margin:0;font-size:14px;color:#111"><strong>IP address:</strong> ${escapeHtml(ip)}</p>` : ''}
+      <p style="margin:0 0 ${ip ? '8px' : '0'};font-size:11pt;color:#111"><strong>When:</strong> ${escapeHtml(ts)}</p>
+      ${ip ? `<p style="margin:0;font-size:11pt;color:#111"><strong>IP address:</strong> ${escapeHtml(ip)}</p>` : ''}
     </div>
     <p style="margin:0 0 8px">If this was you, no further action is needed.</p>
     <p style="margin:0;color:#87102C"><strong>If this wasn't you</strong>, reset your password right away using the button below, and let us know at <a href="mailto:${CHURCH_INFO.email}" style="color:#87102C">${CHURCH_INFO.email}</a>.</p>

@@ -27,14 +27,14 @@ export class FollowUpServiceReportsController {
   }
 
   @Get(':serviceId/:unitId/draft')
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: 'Compile a draft report for one unit + service day — never auto-sent (UNIT_LEAD+ of that unit)' })
   async draft(@CurrentUser() actor: AuthUser, @Param('serviceId') serviceId: string, @Param('unitId') unitId: string) {
     return this.reports.compileDraft(actor, unitId, serviceId);
   }
 
   @Post(':serviceId/:unitId/send')
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: 'Send the report to the Admin Head + Pastor — this closes out that service\'s follow-up work (UNIT_LEAD+ of that unit)' })
   @ApiBody({ type: SendServiceReportDto })
   async send(

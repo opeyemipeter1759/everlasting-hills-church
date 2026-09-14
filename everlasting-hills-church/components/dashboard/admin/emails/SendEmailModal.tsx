@@ -135,7 +135,7 @@ export default function SendEmailModal({
           <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">
             Message
           </label>
-          <ReportEditor value={body} onChange={setBody} placeholder="Write your message…" minHeight={180} />
+          <ReportEditor value={body} onChange={setBody} placeholder="Write your message…" minHeight={180} variant="email" />
         </div>
 
         <div>

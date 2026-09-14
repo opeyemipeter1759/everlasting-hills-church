@@ -111,12 +111,18 @@ export default function ReportEditor({
   onChange,
   placeholder = "Write your report…",
   minHeight = 220,
+  variant = "report",
 }: {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: number;
+  /** "email" renders the content in the house email font (Arial, 11pt) so what
+   * you compose looks like what gets delivered — see notifications/templates/layout.ts. */
+  variant?: "report" | "email";
 }) {
+  const contentClass = variant === "email" ? "leading-relaxed" : "text-[15px] leading-relaxed";
+  const contentStyle = variant === "email" ? { fontFamily: "Arial, Helvetica, sans-serif", fontSize: "11pt" } : undefined;
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2] } }),
@@ -127,14 +133,14 @@ export default function ReportEditor({
     immediatelyRender: false,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
-      attributes: { class: "text-[15px] leading-relaxed" },
+      attributes: { class: contentClass },
     },
   });
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 transition-all focus-within:border-[#87102C]/40 focus-within:ring-2 focus-within:ring-[#87102C]/20">
       {editor && <Toolbar editor={editor} />}
-      <div style={{ minHeight }} className={`px-3.5 py-3 text-gray-900 dark:text-white ${PROSE_CLASSES}`}>
+      <div style={{ minHeight, ...contentStyle }} className={`px-3.5 py-3 text-gray-900 dark:text-white ${PROSE_CLASSES}`}>
         <EditorContent editor={editor} />
       </div>
     </div>

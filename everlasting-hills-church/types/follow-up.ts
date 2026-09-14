@@ -81,6 +81,10 @@ export interface ContactLogEntry {
   note: string;
   /** The service day this activity relates to — null on logs from before this was tracked. */
   service: LogService | null;
+  /** For a general check-in (no service) — the day the contact happened, as
+   * picked by the logger. Null when tied to a service or logged before this
+   * was tracked. */
+  contactedAt: string | null;
   isPastoralContact: boolean;
   /** Server already filters which private notes reach the viewer — this is only
    * a display hint to show the "private" indicator on the ones you can see. */

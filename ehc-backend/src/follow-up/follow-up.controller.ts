@@ -46,6 +46,10 @@ function parseSourceType(type?: string): FollowUpSourceType {
  */
 @ApiTags('follow-up')
 @Controller('follow-up')
+// HOD is listed next to UNIT_LEAD on the leader routes below on purpose: the
+// guard treats HOD as lateral (it never inherits UNIT_LEAD routes wholesale),
+// so each follow-up route opts in explicitly, and FollowUpAuthService then
+// scopes a department head to the units inside their own department.
 @Roles(Role.MEMBER)
 @ApiBearerAuth('access-token')
 export class FollowUpController {
@@ -64,7 +68,7 @@ export class FollowUpController {
   // ── Pickers (declared before :id so Express doesn't swallow them as params) ──
 
   @Get('candidates')
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: 'Search first-timers (Visitor) or absentees (Member) to add to the Master List (UNIT_LEAD+)' })
   @ApiQuery({ name: 'type', enum: FollowUpSourceType })
   @ApiQuery({ name: 'q', required: false })
@@ -123,7 +127,7 @@ export class FollowUpController {
   }
 
   @Post('services/:serviceId/backfill')
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({
     summary:
       'On-demand backfill for one past service (UNIT_LEAD+): surfaces whoever was absent from it and any still-unconverted first-timers from it, even if the daily sweep never covered that day. Safe to re-run — already-surfaced pairs are skipped.',
@@ -140,7 +144,7 @@ export class FollowUpController {
   }
 
   @Patch('bulk-reassign')
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: "Move a whole caseload from one team member to another within one unit (UNIT_LEAD+)" })
   @ApiBody({ type: BulkReassignDto })
   async bulkReassign(@CurrentUser() actor: AuthUser, @Body() body: BulkReassignDto) {
@@ -194,7 +198,7 @@ export class FollowUpController {
   // ── Write ─────────────────────────────────────────────────────────────────────
 
   @Post()
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: 'Add a first-timer or absentee to the Master List (UNIT_LEAD+)' })
   @ApiBody({ type: CreateFollowUpEntryDto })
   async create(@CurrentUser() actor: AuthUser, @Body() body: CreateFollowUpEntryDto) {
@@ -202,7 +206,7 @@ export class FollowUpController {
   }
 
   @Patch(':id/assign')
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: 'Assign or reassign a team member (UNIT_LEAD+ of that unit)' })
   @ApiBody({ type: AssignFollowUpDto })
   async assign(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: AssignFollowUpDto) {
@@ -217,7 +221,7 @@ export class FollowUpController {
   }
 
   @Patch(':id/confirm')
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: 'Log a final outcome for this entry — available any time, not gated on a review hand-off (UNIT_LEAD+ of that unit)' })
   @ApiBody({ type: ConfirmFollowUpDto })
   async confirm(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: ConfirmFollowUpDto) {
@@ -239,7 +243,7 @@ export class FollowUpController {
   }
 
   @Post(':id/send-to-pastor')
-  @Roles(Role.UNIT_LEAD)
+  @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: "Send a first-timer's details to the Pastor by email + a pre-filled WhatsApp link (UNIT_LEAD+ of that unit)" })
   async sendToPastor(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
     return this.pastorEscalation.sendToPastor(actor, id);

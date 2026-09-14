@@ -45,9 +45,9 @@ export function buildNewDeviceLoginEmail({ email, firstName, device, ip, when, a
   const bodyHtml = `
     <p style="margin:0 0 16px">We noticed a sign-in to your Everlasting Hills account from a device we haven't seen before.</p>
     <div style="background:#FFF;border:1px solid #E5E7EB;border-radius:12px;padding:16px 20px;margin:0 0 20px">
-      <p style="margin:0 0 8px;font-size:14px;color:#111"><strong>Device:</strong> ${escapeHtml(device)}</p>
-      ${ip ? `<p style="margin:0 0 8px;font-size:14px;color:#111"><strong>IP address:</strong> ${escapeHtml(ip)}</p>` : ''}
-      <p style="margin:0;font-size:14px;color:#111"><strong>When:</strong> ${escapeHtml(ts)}</p>
+      <p style="margin:0 0 8px;font-size:11pt;color:#111"><strong>Device:</strong> ${escapeHtml(device)}</p>
+      ${ip ? `<p style="margin:0 0 8px;font-size:11pt;color:#111"><strong>IP address:</strong> ${escapeHtml(ip)}</p>` : ''}
+      <p style="margin:0;font-size:11pt;color:#111"><strong>When:</strong> ${escapeHtml(ts)}</p>
     </div>
     <p style="margin:0 0 8px">If this was you, no action is needed.</p>
     <p style="margin:0;color:#87102C"><strong>If this wasn't you</strong>, secure your account right away and let us know at <a href="mailto:${CHURCH_INFO.email}" style="color:#87102C">${CHURCH_INFO.email}</a>.</p>

@@ -116,7 +116,7 @@ export class FollowUpEntryMapperService {
       // A private note is only for the author and this entry's unit leader — drop
       // it from the timeline for everyone else, rather than filter at query time.
       logs: entry.Logs.filter(
-        (l) => !l.isPrivate || l.byId === actor.memberId || this.auth.canLead(actor, entry.unitId),
+        (l) => !l.isPrivate || l.byId === actor.memberId || this.auth.canLead(actor, entry.unitId, entry.Unit.departmentId),
       ).map((l) => ({
         id: l.id,
         by: { id: l.By.id, name: `${l.By.firstName} ${l.By.lastName}`.trim(), photoUrl: l.By.photoUrl },
@@ -126,6 +126,7 @@ export class FollowUpEntryMapperService {
         outcome: l.outcome,
         note: l.note,
         service: l.Service ? { id: l.Service.id, name: l.Service.name, scheduledAt: l.Service.scheduledAt.toISOString() } : null,
+        contactedAt: l.contactedAt?.toISOString() ?? null,
         isPastoralContact: l.isPastoralContact,
         isPrivate: l.isPrivate,
       })),
@@ -148,8 +149,8 @@ export class FollowUpEntryMapperService {
       // Per-entry, not a blanket "is this user a leader somewhere" flag — a lead of
       // Production Team can now *see* a Follow-Up-unit entry via the shared pool,
       // but only Follow-Up's own leader (or ADMIN+) may assign/confirm/reject it.
-      viewerCanApprove: this.auth.canLead(actor, entry.unitId),
-      viewerCanWork: this.auth.canWork(actor, { unitId: entry.unitId, assigneeId: entry.assigneeId }),
+      viewerCanApprove: this.auth.canLead(actor, entry.unitId, entry.Unit.departmentId),
+      viewerCanWork: this.auth.canWork(actor, entry),
     };
   }
 }

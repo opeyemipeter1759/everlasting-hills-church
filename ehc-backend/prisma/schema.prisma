@@ -378,6 +378,11 @@ model FollowUpContactLog {
   /// gets logged against a different service every week. Null on logs from
   /// before this was tracked.
   serviceId         String?
+  /// For a general check-in (no serviceId) — the day the contact actually
+  /// happened, picked by the logger, since it's often recorded after the
+  /// fact. Null when the log is tied to a service (that carries the date)
+  /// or was logged before this was tracked.
+  contactedAt       DateTime?
   /// Tagged distinctly from a team member's routine check-in — set when this
   /// log records the Pastor's own call, not a worker's contact.
   isPastoralContact Boolean                 @default(false)

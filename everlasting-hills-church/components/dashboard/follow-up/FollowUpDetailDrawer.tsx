@@ -293,6 +293,7 @@ export function FollowUpDetailDrawer({
   const [method, setMethod] = useState<ContactMethod>("CALL");
   const [outcome, setOutcome] = useState<ContactOutcome>("REACHED");
   const [logServiceId, setLogServiceId] = useState(defaultServiceId ?? "");
+  const [contactedOn, setContactedOn] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [note, setNote] = useState("");
   const [notePrivate, setNotePrivate] = useState(false);
   const [openingLinesOpen, setOpeningLinesOpen] = useState(false);
@@ -330,6 +331,7 @@ export function FollowUpDetailDrawer({
     setMethod("CALL");
     setOutcome("REACHED");
     setLogServiceId(defaultServiceId ?? "");
+    setContactedOn(format(new Date(), "yyyy-MM-dd"));
     setNote("");
     setNotePrivate(false);
     setOpeningLinesOpen(false);
@@ -397,9 +399,10 @@ export function FollowUpDetailDrawer({
         method: logMode === "CONTACT" ? method : undefined,
         outcome: logMode === "CONTACT" ? outcome : undefined,
         serviceId: logServiceId || undefined,
+        contactedAt: logServiceId ? undefined : contactedOn || undefined,
         isPrivate: notePrivate,
       },
-      { onSuccess: () => { setNote(""); setNotePrivate(false); } },
+      { onSuccess: () => { setNote(""); setNotePrivate(false); setContactedOn(format(new Date(), "yyyy-MM-dd")); } },
     );
   }
 
@@ -782,6 +785,24 @@ export function FollowUpDetailDrawer({
                 ]}
               />
 
+              {/* A service-tied log already has its date; a general check-in
+                  doesn't, and is often written up after the fact — so let the
+                  logger say when it actually happened. */}
+              {!logServiceId && (
+                <label className="flex items-center gap-2 text-[11px] font-medium text-gray-500 dark:text-white/40">
+                  <span className="whitespace-nowrap">Date of check-in</span>
+                  <input
+                    type="date"
+                    aria-label="Date of check-in"
+                    value={contactedOn}
+                    onChange={(e) => setContactedOn(e.target.value)}
+                    max={format(new Date(), "yyyy-MM-dd")}
+                    required
+                    className="flex-1 min-w-0 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-xs text-[#111] dark:text-white px-2.5 py-2 outline-none focus:ring-2 focus:ring-[#87102C]/25"
+                  />
+                </label>
+              )}
+
               <textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
@@ -804,7 +825,7 @@ export function FollowUpDetailDrawer({
 
               <button
                 type="submit"
-                disabled={!note.trim() || logContact.isPending}
+                disabled={!note.trim() || (!logServiceId && !contactedOn) || logContact.isPending}
                 className="w-full px-3 py-2 rounded-lg text-xs font-bold text-white bg-[#87102C] hover:bg-[#6E0C24] transition-colors disabled:opacity-50"
               >
                 {logContact.isPending ? "Logging…" : "Add to log"}
@@ -858,12 +879,17 @@ export function FollowUpDetailDrawer({
                         <span className="text-[10px] text-[#8a7e80] dark:text-white/35">{timeAgo(log.at)}</span>
                       </div>
 
-                      {log.service && (
+                      {log.service ? (
                         <p className="text-[10px] text-[#87102C] dark:text-[#FFB3C1] font-semibold mt-0.5">
                           {new Date(log.service.scheduledAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                           {" — "}{log.service.name}
                         </p>
-                      )}
+                      ) : log.contactedAt ? (
+                        <p className="text-[10px] text-[#87102C] dark:text-[#FFB3C1] font-semibold mt-0.5">
+                          {new Date(log.contactedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
+                          {" — "}General check-in
+                        </p>
+                      ) : null}
 
                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                         {log.kind === "CONTACT" && log.method && (

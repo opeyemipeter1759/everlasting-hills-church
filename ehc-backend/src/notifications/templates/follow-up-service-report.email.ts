@@ -35,7 +35,7 @@ export function buildFollowUpServiceReportEmail(args: Args): SendEmailPayload {
     <p style="margin:0 0 16px"><strong>${escapeHtml(compiledByName)}</strong> sent this Follow-Up report for <strong>${escapeHtml(unitName)}</strong> — ${escapeHtml(serviceName)}.</p>
     <div style="background:#FFF;border:1px solid #E5E7EB;border-radius:12px;padding:18px 20px;margin:0 0 20px">
       <p style="margin:0 0 12px;font-size:12px;font-weight:800;color:#87102C;text-transform:uppercase;letter-spacing:0.4px">${escapeHtml(statLine)}</p>
-      <p style="margin:0;font-size:14px;color:#374151;white-space:pre-wrap;line-height:1.7">${escapeHtml(summaryText)}</p>
+      <p style="margin:0;font-size:11pt;color:#374151;white-space:pre-wrap;line-height:1.7">${escapeHtml(summaryText)}</p>
     </div>
   `;
 
