@@ -2536,6 +2536,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/emails/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Email branding — the header logo every outgoing email uses */
+        get: operations["EmailsController_getSettings"];
+        /** Change the header logo (pass logoUrl: null to restore the default) */
+        put: operations["EmailsController_updateSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/emails/templates": {
         parameters: {
             query?: never;
@@ -6057,6 +6075,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/units/{unitId}/tasks/{taskId}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Reports on a task — all of them for the unit's lead/assistant, only your own otherwise */
+        get: operations["UnitTasksController_listReports"];
+        put?: never;
+        /** File a report on a task assigned to you (any unit member for a whole-unit task). Notifies the lead. */
+        post: operations["UnitTasksController_createReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/units/{unitId}/tasks/{taskId}/reports/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Withdraw your own unreviewed report, or (lead) remove any report */
+        delete: operations["UnitTasksController_deleteReport"];
+        options?: never;
+        head?: never;
+        /** Revise your own report (until the lead acknowledges it) */
+        patch: operations["UnitTasksController_updateReport"];
+        trace?: never;
+    };
+    "/units/{unitId}/tasks/{taskId}/reports/{reportId}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Acknowledge a report or send it back for revision (lead/assistant of unit, or ADMIN+). Notifies the author. */
+        patch: operations["UnitTasksController_reviewReport"];
+        trace?: never;
+    };
     "/units/directory": {
         parameters: {
             query?: never;
@@ -6562,7 +6633,7 @@ export interface components {
             /** @description Member ids — required when mode is SPECIFIC */
             memberIds?: string[];
             /** @enum {string} */
-            mode: "ALL" | "UNIT" | "ROLE" | "SPECIFIC";
+            mode: "ALL" | "WORKERS" | "UNIT" | "ROLE" | "SPECIFIC";
             /**
              * @description Required when mode is ROLE
              * @enum {string}
@@ -6986,6 +7057,19 @@ export interface components {
             /** @example Set up chairs for Sunday service */
             title: string;
         };
+        CreateUnitTaskReportDto: {
+            /** @description Anything that got in the way */
+            challenges?: string;
+            /** @description What happens next, or what you need from the lead */
+            nextSteps?: string;
+            /**
+             * @description Where the task stands as of this report
+             * @enum {string}
+             */
+            outcome: "COMPLETED" | "IN_PROGRESS" | "BLOCKED";
+            /** @example Set up all 120 chairs and the two overflow rows before 7:30am; sound check done with the media team. */
+            summary: string;
+        };
         CreateUserDto: {
             /** @example jane.doe@example.com */
             email: string;
@@ -7023,6 +7107,12 @@ export interface components {
         DiscussionResponseDto: {
             /** @example I want to start applying this by praying daily. */
             content: string;
+        };
+        EmailAttachmentDto: {
+            /** @example flyer.png */
+            name: string;
+            /** @description Public URL of the uploaded file (from /uploads/image or /uploads/document) */
+            url: string;
         };
         FirstTimerDto: {
             /** @example Dignissimos et eos u */
@@ -7125,6 +7215,11 @@ export interface components {
         };
         JoinDto: Record<string, never>;
         LogContactDto: {
+            /**
+             * @description For a general check-in (no serviceId) — the day the contact happened. Ignored when serviceId is set.
+             * @example 2026-09-13
+             */
+            contactedAt?: string;
             /** @description Tags this as the Pastor's own call, distinct from a worker's routine check-in */
             isPastoralContact?: boolean;
             /** @description Visible only to the author and this entry's unit leader */
@@ -7289,6 +7384,12 @@ export interface components {
             /** @description The revision the reviewer read */
             revision: number;
         };
+        ReviewUnitTaskReportDto: {
+            /** @description Feedback for the author — expected when sending a report back */
+            note?: string;
+            /** @enum {string} */
+            status: "ACKNOWLEDGED" | "NEEDS_REVISION";
+        };
         SendDirectMessageDto: {
             /** @example What did you mean by "living sacrifice"? */
             content: string;
@@ -7309,6 +7410,8 @@ export interface components {
             type: "NOTE" | "QUESTION";
         };
         SendEmailDto: {
+            /** @description Up to 5 files to attach */
+            attachments?: components["schemas"]["EmailAttachmentDto"][];
             audience: components["schemas"]["AudienceFilterDto"];
             /** @example <p>Dear church family,</p> */
             body: string;
@@ -7523,6 +7626,10 @@ export interface components {
         UpdateConnectionStatusDto: {
             /** @enum {string} */
             status: "CONNECTED" | "DECLINED";
+        };
+        UpdateEmailSettingsDto: {
+            /** @description Public URL of the header logo (from /uploads/image). Null restores the default site logo. */
+            logoUrl?: Record<string, never> | null;
         };
         UpdateEmailTemplateDto: {
             /** @example <p>Dear church family,</p> */
@@ -7773,6 +7880,13 @@ export interface components {
             /** @enum {string} */
             status?: "TODO" | "IN_PROGRESS" | "DONE";
             title?: string;
+        };
+        UpdateUnitTaskReportDto: {
+            challenges?: string;
+            nextSteps?: string;
+            /** @enum {string} */
+            outcome?: "COMPLETED" | "IN_PROGRESS" | "BLOCKED";
+            summary?: string;
         };
         UpdateUserDto: {
             firstName?: string;
@@ -13525,6 +13639,72 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_getSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailsController_updateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEmailSettingsDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -22344,6 +22524,191 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_listReports: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_createReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateUnitTaskReportDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_deleteReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_updateReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUnitTaskReportDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UnitTasksController_reviewReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+                taskId: string;
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewUnitTaskReportDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

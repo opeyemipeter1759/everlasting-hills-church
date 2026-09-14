@@ -145,6 +145,7 @@
           "mode": {
             "enum": [
               "ALL",
+              "WORKERS",
               "UNIT",
               "ROLE",
               "SPECIFIC"
@@ -1124,6 +1125,36 @@
         ],
         "type": "object"
       },
+      "CreateUnitTaskReportDto": {
+        "properties": {
+          "challenges": {
+            "description": "Anything that got in the way",
+            "type": "string"
+          },
+          "nextSteps": {
+            "description": "What happens next, or what you need from the lead",
+            "type": "string"
+          },
+          "outcome": {
+            "description": "Where the task stands as of this report",
+            "enum": [
+              "COMPLETED",
+              "IN_PROGRESS",
+              "BLOCKED"
+            ],
+            "type": "string"
+          },
+          "summary": {
+            "example": "Set up all 120 chairs and the two overflow rows before 7:30am; sound check done with the media team.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome",
+          "summary"
+        ],
+        "type": "object"
+      },
       "CreateUserDto": {
         "properties": {
           "email": {
@@ -1220,6 +1251,23 @@
         },
         "required": [
           "content"
+        ],
+        "type": "object"
+      },
+      "EmailAttachmentDto": {
+        "properties": {
+          "name": {
+            "example": "flyer.png",
+            "type": "string"
+          },
+          "url": {
+            "description": "Public URL of the uploaded file (from /uploads/image or /uploads/document)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "url"
         ],
         "type": "object"
       },
@@ -1431,6 +1479,11 @@
       },
       "LogContactDto": {
         "properties": {
+          "contactedAt": {
+            "description": "For a general check-in (no serviceId) — the day the contact happened. Ignored when serviceId is set.",
+            "example": "2026-09-13",
+            "type": "string"
+          },
           "isPastoralContact": {
             "description": "Tags this as the Pastor's own call, distinct from a worker's routine check-in",
             "type": "boolean"
@@ -1820,6 +1873,25 @@
         ],
         "type": "object"
       },
+      "ReviewUnitTaskReportDto": {
+        "properties": {
+          "note": {
+            "description": "Feedback for the author — expected when sending a report back",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ACKNOWLEDGED",
+              "NEEDS_REVISION"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
       "SendDirectMessageDto": {
         "properties": {
           "content": {
@@ -1854,6 +1926,13 @@
       },
       "SendEmailDto": {
         "properties": {
+          "attachments": {
+            "description": "Up to 5 files to attach",
+            "items": {
+              "$ref": "#/components/schemas/EmailAttachmentDto"
+            },
+            "type": "array"
+          },
           "audience": {
             "$ref": "#/components/schemas/AudienceFilterDto"
           },
@@ -2325,6 +2404,16 @@
         "required": [
           "status"
         ],
+        "type": "object"
+      },
+      "UpdateEmailSettingsDto": {
+        "properties": {
+          "logoUrl": {
+            "description": "Public URL of the header logo (from /uploads/image). Null restores the default site logo.",
+            "nullable": true,
+            "type": "object"
+          }
+        },
         "type": "object"
       },
       "UpdateEmailTemplateDto": {
@@ -2902,6 +2991,28 @@
             "type": "string"
           },
           "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateUnitTaskReportDto": {
+        "properties": {
+          "challenges": {
+            "type": "string"
+          },
+          "nextSteps": {
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "COMPLETED",
+              "IN_PROGRESS",
+              "BLOCKED"
+            ],
+            "type": "string"
+          },
+          "summary": {
             "type": "string"
           }
         },
@@ -12540,6 +12651,108 @@
           }
         ],
         "summary": "List past sends (audit/history), paginated",
+        "tags": [
+          "emails"
+        ]
+      }
+    },
+    "/emails/settings": {
+      "get": {
+        "operationId": "EmailsController_getSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Email branding — the header logo every outgoing email uses",
+        "tags": [
+          "emails"
+        ]
+      },
+      "put": {
+        "operationId": "EmailsController_updateSettings",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmailSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Change the header logo (pass logoUrl: null to restore the default)",
         "tags": [
           "emails"
         ]
@@ -27273,6 +27486,376 @@
           }
         ],
         "summary": "Comment on a task (any unit member)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/tasks/{taskId}/reports": {
+      "get": {
+        "operationId": "UnitTasksController_listReports",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Reports on a task — all of them for the unit's lead/assistant, only your own otherwise",
+        "tags": [
+          "units"
+        ]
+      },
+      "post": {
+        "operationId": "UnitTasksController_createReport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUnitTaskReportDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "File a report on a task assigned to you (any unit member for a whole-unit task). Notifies the lead.",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/tasks/{taskId}/reports/{reportId}": {
+      "delete": {
+        "operationId": "UnitTasksController_deleteReport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "reportId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Withdraw your own unreviewed report, or (lead) remove any report",
+        "tags": [
+          "units"
+        ]
+      },
+      "patch": {
+        "operationId": "UnitTasksController_updateReport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "reportId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUnitTaskReportDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Revise your own report (until the lead acknowledges it)",
+        "tags": [
+          "units"
+        ]
+      }
+    },
+    "/units/{unitId}/tasks/{taskId}/reports/{reportId}/review": {
+      "patch": {
+        "operationId": "UnitTasksController_reviewReport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "reportId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewUnitTaskReportDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Acknowledge a report or send it back for revision (lead/assistant of unit, or ADMIN+). Notifies the author.",
         "tags": [
           "units"
         ]
