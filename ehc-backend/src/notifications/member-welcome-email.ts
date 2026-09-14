@@ -68,7 +68,8 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
 
   const html = `<!doctype html>
 <html>
-  <body style="margin:0;padding:0;background:#F4F4F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#111827">
+  <head><meta charset="utf-8" /><style>body, table, td, p, li, a { font-family: Arial, Helvetica, sans-serif; }</style></head>
+  <body style="margin:0;padding:0;background:#F4F4F5;font-family:Arial,Helvetica,sans-serif;color:#111827">
     <div style="max-width:560px;margin:0 auto;padding:32px 20px">
       <div style="background:linear-gradient(135deg,#87102C,#6E0C24);border-radius:16px;padding:32px 24px;text-align:center;margin-bottom:24px">
         <p style="color:#FBD38D;margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:3px;font-weight:700">Everlasting Hills</p>
@@ -76,26 +77,26 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
       </div>
 
       <h2 style="color:#111827;font-size:24px;font-weight:800;margin:0 0 8px">Welcome home, ${escapeHtml(firstName)}.</h2>
-      <p style="color:#4B5563;font-size:15px;line-height:1.65;margin:0 0 24px">
+      <p style="color:#4B5563;font-size:11pt;line-height:1.65;margin:0 0 24px">
         You are now part of the Everlasting Hills family. Your member account is ready —
         sign in to step into everything God has stored up for this season.
       </p>
 
       <div style="background:#FFF;border:1px solid #E5E7EB;border-radius:12px;padding:20px 22px;margin-bottom:24px">
         <p style="margin:0 0 14px;font-size:11px;color:#6B7280;text-transform:uppercase;letter-spacing:2px;font-weight:800">Your sign-in details</p>
-        <p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Login URL:</strong> <a href="${loginUrl}" style="color:#87102C;text-decoration:none">${loginUrl}</a></p>
-        ${code ? `<p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Member ID:</strong> <span style="font-family:monospace;color:#87102C;font-weight:700">${code}</span></p>` : ''}
-        <p style="margin:0 0 10px;font-size:14px;color:#111"><strong>Email:</strong> ${escapeHtml(email)}</p>
+        <p style="margin:0 0 10px;font-size:11pt;color:#111"><strong>Login URL:</strong> <a href="${loginUrl}" style="color:#87102C;text-decoration:none">${loginUrl}</a></p>
+        ${code ? `<p style="margin:0 0 10px;font-size:11pt;color:#111"><strong>Member ID:</strong> <span style="font-family:monospace;color:#87102C;font-weight:700">${code}</span></p>` : ''}
+        <p style="margin:0 0 10px;font-size:11pt;color:#111"><strong>Email:</strong> ${escapeHtml(email)}</p>
         ${
           tempPassword
-            ? `<p style="margin:0;font-size:14px;color:#111"><strong>Temporary password:</strong> <span style="font-family:monospace;color:#87102C;font-weight:700;letter-spacing:0.5px">${escapeHtml(tempPassword)}</span></p>
+            ? `<p style="margin:0;font-size:11pt;color:#111"><strong>Temporary password:</strong> <span style="font-family:monospace;color:#87102C;font-weight:700;letter-spacing:0.5px">${escapeHtml(tempPassword)}</span></p>
         <p style="margin:8px 0 0;font-size:12px;color:#9CA3AF">You'll be asked to choose your own password the first time you sign in.</p>`
-            : `<p style="margin:0;font-size:14px;color:#111"><strong>Set your password:</strong> <a href="${setupUrl}" style="color:#87102C;text-decoration:none">Use the secure password setup page</a></p>`
+            : `<p style="margin:0;font-size:11pt;color:#111"><strong>Set your password:</strong> <a href="${setupUrl}" style="color:#87102C;text-decoration:none">Use the secure password setup page</a></p>`
         }
       </div>
 
       <p style="margin:0 0 12px;font-size:13px;color:#6B7280;text-transform:uppercase;letter-spacing:2px;font-weight:800">What's waiting inside</p>
-      <ul style="list-style:none;padding:0;margin:0 0 28px;font-size:14px;color:#374151;line-height:1.65">
+      <ul style="list-style:none;padding:0;margin:0 0 28px;font-size:11pt;color:#374151;line-height:1.65">
         <li style="padding:8px 0;border-bottom:1px solid #F3F4F6">🎧 <strong>Sermons</strong> — listen, watch, read transcripts, save bookmarks</li>
         <li style="padding:8px 0;border-bottom:1px solid #F3F4F6">📍 <strong>Sunday check-in</strong> — log your attendance and build a streak</li>
         <li style="padding:8px 0;border-bottom:1px solid #F3F4F6">💬 <strong>Discussion questions</strong> — weekly prompts from the message</li>
@@ -107,7 +108,7 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
       </ul>
 
       <div style="text-align:center;margin:32px 0">
-        <a href="${loginUrl}" style="display:inline-block;background:#87102C;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:800;font-size:14px;letter-spacing:0.3px">Sign in to your portal →</a>
+        <a href="${loginUrl}" style="display:inline-block;background:#87102C;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:800;font-size:11pt;letter-spacing:0.3px">Sign in to your portal →</a>
       </div>
 
       <p style="font-size:13px;color:#6B7280;line-height:1.6;margin:0 0 24px">

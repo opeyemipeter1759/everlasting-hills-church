@@ -42,7 +42,7 @@ export function buildFollowUpPastorEscalationEmail(args: Args): SendEmailPayload
     .filter(([, v]) => v && v.trim())
     .map(
       ([k, v]) =>
-        `<tr><td style="padding:7px 14px 7px 0;color:#6B7280;font-size:13px;white-space:nowrap;vertical-align:top">${escapeHtml(k)}</td><td style="padding:7px 0;color:#111;font-size:14px;font-weight:600">${escapeHtml(fmt(v))}</td></tr>`,
+        `<tr><td style="padding:7px 14px 7px 0;color:#6B7280;font-size:13px;white-space:nowrap;vertical-align:top">${escapeHtml(k)}</td><td style="padding:7px 0;color:#111;font-size:11pt;font-weight:600">${escapeHtml(fmt(v))}</td></tr>`,
     )
     .join('');
 

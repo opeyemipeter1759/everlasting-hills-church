@@ -7,6 +7,9 @@ import { ROLE_LABEL } from './emails.constants';
 import type { Env } from '../config/env.validation';
 import type { AudienceFilterDto } from './dto/audience-filter.dto';
 
+/** Role grants that make someone a leader for the WORKERS audience. */
+const LEADER_GRANTS: Role[] = [Role.UNIT_LEAD, Role.HOD, Role.HEAD_USHER, Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN];
+
 export interface RecipientRow {
   id: string;
   email: string;
@@ -34,6 +37,20 @@ export class EmailsRecipientsService {
     const where: Prisma.MemberWhereInput = { tenantId: this.tenantId, email: { not: null } };
 
     switch (filter.mode) {
+      case 'WORKERS':
+        // "Workers" is anyone actually serving: on a unit's roster, or holding
+        // any leadership post. Leaders are matched by their live assignments
+        // rather than a UnitMember row because a unit lead or department head
+        // isn't necessarily listed as a member of the unit they oversee.
+        where.OR = [
+          { UnitMember: { some: {} } },
+          { Profile: { is: { UnitLeadOf: { some: { endedAt: null } } } } },
+          { Profile: { is: { DepartmentHeadOf: { some: { endedAt: null } } } } },
+          { Profile: { is: { DepartmentHodOf: { some: { endedAt: null } } } } },
+          { Profile: { is: { HeadUsherOf: { some: { endedAt: null } } } } },
+          { Profile: { is: { RoleGrantOf: { some: { endedAt: null, role: { in: LEADER_GRANTS } } } } } },
+        ];
+        break;
       case 'UNIT':
         where.UnitMember = { some: { unitId: filter.unitId } };
         break;
@@ -76,6 +93,8 @@ export class EmailsRecipientsService {
         const count = filter.memberIds?.length ?? 0;
         return `${count} ${count === 1 ? 'person' : 'people'}`;
       }
+      case 'WORKERS':
+        return 'All workers';
       case 'ALL':
       default:
         return 'All members';

@@ -45,7 +45,7 @@ export class FollowUpPastorEscalationService {
     if (entry.sourceType !== FollowUpSourceType.FIRST_TIMER) {
       throw new BadRequestException('Only first-timers can be sent to the Pastor');
     }
-    if (!this.auth.canLead(actor, entry.unitId)) {
+    if (!this.auth.canLead(actor, entry.unitId, entry.Unit.departmentId)) {
       throw new ForbiddenException("Only this unit's leader can send to the Pastor");
     }
     if (!actor.profileId) throw new ForbiddenException('No profile linked to this account');

@@ -216,7 +216,7 @@ export function useLogFollowUpContact() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
-      id, method, outcome, note, kind, serviceId, isPastoralContact, isPrivate,
+      id, method, outcome, note, kind, serviceId, contactedAt, isPastoralContact, isPrivate,
     }: {
       id: string;
       note: string;
@@ -224,9 +224,11 @@ export function useLogFollowUpContact() {
       outcome?: ContactOutcome;
       kind?: ContactLogKind;
       serviceId?: string;
+      /** yyyy-MM-dd — only meaningful for a general check-in (no serviceId). */
+      contactedAt?: string;
       isPastoralContact?: boolean;
       isPrivate?: boolean;
-    }) => api.post<FollowUpEntry>(`/follow-up/${id}/logs`, { method, outcome, note, kind, serviceId, isPastoralContact, isPrivate }),
+    }) => api.post<FollowUpEntry>(`/follow-up/${id}/logs`, { method, outcome, note, kind, serviceId, contactedAt, isPastoralContact, isPrivate }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["follow-up"] });
       showToast.success("Activity logged");

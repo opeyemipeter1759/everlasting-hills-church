@@ -20,6 +20,7 @@ import { UnitTasksService } from './services/unit-tasks.service';
 import { UnitExpensesService } from './services/unit-expenses.service';
 import { UnitMessagesService } from './services/unit-messages.service';
 import { UnitTaskCommentsService } from './services/unit-task-comments.service';
+import { UnitTaskReportsService } from './services/unit-task-reports.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, InboxModule],
@@ -44,6 +45,7 @@ import { UnitTaskCommentsService } from './services/unit-task-comments.service';
     UnitExpensesService,
     UnitMessagesService,
     UnitTaskCommentsService,
+    UnitTaskReportsService,
   ],
 })
 export class UnitsModule {}

@@ -17,14 +17,47 @@ export class FollowUpAuthService {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  canLead(actor: AuthUser, unitId: string): boolean {
+  /**
+   * Who counts as this unit's leader: ADMIN+, the unit's own lead, or — when the
+   * caller can tell us which department the unit sits in — the head of that
+   * department. The app calls a department head an "Admin Head", but most of
+   * them hold only the scoped HOD role, not a church-wide ADMIN_HEAD grant, so
+   * without this they could see their own department's follow-ups and yet not
+   * reassign a single one. Use `canLeadUnit()` when you only have a unit id.
+   */
+  canLead(actor: AuthUser, unitId: string, departmentId?: string | null): boolean {
     if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return true;
-    return actor.unitLeadOf.includes(unitId);
+    if (actor.unitLeadOf.includes(unitId)) return true;
+    return !!departmentId && this.headsDepartment(actor, departmentId);
   }
 
-  canWork(actor: AuthUser, entry: { unitId: string; assigneeId: string | null }): boolean {
-    if (this.canLead(actor, entry.unitId)) return true;
+  /** `canLead()` for call sites that don't already have the unit's department. */
+  async canLeadUnit(actor: AuthUser, unitId: string): Promise<boolean> {
+    if (this.canLead(actor, unitId)) return true;
+    if (!actor.hodOf?.length) return false;
+    const unit = await this.prisma.unit.findFirst({
+      where: { id: unitId, tenantId: this.tenantId },
+      select: { departmentId: true },
+    });
+    return this.canLead(actor, unitId, unit?.departmentId);
+  }
+
+  canWork(
+    actor: AuthUser,
+    entry: { unitId: string; assigneeId: string | null; Unit?: { departmentId: string | null } | null },
+  ): boolean {
+    if (this.canLead(actor, entry.unitId, entry.Unit?.departmentId)) return true;
     return !!actor.memberId && entry.assigneeId === actor.memberId;
+  }
+
+  /** `canWork()` for call sites that don't already have the unit's department. */
+  async canWorkEntry(actor: AuthUser, entry: { unitId: string; assigneeId: string | null }): Promise<boolean> {
+    if (this.canWork(actor, entry)) return true;
+    return this.canLeadUnit(actor, entry.unitId);
+  }
+
+  private headsDepartment(actor: AuthUser, departmentId: string): boolean {
+    return !!actor.hodOf?.includes(departmentId);
   }
 
   /** Gate for the Follow-Up pipeline itself: a plain church member who isn't on any
@@ -34,6 +67,7 @@ export class FollowUpAuthService {
   async hasUnitAccess(actor: AuthUser): Promise<boolean> {
     if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return true;
     if (actor.unitLeadOf.length > 0) return true;
+    if (actor.hodOf?.length) return true;
     if (!actor.memberId) return false;
     const membership = await this.prisma.unitMember.findFirst({
       where: { tenantId: this.tenantId, memberId: actor.memberId },
@@ -76,6 +110,21 @@ export class FollowUpAuthService {
       if (followUpUnit) return followUpUnit;
     }
 
+    // A department head leads every unit in their department. Prefer Follow-Up
+    // if it's one of them (it's the team this page is about), else the first.
+    if (actor.hodOf?.length) {
+      const unit = await this.prisma.unit.findFirst({
+        where: { tenantId: this.tenantId, departmentId: { in: actor.hodOf } },
+        orderBy: [{ name: 'asc' }],
+        select: { id: true, name: true },
+      });
+      const followUpUnit = await this.prisma.unit.findFirst({
+        where: { tenantId: this.tenantId, name: 'Follow-Up', departmentId: { in: actor.hodOf } },
+        select: { id: true, name: true },
+      });
+      if (followUpUnit ?? unit) return followUpUnit ?? unit;
+    }
+
     return null;
   }
 
@@ -91,20 +140,19 @@ export class FollowUpAuthService {
   async resolveReportsUnit(actor: AuthUser): Promise<{ id: string; name: string } | null> {
     const followUpUnit = await this.prisma.unit.findFirst({
       where: { tenantId: this.tenantId, name: 'Follow-Up' },
-      select: { id: true, name: true },
+      select: { id: true, name: true, departmentId: true },
     });
     if (!followUpUnit) return null;
 
-    if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return followUpUnit;
-    if (actor.unitLeadOf.includes(followUpUnit.id)) return followUpUnit;
-    return null;
+    const { departmentId, ...unit } = followUpUnit;
+    return this.canLead(actor, unit.id, departmentId) ? unit : null;
   }
 
   /** Resolves the unit to operate on and authorizes the actor for it in one pass.
    * With no `requestedUnitId`, resolves to the actor's own unit membership. With one,
    * admins/leaders of that unit pass through; a plain member must actually belong to it. */
   async resolveActorUnitId(actor: AuthUser, requestedUnitId?: string): Promise<string> {
-    if (requestedUnitId && this.canLead(actor, requestedUnitId)) return requestedUnitId;
+    if (requestedUnitId && (await this.canLeadUnit(actor, requestedUnitId))) return requestedUnitId;
 
     if (!actor.memberId) throw new ForbiddenException('No member profile linked to this account');
 

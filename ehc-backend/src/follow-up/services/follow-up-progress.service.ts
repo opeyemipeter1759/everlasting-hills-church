@@ -36,7 +36,7 @@ export class FollowUpProgressService {
   async markPresent(actor: AuthUser, id: string, serviceId: string) {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
-    if (!actor.memberId || !this.auth.canWork(actor, entry)) {
+    if (!actor.memberId || !(await this.auth.canWorkEntry(actor, entry))) {
       throw new ForbiddenException('You are not assigned to this follow-up');
     }
     if (!entry.memberId) {
@@ -60,7 +60,7 @@ export class FollowUpProgressService {
   async logContact(actor: AuthUser, id: string, dto: LogContactDto) {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
-    if (!actor.memberId || !this.auth.canWork(actor, entry)) {
+    if (!actor.memberId || !(await this.auth.canWorkEntry(actor, entry))) {
       throw new ForbiddenException('You are not assigned to this follow-up');
     }
     if (entry.stage === FollowUpStage.CONFIRMED) {
@@ -84,6 +84,9 @@ export class FollowUpProgressService {
         outcome: isContact ? dto.outcome : null,
         note: dto.note,
         serviceId: dto.serviceId ?? null,
+        // A service-tied log gets its date from the service; only a general
+        // check-in needs the logger to say when it happened.
+        contactedAt: !dto.serviceId && dto.contactedAt ? new Date(dto.contactedAt) : null,
         isPastoralContact: dto.isPastoralContact ?? false,
         isPrivate: dto.isPrivate ?? false,
       },
@@ -121,7 +124,7 @@ export class FollowUpProgressService {
   async confirm(actor: AuthUser, id: string, dto: ConfirmFollowUpDto) {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
-    if (!this.auth.canLead(actor, entry.unitId)) {
+    if (!(await this.auth.canLeadUnit(actor, entry.unitId))) {
       throw new ForbiddenException('Only this unit\'s leader can log an outcome');
     }
 
@@ -145,7 +148,7 @@ export class FollowUpProgressService {
   async snooze(actor: AuthUser, id: string, until: string | null) {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
-    if (!actor.memberId || !this.auth.canWork(actor, entry)) {
+    if (!actor.memberId || !(await this.auth.canWorkEntry(actor, entry))) {
       throw new ForbiddenException('You are not assigned to this follow-up');
     }
 

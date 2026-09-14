@@ -51,7 +51,7 @@ export function buildFirstTimerAdminEmail({ data, adminEmail, appUrl }: Args): S
     .filter(([, v]) => v !== undefined && v !== null && v !== '')
     .map(
       ([k, v]) =>
-        `<tr><td style="padding:7px 14px 7px 0;color:#6B7280;font-size:13px;white-space:nowrap;vertical-align:top">${escapeHtml(k)}</td><td style="padding:7px 0;color:#111;font-size:14px;font-weight:600">${escapeHtml(fmt(v))}</td></tr>`,
+        `<tr><td style="padding:7px 14px 7px 0;color:#6B7280;font-size:13px;white-space:nowrap;vertical-align:top">${escapeHtml(k)}</td><td style="padding:7px 0;color:#111;font-size:11pt;font-weight:600">${escapeHtml(fmt(v))}</td></tr>`,
     )
     .join('');
 
@@ -62,8 +62,8 @@ export function buildFirstTimerAdminEmail({ data, adminEmail, appUrl }: Args): S
       <table style="width:100%;border-collapse:collapse">${tableRows}</table>
     </div>
     <div style="text-align:center;margin:8px 0">
-      <a href="${reviewUrl}" style="display:inline-block;margin:4px;background:#87102C;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:800;font-size:14px">Review first-timer →</a>
-      <a href="${assignUrl}" style="display:inline-block;margin:4px;background:#fff;color:#87102C;border:1px solid #E7CDD3;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:800;font-size:14px">Assign for follow-up</a>
+      <a href="${reviewUrl}" style="display:inline-block;margin:4px;background:#87102C;color:#fff;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:800;font-size:11pt">Review first-timer →</a>
+      <a href="${assignUrl}" style="display:inline-block;margin:4px;background:#fff;color:#87102C;border:1px solid #E7CDD3;padding:13px 28px;border-radius:10px;text-decoration:none;font-weight:800;font-size:11pt">Assign for follow-up</a>
     </div>
   `;
 

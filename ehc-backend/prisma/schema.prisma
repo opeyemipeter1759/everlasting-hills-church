@@ -378,6 +378,11 @@ model FollowUpContactLog {
   /// gets logged against a different service every week. Null on logs from
   /// before this was tracked.
   serviceId         String?
+  /// For a general check-in (no serviceId) — the day the contact actually
+  /// happened, picked by the logger, since it's often recorded after the
+  /// fact. Null when the log is tied to a service (that carries the date)
+  /// or was logged before this was tracked.
+  contactedAt       DateTime?
   /// Tagged distinctly from a team member's routine check-in — set when this
   /// log records the Pastor's own call, not a worker's contact.
   isPastoralContact Boolean                 @default(false)
@@ -603,6 +608,8 @@ model Profile {
   UnitTaskCreated               UnitTask[]
   UnitExpenseCreated            UnitExpense[]
   UnitTaskCommentAuthor         UnitTaskComment[]
+  UnitTaskReportAuthored        UnitTaskReport[]        @relation("UnitTaskReportAuthor")
+  UnitTaskReportReviewed        UnitTaskReport[]        @relation("UnitTaskReportReviewer")
   CalendarFeedToken             CalendarFeedToken[]     @relation("CalendarFeedTokenUser")
   PushSubscription              PushSubscription[]      @relation("PushSubscriptionUser")
   NotificationPreference        NotificationPreference? @relation("NotificationPreferenceUser")
@@ -938,6 +945,7 @@ model Tenant {
   Announcement           Announcement[]
   EmailTemplate          EmailTemplate[]
   EmailSend              EmailSend[]
+  EmailSettings          EmailSettings?
   Course                 Course[]
   CommunityPost          CommunityPost[]
   AttendanceRecord       AttendanceRecord[]
@@ -1001,6 +1009,7 @@ model Tenant {
   UnitTask               UnitTask[]
   UnitExpense            UnitExpense[]
   UnitTaskComment        UnitTaskComment[]
+  UnitTaskReport         UnitTaskReport[]
   UnitMessage             UnitMessage[]
   CalendarFeedToken      CalendarFeedToken[]
   PushSubscription       PushSubscription[]
@@ -1432,6 +1441,7 @@ model UnitTask {
   AssignedTo   Member?           @relation(fields: [assignedToId], references: [id])
   CreatedBy    Profile           @relation(fields: [createdById], references: [id])
   Comments     UnitTaskComment[]
+  Reports      UnitTaskReport[]
 
   @@index([unitId])
   @@index([assignedToId])
@@ -1451,6 +1461,47 @@ model UnitTaskComment {
   Author    Profile  @relation(fields: [authorId], references: [id])
 
   @@index([taskId])
+}
+
+enum UnitTaskReportOutcome {
+  COMPLETED
+  IN_PROGRESS
+  BLOCKED
+}
+
+enum UnitTaskReportStatus {
+  SUBMITTED
+  ACKNOWLEDGED
+  NEEDS_REVISION
+}
+
+/// A formal write-up from the person a UnitTask was assigned to, addressed to
+/// the unit's leadership: what was done, what got in the way, what's next.
+/// Distinct from the open comment thread (chatter) and from `Report` (a unit
+/// lead's status report to the Super Admin). A task can accumulate several —
+/// one per check-in — and the lead acknowledges each or sends it back.
+model UnitTaskReport {
+  id             String                @id
+  tenantId       String
+  taskId         String
+  authorId       String // Profile.id of the assignee who wrote it
+  outcome        UnitTaskReportOutcome
+  summary        String
+  challenges     String?
+  nextSteps      String?
+  status         UnitTaskReportStatus  @default(SUBMITTED)
+  reviewNote     String?
+  reviewedById   String? // Profile.id of the lead/assistant who last acted on it
+  reviewedAt     DateTime?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @default(now()) @updatedAt
+  Tenant         Tenant                @relation(fields: [tenantId], references: [id])
+  Task           UnitTask              @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  Author         Profile               @relation("UnitTaskReportAuthor", fields: [authorId], references: [id])
+  ReviewedBy     Profile?              @relation("UnitTaskReportReviewer", fields: [reviewedById], references: [id])
+
+  @@index([taskId, createdAt])
+  @@index([authorId])
 }
 
 /// A direct message between two members of the same unit.
@@ -1655,14 +1706,28 @@ model EmailSend {
   templateId    String?
   subject       String
   body          String
-  audienceMode  String // ALL | UNIT | ROLE | SPECIFIC
+  audienceMode  String // ALL | WORKERS | UNIT | ROLE | SPECIFIC
   audienceLabel String // human-readable snapshot, e.g. "Unit: Media Team"
   recipients    Int      @default(0)
+  /// Files sent along with this email — [{ name, url }] pointing at R2. Kept
+  /// for the send history; the mailer fetches them by URL at send time.
+  attachments   Json?
   sentById      String?
   createdAt     DateTime @default(now())
   Tenant        Tenant   @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, createdAt])
+}
+
+/// Branding shared by every outgoing email (one row per tenant). Only the
+/// header logo for now; null falls back to the site's own /logo.png.
+model EmailSettings {
+  id        String   @id
+  tenantId  String   @unique
+  logoUrl   String?
+  updatedAt DateTime @default(now()) @updatedAt
+  updatedBy String?
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

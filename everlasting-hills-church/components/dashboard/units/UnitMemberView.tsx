@@ -1,9 +1,10 @@
 "use client";
 import { useState } from "react";
 import { useMe, useMyMembershipDetail, useUnitTasks, useUnitUnreadCounts, useUpdateUnitTask } from "@/lib/api";
-import type { UnitMemberEntry, UnitTaskStatus } from "@/types";
+import type { UnitMemberEntry, UnitTask, UnitTaskReport, UnitTaskStatus } from "@/types";
 import UnitHero from "./UnitHero";
 import UnitTaskList from "./UnitTaskList";
+import TaskReportModal from "./TaskReportModal";
 import UnitRolesCard from "./UnitRolesCard";
 import UnitRoster from "./UnitRoster";
 import MessageMemberModal from "./MessageMemberModal";
@@ -24,15 +25,20 @@ function groupByRole(members: UnitMemberEntry[]): Record<string, UnitMemberEntry
 
 export default function UnitMemberView({ unitId }: { unitId: string }) {
   const { data: me } = useMe();
-  const { data: unit, isLoading, refetch: refetchUnit, isFetching: unitFetching } = useMyMembershipDetail(unitId);
-  const { data: tasks, refetch: refetchTasks, isFetching: tasksFetching } = useUnitTasks(unitId);
+  const { data: unit, isLoading, refetch: refetchUnit } = useMyMembershipDetail(unitId);
+  const { data: tasks, refetch: refetchTasks } = useUnitTasks(unitId);
+  // Tasks also refresh quietly in the background; only a deliberate tap on
+  // Refresh should show the spinner, not every poll.
+  const [manualRefreshing, setManualRefreshing] = useState(false);
   const updateTask = useUpdateUnitTask();
   const unreadMessages = useUnitUnreadCounts(unitId);
 
   const [messageTarget, setMessageTarget] = useState<MessageTarget | null>(null);
   const [showPicker, setShowPicker] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{ task: UnitTask; existing: UnitTaskReport | null } | null>(null);
 
   const myMemberId = me?.member?.id ?? null;
+  const myProfileId = me?.profileId ?? null;
 
   if (isLoading) {
     return (
@@ -60,9 +66,13 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
     updateTask.mutate({ unitId, taskId, status: nextStatus(current) });
   }
 
-  function refresh() {
-    refetchUnit();
-    refetchTasks();
+  async function refresh() {
+    setManualRefreshing(true);
+    try {
+      await Promise.all([refetchUnit(), refetchTasks()]);
+    } finally {
+      setManualRefreshing(false);
+    }
   }
 
   return (
@@ -75,7 +85,7 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
         canMessage={otherMembers.length > 0}
         onMessageSomeone={() => setShowPicker(true)}
         onRefresh={refresh}
-        isRefreshing={unitFetching || tasksFetching}
+        isRefreshing={manualRefreshing}
       />
 
       <div className="grid items-stretch gap-5 lg:h-[calc(100dvh-10rem)] lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.6fr)]">
@@ -87,8 +97,34 @@ export default function UnitMemberView({ unitId }: { unitId: string }) {
         </div>
       </div>
 
-      <UnitTaskList unitId={unitId} title="My tasks" tasks={myTasks} delay={0.05} onCycleStatus={cycleStatus} />
-      <UnitTaskList unitId={unitId} title="Unit tasks" tasks={unitTasks} delay={0.1} />
+      <UnitTaskList
+        unitId={unitId}
+        title="My tasks"
+        tasks={myTasks}
+        delay={0.05}
+        viewerMemberId={myMemberId}
+        viewerProfileId={myProfileId}
+        onCycleStatus={cycleStatus}
+        onReport={(task) => setReportTarget({ task, existing: null })}
+        onEditReport={(task, existing) => setReportTarget({ task, existing })}
+      />
+      <UnitTaskList
+        unitId={unitId}
+        title="Unit tasks"
+        tasks={unitTasks}
+        delay={0.1}
+        viewerMemberId={myMemberId}
+        viewerProfileId={myProfileId}
+        onReport={(task) => setReportTarget({ task, existing: null })}
+        onEditReport={(task, existing) => setReportTarget({ task, existing })}
+      />
+
+      <TaskReportModal
+        unitId={unitId}
+        task={reportTarget?.task ?? null}
+        existing={reportTarget?.existing ?? null}
+        onClose={() => setReportTarget(null)}
+      />
       <UnitRolesCard roles={roles} delay={0.15} />
 
       {showPicker && (

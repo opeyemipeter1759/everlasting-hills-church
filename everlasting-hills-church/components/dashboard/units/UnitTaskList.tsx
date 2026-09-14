@@ -1,26 +1,41 @@
 "use client";
 
-import { ListChecks } from "lucide-react";
-import type { UnitTask, UnitTaskStatus } from "@/types";
+import { ClipboardList, ListChecks } from "lucide-react";
+import type { UnitTask, UnitTaskReport, UnitTaskStatus } from "@/types";
 import SectionCard from "./SectionCard";
 import TaskCommentThread from "./TaskCommentThread";
+import TaskReportsPanel from "./TaskReportsPanel";
 import { STATUS_LABEL, STATUS_ICON } from "./taskStatus";
+import { OUTCOME_META, REPORT_STATUS_META } from "./taskReport";
 
-/** Renders a list of unit tasks with a comment thread under each. When
- * `onCycleStatus` is given the status icon becomes clickable (for a member's
- * own tasks); otherwise it's a static read-only indicator. */
+/**
+ * Renders a list of unit tasks, each with its discussion thread and reports.
+ * When `onCycleStatus` is given the status icon becomes clickable (for a
+ * member's own tasks). `onReport` adds a Report button to tasks the viewer
+ * may report on — their own, and whole-unit ones.
+ */
 export default function UnitTaskList({
   unitId,
   title,
   tasks,
   delay,
+  viewerMemberId,
+  viewerProfileId,
+  canReview = false,
   onCycleStatus,
+  onReport,
+  onEditReport,
 }: {
   unitId: string;
   title: string;
   tasks: UnitTask[];
   delay?: number;
+  viewerMemberId?: string | null;
+  viewerProfileId?: string | null;
+  canReview?: boolean;
   onCycleStatus?: (taskId: string, current: UnitTaskStatus) => void;
+  onReport?: (task: UnitTask) => void;
+  onEditReport?: (task: UnitTask, report: UnitTaskReport) => void;
 }) {
   if (tasks.length === 0) return null;
 
@@ -29,6 +44,8 @@ export default function UnitTaskList({
       <ul className="space-y-2">
         {tasks.map((t) => {
           const StatusIcon = STATUS_ICON[t.status];
+          const mayReport = !!onReport && (t.assignedToId === null || t.assignedToId === viewerMemberId);
+          const latest = t.latestReport;
           return (
             <li
               key={t.id}
@@ -78,9 +95,45 @@ export default function UnitTaskList({
                 >
                   {STATUS_LABEL[t.status]}
                 </span>
+                {mayReport && (
+                  <button
+                    type="button"
+                    onClick={() => onReport!(t)}
+                    title="Send a report on this task to your unit lead"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#87102C] px-2.5 py-1.5 text-[11px] font-bold text-white hover:bg-[#6E0C24] transition-colors flex-shrink-0"
+                  >
+                    <ClipboardList size={12} />
+                    Report
+                  </button>
+                )}
               </div>
-              <div className="mt-2 pl-7">
-                <TaskCommentThread unitId={unitId} taskId={t.id} />
+
+              {latest && (
+                <p className="mt-1.5 pl-7 flex flex-wrap items-center gap-1.5 text-[10px] text-gray-500 dark:text-white/40">
+                  <span className="font-semibold uppercase tracking-wider">Latest report</span>
+                  <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 font-bold ${OUTCOME_META[latest.outcome].cls}`}>
+                    {OUTCOME_META[latest.outcome].label}
+                  </span>
+                  <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 font-bold ${REPORT_STATUS_META[latest.status].cls}`}>
+                    {REPORT_STATUS_META[latest.status].label}
+                  </span>
+                </p>
+              )}
+
+              <div className="mt-2 pl-7 flex flex-wrap items-start gap-x-4 gap-y-2">
+                <div className="min-w-0 flex-1 basis-64">
+                  <TaskCommentThread unitId={unitId} taskId={t.id} commentCount={t._count?.Comments ?? 0} />
+                </div>
+                <div className="min-w-0 flex-1 basis-64">
+                  <TaskReportsPanel
+                    unitId={unitId}
+                    taskId={t.id}
+                    reportCount={t._count?.Reports ?? 0}
+                    canReview={canReview}
+                    viewerProfileId={viewerProfileId ?? null}
+                    onEdit={onEditReport ? (r) => onEditReport(t, r) : undefined}
+                  />
+                </div>
               </div>
             </li>
           );

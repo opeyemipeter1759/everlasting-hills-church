@@ -124,7 +124,7 @@ export default function EmailComposerPage({ mode, templateId }: { mode: "create"
               />
             </div>
             <div className="px-1 py-1">
-              <ReportEditor value={body} onChange={setBody} placeholder="Write your message…" minHeight={400} />
+              <ReportEditor value={body} onChange={setBody} placeholder="Write your message…" minHeight={400} variant="email" />
             </div>
           </div>
 

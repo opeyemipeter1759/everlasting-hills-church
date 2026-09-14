@@ -62,7 +62,10 @@ export default function FollowUpPipelineClient() {
   const { data: reportsUnit } = useFollowUpReportsUnit();
   const { data: services = [] } = useFollowUpServices();
 
-  const isLeader = hasMinRole(me?.role, "UNIT_LEAD");
+  // `my-unit` only resolves for someone the backend treats as a leader of that
+  // unit — including a department head, whose HOD role fails hasMinRole because
+  // it's lateral — so a resolved unit is itself proof of leadership.
+  const isLeader = hasMinRole(me?.role, "UNIT_LEAD") || !!myUnit;
 
   const [mainView, setMainView] = useState<MainView>("master");
   const [activeTab, setActiveTabState] = useState<StageTab>("all");

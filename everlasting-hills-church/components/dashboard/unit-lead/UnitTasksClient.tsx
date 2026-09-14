@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { CheckCircle2, Circle, CircleDot, Plus, Trash2 } from "lucide-react";
 import { useUnitLeadContext } from "./useUnitLeadContext";
-import { useUnitTasks, useCreateUnitTask, useUpdateUnitTask, useDeleteUnitTask } from "@/lib/api";
+import { useMe, useUnitTasks, useCreateUnitTask, useUpdateUnitTask, useDeleteUnitTask } from "@/lib/api";
 import type { UnitTaskStatus } from "@/types";
 import UnitLeadTabs from "./UnitLeadTabs";
 import SubmitButton from "@/components/ui/form/SubmitButton";
 import TaskCommentThread from "@/components/dashboard/units/TaskCommentThread";
+import TaskReportsPanel from "@/components/dashboard/units/TaskReportsPanel";
+import { OUTCOME_META, REPORT_STATUS_META } from "@/components/dashboard/units/taskReport";
 
 const STATUS_LABEL: Record<UnitTaskStatus, string> = {
   TODO: "To do",
@@ -23,6 +25,7 @@ const STATUS_ICON: Record<UnitTaskStatus, typeof Circle> = {
 
 export default function UnitTasksClient({ unitId }: { unitId: string }) {
   const { summary, unit } = useUnitLeadContext(unitId);
+  const { data: me } = useMe();
   const { data: tasks } = useUnitTasks(unitId);
   const create = useCreateUnitTask();
   const update = useUpdateUnitTask();
@@ -151,6 +154,14 @@ export default function UnitTasksClient({ unitId }: { unitId: string }) {
                           {t.dueDate && ` · Due ${new Date(t.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
                         </p>
                       </div>
+                      {t.latestReport?.status === "SUBMITTED" && (
+                        <span
+                          title="A report is waiting for your review"
+                          className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#87102C]/10 text-[#87102C] dark:text-[#e8768a] flex-shrink-0"
+                        >
+                          Report to review
+                        </span>
+                      )}
                       <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 flex-shrink-0">
                         {STATUS_LABEL[t.status]}
                       </span>
@@ -163,8 +174,31 @@ export default function UnitTasksClient({ unitId }: { unitId: string }) {
                         <Trash2 size={13} />
                       </button>
                     </div>
-                    <div className="mt-2 pl-7">
-                      <TaskCommentThread unitId={unitId} taskId={t.id} />
+                    {t.latestReport && (
+                      <p className="mt-1.5 pl-7 flex flex-wrap items-center gap-1.5 text-[10px] text-gray-500 dark:text-white/40">
+                        <span className="font-semibold uppercase tracking-wider">Latest report</span>
+                        <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 font-bold ${OUTCOME_META[t.latestReport.outcome].cls}`}>
+                          {OUTCOME_META[t.latestReport.outcome].label}
+                        </span>
+                        <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 font-bold ${REPORT_STATUS_META[t.latestReport.status].cls}`}>
+                          {REPORT_STATUS_META[t.latestReport.status].label}
+                        </span>
+                      </p>
+                    )}
+                    <div className="mt-2 pl-7 flex flex-wrap items-start gap-x-4 gap-y-2">
+                      <div className="min-w-0 flex-1 basis-64">
+                        <TaskCommentThread unitId={unitId} taskId={t.id} commentCount={t._count?.Comments ?? 0} />
+                      </div>
+                      <div className="min-w-0 flex-1 basis-64">
+                        <TaskReportsPanel
+                          unitId={unitId}
+                          taskId={t.id}
+                          reportCount={t._count?.Reports ?? 0}
+                          canReview
+                          viewerProfileId={me?.profileId ?? null}
+                          defaultOpen={t.latestReport?.status === "SUBMITTED"}
+                        />
+                      </div>
                     </div>
                   </li>
                 );

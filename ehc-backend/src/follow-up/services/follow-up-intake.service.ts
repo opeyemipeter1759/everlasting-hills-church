@@ -43,7 +43,7 @@ export class FollowUpIntakeService {
     if (!actor.profileId) throw new ForbiddenException('No profile linked to this account');
 
     const unitId = await this.auth.resolveActorUnitId(actor, dto.unitId);
-    if (!this.auth.canLead(actor, unitId)) {
+    if (!(await this.auth.canLeadUnit(actor, unitId))) {
       throw new ForbiddenException('Only this unit\'s leader can add to the Master List');
     }
 
@@ -152,7 +152,7 @@ export class FollowUpIntakeService {
     });
     if (!assigneeMembership) throw new BadRequestException('Assignee must belong to a unit');
 
-    if (!this.auth.canLead(actor, assigneeMembership.unitId)) {
+    if (!(await this.auth.canLeadUnit(actor, assigneeMembership.unitId))) {
       throw new ForbiddenException('You can only assign to your own team');
     }
 
@@ -243,7 +243,7 @@ export class FollowUpIntakeService {
   /** Moves a whole caseload at once — e.g. when a worker goes on leave. Only their
    * still-open entries within one unit; confirmed/opted-out entries stay put. */
   async bulkReassign(actor: AuthUser, dto: BulkReassignDto) {
-    if (!this.auth.canLead(actor, dto.unitId)) {
+    if (!(await this.auth.canLeadUnit(actor, dto.unitId))) {
       throw new ForbiddenException('You can only bulk-reassign within your own team');
     }
     const [fromMembership, toMembership] = await Promise.all([

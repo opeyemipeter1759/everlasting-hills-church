@@ -2,11 +2,13 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { ArrayNotEmpty, IsArray, IsEnum, IsIn, IsString, ValidateIf } from 'class-validator';
 
-export type AudienceMode = 'ALL' | 'UNIT' | 'ROLE' | 'SPECIFIC';
+/** WORKERS = everyone serving somewhere: any unit member plus every leader
+ * (unit leads, department heads/HODs, head ushers, admin/pastoral grants). */
+export type AudienceMode = 'ALL' | 'WORKERS' | 'UNIT' | 'ROLE' | 'SPECIFIC';
 
 export class AudienceFilterDto {
-  @ApiProperty({ enum: ['ALL', 'UNIT', 'ROLE', 'SPECIFIC'] })
-  @IsIn(['ALL', 'UNIT', 'ROLE', 'SPECIFIC'])
+  @ApiProperty({ enum: ['ALL', 'WORKERS', 'UNIT', 'ROLE', 'SPECIFIC'] })
+  @IsIn(['ALL', 'WORKERS', 'UNIT', 'ROLE', 'SPECIFIC'])
   mode!: AudienceMode;
 
   @ApiPropertyOptional({ description: 'Required when mode is UNIT' })

@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -9,6 +9,7 @@ import { CreateEmailTemplateDto } from './dto/create-email-template.dto';
 import { UpdateEmailTemplateDto } from './dto/update-email-template.dto';
 import { SendEmailDto } from './dto/send-email.dto';
 import { AudienceFilterDto } from './dto/audience-filter.dto';
+import { UpdateEmailSettingsDto } from './dto/update-email-settings.dto';
 
 /**
  * Admin "Emails" feature — reusable templates + targeted sends (all members, a
@@ -20,6 +21,18 @@ import { AudienceFilterDto } from './dto/audience-filter.dto';
 @Roles(Role.ADMIN)
 export class EmailsController {
   constructor(private readonly emails: EmailsService) {}
+
+  @Get('settings')
+  @ApiOperation({ summary: 'Email branding — the header logo every outgoing email uses' })
+  getSettings() {
+    return this.emails.getSettings();
+  }
+
+  @Put('settings')
+  @ApiOperation({ summary: 'Change the header logo (pass logoUrl: null to restore the default)' })
+  updateSettings(@Body() body: UpdateEmailSettingsDto, @CurrentUser() user: AuthUser) {
+    return this.emails.updateSettings(body, user.profileId);
+  }
 
   @Post('templates')
   @ApiOperation({ summary: 'Save a reusable email template' })

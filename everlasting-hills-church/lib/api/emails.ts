@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
+import { apiClient } from "@/lib/api/axios";
 import type { PersonRole } from "@/lib/api/people";
 
 export interface EmailTemplate {
@@ -19,7 +20,8 @@ export interface TemplateFormValues {
   body: string;
 }
 
-export type AudienceMode = "ALL" | "UNIT" | "ROLE" | "SPECIFIC";
+/** WORKERS = anyone in a unit plus every leader. */
+export type AudienceMode = "ALL" | "WORKERS" | "UNIT" | "ROLE" | "SPECIFIC";
 
 export interface AudienceFilter {
   mode: AudienceMode;
@@ -35,6 +37,13 @@ export interface RecipientPreview {
   sample: { name: string; email: string }[];
 }
 
+export interface EmailAttachment {
+  name: string;
+  url: string;
+}
+
+export const MAX_EMAIL_ATTACHMENTS = 5;
+
 export interface EmailSend {
   id: string;
   templateId: string | null;
@@ -43,7 +52,33 @@ export interface EmailSend {
   audienceMode: AudienceMode;
   audienceLabel: string;
   recipients: number;
+  attachments: EmailAttachment[] | null;
   createdAt: string;
+}
+
+export interface EmailSettings {
+  /** What the admin saved — null means "use the site's default logo". */
+  logoUrl: string | null;
+  /** What emails actually render with right now. */
+  effectiveLogoUrl: string;
+}
+
+/**
+ * Uploads a file for use in an email (inline image, attachment, or the header
+ * logo) and returns its public URL. Images go through the image endpoint;
+ * anything else (PDF, Word) through the document one — both land on R2.
+ */
+export async function uploadEmailFile(file: File): Promise<EmailAttachment> {
+  const endpoint = file.type.startsWith("image/") ? "/uploads/image" : "/uploads/document";
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await apiClient.post<{ url?: string; imageUrl?: string; name?: string }>(endpoint, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 120_000,
+  });
+  const url = res.data.url ?? res.data.imageUrl ?? "";
+  if (!url) throw new Error("Upload did not return a URL");
+  return { name: res.data.name ?? file.name, url };
 }
 
 export interface EmailsSentMeta {
@@ -126,8 +161,30 @@ export function usePreviewRecipients() {
 export function useSendEmail() {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (body: { templateId?: string; subject: string; body: string; audience: AudienceFilter }) =>
-      api.post<EmailSend>("/emails/send", body),
+    mutationFn: (body: {
+      templateId?: string;
+      subject: string;
+      body: string;
+      audience: AudienceFilter;
+      attachments?: EmailAttachment[];
+    }) => api.post<EmailSend>("/emails/send", body),
     onSuccess: invalidate,
+  });
+}
+
+// ── Branding ───────────────────────────────────────────────────────────────
+
+export function useEmailSettings() {
+  return useQuery({
+    queryKey: [...KEY, "settings"],
+    queryFn: () => api.get<EmailSettings>("/emails/settings"),
+  });
+}
+
+export function useUpdateEmailSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { logoUrl: string | null }) => api.put<EmailSettings>("/emails/settings", body),
+    onSuccess: (data) => qc.setQueryData([...KEY, "settings"], data),
   });
 }

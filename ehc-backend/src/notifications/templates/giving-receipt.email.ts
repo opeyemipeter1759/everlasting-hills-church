@@ -62,10 +62,10 @@ export function buildGivingReceiptEmail(args: Args): SendEmailPayload {
     bodyHtml: `
       <p style="margin:0 0 16px">Your generous gift of <strong>${escapeHtml(money)}</strong> has been received with gratitude.</p>
       <div style="background:#FFF;border:1px solid #E5E7EB;border-radius:12px;padding:18px 20px;margin:0 0 20px">
-        <p style="margin:0 0 8px;font-size:14px;color:#111"><strong>Amount:</strong> ${escapeHtml(money)}</p>
-        <p style="margin:0 0 8px;font-size:14px;color:#111"><strong>Purpose:</strong> ${escapeHtml(category ?? 'General')}</p>
-        <p style="margin:0 0 8px;font-size:14px;color:#111"><strong>Reference:</strong> ${escapeHtml(reference)}</p>
-        <p style="margin:0;font-size:14px;color:#111"><strong>Date:</strong> ${escapeHtml(when)}</p>
+        <p style="margin:0 0 8px;font-size:11pt;color:#111"><strong>Amount:</strong> ${escapeHtml(money)}</p>
+        <p style="margin:0 0 8px;font-size:11pt;color:#111"><strong>Purpose:</strong> ${escapeHtml(category ?? 'General')}</p>
+        <p style="margin:0 0 8px;font-size:11pt;color:#111"><strong>Reference:</strong> ${escapeHtml(reference)}</p>
+        <p style="margin:0;font-size:11pt;color:#111"><strong>Date:</strong> ${escapeHtml(when)}</p>
       </div>
       <p style="margin:0">May the Lord, who loves a cheerful giver, bless you abundantly.</p>
     `,

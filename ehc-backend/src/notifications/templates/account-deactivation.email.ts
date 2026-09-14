@@ -45,7 +45,7 @@ export function buildAccountDeactivationEmail({ email, firstName, reversalDays, 
     <p style="margin:0 0 16px">We've received your request to deactivate your Everlasting Hills member account, and it's now done.</p>
     <div style="background:#FFF4F6;border:1px solid #E7CDD3;border-radius:12px;padding:16px 20px;margin:0 0 20px">
       <p style="margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:800;color:#87102C">What happens now</p>
-      <ul style="margin:0;padding-left:18px;color:#4B5563;font-size:14px;line-height:1.7">
+      <ul style="margin:0;padding-left:18px;color:#4B5563;font-size:11pt;line-height:1.7">
         <li>Your account is deactivated and no longer active.</li>
         <li>Your information is kept for <strong>${reversalDays} days</strong> in case you change your mind.</li>
         <li>You can reactivate any time within ${reversalDays} days by simply logging back in.</li>

@@ -374,6 +374,9 @@ export interface UnitPosition {
 
 export type UnitTaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
 
+export type UnitTaskReportOutcome = "COMPLETED" | "IN_PROGRESS" | "BLOCKED";
+export type UnitTaskReportStatus = "SUBMITTED" | "ACKNOWLEDGED" | "NEEDS_REVISION";
+
 export interface UnitTask {
   id: string;
   unitId: string;
@@ -385,6 +388,31 @@ export interface UnitTask {
   createdAt: string;
   completedAt: string | null;
   AssignedTo: { id: string; firstName: string; lastName: string; photoUrl: string | null } | null;
+  _count: { Comments: number; Reports: number };
+  /** Most recent report on the task, if any — enough to show where it stands. */
+  latestReport: {
+    id: string;
+    outcome: UnitTaskReportOutcome;
+    status: UnitTaskReportStatus;
+    createdAt: string;
+    authorId: string;
+  } | null;
+}
+
+export interface UnitTaskReport {
+  id: string;
+  taskId: string;
+  outcome: UnitTaskReportOutcome;
+  summary: string;
+  challenges: string | null;
+  nextSteps: string | null;
+  status: UnitTaskReportStatus;
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  reviewedBy: { profileId: string; name: string; photoUrl: string | null } | null;
+  author: { profileId: string; name: string; photoUrl: string | null } | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UnitExpense {

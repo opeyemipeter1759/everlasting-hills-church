@@ -30,7 +30,7 @@ export class FollowUpMemberStatusService {
   async optOutMember(actor: AuthUser, id: string) {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
-    if (!this.auth.canLead(actor, entry.unitId)) {
+    if (!(await this.auth.canLeadUnit(actor, entry.unitId))) {
       throw new ForbiddenException('Only this team\'s leader can opt a member out');
     }
     if (!entry.memberId) {
@@ -48,7 +48,7 @@ export class FollowUpMemberStatusService {
   async restoreMember(actor: AuthUser, id: string) {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
-    if (!this.auth.canLead(actor, entry.unitId)) {
+    if (!(await this.auth.canLeadUnit(actor, entry.unitId))) {
       throw new ForbiddenException('Only this team\'s leader can restore a member');
     }
     if (!entry.memberId) {

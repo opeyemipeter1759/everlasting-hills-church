@@ -4,7 +4,7 @@ import { queryKeys } from "@/lib/api/queryKeys";
 import { notifyFrontendSessionChanged } from "@/lib/auth/frontend-session";
 import { logoutFrontendSession } from "@/lib/auth/logout";
 import { setServiceWorkerUser } from "@/lib/pwa/service-worker";
-import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry, UnitPosition, UnitTask, UnitTaskStatus, UnitExpense, UnitTaskComment, UnitMessage } from "@/types";
+import { LoginPayload, LoginResponse, LatestSermon, User, SermonAdminOverviewData, CreateSermonPayload, UpdateSermonPayload, SermonStatus, Unit, UnitDetail, UnitMemberEntry, UnitPosition, UnitTask, UnitTaskStatus, UnitExpense, UnitTaskComment, UnitMessage, UnitTaskReport, UnitTaskReportOutcome } from "@/types";
 import type {
   SermonDetailRaw,
   MemberSermonContext,
@@ -829,11 +829,30 @@ export function useDeleteUnitMessage() {
 
 // ── Unit task comments ──────────────────────────────────────────────────────
 
+// ── Live refresh for task work ──────────────────────────────────────────
+// A task assigned to you, a comment on it, or a report filed on it should
+// simply appear — nobody should have to reload. The list polls on its own
+// (it carries comment/report counts and the latest report), and an open
+// thread or reports panel polls a little faster while it's on screen.
+// Polling pauses in background tabs and resumes (with an immediate refetch)
+// when you come back or reconnect.
+const TASK_LIST_REFRESH_MS = 15_000;
+const TASK_THREAD_REFRESH_MS = 8_000;
+
+const liveTaskQuery = {
+  refetchIntervalInBackground: false,
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
+  staleTime: 0,
+} as const;
+
 export function useUnitTaskComments(unitId: string | null, taskId: string | null) {
   return useQuery({
     queryKey: ["units", unitId, "tasks", taskId, "comments"],
     queryFn: () => api.get<UnitTaskComment[]>(`/units/${unitId}/tasks/${taskId}/comments`),
     enabled: !!unitId && !!taskId,
+    refetchInterval: TASK_THREAD_REFRESH_MS,
+    ...liveTaskQuery,
   });
 }
 
@@ -842,8 +861,11 @@ export function useAddUnitTaskComment() {
   return useMutation({
     mutationFn: ({ unitId, taskId, content }: { unitId: string; taskId: string; content: string }) =>
       api.post<UnitTaskComment>(`/units/${unitId}/tasks/${taskId}/comments`, { content }),
-    onSuccess: (_data, { unitId, taskId }) =>
-      qc.invalidateQueries({ queryKey: ["units", unitId, "tasks", taskId, "comments"] }),
+    onSuccess: (_data, { unitId, taskId }) => {
+      qc.invalidateQueries({ queryKey: ["units", unitId, "tasks", taskId, "comments"] });
+      // The task row shows a comment count that comes from the list endpoint.
+      qc.invalidateQueries({ queryKey: ["units", unitId, "tasks"], exact: true });
+    },
   });
 }
 
@@ -946,6 +968,11 @@ export function useUnitTasks(unitId: string | null) {
     queryKey: ["units", unitId, "tasks"],
     queryFn: () => api.get<UnitTask[]>(`/units/${unitId}/tasks`),
     enabled: !!unitId,
+    refetchInterval: TASK_LIST_REFRESH_MS,
+    ...liveTaskQuery,
+    // Keep the current list on screen while a background refresh is in flight
+    // so rows never flicker out and back in.
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -987,6 +1014,86 @@ export function useDeleteUnitTask() {
     mutationFn: ({ unitId, taskId }: { unitId: string; taskId: string }) =>
       api.delete(`/units/${unitId}/tasks/${taskId}`),
     onSuccess: (_data, { unitId }) => qc.invalidateQueries({ queryKey: ["units", unitId, "tasks"] }),
+  });
+}
+
+// ── Unit task reports ───────────────────────────────────────────────────
+// Every mutation also invalidates the task list: it carries the report count
+// and the latest report, which is what the task row shows.
+
+export function useUnitTaskReports(unitId: string | null, taskId: string | null) {
+  return useQuery({
+    queryKey: ["units", unitId, "tasks", taskId, "reports"],
+    queryFn: () => api.get<UnitTaskReport[]>(`/units/${unitId}/tasks/${taskId}/reports`),
+    enabled: !!unitId && !!taskId,
+    refetchInterval: TASK_THREAD_REFRESH_MS,
+    ...liveTaskQuery,
+  });
+}
+
+export interface UnitTaskReportInput {
+  outcome: UnitTaskReportOutcome;
+  summary: string;
+  challenges?: string;
+  nextSteps?: string;
+}
+
+function useInvalidateTaskReports() {
+  const qc = useQueryClient();
+  return (unitId: string, taskId: string) => {
+    qc.invalidateQueries({ queryKey: ["units", unitId, "tasks", taskId, "reports"] });
+    qc.invalidateQueries({ queryKey: ["units", unitId, "tasks"], exact: true });
+  };
+}
+
+export function useCreateUnitTaskReport() {
+  const invalidate = useInvalidateTaskReports();
+  return useMutation({
+    mutationFn: ({ unitId, taskId, ...body }: { unitId: string; taskId: string } & UnitTaskReportInput) =>
+      api.post<UnitTaskReport>(`/units/${unitId}/tasks/${taskId}/reports`, body),
+    onSuccess: (_data, { unitId, taskId }) => invalidate(unitId, taskId),
+  });
+}
+
+export function useUpdateUnitTaskReport() {
+  const invalidate = useInvalidateTaskReports();
+  return useMutation({
+    mutationFn: ({
+      unitId,
+      taskId,
+      reportId,
+      ...body
+    }: { unitId: string; taskId: string; reportId: string } & Partial<UnitTaskReportInput>) =>
+      api.patch<UnitTaskReport>(`/units/${unitId}/tasks/${taskId}/reports/${reportId}`, body),
+    onSuccess: (_data, { unitId, taskId }) => invalidate(unitId, taskId),
+  });
+}
+
+export function useReviewUnitTaskReport() {
+  const invalidate = useInvalidateTaskReports();
+  return useMutation({
+    mutationFn: ({
+      unitId,
+      taskId,
+      reportId,
+      ...body
+    }: {
+      unitId: string;
+      taskId: string;
+      reportId: string;
+      status: "ACKNOWLEDGED" | "NEEDS_REVISION";
+      note?: string;
+    }) => api.patch<UnitTaskReport>(`/units/${unitId}/tasks/${taskId}/reports/${reportId}/review`, body),
+    onSuccess: (_data, { unitId, taskId }) => invalidate(unitId, taskId),
+  });
+}
+
+export function useDeleteUnitTaskReport() {
+  const invalidate = useInvalidateTaskReports();
+  return useMutation({
+    mutationFn: ({ unitId, taskId, reportId }: { unitId: string; taskId: string; reportId: string }) =>
+      api.delete(`/units/${unitId}/tasks/${taskId}/reports/${reportId}`),
+    onSuccess: (_data, { unitId, taskId }) => invalidate(unitId, taskId),
   });
 }
 

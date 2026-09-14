@@ -92,7 +92,7 @@ export class FollowUpServiceReportService {
   }
 
   async compileDraft(actor: AuthUser, unitId: string, serviceId: string) {
-    if (!this.auth.canLead(actor, unitId)) throw new ForbiddenException("Only this unit's leader can compile its report");
+    if (!(await this.auth.canLeadUnit(actor, unitId))) throw new ForbiddenException("Only this unit's leader can compile its report");
 
     const [unit, service, entries, pastors, adminHeads] = await Promise.all([
       this.prisma.unit.findFirst({ where: { id: unitId, tenantId: this.tenantId }, select: { name: true } }),
@@ -122,7 +122,7 @@ export class FollowUpServiceReportService {
     dto: { summaryText: string; sentVia?: FollowUpReportSentVia; recipients?: ServiceReportRecipientGroup[] },
   ) {
     if (!actor.profileId) throw new ForbiddenException('No profile linked to this account');
-    if (!this.auth.canLead(actor, unitId)) throw new ForbiddenException("Only this unit's leader can send its report");
+    if (!(await this.auth.canLeadUnit(actor, unitId))) throw new ForbiddenException("Only this unit's leader can send its report");
 
     const [unit, service, entries] = await Promise.all([
       this.prisma.unit.findFirst({ where: { id: unitId, tenantId: this.tenantId }, select: { name: true } }),
@@ -211,7 +211,7 @@ export class FollowUpServiceReportService {
   }
 
   async history(actor: AuthUser, unitId?: string) {
-    if (unitId && !this.auth.canLead(actor, unitId)) throw new ForbiddenException('You can only view your own team\'s reports');
+    if (unitId && !(await this.auth.canLeadUnit(actor, unitId))) throw new ForbiddenException('You can only view your own team\'s reports');
     const rows = await this.prisma.serviceFollowUpReport.findMany({
       where: { tenantId: this.tenantId, sentAt: { not: null }, ...(unitId ? { unitId } : {}) },
       orderBy: { sentAt: 'desc' },

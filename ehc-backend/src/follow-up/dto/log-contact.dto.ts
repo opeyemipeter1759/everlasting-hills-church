@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { FollowUpContactMethod, FollowUpContactOutcome, FollowUpLogKind } from '@prisma/client';
-import { IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsEnum, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 /** A CONTACT log requires method + outcome (a real attempt); a QUICK_UPDATE is
  * just a note — both land on the same timeline. */
@@ -30,6 +30,11 @@ export class LogContactDto {
   @IsOptional()
   @IsString()
   serviceId?: string;
+
+  @ApiPropertyOptional({ description: 'For a general check-in (no serviceId) — the day the contact happened. Ignored when serviceId is set.', example: '2026-09-13' })
+  @IsOptional()
+  @IsDateString()
+  contactedAt?: string;
 
   @ApiPropertyOptional({ description: "Tags this as the Pastor's own call, distinct from a worker's routine check-in" })
   @IsOptional()

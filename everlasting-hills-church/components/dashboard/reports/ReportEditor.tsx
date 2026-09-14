@@ -1,13 +1,17 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
+import Image from "@tiptap/extension-image";
 import {
   Bold,
   Heading2,
+  ImagePlus,
   Italic,
+  Loader2,
   List,
   ListOrdered,
   Minus,
@@ -18,6 +22,8 @@ import {
   Undo2,
 } from "lucide-react";
 import { PROSE_CLASSES } from "./report-text-utils";
+import { uploadEmailFile } from "@/lib/api/emails";
+import { showToast } from "@/components/ui/toast/toast";
 
 function ToolbarDivider() {
   return <span className="mx-1 h-4 w-px flex-shrink-0 bg-gray-200 dark:bg-white/10" />;
@@ -56,7 +62,7 @@ function ToolbarButton({
   );
 }
 
-function Toolbar({ editor }: { editor: Editor }) {
+function Toolbar({ editor, onInsertImage, uploadingImage }: { editor: Editor; onInsertImage?: () => void; uploadingImage?: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-0.5 border-b border-gray-100 dark:border-white/[0.06] px-2 py-1.5">
       <ToolbarButton title="Bold" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
@@ -90,6 +96,15 @@ function Toolbar({ editor }: { editor: Editor }) {
         <Minus size={14} />
       </ToolbarButton>
 
+      {onInsertImage && (
+        <>
+          <ToolbarDivider />
+          <ToolbarButton title="Insert image" disabled={uploadingImage} onClick={onInsertImage}>
+            {uploadingImage ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+          </ToolbarButton>
+        </>
+      )}
+
       <ToolbarDivider />
 
       <ToolbarButton title="Undo" disabled={!editor.can().undo()} onClick={() => editor.chain().focus().undo().run()}>
@@ -111,30 +126,66 @@ export default function ReportEditor({
   onChange,
   placeholder = "Write your report…",
   minHeight = 220,
+  variant = "report",
 }: {
   value: string;
   onChange: (html: string) => void;
   placeholder?: string;
   minHeight?: number;
+  /** "email" renders the content in the house email font (Arial, 11pt) so what
+   * you compose looks like what gets delivered — see notifications/templates/layout.ts. */
+  variant?: "report" | "email";
 }) {
+  const isEmail = variant === "email";
+  const contentClass = isEmail ? "leading-relaxed" : "text-[15px] leading-relaxed";
+  const contentStyle = isEmail ? { fontFamily: "Arial, Helvetica, sans-serif", fontSize: "11pt" } : undefined;
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [2] } }),
       Underline,
       Placeholder.configure({ placeholder }),
+      // Inline images are an email-only affordance: the blast template sizes
+      // them for the 560px card, whereas report rendering has no such handling.
+      ...(isEmail ? [Image.configure({ inline: false, allowBase64: false })] : []),
     ],
     content: value,
     immediatelyRender: false,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
-      attributes: { class: "text-[15px] leading-relaxed" },
+      attributes: { class: contentClass },
     },
   });
 
+  async function handleImagePicked(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !editor) return;
+    setUploadingImage(true);
+    try {
+      const { url } = await uploadEmailFile(file);
+      editor.chain().focus().setImage({ src: url, alt: file.name }).run();
+    } catch (err) {
+      showToast.error((err as Error).message || "Couldn't upload that image");
+    } finally {
+      setUploadingImage(false);
+    }
+  }
+
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 transition-all focus-within:border-[#87102C]/40 focus-within:ring-2 focus-within:ring-[#87102C]/20">
-      {editor && <Toolbar editor={editor} />}
-      <div style={{ minHeight }} className={`px-3.5 py-3 text-gray-900 dark:text-white ${PROSE_CLASSES}`}>
+      {isEmail && (
+        <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImagePicked} className="hidden" />
+      )}
+      {editor && (
+        <Toolbar
+          editor={editor}
+          onInsertImage={isEmail ? () => imageInputRef.current?.click() : undefined}
+          uploadingImage={uploadingImage}
+        />
+      )}
+      <div style={{ minHeight, ...contentStyle }} className={`px-3.5 py-3 text-gray-900 dark:text-white ${PROSE_CLASSES}`}>
         <EditorContent editor={editor} />
       </div>
     </div>
