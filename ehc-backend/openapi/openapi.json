@@ -21657,6 +21657,53 @@
         ]
       }
     },
+    "/reading-monitor": {
+      "get": {
+        "operationId": "AdminReadingController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "How every active member is reading: plans, progress, last reading and recent activity (ADMIN+)",
+        "tags": [
+          "reading-plans"
+        ]
+      }
+    },
     "/reading-plans": {
       "get": {
         "operationId": "ReadingPlanController_list",
