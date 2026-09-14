@@ -18,6 +18,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "Everlasting Hills",
     description:
       "Services, sermons, courses and your serving schedule at Everlasting Hills Church, Ibadan.",
+    id: "/",
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",

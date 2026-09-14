@@ -94,6 +94,10 @@ export default function RootLayout({
             {children}
             <ToastProvider />
             <BirthdayCelebration />
+            {/* Mounted at the app root so every phone gets the install flow,
+                regardless of whether the visitor is on the public site, an
+                auth screen, or inside the member dashboard. */}
+            <InstallPrompt />
           </SermonPlayerProvider>
         </QueryProvider>
       </body>

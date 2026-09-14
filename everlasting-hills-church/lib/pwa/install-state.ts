@@ -8,9 +8,11 @@
  *
  *   Android / desktop Chromium — the browser fires `beforeinstallprompt`, which
  *     we capture and replay on tap to show the real native install dialog.
- *   iOS Safari — there is no such event and no programmatic install. The only
- *     route is Share, then Add to Home Screen, done by hand. So iOS gets
- *     instructions, never a button that pretends to install.
+ *   iOS / iPadOS — there is no such event and no programmatic install. The
+ *     route is Share, then Add to Home Screen, done by hand. Safari and
+ *     eligible third-party browsers can expose that share-sheet action, so all
+ *     iOS browsers get instructions rather than a button that pretends to
+ *     install.
  *   Already installed — nothing at all.
  *
  * This matters beyond convenience: on iOS, Web Push only works for a PWA that
@@ -41,11 +43,7 @@ export function isIos(): boolean {
   );
 }
 
-/**
- * True only for real Safari on iOS. Chrome and Firefox on iOS are WebKit
- * wrappers that cannot add to the home screen at all, so showing them the
- * share-sheet steps would send the member down a dead end.
- */
+/** True only for real Safari on iOS; retained for browser-specific UI checks. */
 export function isIosSafari(): boolean {
   if (!isIos()) return false;
   const ua = window.navigator.userAgent;

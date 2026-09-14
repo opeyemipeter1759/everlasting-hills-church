@@ -1,7 +1,7 @@
 "use client";
 
 import { apiClient } from "@/lib/api/axios";
-import { isIos, isIosSafari } from "./install-state";
+import { isIos } from "./install-state";
 import { isStandalone } from "./service-worker";
 
 /**
@@ -18,7 +18,7 @@ export type PermissionState = "unsupported" | "ios-needs-install" | "default" | 
 
 /**
  * What the settings UI should show. The three real permission states are kept
- * distinct because they need genuinely different interfaces, and iOS Safari
+ * distinct because they need genuinely different interfaces, and iOS
  * outside an installed app is called out separately because a toggle there
  * would silently do nothing.
  */
@@ -26,10 +26,10 @@ export function getPermissionState(): PermissionState {
   if (typeof window === "undefined") return "unsupported";
 
   // iOS supports Web Push only for a PWA added to the home screen. In a plain
-  // Safari tab the APIs may be missing entirely, or present but non-functional,
+  // browser tab the APIs may be missing entirely, or present but non-functional,
   // so this check comes before the capability check.
   if (isIos() && !isStandalone()) {
-    return isIosSafari() ? "ios-needs-install" : "unsupported";
+    return "ios-needs-install";
   }
 
   if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {

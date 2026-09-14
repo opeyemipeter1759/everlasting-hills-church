@@ -7,7 +7,7 @@ import {
   registerServiceWorker,
 } from "@/lib/pwa/service-worker";
 import {
-  isIosSafari,
+  isIos,
   rememberDismissal,
   wasDismissedRecently,
   type BeforeInstallPromptEvent,
@@ -25,7 +25,7 @@ type Mode = "hidden" | "native" | "ios";
  *
  * Three distinct states, because the platforms genuinely differ:
  *   native — Chromium fired beforeinstallprompt; tapping opens the real dialog
- *   ios    — Safari has no such API, so we show the manual share-sheet steps
+ *   ios    — iOS has no such API, so we show the manual share-sheet steps
  *   hidden — already installed, dismissed recently, or unsupported
  *
  * Never renders when running standalone: an install banner inside the installed
@@ -60,9 +60,11 @@ export default function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
 
-    // iOS never fires beforeinstallprompt, so it is scheduled directly.
+    // iOS never fires beforeinstallprompt, so it is scheduled directly. This
+    // intentionally includes browsers other than Safari: current iOS allows
+    // eligible third-party browsers to expose Add to Home Screen too.
     let iosTimer: number | undefined;
-    if (isIosSafari()) {
+    if (isIos()) {
       iosTimer = window.setTimeout(() => setMode("ios"), APPEAR_AFTER_MS);
     }
 
@@ -191,7 +193,7 @@ function IosSteps() {
         <span className="flex flex-wrap items-center gap-1.5">
           Tap
           <ShareIcon />
-          in the Safari toolbar
+          in your browser toolbar
         </span>
       </li>
       <li className="flex items-center gap-3 text-[13px] leading-snug text-white/75">
