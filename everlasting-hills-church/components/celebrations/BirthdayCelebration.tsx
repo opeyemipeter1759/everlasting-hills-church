@@ -93,8 +93,10 @@ export default function BirthdayCelebration() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const balloons = useMemo(() => (open ? makeFloaters(BALLOON_COUNT, [46, 70], [9, 14], 3) : []), [open]);
-  const bubbles = useMemo(() => (open ? makeFloaters(BUBBLE_COUNT, [18, 46], [7, 12], 4) : []), [open]);
+  // Short stagger only — the first balloons must be on screen as the greeting
+  // lands, not seconds later.
+  const balloons = useMemo(() => (open ? makeFloaters(BALLOON_COUNT, [46, 70], [9, 14], 1.5) : []), [open]);
+  const bubbles = useMemo(() => (open ? makeFloaters(BUBBLE_COUNT, [18, 46], [7, 12], 2) : []), [open]);
   const pop = (key: string) => setPopped((previous) => new Set(previous).add(key));
   const firstName = member?.firstName?.trim() || "friend";
 
@@ -108,8 +110,7 @@ export default function BirthdayCelebration() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          {!reduceMotion &&
-            bubbles.map((bubble) => {
+          {bubbles.map((bubble) => {
               const key = `bubble-${bubble.id}`;
               const isPopped = popped.has(key);
               return (
@@ -127,7 +128,9 @@ export default function BirthdayCelebration() {
                   animate={
                     isPopped
                       ? { scale: 1.6, opacity: 0 }
-                      : { y: "-115vh", x: [0, bubble.sway, -bubble.sway, 0], opacity: [0, 0.9, 0.9, 0.6] }
+                      : reduceMotion
+                        ? { y: "-115vh", opacity: [0, 0.9, 0.9, 0.6] }
+                        : { y: "-115vh", x: [0, bubble.sway, -bubble.sway, 0], opacity: [0, 0.9, 0.9, 0.6] }
                   }
                   transition={
                     isPopped
@@ -136,15 +139,17 @@ export default function BirthdayCelebration() {
                           duration: bubble.duration,
                           delay: bubble.delay,
                           ease: "linear",
-                          x: { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
+                          ...(reduceMotion ? {} : { x: { duration: 3.5, repeat: Infinity, ease: "easeInOut" } }),
                         }
                   }
                 />
               );
             })}
 
-          {!reduceMotion &&
-            balloons.map((balloon) => {
+          {/* Balloons always fly — this is the whole point of the day. A device
+              asking for reduced motion still gets the gentle rise; only the
+              endless rocking/swaying loops are left out. */}
+          {balloons.map((balloon) => {
               const key = `balloon-${balloon.id}`;
               const isPopped = popped.has(key);
               return (
@@ -159,12 +164,12 @@ export default function BirthdayCelebration() {
                   className="pointer-events-auto absolute -bottom-32 origin-bottom"
                   style={{ left: `${balloon.left}%` }}
                   initial={{ y: 0 }}
-                  animate={{ y: "-125vh", rotate: [-4, 4, -4] }}
+                  animate={reduceMotion ? { y: "-125vh" } : { y: "-125vh", rotate: [-4, 4, -4] }}
                   transition={{
                     duration: balloon.duration,
                     delay: balloon.delay,
                     ease: "easeOut",
-                    rotate: { duration: 2.6, repeat: Infinity, ease: "easeInOut" },
+                    ...(reduceMotion ? {} : { rotate: { duration: 2.6, repeat: Infinity, ease: "easeInOut" } }),
                   }}
                 >
                   <motion.span
@@ -208,11 +213,7 @@ export default function BirthdayCelebration() {
                 “The Lord bless you and keep you.”
                 <span className="mt-0.5 block text-xs not-italic text-gray-500 dark:text-white/50">Numbers 6:24</span>
               </p>
-              {reduceMotion ? (
-                <p className="mt-3 text-2xl" aria-hidden="true">🎈🎉🎈</p>
-              ) : (
-                <p className="mt-3 text-xs font-semibold text-gray-500 dark:text-white/55">Tap the balloons to pop them 🎈</p>
-              )}
+              <p className="mt-3 text-xs font-semibold text-gray-500 dark:text-white/55">Tap the balloons to pop them 🎈</p>
               <button
                 ref={thanksRef}
                 type="button"

@@ -117,13 +117,13 @@ describe("BirthdayCelebration", () => {
     expect(balloon).toBeDisabled();
   });
 
-  it("keeps the greeting but lets nothing fly for reduced motion", () => {
+  it("still flies the balloons for a device that asks for reduced motion", () => {
     motionPreference.reduced = true;
     signedIn(BIRTHDAY);
     render(<BirthdayCelebration />);
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Pop balloon" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Pop bubble" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Pop balloon" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: "Pop bubble" }).length).toBeGreaterThan(0);
   });
 });
