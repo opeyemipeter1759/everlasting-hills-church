@@ -12,6 +12,8 @@ vi.mock("framer-motion", async (importOriginal) => ({
 }));
 vi.mock("@/lib/api", () => ({ useMe: vi.fn() }));
 vi.mock("@/hooks/useCurrentUser", () => ({ useCurrentUser: vi.fn() }));
+const route = vi.hoisted(() => ({ pathname: "/dashboard" }));
+vi.mock("next/navigation", () => ({ usePathname: () => route.pathname }));
 
 // 14 September 2026, mid-morning in Lagos.
 const TODAY = new Date("2026-09-14T10:00:00Z");
@@ -33,6 +35,7 @@ beforeEach(() => {
   vi.setSystemTime(TODAY);
   window.localStorage.clear();
   motionPreference.reduced = false;
+  route.pathname = "/dashboard";
 });
 
 afterEach(() => {
@@ -73,6 +76,17 @@ describe("BirthdayCelebration", () => {
     first.unmount();
 
     render(<BirthdayCelebration />);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("comes back when they move to another screen after closing it", async () => {
+    signedIn(BIRTHDAY);
+    const view = render(<BirthdayCelebration />);
+    fireEvent.click(screen.getByRole("button", { name: "Thank you!" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+    route.pathname = "/dashboard/unit";
+    view.rerender(<BirthdayCelebration />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 

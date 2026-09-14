@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { X } from "lucide-react";
 import { useMe } from "@/lib/api";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -62,6 +63,7 @@ function Burst({ color }: { color: string }) {
 
 export default function BirthdayCelebration() {
   const user = useCurrentUser();
+  const pathname = usePathname();
   const { data: me } = useMe({ enabled: Boolean(user?.loggedIn) });
   const reduceMotion = useReducedMotion();
   const titleId = useId();
@@ -73,10 +75,13 @@ export default function BirthdayCelebration() {
   useEffect(() => {
     if (!member?.id || !isBirthdayToday(member.dateOfBirth)) return;
     // No "seen today" memory on purpose: the celebration greets them on every
-    // visit and every refresh for as long as it's their birthday. Closing it
-    // only clears it from the page they're on.
+    // screen for as long as it's their birthday. This component sits in the
+    // root layout and never remounts during in-app navigation, so the route
+    // is a dependency — every screen change re-launches the balloons.
+    // Closing it only clears it from the screen they're on.
+    setPopped(new Set());
     setOpen(true);
-  }, [member?.id, member?.dateOfBirth]);
+  }, [member?.id, member?.dateOfBirth, pathname]);
 
   useEffect(() => {
     if (!open) return;
