@@ -1,9 +1,11 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UnitTaskReportOutcome, UnitTaskReportStatus, UnitTaskStatus } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { InboxService } from '../../inbox/inbox.service';
+import { MailDispatcher } from '../../jobs/mail-dispatcher';
+import { buildUnitTaskReportEmail } from '../../notifications/templates/unit-task-report.email';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import type { CreateUnitTaskReportDto, ReviewUnitTaskReportDto, UpdateUnitTaskReportDto } from '../dto/unit-task-report.dto';
@@ -40,15 +42,19 @@ const OUTCOME_TO_STATUS: Record<UnitTaskReportOutcome, UnitTaskStatus | null> = 
  */
 @Injectable()
 export class UnitTaskReportsService {
+  private readonly logger = new Logger(UnitTaskReportsService.name);
   private readonly tenantId: string;
+  private readonly appUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly membership: UnitsMembershipService,
     private readonly inbox: InboxService,
+    private readonly mail: MailDispatcher,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    this.appUrl = (config.get('FRONTEND_URL', { infer: true }) as string | undefined)?.replace(/\/$/, '') ?? 'http://localhost:3000';
   }
 
   private personLabel(p: PersonLike) {
@@ -124,13 +130,20 @@ export class UnitTaskReportsService {
     return report;
   }
 
-  /** Profile ids of the unit's lead + assistants, minus the person triggering the event. */
-  private async leadershipProfileIds(unitId: string, exceptProfileId: string | null) {
+  /** The unit's lead + assistants, minus the person triggering the event. */
+  private async leadership(unitId: string, exceptProfileId: string | null) {
     const rows = await this.prisma.unitMember.findMany({
       where: { unitId, tenantId: this.tenantId, OR: [{ isLead: true }, { isAssistant: true }] },
-      select: { Member: { select: { profileId: true } } },
+      select: { Member: { select: { profileId: true, firstName: true, email: true } } },
     });
-    return [...new Set(rows.map((r) => r.Member.profileId).filter((id): id is string => !!id && id !== exceptProfileId))];
+    const seen = new Set<string>();
+    return rows
+      .map((r) => r.Member)
+      .filter((m) => {
+        if (!m.profileId || m.profileId === exceptProfileId || seen.has(m.profileId)) return false;
+        seen.add(m.profileId);
+        return true;
+      });
   }
 
   async list(actor: AuthUser, unitId: string, taskId: string) {
@@ -187,17 +200,42 @@ export class UnitTaskReportsService {
     ]);
 
     const authorName = this.personLabel(report.Author)?.name ?? 'A member';
-    const recipients = await this.leadershipProfileIds(unitId, actor.profileId);
+    const leaders = await this.leadership(unitId, actor.profileId);
     await this.inbox.createMany(
-      recipients.map((profileId) => ({
+      leaders.map((l) => ({
         tenantId: this.tenantId,
-        profileId,
+        profileId: l.profileId!,
         title: `Task report: ${task.title}`,
         body: `${authorName} reported "${OUTCOME_LABEL[dto.outcome]}" on ${task.Unit.name}'s task.`,
         type: 'task-report',
         link: `/dashboard/unit-lead/${unitId}/tasks`,
       })),
     );
+
+    // Email the lead(s) too — the inbox bell is easy to miss, and a report is
+    // something they're expected to act on. Fire-and-forget: the report is
+    // already saved, so a mail failure must not surface as a failed submit.
+    void Promise.all(
+      leaders
+        .filter((l) => !!l.email)
+        .map((l) =>
+          this.mail.dispatch(
+            buildUnitTaskReportEmail({
+              to: l.email!,
+              leadFirstName: l.firstName,
+              authorName,
+              taskTitle: task.title,
+              unitId,
+              unitName: task.Unit.name,
+              outcomeLabel: OUTCOME_LABEL[dto.outcome],
+              summary: report.summary,
+              challenges: report.challenges,
+              nextSteps: report.nextSteps,
+              appUrl: this.appUrl,
+            }),
+          ),
+        ),
+    ).catch((err) => this.logger.warn(`Could not email unit leads about report ${report.id}: ${(err as Error).message}`));
 
     return this.toDto(report);
   }

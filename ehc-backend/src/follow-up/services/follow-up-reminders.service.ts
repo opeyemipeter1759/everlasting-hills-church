@@ -93,21 +93,24 @@ export class FollowUpRemindersService {
       },
     });
 
-    const leaderCache = new Map<string, string | null>();
+    const leaderCache = new Map<string, string[]>();
     let escalated = 0;
     for (const entry of entries) {
-      const leaderProfileId = await this.unitLeaderLookup.getUnitLeaderProfileId(entry.unitId, leaderCache);
-      if (!leaderProfileId) continue;
+      // Unit lead and department head alike — whoever leads this team.
+      const leaderProfileIds = await this.unitLeaderLookup.getUnitLeadershipProfileIds(entry.unitId, leaderCache);
+      if (leaderProfileIds.length === 0) continue;
       const subject = entry.Member ?? entry.Visitor;
       const name = subject ? `${subject.firstName} ${subject.lastName}`.trim() : 'this person';
       const assigneeName = entry.Assignee ? `${entry.Assignee.firstName} ${entry.Assignee.lastName}`.trim() : 'the assignee';
-      await this.notify.notifyProfile(
-        leaderProfileId,
-        `${name} still hasn't been reached after 5 days`,
-        `Assigned to ${assigneeName}`,
-        `/dashboard/follow-up?entry=${entry.id}`,
-        'follow-up-escalation-5d',
-      );
+      for (const leaderProfileId of leaderProfileIds) {
+        await this.notify.notifyProfile(
+          leaderProfileId,
+          `${name} still hasn't been reached after 5 days`,
+          `Assigned to ${assigneeName}`,
+          `/dashboard/follow-up?entry=${entry.id}`,
+          'follow-up-escalation-5d',
+        );
+      }
       escalated += 1;
     }
     if (escalated > 0) this.logger.log(`follow-up-reminders: escalated ${escalated} stale entries to their leaders`);
