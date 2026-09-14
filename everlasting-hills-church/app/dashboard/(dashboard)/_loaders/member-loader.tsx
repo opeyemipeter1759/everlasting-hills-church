@@ -1,6 +1,7 @@
 import MemberHome from "@/components/dashboard/member/MemberHome";
 import type { StreakState } from "@/components/dashboard/member/member-home/types";
 import { getMemberDisplayId, safeGet, type MeResponse } from "./shared";
+import { daysUntilBirthday } from "@/lib/birthday";
 
 interface SermonBookmark {
   Sermon: { slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; audioUrl: string | null };
@@ -73,16 +74,10 @@ export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
   const coursesCompleted = overviewRaw?.coursesCompleted ?? 0;
   const sermonsCompleted = overviewRaw?.sermonsCompleted ?? 0;
 
-  let birthdayDaysUntil: number | null = null;
-  if (me.member?.dateOfBirth) {
-    const WAT_OFFSET_MS = 60 * 60 * 1000;
-    const nowWat = new Date(Date.now() + WAT_OFFSET_MS);
-    const today = new Date(Date.UTC(nowWat.getUTCFullYear(), nowWat.getUTCMonth(), nowWat.getUTCDate()));
-    const dob = new Date(me.member.dateOfBirth);
-    const thisYear = new Date(Date.UTC(nowWat.getUTCFullYear(), dob.getUTCMonth(), dob.getUTCDate()));
-    const diff = Math.round((thisYear.getTime() - today.getTime()) / 86_400_000);
-    if (diff >= 0 && diff <= 7) birthdayDaysUntil = diff;
-  }
+  // Shared with the site-wide celebration, so both agree on which day it is.
+  // It also counts across the new year, which the inline version here did not.
+  const daysUntil = daysUntilBirthday(me.member?.dateOfBirth);
+  const birthdayDaysUntil = daysUntil !== null && daysUntil <= 7 ? daysUntil : null;
 
   return (
     <MemberHome

@@ -7,6 +7,7 @@ import { ToastProvider } from "@/lib/api/ToastProvider";
 import "./globals.css";
 import { SermonPlayerProvider } from "@/context/SermonPlayerContext";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
+import BirthdayCelebration from "@/components/celebrations/BirthdayCelebration";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--nf-inter", display: "swap" });
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--nf-jakarta", display: "swap" });
@@ -92,6 +93,7 @@ export default function RootLayout({
           <SermonPlayerProvider>
             {children}
             <ToastProvider />
+            <BirthdayCelebration />
           </SermonPlayerProvider>
         </QueryProvider>
       </body>
