@@ -14,6 +14,7 @@ import { AnnouncementsPanel } from "../AnnouncementsPanel";
 import { ProfileCompletionToast } from "./ProfileCompletionToast";
 import TodayReadingCard from "../reading-plan/TodayReadingCard";
 import DailyScriptureCard from "./DailyScriptureCard";
+import { PledgeAppeal } from "./PledgeAppeal";
 
 const DEFAULT_STREAK: StreakState = {
   level: 1,
@@ -71,6 +72,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         streak={streak}
         nextService={nextService}
       />
+
+      <PledgeAppeal member={member} userEmail={userEmail} />
 
       <BirthdayCard
         memberId={member?.id ?? null}
