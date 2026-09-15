@@ -24,6 +24,19 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("Financial Pledge Form", () => {
+  it("uses the public submission flow when rendered on the public pledge page", () => {
+    render(
+      <PledgeForm
+        existing={null}
+        prefill={{ fullName: "", phone: "", email: "" }}
+        onSaved={onSaved}
+        access="public"
+      />,
+    );
+
+    expect(useSubmitPledge).toHaveBeenCalledWith(undefined, "public");
+  });
+
   it("requires the member's confirmation before submitting", () => {
     render(
       <PledgeForm

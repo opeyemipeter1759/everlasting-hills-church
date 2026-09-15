@@ -4764,6 +4764,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pledges/{campaign}/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a pledge from the public church website
+         * @description Available without an account. If the visitor is signed in, the pledge is linked to them and updates their existing project pledge.
+         */
+        post: operations["PledgesController_submitPublic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/push/preferences": {
         parameters: {
             query?: never;
@@ -19142,6 +19162,53 @@ export interface operations {
                         data: unknown;
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_submitPublic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeDto"];
+            };
+        };
+        responses: {
+            /** @description Pledge submitted successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
                 };
             };
             /** @description Error response */

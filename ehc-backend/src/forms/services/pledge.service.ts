@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from '@prisma/client';
+import { Prisma, type FormSubmission } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
@@ -33,7 +33,7 @@ const METHOD_LABEL: Record<PledgeMethod, string> = {
 };
 
 interface StoredPledge {
-  profileId: string;
+  profileId: string | null;
   memberId: string | null;
   fullName: string;
   phone: string;
@@ -120,14 +120,33 @@ export class PledgeService {
   async submit(actor: AuthUser, campaignKey: string, input: PledgeDto) {
     const campaign = this.campaignOrThrow(campaignKey);
     const profileId = this.profileOrThrow(actor);
-    this.assertCoherent(input);
-
     const existing = await this.find(campaign, profileId);
+    return this.persist(campaign, input, profileId, actor.memberId ?? null, existing);
+  }
+
+  /**
+   * Public visitors do not need an account. A valid optional session still
+   * links the pledge and preserves the one-pledge-per-person member behavior.
+   */
+  async submitPublic(actor: AuthUser | undefined, campaignKey: string, input: PledgeDto) {
+    if (actor?.profileId) return this.submit(actor, campaignKey, input);
+    const campaign = this.campaignOrThrow(campaignKey);
+    return this.persist(campaign, input, null, actor?.memberId ?? null, null);
+  }
+
+  private async persist(
+    campaign: PledgeCampaign,
+    input: PledgeDto,
+    profileId: string | null,
+    memberId: string | null,
+    existing: FormSubmission | null,
+  ) {
+    this.assertCoherent(input);
     const now = new Date().toISOString();
     const inInstallments = input.method === 'WEEKLY' || input.method === 'MONTHLY';
     const stored: StoredPledge = {
       profileId,
-      memberId: actor.memberId ?? null,
+      memberId,
       fullName: input.fullName.trim(),
       phone: input.phone.trim(),
       email: input.email.trim().toLowerCase(),

@@ -50,6 +50,7 @@ const quickLinks = [
   { label: "Home Cell", href: "/connect/home-cell" },
   { label: "Plan a Visit", href: "/visit" },
   { label: "Give", href: "/give" },
+  { label: "Project Pledge", href: "/pledge" },
   { label: "Contact", href: "/contact" },
 ];
 

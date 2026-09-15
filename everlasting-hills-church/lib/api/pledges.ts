@@ -60,13 +60,25 @@ export function useMyPledge(campaign: string = SOUND_MEDIA.key) {
   });
 }
 
-/** Make or update the member's pledge; pledging again replaces the last one. */
-export function useSubmitPledge(campaign: string = SOUND_MEDIA.key) {
+/**
+ * Make a pledge. Dashboard submissions require membership; public submissions
+ * work for everyone and are still linked when the visitor is signed in.
+ */
+export function useSubmitPledge(
+  campaign: string = SOUND_MEDIA.key,
+  access: "member" | "public" = "member",
+) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: PledgeInput) => api.post<Pledge>(`/pledges/${campaign}`, input),
+    mutationFn: (input: PledgeInput) =>
+      api.post<Pledge>(
+        access === "public" ? `/pledges/${campaign}/public` : `/pledges/${campaign}`,
+        input,
+      ),
     onSuccess: (pledge) => {
-      qc.setQueryData(mineKey(campaign), pledge);
+      // An anonymous public pledge must never be mistaken for the next member
+      // who signs in on the same browser. Member pages fetch their own record.
+      if (access === "member") qc.setQueryData(mineKey(campaign), pledge);
       qc.invalidateQueries({ queryKey: ["pledges", campaign, "all"] });
     },
   });

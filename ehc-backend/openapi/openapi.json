@@ -21629,6 +21629,78 @@
         ]
       }
     },
+    "/pledges/{campaign}/public": {
+      "post": {
+        "description": "Available without an account. If the visitor is signed in, the pledge is linked to them and updates their existing project pledge.",
+        "operationId": "PledgesController_submitPublic",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PledgeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Pledge submitted successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Make a pledge from the public church website",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
     "/push/preferences": {
       "get": {
         "operationId": "PushController_getPreferences",

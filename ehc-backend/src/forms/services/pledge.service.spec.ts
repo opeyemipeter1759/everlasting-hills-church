@@ -119,6 +119,40 @@ describe('making a pledge', () => {
 
     expect((prisma.formSubmission.create as jest.Mock).mock.calls[0][0].data.data.installmentAmount).toBeNull();
   });
+
+  it('accepts a pledge from a public visitor without a profile or member account', async () => {
+    const { service, prisma, emails } = makeService();
+
+    const saved = await service.submitPublic(undefined, 'sound-media', pledge());
+
+    const { data } = (prisma.formSubmission.create as jest.Mock).mock.calls[0][0];
+    expect(data.data).toMatchObject({
+      profileId: null,
+      memberId: null,
+      fullName: 'Tomike Kolajo',
+      amount: 250_000,
+    });
+    expect(saved).not.toHaveProperty('profileId');
+    expect(emails.dispatch).toHaveBeenCalledTimes(2);
+  });
+
+  it("uses a signed-in visitor's existing member pledge from the public form", async () => {
+    const { service, prisma } = makeService({
+      id: 'pledge-1',
+      submittedAt: new Date('2026-09-01T09:00:00Z'),
+      data: { profileId: 'profile-1', createdAt: '2026-09-01T09:00:00.000Z' },
+    });
+
+    await service.submitPublic(actor, 'sound-media', pledge({ amount: 400_000 }));
+
+    expect(prisma.formSubmission.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'pledge-1' },
+        data: { data: expect.objectContaining({ profileId: 'profile-1', amount: 400_000 }) },
+      }),
+    );
+    expect(prisma.formSubmission.create).not.toHaveBeenCalled();
+  });
 });
 
 describe('what a pledge must say', () => {

@@ -139,11 +139,12 @@ interface PledgeFormProps {
   existing: Pledge | null;
   prefill: { fullName: string; phone: string; email: string };
   onSaved: (pledge: Pledge) => void;
+  access?: "member" | "public";
 }
 
-export default function PledgeForm({ existing, prefill, onSaved }: PledgeFormProps) {
+export default function PledgeForm({ existing, prefill, onSaved, access = "member" }: PledgeFormProps) {
   const today = lagosToday();
-  const submit = useSubmitPledge();
+  const submit = useSubmitPledge(undefined, access);
   const [values, setValues] = useState<Values>(() =>
     existing
       ? {

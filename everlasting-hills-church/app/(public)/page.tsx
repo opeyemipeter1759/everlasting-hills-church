@@ -15,6 +15,7 @@ import EventSection from "@/components/home/EventSection";
 import BirthdayTeaserSection from "@/components/home/BirthdayTeaserSection";
 import Carousel from "@/components/home/Carousel";
 import { FadeIn } from "@/components/ui/motion/FadeIn";
+import PledgeProjectSection from "@/components/home/PledgeProjectSection";
 
 export const metadata = {
   title: "Everlasting Hills Church — Ibadan",
@@ -48,6 +49,7 @@ export default async function HomePage() {
         <TelegramSermons content={settings.SERMONS} />
       </Suspense>
       <AttendanceSection />
+      <PledgeProjectSection />
       <BirthdayTeaserSection />
       <TestimonialsSection content={settings.TESTIMONIALS} />
       <Carousel content={settings.CAROUSEL} />
