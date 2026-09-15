@@ -2543,9 +2543,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Email branding — the header logo every outgoing email uses */
+        /** Email branding — the header logo and salutation every outgoing email uses */
         get: operations["EmailsController_getSettings"];
-        /** Change the header logo (pass logoUrl: null to restore the default) */
+        /** Change the header logo and/or greeting word (pass null to restore a default; omitted fields are left as they are) */
         put: operations["EmailsController_updateSettings"];
         post?: never;
         delete?: never;
@@ -7734,6 +7734,11 @@ export interface components {
             status: "CONNECTED" | "DECLINED";
         };
         UpdateEmailSettingsDto: {
+            /**
+             * @description Salutation that opens every email, e.g. "Dear" → "Dear Daphne,". Null restores the default ("Hello").
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @description Public URL of the header logo (from /uploads/image). Null restores the default site logo. */
             logoUrl?: Record<string, never> | null;
         };

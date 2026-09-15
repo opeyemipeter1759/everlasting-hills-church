@@ -2472,6 +2472,13 @@
       },
       "UpdateEmailSettingsDto": {
         "properties": {
+          "greeting": {
+            "description": "Salutation that opens every email, e.g. \"Dear\" → \"Dear Daphne,\". Null restores the default (\"Hello\").",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
+          },
           "logoUrl": {
             "description": "Public URL of the header logo (from /uploads/image). Null restores the default site logo.",
             "nullable": true,
@@ -12771,7 +12778,7 @@
             "access-token": []
           }
         ],
-        "summary": "Email branding — the header logo every outgoing email uses",
+        "summary": "Email branding — the header logo and salutation every outgoing email uses",
         "tags": [
           "emails"
         ]
@@ -12826,7 +12833,7 @@
             "access-token": []
           }
         ],
-        "summary": "Change the header logo (pass logoUrl: null to restore the default)",
+        "summary": "Change the header logo and/or greeting word (pass null to restore a default; omitted fields are left as they are)",
         "tags": [
           "emails"
         ]

@@ -1,7 +1,15 @@
 import { buildEmailBlast } from './email-blast.email';
 import { buildAnnouncementEmail } from './announcement.email';
 import { buildFirstTimerFollowUpEmail } from './first-timer-follow-up.email';
-import { fillNameTokens, greetingText, hasNameToken } from './layout';
+import {
+  DEFAULT_GREETING,
+  fillNameTokens,
+  getEmailGreeting,
+  greetingText,
+  hasNameToken,
+  normalizeGreeting,
+  setEmailGreeting,
+} from './layout';
 
 describe('personal greeting', () => {
   it('opens every family of email with "Hello <FirstName>,"', () => {
@@ -41,5 +49,26 @@ describe('personal greeting', () => {
   it('escapes a name when substituting into HTML', () => {
     const mail = buildEmailBlast({ email: 'x@x.com', firstName: '<b>', subject: 's', body: '<p>Hi {{firstName}}</p>' });
     expect(mail.html).toContain('Hi &lt;b&gt;');
+  });
+});
+
+describe('configurable salutation word', () => {
+  afterEach(() => setEmailGreeting(null));
+
+  it('lets admins swap "Hello" for their own word', () => {
+    setEmailGreeting('Dear');
+    expect(greetingText('Daphne')).toBe('Dear Daphne,');
+    expect(greetingText(null)).toBe('Dear,');
+    const mail = buildAnnouncementEmail({ email: 'd@x.com', firstName: 'Daphne', title: 'T', body: 'B' });
+    expect(mail.html).toContain('Dear Daphne,');
+    expect(mail.text.startsWith('Dear Daphne,')).toBe(true);
+  });
+
+  it('normalises what the admin typed and falls back to the default when blank', () => {
+    expect(normalizeGreeting('  Beloved , ')).toBe('Beloved');
+    expect(normalizeGreeting('Good   morning:')).toBe('Good morning');
+    expect(normalizeGreeting('   ')).toBeNull();
+    setEmailGreeting('   ');
+    expect(getEmailGreeting()).toBe(DEFAULT_GREETING);
   });
 });

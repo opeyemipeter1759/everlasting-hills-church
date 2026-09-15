@@ -44,6 +44,27 @@ export function escapeHtml(s: string): string {
 // Templates call these with the recipient's first name; a missing or blank name
 // falls back to a plain "Hello," so nobody is ever greeted as "Hello null,".
 
+// The salutation word itself is admin-configurable from the Emails page
+// (EmailSettings.greeting — "Dear", "Hi", "Beloved"…). Same module-state
+// pattern as the logo: loaded on boot, updated on save.
+export const DEFAULT_GREETING = 'Hello';
+export const MAX_GREETING_LENGTH = 40;
+let greetingOverride: string | null = null;
+
+/** Normalises an admin-typed salutation: trims, collapses whitespace and
+ * drops any trailing comma/colon (we add our own after the name). Returns
+ * null when nothing usable is left, meaning "use the default". */
+export function normalizeGreeting(word: string | null | undefined): string | null {
+  const cleaned = (word ?? '').replace(/\s+/g, ' ').trim().replace(/[,:;\s]+$/, '');
+  return cleaned ? cleaned.slice(0, MAX_GREETING_LENGTH) : null;
+}
+export function setEmailGreeting(word: string | null | undefined): void {
+  greetingOverride = normalizeGreeting(word);
+}
+export function getEmailGreeting(): string {
+  return greetingOverride ?? DEFAULT_GREETING;
+}
+
 /** Tidies a stored first name for display: trims, and takes only the first
  * word so "Daphne Grace" reads as "Hello Daphne,". Returns null when empty. */
 export function greetingName(firstName?: string | null): string | null {
@@ -55,7 +76,8 @@ export function greetingName(firstName?: string | null): string | null {
 /** Plain-text greeting line, e.g. "Hello Daphne," — for the text/plain part. */
 export function greetingText(firstName?: string | null): string {
   const name = greetingName(firstName);
-  return name ? `Hello ${name},` : 'Hello,';
+  const word = getEmailGreeting();
+  return name ? `${word} ${name},` : `${word},`;
 }
 
 /** HTML greeting paragraph to place at the very top of a template's body. */

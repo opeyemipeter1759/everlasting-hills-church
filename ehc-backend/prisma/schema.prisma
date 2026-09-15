@@ -1725,6 +1725,8 @@ model EmailSettings {
   id        String   @id
   tenantId  String   @unique
   logoUrl   String?
+  /// Salutation word that opens every outgoing email ("Hello" → "Hello Daphne,"). Null = default.
+  greeting  String?
   updatedAt DateTime @default(now()) @updatedAt
   updatedBy String?
   Tenant    Tenant   @relation(fields: [tenantId], references: [id])

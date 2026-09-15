@@ -23,13 +23,13 @@ export class EmailsController {
   constructor(private readonly emails: EmailsService) {}
 
   @Get('settings')
-  @ApiOperation({ summary: 'Email branding — the header logo every outgoing email uses' })
+  @ApiOperation({ summary: 'Email branding — the header logo and salutation every outgoing email uses' })
   getSettings() {
     return this.emails.getSettings();
   }
 
   @Put('settings')
-  @ApiOperation({ summary: 'Change the header logo (pass logoUrl: null to restore the default)' })
+  @ApiOperation({ summary: 'Change the header logo and/or greeting word (pass null to restore a default; omitted fields are left as they are)' })
   updateSettings(@Body() body: UpdateEmailSettingsDto, @CurrentUser() user: AuthUser) {
     return this.emails.updateSettings(body, user.profileId);
   }
