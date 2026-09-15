@@ -10,6 +10,7 @@ import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import { textLength } from "@/components/dashboard/reports/report-text-utils";
 import { SkeletonBlock } from "@/components/ui/display/SkeletonBlock";
+import PersonalGreetingHint from "./PersonalGreetingHint";
 
 // Tiptap is only needed once someone actually composes — split out of the
 // initial bundle, same reasoning as ReportEditorPage.
@@ -122,6 +123,9 @@ export default function EmailComposerPage({ mode, templateId }: { mode: "create"
                 maxLength={200}
                 className="flex-1 border-none bg-transparent p-0 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-0"
               />
+            </div>
+            <div className="px-4 pt-3">
+              <PersonalGreetingHint />
             </div>
             <div className="px-1 py-1">
               <ReportEditor value={body} onChange={setBody} placeholder="Write your message…" minHeight={400} variant="email" />

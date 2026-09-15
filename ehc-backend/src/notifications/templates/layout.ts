@@ -39,6 +39,47 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
+// ── Personal greeting ────────────────────────────────────────────────────────
+// Every outbound email opens with "Hello Daphne," rather than a faceless blast.
+// Templates call these with the recipient's first name; a missing or blank name
+// falls back to a plain "Hello," so nobody is ever greeted as "Hello null,".
+
+/** Tidies a stored first name for display: trims, and takes only the first
+ * word so "Daphne Grace" reads as "Hello Daphne,". Returns null when empty. */
+export function greetingName(firstName?: string | null): string | null {
+  const first = firstName?.trim().split(/\s+/)[0] ?? '';
+  if (!first) return null;
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
+/** Plain-text greeting line, e.g. "Hello Daphne," — for the text/plain part. */
+export function greetingText(firstName?: string | null): string {
+  const name = greetingName(firstName);
+  return name ? `Hello ${name},` : 'Hello,';
+}
+
+/** HTML greeting paragraph to place at the very top of a template's body. */
+export function greetingHtml(firstName?: string | null): string {
+  return `<p style="font-family:${FONT};color:#111827;font-size:${BODY_SIZE};font-weight:700;margin:0 0 16px">${escapeHtml(greetingText(firstName))}</p>`;
+}
+
+/** Admin-typed placeholders such as {{firstName}} or {{ name }} (any case,
+ * optional spaces). When a composer body already contains one, the author has
+ * chosen where the name goes and the automatic greeting line is skipped. */
+const NAME_TOKEN = /\{\{\s*(first_?name|name)\s*\}\}/gi;
+
+export function hasNameToken(s: string): boolean {
+  return new RegExp(NAME_TOKEN.source, 'i').test(s);
+}
+
+/** Replaces every name token with the recipient's first name (HTML-escaped
+ * when `html` is true). A recipient with no usable first name gets "there",
+ * so "Hi {{firstName}}" degrades to "Hi there" instead of "Hi ". */
+export function fillNameTokens(s: string, firstName: string | null | undefined, html = false): string {
+  const name = greetingName(firstName) ?? 'there';
+  return s.replace(NAME_TOKEN, html ? escapeHtml(name) : name);
+}
+
 interface LayoutArgs {
   /** Heading inside the card. Omit when the body is a complete message on
    * its own (the admin composer) — otherwise it just repeats the subject. */

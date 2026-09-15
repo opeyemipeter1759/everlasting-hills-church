@@ -130,7 +130,7 @@ export class EmailsService implements OnModuleInit {
       await Promise.all(
         batch.map((r) =>
           this.mail.dispatch(
-            buildEmailBlast({ email: r.email, subject: dto.subject, body: dto.body, attachments: dto.attachments }),
+            buildEmailBlast({ email: r.email, firstName: r.firstName, subject: dto.subject, body: dto.body, attachments: dto.attachments }),
           ),
         ),
       );

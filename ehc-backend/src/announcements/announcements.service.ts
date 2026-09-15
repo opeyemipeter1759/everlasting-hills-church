@@ -13,6 +13,13 @@ import { PushEvents, type AnnouncementPublishedPayload } from '../push/push.even
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 import type { Env } from '../config/env.validation';
 
+/** One email recipient plus what we need to address them personally. */
+interface EmailRecipient {
+  email: string;
+  firstName: string | null;
+  kind: 'member' | 'visitor';
+}
+
 interface AudienceTargeting {
   targetRoles: Role[];
   targetGenders: string[];
@@ -75,8 +82,8 @@ export class AnnouncementsService {
    */
   private async resolveEmailAudience(
     targeting: AudienceTargeting,
-    allProfiles: { Member: { email: string | null } | null }[],
-  ): Promise<{ email: string; kind: 'member' | 'visitor' }[]> {
+    allProfiles: { Member: { email: string | null; firstName?: string | null } | null }[],
+  ): Promise<EmailRecipient[]> {
     const visitorsTargeted = targeting.targetRoles.includes(Role.VISITOR);
     const profileTargeting: AudienceTargeting = {
       ...targeting,
@@ -90,30 +97,28 @@ export class AnnouncementsService {
       : profilesTargeted
         ? await this.prisma.profile.findMany({
             where: this.resolveAudienceWhere(profileTargeting),
-            select: { Member: { select: { email: true } } },
+            select: { Member: { select: { email: true, firstName: true } } },
           })
         : [];
 
-    const memberEmails = profileRows
-      .map((p) => p.Member?.email)
-      .filter((e): e is string => Boolean(e));
-
-    const recipients: { email: string; kind: 'member' | 'visitor' }[] = memberEmails.map(
-      (email) => ({ email, kind: 'member' }),
-    );
+    const recipients: EmailRecipient[] = [];
+    for (const p of profileRows) {
+      if (!p.Member?.email) continue;
+      recipients.push({ email: p.Member.email, firstName: p.Member.firstName ?? null, kind: 'member' });
+    }
 
     if (visitorsTargeted) {
       const visitors = await this.prisma.visitor.findMany({
         where: { tenantId: this.tenantId, convertedAt: null, email: { not: null } },
-        select: { email: true },
+        select: { email: true, firstName: true },
       });
       // A first-timer who also has a member account must not get two copies.
-      const seen = new Set(memberEmails.map((e) => e.toLowerCase()));
+      const seen = new Set(recipients.map((r) => r.email.toLowerCase()));
       for (const visitor of visitors) {
         const email = visitor.email?.trim();
         if (!email || seen.has(email.toLowerCase())) continue;
         seen.add(email.toLowerCase());
-        recipients.push({ email, kind: 'visitor' as const });
+        recipients.push({ email, firstName: visitor.firstName ?? null, kind: 'visitor' });
       }
     }
 
@@ -131,7 +136,7 @@ export class AnnouncementsService {
   ): Promise<number> {
     const allProfiles = await this.prisma.profile.findMany({
       where: { tenantId: this.tenantId },
-      select: { id: true, Member: { select: { email: true } } },
+      select: { id: true, Member: { select: { email: true, firstName: true } } },
     });
 
     const created = await this.inbox.createMany(
@@ -164,6 +169,7 @@ export class AnnouncementsService {
             this.mail.dispatch(
               buildAnnouncementEmail({
                 email: recipient.email,
+                firstName: recipient.firstName,
                 title,
                 body,
                 dashboardUrl,

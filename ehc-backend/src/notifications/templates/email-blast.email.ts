@@ -1,8 +1,10 @@
 import type { SendEmailPayload } from '../notification-events';
-import { renderEmailLayout } from './layout';
+import { fillNameTokens, greetingHtml, greetingText, hasNameToken, renderEmailLayout } from './layout';
 
 interface Args {
   email: string;
+  /** Recipient's first name — opens the message with "Hello Daphne,". */
+  firstName?: string | null;
   subject: string;
   /** Rich-text HTML from the admin composer (Tiptap, schema-limited — sanitized
    * by construction, same trust level as ReportEditor's saved report content). */
@@ -26,15 +28,29 @@ function toPlainText(html: string): string {
 }
 
 /** Admin-authored, freely-targeted email (the "Emails" admin feature) — no fixed CTA/destination. */
-export function buildEmailBlast({ email, subject, body, attachments }: Args): SendEmailPayload {
-  const text = [toPlainText(body), '', '— Everlasting Hills Church · Ibadan'].join('\n');
+export function buildEmailBlast({ email, firstName, subject, body, attachments }: Args): SendEmailPayload {
+  // Personalised per recipient: "{{firstName}}" placeholders are filled in, and
+  // unless the author placed the name themselves the message opens with a
+  // "Hello Daphne," line.
+  const personalSubject = fillNameTokens(subject, firstName);
+  const personalBody = fillNameTokens(body, firstName, true);
+  const autoGreet = !hasNameToken(body);
+
+  const text = [
+    ...(autoGreet ? [greetingText(firstName), ''] : []),
+    toPlainText(personalBody),
+    '',
+    '— Everlasting Hills Church · Ibadan',
+  ].join('\n');
   // No card heading: the subject line already carries it, and the composer's
   // body is the whole message — repeating it read like a duplicated title.
-  const html = renderEmailLayout({ bodyHtml: styleInlineImages(body) });
+  const html = renderEmailLayout({
+    bodyHtml: `${autoGreet ? greetingHtml(firstName) : ''}${styleInlineImages(personalBody)}`,
+  });
 
   return {
     to: email,
-    subject,
+    subject: personalSubject,
     text,
     html,
     tag: 'email-blast',

@@ -8,6 +8,7 @@ import { ROLE_LABEL } from "@/components/dashboard/admin/people/peopleShared";
 import ResultList from "@/components/dashboard/admin/people/assign-members-dialog/ResultList";
 import { textLength } from "@/components/dashboard/reports/report-text-utils";
 import { SkeletonBlock } from "@/components/ui/display/SkeletonBlock";
+import PersonalGreetingHint from "./PersonalGreetingHint";
 import { EMPTY_AUDIENCE, MAX_EMAIL_ATTACHMENTS, uploadEmailFile } from "@/lib/api/emails";
 import type { AudienceFilter, AudienceMode, EmailAttachment, EmailTemplate, RecipientPreview } from "@/lib/api/emails";
 import { showToast } from "@/components/ui/toast/toast";
@@ -170,6 +171,7 @@ export default function SendEmailModal({
           <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">
             Message
           </label>
+          <PersonalGreetingHint className="mb-2" />
           <ReportEditor value={body} onChange={setBody} placeholder="Write your message…" minHeight={180} variant="email" />
         </div>
 

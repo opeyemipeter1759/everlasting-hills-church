@@ -1,5 +1,5 @@
 import type { SendEmailPayload } from '../notification-events';
-import { escapeHtml, renderEmailLayout } from './layout';
+import { escapeHtml, greetingHtml, greetingText, renderEmailLayout } from './layout';
 import { CHURCH_INFO } from '../church-info';
 
 interface Args {
@@ -14,7 +14,7 @@ export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl }: Args):
   const subject = `Welcome to the Everlasting Hills family, ${firstName}`;
 
   const text = [
-    `Hi ${firstName},`,
+    greetingText(firstName),
     '',
     'Welcome to the Everlasting Hills Church family! We are so glad you chose to worship with us, and we hope your time here felt like a breath of fresh air.',
     '',
@@ -50,6 +50,7 @@ export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl }: Args):
     .join('');
 
   const bodyHtml = `
+    ${greetingHtml(firstName)}
     <p style="margin:0 0 16px">Welcome to the <strong>Everlasting Hills Church</strong> family! We are so glad you chose to worship with us, and we hope your time here felt like a breath of fresh air.</p>
     <p style="margin:0 0 20px">You are not here by accident. We believe God has a plan and a purpose for your life, and we'd love to walk alongside you on that journey. Whether Sunday was your first step or you've been searching for a place to belong, know that there is a seat with your name on it here at EHC.</p>
 
