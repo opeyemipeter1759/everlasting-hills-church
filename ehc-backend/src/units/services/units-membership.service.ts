@@ -22,12 +22,27 @@ export class UnitsMembershipService {
   }
 
   /**
+   * Heading a department means overseeing its units — including who is on
+   * them. True when this unit sits in a department the actor heads.
+   */
+  async headsUnitDepartment(actor: AuthUser, unitId: string): Promise<boolean> {
+    if (!actor.hodOf?.length) return false;
+    const unit = await this.prisma.unit.findFirst({
+      where: { id: unitId, tenantId: this.tenantId },
+      select: { departmentId: true },
+    });
+    return !!unit?.departmentId && actor.hodOf.includes(unit.departmentId);
+  }
+
+  /**
    * Throws ForbiddenException unless:
    *   - actor is ADMIN / PASTOR / SUPER_ADMIN, OR
+   *   - actor heads the department this unit belongs to, OR
    *   - actor is the LEAD or ASSISTANT of THIS unit
    */
   async assertCanManageUnit(actor: AuthUser, unitId: string) {
     if (actor.role && ADMIN_ROLES.includes(actor.role)) return;
+    if (await this.headsUnitDepartment(actor, unitId)) return;
 
     if (actor.role === Role.UNIT_LEAD || actor.role === Role.MEMBER) {
       if (!actor.memberId) {
@@ -59,6 +74,7 @@ export class UnitsMembershipService {
    */
   async assertIsUnitMember(actor: AuthUser, unitId: string) {
     if (actor.role && ADMIN_ROLES.includes(actor.role)) return;
+    if (await this.headsUnitDepartment(actor, unitId)) return;
     if (!actor.memberId) {
       throw new ForbiddenException('No member record on your account');
     }

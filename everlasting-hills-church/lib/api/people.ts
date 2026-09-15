@@ -127,11 +127,12 @@ const PEOPLE_KEY = ["people"] as const;
 
 // ── Queries ──────────────────────────────────────────────────────────────────
 
-export function usePeople(params: DirectoryParams) {
+export function usePeople(params: DirectoryParams, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: [...PEOPLE_KEY, "directory", params],
     queryFn: () => api.get<DirectoryResponse>("/members/directory", clean(params)),
     placeholderData: keepPreviousData,
+    enabled: options.enabled ?? true,
   });
 }
 

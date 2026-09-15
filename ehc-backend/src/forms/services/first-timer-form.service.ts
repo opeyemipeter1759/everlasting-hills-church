@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -10,6 +11,7 @@ import { buildFirstTimerWelcomeEmail } from '../../notifications/templates/first
 import { buildFirstTimerAdminEmail } from '../../notifications/templates/first-timer-admin.email';
 import { composeBirthdayIso } from '../birthday.util';
 import { FormsEmailDispatchService } from './forms-email-dispatch.service';
+import { VisitorEvents, type VisitorCreatedPayload } from '../../notifications/notification-events';
 
 @Injectable()
 export class FirstTimerFormService {
@@ -19,6 +21,7 @@ export class FirstTimerFormService {
     private readonly prisma: PrismaService,
     private readonly emailDispatch: FormsEmailDispatchService,
     private readonly sessionWindow: AttendanceSessionWindowService,
+    private readonly events: EventEmitter2,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -85,6 +88,9 @@ export class FirstTimerFormService {
         },
       }),
     ]);
+
+    // Put them in the Follow-Up pipeline now, not at tomorrow's 9am sweep.
+    this.events.emit(VisitorEvents.Created, { visitorIds: [visitor.id] } satisfies VisitorCreatedPayload);
 
     // Fire-and-forget — does not block response.
     // Admin/pastoral team: full details + review & assign-for-follow-up CTAs.

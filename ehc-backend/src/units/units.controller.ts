@@ -8,6 +8,7 @@ import { CreateUnitDto, UpdateUnitDto } from './dto/unit.dto';
 import { UnitsDirectoryService } from './services/units-directory.service';
 import { UnitsSelfService } from './services/units-self.service';
 import { UnitsCrudService } from './services/units-crud.service';
+import { UnitsMembershipService } from './services/units-membership.service';
 
 /**
  * Units: directory, self, and CRUD. See units-members.controller.ts for member/lead
@@ -24,6 +25,7 @@ export class UnitsController {
     private readonly directory: UnitsDirectoryService,
     private readonly self: UnitsSelfService,
     private readonly crud: UnitsCrudService,
+    private readonly membership: UnitsMembershipService,
   ) {}
 
   @Get('directory')
@@ -76,9 +78,11 @@ export class UnitsController {
   }
 
   @Get(':unitId')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Get one unit with full member list including roles (ADMIN+)' })
-  async getById(@Param('unitId') unitId: string) {
+  @Roles(Role.HOD)
+  @ApiOperation({ summary: 'Get one unit with full member list including roles (ADMIN+, or the head of its department)' })
+  async getById(@CurrentUser() actor: AuthUser, @Param('unitId') unitId: string) {
+    // The guard lets HOD through; the department scope is enforced here.
+    await this.membership.assertCanManageUnit(actor, unitId);
     return this.crud.getById(unitId);
   }
 

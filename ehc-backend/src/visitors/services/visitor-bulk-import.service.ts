@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { AttendanceSessionWindowService } from '../../attendance/services/attendance-session-window.service';
-import { NotificationEvents } from '../../notifications/notification-events';
+import { NotificationEvents, VisitorEvents, type VisitorCreatedPayload } from '../../notifications/notification-events';
 import { buildFirstTimerWelcomeEmail } from '../../notifications/templates/first-timer-welcome.email';
 import type { VisitorImportRowDto } from '../dto/bulk-import-visitor.dto';
 import { BIRTHDAY_SENTINEL_YEAR } from '../../forms/birthday.util';
@@ -45,6 +45,7 @@ export class VisitorBulkImportService {
     const alsoWelcomeExisting = opts.alsoWelcomeExisting ?? false;
     const results: { name: string; status: 'created' | 'skipped' | 'error'; reason?: string }[] = [];
     let created = 0;
+    const createdIds: string[] = [];
 
     for (const row of rows) {
       const firstName = row.firstName.trim();
@@ -80,9 +81,10 @@ export class VisitorBulkImportService {
           row.submittedAt ? new Date(row.submittedAt) : new Date(),
         );
 
+        const visitorId = randomUUID();
         await this.prisma.visitor.create({
           data: {
-            id: randomUUID(),
+            id: visitorId,
             tenantId: this.tenantId,
             firstName,
             lastName,
@@ -106,6 +108,7 @@ export class VisitorBulkImportService {
         });
 
         created += 1;
+        createdIds.push(visitorId);
         results.push({ name, status: 'created' });
         if (sendWelcome && email) {
           this.dispatchWelcome(firstName, email);
@@ -113,6 +116,11 @@ export class VisitorBulkImportService {
       } catch (err) {
         results.push({ name, status: 'error', reason: (err as Error).message });
       }
+    }
+
+    if (createdIds.length > 0) {
+      // Surface the whole batch in the Follow-Up pipeline right away.
+      this.events.emit(VisitorEvents.Created, { visitorIds: createdIds } satisfies VisitorCreatedPayload);
     }
 
     const skipped = results.filter((r) => r.status === 'skipped').length;

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { OnEvent } from '@nestjs/event-emitter';
 import { randomUUID } from 'crypto';
 import { FollowUpSourceType, FollowUpStage, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -7,6 +8,10 @@ import type { Env } from '../../config/env.validation';
 import { FollowUpUnitLeaderLookupService } from './follow-up-unit-leader-lookup.service';
 import { FollowUpAutoAssignService } from './follow-up-auto-assign.service';
 import { FollowUpNotifyService } from './follow-up-notify.service';
+import { VisitorEvents, type VisitorCreatedPayload } from '../../notifications/notification-events';
+
+/** How often the pipeline's own on-load backfill is allowed to run. */
+const SURFACE_MISSING_THROTTLE_MS = 15_000;
 
 interface VisitorCandidate {
   id: string;
@@ -28,6 +33,52 @@ export class FollowUpAutoSurfaceFirstTimersService {
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
+
+  private lastSurfaceMissingAt = 0;
+
+  /**
+   * A first-timer was just recorded somewhere (form, import, quick capture):
+   * put them in the pipeline immediately rather than waiting for the daily
+   * sweep. Out-of-band — a failure here is logged, never surfaced to the
+   * form that created the visitor.
+   */
+  @OnEvent(VisitorEvents.Created, { async: true, promisify: true })
+  async onVisitorCreated(payload: VisitorCreatedPayload): Promise<void> {
+    try {
+      const followUpUnitId = await this.unitLeaderLookup.getFollowUpUnitId();
+      if (!followUpUnitId) return;
+      const visitors = await this.prisma.visitor.findMany({
+        where: { tenantId: this.tenantId, id: { in: payload.visitorIds }, convertedAt: null },
+        select: { id: true, firstName: true, lastName: true, gender: true },
+      });
+      const created = await this.createEntries(visitors, new Map(), followUpUnitId);
+      if (created > 0) this.logger.log(`Surfaced ${created} new first-timer(s) into the Follow-Up pipeline`);
+    } catch (err) {
+      this.logger.warn(`Could not surface new first-timer(s): ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * Safety net for the pipeline itself: any unconverted visitor that has never
+   * had an entry (event missed, feature just turned on, entry deleted by hand)
+   * gets one the next time someone opens the pipeline. Throttled so the list
+   * endpoint's polling doesn't turn this into a hot loop; the query is cheap
+   * when there's nothing to do.
+   */
+  async surfaceMissing(): Promise<number> {
+    const now = Date.now();
+    if (now - this.lastSurfaceMissingAt < SURFACE_MISSING_THROTTLE_MS) return 0;
+    this.lastSurfaceMissingAt = now;
+
+    const followUpUnitId = await this.unitLeaderLookup.getFollowUpUnitId();
+    if (!followUpUnitId) return 0;
+    const visitors = await this.prisma.visitor.findMany({
+      where: { tenantId: this.tenantId, convertedAt: null, FollowUpEntry: { none: {} } },
+      select: { id: true, firstName: true, lastName: true, gender: true },
+    });
+    if (visitors.length === 0) return 0;
+    return this.createEntries(visitors, new Map(), followUpUnitId);
   }
 
   async run(leaderCache: Map<string, string | null>, followUpUnitId: string | null): Promise<number> {

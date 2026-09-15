@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Users, Layers, Megaphone, Send, Check, Bell, Inbox, Plus } from "lucide-react";
+import { Building2, Users, Layers, Megaphone, Send, Check, Bell, Inbox, Plus, Settings2 } from "lucide-react";
 import {
   useMyDepartments, useMyDeptAnnouncement, useNudgeLead, useCreateMyUnit, type MyDepartment as MyDept,
 } from "@/lib/api/departments";
 import { Avatar } from "./HeadPicker";
 import UnitLeadControl from "./UnitLeadControl";
+import UnitManageModal from "./UnitManageModal";
 import CreateUnitForm from "../unit/CreateUnitForm";
 import { showToast } from "@/components/ui/toast/toast";
 import Link from "next/link";
@@ -67,6 +68,8 @@ function DepartmentPanel({ dept }: { dept: MyDept }) {
   const [sent, setSent] = useState<number | null>(null);
   const [nudged, setNudged] = useState<string | null>(null);
   const [creatingUnit, setCreatingUnit] = useState(false);
+  const [managingUnitId, setManagingUnitId] = useState<string | null>(null);
+  const managingUnit = dept.units.find((u) => u.id === managingUnitId) ?? null;
 
   async function handleCreateUnit(name: string, description: string) {
     await createUnit.mutateAsync({ departmentId: dept.id, name, description: description || undefined });
@@ -132,6 +135,14 @@ function DepartmentPanel({ dept }: { dept: MyDept }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setManagingUnitId(u.id)}
+                title="Add or remove members, appoint the lead"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#87102C]/20 dark:border-[#e8768a]/20 bg-[#87102C]/5 dark:bg-[#e8768a]/5 px-2.5 py-1.5 text-xs font-bold text-[#87102C] dark:text-[#e8768a] hover:bg-[#87102C]/10 dark:hover:bg-[#e8768a]/10 transition-colors"
+              >
+                <Settings2 size={13} /> Manage
+              </button>
               <UnitLeadControl
                 unitId={u.id}
                 leadName={u.lead ? `${u.lead.firstName} ${u.lead.lastName}` : null}
@@ -150,6 +161,13 @@ function DepartmentPanel({ dept }: { dept: MyDept }) {
         ))}
         {dept.units.length === 0 && <p className="py-3 text-center text-sm text-gray-400">No units in this department yet.</p>}
       </ul>
+
+      <UnitManageModal
+        unitId={managingUnitId}
+        unitName={managingUnit?.name ?? ""}
+        leadName={managingUnit?.lead ? `${managingUnit.lead.firstName} ${managingUnit.lead.lastName}` : null}
+        onClose={() => setManagingUnitId(null)}
+      />
 
       {/* Announcement composer */}
       <div className="mt-5 border-t border-gray-100 dark:border-white/[0.06] pt-4">

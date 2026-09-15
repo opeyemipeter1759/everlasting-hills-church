@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FollowUpStage } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -8,6 +8,7 @@ import { ENTRY_INCLUDE } from '../follow-up.types';
 import { FollowUpAuthService } from './follow-up-auth.service';
 import { FollowUpEntryMapperService } from './follow-up-entry-mapper.service';
 import { FollowUpAbsenteeDetailService } from './follow-up-absentee-detail.service';
+import { FollowUpAutoSurfaceFirstTimersService } from './follow-up-auto-surface-first-timers.service';
 
 /**
  * Visibility is intentionally church-wide: every authenticated unit member sees
@@ -18,6 +19,7 @@ import { FollowUpAbsenteeDetailService } from './follow-up-absentee-detail.servi
  */
 @Injectable()
 export class FollowUpReadService {
+  private readonly logger = new Logger(FollowUpReadService.name);
   private readonly tenantId: string;
 
   constructor(
@@ -25,6 +27,7 @@ export class FollowUpReadService {
     private readonly auth: FollowUpAuthService,
     private readonly mapper: FollowUpEntryMapperService,
     private readonly absenteeDetail: FollowUpAbsenteeDetailService,
+    private readonly firstTimers: FollowUpAutoSurfaceFirstTimersService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -33,6 +36,14 @@ export class FollowUpReadService {
   async list(actor: AuthUser, opts: { unitId?: string; stage?: FollowUpStage; mine?: boolean; serviceId?: string; pastoral?: boolean }) {
     if (!(await this.auth.hasUnitAccess(actor))) {
       throw new ForbiddenException('You need to be part of a team to view the Follow-Up pipeline');
+    }
+
+    // Every first-timer recorded at a service belongs in this list — make sure
+    // none are missing before we read it. Never lets a hiccup block the page.
+    try {
+      await this.firstTimers.surfaceMissing();
+    } catch (err) {
+      this.logger.warn(`first-timer backfill skipped: ${(err as Error).message}`);
     }
 
     const entries = await this.prisma.followUpEntry.findMany({

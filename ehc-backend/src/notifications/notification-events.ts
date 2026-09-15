@@ -19,6 +19,17 @@ export const NotificationEvents = {
   SendEmail: 'notification.email.send',
 } as const;
 
+/** Domain events other modules react to out-of-band. */
+export const VisitorEvents = {
+  /** A first-timer was recorded (form, bulk import, quick capture). The
+   * Follow-Up pipeline listens and surfaces them straight away. */
+  Created: 'visitor.created',
+} as const;
+
+export interface VisitorCreatedPayload {
+  visitorIds: string[];
+}
+
 export interface SendEmailPayload {
   to: string;
   subject: string;

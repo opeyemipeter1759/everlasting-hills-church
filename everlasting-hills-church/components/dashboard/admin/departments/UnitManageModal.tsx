@@ -8,9 +8,10 @@ import {
 import Modal from "@/components/ui/overlay/Modal";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
-import { useUnitTasks } from "@/lib/api";
+import { useMe, useMemberSearch, useUnitTasks } from "@/lib/api";
 import { useAnyUnitRoster } from "@/lib/api/departments";
 import { usePeople, useAddMemberToUnit, useRemoveMemberFromUnit } from "@/lib/api/people";
+import { hasMinRole } from "@/lib/auth/frontend-session";
 import { Avatar } from "./HeadPicker";
 import UnitLeadControl from "./UnitLeadControl";
 import { STATUS_ICON, STATUS_LABEL } from "../../units/taskStatus";
@@ -43,7 +44,17 @@ export default function UnitManageModal({
   const addMember = useAddMemberToUnit();
   const removeMember = useRemoveMemberFromUnit();
   const [search, setSearch] = useState("");
-  const people = usePeople({ search, limit: 8 });
+  // The full People directory is ADMIN+ only. A department head managing
+  // their own units searches the member picker instead (MEMBER+), which
+  // returns name + photo but no email.
+  const { data: me } = useMe();
+  const isAdmin = hasMinRole(me?.role, "ADMIN");
+  const people = usePeople({ search, limit: 8 }, { enabled: isAdmin && search.trim().length > 0 });
+  const picker = useMemberSearch(isAdmin ? "" : search);
+  const searchLoading = isAdmin ? people.isLoading : picker.isLoading;
+  const candidates: { id: string; name: string; email: string | null; photoUrl: string | null }[] = isAdmin
+    ? (people.data?.data ?? []).map((p) => ({ id: p.id, name: p.name, email: p.email ?? null, photoUrl: p.photoUrl }))
+    : (picker.data ?? []).map((m) => ({ id: m.id, name: `${m.firstName} ${m.lastName}`.trim(), email: null, photoUrl: m.photoUrl }));
 
   function invalidateAfterRosterChange() {
     qc.invalidateQueries({ queryKey: ["departments"] });
@@ -73,7 +84,7 @@ export default function UnitManageModal({
   }
 
   const rosterMemberIds = new Set((roster.data?.members ?? []).map((m) => m.memberId));
-  const searchResults = (people.data?.data ?? []).filter((p) => !rosterMemberIds.has(p.id));
+  const searchResults = candidates.filter((p) => !rosterMemberIds.has(p.id));
 
   return (
     <Modal
@@ -161,7 +172,7 @@ export default function UnitManageModal({
           </div>
           {search.trim().length > 0 && (
             <div className="max-h-56 space-y-1.5 overflow-y-auto">
-              {people.isLoading ? (
+              {searchLoading ? (
                 <div className="h-12 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5" />
               ) : searchResults.length === 0 ? (
                 <p className="py-3 text-center text-sm text-gray-400">No matches.</p>
@@ -174,7 +185,7 @@ export default function UnitManageModal({
                     <Avatar name={p.name} photoUrl={p.photoUrl} px={32} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{p.name}</p>
-                      <p className="truncate text-[11px] text-gray-400">{p.email ?? "No email"}</p>
+                      {p.email && <p className="truncate text-[11px] text-gray-400">{p.email}</p>}
                     </div>
                     <button
                       type="button"
