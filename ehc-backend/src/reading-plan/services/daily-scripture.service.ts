@@ -9,11 +9,15 @@ export const SCRIPTURE_TIMEZONE = 'Africa/Lagos';
 export class DailyScriptureService {
   constructor(private readonly passages: BiblePassageService) {}
 
-  async today() {
+  /**
+   * The verse for today in Lagos, quoted in the version the member chose. The
+   * verse itself is the same for everyone; only the wording changes.
+   */
+  async today(translationCode?: string) {
     const date = localDate(SCRIPTURE_TIMEZONE);
     const { startVerseId, endVerseId } = verseForDate(date);
     const passage = await this.passages.passage({
-      translationCode: 'WEB',
+      translationCode: translationCode?.trim().toUpperCase() || 'WEB',
       startVerseId,
       endVerseId,
     });

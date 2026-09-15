@@ -1,9 +1,10 @@
-import { Controller, Get, Header } from '@nestjs/common';
+import { Controller, Get, Header, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiProperty,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
@@ -45,7 +46,8 @@ export class DailyScriptureController {
     summary: 'Today’s scripture for the church, changing at midnight in Lagos',
   })
   @ApiOkResponse({ type: DailyScriptureDto })
-  today() {
-    return this.scripture.today();
+  @ApiQuery({ name: 'translation', required: false, example: 'KJV' })
+  today(@Query('translation') translation?: string) {
+    return this.scripture.today(translation);
   }
 }

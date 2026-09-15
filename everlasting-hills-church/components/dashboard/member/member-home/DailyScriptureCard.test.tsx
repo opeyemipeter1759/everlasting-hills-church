@@ -14,6 +14,14 @@ import {
 } from "@/lib/scripture-share";
 
 vi.mock("@/lib/api/daily-scripture", () => ({ useDailyScripture: vi.fn() }));
+vi.mock("@/lib/api/reading-plan", () => ({
+  useTranslations: () => ({
+    data: [
+      { id: 1, code: "WEB", name: "World English Bible", isDefault: true },
+      { id: 2, code: "KJV", name: "King James Version", isDefault: false },
+    ],
+  }),
+}));
 vi.mock("@/lib/scripture-share", () => ({
   createScriptureImage: vi.fn(),
   saveScriptureImage: vi.fn(),
@@ -37,6 +45,7 @@ beforeEach(() => {
     data: scripture,
     isLoading: false,
     isError: false,
+    isFetching: false,
     refetch: vi.fn(),
   } as never);
   vi.mocked(createScriptureImage).mockResolvedValue(file);
@@ -82,6 +91,36 @@ describe("DailyScriptureCard", () => {
       title: expect.stringContaining("Everlasting Hills Church"),
     });
     expect(screen.getByText("Test scripture.")).toBeInTheDocument();
+  });
+
+  it("regenerates the status image in the Bible version the member chooses", async () => {
+    vi.mocked(useDailyScripture).mockImplementation((translation) => ({
+      data: translation === "KJV"
+        ? {
+            ...scripture,
+            text: "The Lord is my shepherd; I shall not want.",
+            translationCode: "KJV",
+            translationName: "King James Version",
+          }
+        : scripture,
+      isLoading: false,
+      isError: false,
+      isFetching: false,
+      refetch: vi.fn(),
+    } as never));
+
+    render(<DailyScriptureCard />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Bible version for this status" }), {
+      target: { value: "KJV" },
+    });
+
+    expect(useDailyScripture).toHaveBeenLastCalledWith("KJV");
+    await waitFor(() =>
+      expect(createScriptureImage).toHaveBeenLastCalledWith(
+        expect.objectContaining({ translationCode: "KJV", translationName: "King James Version" }),
+      ),
+    );
+    expect(screen.getByText("The Lord is my shepherd; I shall not want.")).toBeInTheDocument();
   });
 
   it("offers a downloaded image when native file sharing is unavailable", async () => {

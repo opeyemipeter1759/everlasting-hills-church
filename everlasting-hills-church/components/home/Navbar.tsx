@@ -21,6 +21,7 @@ const navLinks = [
   { label: "Home Cell", href: "/home-cell" },
   { label: "Visit", href: "/visit" },
   { label: "Give", href: "/give" },
+  { label: "Pledge", href: "/pledge" },
 ];
 
 const mobileOnlyLinks: { label: string; href: string }[] = [];

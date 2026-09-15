@@ -12,10 +12,19 @@ export interface DailyScripture {
   translationName: string;
 }
 
-export function useDailyScripture() {
+/**
+ * Today's scripture, in the version the member chose. Without a choice the
+ * church's default version is used.
+ */
+export function useDailyScripture(translation?: string) {
   return useQuery({
-    queryKey: ["bible", "today"],
-    queryFn: () => api.get<DailyScripture>("/bible/today"),
+    queryKey: ["bible", "today", translation ?? "default"],
+    queryFn: () =>
+      api.get<DailyScripture>(
+        translation ? "/bible/today?translation=" + encodeURIComponent(translation) : "/bible/today",
+      ),
+    // Switching version keeps the current verse on screen until the new one arrives.
+    placeholderData: (previous) => previous,
     staleTime: 30_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: true,

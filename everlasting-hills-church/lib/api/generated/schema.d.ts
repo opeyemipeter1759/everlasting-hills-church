@@ -4729,6 +4729,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pledges/{campaign}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every pledge to this project, with totals (ADMIN+) */
+        get: operations["PledgesController_list"];
+        put?: never;
+        /** Make or update your pledge to this project */
+        post: operations["PledgesController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your own pledge to this project, or null if you have not pledged */
+        get: operations["PledgesController_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a pledge from the public church website
+         * @description Available without an account. If the visitor is signed in, the pledge is linked to them and updates their existing project pledge.
+         */
+        post: operations["PledgesController_submitPublic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/push/preferences": {
         parameters: {
             query?: never;
@@ -5797,7 +5852,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get one unit with full member list including roles (ADMIN+) */
+        /** Get one unit with full member list including roles (ADMIN+, or the head of its department) */
         get: operations["UnitsController_getById"];
         put?: never;
         post?: never;
@@ -7327,6 +7382,40 @@ export interface components {
              * @example Seeker
              */
             title: string;
+        };
+        PledgeDto: {
+            /**
+             * @description The whole pledge in naira
+             * @example 250000
+             */
+            amount: number;
+            /**
+             * @description Expected date to complete the pledge
+             * @example 2026-12-31
+             */
+            completeBy: string;
+            /** @description The pledge confirmation, which must be ticked */
+            confirmed: boolean;
+            /** @description Whether the project team may contact them about the pledge */
+            contactMe: boolean;
+            /** @example tomike@example.com */
+            email: string;
+            /** @example Tomike Kolajo */
+            fullName: string;
+            /**
+             * @description Per installment, for weekly or monthly
+             * @example 25000
+             */
+            installmentAmount?: number;
+            /** @enum {string} */
+            method: "ONE_TIME" | "WEEKLY" | "MONTHLY" | "OTHER";
+            /** @description How they will redeem it, when method is OTHER */
+            methodOther?: string;
+            /**
+             * @description WhatsApp number
+             * @example 0810 235 5043
+             */
+            phone: string;
         };
         PrayerRequestDto: {
             /** @example john@example.com */
@@ -11314,7 +11403,9 @@ export interface operations {
     };
     DailyScriptureController_today: {
         parameters: {
-            query?: never;
+            query?: {
+                translation?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -18963,6 +19054,156 @@ export interface operations {
             };
             /** @description Access token missing or invalid */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_submitPublic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeDto"];
+            };
+        };
+        responses: {
+            /** @description Pledge submitted successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
