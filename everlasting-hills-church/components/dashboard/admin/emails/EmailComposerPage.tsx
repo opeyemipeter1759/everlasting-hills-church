@@ -10,7 +10,7 @@ import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import { textLength } from "@/components/dashboard/reports/report-text-utils";
 import { SkeletonBlock } from "@/components/ui/display/SkeletonBlock";
-import PersonalGreetingHint from "./PersonalGreetingHint";
+import GreetingPicker from "./GreetingPicker";
 
 // Tiptap is only needed once someone actually composes — split out of the
 // initial bundle, same reasoning as ReportEditorPage.
@@ -37,12 +37,14 @@ export default function EmailComposerPage({ mode, templateId }: { mode: "create"
   const [name, setName] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [greeting, setGreeting] = useState<string | null>(null);
 
   useEffect(() => {
     if (mode === "edit" && template) {
       setName(template.name);
       setSubject(template.subject);
       setBody(template.body);
+      setGreeting(template.greeting ?? null);
     }
   }, [mode, template]);
 
@@ -51,7 +53,7 @@ export default function EmailComposerPage({ mode, templateId }: { mode: "create"
 
   async function handleSave() {
     if (!canSave) return;
-    const values = { name: name.trim(), subject: subject.trim(), body };
+    const values = { name: name.trim(), subject: subject.trim(), body, greeting };
     try {
       if (mode === "create") {
         await create.mutateAsync(values);
@@ -125,7 +127,7 @@ export default function EmailComposerPage({ mode, templateId }: { mode: "create"
               />
             </div>
             <div className="px-4 pt-3">
-              <PersonalGreetingHint />
+              <GreetingPicker value={greeting} onChange={setGreeting} />
             </div>
             <div className="px-1 py-1">
               <ReportEditor value={body} onChange={setBody} placeholder="Write your message…" minHeight={400} variant="email" />

@@ -1653,6 +1653,8 @@ model Announcement {
   title              String
   body               String
   imageUrl           String?
+  /// Salutation for the email copy of this announcement. Null = the church-wide EmailSettings.greeting.
+  greeting           String?
   audience           String      @default("all") // display label only ("all" or "custom"); actual targeting lives in the fields below
   sendEmail          Boolean     @default(false)
   status             EventStatus @default(PUBLISHED)
@@ -1690,6 +1692,8 @@ model EmailTemplate {
   name        String
   subject     String
   body        String
+  /// Per-template salutation ("Dear" → "Dear Daphne,"). Null = the church-wide EmailSettings.greeting.
+  greeting    String?
   createdById String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

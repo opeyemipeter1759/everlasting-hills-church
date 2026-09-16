@@ -51,12 +51,14 @@ export const DEFAULT_GREETING = 'Hello';
 export const MAX_GREETING_LENGTH = 40;
 let greetingOverride: string | null = null;
 
-/** Normalises an admin-typed salutation: trims, collapses whitespace and
- * drops any trailing comma/colon (we add our own after the name). Returns
- * null when nothing usable is left, meaning "use the default". */
+/** Normalises an admin-typed salutation: trims, collapses whitespace, drops
+ * any trailing comma/colon (we add our own after the name) and capitalises
+ * the first letter so "dear" opens the line as "Dear Daphne,". Returns null
+ * when nothing usable is left, meaning "use the default". */
 export function normalizeGreeting(word: string | null | undefined): string | null {
   const cleaned = (word ?? '').replace(/\s+/g, ' ').trim().replace(/[,:;\s]+$/, '');
-  return cleaned ? cleaned.slice(0, MAX_GREETING_LENGTH) : null;
+  if (!cleaned) return null;
+  return (cleaned.charAt(0).toUpperCase() + cleaned.slice(1)).slice(0, MAX_GREETING_LENGTH);
 }
 export function setEmailGreeting(word: string | null | undefined): void {
   greetingOverride = normalizeGreeting(word);
@@ -74,15 +76,22 @@ export function greetingName(firstName?: string | null): string | null {
 }
 
 /** Plain-text greeting line, e.g. "Hello Daphne," — for the text/plain part. */
-export function greetingText(firstName?: string | null): string {
+/** Resolves the salutation for one email: the per-email choice when the
+ * author made one (a template's or announcement's `greeting`), otherwise the
+ * church-wide default. */
+export function resolveGreeting(override?: string | null): string {
+  return normalizeGreeting(override) ?? getEmailGreeting();
+}
+
+export function greetingText(firstName?: string | null, override?: string | null): string {
   const name = greetingName(firstName);
-  const word = getEmailGreeting();
+  const word = resolveGreeting(override);
   return name ? `${word} ${name},` : `${word},`;
 }
 
 /** HTML greeting paragraph to place at the very top of a template's body. */
-export function greetingHtml(firstName?: string | null): string {
-  return `<p style="font-family:${FONT};color:#111827;font-size:${BODY_SIZE};font-weight:700;margin:0 0 16px">${escapeHtml(greetingText(firstName))}</p>`;
+export function greetingHtml(firstName?: string | null, override?: string | null): string {
+  return `<p style="font-family:${FONT};color:#111827;font-size:${BODY_SIZE};font-weight:700;margin:0 0 16px">${escapeHtml(greetingText(firstName, override))}</p>`;
 }
 
 /** Admin-typed placeholders such as {{firstName}} or {{ name }} (any case,

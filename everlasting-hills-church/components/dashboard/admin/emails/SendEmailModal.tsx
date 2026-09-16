@@ -8,7 +8,7 @@ import { ROLE_LABEL } from "@/components/dashboard/admin/people/peopleShared";
 import ResultList from "@/components/dashboard/admin/people/assign-members-dialog/ResultList";
 import { textLength } from "@/components/dashboard/reports/report-text-utils";
 import { SkeletonBlock } from "@/components/ui/display/SkeletonBlock";
-import PersonalGreetingHint from "./PersonalGreetingHint";
+import GreetingPicker from "./GreetingPicker";
 import { EMPTY_AUDIENCE, MAX_EMAIL_ATTACHMENTS, uploadEmailFile } from "@/lib/api/emails";
 import type { AudienceFilter, AudienceMode, EmailAttachment, EmailTemplate, RecipientPreview } from "@/lib/api/emails";
 import { showToast } from "@/components/ui/toast/toast";
@@ -42,6 +42,7 @@ export default function SendEmailModal({
     templateId?: string;
     subject: string;
     body: string;
+    greeting?: string | null;
     audience: AudienceFilter;
     attachments?: EmailAttachment[];
   }) => void;
@@ -51,6 +52,7 @@ export default function SendEmailModal({
 }) {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [greeting, setGreeting] = useState<string | null>(null);
   const [audience, setAudience] = useState<AudienceFilter>(EMPTY_AUDIENCE);
   const [search, setSearch] = useState("");
   const [selectedPeople, setSelectedPeople] = useState<PersonRow[]>([]);
@@ -68,6 +70,7 @@ export default function SendEmailModal({
     if (!open) return;
     setSubject(isTemplate ? target.subject : "");
     setBody(isTemplate ? target.body : "");
+    setGreeting(isTemplate ? target.greeting : null);
     setAudience(EMPTY_AUDIENCE);
     setAttachments([]);
     setSearch("");
@@ -147,6 +150,7 @@ export default function SendEmailModal({
                 templateId: isTemplate ? target.id : undefined,
                 subject,
                 body,
+                greeting,
                 audience,
                 attachments: attachments.length ? attachments : undefined,
               })
@@ -171,7 +175,12 @@ export default function SendEmailModal({
           <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">
             Message
           </label>
-          <PersonalGreetingHint className="mb-2" />
+          <GreetingPicker
+            key={isTemplate ? target.id : "blank"}
+            value={greeting}
+            onChange={setGreeting}
+            className="mb-2"
+          />
           <ReportEditor value={body} onChange={setBody} placeholder="Write your message…" minHeight={180} variant="email" />
         </div>
 

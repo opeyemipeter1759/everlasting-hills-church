@@ -7,6 +7,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { InboxService } from '../inbox/inbox.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
 import { buildAnnouncementEmail } from '../notifications/templates/announcement.email';
+import { normalizeGreeting } from '../notifications/templates/layout';
 import { roleFilter } from '../members/members-directory.util';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { PushEvents, type AnnouncementPublishedPayload } from '../push/push.events';
@@ -133,6 +134,7 @@ export class AnnouncementsService {
     sendEmail: boolean,
     targeting: AudienceTargeting,
     imageUrl?: string | null,
+    greeting?: string | null,
   ): Promise<number> {
     const allProfiles = await this.prisma.profile.findMany({
       where: { tenantId: this.tenantId },
@@ -170,6 +172,7 @@ export class AnnouncementsService {
               buildAnnouncementEmail({
                 email: recipient.email,
                 firstName: recipient.firstName,
+                greeting,
                 title,
                 body,
                 dashboardUrl,
@@ -207,7 +210,7 @@ export class AnnouncementsService {
     const isTargeted = targeting.targetRoles.length > 0 || targeting.targetGenders.length > 0 || targeting.targetProfileIds.length > 0;
 
     const recipients = shouldFanOut
-      ? await this.fanOut(dto.title, dto.body, sendEmail, targeting, dto.imageUrl)
+      ? await this.fanOut(dto.title, dto.body, sendEmail, targeting, dto.imageUrl, dto.greeting)
       : 0;
 
     const created = await this.prisma.announcement.create({
@@ -217,6 +220,7 @@ export class AnnouncementsService {
         title: dto.title,
         body: dto.body,
         imageUrl: dto.imageUrl ?? null,
+        greeting: normalizeGreeting(dto.greeting),
         audience: dto.audience ?? (isTargeted ? 'custom' : 'all'),
         sendEmail,
         status,
@@ -296,6 +300,7 @@ export class AnnouncementsService {
         ...(dto.body !== undefined && { body: dto.body }),
         ...(dto.sendEmail !== undefined && { sendEmail: dto.sendEmail }),
         ...(dto.imageUrl !== undefined && { imageUrl: dto.imageUrl || null }),
+        ...(dto.greeting !== undefined && { greeting: normalizeGreeting(dto.greeting) }),
         ...(dto.targetRoles !== undefined && { targetRoles: dto.targetRoles }),
         ...(dto.targetGenders !== undefined && { targetGenders: dto.targetGenders }),
         ...(dto.targetProfileIds !== undefined && { targetProfileIds: dto.targetProfileIds }),
@@ -333,6 +338,7 @@ export class AnnouncementsService {
         targetProfileIds: announcement.targetProfileIds,
       },
       announcement.imageUrl,
+      announcement.greeting,
     );
     const published = await this.prisma.announcement.update({
       where: { id },

@@ -88,6 +88,7 @@ export class EmailsService implements OnModuleInit {
         name: dto.name,
         subject: dto.subject,
         body: dto.body,
+        greeting: normalizeGreeting(dto.greeting),
         createdById,
       },
     });
@@ -118,6 +119,7 @@ export class EmailsService implements OnModuleInit {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.subject !== undefined && { subject: dto.subject }),
         ...(dto.body !== undefined && { body: dto.body }),
+        ...(dto.greeting !== undefined && { greeting: normalizeGreeting(dto.greeting) }),
       },
     });
   }
@@ -150,7 +152,14 @@ export class EmailsService implements OnModuleInit {
       await Promise.all(
         batch.map((r) =>
           this.mail.dispatch(
-            buildEmailBlast({ email: r.email, firstName: r.firstName, subject: dto.subject, body: dto.body, attachments: dto.attachments }),
+            buildEmailBlast({
+              email: r.email,
+              firstName: r.firstName,
+              subject: dto.subject,
+              greeting: dto.greeting,
+              body: dto.body,
+              attachments: dto.attachments,
+            }),
           ),
         ),
       );

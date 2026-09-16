@@ -6,6 +6,8 @@ interface Args {
   /** Recipient's first name — opens the message with "Hello Daphne,". */
   firstName?: string | null;
   subject: string;
+  /** Salutation chosen for this particular email ("Dear"). Null/absent = church default. */
+  greeting?: string | null;
   /** Rich-text HTML from the admin composer (Tiptap, schema-limited — sanitized
    * by construction, same trust level as ReportEditor's saved report content). */
   body: string;
@@ -28,7 +30,7 @@ function toPlainText(html: string): string {
 }
 
 /** Admin-authored, freely-targeted email (the "Emails" admin feature) — no fixed CTA/destination. */
-export function buildEmailBlast({ email, firstName, subject, body, attachments }: Args): SendEmailPayload {
+export function buildEmailBlast({ email, firstName, subject, greeting, body, attachments }: Args): SendEmailPayload {
   // Personalised per recipient: "{{firstName}}" placeholders are filled in, and
   // unless the author placed the name themselves the message opens with a
   // "Hello Daphne," line.
@@ -37,7 +39,7 @@ export function buildEmailBlast({ email, firstName, subject, body, attachments }
   const autoGreet = !hasNameToken(body);
 
   const text = [
-    ...(autoGreet ? [greetingText(firstName), ''] : []),
+    ...(autoGreet ? [greetingText(firstName, greeting), ''] : []),
     toPlainText(personalBody),
     '',
     '— Everlasting Hills Church · Ibadan',
@@ -45,7 +47,7 @@ export function buildEmailBlast({ email, firstName, subject, body, attachments }
   // No card heading: the subject line already carries it, and the composer's
   // body is the whole message — repeating it read like a duplicated title.
   const html = renderEmailLayout({
-    bodyHtml: `${autoGreet ? greetingHtml(firstName) : ''}${styleInlineImages(personalBody)}`,
+    bodyHtml: `${autoGreet ? greetingHtml(firstName, greeting) : ''}${styleInlineImages(personalBody)}`,
   });
 
   return {

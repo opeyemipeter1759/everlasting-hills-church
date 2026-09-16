@@ -6,6 +6,8 @@ interface Args {
   email: string;
   /** Recipient's first name — the message opens with "Hello Daphne,". */
   firstName?: string | null;
+  /** Salutation chosen for this announcement ("Dear"). Null/absent = church default. */
+  greeting?: string | null;
   title: string;
   body: string;
   dashboardUrl?: string;
@@ -27,6 +29,7 @@ interface Args {
 export function buildAnnouncementEmail({
   email,
   firstName,
+  greeting,
   title,
   body,
   dashboardUrl = 'https://everlastinghills.org/dashboard',
@@ -57,7 +60,7 @@ export function buildAnnouncementEmail({
       ? `<img src="${escapeHtml(imageUrl)}" alt="" width="560" style="display:block;width:100%;max-width:560px;height:auto;border-radius:8px;margin:0 0 20px" />`
       : '';
   const text = [
-    greetingText(firstName),
+    greetingText(firstName, greeting),
     '',
     `📢 ${title}`,
     '',
@@ -74,7 +77,7 @@ export function buildAnnouncementEmail({
     <div style="background:#FFF4F6;border-left:4px solid #87102C;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:20px">
       <p style="margin:0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#87102C">Church Announcement</p>
     </div>
-    ${greetingHtml(firstName)}
+    ${greetingHtml(firstName, greeting)}
     ${flyerHtml}
     ${markdownToEmailHtml(body, escapeHtml)}
     <p style="color:#9CA3AF;font-size:13px;margin:24px 0 0">

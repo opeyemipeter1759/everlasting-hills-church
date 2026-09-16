@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUrl, Matches, MaxLength, ValidateIf } from 'class-validator';
-import { MAX_GREETING_LENGTH } from '../../notifications/templates/layout';
+import { IsOptional, IsUrl, MaxLength, ValidateIf } from 'class-validator';
+import { IsGreetingField } from '../../common/greeting.decorator';
 
 /** Partial update: only the fields present are changed. */
 export class UpdateEmailSettingsDto {
@@ -11,17 +11,6 @@ export class UpdateEmailSettingsDto {
   @MaxLength(2000)
   logoUrl?: string | null;
 
-  @ApiPropertyOptional({
-    description: 'Salutation that opens every email, e.g. "Dear" → "Dear Daphne,". Null restores the default ("Hello").',
-    nullable: true,
-    maxLength: MAX_GREETING_LENGTH,
-    example: 'Dear',
-  })
-  @IsOptional()
-  @ValidateIf((o) => o.greeting !== null)
-  @IsString()
-  @MaxLength(MAX_GREETING_LENGTH)
-  // Plain words only — it lands inside the HTML body, so no tags or braces.
-  @Matches(/^[^<>{}]*$/, { message: 'greeting cannot contain < > { or }' })
+  @IsGreetingField('Church-wide default salutation, e.g. "Dear" → "Dear Daphne,". Null restores "Hello". Individual emails can override it.')
   greeting?: string | null;
 }

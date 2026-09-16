@@ -6804,6 +6804,11 @@ export interface components {
              * @example 10:00 AM
              */
             eventTime?: string;
+            /**
+             * @description Salutation for the email copy, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @description Image to show alongside the announcement (from /uploads/image) */
             imageUrl?: string;
             /**
@@ -6881,6 +6886,11 @@ export interface components {
         CreateEmailTemplateDto: {
             /** @example <p>Dear church family,</p> */
             body: string;
+            /**
+             * @description Salutation that opens this email, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @example Monthly Newsletter */
             name: string;
             /** @example Here is what happened this month at EHC */
@@ -7521,6 +7531,11 @@ export interface components {
             audience: components["schemas"]["AudienceFilterDto"];
             /** @example <p>Dear church family,</p> */
             body: string;
+            /**
+             * @description Salutation that opens this email, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @example Here is what happened this month at EHC */
             subject: string;
             /** @description Template this send originated from, for record-keeping only — subject/body below are what actually gets sent */
@@ -7692,6 +7707,11 @@ export interface components {
             body?: string;
             /** @example 10:00 AM */
             eventTime?: string;
+            /**
+             * @description Salutation for the email copy, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @description Image to show alongside the announcement (from /uploads/image), or "" to remove it */
             imageUrl?: string;
             /**
@@ -7735,7 +7755,7 @@ export interface components {
         };
         UpdateEmailSettingsDto: {
             /**
-             * @description Salutation that opens every email, e.g. "Dear" → "Dear Daphne,". Null restores the default ("Hello").
+             * @description Church-wide default salutation, e.g. "Dear" → "Dear Daphne,". Null restores "Hello". Individual emails can override it.
              * @example Dear
              */
             greeting?: Record<string, never> | null;
@@ -7745,6 +7765,11 @@ export interface components {
         UpdateEmailTemplateDto: {
             /** @example <p>Dear church family,</p> */
             body?: string;
+            /**
+             * @description Salutation that opens this email, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @example Monthly Newsletter */
             name?: string;
             /** @example Here is what happened this month at EHC */

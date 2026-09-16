@@ -66,9 +66,31 @@ describe('configurable salutation word', () => {
 
   it('normalises what the admin typed and falls back to the default when blank', () => {
     expect(normalizeGreeting('  Beloved , ')).toBe('Beloved');
+    expect(normalizeGreeting('dear')).toBe('Dear');
     expect(normalizeGreeting('Good   morning:')).toBe('Good morning');
     expect(normalizeGreeting('   ')).toBeNull();
     setEmailGreeting('   ');
     expect(getEmailGreeting()).toBe(DEFAULT_GREETING);
+  });
+});
+
+describe('per-email greeting override', () => {
+  afterEach(() => setEmailGreeting(null));
+
+  it('beats the church-wide default when set, and falls back when null/blank', () => {
+    setEmailGreeting('Hi');
+    expect(greetingText('Daphne', 'Dear')).toBe('Dear Daphne,');
+    expect(greetingText('Daphne', null)).toBe('Hi Daphne,');
+    expect(greetingText('Daphne', '   ')).toBe('Hi Daphne,');
+  });
+
+  it('is honoured by blasts and announcements', () => {
+    const blast = buildEmailBlast({ email: 'd@x.com', firstName: 'Daphne', subject: 's', greeting: 'Beloved', body: '<p>b</p>' });
+    expect(blast.html).toContain('Beloved Daphne,');
+    expect(blast.text.startsWith('Beloved Daphne,')).toBe(true);
+
+    const ann = buildAnnouncementEmail({ email: 'd@x.com', firstName: 'Daphne', greeting: 'Shalom', title: 'T', body: 'B' });
+    expect(ann.html).toContain('Shalom Daphne,');
+    expect(ann.text.startsWith('Shalom Daphne,')).toBe(true);
   });
 });

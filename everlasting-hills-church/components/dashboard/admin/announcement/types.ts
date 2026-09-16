@@ -15,6 +15,8 @@ export interface Announcement {
   imageUrl: string | null;
   audience: string;
   sendEmail: boolean;
+  /** Salutation for the email copy; null = the church-wide default. */
+  greeting: string | null;
   status: AnnouncementStatus;
   recipients: number;
   createdAt: string;
@@ -32,6 +34,7 @@ export interface AnnouncementFormValues {
   body: string;
   imageUrl: string;
   sendEmail: boolean;
+  greeting: string | null;
   targetRoles: PersonRole[];
   targetGenders: TargetGender[];
   targetPeople: TargetPerson[];
@@ -44,6 +47,7 @@ export const EMPTY_FORM: AnnouncementFormValues = {
   body: "",
   imageUrl: "",
   sendEmail: true,
+  greeting: null,
   targetRoles: [],
   targetGenders: [],
   targetPeople: [],

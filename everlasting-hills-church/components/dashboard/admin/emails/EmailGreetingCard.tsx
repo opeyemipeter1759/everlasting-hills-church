@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { Check, Loader2, MessageSquareText, RotateCcw } from "lucide-react";
 import { useEmailSettings, useUpdateEmailSettings } from "@/lib/api/emails";
 import { showToast } from "@/components/ui/toast/toast";
+import { GREETING_PRESETS as PRESETS } from "./GreetingPicker";
 
-/** Quick picks; anything else can be typed in the box. */
-const PRESETS = ["Hello", "Hi", "Dear", "Beloved", "Greetings", "Shalom"];
 const MAX_LENGTH = 40;
 
 /** The salutation word every outgoing email opens with — "Hello Daphne,",
- * "Dear Daphne,", "Beloved Daphne,"… Church-wide, same as the header logo:
+ * "Dear Daphne,", "Beloved Daphne,"… This is the church-wide DEFAULT — each
+ * email can still pick its own word when it is composed. Same scope as the logo:
  * it applies to blasts, announcements and first-timer mails alike. */
 export default function EmailGreetingCard() {
   const { data: settings, isLoading, error } = useEmailSettings();
@@ -47,9 +47,9 @@ export default function EmailGreetingCard() {
 
         <div className="min-w-0 flex-1 space-y-3">
           <div>
-            <p className="text-sm font-bold text-gray-900 dark:text-white">Greeting</p>
+            <p className="text-sm font-bold text-gray-900 dark:text-white">Default greeting</p>
             <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">
-              The word every email opens with, followed by the person&apos;s first name.
+              The word emails open with unless a particular email picks its own, followed by the person&apos;s first name.
               {isDefault && " Currently using the default."}
             </p>
           </div>

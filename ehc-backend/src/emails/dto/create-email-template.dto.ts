@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsGreetingField } from '../../common/greeting.decorator';
 
 export class CreateEmailTemplateDto {
   @ApiProperty({ example: 'Monthly Newsletter' })
@@ -19,4 +20,7 @@ export class CreateEmailTemplateDto {
   @MinLength(2)
   @MaxLength(20_000)
   body!: string;
+
+  @IsGreetingField()
+  greeting?: string | null;
 }

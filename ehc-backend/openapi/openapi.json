@@ -399,6 +399,13 @@
             "example": "10:00 AM",
             "type": "string"
           },
+          "greeting": {
+            "description": "Salutation for the email copy, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
+          },
           "imageUrl": {
             "description": "Image to show alongside the announcement (from /uploads/image)",
             "type": "string"
@@ -572,6 +579,13 @@
           "body": {
             "example": "<p>Dear church family,</p>",
             "type": "string"
+          },
+          "greeting": {
+            "description": "Salutation that opens this email, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
           },
           "name": {
             "example": "Monthly Newsletter",
@@ -2004,6 +2018,13 @@
             "example": "<p>Dear church family,</p>",
             "type": "string"
           },
+          "greeting": {
+            "description": "Salutation that opens this email, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
+          },
           "subject": {
             "example": "Here is what happened this month at EHC",
             "type": "string"
@@ -2361,6 +2382,13 @@
             "example": "10:00 AM",
             "type": "string"
           },
+          "greeting": {
+            "description": "Salutation for the email copy, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
+          },
           "imageUrl": {
             "description": "Image to show alongside the announcement (from /uploads/image), or \"\" to remove it",
             "type": "string"
@@ -2473,7 +2501,7 @@
       "UpdateEmailSettingsDto": {
         "properties": {
           "greeting": {
-            "description": "Salutation that opens every email, e.g. \"Dear\" → \"Dear Daphne,\". Null restores the default (\"Hello\").",
+            "description": "Church-wide default salutation, e.g. \"Dear\" → \"Dear Daphne,\". Null restores \"Hello\". Individual emails can override it.",
             "example": "Dear",
             "maxLength": 40,
             "nullable": true,
@@ -2492,6 +2520,13 @@
           "body": {
             "example": "<p>Dear church family,</p>",
             "type": "string"
+          },
+          "greeting": {
+            "description": "Salutation that opens this email, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
           },
           "name": {
             "example": "Monthly Newsletter",

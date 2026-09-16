@@ -10,6 +10,8 @@ export interface EmailTemplate {
   name: string;
   subject: string;
   body: string;
+  /** Per-template salutation; null = the church-wide default. */
+  greeting: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -18,6 +20,7 @@ export interface TemplateFormValues {
   name: string;
   subject: string;
   body: string;
+  greeting?: string | null;
 }
 
 /** WORKERS = anyone in a unit plus every leader. */
@@ -172,6 +175,8 @@ export function useSendEmail() {
       templateId?: string;
       subject: string;
       body: string;
+      /** Salutation for this send; null/omitted = the church-wide default. */
+      greeting?: string | null;
       audience: AudienceFilter;
       attachments?: EmailAttachment[];
     }) => api.post<EmailSend>("/emails/send", body),
