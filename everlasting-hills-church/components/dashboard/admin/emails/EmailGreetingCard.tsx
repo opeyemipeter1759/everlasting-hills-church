@@ -13,7 +13,7 @@ const MAX_LENGTH = 40;
  * "Dear Daphne,", "Beloved Daphne,"… Church-wide, same as the header logo:
  * it applies to blasts, announcements and first-timer mails alike. */
 export default function EmailGreetingCard() {
-  const { data: settings, isLoading } = useEmailSettings();
+  const { data: settings, isLoading, error } = useEmailSettings();
   const update = useUpdateEmailSettings();
   const [draft, setDraft] = useState("");
 
@@ -54,7 +54,11 @@ export default function EmailGreetingCard() {
             </p>
           </div>
 
-          {isLoading ? (
+          {error ? (
+            <p className="text-xs text-red-600 dark:text-red-400">
+              Couldn&apos;t load the current greeting — {(error as Error).message || "the server returned an error"}. Refresh to try again.
+            </p>
+          ) : isLoading ? (
             <div className="flex items-center gap-2 text-xs text-gray-400">
               <Loader2 size={14} className="animate-spin" /> Loading…
             </div>
