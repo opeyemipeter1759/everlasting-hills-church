@@ -8,7 +8,9 @@ COPY . .
 RUN npx prisma generate
 # nest build (tsc) OOMs on the default Cloud Build machine's memory budget once
 # V8 hits its auto-detected heap ceiling (~2GB) well before the box's actual
-# limit — raise it explicitly rather than relying on that heuristic.
+# limit. The npm build script raises the heap itself so every builder (this
+# image, Railway's Railpack, a laptop) gets the same fix; this ENV stays for
+# the prisma/postinstall steps that run node directly.
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 

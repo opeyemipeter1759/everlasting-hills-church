@@ -56,7 +56,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={FONT_VARIABLES}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('ehc-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
+        {/* Dark mode is a dashboard setting. The public site and the sign-in
+            screens are designed light-only, so a member's saved preference must
+            not paint them dark; that is how the public pledge form once rendered
+            white labels on a white card. Applied here, before paint, so the
+            dashboard itself never flashes light first. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(location.pathname.indexOf('/dashboard')!==0)return;var t=localStorage.getItem('ehc-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
        <link rel="icon" href="/favicon/favicon.ico" />
         <link
           rel="icon"
