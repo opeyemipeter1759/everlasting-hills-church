@@ -6,12 +6,10 @@ COPY prisma ./prisma
 RUN npm ci
 COPY . .
 RUN npx prisma generate
-# nest build (tsc) OOMs on the default Cloud Build machine's memory budget once
-# V8 hits its auto-detected heap ceiling (~2GB) well before the box's actual
-# limit. The npm build script raises the heap itself so every builder (this
-# image, Railway's Railpack, a laptop) gets the same fix; this ENV stays for
-# the prisma/postinstall steps that run node directly.
-ENV NODE_OPTIONS=--max-old-space-size=4096
+# The build transpiles with SWC (see nest-cli.json): under a second and a few
+# hundred MB. The tsc builder had grown past the default heap and past Cloud
+# Build's default machine, which is how the API silently stopped deploying on
+# 2026-09-16. Type errors are caught by CI's `npm run typecheck`, not here.
 RUN npm run build
 
 FROM node:20-slim
