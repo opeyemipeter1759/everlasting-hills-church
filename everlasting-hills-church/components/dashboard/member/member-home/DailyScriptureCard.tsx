@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BookOpen, Check, Copy, Download, Languages, Loader2, Share2 } from "lucide-react";
-import { useDailyScripture } from "@/lib/api/daily-scripture";
-import { useTranslations } from "@/lib/api/reading-plan";
+import { useDailyScripture, useScriptureVersions } from "@/lib/api/daily-scripture";
 import {
   createScriptureImage,
   saveScriptureImage,
@@ -12,7 +11,7 @@ import {
 
 export default function DailyScriptureCard() {
   const [translationCode, setTranslationCode] = useState("");
-  const { data: translations } = useTranslations();
+  const { data: translations } = useScriptureVersions();
   const { data, isLoading, isError, isFetching, refetch } = useDailyScripture(
     translationCode || undefined,
   );

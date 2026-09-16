@@ -13,12 +13,12 @@ import {
   saveScriptureImage,
 } from "@/lib/scripture-share";
 
-vi.mock("@/lib/api/daily-scripture", () => ({ useDailyScripture: vi.fn() }));
-vi.mock("@/lib/api/reading-plan", () => ({
-  useTranslations: () => ({
+vi.mock("@/lib/api/daily-scripture", () => ({
+  useDailyScripture: vi.fn(),
+  useScriptureVersions: () => ({
     data: [
-      { id: 1, code: "WEB", name: "World English Bible", isDefault: true },
-      { id: 2, code: "KJV", name: "King James Version", isDefault: false },
+      { code: "WEB", name: "World English Bible", isDefault: true },
+      { code: "KJV", name: "King James Version", isDefault: false },
     ],
   }),
 }));

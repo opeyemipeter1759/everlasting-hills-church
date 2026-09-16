@@ -1,0 +1,2063 @@
+{
+  "rotationStart": "2026-01-01",
+  "timezone": "Africa/Lagos",
+  "translations": [
+    {
+      "code": "WEB",
+      "name": "World English Bible",
+      "isDefault": true
+    },
+    {
+      "code": "KJV",
+      "name": "King James Version",
+      "isDefault": false
+    }
+  ],
+  "verses": [
+    {
+      "ref": [
+        19,
+        122,
+        1
+      ],
+      "reference": "Psalm 122:1",
+      "text": {
+        "WEB": "A Song of Ascents. By David. I was glad when they said to me, “Let’s go to the LORD’s house!”",
+        "KJV": "A Song of degrees of David. I was glad when they said unto me, Let us go into the house of the Lord."
+      }
+    },
+    {
+      "ref": [
+        24,
+        29,
+        11
+      ],
+      "reference": "Jeremiah 29:11",
+      "text": {
+        "WEB": "For I know the thoughts that I think toward you,” says the LORD, “thoughts of peace, and not of evil, to give you hope and a future.",
+        "KJV": "For I know the thoughts that I think toward you, saith the Lord, thoughts of peace, and not of evil, to give you an expected end."
+      }
+    },
+    {
+      "ref": [
+        50,
+        4,
+        13
+      ],
+      "reference": "Philippians 4:13",
+      "text": {
+        "WEB": "I can do all things through Christ who strengthens me.",
+        "KJV": "I can do all things through Christ which strengtheneth me."
+      }
+    },
+    {
+      "ref": [
+        19,
+        23,
+        1
+      ],
+      "reference": "Psalm 23:1",
+      "text": {
+        "WEB": "A Psalm by David. The LORD is my shepherd; I shall lack nothing.",
+        "KJV": "A Psalm of David. The Lord is my shepherd; I shall not want."
+      }
+    },
+    {
+      "ref": [
+        23,
+        41,
+        10
+      ],
+      "reference": "Isaiah 41:10",
+      "text": {
+        "WEB": "Don’t you be afraid, for I am with you. Don’t be dismayed, for I am your God. I will strengthen you. Yes, I will help you. Yes, I will uphold you with the right hand of my righteousness.",
+        "KJV": "Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee; yea, I will uphold thee with the right hand of my righteousness."
+      }
+    },
+    {
+      "ref": [
+        6,
+        1,
+        9
+      ],
+      "reference": "Joshua 1:9",
+      "text": {
+        "WEB": "Haven’t I commanded you? Be strong and courageous. Don’t be afraid. Don’t be dismayed, for the LORD your God is with you wherever you go.”",
+        "KJV": "Have not I commanded thee? Be strong and of a good courage; be not afraid, neither be thou dismayed: for the Lord thy God is with thee whithersoever thou goest."
+      }
+    },
+    {
+      "ref": [
+        20,
+        3,
+        5,
+        6
+      ],
+      "reference": "Proverbs 3:5-6",
+      "text": {
+        "WEB": "Trust in the LORD with all your heart, and don’t lean on your own understanding. In all your ways acknowledge him, and he will make your paths straight.",
+        "KJV": "Trust in the Lord with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths."
+      }
+    },
+    {
+      "ref": [
+        45,
+        8,
+        28
+      ],
+      "reference": "Romans 8:28",
+      "text": {
+        "WEB": "We know that all things work together for good for those who love God, for those who are called according to his purpose.",
+        "KJV": "And we know that all things work together for good to them that love God, to them who are the called according to his purpose."
+      }
+    },
+    {
+      "ref": [
+        58,
+        10,
+        24,
+        25
+      ],
+      "reference": "Hebrews 10:24-25",
+      "text": {
+        "WEB": "Let’s consider how to provoke one another to love and good works, not forsaking our own assembling together, as the custom of some is, but exhorting one another, and so much the more as you see the Day approaching.",
+        "KJV": "And let us consider one another to provoke unto love and to good works: Not forsaking the assembling of ourselves together, as the manner of some is; but exhorting one another: and so much the more, as ye see the day approaching."
+      }
+    },
+    {
+      "ref": [
+        50,
+        4,
+        6,
+        7
+      ],
+      "reference": "Philippians 4:6-7",
+      "text": {
+        "WEB": "In nothing be anxious, but in everything, by prayer and petition with thanksgiving, let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your thoughts in Christ Jesus.",
+        "KJV": "Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus."
+      }
+    },
+    {
+      "ref": [
+        40,
+        11,
+        28
+      ],
+      "reference": "Matthew 11:28",
+      "text": {
+        "WEB": "“Come to me, all you who labor and are heavily burdened, and I will give you rest.",
+        "KJV": "Come unto me, all ye that labour and are heavy laden, and I will give you rest."
+      }
+    },
+    {
+      "ref": [
+        43,
+        3,
+        16
+      ],
+      "reference": "John 3:16",
+      "text": {
+        "WEB": "For God so loved the world, that he gave his only born Son, that whoever believes in him should not perish, but have eternal life.",
+        "KJV": "For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life."
+      }
+    },
+    {
+      "ref": [
+        19,
+        46,
+        1
+      ],
+      "reference": "Psalm 46:1",
+      "text": {
+        "WEB": "For the Chief Musician. By the sons of Korah. According to Alamoth. God is our refuge and strength, a very present help in trouble.",
+        "KJV": "To the chief Musician for the sons of Korah, A Song upon Alamoth. God is our refuge and strength, a very present help in trouble."
+      }
+    },
+    {
+      "ref": [
+        23,
+        40,
+        31
+      ],
+      "reference": "Isaiah 40:31",
+      "text": {
+        "WEB": "but those who wait for the LORD will renew their strength. They will mount up with wings like eagles. They will run, and not be weary. They will walk, and not faint.",
+        "KJV": "But they that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint."
+      }
+    },
+    {
+      "ref": [
+        47,
+        5,
+        17
+      ],
+      "reference": "2 Corinthians 5:17",
+      "text": {
+        "WEB": "Therefore if anyone is in Christ, he is a new creation. The old things have passed away. Behold, all things have become new.",
+        "KJV": "Therefore if any man be in Christ, he is a new creature: old things are passed away; behold, all things are become new."
+      }
+    },
+    {
+      "ref": [
+        25,
+        3,
+        22,
+        23
+      ],
+      "reference": "Lamentations 3:22-23",
+      "text": {
+        "WEB": "It is because of the LORD’s loving kindnesses that we are not consumed, because his mercies don’t fail. They are new every morning. Great is your faithfulness.",
+        "KJV": "It is of the Lord’s mercies that we are not consumed, because his compassions fail not. They are new every morning: great is thy faithfulness."
+      }
+    },
+    {
+      "ref": [
+        19,
+        118,
+        24
+      ],
+      "reference": "Psalm 118:24",
+      "text": {
+        "WEB": "This is the day that the LORD has made. We will rejoice and be glad in it!",
+        "KJV": "This is the day which the Lord hath made; we will rejoice and be glad in it."
+      }
+    },
+    {
+      "ref": [
+        40,
+        18,
+        20
+      ],
+      "reference": "Matthew 18:20",
+      "text": {
+        "WEB": "For where two or three are gathered together in my name, there I am in the middle of them.”",
+        "KJV": "For where two or three are gathered together in my name, there am I in the midst of them."
+      }
+    },
+    {
+      "ref": [
+        58,
+        11,
+        1
+      ],
+      "reference": "Hebrews 11:1",
+      "text": {
+        "WEB": "Now faith is assurance of things hoped for, proof of things not seen.",
+        "KJV": "Now faith is the substance of things hoped for, the evidence of things not seen."
+      }
+    },
+    {
+      "ref": [
+        45,
+        12,
+        2
+      ],
+      "reference": "Romans 12:2",
+      "text": {
+        "WEB": "Don’t be conformed to this world, but be transformed by the renewing of your mind, so that you may prove what is the good, well-pleasing, and perfect will of God.",
+        "KJV": "And be not conformed to this world: but be ye transformed by the renewing of your mind, that ye may prove what is that good, and acceptable, and perfect, will of God."
+      }
+    },
+    {
+      "ref": [
+        40,
+        6,
+        33
+      ],
+      "reference": "Matthew 6:33",
+      "text": {
+        "WEB": "But seek first God’s Kingdom and his righteousness; and all these things will be given to you as well.",
+        "KJV": "But seek ye first the kingdom of God, and his righteousness; and all these things shall be added unto you."
+      }
+    },
+    {
+      "ref": [
+        19,
+        37,
+        4
+      ],
+      "reference": "Psalm 37:4",
+      "text": {
+        "WEB": "Also delight yourself in the LORD, and he will give you the desires of your heart.",
+        "KJV": "Delight thyself also in the Lord; and he shall give thee the desires of thine heart."
+      }
+    },
+    {
+      "ref": [
+        48,
+        2,
+        20
+      ],
+      "reference": "Galatians 2:20",
+      "text": {
+        "WEB": "I have been crucified with Christ, and it is no longer I who live, but Christ lives in me. That life which I now live in the flesh, I live by faith in the Son of God, who loved me and gave himself up for me.",
+        "KJV": "I am crucified with Christ: nevertheless I live; yet not I, but Christ liveth in me: and the life which I now live in the flesh I live by the faith of the Son of God, who loved me, and gave himself for me."
+      }
+    },
+    {
+      "ref": [
+        43,
+        14,
+        27
+      ],
+      "reference": "John 14:27",
+      "text": {
+        "WEB": "Peace I leave with you. My peace I give to you; not as the world gives, I give to you. Don’t let your heart be troubled, neither let it be fearful.",
+        "KJV": "Peace I leave with you, my peace I give unto you: not as the world giveth, give I unto you. Let not your heart be troubled, neither let it be afraid."
+      }
+    },
+    {
+      "ref": [
+        60,
+        5,
+        7
+      ],
+      "reference": "1 Peter 5:7",
+      "text": {
+        "WEB": "casting all your worries on him, because he cares for you.",
+        "KJV": "Casting all your care upon him; for he careth for you."
+      }
+    },
+    {
+      "ref": [
+        19,
+        121,
+        1,
+        2
+      ],
+      "reference": "Psalm 121:1-2",
+      "text": {
+        "WEB": "A Song of Ascents. I will lift up my eyes to the hills. Where does my help come from? My help comes from the LORD, who made heaven and earth.",
+        "KJV": "A Song of degrees. I will lift up mine eyes unto the hills, from whence cometh my help. My help cometh from the Lord, which made heaven and earth."
+      }
+    },
+    {
+      "ref": [
+        19,
+        133,
+        1
+      ],
+      "reference": "Psalm 133:1",
+      "text": {
+        "WEB": "A Song of Ascents. By David. See how good and how pleasant it is for brothers to live together in unity!",
+        "KJV": "A Song of degrees of David. Behold, how good and how pleasant it is for brethren to dwell together in unity!"
+      }
+    },
+    {
+      "ref": [
+        5,
+        31,
+        6
+      ],
+      "reference": "Deuteronomy 31:6",
+      "text": {
+        "WEB": "Be strong and courageous. Don’t be afraid or scared of them, for the LORD your God himself is who goes with you. He will not fail you nor forsake you.”",
+        "KJV": "Be strong and of a good courage, fear not, nor be afraid of them: for the Lord thy God, he it is that doth go with thee; he will not fail thee, nor forsake thee."
+      }
+    },
+    {
+      "ref": [
+        4,
+        6,
+        24,
+        26
+      ],
+      "reference": "Numbers 6:24-26",
+      "text": {
+        "WEB": "‘The LORD bless you, and keep you. The LORD make his face to shine on you, and be gracious to you. The LORD lift up his face toward you, and give you peace.’",
+        "KJV": "The Lord bless thee, and keep thee: The Lord make his face shine upon thee, and be gracious unto thee: The Lord lift up his countenance upon thee, and give thee peace."
+      }
+    },
+    {
+      "ref": [
+        36,
+        3,
+        17
+      ],
+      "reference": "Zephaniah 3:17",
+      "text": {
+        "WEB": "The LORD, your God, is among you, a mighty one who will save. He will rejoice over you with joy. He will calm you in his love. He will rejoice over you with singing.",
+        "KJV": "The Lord thy God in the midst of thee is mighty; he will save, he will rejoice over thee with joy; he will rest in his love, he will joy over thee with singing."
+      }
+    },
+    {
+      "ref": [
+        23,
+        26,
+        3
+      ],
+      "reference": "Isaiah 26:3",
+      "text": {
+        "WEB": "You will keep whoever’s mind is steadfast in perfect peace, because he trusts in you.",
+        "KJV": "Thou wilt keep him in perfect peace, whose mind is stayed on thee: because he trusteth in thee."
+      }
+    },
+    {
+      "ref": [
+        49,
+        2,
+        8,
+        9
+      ],
+      "reference": "Ephesians 2:8-9",
+      "text": {
+        "WEB": "for by grace you have been saved through faith, and that not of yourselves; it is the gift of God, not of works, that no one would boast.",
+        "KJV": "For by grace are ye saved through faith; and that not of yourselves: it is the gift of God: Not of works, lest any man should boast."
+      }
+    },
+    {
+      "ref": [
+        45,
+        15,
+        13
+      ],
+      "reference": "Romans 15:13",
+      "text": {
+        "WEB": "Now may the God of hope fill you with all joy and peace in believing, that you may abound in hope in the power of the Holy Spirit.",
+        "KJV": "Now the God of hope fill you with all joy and peace in believing, that ye may abound in hope, through the power of the Holy Ghost."
+      }
+    },
+    {
+      "ref": [
+        19,
+        27,
+        1
+      ],
+      "reference": "Psalm 27:1",
+      "text": {
+        "WEB": "By David. The LORD is my light and my salvation. Whom shall I fear? The LORD is the strength of my life. Of whom shall I be afraid?",
+        "KJV": "A Psalm of David. The Lord is my light and my salvation; whom shall I fear? the Lord is the strength of my life; of whom shall I be afraid?"
+      }
+    },
+    {
+      "ref": [
+        44,
+        2,
+        42
+      ],
+      "reference": "Acts 2:42",
+      "text": {
+        "WEB": "They continued steadfastly in the apostles’ teaching and fellowship, in the breaking of bread, and prayer.",
+        "KJV": "And they continued stedfastly in the apostles’ doctrine and fellowship, and in breaking of bread, and in prayers."
+      }
+    },
+    {
+      "ref": [
+        43,
+        16,
+        33
+      ],
+      "reference": "John 16:33",
+      "text": {
+        "WEB": "I have told you these things, that in me you may have peace. In the world you have trouble; but cheer up! I have overcome the world.”",
+        "KJV": "These things I have spoken unto you, that in me ye might have peace. In the world ye shall have tribulation: but be of good cheer; I have overcome the world."
+      }
+    },
+    {
+      "ref": [
+        55,
+        1,
+        7
+      ],
+      "reference": "2 Timothy 1:7",
+      "text": {
+        "WEB": "For God didn’t give us a spirit of fear, but of power, love, and self-control.",
+        "KJV": "For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind."
+      }
+    },
+    {
+      "ref": [
+        40,
+        5,
+        16
+      ],
+      "reference": "Matthew 5:16",
+      "text": {
+        "WEB": "Even so, let your light shine before men, that they may see your good works and glorify your Father who is in heaven.",
+        "KJV": "Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven."
+      }
+    },
+    {
+      "ref": [
+        19,
+        119,
+        105
+      ],
+      "reference": "Psalm 119:105",
+      "text": {
+        "WEB": "Your word is a lamp to my feet, and a light for my path.",
+        "KJV": "נ NUN. Thy word is a lamp unto my feet, and a light unto my path."
+      }
+    },
+    {
+      "ref": [
+        58,
+        13,
+        8
+      ],
+      "reference": "Hebrews 13:8",
+      "text": {
+        "WEB": "Jesus Christ is the same yesterday, today, and forever.",
+        "KJV": "Jesus Christ the same yesterday, and to day, and for ever."
+      }
+    },
+    {
+      "ref": [
+        23,
+        43,
+        2
+      ],
+      "reference": "Isaiah 43:2",
+      "text": {
+        "WEB": "When you pass through the waters, I will be with you, and through the rivers, they will not overflow you. When you walk through the fire, you will not be burned, and flame will not scorch you.",
+        "KJV": "When thou passest through the waters, I will be with thee; and through the rivers, they shall not overflow thee: when thou walkest through the fire, thou shalt not be burned; neither shall the flame kindle upon thee."
+      }
+    },
+    {
+      "ref": [
+        33,
+        6,
+        8
+      ],
+      "reference": "Micah 6:8",
+      "text": {
+        "WEB": "He has shown you, O man, what is good. What does the LORD require of you, but to act justly, to love mercy, and to walk humbly with your God?",
+        "KJV": "He hath shewed thee, O man, what is good; and what doth the Lord require of thee, but to do justly, and to love mercy, and to walk humbly with thy God?"
+      }
+    },
+    {
+      "ref": [
+        46,
+        13,
+        13
+      ],
+      "reference": "1 Corinthians 13:13",
+      "text": {
+        "WEB": "But now faith, hope, and love remain—these three. The greatest of these is love.",
+        "KJV": "And now abideth faith, hope, charity, these three; but the greatest of these is charity."
+      }
+    },
+    {
+      "ref": [
+        43,
+        15,
+        5
+      ],
+      "reference": "John 15:5",
+      "text": {
+        "WEB": "I am the vine. You are the branches. He who remains in me and I in him bears much fruit, for apart from me you can do nothing.",
+        "KJV": "I am the vine, ye are the branches: He that abideth in me, and I in him, the same bringeth forth much fruit: for without me ye can do nothing."
+      }
+    },
+    {
+      "ref": [
+        19,
+        34,
+        8
+      ],
+      "reference": "Psalm 34:8",
+      "text": {
+        "WEB": "Oh taste and see that the LORD is good. Blessed is the man who takes refuge in him.",
+        "KJV": "O taste and see that the Lord is good: blessed is the man that trusteth in him."
+      }
+    },
+    {
+      "ref": [
+        45,
+        5,
+        8
+      ],
+      "reference": "Romans 5:8",
+      "text": {
+        "WEB": "But God commends his own love toward us, in that while we were yet sinners, Christ died for us.",
+        "KJV": "But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us."
+      }
+    },
+    {
+      "ref": [
+        50,
+        1,
+        6
+      ],
+      "reference": "Philippians 1:6",
+      "text": {
+        "WEB": "being confident of this very thing, that he who began a good work in you will complete it until the day of Jesus Christ.",
+        "KJV": "Being confident of this very thing, that he which hath begun a good work in you will perform it until the day of Jesus Christ:"
+      }
+    },
+    {
+      "ref": [
+        51,
+        3,
+        23
+      ],
+      "reference": "Colossians 3:23",
+      "text": {
+        "WEB": "And whatever you do, work heartily, as for the Lord and not for men,",
+        "KJV": "And whatsoever ye do, do it heartily, as to the Lord, and not unto men;"
+      }
+    },
+    {
+      "ref": [
+        59,
+        1,
+        5
+      ],
+      "reference": "James 1:5",
+      "text": {
+        "WEB": "But if any of you lacks wisdom, let him ask of God, who gives to all liberally and without reproach, and it will be given to him.",
+        "KJV": "If any of you lack wisdom, let him ask of God, that giveth to all men liberally, and upbraideth not; and it shall be given him."
+      }
+    },
+    {
+      "ref": [
+        19,
+        91,
+        1,
+        2
+      ],
+      "reference": "Psalm 91:1-2",
+      "text": {
+        "WEB": "He who dwells in the secret place of the Most High will rest in the shadow of the Almighty. I will say of the LORD, “He is my refuge and my fortress; my God, in whom I trust.”",
+        "KJV": "He that dwelleth in the secret place of the most High shall abide under the shadow of the Almighty. I will say of the Lord, He is my refuge and my fortress: my God; in him will I trust."
+      }
+    },
+    {
+      "ref": [
+        23,
+        9,
+        6
+      ],
+      "reference": "Isaiah 9:6",
+      "text": {
+        "WEB": "For a child is born to us. A son is given to us; and the government will be on his shoulders. His name will be called Wonderful Counselor, Mighty God, Everlasting Father, Prince of Peace.",
+        "KJV": "For unto us a child is born, unto us a son is given: and the government shall be upon his shoulder: and his name shall be called Wonderful, Counsellor, The mighty God, The everlasting Father, The Prince of Peace."
+      }
+    },
+    {
+      "ref": [
+        40,
+        28,
+        20
+      ],
+      "reference": "Matthew 28:20",
+      "text": {
+        "WEB": "teaching them to observe all things that I commanded you. Behold, I am with you always, even to the end of the age.” Amen.",
+        "KJV": "Teaching them to observe all things whatsoever I have commanded you: and, lo, I am with you alway, even unto the end of the world. Amen."
+      }
+    },
+    {
+      "ref": [
+        62,
+        4,
+        19
+      ],
+      "reference": "1 John 4:19",
+      "text": {
+        "WEB": "We love him, because he first loved us.",
+        "KJV": "We love him, because he first loved us."
+      }
+    },
+    {
+      "ref": [
+        62,
+        1,
+        9
+      ],
+      "reference": "1 John 1:9",
+      "text": {
+        "WEB": "If we confess our sins, he is faithful and righteous to forgive us the sins and to cleanse us from all unrighteousness.",
+        "KJV": "If we confess our sins, he is faithful and just to forgive us our sins, and to cleanse us from all unrighteousness."
+      }
+    },
+    {
+      "ref": [
+        49,
+        3,
+        20
+      ],
+      "reference": "Ephesians 3:20",
+      "text": {
+        "WEB": "Now to him who is able to do exceedingly abundantly above all that we ask or think, according to the power that works in us,",
+        "KJV": "Now unto him that is able to do exceeding abundantly above all that we ask or think, according to the power that worketh in us,"
+      }
+    },
+    {
+      "ref": [
+        19,
+        16,
+        11
+      ],
+      "reference": "Psalm 16:11",
+      "text": {
+        "WEB": "You will show me the path of life. In your presence is fullness of joy. In your right hand there are pleasures forever more.",
+        "KJV": "Thou wilt shew me the path of life: in thy presence is fulness of joy; at thy right hand there are pleasures for evermore."
+      }
+    },
+    {
+      "ref": [
+        20,
+        18,
+        10
+      ],
+      "reference": "Proverbs 18:10",
+      "text": {
+        "WEB": "The LORD’s name is a strong tower: the righteous run to him, and are safe.",
+        "KJV": "The name of the Lord is a strong tower: the righteous runneth into it, and is safe."
+      }
+    },
+    {
+      "ref": [
+        34,
+        1,
+        7
+      ],
+      "reference": "Nahum 1:7",
+      "text": {
+        "WEB": "The LORD is good, a stronghold in the day of trouble; and he knows those who take refuge in him.",
+        "KJV": "The Lord is good, a strong hold in the day of trouble; and he knoweth them that trust in him."
+      }
+    },
+    {
+      "ref": [
+        35,
+        3,
+        19
+      ],
+      "reference": "Habakkuk 3:19",
+      "text": {
+        "WEB": "GOD, the Lord, is my strength. He makes my feet like deer’s feet, and enables me to go in high places. For the music director, on my stringed instruments.",
+        "KJV": "The Lord God is my strength, and he will make my feet like hinds’ feet, and he will make me to walk upon mine high places. To the chief singer on my stringed instruments."
+      }
+    },
+    {
+      "ref": [
+        23,
+        54,
+        10
+      ],
+      "reference": "Isaiah 54:10",
+      "text": {
+        "WEB": "For the mountains may depart, and the hills be removed, but my loving kindness will not depart from you, and my covenant of peace will not be removed,” says the LORD who has mercy on you.",
+        "KJV": "For the mountains shall depart, and the hills be removed; but my kindness shall not depart from thee, neither shall the covenant of my peace be removed, saith the Lord that hath mercy on thee."
+      }
+    },
+    {
+      "ref": [
+        19,
+        139,
+        14
+      ],
+      "reference": "Psalm 139:14",
+      "text": {
+        "WEB": "I will give thanks to you, for I am fearfully and wonderfully made. Your works are wonderful. My soul knows that very well.",
+        "KJV": "I will praise thee; for I am fearfully and wonderfully made: marvellous are thy works; and that my soul knoweth right well."
+      }
+    },
+    {
+      "ref": [
+        47,
+        12,
+        9
+      ],
+      "reference": "2 Corinthians 12:9",
+      "text": {
+        "WEB": "He has said to me, “My grace is sufficient for you, for my power is made perfect in weakness.” Most gladly therefore I will rather glory in my weaknesses, that the power of Christ may rest on me.",
+        "KJV": "And he said unto me, My grace is sufficient for thee: for my strength is made perfect in weakness. Most gladly therefore will I rather glory in my infirmities, that the power of Christ may rest upon me."
+      }
+    },
+    {
+      "ref": [
+        45,
+        10,
+        9
+      ],
+      "reference": "Romans 10:9",
+      "text": {
+        "WEB": "that if you will confess with your mouth that Jesus is Lord and believe in your heart that God raised him from the dead, you will be saved.",
+        "KJV": "That if thou shalt confess with thy mouth the Lord Jesus, and shalt believe in thine heart that God hath raised him from the dead, thou shalt be saved."
+      }
+    },
+    {
+      "ref": [
+        43,
+        8,
+        12
+      ],
+      "reference": "John 8:12",
+      "text": {
+        "WEB": "Again, therefore, Jesus spoke to them, saying, “I am the light of the world. He who follows me will not walk in the darkness, but will have the light of life.”",
+        "KJV": "Then spake Jesus again unto them, saying, I am the light of the world: he that followeth me shall not walk in darkness, but shall have the light of life."
+      }
+    },
+    {
+      "ref": [
+        43,
+        10,
+        10
+      ],
+      "reference": "John 10:10",
+      "text": {
+        "WEB": "The thief only comes to steal, kill, and destroy. I came that they may have life, and may have it abundantly.",
+        "KJV": "The thief cometh not, but for to steal, and to kill, and to destroy: I am come that they might have life, and that they might have it more abundantly."
+      }
+    },
+    {
+      "ref": [
+        43,
+        11,
+        25
+      ],
+      "reference": "John 11:25",
+      "text": {
+        "WEB": "Jesus said to her, “I am the resurrection and the life. He who believes in me will still live, even if he dies.",
+        "KJV": "Jesus said unto her, I am the resurrection, and the life: he that believeth in me, though he were dead, yet shall he live:"
+      }
+    },
+    {
+      "ref": [
+        43,
+        14,
+        6
+      ],
+      "reference": "John 14:6",
+      "text": {
+        "WEB": "Jesus said to him, “I am the way, the truth, and the life. No one comes to the Father, except through me.",
+        "KJV": "Jesus saith unto him, I am the way, the truth, and the life: no man cometh unto the Father, but by me."
+      }
+    },
+    {
+      "ref": [
+        44,
+        1,
+        8
+      ],
+      "reference": "Acts 1:8",
+      "text": {
+        "WEB": "But you will receive power when the Holy Spirit has come upon you. You will be witnesses to me in Jerusalem, in all Judea and Samaria, and to the uttermost parts of the earth.”",
+        "KJV": "But ye shall receive power, after that the Holy Ghost is come upon you: and ye shall be witnesses unto me both in Jerusalem, and in all Judea, and in Samaria, and unto the uttermost part of the earth."
+      }
+    },
+    {
+      "ref": [
+        19,
+        100,
+        4,
+        5
+      ],
+      "reference": "Psalm 100:4-5",
+      "text": {
+        "WEB": "Enter into his gates with thanksgiving, and into his courts with praise. Give thanks to him, and bless his name. For the LORD is good. His loving kindness endures forever, his faithfulness to all generations.",
+        "KJV": "Enter into his gates with thanksgiving, and into his courts with praise: be thankful unto him, and bless his name. For the Lord is good; his mercy is everlasting; and his truth endureth to all generations."
+      }
+    },
+    {
+      "ref": [
+        19,
+        103,
+        1,
+        2
+      ],
+      "reference": "Psalm 103:1-2",
+      "text": {
+        "WEB": "By David. Praise the LORD, my soul! All that is within me, praise his holy name! Praise the LORD, my soul, and don’t forget all his benefits,",
+        "KJV": "A Psalm of David. Bless the Lord, O my soul: and all that is within me, bless his holy name. Bless the Lord, O my soul, and forget not all his benefits:"
+      }
+    },
+    {
+      "ref": [
+        21,
+        3,
+        1
+      ],
+      "reference": "Ecclesiastes 3:1",
+      "text": {
+        "WEB": "For everything there is a season, and a time for every purpose under heaven:",
+        "KJV": "To every thing there is a season, and a time to every purpose under the heaven:"
+      }
+    },
+    {
+      "ref": [
+        48,
+        6,
+        9
+      ],
+      "reference": "Galatians 6:9",
+      "text": {
+        "WEB": "Let’s not be weary in doing good, for we will reap in due season if we don’t give up.",
+        "KJV": "And let us not be weary in well doing: for in due season we shall reap, if we faint not."
+      }
+    },
+    {
+      "ref": [
+        52,
+        5,
+        16,
+        18
+      ],
+      "reference": "1 Thessalonians 5:16-18",
+      "text": {
+        "WEB": "Always rejoice. Pray without ceasing. In everything give thanks, for this is the will of God in Christ Jesus toward you.",
+        "KJV": "Rejoice evermore. Pray without ceasing. In every thing give thanks: for this is the will of God in Christ Jesus concerning you."
+      }
+    },
+    {
+      "ref": [
+        19,
+        55,
+        22
+      ],
+      "reference": "Psalm 55:22",
+      "text": {
+        "WEB": "Cast your burden on the LORD and he will sustain you. He will never allow the righteous to be moved.",
+        "KJV": "Cast thy burden upon the Lord, and he shall sustain thee: he shall never suffer the righteous to be moved."
+      }
+    },
+    {
+      "ref": [
+        23,
+        12,
+        2
+      ],
+      "reference": "Isaiah 12:2",
+      "text": {
+        "WEB": "Behold, God is my salvation. I will trust, and will not be afraid; for the LORD, the LORD, is my strength and song; and he has become my salvation.”",
+        "KJV": "Behold, God is my salvation; I will trust, and not be afraid: for the Lord Jehovah is my strength and my song; he also is become my salvation."
+      }
+    },
+    {
+      "ref": [
+        20,
+        16,
+        3
+      ],
+      "reference": "Proverbs 16:3",
+      "text": {
+        "WEB": "Commit your deeds to the LORD, and your plans shall succeed.",
+        "KJV": "Commit thy works unto the Lord, and thy thoughts shall be established."
+      }
+    },
+    {
+      "ref": [
+        20,
+        4,
+        23
+      ],
+      "reference": "Proverbs 4:23",
+      "text": {
+        "WEB": "Keep your heart with all diligence, for out of it is the wellspring of life.",
+        "KJV": "Keep thy heart with all diligence; for out of it are the issues of life."
+      }
+    },
+    {
+      "ref": [
+        19,
+        145,
+        18
+      ],
+      "reference": "Psalm 145:18",
+      "text": {
+        "WEB": "The LORD is near to all those who call on him, to all who call on him in truth.",
+        "KJV": "The Lord is nigh unto all them that call upon him, to all that call upon him in truth."
+      }
+    },
+    {
+      "ref": [
+        19,
+        30,
+        5
+      ],
+      "reference": "Psalm 30:5",
+      "text": {
+        "WEB": "For his anger is but for a moment. His favor is for a lifetime. Weeping may stay for the night, but joy comes in the morning.",
+        "KJV": "For his anger endureth but a moment; in his favour is life: weeping may endure for a night, but joy cometh in the morning."
+      }
+    },
+    {
+      "ref": [
+        23,
+        60,
+        1
+      ],
+      "reference": "Isaiah 60:1",
+      "text": {
+        "WEB": "“Arise, shine; for your light has come, and the LORD’s glory has risen on you!",
+        "KJV": "Arise, shine; for thy light is come, and the glory of the Lord is risen upon thee."
+      }
+    },
+    {
+      "ref": [
+        45,
+        8,
+        38,
+        39
+      ],
+      "reference": "Romans 8:38-39",
+      "text": {
+        "WEB": "For I am persuaded that neither death, nor life, nor angels, nor principalities, nor things present, nor things to come, nor powers, nor height, nor depth, nor any other created thing will be able to separate us from God’s love which is in Christ Jesus our Lord.",
+        "KJV": "For I am persuaded, that neither death, nor life, nor angels, nor principalities, nor powers, nor things present, nor things to come, Nor height, nor depth, nor any other creature, shall be able to separate us from the love of God, which is in Christ Jesus our Lord."
+      }
+    },
+    {
+      "ref": [
+        45,
+        8,
+        31
+      ],
+      "reference": "Romans 8:31",
+      "text": {
+        "WEB": "What then shall we say about these things? If God is for us, who can be against us?",
+        "KJV": "What shall we then say to these things? If God be for us, who can be against us?"
+      }
+    },
+    {
+      "ref": [
+        47,
+        4,
+        18
+      ],
+      "reference": "2 Corinthians 4:18",
+      "text": {
+        "WEB": "while we don’t look at the things which are seen, but at the things which are not seen. For the things which are seen are temporal, but the things which are not seen are eternal.",
+        "KJV": "While we look not at the things which are seen, but at the things which are not seen: for the things which are seen are temporal; but the things which are not seen are eternal."
+      }
+    },
+    {
+      "ref": [
+        50,
+        4,
+        19
+      ],
+      "reference": "Philippians 4:19",
+      "text": {
+        "WEB": "My God will supply every need of yours according to his riches in glory in Christ Jesus.",
+        "KJV": "But my God shall supply all your need according to his riches in glory by Christ Jesus."
+      }
+    },
+    {
+      "ref": [
+        50,
+        4,
+        4
+      ],
+      "reference": "Philippians 4:4",
+      "text": {
+        "WEB": "Rejoice in the Lord always! Again I will say, “Rejoice!”",
+        "KJV": "Rejoice in the Lord alway: and again I say, Rejoice."
+      }
+    },
+    {
+      "ref": [
+        51,
+        3,
+        2
+      ],
+      "reference": "Colossians 3:2",
+      "text": {
+        "WEB": "Set your mind on the things that are above, not on the things that are on the earth.",
+        "KJV": "Set your affection on things above, not on things on the earth."
+      }
+    },
+    {
+      "ref": [
+        58,
+        4,
+        16
+      ],
+      "reference": "Hebrews 4:16",
+      "text": {
+        "WEB": "Let’s therefore draw near with boldness to the throne of grace, that we may receive mercy and may find grace for help in time of need.",
+        "KJV": "Let us therefore come boldly unto the throne of grace, that we may obtain mercy, and find grace to help in time of need."
+      }
+    },
+    {
+      "ref": [
+        58,
+        10,
+        23
+      ],
+      "reference": "Hebrews 10:23",
+      "text": {
+        "WEB": "let’s hold fast the confession of our hope without wavering; for he who promised is faithful.",
+        "KJV": "Let us hold fast the profession of our faith without wavering; (for he is faithful that promised;)"
+      }
+    },
+    {
+      "ref": [
+        59,
+        4,
+        8
+      ],
+      "reference": "James 4:8",
+      "text": {
+        "WEB": "Draw near to God, and he will draw near to you. Cleanse your hands, you sinners. Purify your hearts, you double-minded.",
+        "KJV": "Draw nigh to God, and he will draw nigh to you. Cleanse your hands, ye sinners; and purify your hearts, ye double minded."
+      }
+    },
+    {
+      "ref": [
+        60,
+        2,
+        9
+      ],
+      "reference": "1 Peter 2:9",
+      "text": {
+        "WEB": "But you are a chosen race, a royal priesthood, a holy nation, a people for God’s own possession, that you may proclaim the excellence of him who called you out of darkness into his marvelous light.",
+        "KJV": "But ye are a chosen generation, a royal priesthood, an holy nation, a peculiar people; that ye should shew forth the praises of him who hath called you out of darkness into his marvellous light:"
+      }
+    },
+    {
+      "ref": [
+        62,
+        4,
+        4
+      ],
+      "reference": "1 John 4:4",
+      "text": {
+        "WEB": "You are of God, little children, and have overcome them, because greater is he who is in you than he who is in the world.",
+        "KJV": "Ye are of God, little children, and have overcome them: because greater is he that is in you, than he that is in the world."
+      }
+    },
+    {
+      "ref": [
+        62,
+        3,
+        1
+      ],
+      "reference": "1 John 3:1",
+      "text": {
+        "WEB": "See how great a love the Father has given to us, that we should be called children of God! For this cause the world doesn’t know us, because it didn’t know him.",
+        "KJV": "Behold, what manner of love the Father hath bestowed upon us, that we should be called the sons of God: therefore the world knoweth us not, because it knew him not."
+      }
+    },
+    {
+      "ref": [
+        66,
+        3,
+        20
+      ],
+      "reference": "Revelation 3:20",
+      "text": {
+        "WEB": "Behold, I stand at the door and knock. If anyone hears my voice and opens the door, then I will come in to him and will dine with him, and he with me.",
+        "KJV": "Behold, I stand at the door, and knock: if any man hear my voice, and open the door, I will come in to him, and will sup with him, and he with me."
+      }
+    },
+    {
+      "ref": [
+        66,
+        21,
+        4
+      ],
+      "reference": "Revelation 21:4",
+      "text": {
+        "WEB": "He will wipe away every tear from their eyes. Death will be no more; neither will there be mourning, nor crying, nor pain any more. The first things have passed away.”",
+        "KJV": "And God shall wipe away all tears from their eyes; and there shall be no more death, neither sorrow, nor crying, neither shall there be any more pain: for the former things are passed away."
+      }
+    },
+    {
+      "ref": [
+        19,
+        18,
+        2
+      ],
+      "reference": "Psalm 18:2",
+      "text": {
+        "WEB": "The LORD is my rock, my fortress, and my deliverer; my God, my rock, in whom I take refuge; my shield, and the horn of my salvation, my high tower.",
+        "KJV": "The Lord is my rock, and my fortress, and my deliverer; my God, my strength, in whom I will trust; my buckler, and the horn of my salvation, and my high tower."
+      }
+    },
+    {
+      "ref": [
+        19,
+        19,
+        14
+      ],
+      "reference": "Psalm 19:14",
+      "text": {
+        "WEB": "Let the words of my mouth and the meditation of my heart be acceptable in your sight, LORD, my rock, and my redeemer.",
+        "KJV": "Let the words of my mouth, and the meditation of my heart, be acceptable in thy sight, O Lord, my strength, and my redeemer."
+      }
+    },
+    {
+      "ref": [
+        19,
+        32,
+        8
+      ],
+      "reference": "Psalm 32:8",
+      "text": {
+        "WEB": "I will instruct you and teach you in the way which you shall go. I will counsel you with my eye on you.",
+        "KJV": "I will instruct thee and teach thee in the way which thou shalt go: I will guide thee with mine eye."
+      }
+    },
+    {
+      "ref": [
+        19,
+        40,
+        1,
+        2
+      ],
+      "reference": "Psalm 40:1-2",
+      "text": {
+        "WEB": "For the Chief Musician. A Psalm by David. I waited patiently for the LORD. He turned to me, and heard my cry. He brought me up also out of a horrible pit, out of the miry clay. He set my feet on a rock, and gave me a firm place to stand.",
+        "KJV": "To the chief Musician, A Psalm of David. I waited patiently for the Lord; and he inclined unto me, and heard my cry. He brought me up also out of an horrible pit, out of the miry clay, and set my feet upon a rock, and established my goings."
+      }
+    },
+    {
+      "ref": [
+        19,
+        62,
+        1,
+        2
+      ],
+      "reference": "Psalm 62:1-2",
+      "text": {
+        "WEB": "For the Chief Musician. To Jeduthun. A Psalm by David. My soul rests in God alone. My salvation is from him. He alone is my rock, my salvation, and my fortress. I will never be greatly shaken.",
+        "KJV": "To the chief Musician, to Jeduthun, A Psalm of David. Truly my soul waiteth upon God: from him cometh my salvation. He only is my rock and my salvation; he is my defence; I shall not be greatly moved."
+      }
+    },
+    {
+      "ref": [
+        19,
+        84,
+        11
+      ],
+      "reference": "Psalm 84:11",
+      "text": {
+        "WEB": "For the LORD God is a sun and a shield. The LORD will give grace and glory. He withholds no good thing from those who walk blamelessly.",
+        "KJV": "For the Lord God is a sun and shield: the Lord will give grace and glory: no good thing will he withhold from them that walk uprightly."
+      }
+    },
+    {
+      "ref": [
+        19,
+        90,
+        12
+      ],
+      "reference": "Psalm 90:12",
+      "text": {
+        "WEB": "So teach us to count our days, that we may gain a heart of wisdom.",
+        "KJV": "So teach us to number our days, that we may apply our hearts unto wisdom."
+      }
+    },
+    {
+      "ref": [
+        19,
+        107,
+        1
+      ],
+      "reference": "Psalm 107:1",
+      "text": {
+        "WEB": "Give thanks to the LORD, for he is good, for his loving kindness endures forever.",
+        "KJV": "O give thanks unto the Lord, for he is good: for his mercy endureth for ever."
+      }
+    },
+    {
+      "ref": [
+        19,
+        126,
+        3
+      ],
+      "reference": "Psalm 126:3",
+      "text": {
+        "WEB": "The LORD has done great things for us, and we are glad.",
+        "KJV": "The Lord hath done great things for us; whereof we are glad."
+      }
+    },
+    {
+      "ref": [
+        19,
+        127,
+        1
+      ],
+      "reference": "Psalm 127:1",
+      "text": {
+        "WEB": "A Song of Ascents. By Solomon. Unless the LORD builds the house, they who build it labor in vain. Unless the LORD watches over the city, the watchman guards it in vain.",
+        "KJV": "A Song of degrees for Solomon. Except the Lord build the house, they labour in vain that build it: except the Lord keep the city, the watchman waketh but in vain."
+      }
+    },
+    {
+      "ref": [
+        19,
+        150,
+        6
+      ],
+      "reference": "Psalm 150:6",
+      "text": {
+        "WEB": "Let everything that has breath praise the LORD! Praise the LORD!",
+        "KJV": "Let every thing that hath breath praise the Lord. Praise ye the Lord."
+      }
+    },
+    {
+      "ref": [
+        23,
+        30,
+        21
+      ],
+      "reference": "Isaiah 30:21",
+      "text": {
+        "WEB": "and when you turn to the right hand, and when you turn to the left, your ears will hear a voice behind you, saying, “This is the way. Walk in it.”",
+        "KJV": "And thine ears shall hear a word behind thee, saying, This is the way, walk ye in it, when ye turn to the right hand, and when ye turn to the left."
+      }
+    },
+    {
+      "ref": [
+        23,
+        55,
+        8,
+        9
+      ],
+      "reference": "Isaiah 55:8-9",
+      "text": {
+        "WEB": "“For my thoughts are not your thoughts, and your ways are not my ways,” says the LORD. “For as the heavens are higher than the earth, so are my ways higher than your ways, and my thoughts than your thoughts.",
+        "KJV": "For my thoughts are not your thoughts, neither are your ways my ways, saith the Lord. For as the heavens are higher than the earth, so are my ways higher than your ways, and my thoughts than your thoughts."
+      }
+    },
+    {
+      "ref": [
+        23,
+        58,
+        11
+      ],
+      "reference": "Isaiah 58:11",
+      "text": {
+        "WEB": "and the LORD will guide you continually, satisfy your soul in dry places, and make your bones strong. You will be like a watered garden, and like a spring of water whose waters don’t fail.",
+        "KJV": "And the Lord shall guide thee continually, and satisfy thy soul in drought, and make fat thy bones: and thou shalt be like a watered garden, and like a spring of water, whose waters fail not."
+      }
+    },
+    {
+      "ref": [
+        24,
+        17,
+        7
+      ],
+      "reference": "Jeremiah 17:7",
+      "text": {
+        "WEB": "“Blessed is the man who trusts in the LORD, and whose confidence is in the LORD.",
+        "KJV": "Blessed is the man that trusteth in the Lord, and whose hope the Lord is."
+      }
+    },
+    {
+      "ref": [
+        24,
+        33,
+        3
+      ],
+      "reference": "Jeremiah 33:3",
+      "text": {
+        "WEB": "‘Call to me, and I will answer you, and will show you great and difficult things, which you don’t know.’",
+        "KJV": "Call unto me, and I will answer thee, and shew thee great and mighty things, which thou knowest not."
+      }
+    },
+    {
+      "ref": [
+        26,
+        36,
+        26
+      ],
+      "reference": "Ezekiel 36:26",
+      "text": {
+        "WEB": "I will also give you a new heart, and I will put a new spirit within you. I will take away the stony heart out of your flesh, and I will give you a heart of flesh.",
+        "KJV": "A new heart also will I give you, and a new spirit will I put within you: and I will take away the stony heart out of your flesh, and I will give you an heart of flesh."
+      }
+    },
+    {
+      "ref": [
+        29,
+        2,
+        25
+      ],
+      "reference": "Joel 2:25",
+      "text": {
+        "WEB": "I will restore to you the years that the swarming locust has eaten, the great locust, the grasshopper, and the caterpillar, my great army, which I sent among you.",
+        "KJV": "And I will restore to you the years that the locust hath eaten, the cankerworm, and the caterpiller, and the palmerworm, my great army which I sent among you."
+      }
+    },
+    {
+      "ref": [
+        40,
+        5,
+        9
+      ],
+      "reference": "Matthew 5:9",
+      "text": {
+        "WEB": "Blessed are the peacemakers, for they shall be called children of God.",
+        "KJV": "Blessed are the peacemakers: for they shall be called the children of God."
+      }
+    },
+    {
+      "ref": [
+        40,
+        7,
+        7
+      ],
+      "reference": "Matthew 7:7",
+      "text": {
+        "WEB": "“Ask, and it will be given you. Seek, and you will find. Knock, and it will be opened for you.",
+        "KJV": "Ask, and it shall be given you; seek, and ye shall find; knock, and it shall be opened unto you:"
+      }
+    },
+    {
+      "ref": [
+        40,
+        19,
+        26
+      ],
+      "reference": "Matthew 19:26",
+      "text": {
+        "WEB": "Looking at them, Jesus said, “With men this is impossible, but with God all things are possible.”",
+        "KJV": "But Jesus beheld them, and said unto them, With men this is impossible; but with God all things are possible."
+      }
+    },
+    {
+      "ref": [
+        41,
+        9,
+        23
+      ],
+      "reference": "Mark 9:23",
+      "text": {
+        "WEB": "Jesus said to him, “If you can believe, all things are possible to him who believes.”",
+        "KJV": "Jesus said unto him, If thou canst believe, all things are possible to him that believeth."
+      }
+    },
+    {
+      "ref": [
+        41,
+        11,
+        24
+      ],
+      "reference": "Mark 11:24",
+      "text": {
+        "WEB": "Therefore I tell you, all things whatever you pray and ask for, believe that you have received them, and you shall have them.",
+        "KJV": "Therefore I say unto you, What things soever ye desire, when ye pray, believe that ye receive them, and ye shall have them."
+      }
+    },
+    {
+      "ref": [
+        42,
+        1,
+        37
+      ],
+      "reference": "Luke 1:37",
+      "text": {
+        "WEB": "For nothing spoken by God is impossible.”",
+        "KJV": "For with God nothing shall be impossible."
+      }
+    },
+    {
+      "ref": [
+        42,
+        6,
+        31
+      ],
+      "reference": "Luke 6:31",
+      "text": {
+        "WEB": "“As you would like people to do to you, do exactly so to them.",
+        "KJV": "And as ye would that men should do to you, do ye also to them likewise."
+      }
+    },
+    {
+      "ref": [
+        43,
+        1,
+        5
+      ],
+      "reference": "John 1:5",
+      "text": {
+        "WEB": "The light shines in the darkness, and the darkness hasn’t overcome it.",
+        "KJV": "And the light shineth in darkness; and the darkness comprehended it not."
+      }
+    },
+    {
+      "ref": [
+        43,
+        13,
+        34,
+        35
+      ],
+      "reference": "John 13:34-35",
+      "text": {
+        "WEB": "A new commandment I give to you, that you love one another. Just as I have loved you, you also love one another. By this everyone will know that you are my disciples, if you have love for one another.”",
+        "KJV": "A new commandment I give unto you, That ye love one another; as I have loved you, that ye also love one another. By this shall all men know that ye are my disciples, if ye have love one to another."
+      }
+    },
+    {
+      "ref": [
+        45,
+        1,
+        16
+      ],
+      "reference": "Romans 1:16",
+      "text": {
+        "WEB": "For I am not ashamed of the Good News of Christ, because it is the power of God for salvation for everyone who believes, for the Jew first, and also for the Greek.",
+        "KJV": "For I am not ashamed of the gospel of Christ: for it is the power of God unto salvation to every one that believeth; to the Jew first, and also to the Greek."
+      }
+    },
+    {
+      "ref": [
+        45,
+        12,
+        12
+      ],
+      "reference": "Romans 12:12",
+      "text": {
+        "WEB": "rejoicing in hope, enduring in troubles, continuing steadfastly in prayer,",
+        "KJV": "Rejoicing in hope; patient in tribulation; continuing instant in prayer;"
+      }
+    },
+    {
+      "ref": [
+        46,
+        16,
+        14
+      ],
+      "reference": "1 Corinthians 16:14",
+      "text": {
+        "WEB": "Let all that you do be done in love.",
+        "KJV": "Let all your things be done with charity."
+      }
+    },
+    {
+      "ref": [
+        47,
+        9,
+        7
+      ],
+      "reference": "2 Corinthians 9:7",
+      "text": {
+        "WEB": "Let each man give according as he has determined in his heart, not grudgingly or under compulsion, for God loves a cheerful giver.",
+        "KJV": "Every man according as he purposeth in his heart, so let him give; not grudgingly, or of necessity: for God loveth a cheerful giver."
+      }
+    },
+    {
+      "ref": [
+        48,
+        5,
+        22,
+        23
+      ],
+      "reference": "Galatians 5:22-23",
+      "text": {
+        "WEB": "But the fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faith, gentleness, and self-control. Against such things there is no law.",
+        "KJV": "But the fruit of the Spirit is love, joy, peace, longsuffering, gentleness, goodness, faith, Meekness, temperance: against such there is no law."
+      }
+    },
+    {
+      "ref": [
+        49,
+        4,
+        32
+      ],
+      "reference": "Ephesians 4:32",
+      "text": {
+        "WEB": "And be kind to one another, tender hearted, forgiving each other, just as God also in Christ forgave you.",
+        "KJV": "And be ye kind one to another, tenderhearted, forgiving one another, even as God for Christ’s sake hath forgiven you."
+      }
+    },
+    {
+      "ref": [
+        49,
+        6,
+        10
+      ],
+      "reference": "Ephesians 6:10",
+      "text": {
+        "WEB": "Finally, be strong in the Lord and in the strength of his might.",
+        "KJV": "Finally, my brethren, be strong in the Lord, and in the power of his might."
+      }
+    },
+    {
+      "ref": [
+        50,
+        2,
+        3
+      ],
+      "reference": "Philippians 2:3",
+      "text": {
+        "WEB": "doing nothing through rivalry or through conceit, but in humility, each counting others better than himself;",
+        "KJV": "Let nothing be done through strife or vainglory; but in lowliness of mind let each esteem other better than themselves."
+      }
+    },
+    {
+      "ref": [
+        51,
+        3,
+        15
+      ],
+      "reference": "Colossians 3:15",
+      "text": {
+        "WEB": "And let the peace of God rule in your hearts, to which also you were called in one body, and be thankful.",
+        "KJV": "And let the peace of God rule in your hearts, to the which also ye are called in one body; and be ye thankful."
+      }
+    },
+    {
+      "ref": [
+        52,
+        5,
+        11
+      ],
+      "reference": "1 Thessalonians 5:11",
+      "text": {
+        "WEB": "Therefore exhort one another, and build each other up, even as you also do.",
+        "KJV": "Wherefore comfort yourselves together, and edify one another, even as also ye do."
+      }
+    },
+    {
+      "ref": [
+        53,
+        3,
+        3
+      ],
+      "reference": "2 Thessalonians 3:3",
+      "text": {
+        "WEB": "But the Lord is faithful, who will establish you and guard you from the evil one.",
+        "KJV": "But the Lord is faithful, who shall stablish you, and keep you from evil."
+      }
+    },
+    {
+      "ref": [
+        54,
+        4,
+        12
+      ],
+      "reference": "1 Timothy 4:12",
+      "text": {
+        "WEB": "Let no man despise your youth; but be an example to those who believe, in word, in your way of life, in love, in spirit, in faith, and in purity.",
+        "KJV": "Let no man despise thy youth; but be thou an example of the believers, in word, in conversation, in charity, in spirit, in faith, in purity."
+      }
+    },
+    {
+      "ref": [
+        55,
+        3,
+        16
+      ],
+      "reference": "2 Timothy 3:16",
+      "text": {
+        "WEB": "Every Scripture is God-breathed and profitable for teaching, for reproof, for correction, and for instruction in righteousness,",
+        "KJV": "All scripture is given by inspiration of God, and is profitable for doctrine, for reproof, for correction, for instruction in righteousness:"
+      }
+    },
+    {
+      "ref": [
+        58,
+        13,
+        5
+      ],
+      "reference": "Hebrews 13:5",
+      "text": {
+        "WEB": "Be free from the love of money, content with such things as you have, for he has said, “I will in no way leave you, neither will I in any way forsake you.”",
+        "KJV": "Let your conversation be without covetousness; and be content with such things as ye have: for he hath said, I will never leave thee, nor forsake thee."
+      }
+    },
+    {
+      "ref": [
+        59,
+        1,
+        17
+      ],
+      "reference": "James 1:17",
+      "text": {
+        "WEB": "Every good gift and every perfect gift is from above, coming down from the Father of lights, with whom can be no variation nor turning shadow.",
+        "KJV": "Every good gift and every perfect gift is from above, and cometh down from the Father of lights, with whom is no variableness, neither shadow of turning."
+      }
+    },
+    {
+      "ref": [
+        60,
+        5,
+        10
+      ],
+      "reference": "1 Peter 5:10",
+      "text": {
+        "WEB": "But may the God of all grace, who called you to his eternal glory by Christ Jesus, after you have suffered a little while, perfect, establish, strengthen, and settle you.",
+        "KJV": "But the God of all grace, who hath called us unto his eternal glory by Christ Jesus, after that ye have suffered a while, make you perfect, stablish, strengthen, settle you."
+      }
+    },
+    {
+      "ref": [
+        61,
+        3,
+        9
+      ],
+      "reference": "2 Peter 3:9",
+      "text": {
+        "WEB": "The Lord is not slow concerning his promise, as some count slowness; but he is patient with us, not wishing that anyone should perish, but that all should come to repentance.",
+        "KJV": "The Lord is not slack concerning his promise, as some men count slackness; but is longsuffering to us-ward, not willing that any should perish, but that all should come to repentance."
+      }
+    },
+    {
+      "ref": [
+        62,
+        4,
+        18
+      ],
+      "reference": "1 John 4:18",
+      "text": {
+        "WEB": "There is no fear in love; but perfect love casts out fear, because fear has punishment. He who fears is not made perfect in love.",
+        "KJV": "There is no fear in love; but perfect love casteth out fear: because fear hath torment. He that feareth is not made perfect in love."
+      }
+    },
+    {
+      "ref": [
+        65,
+        1,
+        24
+      ],
+      "reference": "Jude 1:24",
+      "text": {
+        "WEB": "Now to him who is able to keep them from stumbling, and to present you faultless before the presence of his glory in great joy,",
+        "KJV": "Now unto him that is able to keep you from falling, and to present you faultless before the presence of his glory with exceeding joy,"
+      }
+    },
+    {
+      "ref": [
+        66,
+        22,
+        13
+      ],
+      "reference": "Revelation 22:13",
+      "text": {
+        "WEB": "I am the Alpha and the Omega, the First and the Last, the Beginning and the End.",
+        "KJV": "I am Alpha and Omega, the beginning and the end, the first and the last."
+      }
+    },
+    {
+      "ref": [
+        1,
+        28,
+        15
+      ],
+      "reference": "Genesis 28:15",
+      "text": {
+        "WEB": "Behold, I am with you, and will keep you, wherever you go, and will bring you again into this land. For I will not leave you until I have done that which I have spoken of to you.”",
+        "KJV": "And, behold, I am with thee, and will keep thee in all places whither thou goest, and will bring thee again into this land; for I will not leave thee, until I have done that which I have spoken to thee of."
+      }
+    },
+    {
+      "ref": [
+        2,
+        14,
+        14
+      ],
+      "reference": "Exodus 14:14",
+      "text": {
+        "WEB": "The LORD will fight for you, and you shall be still.”",
+        "KJV": "The Lord shall fight for you, and ye shall hold your peace."
+      }
+    },
+    {
+      "ref": [
+        2,
+        15,
+        2
+      ],
+      "reference": "Exodus 15:2",
+      "text": {
+        "WEB": "The LORD is my strength and song. He has become my salvation. This is my God, and I will praise him; my father’s God, and I will exalt him.",
+        "KJV": "The Lord is my strength and song, and he is become my salvation: he is my God, and I will prepare him an habitation; my father’s God, and I will exalt him."
+      }
+    },
+    {
+      "ref": [
+        9,
+        16,
+        7
+      ],
+      "reference": "1 Samuel 16:7",
+      "text": {
+        "WEB": "But the LORD said to Samuel, “Don’t look on his face, or on the height of his stature, because I have rejected him; for I don’t see as man sees. For man looks at the outward appearance, but the LORD looks at the heart.”",
+        "KJV": "But the Lord said unto Samuel, Look not on his countenance, or on the height of his stature; because I have refused him: for the Lord seeth not as man seeth; for man looketh on the outward appearance, but the Lord looketh on the heart."
+      }
+    },
+    {
+      "ref": [
+        13,
+        16,
+        34
+      ],
+      "reference": "1 Chronicles 16:34",
+      "text": {
+        "WEB": "Oh give thanks to the LORD, for he is good, for his loving kindness endures forever.",
+        "KJV": "O give thanks unto the Lord; for he is good; for his mercy endureth for ever."
+      }
+    },
+    {
+      "ref": [
+        14,
+        7,
+        14
+      ],
+      "reference": "2 Chronicles 7:14",
+      "text": {
+        "WEB": "if my people who are called by my name will humble themselves, pray, seek my face, and turn from their wicked ways, then I will hear from heaven, will forgive their sin, and will heal their land.",
+        "KJV": "If my people, which are called by my name, shall humble themselves, and pray, and seek my face, and turn from their wicked ways; then will I hear from heaven, and will forgive their sin, and will heal their land."
+      }
+    },
+    {
+      "ref": [
+        18,
+        19,
+        25
+      ],
+      "reference": "Job 19:25",
+      "text": {
+        "WEB": "But as for me, I know that my Redeemer lives. In the end, he will stand upon the earth.",
+        "KJV": "For I know that my redeemer liveth, and that he shall stand at the latter day upon the earth:"
+      }
+    },
+    {
+      "ref": [
+        19,
+        1,
+        3
+      ],
+      "reference": "Psalm 1:3",
+      "text": {
+        "WEB": "He will be like a tree planted by the streams of water, that produces its fruit in its season, whose leaf also does not wither. Whatever he does shall prosper.",
+        "KJV": "And he shall be like a tree planted by the rivers of water, that bringeth forth his fruit in his season; his leaf also shall not wither; and whatsoever he doeth shall prosper."
+      }
+    },
+    {
+      "ref": [
+        19,
+        4,
+        8
+      ],
+      "reference": "Psalm 4:8",
+      "text": {
+        "WEB": "In peace I will both lay myself down and sleep, for you alone, LORD, make me live in safety.",
+        "KJV": "I will both lay me down in peace, and sleep: for thou, Lord, only makest me dwell in safety."
+      }
+    },
+    {
+      "ref": [
+        19,
+        5,
+        3
+      ],
+      "reference": "Psalm 5:3",
+      "text": {
+        "WEB": "LORD, in the morning you will hear my voice. In the morning I will lay my requests before you, and will watch expectantly.",
+        "KJV": "My voice shalt thou hear in the morning, O Lord; in the morning will I direct my prayer unto thee, and will look up."
+      }
+    },
+    {
+      "ref": [
+        19,
+        8,
+        1
+      ],
+      "reference": "Psalm 8:1",
+      "text": {
+        "WEB": "For the Chief Musician; on an instrument of Gath. A Psalm by David. LORD, our Lord, how majestic is your name in all the earth! You have set your glory above the heavens!",
+        "KJV": "To the chief Musician upon Gittith, A Psalm of David. O Lord our Lord, how excellent is thy name in all the earth! who hast set thy glory above the heavens."
+      }
+    },
+    {
+      "ref": [
+        19,
+        9,
+        1
+      ],
+      "reference": "Psalm 9:1",
+      "text": {
+        "WEB": "For the Chief Musician. Set to “The Death of the Son.” A Psalm by David. I will give thanks to the LORD with my whole heart. I will tell of all your marvelous works.",
+        "KJV": "To the chief Musician upon Muth–labben, A Psalm of David. I will praise thee, O Lord, with my whole heart; I will shew forth all thy marvellous works."
+      }
+    },
+    {
+      "ref": [
+        19,
+        28,
+        7
+      ],
+      "reference": "Psalm 28:7",
+      "text": {
+        "WEB": "The LORD is my strength and my shield. My heart has trusted in him, and I am helped. Therefore my heart greatly rejoices. With my song I will thank him.",
+        "KJV": "The Lord is my strength and my shield; my heart trusted in him, and I am helped: therefore my heart greatly rejoiceth; and with my song will I praise him."
+      }
+    },
+    {
+      "ref": [
+        19,
+        31,
+        24
+      ],
+      "reference": "Psalm 31:24",
+      "text": {
+        "WEB": "Be strong, and let your heart take courage, all you who hope in the LORD.",
+        "KJV": "Be of good courage, and he shall strengthen your heart, all ye that hope in the Lord."
+      }
+    },
+    {
+      "ref": [
+        19,
+        42,
+        11
+      ],
+      "reference": "Psalm 42:11",
+      "text": {
+        "WEB": "Why are you in despair, my soul? Why are you disturbed within me? Hope in God! For I shall still praise him, the saving help of my countenance, and my God.",
+        "KJV": "Why art thou cast down, O my soul? and why art thou disquieted within me? hope thou in God: for I shall yet praise him, who is the health of my countenance, and my God."
+      }
+    },
+    {
+      "ref": [
+        19,
+        51,
+        10
+      ],
+      "reference": "Psalm 51:10",
+      "text": {
+        "WEB": "Create in me a clean heart, O God. Renew a right spirit within me.",
+        "KJV": "Create in me a clean heart, O God; and renew a right spirit within me."
+      }
+    },
+    {
+      "ref": [
+        19,
+        63,
+        1
+      ],
+      "reference": "Psalm 63:1",
+      "text": {
+        "WEB": "A Psalm by David, when he was in the desert of Judah. God, you are my God. I will earnestly seek you. My soul thirsts for you. My flesh longs for you, in a dry and weary land, where there is no water.",
+        "KJV": "A Psalm of David, when he was in the wilderness of Judah. O God, thou art my God; early will I seek thee: my soul thirsteth for thee, my flesh longeth for thee in a dry and thirsty land, where no water is;"
+      }
+    },
+    {
+      "ref": [
+        19,
+        73,
+        26
+      ],
+      "reference": "Psalm 73:26",
+      "text": {
+        "WEB": "My flesh and my heart fails, but God is the strength of my heart and my portion forever.",
+        "KJV": "My flesh and my heart faileth: but God is the strength of my heart, and my portion for ever."
+      }
+    },
+    {
+      "ref": [
+        19,
+        86,
+        5
+      ],
+      "reference": "Psalm 86:5",
+      "text": {
+        "WEB": "For you, Lord, are good, and ready to forgive, abundant in loving kindness to all those who call on you.",
+        "KJV": "For thou, Lord, art good, and ready to forgive; and plenteous in mercy unto all them that call upon thee."
+      }
+    },
+    {
+      "ref": [
+        19,
+        95,
+        1
+      ],
+      "reference": "Psalm 95:1",
+      "text": {
+        "WEB": "Oh come, let’s sing to the LORD. Let’s shout aloud to the rock of our salvation!",
+        "KJV": "O come, let us sing unto the Lord: let us make a joyful noise to the rock of our salvation."
+      }
+    },
+    {
+      "ref": [
+        20,
+        11,
+        25
+      ],
+      "reference": "Proverbs 11:25",
+      "text": {
+        "WEB": "The liberal soul shall be made fat. He who waters shall be watered also himself.",
+        "KJV": "The liberal soul shall be made fat: and he that watereth shall be watered also himself."
+      }
+    },
+    {
+      "ref": [
+        20,
+        17,
+        17
+      ],
+      "reference": "Proverbs 17:17",
+      "text": {
+        "WEB": "A friend loves at all times; and a brother is born for adversity.",
+        "KJV": "A friend loveth at all times, and a brother is born for adversity."
+      }
+    },
+    {
+      "ref": [
+        20,
+        22,
+        6
+      ],
+      "reference": "Proverbs 22:6",
+      "text": {
+        "WEB": "Train up a child in the way he should go, and when he is old he will not depart from it.",
+        "KJV": "Train up a child in the way he should go: and when he is old, he will not depart from it."
+      }
+    },
+    {
+      "ref": [
+        23,
+        6,
+        8
+      ],
+      "reference": "Isaiah 6:8",
+      "text": {
+        "WEB": "I heard the Lord’s voice, saying, “Whom shall I send, and who will go for us?” Then I said, “Here I am. Send me!”",
+        "KJV": "Also I heard the voice of the Lord, saying, Whom shall I send, and who will go for us? Then said I, Here am I; send me."
+      }
+    },
+    {
+      "ref": [
+        23,
+        40,
+        8
+      ],
+      "reference": "Isaiah 40:8",
+      "text": {
+        "WEB": "The grass withers, the flower fades; but the word of our God stands forever.”",
+        "KJV": "The grass withereth, the flower fadeth: but the word of our God shall stand for ever."
+      }
+    },
+    {
+      "ref": [
+        23,
+        53,
+        5
+      ],
+      "reference": "Isaiah 53:5",
+      "text": {
+        "WEB": "But he was pierced for our transgressions. He was crushed for our iniquities. The punishment that brought our peace was on him; and by his wounds we are healed.",
+        "KJV": "But he was wounded for our transgressions, he was bruised for our iniquities: the chastisement of our peace was upon him; and with his stripes we are healed."
+      }
+    },
+    {
+      "ref": [
+        25,
+        3,
+        25
+      ],
+      "reference": "Lamentations 3:25",
+      "text": {
+        "WEB": "The LORD is good to those who wait for him, to the soul who seeks him.",
+        "KJV": "The Lord is good unto them that wait for him, to the soul that seeketh him."
+      }
+    },
+    {
+      "ref": [
+        38,
+        4,
+        6
+      ],
+      "reference": "Zechariah 4:6",
+      "text": {
+        "WEB": "Then he answered and spoke to me, saying, “This is the LORD’s word to Zerubbabel, saying, ‘Not by might, nor by power, but by my Spirit,’ says the LORD of Armies.",
+        "KJV": "Then he answered and spake unto me, saying, This is the word of the Lord unto Zerubbabel, saying, Not by might, nor by power, but by my spirit, saith the Lord of hosts."
+      }
+    }
+  ]
+}
