@@ -93,6 +93,17 @@ describe("DailyScriptureCard", () => {
     expect(screen.getByText("Test scripture.")).toBeInTheDocument();
   });
 
+  it("speaks the Hills Confession after the scripture", () => {
+    render(<DailyScriptureCard />);
+    const verse = screen.getByText("Test scripture.");
+    const confession = screen.getByRole("group", { name: /The Hills Confession/ });
+
+    expect(confession).toHaveTextContent("I am of the Everlasting Hills.");
+    expect(confession).toHaveTextContent(/in Jesus’ name!/);
+    // After the reading, never before it.
+    expect(verse.compareDocumentPosition(confession) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it("regenerates the status image in the Bible version the member chooses", async () => {
     vi.mocked(useDailyScripture).mockImplementation((translation) => ({
       data: translation === "KJV"

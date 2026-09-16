@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Check, Copy, Download, Languages, Loader2, Share2 } from "lucide-react";
 import { useDailyScripture, useScriptureVersions } from "@/lib/api/daily-scripture";
+import { HILLS_CONFESSION } from "@/lib/hills-confession";
 import {
   createScriptureImage,
   saveScriptureImage,
@@ -160,6 +161,36 @@ export default function DailyScriptureCard() {
             · {data.translationCode}
           </span>
         </p>
+
+        {/* Said out loud after the reading, so it is set to be spoken: one
+            line per breath, and loud enough on the page to be read across a
+            room. */}
+        <div
+          role="group"
+          aria-labelledby="hills-confession-title"
+          className="mt-6 border-t border-[#f5d49a]/30 pt-5"
+        >
+          <p
+            id="hills-confession-title"
+            className="text-[11px] font-black uppercase tracking-[0.22em] text-[#f5d49a]"
+          >
+            The Hills Confession
+            <span className="font-semibold normal-case tracking-normal text-white/60">
+              {" "}· say it out loud
+            </span>
+          </p>
+          <p className="mt-3 max-w-3xl font-display text-lg font-bold leading-snug tracking-tight text-white sm:text-2xl">
+            {HILLS_CONFESSION.map((line, index) => (
+              <span key={line} className="block">
+                {index === HILLS_CONFESSION.length - 1 ? (
+                  <span className="text-[#f5d49a]">{line}</span>
+                ) : (
+                  line
+                )}
+              </span>
+            ))}
+          </p>
+        </div>
       </div>
 
       <div className="p-4 sm:p-5">
