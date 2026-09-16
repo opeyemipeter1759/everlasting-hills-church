@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse } from "axios";
 import { AUTH_ERROR_EVENT } from "../auth/frontend-session";
 import { clearClientSessionState } from "../auth/logout";
+import { userMessageForError } from "./user-message";
 
 /** Browser requests always use the same-origin Next BFF. */
 const BASE_URL = "/api/backend";
@@ -55,17 +56,21 @@ export interface ApiError {
 function normalizeError(error: AxiosError): ApiError {
   if (error.response) {
     const body = error.response.data as
-      | { error?: { message?: string; code?: string; requestId?: string; details?: unknown } }
+      | {
+          message?: string;
+          error?: { message?: string; code?: string; requestId?: string; details?: unknown };
+        }
       | undefined;
     const enveloped = body?.error;
+    const status = error.response.status;
+    const message = enveloped?.message ?? body?.message ?? error.message;
     return {
-      message: enveloped?.message ?? error.message,
-      status: error.response.status,
+      message: userMessageForError({ message, status, code: enveloped?.code }),
+      status,
       code: enveloped?.code,
       requestId: enveloped?.requestId,
       details: enveloped?.details,
     };
   }
-  if (error.request) return { message: "No response from server. Check your connection." };
-  return { message: error.message };
+  return { message: userMessageForError(error) };
 }

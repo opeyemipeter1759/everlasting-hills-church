@@ -35,6 +35,8 @@ describe("Financial Pledge Form", () => {
     );
 
     expect(useSubmitPledge).toHaveBeenCalledWith(undefined, "public");
+    expect(screen.getByLabelText(/Full Name/).className).not.toContain("dark:bg-white/5");
+    expect(screen.getByText("Full Name").className).not.toContain("dark:text-white");
   });
 
   it("requires the member's confirmation before submitting", () => {

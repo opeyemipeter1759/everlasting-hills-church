@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CircleDollarSign, Download, HandCoins, Loader2, PhoneCall, RefreshCw, Search, Users } from "lucide-react";
-import { formatNaira, pledgePlan, usePledges, type Pledge } from "@/lib/api/pledges";
+import { formatNaira, normalizePledge, pledgePlan, usePledges, type Pledge } from "@/lib/api/pledges";
 
 /**
  * Pledges to the Sound & Media Project, for pastors, admins and the project
@@ -34,22 +34,25 @@ export function pledgesCsv(pledges: Pledge[]) {
     "Progress", "How", "Per installment (NGN)", "Installment history", "Complete by",
     "Contact about pledge", "Pledged on", "Last updated",
   ];
-  const rows = pledges.map((pledge) => [
-    pledge.fullName,
-    pledge.phone,
-    pledge.email,
-    pledge.amount,
-    pledge.amountGiven,
-    pledge.balance,
-    `${pledge.progressPercent}%`,
-    pledgePlan({ ...pledge, installmentAmount: null }),
-    pledge.installmentAmount,
-    pledge.installments.map((item) => `${item.givenOn}: ${item.amount}${item.note ? ` (${item.note})` : ""}`).join("; "),
-    pledge.completeBy,
-    pledge.contactMe ? "Yes" : "No",
-    pledge.createdAt.slice(0, 10),
-    pledge.updatedAt.slice(0, 10),
-  ]);
+  const rows = pledges.map((rawPledge) => {
+    const pledge = normalizePledge(rawPledge);
+    return [
+      pledge.fullName,
+      pledge.phone,
+      pledge.email,
+      pledge.amount,
+      pledge.amountGiven,
+      pledge.balance,
+      `${pledge.progressPercent}%`,
+      pledgePlan({ ...pledge, installmentAmount: null }),
+      pledge.installmentAmount,
+      pledge.installments.map((item) => `${item.givenOn}: ${item.amount}${item.note ? ` (${item.note})` : ""}`).join("; "),
+      pledge.completeBy,
+      pledge.contactMe ? "Yes" : "No",
+      pledge.createdAt.slice(0, 10),
+      pledge.updatedAt.slice(0, 10),
+    ];
+  });
   return [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
 }
 

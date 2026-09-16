@@ -51,7 +51,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const isProd = process.env.NODE_ENV === 'production';
 
-    const requestId = (request.headers['x-request-id'] as string | undefined) ?? randomUUID();
+    const requestId =
+      (request.headers['x-request-id'] as string | undefined) ?? randomUUID();
     const { status, message, code, details } = this.resolve(exception);
 
     const body: ErrorResponse = {
@@ -61,7 +62,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
         code,
         requestId,
         ...(details !== undefined && { details }),
-        ...(!isProd && exception instanceof Error && { stack: exception.stack }),
+        ...(!isProd &&
+          exception instanceof Error && { stack: exception.stack }),
       },
     };
 
@@ -74,7 +76,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
       // Report server-side failures to Sentry (no-op when SENTRY_DSN is unset).
       Sentry.withScope((scope) => {
         scope.setTag('requestId', requestId);
-        scope.setContext('request', { method: request.method, url: request.url });
+        scope.setContext('request', {
+          method: request.method,
+          url: request.url,
+        });
         Sentry.captureException(exception);
       });
     } else {
@@ -100,10 +105,23 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof res === 'object' && res !== null) {
         const obj = res as { message?: string | string[]; error?: string };
         const msg = Array.isArray(obj.message) ? obj.message[0] : obj.message;
+        if (
+          status === HttpStatus.NOT_FOUND &&
+          /^Cannot\s+(GET|POST|PUT|PATCH|DELETE)\s+\//i.test(msg ?? '')
+        ) {
+          return {
+            status,
+            message:
+              'This feature is not available yet. Please update or refresh the app and try again.',
+            code: 'ROUTE_NOT_FOUND',
+          };
+        }
         return {
           status,
           message: msg ?? exception.message,
-          code: obj.error?.toUpperCase().replace(/\s+/g, '_') ?? this.statusToCode(status),
+          code:
+            obj.error?.toUpperCase().replace(/\s+/g, '_') ??
+            this.statusToCode(status),
           details: Array.isArray(obj.message) ? obj.message : undefined,
         };
       }
@@ -130,7 +148,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
         .pop();
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
-        message: isProd ? 'Invalid database operation' : `Invalid database operation: ${inner}`,
+        message: isProd
+          ? 'Invalid database operation'
+          : `Invalid database operation: ${inner}`,
         code: 'PRISMA_VALIDATION_ERROR',
       };
     }
@@ -156,7 +176,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       case 'P1001':
         return {
           status: HttpStatus.SERVICE_UNAVAILABLE,
-          message: 'Database is temporarily unreachable. Please try again shortly.',
+          message:
+            'Database is temporarily unreachable. Please try again shortly.',
           code: 'DATABASE_UNAVAILABLE',
         };
       case 'P1002':
@@ -166,7 +187,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
           code: 'DATABASE_TIMEOUT',
         };
       case 'P2002': {
-        const target = (err.meta?.target as string[] | undefined)?.join(', ') ?? 'field';
+        const target =
+          (err.meta?.target as string[] | undefined)?.join(', ') ?? 'field';
         return {
           status: HttpStatus.CONFLICT,
           message: `A record with this ${target} already exists`,

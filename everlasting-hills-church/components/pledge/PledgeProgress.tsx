@@ -15,6 +15,7 @@ import {
   type Pledge,
   type PledgeInstallmentTarget,
 } from "@/lib/api/pledges";
+import { userMessageForError } from "@/lib/api/user-message";
 
 const lagosToday = () =>
   new Intl.DateTimeFormat("en-CA", {
@@ -38,15 +39,13 @@ const grouped = (digits: string) =>
   digits ? Number(digits).toLocaleString("en-NG") : "";
 
 function mutationError(error: unknown) {
-  if (
-    error &&
-    typeof error === "object" &&
-    "message" in error &&
-    typeof error.message === "string"
-  ) {
-    return error.message;
+  if (error && typeof error === "object" && "status" in error && error.status === 404) {
+    return "Installment tracking is temporarily unavailable. Your payment was not recorded. Please try again shortly.";
   }
-  return "The installment could not be recorded. Please try again.";
+  return userMessageForError(
+    error,
+    "We couldn't record this installment. Your progress has not changed; please try again.",
+  );
 }
 
 export default function PledgeProgress({

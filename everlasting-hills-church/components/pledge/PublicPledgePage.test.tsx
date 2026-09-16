@@ -45,6 +45,7 @@ describe("public Sound & Media pledge page", () => {
 
     expect(screen.getByRole("heading", { name: "Financial Pledge Form" })).toBeInTheDocument();
     expect(screen.getByText("Public pledge introduction")).toBeInTheDocument();
+    expect(screen.queryByText("A pledge is not an immediate payment")).not.toBeInTheDocument();
     expect(screen.getByTestId("public-pledge-form")).toHaveAttribute("data-access", "public");
 
     fireEvent.click(screen.getByRole("button", { name: "Test public submission" }));

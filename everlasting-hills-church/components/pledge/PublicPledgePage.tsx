@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, HandCoins, Mic2, Radio, ShieldCheck, Video } from "lucide-react";
+import { ArrowRight, CheckCircle2, HandCoins, Mic2, Radio, Video } from "lucide-react";
 import PledgeForm, {
   PLEDGE_INTRO,
 } from "@/components/dashboard/member/member-home/PledgeForm";
@@ -72,16 +72,6 @@ export default function PublicPledgePage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-[#87102C]">Sound &amp; Media Project</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-[#261015]">Financial Pledge Form</h2>
             <p className="mt-5 text-sm leading-7 text-[#6d565b]">{PLEDGE_INTRO}</p>
-
-            <div className="mt-8 rounded-2xl border border-[#e6c887] bg-white/65 p-4">
-              <p className="flex items-center gap-2 text-sm font-bold text-[#5c3010]">
-                <ShieldCheck size={18} aria-hidden="true" />
-                A pledge is not an immediate payment
-              </p>
-              <p className="mt-2 text-xs leading-relaxed text-[#765b45]">
-                This form records your intended support and timeline. The project team will only contact you if you request it.
-              </p>
-            </div>
 
             <Link href="/give" className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#87102C] hover:underline">
               View church giving accounts <ArrowRight size={16} aria-hidden="true" />

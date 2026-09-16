@@ -10,6 +10,7 @@ import {
   type PledgeInput,
   type PledgeMethod,
 } from "@/lib/api/pledges";
+import { userMessageForError } from "@/lib/api/user-message";
 
 /**
  * The Financial Pledge Form for the Sound & Media Project, with the church's
@@ -85,49 +86,59 @@ const digitsOnly = (value: string) => value.replace(/\D/g, "").replace(/^0+/, ""
 const grouped = (digits: string) => (digits ? Number(digits).toLocaleString("en-NG") : "");
 
 function errorMessage(error: unknown) {
-  if (
-    error &&
-    typeof error === "object" &&
-    "message" in error &&
-    typeof error.message === "string" &&
-    error.message
-  ) {
-    return error.message;
-  }
-  return "Your pledge couldn't be sent. Check your connection and try again.";
+  return userMessageForError(
+    error,
+    "Your pledge couldn't be sent. Check your connection and try again.",
+  );
 }
 
-const inputClass =
-  "block min-h-12 w-full rounded-xl border bg-white px-3.5 text-base text-gray-900 outline-none transition focus:border-[#87102C] focus:ring-2 focus:ring-[#87102C]/20 dark:bg-white/5 dark:text-white";
-const borderFor = (error?: string) =>
-  error ? "border-red-400 dark:border-red-400/70" : "border-gray-300 dark:border-white/15";
+const inputClassFor = (publicView: boolean) =>
+  publicView
+    ? "block min-h-12 w-full rounded-xl border bg-white px-3.5 text-base text-gray-900 outline-none transition focus:border-[#87102C] focus:ring-2 focus:ring-[#87102C]/20"
+    : "block min-h-12 w-full rounded-xl border bg-white px-3.5 text-base text-gray-900 outline-none transition focus:border-[#87102C] focus:ring-2 focus:ring-[#87102C]/20 dark:bg-white/5 dark:text-white";
+const borderFor = (error: string | undefined, publicView: boolean) =>
+  error
+    ? publicView ? "border-red-400" : "border-red-400 dark:border-red-400/70"
+    : publicView ? "border-gray-300" : "border-gray-300 dark:border-white/15";
+const labelClassFor = (publicView: boolean) =>
+  publicView
+    ? "block text-sm font-semibold text-gray-800"
+    : "block text-sm font-semibold text-gray-800 dark:text-white/90";
+const requiredClassFor = (publicView: boolean) =>
+  publicView ? "text-[#87102C]" : "text-[#87102C] dark:text-rose-300";
+const errorClassFor = (publicView: boolean) =>
+  publicView
+    ? "text-sm font-medium text-red-600"
+    : "text-sm font-medium text-red-600 dark:text-red-300";
 
 function Field({
   id,
   label,
   hint,
   error,
+  publicView,
   children,
 }: {
   id: string;
   label: string;
   hint?: string;
   error?: string;
+  publicView: boolean;
   children: ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-semibold text-gray-800 dark:text-white/90">
-        {label} <span className="text-[#87102C] dark:text-rose-300" aria-hidden="true">*</span>
+      <label htmlFor={id} className={labelClassFor(publicView)}>
+        {label} <span className={requiredClassFor(publicView)} aria-hidden="true">*</span>
       </label>
       {hint && (
-        <p id={`${id}-hint`} className="text-xs text-gray-500 dark:text-white/50">
+        <p id={`${id}-hint`} className={publicView ? "text-xs text-gray-500" : "text-xs text-gray-500 dark:text-white/50"}>
           {hint}
         </p>
       )}
       {children}
       {error && (
-        <p id={`${id}-error`} className="text-sm font-medium text-red-600 dark:text-red-300">
+        <p id={`${id}-error`} className={errorClassFor(publicView)}>
           {error}
         </p>
       )}
@@ -144,6 +155,7 @@ interface PledgeFormProps {
 
 export default function PledgeForm({ existing, prefill, onSaved, access = "member" }: PledgeFormProps) {
   const today = lagosToday();
+  const publicView = access === "public";
   const submit = useSubmitPledge(undefined, access);
   const [values, setValues] = useState<Values>(() =>
     existing
@@ -215,8 +227,13 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
   }
 
   return (
-    <form noValidate onSubmit={onSubmit} className="space-y-6 p-5 sm:p-7">
-      <Field id="pledge-fullName" label="Full Name" error={errors.fullName}>
+    <form
+      noValidate
+      onSubmit={onSubmit}
+      className="space-y-6 p-5 sm:p-7"
+      style={publicView ? { colorScheme: "light" } : undefined}
+    >
+      <Field id="pledge-fullName" label="Full Name" error={errors.fullName} publicView={publicView}>
         <input
           id="pledge-fullName"
           autoComplete="name"
@@ -224,11 +241,11 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           onChange={(event) => set("fullName", event.target.value)}
           aria-invalid={Boolean(errors.fullName)}
           aria-describedby={describedBy("pledge-fullName", errors.fullName)}
-          className={`${inputClass} ${borderFor(errors.fullName)}`}
+          className={`${inputClassFor(publicView)} ${borderFor(errors.fullName, publicView)}`}
         />
       </Field>
 
-      <Field id="pledge-phone" label="Phone Number (WhatsApp Number)" error={errors.phone}>
+      <Field id="pledge-phone" label="Phone Number (WhatsApp Number)" error={errors.phone} publicView={publicView}>
         <input
           id="pledge-phone"
           type="tel"
@@ -238,11 +255,11 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           onChange={(event) => set("phone", event.target.value)}
           aria-invalid={Boolean(errors.phone)}
           aria-describedby={describedBy("pledge-phone", errors.phone)}
-          className={`${inputClass} ${borderFor(errors.phone)}`}
+          className={`${inputClassFor(publicView)} ${borderFor(errors.phone, publicView)}`}
         />
       </Field>
 
-      <Field id="pledge-email" label="Email Address" error={errors.email}>
+      <Field id="pledge-email" label="Email Address" error={errors.email} publicView={publicView}>
         <input
           id="pledge-email"
           type="email"
@@ -251,7 +268,7 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           onChange={(event) => set("email", event.target.value)}
           aria-invalid={Boolean(errors.email)}
           aria-describedby={describedBy("pledge-email", errors.email)}
-          className={`${inputClass} ${borderFor(errors.email)}`}
+          className={`${inputClassFor(publicView)} ${borderFor(errors.email, publicView)}`}
         />
       </Field>
 
@@ -259,9 +276,10 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
         id="pledge-amount"
         label="How much would you like to pledge towards the project?"
         error={errors.amount}
+        publicView={publicView}
       >
         <div className="relative">
-          <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-base font-bold text-gray-500 dark:text-white/50">
+          <span className={publicView ? "pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-base font-bold text-gray-500" : "pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-base font-bold text-gray-500 dark:text-white/50"}>
             ₦
           </span>
           <input
@@ -273,15 +291,15 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
             onChange={(event) => set("amount", digitsOnly(event.target.value))}
             aria-invalid={Boolean(errors.amount)}
             aria-describedby={describedBy("pledge-amount", errors.amount)}
-            className={`${inputClass} ${borderFor(errors.amount)} pl-8 text-lg font-bold tabular-nums`}
+            className={`${inputClassFor(publicView)} ${borderFor(errors.amount, publicView)} pl-8 text-lg font-bold tabular-nums`}
           />
         </div>
       </Field>
 
       <fieldset className="space-y-2" aria-describedby={errors.method ? "pledge-method-error" : undefined}>
-        <legend className="text-sm font-semibold text-gray-800 dark:text-white/90">
+        <legend className={labelClassFor(publicView)}>
           How do you intend to redeem your pledge?{" "}
-          <span className="text-[#87102C] dark:text-rose-300" aria-hidden="true">*</span>
+          <span className={requiredClassFor(publicView)} aria-hidden="true">*</span>
         </legend>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {METHODS.map((method, index) => (
@@ -289,8 +307,12 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
               key={method}
               className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3.5 text-sm font-medium transition ${
                 values.method === method
-                  ? "border-[#87102C] bg-[#FFF4F6] text-[#5c0a1e] dark:border-rose-300/60 dark:bg-[#87102C]/20 dark:text-white"
-                  : "border-gray-300 text-gray-700 hover:border-gray-400 dark:border-white/15 dark:text-white/80"
+                  ? publicView
+                    ? "border-[#87102C] bg-[#FFF4F6] text-[#5c0a1e]"
+                    : "border-[#87102C] bg-[#FFF4F6] text-[#5c0a1e] dark:border-rose-300/60 dark:bg-[#87102C]/20 dark:text-white"
+                  : publicView
+                    ? "border-gray-300 text-gray-700 hover:border-gray-400"
+                    : "border-gray-300 text-gray-700 hover:border-gray-400 dark:border-white/15 dark:text-white/80"
               }`}
             >
               <input
@@ -307,14 +329,14 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           ))}
         </div>
         {errors.method && (
-          <p id="pledge-method-error" className="text-sm font-medium text-red-600 dark:text-red-300">
+          <p id="pledge-method-error" className={errorClassFor(publicView)}>
             {errors.method}
           </p>
         )}
       </fieldset>
 
       {values.method === "OTHER" && (
-        <Field id="pledge-methodOther" label="Tell us how you intend to redeem it" error={errors.methodOther}>
+        <Field id="pledge-methodOther" label="Tell us how you intend to redeem it" error={errors.methodOther} publicView={publicView}>
           <input
             id="pledge-methodOther"
             value={values.methodOther}
@@ -322,7 +344,7 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
             onChange={(event) => set("methodOther", event.target.value)}
             aria-invalid={Boolean(errors.methodOther)}
             aria-describedby={describedBy("pledge-methodOther", errors.methodOther)}
-            className={`${inputClass} ${borderFor(errors.methodOther)}`}
+            className={`${inputClassFor(publicView)} ${borderFor(errors.methodOther, publicView)}`}
           />
         </Field>
       )}
@@ -332,9 +354,10 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           id="pledge-installmentAmount"
           label="If you intend to pay in installments, what amount do you expect to give per installment?"
           error={errors.installmentAmount}
+          publicView={publicView}
         >
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-base font-bold text-gray-500 dark:text-white/50">
+            <span className={publicView ? "pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-base font-bold text-gray-500" : "pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-base font-bold text-gray-500 dark:text-white/50"}>
               ₦
             </span>
             <input
@@ -346,11 +369,11 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
               onChange={(event) => set("installmentAmount", digitsOnly(event.target.value))}
               aria-invalid={Boolean(errors.installmentAmount)}
               aria-describedby={describedBy("pledge-installmentAmount", errors.installmentAmount)}
-              className={`${inputClass} ${borderFor(errors.installmentAmount)} pl-8 font-bold tabular-nums`}
+              className={`${inputClassFor(publicView)} ${borderFor(errors.installmentAmount, publicView)} pl-8 font-bold tabular-nums`}
             />
           </div>
           {installmentCount > 0 && (
-            <p className="text-xs text-gray-500 dark:text-white/55">
+            <p className={publicView ? "text-xs text-gray-500" : "text-xs text-gray-500 dark:text-white/55"}>
               That&apos;s about {installmentCount} {values.method === "WEEKLY" ? "weekly" : "monthly"}{" "}
               {installmentCount === 1 ? "installment" : "installments"} of {formatNaira(each)}.
             </p>
@@ -362,6 +385,7 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
         id="pledge-completeBy"
         label="What is your expected date for completing/redeeming your pledge?"
         error={errors.completeBy}
+        publicView={publicView}
       >
         <input
           id="pledge-completeBy"
@@ -371,14 +395,14 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           onChange={(event) => set("completeBy", event.target.value)}
           aria-invalid={Boolean(errors.completeBy)}
           aria-describedby={describedBy("pledge-completeBy", errors.completeBy)}
-          className={`${inputClass} ${borderFor(errors.completeBy)}`}
+          className={`${inputClassFor(publicView)} ${borderFor(errors.completeBy, publicView)}`}
         />
       </Field>
 
       <fieldset className="space-y-2" aria-describedby={errors.contactMe ? "pledge-contactMe-error" : undefined}>
-        <legend className="text-sm font-semibold text-gray-800 dark:text-white/90">
+        <legend className={labelClassFor(publicView)}>
           Would you like the project team to contact you regarding your pledge?{" "}
-          <span className="text-[#87102C] dark:text-rose-300" aria-hidden="true">*</span>
+          <span className={requiredClassFor(publicView)} aria-hidden="true">*</span>
         </legend>
         <div className="flex gap-2">
           {(["yes", "no"] as const).map((answer, index) => (
@@ -386,8 +410,12 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
               key={answer}
               className={`flex min-h-12 flex-1 cursor-pointer items-center gap-3 rounded-xl border px-3.5 text-sm font-medium transition sm:flex-none sm:px-6 ${
                 values.contactMe === answer
-                  ? "border-[#87102C] bg-[#FFF4F6] text-[#5c0a1e] dark:border-rose-300/60 dark:bg-[#87102C]/20 dark:text-white"
-                  : "border-gray-300 text-gray-700 hover:border-gray-400 dark:border-white/15 dark:text-white/80"
+                  ? publicView
+                    ? "border-[#87102C] bg-[#FFF4F6] text-[#5c0a1e]"
+                    : "border-[#87102C] bg-[#FFF4F6] text-[#5c0a1e] dark:border-rose-300/60 dark:bg-[#87102C]/20 dark:text-white"
+                  : publicView
+                    ? "border-gray-300 text-gray-700 hover:border-gray-400"
+                    : "border-gray-300 text-gray-700 hover:border-gray-400 dark:border-white/15 dark:text-white/80"
               }`}
             >
               <input
@@ -404,7 +432,7 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           ))}
         </div>
         {errors.contactMe && (
-          <p id="pledge-contactMe-error" className="text-sm font-medium text-red-600 dark:text-red-300">
+          <p id="pledge-contactMe-error" className={errorClassFor(publicView)}>
             {errors.contactMe}
           </p>
         )}
@@ -413,14 +441,18 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
       <div
         className={`rounded-2xl border p-4 ${
           errors.confirmed
-            ? "border-red-400 bg-red-50/60 dark:border-red-400/60 dark:bg-red-500/10"
-            : "border-[#f2b84b]/60 bg-[#fff8e8] dark:border-[#f2b84b]/30 dark:bg-[#f2b84b]/10"
+            ? publicView
+              ? "border-red-400 bg-red-50/60"
+              : "border-red-400 bg-red-50/60 dark:border-red-400/60 dark:bg-red-500/10"
+            : publicView
+              ? "border-[#f2b84b]/60 bg-[#fff8e8]"
+              : "border-[#f2b84b]/60 bg-[#fff8e8] dark:border-[#f2b84b]/30 dark:bg-[#f2b84b]/10"
         }`}
       >
-        <p className="text-xs font-black uppercase tracking-[0.14em] text-[#8a5a00] dark:text-[#f2c86b]">
+        <p className={publicView ? "text-xs font-black uppercase tracking-[0.14em] text-[#8a5a00]" : "text-xs font-black uppercase tracking-[0.14em] text-[#8a5a00] dark:text-[#f2c86b]"}>
           Pledge Confirmation
         </p>
-        <label htmlFor="pledge-confirmed" className="mt-2 flex cursor-pointer gap-3 text-sm leading-relaxed text-gray-800 dark:text-white/85">
+        <label htmlFor="pledge-confirmed" className={publicView ? "mt-2 flex cursor-pointer gap-3 text-sm leading-relaxed text-gray-800" : "mt-2 flex cursor-pointer gap-3 text-sm leading-relaxed text-gray-800 dark:text-white/85"}>
           <input
             id="pledge-confirmed"
             type="checkbox"
@@ -433,7 +465,7 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           <span>{PLEDGE_CONFIRMATION}</span>
         </label>
         {errors.confirmed && (
-          <p id="pledge-confirmed-error" className="mt-2 text-sm font-medium text-red-600 dark:text-red-300">
+          <p id="pledge-confirmed-error" className={`mt-2 ${errorClassFor(publicView)}`}>
             {errors.confirmed}
           </p>
         )}
@@ -449,7 +481,7 @@ export default function PledgeForm({ existing, prefill, onSaved, access = "membe
           {submit.isPending ? "Sending your pledge…" : existing ? "Update my pledge" : "Submit my pledge"}
         </button>
         {submit.isError && (
-          <p role="alert" className="text-sm font-medium text-red-600 dark:text-red-300">
+          <p role="alert" className={errorClassFor(publicView)}>
             {errorMessage(submit.error)}
           </p>
         )}

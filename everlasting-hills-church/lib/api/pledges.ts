@@ -70,6 +70,44 @@ export interface PledgeList {
   pledges: Pledge[];
 }
 
+const numeric = (value: unknown, fallback = 0) => {
+  if (value === null || value === undefined || value === "") return fallback;
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+/**
+ * Older deployments returned pledges without installment progress fields.
+ * Normalize every response at the API boundary so those records cannot crash
+ * the member or administration screens during a rolling deployment.
+ */
+export function normalizePledge(raw: Pledge): Pledge {
+  const installments = Array.isArray(raw.installments) ? raw.installments : [];
+  const amount = numeric(raw.amount);
+  const recordedTotal = installments.reduce((total, item) => total + numeric(item.amount), 0);
+  const amountGiven = numeric(raw.amountGiven, recordedTotal);
+  const balance = numeric(raw.balance, Math.max(amount - amountGiven, 0));
+  const calculatedProgress = amount > 0 ? Math.min(100, Math.round((amountGiven / amount) * 100)) : 0;
+  const progressPercent = Math.max(0, Math.min(100, numeric(raw.progressPercent, calculatedProgress)));
+
+  return { ...raw, amount, installments, amountGiven, balance, progressPercent };
+}
+
+export function normalizePledgeList(raw: PledgeList): PledgeList {
+  const pledges = Array.isArray(raw.pledges) ? raw.pledges.map(normalizePledge) : [];
+  return {
+    ...raw,
+    pledges,
+    totals: {
+      pledges: pledges.length,
+      amount: pledges.reduce((total, pledge) => total + pledge.amount, 0),
+      amountGiven: pledges.reduce((total, pledge) => total + pledge.amountGiven, 0),
+      balance: pledges.reduce((total, pledge) => total + pledge.balance, 0),
+      wantContact: pledges.filter((pledge) => pledge.contactMe).length,
+    },
+  };
+}
+
 const mineKey = (campaign: string) => ["pledges", campaign, "mine"] as const;
 const trackedKey = (campaign: string, token: string) => ["pledges", campaign, "track", token] as const;
 
@@ -77,7 +115,10 @@ const trackedKey = (campaign: string, token: string) => ["pledges", campaign, "t
 export function useMyPledge(campaign: string = SOUND_MEDIA.key) {
   return useQuery({
     queryKey: mineKey(campaign),
-    queryFn: () => api.get<Pledge | null>(`/pledges/${campaign}/mine`),
+    queryFn: async () => {
+      const pledge = await api.get<Pledge | null>(`/pledges/${campaign}/mine`);
+      return pledge ? normalizePledge(pledge) : null;
+    },
   });
 }
 
@@ -91,11 +132,11 @@ export function useSubmitPledge(
 ) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: PledgeInput) =>
-      api.post<Pledge>(
+    mutationFn: async (input: PledgeInput) =>
+      normalizePledge(await api.post<Pledge>(
         access === "public" ? `/pledges/${campaign}/public` : `/pledges/${campaign}`,
         input,
-      ),
+      )),
     onSuccess: (pledge) => {
       // An anonymous public pledge must never be mistaken for the next member
       // who signs in on the same browser. Member pages fetch their own record.
@@ -109,7 +150,7 @@ export function useSubmitPledge(
 export function usePledges(campaign: string = SOUND_MEDIA.key) {
   return useQuery({
     queryKey: ["pledges", campaign, "all"],
-    queryFn: () => api.get<PledgeList>(`/pledges/${campaign}`),
+    queryFn: async () => normalizePledgeList(await api.get<PledgeList>(`/pledges/${campaign}`)),
   });
 }
 
@@ -117,7 +158,9 @@ export function usePledges(campaign: string = SOUND_MEDIA.key) {
 export function useTrackedPledge(token: string, campaign: string = SOUND_MEDIA.key) {
   return useQuery({
     queryKey: trackedKey(campaign, token),
-    queryFn: () => api.get<Pledge>(`/pledges/${campaign}/track/${encodeURIComponent(token)}`),
+    queryFn: async () => normalizePledge(
+      await api.get<Pledge>(`/pledges/${campaign}/track/${encodeURIComponent(token)}`),
+    ),
     enabled: Boolean(token),
   });
 }
@@ -136,7 +179,9 @@ export function useAddPledgeInstallment(
     ? `/pledges/${campaign}/mine/installments`
     : `/pledges/${campaign}/track/${encodeURIComponent(target.token)}/installments`;
   return useMutation({
-    mutationFn: (input: PledgeInstallmentInput) => api.post<Pledge>(endpoint, input),
+    mutationFn: async (input: PledgeInstallmentInput) => normalizePledge(
+      await api.post<Pledge>(endpoint, input),
+    ),
     onSuccess: (pledge) => {
       if (target.access === "member") qc.setQueryData(mineKey(campaign), pledge);
       else qc.setQueryData(trackedKey(campaign, target.token), pledge);

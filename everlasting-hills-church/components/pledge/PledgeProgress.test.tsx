@@ -94,4 +94,23 @@ describe("pledge installment progress", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Only ₦150,000 remains");
     expect(mutateAsync).not.toHaveBeenCalled();
   });
+
+  it("replaces a missing installment endpoint with a useful message", () => {
+    vi.mocked(useAddPledgeInstallment).mockReturnValue({
+      mutateAsync,
+      isPending: false,
+      isError: true,
+      error: {
+        status: 404,
+        message: "Cannot POST /pledges/sound-media/mine/installments",
+      },
+    } as never);
+
+    render(<PledgeProgress pledge={pledge} target={{ access: "member" }} />);
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Installment tracking is temporarily unavailable. Your payment was not recorded.",
+    );
+    expect(screen.getByRole("alert")).not.toHaveTextContent("Cannot POST");
+  });
 });
