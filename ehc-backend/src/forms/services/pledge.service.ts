@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -111,7 +112,8 @@ export class PledgeService {
   }
 
   private profileOrThrow(actor: AuthUser): string {
-    if (!actor.profileId) throw new ForbiddenException('No profile linked to this account');
+    if (!actor.profileId)
+      throw new ForbiddenException('No profile linked to this account');
     return actor.profileId;
   }
 
@@ -125,29 +127,153 @@ export class PledgeService {
     });
   }
 
+  private findByEmail(campaign: PledgeCampaign, email: string) {
+    return this.prisma.formSubmission.findFirst({
+      where: {
+        tenantId: this.tenantId,
+        type: this.type(campaign),
+        data: { path: ['email'], equals: email.trim().toLowerCase() },
+      },
+    });
+  }
+
+  private findAnonymousByEmail(campaign: PledgeCampaign, email: string) {
+    return this.prisma.formSubmission.findFirst({
+      where: {
+        tenantId: this.tenantId,
+        type: this.type(campaign),
+        AND: [
+          { data: { path: ['email'], equals: email.trim().toLowerCase() } },
+          { data: { path: ['profileId'], equals: Prisma.JsonNull } },
+        ],
+      },
+    });
+  }
+
+  private async resolveMemberPledge(actor: AuthUser, campaign: PledgeCampaign) {
+    const profileId = this.profileOrThrow(actor);
+    const linked = await this.find(campaign, profileId);
+    const anonymous = await this.findAnonymousByEmail(campaign, actor.email);
+
+    if (linked && anonymous && linked.id !== anonymous.id) {
+      return this.mergeDuplicatePledges(actor, linked, anonymous);
+    }
+    if (linked) return linked;
+    if (!anonymous) return null;
+
+    const previous = anonymous.data as unknown as StoredPledge;
+    return this.prisma.formSubmission.update({
+      where: { id: anonymous.id },
+      data: {
+        data: {
+          ...previous,
+          profileId,
+          memberId: actor.memberId ?? null,
+          updatedAt: new Date().toISOString(),
+        } as unknown as Prisma.InputJsonValue,
+      },
+    });
+  }
+
+  private async mergeDuplicatePledges(
+    actor: AuthUser,
+    linked: FormSubmission,
+    anonymous: FormSubmission,
+  ) {
+    const memberPledge = linked.data as unknown as StoredPledge;
+    const publicPledge = anonymous.data as unknown as StoredPledge;
+    const memberUpdated = Date.parse(
+      memberPledge.updatedAt || linked.submittedAt.toISOString(),
+    );
+    const publicUpdated = Date.parse(
+      publicPledge.updatedAt || anonymous.submittedAt.toISOString(),
+    );
+    const newest = publicUpdated > memberUpdated ? publicPledge : memberPledge;
+    const installments = [
+      ...(Array.isArray(memberPledge.installments)
+        ? memberPledge.installments
+        : []),
+      ...(Array.isArray(publicPledge.installments)
+        ? publicPledge.installments
+        : []),
+    ];
+    const uniqueInstallments = [
+      ...new Map(installments.map((item) => [item.id, item])).values(),
+    ].sort((left, right) => left.createdAt.localeCompare(right.createdAt));
+    const amountGiven = uniqueInstallments.reduce(
+      (sum, item) => sum + item.amount,
+      0,
+    );
+    const createdAt = [
+      memberPledge.createdAt || linked.submittedAt.toISOString(),
+      publicPledge.createdAt || anonymous.submittedAt.toISOString(),
+    ].sort()[0];
+    const merged: StoredPledge = {
+      ...newest,
+      profileId: this.profileOrThrow(actor),
+      memberId: actor.memberId ?? null,
+      amount: Math.max(newest.amount, amountGiven),
+      trackingTokenHash:
+        memberPledge.trackingTokenHash ??
+        publicPledge.trackingTokenHash ??
+        null,
+      installments: uniqueInstallments,
+      createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    const saved = await this.prisma.formSubmission.update({
+      where: { id: linked.id },
+      data: { data: merged as unknown as Prisma.InputJsonValue },
+    });
+    await this.prisma.formSubmission.delete({ where: { id: anonymous.id } });
+    return saved;
+  }
+
   /** The member's own pledge, or null when they have not pledged yet. */
   async mine(actor: AuthUser, campaignKey: string) {
     const campaign = this.campaignOrThrow(campaignKey);
-    const row = await this.find(campaign, this.profileOrThrow(actor));
+    const row = await this.resolveMemberPledge(actor, campaign);
     return row ? this.present(row) : null;
   }
 
   async submit(actor: AuthUser, campaignKey: string, input: PledgeDto) {
     const campaign = this.campaignOrThrow(campaignKey);
     const profileId = this.profileOrThrow(actor);
-    const existing = await this.find(campaign, profileId);
-    return this.persist(campaign, input, profileId, actor.memberId ?? null, existing);
+    const existing = await this.resolveMemberPledge(actor, campaign);
+    return this.persist(
+      campaign,
+      input,
+      profileId,
+      actor.memberId ?? null,
+      existing,
+    );
   }
 
   /**
    * Public visitors do not need an account. A valid optional session still
    * links the pledge and preserves the one-pledge-per-person member behavior.
    */
-  async submitPublic(actor: AuthUser | undefined, campaignKey: string, input: PledgeDto) {
+  async submitPublic(
+    actor: AuthUser | undefined,
+    campaignKey: string,
+    input: PledgeDto,
+  ) {
     if (actor?.profileId) return this.submit(actor, campaignKey, input);
     const campaign = this.campaignOrThrow(campaignKey);
+    if (await this.findByEmail(campaign, input.email)) {
+      throw new ConflictException(
+        'A pledge already exists for this email address. Sign in to update it, or use the private tracking link in your confirmation email.',
+      );
+    }
     const trackingToken = randomBytes(24).toString('base64url');
-    return this.persist(campaign, input, null, actor?.memberId ?? null, null, trackingToken);
+    return this.persist(
+      campaign,
+      input,
+      null,
+      actor?.memberId ?? null,
+      null,
+      trackingToken,
+    );
   }
 
   private async persist(
@@ -160,10 +286,14 @@ export class PledgeService {
   ) {
     this.assertCoherent(input);
     const now = new Date().toISOString();
-    const inInstallments = input.method === 'WEEKLY' || input.method === 'MONTHLY';
+    const inInstallments =
+      input.method === 'WEEKLY' || input.method === 'MONTHLY';
     const previous = existing?.data as Partial<StoredPledge> | undefined;
     const previouslyGiven = Array.isArray(previous?.installments)
-      ? previous.installments.reduce((sum, installment) => sum + installment.amount, 0)
+      ? previous.installments.reduce(
+          (sum, installment) => sum + installment.amount,
+          0,
+        )
       : 0;
     if (previouslyGiven > input.amount) {
       throw new BadRequestException(
@@ -178,19 +308,22 @@ export class PledgeService {
       email: input.email.trim().toLowerCase(),
       amount: input.amount,
       method: input.method,
-      methodOther: input.method === 'OTHER' ? (input.methodOther ?? '').trim() : null,
-      installmentAmount: inInstallments ? (input.installmentAmount ?? null) : null,
+      methodOther:
+        input.method === 'OTHER' ? (input.methodOther ?? '').trim() : null,
+      installmentAmount: inInstallments
+        ? (input.installmentAmount ?? null)
+        : null,
       completeBy: input.completeBy.slice(0, 10),
       contactMe: input.contactMe,
       trackingTokenHash:
         previous?.trackingTokenHash ??
         (trackingToken ? this.hashTrackingToken(trackingToken) : null),
-      installments: Array.isArray(previous?.installments) ? previous.installments : [],
+      installments: Array.isArray(previous?.installments)
+        ? previous.installments
+        : [],
       // Updating a pledge keeps the day it was first made.
       createdAt:
-        previous?.createdAt ??
-        existing?.submittedAt.toISOString() ??
-        now,
+        previous?.createdAt ?? existing?.submittedAt.toISOString() ?? now,
       updatedAt: now,
     };
 
@@ -221,10 +354,17 @@ export class PledgeService {
     return this.present(await this.findTrackedOrThrow(campaign, trackingToken));
   }
 
-  async addMineInstallment(actor: AuthUser, campaignKey: string, input: PledgeInstallmentDto) {
+  async addMineInstallment(
+    actor: AuthUser,
+    campaignKey: string,
+    input: PledgeInstallmentDto,
+  ) {
     const campaign = this.campaignOrThrow(campaignKey);
-    const row = await this.find(campaign, this.profileOrThrow(actor));
-    if (!row) throw new NotFoundException('Make a pledge before recording an installment');
+    const row = await this.resolveMemberPledge(actor, campaign);
+    if (!row)
+      throw new NotFoundException(
+        'Make a pledge before recording an installment',
+      );
     return this.addInstallment(campaign, row, input);
   }
 
@@ -242,7 +382,10 @@ export class PledgeService {
     return createHash('sha256').update(token).digest('hex');
   }
 
-  private async findTrackedOrThrow(campaign: PledgeCampaign, trackingToken: string) {
+  private async findTrackedOrThrow(
+    campaign: PledgeCampaign,
+    trackingToken: string,
+  ) {
     if (!/^[A-Za-z0-9_-]{32}$/.test(trackingToken)) {
       throw new NotFoundException('This pledge tracking link is not valid');
     }
@@ -256,7 +399,8 @@ export class PledgeService {
         },
       },
     });
-    if (!row) throw new NotFoundException('This pledge tracking link is not valid');
+    if (!row)
+      throw new NotFoundException('This pledge tracking link is not valid');
     return row;
   }
 
@@ -267,13 +411,22 @@ export class PledgeService {
   ) {
     const pledge = row.data as unknown as StoredPledge;
     if (input.givenOn > localDate(TIMEZONE)) {
-      throw new BadRequestException('The installment date cannot be in the future');
+      throw new BadRequestException(
+        'The installment date cannot be in the future',
+      );
     }
-    const installments = Array.isArray(pledge.installments) ? pledge.installments : [];
-    const amountGiven = installments.reduce((sum, installment) => sum + installment.amount, 0);
+    const installments = Array.isArray(pledge.installments)
+      ? pledge.installments
+      : [];
+    const amountGiven = installments.reduce(
+      (sum, installment) => sum + installment.amount,
+      0,
+    );
     const remaining = Math.max(pledge.amount - amountGiven, 0);
     if (input.amount > remaining) {
-      throw new BadRequestException(`Only ${naira(remaining)} remains on this pledge`);
+      throw new BadRequestException(
+        `Only ${naira(remaining)} remains on this pledge`,
+      );
     }
 
     const now = new Date().toISOString();
@@ -310,7 +463,10 @@ export class PledgeService {
       totals: {
         pledges: pledges.length,
         amount: pledges.reduce((sum, pledge) => sum + pledge.amount, 0),
-        amountGiven: pledges.reduce((sum, pledge) => sum + pledge.amountGiven, 0),
+        amountGiven: pledges.reduce(
+          (sum, pledge) => sum + pledge.amountGiven,
+          0,
+        ),
         balance: pledges.reduce((sum, pledge) => sum + pledge.balance, 0),
         wantContact: pledges.filter((pledge) => pledge.contactMe).length,
       },
@@ -320,22 +476,35 @@ export class PledgeService {
 
   /** Rules that span fields, which decorators on single fields cannot say. */
   private assertCoherent(input: PledgeDto) {
-    const inInstallments = input.method === 'WEEKLY' || input.method === 'MONTHLY';
+    const inInstallments =
+      input.method === 'WEEKLY' || input.method === 'MONTHLY';
     if (inInstallments && !input.installmentAmount) {
-      throw new BadRequestException('Tell us how much you expect to give per installment');
+      throw new BadRequestException(
+        'Tell us how much you expect to give per installment',
+      );
     }
     if (inInstallments && input.installmentAmount! > input.amount) {
-      throw new BadRequestException('An installment cannot be more than the whole pledge');
+      throw new BadRequestException(
+        'An installment cannot be more than the whole pledge',
+      );
     }
     if (input.method === 'OTHER' && !input.methodOther?.trim()) {
-      throw new BadRequestException('Tell us how you intend to redeem your pledge');
+      throw new BadRequestException(
+        'Tell us how you intend to redeem your pledge',
+      );
     }
     if (input.completeBy.slice(0, 10) < localDate(TIMEZONE)) {
-      throw new BadRequestException('Choose a completion date from today onwards');
+      throw new BadRequestException(
+        'Choose a completion date from today onwards',
+      );
     }
   }
 
-  private present(row: { id: string; data: Prisma.JsonValue; submittedAt: Date }) {
+  private present(row: {
+    id: string;
+    data: Prisma.JsonValue;
+    submittedAt: Date;
+  }) {
     const {
       profileId: _profileId,
       trackingTokenHash: _trackingTokenHash,
@@ -343,7 +512,10 @@ export class PledgeService {
       ...pledge
     } = row.data as unknown as StoredPledge;
     const installments = Array.isArray(rawInstallments) ? rawInstallments : [];
-    const amountGiven = installments.reduce((sum, installment) => sum + installment.amount, 0);
+    const amountGiven = installments.reduce(
+      (sum, installment) => sum + installment.amount,
+      0,
+    );
     const balance = Math.max(pledge.amount - amountGiven, 0);
     return {
       id: row.id,
@@ -351,7 +523,10 @@ export class PledgeService {
       installments,
       amountGiven,
       balance,
-      progressPercent: pledge.amount > 0 ? Math.min(100, Math.round((amountGiven / pledge.amount) * 100)) : 0,
+      progressPercent:
+        pledge.amount > 0
+          ? Math.min(100, Math.round((amountGiven / pledge.amount) * 100))
+          : 0,
     };
   }
 
@@ -415,7 +590,10 @@ export class PledgeService {
     pledge: StoredPledge,
     installment: PledgeInstallmentRecord,
   ) {
-    const amountGiven = pledge.installments.reduce((sum, item) => sum + item.amount, 0);
+    const amountGiven = pledge.installments.reduce(
+      (sum, item) => sum + item.amount,
+      0,
+    );
     const balance = Math.max(pledge.amount - amountGiven, 0);
     const title = PLEDGE_CAMPAIGNS[campaign].title;
     this.emails.dispatch({
