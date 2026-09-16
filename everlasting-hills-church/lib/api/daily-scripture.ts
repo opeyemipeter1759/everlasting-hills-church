@@ -13,8 +13,8 @@ export interface DailyScripture {
 }
 
 /**
- * Today's scripture, in the version the member chose. Without a choice the
- * church's default version is used.
+ * Today's public scripture, in the version the reader chose. Without a choice
+ * the church's default version is used.
  */
 export function useDailyScripture(translation?: string) {
   return useQuery({

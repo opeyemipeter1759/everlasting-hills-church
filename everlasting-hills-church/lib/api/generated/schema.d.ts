@@ -1479,8 +1479,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Translations a member can read in */
-        get: operations["ReadingPlanController_translations"];
+        /** Bible translations available for the public daily scripture */
+        get: operations["DailyScriptureController_translations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -11532,7 +11532,7 @@ export interface operations {
             };
         };
     };
-    ReadingPlanController_translations: {
+    DailyScriptureController_translations: {
         parameters: {
             query?: never;
             header?: never;

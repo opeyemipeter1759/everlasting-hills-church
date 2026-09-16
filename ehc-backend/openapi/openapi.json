@@ -9020,11 +9020,6 @@
             "description": "Error response"
           }
         },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
         "summary": "Today’s scripture for the church, changing at midnight in Lagos",
         "tags": [
           "reading-plans"
@@ -9033,7 +9028,7 @@
     },
     "/bible/translations": {
       "get": {
-        "operationId": "ReadingPlanController_translations",
+        "operationId": "DailyScriptureController_translations",
         "parameters": [],
         "responses": {
           "200": {
@@ -9067,12 +9062,7 @@
             "description": "Error response"
           }
         },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Translations a member can read in",
+        "summary": "Bible translations available for the public daily scripture",
         "tags": [
           "reading-plans"
         ]

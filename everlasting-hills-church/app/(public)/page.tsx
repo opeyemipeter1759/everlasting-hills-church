@@ -16,10 +16,12 @@ import BirthdayTeaserSection from "@/components/home/BirthdayTeaserSection";
 import Carousel from "@/components/home/Carousel";
 import { FadeIn } from "@/components/ui/motion/FadeIn";
 import PledgeProjectSection from "@/components/home/PledgeProjectSection";
+import PublicDailyScriptureSection from "@/components/home/PublicDailyScriptureSection";
 
 export const metadata = {
   title: "Everlasting Hills Church — Ibadan",
-  description: "A church family in Ibadan, Nigeria. Join us Sunday for service.",
+  description:
+    "A church family in Ibadan, Nigeria. Join us Sunday for service.",
 };
 
 export const revalidate = 300;
@@ -38,6 +40,7 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen flex overflow-x-hidden flex-col bg-church-dark">
       <HeroSection content={settings.HERO} />
+      <PublicDailyScriptureSection />
       <AboutSection content={settings.ABOUT} />
       <CultureSection content={settings.CULTURE} />
       <ScriptureSection content={settings.SCRIPTURE} />
@@ -45,7 +48,11 @@ export default async function HomePage() {
       <Suspense fallback={null}>
         <EventSectionFade />
       </Suspense>
-      <Suspense fallback={<SermonsSection content={settings.SERMONS} telegramSermons={[]} />}>
+      <Suspense
+        fallback={
+          <SermonsSection content={settings.SERMONS} telegramSermons={[]} />
+        }
+      >
         <TelegramSermons content={settings.SERMONS} />
       </Suspense>
       <AttendanceSection />
