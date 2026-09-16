@@ -4764,6 +4764,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pledges/{campaign}/mine/installments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an installment on your own pledge */
+        post: operations["PledgesController_addMineInstallment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/pledges/{campaign}/public": {
         parameters: {
             query?: never;
@@ -4778,6 +4795,40 @@ export interface paths {
          * @description Available without an account. If the visitor is signed in, the pledge is linked to them and updates their existing project pledge.
          */
         post: operations["PledgesController_submitPublic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/track/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open a public pledge using its private tracking link */
+        get: operations["PledgesController_track"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/track/{token}/installments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an installment using a private public tracking link */
+        post: operations["PledgesController_addTrackedInstallment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7426,6 +7477,23 @@ export interface components {
              * @example 0810 235 5043
              */
             phone: string;
+        };
+        PledgeInstallmentDto: {
+            /**
+             * @description Amount given in whole naira
+             * @example 25000
+             */
+            amount: number;
+            /**
+             * @description Date the installment was given
+             * @example 2026-09-15
+             */
+            givenOn: string;
+            /**
+             * @description Optional reminder for the pledger
+             * @example Bank transfer
+             */
+            note?: string;
         };
         PrayerRequestDto: {
             /** @example john@example.com */
@@ -19205,6 +19273,43 @@ export interface operations {
             };
         };
     };
+    PledgesController_addMineInstallment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeInstallmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     PledgesController_submitPublic: {
         parameters: {
             query?: never;
@@ -19239,6 +19344,78 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_track: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_addTrackedInstallment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeInstallmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
             /** @description Error response */

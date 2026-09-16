@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, HandCoins, Loader2, PhoneCall, RefreshCw, Search, Users } from "lucide-react";
+import { CircleDollarSign, Download, HandCoins, Loader2, PhoneCall, RefreshCw, Search, Users } from "lucide-react";
 import { formatNaira, pledgePlan, usePledges, type Pledge } from "@/lib/api/pledges";
 
 /**
@@ -24,22 +24,27 @@ export function whatsappNumber(phone: string) {
 function csvCell(value: string | number | null) {
   let text = value == null ? "" : String(value);
   // A cell starting with = or @ is a formula to a spreadsheet.
-  if (/^[=@]/.test(text)) text = `'${text}`;
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
 export function pledgesCsv(pledges: Pledge[]) {
   const header = [
-    "Full name", "Phone (WhatsApp)", "Email", "Pledge (NGN)", "How", "Per installment (NGN)",
-    "Complete by", "Contact about pledge", "Pledged on", "Last updated",
+    "Full name", "Phone (WhatsApp)", "Email", "Pledge (NGN)", "Given (NGN)", "Balance (NGN)",
+    "Progress", "How", "Per installment (NGN)", "Installment history", "Complete by",
+    "Contact about pledge", "Pledged on", "Last updated",
   ];
   const rows = pledges.map((pledge) => [
     pledge.fullName,
     pledge.phone,
     pledge.email,
     pledge.amount,
+    pledge.amountGiven,
+    pledge.balance,
+    `${pledge.progressPercent}%`,
     pledgePlan({ ...pledge, installmentAmount: null }),
     pledge.installmentAmount,
+    pledge.installments.map((item) => `${item.givenOn}: ${item.amount}${item.note ? ` (${item.note})` : ""}`).join("; "),
     pledge.completeBy,
     pledge.contactMe ? "Yes" : "No",
     pledge.createdAt.slice(0, 10),
@@ -82,12 +87,9 @@ export default function PledgesOverview() {
   const tiles = totals
     ? [
         { label: "Total pledged", value: formatNaira(totals.amount), icon: HandCoins },
+        { label: "Giving recorded", value: formatNaira(totals.amountGiven), icon: CircleDollarSign },
+        { label: "Balance remaining", value: formatNaira(totals.balance), icon: HandCoins },
         { label: "Pledges", value: totals.pledges.toLocaleString("en-NG"), icon: Users },
-        {
-          label: "Average pledge",
-          value: totals.pledges ? formatNaira(Math.round(totals.amount / totals.pledges)) : "—",
-          icon: HandCoins,
-        },
         { label: "Asked to be contacted", value: totals.wantContact.toLocaleString("en-NG"), icon: PhoneCall },
       ]
     : [];
@@ -98,8 +100,8 @@ export default function PledgesOverview() {
         <div className="min-w-0">
           <h1 className="text-2xl font-black tracking-tight text-[#111] dark:text-white">Sound &amp; Media pledges</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-500 dark:text-white/55">
-            Pledges members have made from their home page. Each member has one pledge; when they update it,
-            the row changes.
+            Every member and public pledge, including installment progress, remaining balances and people who asked to be contacted.
+            Installments shown here are recorded by pledgers after giving and should be reconciled with church bank records.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -139,7 +141,7 @@ export default function PledgesOverview() {
         </div>
       ) : (
         <>
-          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-3 lg:grid-cols-5">
             {tiles.map(({ label, value, icon: Icon }, index) => (
               <div
                 key={label}
@@ -191,12 +193,13 @@ export default function PledgesOverview() {
             </p>
           ) : (
             <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-white/10">
-              <table className="w-full min-w-[860px] text-left text-sm">
+              <table className="w-full min-w-[1080px] text-left text-sm">
                 <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-white/5 dark:text-white/50">
                   <tr>
-                    <th scope="col" className="px-4 py-3">Member</th>
+                    <th scope="col" className="px-4 py-3">Pledger</th>
                     <th scope="col" className="px-4 py-3">WhatsApp</th>
                     <th scope="col" className="px-4 py-3 text-right">Pledge</th>
+                    <th scope="col" className="px-4 py-3">Progress</th>
                     <th scope="col" className="px-4 py-3">How</th>
                     <th scope="col" className="px-4 py-3">Complete by</th>
                     <th scope="col" className="px-4 py-3">Contact</th>
@@ -224,6 +227,31 @@ export default function PledgesOverview() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-white">
                         {formatNaira(pledge.amount)}
+                      </td>
+                      <td className="min-w-44 px-4 py-3">
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span className="font-bold text-emerald-700 dark:text-emerald-300">{formatNaira(pledge.amountGiven)}</span>
+                          <span className="text-gray-500 dark:text-white/50">{pledge.progressPercent}%</span>
+                        </div>
+                        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pledge.progressPercent}%` }} />
+                        </div>
+                        <p className="mt-1 text-[11px] text-gray-500 dark:text-white/50">{formatNaira(pledge.balance)} remaining</p>
+                        {pledge.installments.length > 0 && (
+                          <details className="mt-1.5">
+                            <summary className="cursor-pointer text-[11px] font-semibold text-[#87102C] dark:text-rose-300">
+                              {pledge.installments.length} {pledge.installments.length === 1 ? "entry" : "entries"}
+                            </summary>
+                            <ul className="mt-1 space-y-1 text-[11px] text-gray-600 dark:text-white/60">
+                              {[...pledge.installments].reverse().map((installment) => (
+                                <li key={installment.id}>
+                                  {shortDate(installment.givenOn)} · {formatNaira(installment.amount)}
+                                  {installment.note ? ` · ${installment.note}` : ""}
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        )}
                       </td>
                       <td className="px-4 py-3">{pledgePlan(pledge)}</td>
                       <td className="whitespace-nowrap px-4 py-3">{shortDate(pledge.completeBy)}</td>

@@ -40,17 +40,38 @@ export interface Pledge {
   installmentAmount: number | null;
   completeBy: string;
   contactMe: boolean;
+  installments: PledgeInstallment[];
+  amountGiven: number;
+  balance: number;
+  progressPercent: number;
+  /** Returned once, only when an anonymous public pledge is created. */
+  trackingToken?: string;
   createdAt: string;
   updatedAt: string;
 }
 
+export interface PledgeInstallment {
+  id: string;
+  amount: number;
+  givenOn: string;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface PledgeInstallmentInput {
+  amount: number;
+  givenOn: string;
+  note?: string;
+}
+
 export interface PledgeList {
   campaign: { key: string; title: string };
-  totals: { pledges: number; amount: number; wantContact: number };
+  totals: { pledges: number; amount: number; amountGiven: number; balance: number; wantContact: number };
   pledges: Pledge[];
 }
 
 const mineKey = (campaign: string) => ["pledges", campaign, "mine"] as const;
+const trackedKey = (campaign: string, token: string) => ["pledges", campaign, "track", token] as const;
 
 /** The member's own pledge, or null before they pledge. */
 export function useMyPledge(campaign: string = SOUND_MEDIA.key) {
@@ -89,6 +110,38 @@ export function usePledges(campaign: string = SOUND_MEDIA.key) {
   return useQuery({
     queryKey: ["pledges", campaign, "all"],
     queryFn: () => api.get<PledgeList>(`/pledges/${campaign}`),
+  });
+}
+
+/** Open the progress page associated with a private public tracking link. */
+export function useTrackedPledge(token: string, campaign: string = SOUND_MEDIA.key) {
+  return useQuery({
+    queryKey: trackedKey(campaign, token),
+    queryFn: () => api.get<Pledge>(`/pledges/${campaign}/track/${encodeURIComponent(token)}`),
+    enabled: Boolean(token),
+  });
+}
+
+export type PledgeInstallmentTarget =
+  | { access: "member" }
+  | { access: "public"; token: string };
+
+/** Record giving against either the signed-in member's pledge or a private public link. */
+export function useAddPledgeInstallment(
+  target: PledgeInstallmentTarget,
+  campaign: string = SOUND_MEDIA.key,
+) {
+  const qc = useQueryClient();
+  const endpoint = target.access === "member"
+    ? `/pledges/${campaign}/mine/installments`
+    : `/pledges/${campaign}/track/${encodeURIComponent(target.token)}/installments`;
+  return useMutation({
+    mutationFn: (input: PledgeInstallmentInput) => api.post<Pledge>(endpoint, input),
+    onSuccess: (pledge) => {
+      if (target.access === "member") qc.setQueryData(mineKey(campaign), pledge);
+      else qc.setQueryData(trackedKey(campaign, target.token), pledge);
+      qc.invalidateQueries({ queryKey: ["pledges", campaign, "all"] });
+    },
   });
 }
 

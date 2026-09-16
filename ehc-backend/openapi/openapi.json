@@ -1768,6 +1768,30 @@
         ],
         "type": "object"
       },
+      "PledgeInstallmentDto": {
+        "properties": {
+          "amount": {
+            "description": "Amount given in whole naira",
+            "example": 25000,
+            "type": "number"
+          },
+          "givenOn": {
+            "description": "Date the installment was given",
+            "example": "2026-09-15",
+            "type": "string"
+          },
+          "note": {
+            "description": "Optional reminder for the pledger",
+            "example": "Bank transfer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "givenOn"
+        ],
+        "type": "object"
+      },
       "PrayerRequestDto": {
         "properties": {
           "email": {
@@ -21671,6 +21695,72 @@
         ]
       }
     },
+    "/pledges/{campaign}/mine/installments": {
+      "post": {
+        "operationId": "PledgesController_addMineInstallment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PledgeInstallmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Record an installment on your own pledge",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
     "/pledges/{campaign}/public": {
       "post": {
         "description": "Available without an account. If the visitor is signed in, the pledge is linked to them and updates their existing project pledge.",
@@ -21738,6 +21828,134 @@
           }
         },
         "summary": "Make a pledge from the public church website",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
+    "/pledges/{campaign}/track/{token}": {
+      "get": {
+        "operationId": "PledgesController_track",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Open a public pledge using its private tracking link",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
+    "/pledges/{campaign}/track/{token}/installments": {
+      "post": {
+        "operationId": "PledgesController_addTrackedInstallment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PledgeInstallmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Record an installment using a private public tracking link",
         "tags": [
           "pledges"
         ]

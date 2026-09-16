@@ -12,6 +12,7 @@ import {
   type Pledge,
 } from "@/lib/api/pledges";
 import PledgeForm, { PLEDGE_INTRO } from "./PledgeForm";
+import PledgeProgress from "@/components/pledge/PledgeProgress";
 
 /**
  * The Sound & Media Project appeal, near the top of every member's home page.
@@ -101,6 +102,7 @@ export function PledgeAppeal({ member, userEmail = "" }: PledgeAppealProps) {
               Update my pledge
             </button>
           </div>
+          <PledgeProgress pledge={pledge} target={{ access: "member" }} />
         </section>
       ) : (
         <section

@@ -20,4 +20,22 @@ describe('PledgesController access', () => {
     expect(memberAction).not.toBe(true);
     expect(adminAction).not.toBe(true);
   });
+
+  it('keeps private tracking links public without opening member installment actions', () => {
+    expect(
+      Reflect.getMetadata(IS_PUBLIC_KEY, PledgesController.prototype.track),
+    ).toBe(true);
+    expect(
+      Reflect.getMetadata(
+        IS_PUBLIC_KEY,
+        PledgesController.prototype.addTrackedInstallment,
+      ),
+    ).toBe(true);
+    expect(
+      Reflect.getMetadata(
+        IS_PUBLIC_KEY,
+        PledgesController.prototype.addMineInstallment,
+      ),
+    ).not.toBe(true);
+  });
 });

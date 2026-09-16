@@ -24,6 +24,11 @@ vi.mock("@/components/dashboard/member/member-home/PledgeForm", () => ({
           contactMe: false,
           createdAt: "2026-09-15T10:00:00.000Z",
           updatedAt: "2026-09-15T10:00:00.000Z",
+          installments: [],
+          amountGiven: 0,
+          balance: 100_000,
+          progressPercent: 0,
+          trackingToken: "abcdefghijklmnopqrstuvwxyz123456",
         })
       }
     >
@@ -46,5 +51,9 @@ describe("public Sound & Media pledge page", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("Thank you, Ada");
     expect(screen.getByRole("status")).toHaveTextContent("₦100,000");
+    expect(screen.getByRole("link", { name: "Track my installment giving" })).toHaveAttribute(
+      "href",
+      "/pledge/track/abcdefghijklmnopqrstuvwxyz123456",
+    );
   });
 });

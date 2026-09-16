@@ -49,7 +49,11 @@ function makeService(existing: Record<string, unknown> | null = null) {
   const service = new PledgeService(
     prisma as never,
     emails as never,
-    { get: jest.fn().mockReturnValue('tenant-1') } as never,
+    {
+      get: jest.fn((key: string) =>
+        key === 'DEFAULT_TENANT_ID' ? 'tenant-1' : 'https://everlastinghills.church',
+      ),
+    } as never,
   );
   return { service, prisma, emails };
 }
@@ -133,7 +137,16 @@ describe('making a pledge', () => {
       amount: 250_000,
     });
     expect(saved).not.toHaveProperty('profileId');
+    expect(saved).not.toHaveProperty('trackingTokenHash');
+    expect(saved).toHaveProperty('trackingToken', expect.stringMatching(/^[A-Za-z0-9_-]{32}$/));
+    expect(data.data.trackingTokenHash).not.toBe(saved.trackingToken);
     expect(emails.dispatch).toHaveBeenCalledTimes(2);
+    expect(emails.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'tomike@example.com',
+        text: expect.stringContaining(`/pledge/track/${saved.trackingToken}`),
+      }),
+    );
   });
 
   it("uses a signed-in visitor's existing member pledge from the public form", async () => {
@@ -152,6 +165,127 @@ describe('making a pledge', () => {
       }),
     );
     expect(prisma.formSubmission.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('tracking installment giving', () => {
+  const storedPledge = {
+    profileId: 'profile-1',
+    memberId: 'member-1',
+    fullName: 'Tomike Kolajo',
+    phone: '0810 235 5043',
+    email: 'tomike@example.com',
+    amount: 250_000,
+    method: 'MONTHLY',
+    methodOther: null,
+    installmentAmount: 50_000,
+    completeBy: '2026-12-31',
+    contactMe: true,
+    trackingTokenHash: null,
+    installments: [
+      {
+        id: 'installment-1',
+        amount: 50_000,
+        givenOn: '2026-09-01',
+        note: 'Transfer',
+        createdAt: '2026-09-01T09:00:00.000Z',
+      },
+    ],
+    createdAt: '2026-09-01T08:00:00.000Z',
+    updatedAt: '2026-09-01T09:00:00.000Z',
+  };
+
+  it('adds a dated installment and returns paid, balance and percentage progress', async () => {
+    const { service, prisma, emails } = makeService({
+      id: 'pledge-1',
+      submittedAt: new Date('2026-09-01T08:00:00Z'),
+      data: storedPledge,
+    });
+
+    const result = await service.addMineInstallment(actor, 'sound-media', {
+      amount: 50_000,
+      givenOn: '2026-09-15',
+      note: 'Second transfer',
+    });
+
+    const updated = (prisma.formSubmission.update as jest.Mock).mock.calls[0][0].data.data;
+    expect(updated.installments).toHaveLength(2);
+    expect(updated.installments[1]).toMatchObject({
+      amount: 50_000,
+      givenOn: '2026-09-15',
+      note: 'Second transfer',
+    });
+    expect(result).toMatchObject({ amountGiven: 100_000, balance: 150_000, progressPercent: 40 });
+    expect(emails.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'tomike@example.com', tag: 'pledge-installment' }),
+    );
+  });
+
+  it('finds a public pledge by a hashed private token without returning the hash', async () => {
+    const { service, prisma } = makeService({
+      id: 'pledge-1',
+      submittedAt: new Date(),
+      data: { ...storedPledge, profileId: null, trackingTokenHash: 'stored-secret-hash' },
+    });
+
+    const result = await service.tracked('sound-media', 'abcdefghijklmnopqrstuvwxyz123456');
+
+    expect(prisma.formSubmission.findFirst).toHaveBeenCalledWith({
+      where: {
+        tenantId: 'tenant-1',
+        type: 'pledge:sound-media',
+        data: {
+          path: ['trackingTokenHash'],
+          equals: expect.stringMatching(/^[a-f0-9]{64}$/),
+        },
+      },
+    });
+    expect(result).not.toHaveProperty('trackingTokenHash');
+    expect(result).not.toHaveProperty('profileId');
+  });
+
+  it('refuses an installment larger than the remaining pledge balance', async () => {
+    const { service, prisma } = makeService({
+      id: 'pledge-1',
+      submittedAt: new Date(),
+      data: storedPledge,
+    });
+
+    await expect(
+      service.addMineInstallment(actor, 'sound-media', {
+        amount: 210_000,
+        givenOn: '2026-09-15',
+      }),
+    ).rejects.toThrow(/Only .* remains/);
+    expect(prisma.formSubmission.update).not.toHaveBeenCalled();
+  });
+
+  it('refuses a future installment date', async () => {
+    const { service } = makeService({
+      id: 'pledge-1',
+      submittedAt: new Date(),
+      data: storedPledge,
+    });
+
+    await expect(
+      service.addMineInstallment(actor, 'sound-media', {
+        amount: 50_000,
+        givenOn: '2026-09-16',
+      }),
+    ).rejects.toThrow(/cannot be in the future/);
+  });
+
+  it('does not let an updated pledge fall below giving already recorded', async () => {
+    const { service, prisma } = makeService({
+      id: 'pledge-1',
+      submittedAt: new Date(),
+      data: storedPledge,
+    });
+
+    await expect(
+      service.submit(actor, 'sound-media', pledge({ amount: 40_000 })),
+    ).rejects.toThrow(/cannot be lower than/);
+    expect(prisma.formSubmission.update).not.toHaveBeenCalled();
   });
 });
 
@@ -193,7 +327,13 @@ describe('the list leaders see', () => {
     const result = await service.list('sound-media');
 
     expect(result.campaign).toEqual({ key: 'sound-media', title: 'Sound & Media Project' });
-    expect(result.totals).toEqual({ pledges: 2, amount: 150_000, wantContact: 1 });
+    expect(result.totals).toEqual({
+      pledges: 2,
+      amount: 150_000,
+      amountGiven: 0,
+      balance: 150_000,
+      wantContact: 1,
+    });
     expect(result.pledges[0]).not.toHaveProperty('profileId');
     expect(prisma.formSubmission.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { tenantId: 'tenant-1', type: 'pledge:sound-media' } }),

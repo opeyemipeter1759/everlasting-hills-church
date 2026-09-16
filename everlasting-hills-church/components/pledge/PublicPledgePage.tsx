@@ -101,8 +101,16 @@ export default function PublicPledgePage() {
                   {pledgePlan(saved)} · expected completion by {longDate(saved.completeBy)}.
                   A confirmation has been sent to {saved.email}.
                 </p>
-                <Link href="/" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#87102C] px-7 font-bold text-white hover:bg-[#6f0d24]">
-                  Return to church homepage
+                {saved.trackingToken && (
+                  <p className="mt-4 max-w-md rounded-xl bg-[#fff3e1] p-3 text-xs leading-relaxed text-[#765b45]">
+                    Your private tracking link is also in your confirmation email. Keep it private and use it whenever you record an installment.
+                  </p>
+                )}
+                <Link
+                  href={saved.trackingToken ? `/pledge/track/${saved.trackingToken}` : "/dashboard"}
+                  className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#87102C] px-7 font-bold text-white hover:bg-[#6f0d24]"
+                >
+                  {saved.trackingToken ? "Track my installment giving" : "Track giving on my dashboard"}
                 </Link>
               </div>
             ) : (

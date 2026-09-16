@@ -24,6 +24,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import type { AuthUser } from '../auth/types/auth-user';
 import { PledgeDto } from './dto/pledge.dto';
+import { PledgeInstallmentDto } from './dto/pledge-installment.dto';
 import { PledgeService } from './services/pledge.service';
 
 /**
@@ -65,6 +66,42 @@ export class PledgesController {
     @CurrentUser() actor?: AuthUser,
   ) {
     return this.pledges.submitPublic(actor, campaign, body);
+  }
+
+  @Public()
+  @Get(':campaign/track/:token')
+  @Header('Cache-Control', 'no-store')
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Open a public pledge using its private tracking link' })
+  track(@Param('campaign') campaign: string, @Param('token') token: string) {
+    return this.pledges.tracked(campaign, token);
+  }
+
+  @Public()
+  @Post(':campaign/track/:token/installments')
+  @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Record an installment using a private public tracking link' })
+  addTrackedInstallment(
+    @Param('campaign') campaign: string,
+    @Param('token') token: string,
+    @Body() body: PledgeInstallmentDto,
+  ) {
+    return this.pledges.addTrackedInstallment(campaign, token, body);
+  }
+
+  @Post(':campaign/mine/installments')
+  @Roles(Role.MEMBER)
+  @ApiBearerAuth('access-token')
+  @HttpCode(HttpStatus.CREATED)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Record an installment on your own pledge' })
+  addMineInstallment(
+    @CurrentUser() actor: AuthUser,
+    @Param('campaign') campaign: string,
+    @Body() body: PledgeInstallmentDto,
+  ) {
+    return this.pledges.addMineInstallment(actor, campaign, body);
   }
 
   @Post(':campaign')
