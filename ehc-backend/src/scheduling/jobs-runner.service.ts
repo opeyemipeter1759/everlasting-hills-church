@@ -9,6 +9,7 @@ export const JOB_NAMES = [
   'anniversary-greetings',
   'follow-up-auto-surface',
   'follow-up-reminders',
+  'attendance-absentee-emails',
   'weekly-digest',
   'google-calendar-sync',
   'push-service-reminder',
@@ -73,6 +74,8 @@ export class JobsRunnerService {
         return this.scheduling.sendAnniversaryGreetings();
       case 'follow-up-auto-surface':
         return this.scheduling.autoSurfaceFollowUps();
+      case 'attendance-absentee-emails':
+        return this.scheduling.sendAbsenteeEmails();
       case 'follow-up-reminders':
         return this.scheduling.sweepFollowUpReminders();
       case 'weekly-digest':

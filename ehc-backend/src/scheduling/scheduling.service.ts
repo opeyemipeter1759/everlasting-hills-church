@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
 import { FollowUpAutoSurfaceService } from '../follow-up/services/follow-up-auto-surface.service';
 import { FollowUpRemindersService } from '../follow-up/services/follow-up-reminders.service';
+import { AttendanceAbsenteeMailService } from '../attendance/services/attendance-absentee-mail.service';
 import { buildBirthdayEmail } from '../notifications/templates/birthday.email';
 import { buildAnniversaryEmail } from '../notifications/templates/anniversary.email';
 import type { Env } from '../config/env.validation';
@@ -27,6 +28,7 @@ export class SchedulingService {
     private readonly config: ConfigService<Env, true>,
     private readonly followUp: FollowUpAutoSurfaceService,
     private readonly followUpReminders: FollowUpRemindersService,
+    private readonly absenteeMail: AttendanceAbsenteeMailService,
   ) {}
 
   /**
@@ -157,5 +159,22 @@ export class SchedulingService {
     this.logger.log(
       `follow-up-reminders: ${reminded} reminders, ${escalated} escalations, ${returnedPrompts} "they're back" prompts`,
     );
+  }
+
+  /**
+   * "We missed you" emails to absent members, once attendance has closed.
+   * Polls every 30 minutes on Sundays and Wednesdays (Lagos time) and lets
+   * AttendanceAbsenteeMailService decide whether the window has actually
+   * closed yet — so the schedule follows ATTENDANCE_*_CLOSE without a redeploy,
+   * and a service is only ever mailed once.
+   */
+  @Cron('*/30 * * * 0,3', { name: 'attendance-absentee-emails', timeZone: 'Africa/Lagos' })
+  async sendAbsenteeEmails(): Promise<void> {
+    const result = await this.absenteeMail.run();
+    if (result.skipped) {
+      this.logger.debug(`attendance-absentee-emails: skipped (${result.skipped})`);
+      return;
+    }
+    this.logger.log(`attendance-absentee-emails: ${result.emailed}/${result.absent} absent members emailed`);
   }
 }

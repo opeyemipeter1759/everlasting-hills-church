@@ -18,6 +18,7 @@ import { AttendanceSummaryService } from './services/attendance-summary.service'
 import { AttendanceOverrideService } from './services/attendance-override.service';
 import { AttendanceFeedService } from './services/attendance-feed.service';
 import { AttendanceAbsenceService } from './services/attendance-absence.service';
+import { AttendanceAbsenteeMailService } from './services/attendance-absentee-mail.service';
 
 @Module({
   imports: [PrismaModule, AuthModule],
@@ -41,12 +42,13 @@ import { AttendanceAbsenceService } from './services/attendance-absence.service'
     AttendanceOverrideService,
     AttendanceFeedService,
     AttendanceAbsenceService,
+    AttendanceAbsenteeMailService,
   ],
   // SessionsService (sessions.module.ts) depends on AttendanceAbsenceService (to mark
   // absentees when a session auto-closes) and AttendanceSessionWindowService (force-open
   // today's service). FollowUpModule depends on AttendanceOverrideService for its own
   // "Mark Present" action, so a leader can fix a missed check-in without leaving the
   // pipeline. Everything else here is attendance-module-internal.
-  exports: [AttendanceAbsenceService, AttendanceSessionWindowService, AttendanceOverrideService],
+  exports: [AttendanceAbsenceService, AttendanceAbsenteeMailService, AttendanceSessionWindowService, AttendanceOverrideService],
 })
 export class AttendanceModule {}

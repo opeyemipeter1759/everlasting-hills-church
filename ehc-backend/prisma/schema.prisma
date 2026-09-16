@@ -864,6 +864,11 @@ model Service {
   cancelledAt           DateTime?
   cancelReason          String?
   location              String?
+  /// Set when the "we missed you" emails for this service were dispatched — the
+  /// absentee-email job claims a service by writing this before sending, so a
+  /// retried or duplicated run can never mail the same people twice.
+  absenteeMailSentAt    DateTime?
+  absenteeMailCount     Int?
   AttendanceRecord      AttendanceRecord[]
   ServiceHeadcount      ServiceHeadcount?
   Assignments           ServiceAssignment[]
