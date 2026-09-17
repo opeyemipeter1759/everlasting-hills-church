@@ -4,7 +4,15 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailDispatcher } from '../jobs/mail-dispatcher';
 import { buildEmailBlast } from '../notifications/templates/email-blast.email';
-import { escapeHtml, getEmailLogoUrl, setEmailLogoUrl } from '../notifications/templates/layout';
+import {
+  DEFAULT_GREETING,
+  escapeHtml,
+  getEmailGreeting,
+  getEmailLogoUrl,
+  normalizeGreeting,
+  setEmailGreeting,
+  setEmailLogoUrl,
+} from '../notifications/templates/layout';
 import { EmailsRecipientsService } from './emails-recipients.service';
 import { CreateEmailTemplateDto } from './dto/create-email-template.dto';
 import { UpdateEmailTemplateDto } from './dto/update-email-template.dto';
@@ -35,6 +43,7 @@ export class EmailsService implements OnModuleInit {
     try {
       const row = await this.prisma.emailSettings.findUnique({ where: { tenantId: this.tenantId } });
       setEmailLogoUrl(row?.logoUrl);
+      setEmailGreeting(row?.greeting);
     } catch (err) {
       this.logger.warn(`Could not load email settings: ${(err as Error).message}`);
     }
@@ -44,17 +53,28 @@ export class EmailsService implements OnModuleInit {
 
   async getSettings() {
     const row = await this.prisma.emailSettings.findUnique({ where: { tenantId: this.tenantId } });
-    return { logoUrl: row?.logoUrl ?? null, effectiveLogoUrl: getEmailLogoUrl() };
+    return {
+      logoUrl: row?.logoUrl ?? null,
+      effectiveLogoUrl: getEmailLogoUrl(),
+      greeting: row?.greeting ?? null,
+      effectiveGreeting: getEmailGreeting(),
+      defaultGreeting: DEFAULT_GREETING,
+    };
   }
 
+  /** Partial: a field left out of the body keeps its stored value; null resets it. */
   async updateSettings(dto: UpdateEmailSettingsDto, updatedBy: string | null) {
-    const logoUrl = dto.logoUrl?.trim() || null;
-    await this.prisma.emailSettings.upsert({
+    const patch: { logoUrl?: string | null; greeting?: string | null } = {};
+    if (dto.logoUrl !== undefined) patch.logoUrl = dto.logoUrl?.trim() || null;
+    if (dto.greeting !== undefined) patch.greeting = normalizeGreeting(dto.greeting);
+
+    const row = await this.prisma.emailSettings.upsert({
       where: { tenantId: this.tenantId },
-      create: { id: randomUUID(), tenantId: this.tenantId, logoUrl, updatedBy },
-      update: { logoUrl, updatedBy },
+      create: { id: randomUUID(), tenantId: this.tenantId, logoUrl: null, greeting: null, ...patch, updatedBy },
+      update: { ...patch, updatedBy },
     });
-    setEmailLogoUrl(logoUrl);
+    setEmailLogoUrl(row.logoUrl);
+    setEmailGreeting(row.greeting);
     return this.getSettings();
   }
 
@@ -68,6 +88,7 @@ export class EmailsService implements OnModuleInit {
         name: dto.name,
         subject: dto.subject,
         body: dto.body,
+        greeting: normalizeGreeting(dto.greeting),
         createdById,
       },
     });
@@ -98,6 +119,7 @@ export class EmailsService implements OnModuleInit {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.subject !== undefined && { subject: dto.subject }),
         ...(dto.body !== undefined && { body: dto.body }),
+        ...(dto.greeting !== undefined && { greeting: normalizeGreeting(dto.greeting) }),
       },
     });
   }
@@ -130,7 +152,14 @@ export class EmailsService implements OnModuleInit {
       await Promise.all(
         batch.map((r) =>
           this.mail.dispatch(
-            buildEmailBlast({ email: r.email, subject: dto.subject, body: dto.body, attachments: dto.attachments }),
+            buildEmailBlast({
+              email: r.email,
+              firstName: r.firstName,
+              subject: dto.subject,
+              greeting: dto.greeting,
+              body: dto.body,
+              attachments: dto.attachments,
+            }),
           ),
         ),
       );

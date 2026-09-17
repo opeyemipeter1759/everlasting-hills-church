@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ArrayMaxSize, IsArray, IsOptional, IsString, IsUrl, MaxLength, MinLength, ValidateNested } from 'class-validator';
 import { AudienceFilterDto } from './audience-filter.dto';
+import { IsGreetingField } from '../../common/greeting.decorator';
 
 export class EmailAttachmentDto {
   @ApiProperty({ example: 'flyer.png' })
@@ -33,6 +34,9 @@ export class SendEmailDto {
   @MinLength(2)
   @MaxLength(20_000)
   body!: string;
+
+  @IsGreetingField()
+  greeting?: string | null;
 
   @ApiProperty({ type: AudienceFilterDto })
   @ValidateNested()

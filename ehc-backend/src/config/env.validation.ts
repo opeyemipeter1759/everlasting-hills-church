@@ -74,6 +74,20 @@ export const envSchema = z.object({
   /** Background jobs (BullMQ). Absent → falls back to in-process EventEmitter. */
   REDIS_URL: z.url().optional(),
 
+  /**
+   * Scheduled jobs. Production runs on Cloud Run with scale-to-zero, where an
+   * in-process timer only fires if a request happens to keep an instance warm —
+   * so the schedule lives in Cloud Scheduler, which POSTs /jobs/:name with
+   * CRON_SECRET. CRON_ENABLED=true turns the in-process @Cron timers back on
+   * for an always-on host; leave it off on Cloud Run and on dev machines that
+   * point at the production database (two schedulers = duplicate reminders).
+   */
+  CRON_ENABLED: z
+    .string()
+    .transform((v) => v === 'true')
+    .optional(),
+  CRON_SECRET: z.string().min(16).optional(),
+
   /** Error monitoring (Sentry). Absent → Sentry is a no-op. */
   SENTRY_DSN: z.url().optional(),
   SENTRY_TRACES_SAMPLE_RATE: z.coerce.number().min(0).max(1).default(0),

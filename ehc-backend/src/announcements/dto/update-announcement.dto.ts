@@ -1,6 +1,7 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsGreetingField } from '../../common/greeting.decorator';
 
 /** Edits title/body/email-flag only — status transitions go through /publish. */
 export class UpdateAnnouncementDto {
@@ -22,6 +23,9 @@ export class UpdateAnnouncementDto {
   @IsOptional()
   @IsBoolean()
   sendEmail?: boolean;
+
+  @IsGreetingField('Salutation for the email copy, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.')
+  greeting?: string | null;
 
   @ApiPropertyOptional({ description: 'Image to show alongside the announcement (from /uploads/image), or "" to remove it' })
   @IsOptional()

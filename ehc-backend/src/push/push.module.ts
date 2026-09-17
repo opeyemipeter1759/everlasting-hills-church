@@ -25,6 +25,6 @@ import { PushTriggersService } from './services/push-triggers.service';
     PushSubscriptionService,
     PushTriggersService,
   ],
-  exports: [PushDispatchService, PushSubscriptionService],
+  exports: [PushDispatchService, PushSubscriptionService, PushTriggersService],
 })
 export class PushModule {}

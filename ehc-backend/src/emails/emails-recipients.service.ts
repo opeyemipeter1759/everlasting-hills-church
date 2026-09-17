@@ -14,6 +14,8 @@ export interface RecipientRow {
   id: string;
   email: string;
   name: string;
+  /** Used for the "Hello Daphne," greeting each recipient gets. */
+  firstName: string;
 }
 
 /**
@@ -76,7 +78,7 @@ export class EmailsRecipientsService {
 
     return rows
       .filter((r): r is typeof r & { email: string } => Boolean(r.email))
-      .map((r) => ({ id: r.id, email: r.email, name: `${r.firstName} ${r.lastName}`.trim() }));
+      .map((r) => ({ id: r.id, email: r.email, firstName: r.firstName, name: `${r.firstName} ${r.lastName}`.trim() }));
   }
 
   /** Human-readable snapshot for EmailSend.audienceLabel and the frontend preview. */

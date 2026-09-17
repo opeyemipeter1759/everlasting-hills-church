@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EventStatus, Role } from '@prisma/client';
 import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsGreetingField } from '../../common/greeting.decorator';
 
 export class CreateAnnouncementDto {
   @ApiProperty({ example: 'Special Sunday Service' })
@@ -34,6 +35,9 @@ export class CreateAnnouncementDto {
   @IsOptional()
   @IsBoolean()
   sendEmail?: boolean;
+
+  @IsGreetingField('Salutation for the email copy, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.')
+  greeting?: string | null;
 
   @ApiPropertyOptional({
     enum: EventStatus,

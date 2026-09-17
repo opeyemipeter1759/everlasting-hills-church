@@ -80,6 +80,25 @@ describe('AllExceptionsFilter', () => {
     });
   });
 
+  it('does not expose framework route errors to users', () => {
+    const { host, response } = makeHost();
+    filter.catch(
+      new NotFoundException(
+        'Cannot POST /pledges/sound-media/mine/installments',
+      ),
+      host,
+    );
+
+    expect(response._body).toMatchObject({
+      error: {
+        statusCode: 404,
+        message:
+          'This feature is not available yet. Please update or refresh the app and try again.',
+        code: 'ROUTE_NOT_FOUND',
+      },
+    });
+  });
+
   it('reuses x-request-id from incoming request header if present', () => {
     const { host, response, request } = makeHost();
     request.headers['x-request-id'] = 'caller-supplied-id-42';
@@ -88,20 +107,28 @@ describe('AllExceptionsFilter', () => {
 
     const body = response._body as { error: { requestId: string } };
     expect(body.error.requestId).toBe('caller-supplied-id-42');
-    expect(response.setHeader).toHaveBeenCalledWith('x-request-id', 'caller-supplied-id-42');
+    expect(response.setHeader).toHaveBeenCalledWith(
+      'x-request-id',
+      'caller-supplied-id-42',
+    );
   });
 
   it('extracts ValidationPipe field errors into `details`', () => {
     const { host, response } = makeHost();
     const validationError = new BadRequestException({
       statusCode: 400,
-      message: ['email must be a valid email', 'password must be at least 6 characters'],
+      message: [
+        'email must be a valid email',
+        'password must be at least 6 characters',
+      ],
       error: 'Bad Request',
     });
 
     filter.catch(validationError, host);
 
-    const body = response._body as { error: { details?: string[]; message: string } };
+    const body = response._body as {
+      error: { details?: string[]; message: string };
+    };
     expect(body.error.details).toEqual([
       'email must be a valid email',
       'password must be at least 6 characters',
@@ -111,11 +138,14 @@ describe('AllExceptionsFilter', () => {
 
   it('maps Prisma P2002 unique-constraint to HTTP 409', () => {
     const { host, response } = makeHost();
-    const err = new Prisma.PrismaClientKnownRequestError('Unique constraint failed', {
-      code: 'P2002',
-      clientVersion: '6.0.0',
-      meta: { target: ['email'] },
-    });
+    const err = new Prisma.PrismaClientKnownRequestError(
+      'Unique constraint failed',
+      {
+        code: 'P2002',
+        clientVersion: '6.0.0',
+        meta: { target: ['email'] },
+      },
+    );
 
     filter.catch(err, host);
 
@@ -152,9 +182,14 @@ describe('AllExceptionsFilter', () => {
 
   it('returns generic 500 for unknown errors and does NOT leak the raw message', () => {
     const { host, response } = makeHost();
-    filter.catch(new Error('Internal Prisma boom — schema column foo missing'), host);
+    filter.catch(
+      new Error('Internal Prisma boom — schema column foo missing'),
+      host,
+    );
 
-    expect(response.status).toHaveBeenCalledWith(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect(response.status).toHaveBeenCalledWith(
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
     const body = response._body as { error: { message: string; code: string } };
     expect(body.error.message).toBe('Internal server error');
     expect(body.error.code).toBe('INTERNAL_SERVER_ERROR');
@@ -191,7 +226,9 @@ describe('AllExceptionsFilter', () => {
     filter.catch(new HttpException('Custom message', 418), host);
 
     expect(response.status).toHaveBeenCalledWith(418);
-    const body = response._body as { error: { message: string; statusCode: number } };
+    const body = response._body as {
+      error: { message: string; statusCode: number };
+    };
     expect(body.error.message).toBe('Custom message');
     expect(body.error.statusCode).toBe(418);
   });

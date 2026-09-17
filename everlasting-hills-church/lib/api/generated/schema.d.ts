@@ -1479,8 +1479,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Translations a member can read in */
-        get: operations["ReadingPlanController_translations"];
+        /** Bible translations available for the public daily scripture */
+        get: operations["DailyScriptureController_translations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2543,9 +2543,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Email branding — the header logo every outgoing email uses */
+        /** Email branding — the header logo and salutation every outgoing email uses */
         get: operations["EmailsController_getSettings"];
-        /** Change the header logo (pass logoUrl: null to restore the default) */
+        /** Change the header logo and/or greeting word (pass null to restore a default; omitted fields are left as they are) */
         put: operations["EmailsController_updateSettings"];
         post?: never;
         delete?: never;
@@ -4729,6 +4729,129 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pledges/{campaign}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every pledge to this project, with totals (ADMIN+) */
+        get: operations["PledgesController_list"];
+        put?: never;
+        /** Make or update your pledge to this project */
+        post: operations["PledgesController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a pledge and its recorded installments (ADMIN+) */
+        delete: operations["PledgesController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your own pledge to this project, or null if you have not pledged */
+        get: operations["PledgesController_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/mine/installments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an installment on your own pledge */
+        post: operations["PledgesController_addMineInstallment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/public": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a pledge from the public church website
+         * @description Available without an account. If the visitor is signed in, the pledge is linked to them and updates their existing project pledge.
+         */
+        post: operations["PledgesController_submitPublic"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/track/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open a public pledge using its private tracking link */
+        get: operations["PledgesController_track"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pledges/{campaign}/track/{token}/installments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record an installment using a private public tracking link */
+        post: operations["PledgesController_addTrackedInstallment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/push/preferences": {
         parameters: {
             query?: never;
@@ -5797,7 +5920,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get one unit with full member list including roles (ADMIN+) */
+        /** Get one unit with full member list including roles (ADMIN+, or the head of its department) */
         get: operations["UnitsController_getById"];
         put?: never;
         post?: never;
@@ -6749,6 +6872,11 @@ export interface components {
              * @example 10:00 AM
              */
             eventTime?: string;
+            /**
+             * @description Salutation for the email copy, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @description Image to show alongside the announcement (from /uploads/image) */
             imageUrl?: string;
             /**
@@ -6826,6 +6954,11 @@ export interface components {
         CreateEmailTemplateDto: {
             /** @example <p>Dear church family,</p> */
             body: string;
+            /**
+             * @description Salutation that opens this email, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @example Monthly Newsletter */
             name: string;
             /** @example Here is what happened this month at EHC */
@@ -7328,6 +7461,57 @@ export interface components {
              */
             title: string;
         };
+        PledgeDto: {
+            /**
+             * @description The whole pledge in naira
+             * @example 250000
+             */
+            amount: number;
+            /**
+             * @description Expected date to complete the pledge
+             * @example 2026-12-31
+             */
+            completeBy: string;
+            /** @description The pledge confirmation, which must be ticked */
+            confirmed: boolean;
+            /** @description Whether the project team may contact them about the pledge */
+            contactMe: boolean;
+            /** @example tomike@example.com */
+            email: string;
+            /** @example Tomike Kolajo */
+            fullName: string;
+            /**
+             * @description Per installment, for weekly or monthly
+             * @example 25000
+             */
+            installmentAmount?: number;
+            /** @enum {string} */
+            method: "ONE_TIME" | "WEEKLY" | "MONTHLY" | "OTHER";
+            /** @description How they will redeem it, when method is OTHER */
+            methodOther?: string;
+            /**
+             * @description WhatsApp number
+             * @example 0810 235 5043
+             */
+            phone: string;
+        };
+        PledgeInstallmentDto: {
+            /**
+             * @description Amount given in whole naira
+             * @example 25000
+             */
+            amount: number;
+            /**
+             * @description Date the installment was given
+             * @example 2026-09-15
+             */
+            givenOn: string;
+            /**
+             * @description Optional reminder for the pledger
+             * @example Bank transfer
+             */
+            note?: string;
+        };
         PrayerRequestDto: {
             /** @example john@example.com */
             email?: string;
@@ -7432,6 +7616,11 @@ export interface components {
             audience: components["schemas"]["AudienceFilterDto"];
             /** @example <p>Dear church family,</p> */
             body: string;
+            /**
+             * @description Salutation that opens this email, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @example Here is what happened this month at EHC */
             subject: string;
             /** @description Template this send originated from, for record-keeping only — subject/body below are what actually gets sent */
@@ -7603,6 +7792,11 @@ export interface components {
             body?: string;
             /** @example 10:00 AM */
             eventTime?: string;
+            /**
+             * @description Salutation for the email copy, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @description Image to show alongside the announcement (from /uploads/image), or "" to remove it */
             imageUrl?: string;
             /**
@@ -7645,12 +7839,22 @@ export interface components {
             status: "CONNECTED" | "DECLINED";
         };
         UpdateEmailSettingsDto: {
+            /**
+             * @description Church-wide default salutation, e.g. "Dear" → "Dear Daphne,". Null restores "Hello". Individual emails can override it.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @description Public URL of the header logo (from /uploads/image). Null restores the default site logo. */
             logoUrl?: Record<string, never> | null;
         };
         UpdateEmailTemplateDto: {
             /** @example <p>Dear church family,</p> */
             body?: string;
+            /**
+             * @description Salutation that opens this email, e.g. "Dear" → "Dear Daphne,". Null/omitted = the church-wide default.
+             * @example Dear
+             */
+            greeting?: Record<string, never> | null;
             /** @example Monthly Newsletter */
             name?: string;
             /** @example Here is what happened this month at EHC */
@@ -11314,7 +11518,9 @@ export interface operations {
     };
     DailyScriptureController_today: {
         parameters: {
-            query?: never;
+            query?: {
+                translation?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -11343,7 +11549,7 @@ export interface operations {
             };
         };
     };
-    ReadingPlanController_translations: {
+    DailyScriptureController_translations: {
         parameters: {
             query?: never;
             header?: never;
@@ -18968,6 +19174,299 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_addMineInstallment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeInstallmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_submitPublic: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeDto"];
+            };
+        };
+        responses: {
+            /** @description Pledge submitted successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_track: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PledgesController_addTrackedInstallment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeInstallmentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
             /** @description Error response */

@@ -1,5 +1,5 @@
 import type { SendEmailPayload } from '../notification-events';
-import { escapeHtml, renderEmailLayout } from './layout';
+import { escapeHtml, greetingHtml, greetingText, renderEmailLayout } from './layout';
 
 interface Args {
   firstName: string;
@@ -21,7 +21,7 @@ export function buildFirstTimerFollowUpEmail(args: Args): SendEmailPayload {
   const subject = `It was so good to have you, ${firstName}`;
 
   const text = [
-    `Hi ${firstName},`,
+    greetingText(firstName),
     '',
     'Thank you for worshipping with us at Everlasting Hills. It was a joy to have you in the house, and we hope you felt right at home.',
     '',
@@ -36,6 +36,7 @@ export function buildFirstTimerFollowUpEmail(args: Args): SendEmailPayload {
   const html = renderEmailLayout({
     heading: `It was so good to have you, ${escapeHtml(firstName)}.`,
     bodyHtml: `
+      ${greetingHtml(firstName)}
       <p style="margin:0 0 16px">Thank you for worshipping with us at Everlasting Hills. It was a joy to have you in the house, and we hope you felt right at home.</p>
       <p style="margin:0 0 16px">We would love to see you again this week. If there is anything we can pray about or help you with, simply reply to this email and a member of our team will reach out.</p>
       <p style="margin:0">There is always a place for you here.</p>

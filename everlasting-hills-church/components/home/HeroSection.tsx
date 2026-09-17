@@ -55,7 +55,12 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
             className="hidden lg:block absolute -left-16 top-2 w-10 h-5 text-white/25"
             fill="none"
           >
-            <path d="M4 20 Q 20 4 56 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path
+              d="M4 20 Q 20 4 56 10"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           </svg>
 
           <div className="hidden lg:flex flex-col items-center absolute -right-20 -top-8 text-white/35">
@@ -65,7 +70,11 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
             >
               {c.mediaCard.eyebrow}
             </span>
-            <svg viewBox="0 0 70 56" className="w-16 h-[52px] -mt-1 ml-10" fill="none">
+            <svg
+              viewBox="0 0 70 56"
+              className="w-16 h-[52px] -mt-1 ml-10"
+              fill="none"
+            >
               <path
                 d="M10 8 C 32 4, 50 14, 42 32"
                 stroke="currentColor"
@@ -130,11 +139,23 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           className="opacity-0 animate-fade-up flex flex-col sm:flex-row items-center gap-4 mt-10"
         >
           <div className="hidden lg:flex flex-col items-end justify-center pr-2 text-white/35 whitespace-nowrap">
-            <span style={{ fontFamily: "var(--font-dancing)" }} className="text-xl rotate-3">
+            <span
+              style={{ fontFamily: "var(--font-dancing)" }}
+              className="text-xl rotate-3"
+            >
               Everyone&apos;s welcome
             </span>
-            <svg viewBox="0 0 70 48" className="w-16 h-11 -mt-1 mr-2 scale-x-[-1]" fill="none">
-              <path d="M8 8 C 30 4, 48 14, 40 32" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            <svg
+              viewBox="0 0 70 48"
+              className="w-16 h-11 -mt-1 mr-2 scale-x-[-1]"
+              fill="none"
+            >
+              <path
+                d="M8 8 C 30 4, 48 14, 40 32"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
               {/* <path
                 d="M28 25 L 41 32 L 32 43"
                 stroke="currentColor"
@@ -158,7 +179,10 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           </motion.a>
           <motion.a
             href={c.ctaSecondary.href}
-            whileHover={{ scale: 1.03, backgroundColor: "rgba(255,255,255,0.05)" }}
+            whileHover={{
+              scale: 1.03,
+              backgroundColor: "rgba(255,255,255,0.05)",
+            }}
             whileTap={{ scale: 0.97 }}
             className="group px-10 py-4 bg-transparent border border-white/20 font-bold rounded-xl transition-all flex items-center justify-center gap-3 text-white"
           >
@@ -178,11 +202,13 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
 
         {/* Scroll cue */}
         <a
-          href="#about"
+          href="#daily-scripture-today"
           style={{ animationDelay: "1100ms" }}
           className="opacity-0 animate-fade-in hidden sm:flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors mt-10"
         >
-          <span className="text-[10px] uppercase tracking-[0.3em] font-bold">Scroll</span>
+          <span className="text-[10px] uppercase tracking-[0.3em] font-bold">
+            Scroll
+          </span>
           <ChevronDown className="w-4 h-4 animate-bounce-soft" />
         </a>
       </div>
@@ -257,9 +283,14 @@ function PhotoMarquee({ images }: { images: string[] }) {
         itemRefs.current.forEach((el, i) => {
           if (!el) return;
           const baseX = i * step;
-          const x = (((baseX - scrollRef.current) % totalWidth) + totalWidth) % totalWidth;
+          const x =
+            (((baseX - scrollRef.current) % totalWidth) + totalWidth) %
+            totalWidth;
           const centerX = x + itemWidth / 2;
-          const t = Math.min(1, Math.max(-1, (centerX - containerWidth / 2) / (containerWidth / 2)));
+          const t = Math.min(
+            1,
+            Math.max(-1, (centerX - containerWidth / 2) / (containerWidth / 2)),
+          );
           const y = amplitude * (1 - t * t);
           el.style.transform = `translate3d(${x}px, ${y}px, 0)`;
         });
@@ -278,15 +309,21 @@ function PhotoMarquee({ images }: { images: string[] }) {
   return (
     <div
       ref={containerRef}
-      onMouseEnter={() => { pausedRef.current = true; }}
-      onMouseLeave={() => { pausedRef.current = false; }}
+      onMouseEnter={() => {
+        pausedRef.current = true;
+      }}
+      onMouseLeave={() => {
+        pausedRef.current = false;
+      }}
       style={containerHeight ? { height: containerHeight } : undefined}
       className="relative w-full h-[240px] sm:h-[300px] lg:h-[360px] overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_6%,black_94%,transparent)]"
     >
       {loop.map((img, i) => (
         <div
           key={img + i}
-          ref={(el) => { itemRefs.current[i] = el; }}
+          ref={(el) => {
+            itemRefs.current[i] = el;
+          }}
           className="group/thumb absolute top-0 left-0 w-[140px] sm:w-[180px] lg:w-[215px] aspect-[3/4.3] rounded-[28px] overflow-hidden border border-white/10 bg-church-card shadow-xl will-change-transform"
         >
           <Image

@@ -1,13 +1,13 @@
-import { Controller, Get, Header } from '@nestjs/common';
+import { Controller, Get, Header, Query } from '@nestjs/common';
 import {
-  ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
   ApiProperty,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
-import { Roles } from '../auth/decorators/roles.decorator';
+import { Public } from '../auth/decorators/public.decorator';
+import { BiblePassageService } from './services/bible-passage.service';
 import { DailyScriptureService } from './services/daily-scripture.service';
 
 class DailyScriptureDto {
@@ -33,19 +33,35 @@ class DailyScriptureDto {
 }
 
 @ApiTags('reading-plans')
-@ApiBearerAuth('access-token')
-@Roles(Role.MEMBER)
 @Controller('bible')
 export class DailyScriptureController {
-  constructor(private readonly scripture: DailyScriptureService) {}
+  constructor(
+    private readonly scripture: DailyScriptureService,
+    private readonly passages: BiblePassageService,
+  ) {}
 
+  @Public()
   @Get('today')
-  @Header('Cache-Control', 'private, no-store')
+  @Header(
+    'Cache-Control',
+    'public, max-age=60, s-maxage=300, stale-while-revalidate=300',
+  )
   @ApiOperation({
     summary: 'Today’s scripture for the church, changing at midnight in Lagos',
   })
   @ApiOkResponse({ type: DailyScriptureDto })
-  today() {
-    return this.scripture.today();
+  @ApiQuery({ name: 'translation', required: false, example: 'KJV' })
+  today(@Query('translation') translation?: string) {
+    return this.scripture.today(translation);
+  }
+
+  @Public()
+  @Get('translations')
+  @ApiOperation({
+    summary: 'Bible translations available for the public daily scripture',
+  })
+  @Header('Cache-Control', 'public, max-age=86400')
+  translations() {
+    return this.passages.translations();
   }
 }

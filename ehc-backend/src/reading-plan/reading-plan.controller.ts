@@ -1,5 +1,17 @@
-import { Controller, Get, Header, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Header,
+  Param,
+  ParseIntPipe,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { ReadingPlanCatalogueService } from './services/reading-plan-catalogue.service';
@@ -25,7 +37,9 @@ export class ReadingPlanController {
   ) {}
 
   @Get('reading-plans')
-  @ApiOperation({ summary: 'Published plans this church offers, optionally filtered by track' })
+  @ApiOperation({
+    summary: 'Published plans this church offers, optionally filtered by track',
+  })
   // Shorter than the rest: the catalogue changes when a church forks a plan.
   @Header('Cache-Control', 'private, max-age=300')
   list(@Query() query: ListPlansQueryDto) {
@@ -53,17 +67,15 @@ export class ReadingPlanController {
   }
 
   @Get('reading-plans/:planId/days/:dayIndex')
-  @ApiOperation({ summary: 'One day with its portions. References only, no scripture text' })
+  @ApiOperation({
+    summary: 'One day with its portions. References only, no scripture text',
+  })
   @Header('Cache-Control', 'public, max-age=31536000, immutable')
-  day(@Param('planId') planId: string, @Param('dayIndex', ParseIntPipe) dayIndex: number) {
+  day(
+    @Param('planId') planId: string,
+    @Param('dayIndex', ParseIntPipe) dayIndex: number,
+  ) {
     return this.catalogue.day(planId, dayIndex);
-  }
-
-  @Get('bible/translations')
-  @ApiOperation({ summary: 'Translations a member can read in' })
-  @Header('Cache-Control', 'public, max-age=86400')
-  translations() {
-    return this.passages.translations();
   }
 
   @Get('bible/passage')

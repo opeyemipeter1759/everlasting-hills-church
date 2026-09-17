@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/session-constants";
 import { getBackendBaseUrl } from "@/lib/api/backend-url";
 import type { MeResponse } from "@/lib/api";
+import { userMessageForError } from "@/lib/api/user-message";
 
 export interface ApiError {
   message: string;
@@ -83,7 +84,11 @@ async function request<T>(method: string, path: string, options: FetchOptions = 
     }
     const err: ApiError = {
       status: response.status,
-      message: errorBody?.error?.message ?? response.statusText,
+      message: userMessageForError({
+        status: response.status,
+        message: errorBody?.error?.message ?? response.statusText,
+        code: errorBody?.error?.code,
+      }),
       code: errorBody?.error?.code,
       requestId: errorBody?.error?.requestId,
       details: errorBody?.error?.details,

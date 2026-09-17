@@ -399,6 +399,13 @@
             "example": "10:00 AM",
             "type": "string"
           },
+          "greeting": {
+            "description": "Salutation for the email copy, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
+          },
           "imageUrl": {
             "description": "Image to show alongside the announcement (from /uploads/image)",
             "type": "string"
@@ -572,6 +579,13 @@
           "body": {
             "example": "<p>Dear church family,</p>",
             "type": "string"
+          },
+          "greeting": {
+            "description": "Salutation that opens this email, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
           },
           "name": {
             "example": "Monthly Newsletter",
@@ -1690,6 +1704,94 @@
         ],
         "type": "object"
       },
+      "PledgeDto": {
+        "properties": {
+          "amount": {
+            "description": "The whole pledge in naira",
+            "example": 250000,
+            "type": "number"
+          },
+          "completeBy": {
+            "description": "Expected date to complete the pledge",
+            "example": "2026-12-31",
+            "type": "string"
+          },
+          "confirmed": {
+            "description": "The pledge confirmation, which must be ticked",
+            "type": "boolean"
+          },
+          "contactMe": {
+            "description": "Whether the project team may contact them about the pledge",
+            "type": "boolean"
+          },
+          "email": {
+            "example": "tomike@example.com",
+            "type": "string"
+          },
+          "fullName": {
+            "example": "Tomike Kolajo",
+            "type": "string"
+          },
+          "installmentAmount": {
+            "description": "Per installment, for weekly or monthly",
+            "example": 25000,
+            "type": "number"
+          },
+          "method": {
+            "enum": [
+              "ONE_TIME",
+              "WEEKLY",
+              "MONTHLY",
+              "OTHER"
+            ],
+            "type": "string"
+          },
+          "methodOther": {
+            "description": "How they will redeem it, when method is OTHER",
+            "type": "string"
+          },
+          "phone": {
+            "description": "WhatsApp number",
+            "example": "0810 235 5043",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName",
+          "phone",
+          "email",
+          "amount",
+          "method",
+          "completeBy",
+          "contactMe",
+          "confirmed"
+        ],
+        "type": "object"
+      },
+      "PledgeInstallmentDto": {
+        "properties": {
+          "amount": {
+            "description": "Amount given in whole naira",
+            "example": 25000,
+            "type": "number"
+          },
+          "givenOn": {
+            "description": "Date the installment was given",
+            "example": "2026-09-15",
+            "type": "string"
+          },
+          "note": {
+            "description": "Optional reminder for the pledger",
+            "example": "Bank transfer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "amount",
+          "givenOn"
+        ],
+        "type": "object"
+      },
       "PrayerRequestDto": {
         "properties": {
           "email": {
@@ -1939,6 +2041,13 @@
           "body": {
             "example": "<p>Dear church family,</p>",
             "type": "string"
+          },
+          "greeting": {
+            "description": "Salutation that opens this email, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
           },
           "subject": {
             "example": "Here is what happened this month at EHC",
@@ -2297,6 +2406,13 @@
             "example": "10:00 AM",
             "type": "string"
           },
+          "greeting": {
+            "description": "Salutation for the email copy, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
+          },
           "imageUrl": {
             "description": "Image to show alongside the announcement (from /uploads/image), or \"\" to remove it",
             "type": "string"
@@ -2408,6 +2524,13 @@
       },
       "UpdateEmailSettingsDto": {
         "properties": {
+          "greeting": {
+            "description": "Church-wide default salutation, e.g. \"Dear\" → \"Dear Daphne,\". Null restores \"Hello\". Individual emails can override it.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
+          },
           "logoUrl": {
             "description": "Public URL of the header logo (from /uploads/image). Null restores the default site logo.",
             "nullable": true,
@@ -2421,6 +2544,13 @@
           "body": {
             "example": "<p>Dear church family,</p>",
             "type": "string"
+          },
+          "greeting": {
+            "description": "Salutation that opens this email, e.g. \"Dear\" → \"Dear Daphne,\". Null/omitted = the church-wide default.",
+            "example": "Dear",
+            "maxLength": 40,
+            "nullable": true,
+            "type": "object"
           },
           "name": {
             "example": "Monthly Newsletter",
@@ -8845,7 +8975,17 @@
     "/bible/today": {
       "get": {
         "operationId": "DailyScriptureController_today",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "translation",
+            "required": false,
+            "schema": {
+              "example": "KJV",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -8880,11 +9020,6 @@
             "description": "Error response"
           }
         },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
         "summary": "Today’s scripture for the church, changing at midnight in Lagos",
         "tags": [
           "reading-plans"
@@ -8893,7 +9028,7 @@
     },
     "/bible/translations": {
       "get": {
-        "operationId": "ReadingPlanController_translations",
+        "operationId": "DailyScriptureController_translations",
         "parameters": [],
         "responses": {
           "200": {
@@ -8927,12 +9062,7 @@
             "description": "Error response"
           }
         },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Translations a member can read in",
+        "summary": "Bible translations available for the public daily scripture",
         "tags": [
           "reading-plans"
         ]
@@ -12697,7 +12827,7 @@
             "access-token": []
           }
         ],
-        "summary": "Email branding — the header logo every outgoing email uses",
+        "summary": "Email branding — the header logo and salutation every outgoing email uses",
         "tags": [
           "emails"
         ]
@@ -12752,7 +12882,7 @@
             "access-token": []
           }
         ],
-        "summary": "Change the header logo (pass logoUrl: null to restore the default)",
+        "summary": "Change the header logo and/or greeting word (pass null to restore a default; omitted fields are left as they are)",
         "tags": [
           "emails"
         ]
@@ -21379,6 +21509,512 @@
         ]
       }
     },
+    "/pledges/{campaign}": {
+      "get": {
+        "operationId": "PledgesController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Every pledge to this project, with totals (ADMIN+)",
+        "tags": [
+          "pledges"
+        ]
+      },
+      "post": {
+        "operationId": "PledgesController_submit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PledgeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Make or update your pledge to this project",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
+    "/pledges/{campaign}/{id}": {
+      "delete": {
+        "operationId": "PledgesController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove a pledge and its recorded installments (ADMIN+)",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
+    "/pledges/{campaign}/mine": {
+      "get": {
+        "operationId": "PledgesController_mine",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Your own pledge to this project, or null if you have not pledged",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
+    "/pledges/{campaign}/mine/installments": {
+      "post": {
+        "operationId": "PledgesController_addMineInstallment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PledgeInstallmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Record an installment on your own pledge",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
+    "/pledges/{campaign}/public": {
+      "post": {
+        "description": "Available without an account. If the visitor is signed in, the pledge is linked to them and updates their existing project pledge.",
+        "operationId": "PledgesController_submitPublic",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PledgeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Pledge submitted successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Make a pledge from the public church website",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
+    "/pledges/{campaign}/track/{token}": {
+      "get": {
+        "operationId": "PledgesController_track",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Open a public pledge using its private tracking link",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
+    "/pledges/{campaign}/track/{token}/installments": {
+      "post": {
+        "operationId": "PledgesController_addTrackedInstallment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PledgeInstallmentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Record an installment using a private public tracking link",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
     "/push/preferences": {
       "get": {
         "operationId": "PushController_getPreferences",
@@ -25730,7 +26366,7 @@
             "access-token": []
           }
         ],
-        "summary": "Get one unit with full member list including roles (ADMIN+)",
+        "summary": "Get one unit with full member list including roles (ADMIN+, or the head of its department)",
         "tags": [
           "units"
         ]

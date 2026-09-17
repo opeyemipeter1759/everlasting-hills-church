@@ -10,6 +10,8 @@ export interface EmailTemplate {
   name: string;
   subject: string;
   body: string;
+  /** Per-template salutation; null = the church-wide default. */
+  greeting: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -18,6 +20,7 @@ export interface TemplateFormValues {
   name: string;
   subject: string;
   body: string;
+  greeting?: string | null;
 }
 
 /** WORKERS = anyone in a unit plus every leader. */
@@ -56,11 +59,18 @@ export interface EmailSend {
   createdAt: string;
 }
 
+export type EmailSettingsPatch = Partial<Pick<EmailSettings, "logoUrl" | "greeting">>;
+
 export interface EmailSettings {
   /** What the admin saved — null means "use the site's default logo". */
   logoUrl: string | null;
   /** What emails actually render with right now. */
   effectiveLogoUrl: string;
+  /** Saved salutation word ("Dear", "Hi"…) — null means the default. */
+  greeting: string | null;
+  /** The word emails actually open with right now, e.g. "Hello" → "Hello Daphne,". */
+  effectiveGreeting: string;
+  defaultGreeting: string;
 }
 
 /**
@@ -165,6 +175,8 @@ export function useSendEmail() {
       templateId?: string;
       subject: string;
       body: string;
+      /** Salutation for this send; null/omitted = the church-wide default. */
+      greeting?: string | null;
       audience: AudienceFilter;
       attachments?: EmailAttachment[];
     }) => api.post<EmailSend>("/emails/send", body),
@@ -184,7 +196,8 @@ export function useEmailSettings() {
 export function useUpdateEmailSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { logoUrl: string | null }) => api.put<EmailSettings>("/emails/settings", body),
+    // Partial: only the fields you pass are changed; null resets one to its default.
+    mutationFn: (body: EmailSettingsPatch) => api.put<EmailSettings>("/emails/settings", body),
     onSuccess: (data) => qc.setQueryData([...KEY, "settings"], data),
   });
 }

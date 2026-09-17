@@ -138,6 +138,7 @@ import {
   Newspaper,
   UserCog,
   Library,
+  HandCoins,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -196,6 +197,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       // How the church is reading, read-only, so leaders know who to encourage.
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
+      // Sound & Media Project pledges members make from their home page.
+      { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
       { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },

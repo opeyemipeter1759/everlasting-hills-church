@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, Check, Copy, Download, Loader2, Share2 } from "lucide-react";
-import { useDailyScripture } from "@/lib/api/daily-scripture";
+import { BookOpen, Check, Copy, Download, Languages, Loader2, Share2 } from "lucide-react";
+import { useDailyScripture, useScriptureVersions } from "@/lib/api/daily-scripture";
+import { HILLS_CONFESSION } from "@/lib/hills-confession";
 import {
   createScriptureImage,
   saveScriptureImage,
@@ -10,7 +11,11 @@ import {
 } from "@/lib/scripture-share";
 
 export default function DailyScriptureCard() {
-  const { data, isLoading, isError, refetch } = useDailyScripture();
+  const [translationCode, setTranslationCode] = useState("");
+  const { data: translations } = useScriptureVersions();
+  const { data, isLoading, isError, isFetching, refetch } = useDailyScripture(
+    translationCode || undefined,
+  );
   const [image, setImage] = useState<{
     key: string;
     file: File;
@@ -23,7 +28,12 @@ export default function DailyScriptureCard() {
   const imageKey = data
     ? `${data.date}|${data.reference}|${data.translationCode}|${data.text}`
     : "";
-  const readyImage = image?.key === imageKey ? image : null;
+  // placeholderData keeps the old wording visible while another translation
+  // loads. Never let that old image be shared under the newly selected label.
+  const translationChanging = Boolean(
+    translationCode && data && data.translationCode !== translationCode,
+  );
+  const readyImage = !translationChanging && image?.key === imageKey ? image : null;
 
   useEffect(() => {
     if (!data) return;
@@ -151,9 +161,78 @@ export default function DailyScriptureCard() {
             · {data.translationCode}
           </span>
         </p>
+
+        {/* Said out loud after the reading, so it is set to be spoken: one
+            line per breath, and loud enough on the page to be read across a
+            room. */}
+        <div
+          role="group"
+          aria-labelledby="hills-confession-title"
+          className="mt-6 border-t border-[#f5d49a]/30 pt-5"
+        >
+          <p
+            id="hills-confession-title"
+            className="text-[11px] font-black uppercase tracking-[0.22em] text-[#f5d49a]"
+          >
+            The Hills Confession
+            <span className="font-semibold normal-case tracking-normal text-white/60">
+              {" "}· say it out loud
+            </span>
+          </p>
+          <p className="mt-3 max-w-3xl font-display text-lg font-bold leading-snug tracking-tight text-white sm:text-2xl">
+            {HILLS_CONFESSION.map((line, index) => (
+              <span key={line} className="block">
+                {index === HILLS_CONFESSION.length - 1 ? (
+                  <span className="text-[#f5d49a]">{line}</span>
+                ) : (
+                  line
+                )}
+              </span>
+            ))}
+          </p>
+        </div>
       </div>
 
       <div className="p-4 sm:p-5">
+        <label className="mb-4 block rounded-xl border border-[#E7CDD3] bg-[#FFF8F9] p-3 dark:border-white/10 dark:bg-white/[0.04]">
+          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-[#87102C] dark:text-rose-300">
+            <Languages size={15} aria-hidden="true" />
+            Bible version for this status
+          </span>
+          <span className="mt-1 block text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+            The scripture stays the same; the wording, image and copied text use the version you choose.
+          </span>
+          <span className="relative mt-2 block">
+            <select
+              aria-label="Bible version for this status"
+              value={translationCode || data.translationCode}
+              onChange={(event) => {
+                setMessage("");
+                setCopied(false);
+                setTranslationCode(event.target.value);
+              }}
+              disabled={!translations?.length}
+              className="min-h-11 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-10 text-sm font-semibold text-gray-800 outline-none transition focus:border-[#87102C] focus:ring-2 focus:ring-[#87102C]/15 disabled:opacity-60 dark:border-white/15 dark:bg-[#171719] dark:text-white"
+            >
+              {!translations?.some((translation) => translation.code === data.translationCode) && (
+                <option value={data.translationCode}>{data.translationName}</option>
+              )}
+              {translations?.map((translation) => (
+                <option key={translation.code} value={translation.code}>
+                  {translation.code} — {translation.name}
+                </option>
+              ))}
+            </select>
+            <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+              {translationChanging || isFetching ? <Loader2 size={15} className="animate-spin" /> : "⌄"}
+            </span>
+          </span>
+          {translationChanging && (
+            <span role="status" className="mt-2 block text-xs font-medium text-[#87102C] dark:text-rose-300">
+              Loading {translationCode} wording…
+            </span>
+          )}
+        </label>
         <p className="text-sm text-gray-600 dark:text-gray-300">
           Encourage someone today. Share a scripture image with our church’s
           name and website.

@@ -865,6 +865,11 @@ model Service {
   cancelledAt           DateTime?
   cancelReason          String?
   location              String?
+  /// Set when the "we missed you" emails for this service were dispatched — the
+  /// absentee-email job claims a service by writing this before sending, so a
+  /// retried or duplicated run can never mail the same people twice.
+  absenteeMailSentAt    DateTime?
+  absenteeMailCount     Int?
   AttendanceRecord      AttendanceRecord[]
   ServiceHeadcount      ServiceHeadcount?
   Assignments           ServiceAssignment[]
@@ -1657,6 +1662,8 @@ model Announcement {
   title              String
   body               String
   imageUrl           String?
+  /// Salutation for the email copy of this announcement. Null = the church-wide EmailSettings.greeting.
+  greeting           String?
   audience           String      @default("all") // display label only ("all" or "custom"); actual targeting lives in the fields below
   sendEmail          Boolean     @default(false)
   status             EventStatus @default(PUBLISHED)
@@ -1751,6 +1758,8 @@ model EmailTemplate {
   name        String
   subject     String
   body        String
+  /// Per-template salutation ("Dear" → "Dear Daphne,"). Null = the church-wide EmailSettings.greeting.
+  greeting    String?
   createdById String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1786,6 +1795,8 @@ model EmailSettings {
   id        String   @id
   tenantId  String   @unique
   logoUrl   String?
+  /// Salutation word that opens every outgoing email ("Hello" → "Hello Daphne,"). Null = default.
+  greeting  String?
   updatedAt DateTime @default(now()) @updatedAt
   updatedBy String?
   Tenant    Tenant   @relation(fields: [tenantId], references: [id])

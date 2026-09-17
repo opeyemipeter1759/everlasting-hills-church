@@ -38,6 +38,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [theme, isInitialized]);
 
+  // Leaving the dashboard (to the public site, say) unmounts this provider.
+  // The preference stays saved; the class must not follow the member onto
+  // pages that were never designed for it.
+  useEffect(() => () => document.documentElement.classList.remove("dark"), []);
+
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "light" ? "dark" : "light"));
   };

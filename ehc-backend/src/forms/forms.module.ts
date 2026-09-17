@@ -12,10 +12,12 @@ import { TestimonyFormService } from './services/testimony-form.service';
 import { ServeTeamFormService } from './services/serve-team-form.service';
 import { ContactFormService } from './services/contact-form.service';
 import { HomeCellFormService } from './services/home-cell-form.service';
+import { PledgeService } from './services/pledge.service';
+import { PledgesController } from './pledges.controller';
 
 @Module({
   imports: [PrismaModule, AttendanceModule],
-  controllers: [FormsController, FormsMiscController],
+  controllers: [FormsController, FormsMiscController, PledgesController],
   providers: [
     FormsEmailDispatchService,
     FirstTimerFormService,
@@ -26,6 +28,7 @@ import { HomeCellFormService } from './services/home-cell-form.service';
     ServeTeamFormService,
     ContactFormService,
     HomeCellFormService,
+    PledgeService,
   ],
 })
 export class FormsModule {}

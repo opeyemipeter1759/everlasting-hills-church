@@ -21,6 +21,7 @@ const navLinks = [
   { label: "Home Cell", href: "/home-cell" },
   { label: "Visit", href: "/visit" },
   { label: "Give", href: "/give" },
+  { label: "Pledge", href: "/pledge" },
 ];
 
 // Shown last (after Give), only when signed in — jumps straight to the check-in panel on the

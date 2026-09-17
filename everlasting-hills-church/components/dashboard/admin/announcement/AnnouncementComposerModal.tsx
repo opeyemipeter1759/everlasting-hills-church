@@ -11,6 +11,7 @@ import { EMPTY_FORM } from "./types";
 import type { Announcement, AnnouncementFormValues, TargetGender } from "./types";
 import RichText from "@/components/ui/display/RichText";
 import { postAi } from "@/lib/ai/client";
+import GreetingPicker from "../emails/GreetingPicker";
 
 const inputCls =
   "w-full rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-[#87102C]/40 focus:ring-2 focus:ring-[#87102C]/10 transition-all";
@@ -68,6 +69,7 @@ export default function AnnouncementComposerModal({
             body: editingItem.body,
             imageUrl: editingItem.imageUrl ?? "",
             sendEmail: editingItem.sendEmail,
+            greeting: editingItem.greeting ?? null,
             targetRoles: editingItem.targetRoles,
             targetGenders: editingItem.targetGenders,
             targetPeople: editingItem.targetProfileIds.map((id, i) => ({ id, name: editingItem.targetProfileNames[i] ?? "Unknown" })),
@@ -271,6 +273,7 @@ export default function AnnouncementComposerModal({
             only narrows who additionally gets emailed. */}
         {values.sendEmail && (
         <div className="rounded-2xl border border-gray-200 dark:border-white/10 p-4 space-y-3.5">
+          <GreetingPicker value={values.greeting} onChange={(g) => set("greeting", g)} allowToken={false} />
           <div className="flex items-center gap-2">
             <Users size={14} className="text-gray-400" />
             <p className="text-sm font-semibold text-gray-700 dark:text-white/80">Who should receive the email?</p>

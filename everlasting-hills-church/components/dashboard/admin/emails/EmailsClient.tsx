@@ -16,6 +16,7 @@ import EmailTemplateList from "./EmailTemplateList";
 import SentHistoryList from "./SentHistoryList";
 import SendEmailModal from "./SendEmailModal";
 import EmailLogoCard from "./EmailLogoCard";
+import EmailGreetingCard from "./EmailGreetingCard";
 
 export default function EmailsClient() {
   const [tab, setTab] = useState<"TEMPLATES" | "SENT">("TEMPLATES");
@@ -48,6 +49,7 @@ export default function EmailsClient() {
       </div>
 
       <EmailLogoCard />
+      <EmailGreetingCard />
 
       <div className="flex items-center gap-1 border-b border-gray-200 dark:border-white/10">
         {(["TEMPLATES", "SENT"] as const).map((t) => (
