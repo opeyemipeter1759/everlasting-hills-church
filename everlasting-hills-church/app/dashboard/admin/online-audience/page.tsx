@@ -65,7 +65,7 @@ export default function OnlineAudiencePage() {
   ];
 
   return (
-    <div className="px-5 space-y-6">
+    <div className="max-w-6xl mx-auto px-4 sm:px-5 space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -87,7 +87,7 @@ export default function OnlineAudiencePage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           { label: "Total Check-ins", value: total, icon: Users, color: "text-[#87102C] dark:text-[#e8768a]", bg: "bg-[#87102C]/10 dark:bg-[#87102C]/20" },
           { label: "2nd Visit", value: secondTimers, icon: CheckCircle2, color: "text-amber-500", bg: "bg-amber-500/10" },
@@ -145,37 +145,69 @@ export default function OnlineAudiencePage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 dark:border-white/[0.06]">
-                  {["Name", "Email", "Stage", "Visit #", "Channel", "Last Check-in"].map((h) => (
-                    <th key={h} className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-gray-400 dark:text-white/30">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-white/[0.04]">
-                {records.map((r) => (
-                  <tr key={r.id} className="group transition-colors hover:bg-gray-50/60 dark:hover:bg-white/[0.02]">
-                    <td className="px-5 py-3.5 font-semibold text-gray-900 dark:text-white">{r.name || "—"}</td>
-                    <td className="px-5 py-3.5 text-gray-500 dark:text-white/50">{r.email}</td>
-                    <td className="px-5 py-3.5">
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${STAGE_CLASSES[r.stage] ?? "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"}`}>
-                        {STAGE_LABELS[r.stage] ?? r.stage}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 tabular-nums font-bold text-gray-700 dark:text-white/70">{r.visitCount}</td>
-                    <td className="px-5 py-3.5 text-gray-400 dark:text-white/40 uppercase text-[11px] font-semibold">{r.channel}</td>
-                    <td className="px-5 py-3.5 text-gray-400 dark:text-white/40">
-                      {fmt(r.lastCheckedIn)} <span className="text-[11px]">{fmtTime(r.lastCheckedIn)}</span>
-                    </td>
+          <>
+            {/* Mobile: stacked cards — a 6-column table has no good small-screen shape */}
+            <div className="divide-y divide-gray-50 dark:divide-white/[0.04] sm:hidden">
+              {records.map((r) => (
+                <div key={r.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 dark:text-white truncate">{r.name || "—"}</p>
+                      <p className="text-xs text-gray-500 dark:text-white/50 truncate">{r.email}</p>
+                    </div>
+                    <span className={`flex-shrink-0 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${STAGE_CLASSES[r.stage] ?? "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"}`}>
+                      {STAGE_LABELS[r.stage] ?? r.stage}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-gray-400 dark:text-white/40">
+                    <span className="uppercase font-semibold">{r.channel} · Visit #{r.visitCount}</span>
+                    <span>{fmt(r.lastCheckedIn)} {fmtTime(r.lastCheckedIn)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop/tablet: table */}
+            <div className="hidden overflow-x-auto sm:block">
+              <table className="w-full table-fixed text-sm">
+                <colgroup>
+                  <col className="w-[18%]" />
+                  <col className="w-[28%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[16%]" />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-gray-100 dark:border-white/[0.06]">
+                    {["Name", "Email", "Stage", "Visit #", "Channel", "Last Check-in"].map((h) => (
+                      <th key={h} className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-[0.12em] text-gray-400 dark:text-white/30">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-white/[0.04]">
+                  {records.map((r) => (
+                    <tr key={r.id} className="group transition-colors hover:bg-gray-50/60 dark:hover:bg-white/[0.02]">
+                      <td className="px-5 py-3.5 font-semibold text-gray-900 dark:text-white truncate">{r.name || "—"}</td>
+                      <td className="px-5 py-3.5 text-gray-500 dark:text-white/50 truncate">{r.email}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${STAGE_CLASSES[r.stage] ?? "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"}`}>
+                          {STAGE_LABELS[r.stage] ?? r.stage}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 tabular-nums font-bold text-gray-700 dark:text-white/70">{r.visitCount}</td>
+                      <td className="px-5 py-3.5 text-gray-400 dark:text-white/40 uppercase text-[11px] font-semibold">{r.channel}</td>
+                      <td className="px-5 py-3.5 text-gray-400 dark:text-white/40">
+                        {fmt(r.lastCheckedIn)} <span className="text-[11px]">{fmtTime(r.lastCheckedIn)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
         {!q.isLoading && records.length > 0 && (
           <div className="border-t border-gray-100 dark:border-white/[0.06] px-5 py-3">

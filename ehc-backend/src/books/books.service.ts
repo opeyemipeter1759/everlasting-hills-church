@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventStatus } from '@prisma/client';
 import { randomUUID } from 'crypto';
@@ -100,5 +100,35 @@ export class BooksService {
     const result = await this.prisma.book.deleteMany({ where: { id, tenantId: this.tenantId } });
     if (result.count === 0) throw new NotFoundException('Book not found');
     return { id, deleted: true };
+  }
+
+  /** Flat comments on a book, oldest first — like a normal discussion thread. */
+  async getComments(bookId: string) {
+    return this.prisma.bookComment.findMany({
+      where: { bookId, tenantId: this.tenantId },
+      orderBy: { createdAt: 'asc' },
+      include: { Member: { select: { firstName: true, lastName: true, photoUrl: true } } },
+    });
+  }
+
+  async createComment(memberId: string, bookId: string, content: string) {
+    await this.findOne(bookId, { allowDraft: false });
+    return this.prisma.bookComment.create({
+      data: { id: randomUUID(), tenantId: this.tenantId, bookId, memberId, content: content.trim() },
+      include: { Member: { select: { firstName: true, lastName: true, photoUrl: true } } },
+    });
+  }
+
+  /** Author or a PASTOR may delete a comment, same policy as SermonComment. */
+  async deleteComment(commentId: string, requester: { memberId: string; isPastor: boolean }) {
+    const comment = await this.prisma.bookComment.findFirst({
+      where: { id: commentId, tenantId: this.tenantId },
+    });
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.memberId !== requester.memberId && !requester.isPastor) {
+      throw new BadRequestException('You can only delete your own comments');
+    }
+    await this.prisma.bookComment.delete({ where: { id: commentId } });
+    return { id: commentId, deleted: true };
   }
 }

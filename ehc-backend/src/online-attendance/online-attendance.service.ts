@@ -122,6 +122,27 @@ export class OnlineAttendanceService {
     return { action: 'checked_in', stage: record.stage, visitCount: record.visitCount };
   }
 
+  /**
+   * Called on every login. If this account's email already has an online
+   * check-in record from before they had an account (SECOND_TIMER), upgrade
+   * it to ONLINE_MEMBER now that they really are one — otherwise the admin's
+   * Online Audience list never reflects that a visitor became a member.
+   */
+  async upgradeToMemberIfKnown(email: string, supabaseUserId: string, name?: string) {
+    const normEmail = email.trim().toLowerCase();
+    const result = await this.prisma.onlineCheckIn.updateMany({
+      where: { tenantId: this.tenantId, email: normEmail, stage: { not: 'ONLINE_MEMBER' } },
+      data: {
+        stage: 'ONLINE_MEMBER',
+        supabaseUserId,
+        ...(name ? { name } : {}),
+      },
+    });
+    if (result.count > 0) {
+      this.logger.log(`Upgraded ${result.count} online check-in record(s) for ${normEmail} to ONLINE_MEMBER`);
+    }
+  }
+
   async list(opts: { channel?: string; stage?: string; take: number; skip: number }) {
     const where = {
       tenantId: this.tenantId,

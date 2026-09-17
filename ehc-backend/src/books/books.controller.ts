@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -7,6 +7,7 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { CreateBookCommentDto } from './dto/create-book-comment.dto';
 
 /**
  * The church's book library. Admin-managed (ADMIN+); the /feed and /:id read
@@ -57,5 +58,29 @@ export class BooksController {
   @ApiOperation({ summary: 'Delete a book (ADMIN+)' })
   remove(@Param('id') id: string) {
     return this.books.remove(id);
+  }
+
+  @Get(':id/comments')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'List comments on a book (MEMBER+)' })
+  getComments(@Param('id') id: string) {
+    return this.books.getComments(id);
+  }
+
+  @Post('me/:id/comments')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Post a comment on a book (MEMBER+)' })
+  createComment(@Param('id') id: string, @Body() body: CreateBookCommentDto, @CurrentUser() actor: AuthUser) {
+    if (!actor.memberId) throw new BadRequestException('No member profile linked to this account');
+    return this.books.createComment(actor.memberId, id, body.content);
+  }
+
+  @Delete('me/comments/:commentId')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Delete my comment (or any comment, if PASTOR+)' })
+  deleteComment(@Param('commentId') commentId: string, @CurrentUser() actor: AuthUser) {
+    if (!actor.memberId) throw new BadRequestException('No member profile linked to this account');
+    const isPastor = actor.effectiveRoles?.some((r) => ['PASTOR', 'SUPER_ADMIN'].includes(r)) ?? false;
+    return this.books.deleteComment(commentId, { memberId: actor.memberId, isPastor });
   }
 }

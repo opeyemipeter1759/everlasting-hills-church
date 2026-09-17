@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 
 export interface BookCollection {
@@ -46,5 +46,43 @@ export function useBook(id?: string) {
     queryKey: ["books", "one", id],
     queryFn: () => api.get<Book>(`/books/${id}`),
     enabled: Boolean(id),
+  });
+}
+
+export interface BookComment {
+  id: string;
+  content: string;
+  createdAt: string;
+  memberId: string;
+  Member: { firstName: string; lastName: string; photoUrl: string | null };
+}
+
+export function useBookComments(bookId?: string) {
+  return useQuery({
+    queryKey: ["books", "comments", bookId],
+    queryFn: () => api.get<BookComment[]>(`/books/${bookId}/comments`),
+    enabled: !!bookId,
+  });
+}
+
+export function useAddBookComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookId, content }: { bookId: string; content: string }) =>
+      api.post<BookComment>(`/books/me/${bookId}/comments`, { content }),
+    onSuccess: (_data, { bookId }) => {
+      queryClient.invalidateQueries({ queryKey: ["books", "comments", bookId] });
+    },
+  });
+}
+
+export function useDeleteBookComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId }: { commentId: string; bookId: string }) =>
+      api.delete<{ id: string; deleted: boolean }>(`/books/me/comments/${commentId}`),
+    onSuccess: (_data, { bookId }) => {
+      queryClient.invalidateQueries({ queryKey: ["books", "comments", bookId] });
+    },
   });
 }

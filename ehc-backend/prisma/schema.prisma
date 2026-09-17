@@ -191,6 +191,7 @@ model Member {
   PastoralAlert                 PastoralAlert[]
   SermonBookmark                SermonBookmark[]
   SermonComment                 SermonComment[]
+  BookComment                   BookComment[]
   SermonDirectMessageSent       SermonDirectMessage[]      @relation("SermonDirectMessageSender")
   SermonDirectMessageReceived   SermonDirectMessage[]      @relation("SermonDirectMessageRecipient")
   BirthdayGreetingReceived      BirthdayGreeting[]         @relation("BirthdayGreetingRecipient")
@@ -945,6 +946,7 @@ model Tenant {
   Announcement           Announcement[]
   Book                   Book[]
   BookCollection         BookCollection[]
+  BookComment            BookComment[]
   EmailTemplate          EmailTemplate[]
   EmailSend              EmailSend[]
   EmailSettings          EmailSettings?
@@ -1702,9 +1704,26 @@ model Book {
   updatedAt    DateTime        @updatedAt
   Tenant       Tenant          @relation(fields: [tenantId], references: [id])
   Collection   BookCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  BookComment  BookComment[]
 
   @@index([tenantId, status])
   @@index([collectionId])
+}
+
+/// A member's comment on a book — flat, no reply threading, unlike SermonComment.
+model BookComment {
+  id        String   @id
+  tenantId  String
+  bookId    String
+  memberId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Book      Book     @relation(fields: [bookId], references: [id])
+  Member    Member   @relation(fields: [memberId], references: [id])
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([bookId, createdAt])
 }
 
 /// A named shelf ("Faith", "Power", "Healing") that books are grouped under.
