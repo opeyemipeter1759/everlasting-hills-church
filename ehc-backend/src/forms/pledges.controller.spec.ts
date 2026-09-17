@@ -38,4 +38,10 @@ describe('PledgesController access', () => {
       ),
     ).not.toBe(true);
   });
+
+  it('keeps removing a pledge behind a sign-in', () => {
+    expect(
+      Reflect.getMetadata(IS_PUBLIC_KEY, PledgesController.prototype.remove),
+    ).not.toBe(true);
+  });
 });

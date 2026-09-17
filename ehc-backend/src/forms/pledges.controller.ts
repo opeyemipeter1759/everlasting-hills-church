@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Header,
   HttpCode,
@@ -31,8 +32,8 @@ import { PledgeService } from './services/pledge.service';
  * Financial pledges towards church projects, such as the Sound & Media
  * Project at /pledges/sound-media.
  *
- * Members pledge and see their own pledge. The full list is ADMIN and above:
- * Admin, Admin Head, Pastor and Super Admin.
+ * Members pledge and see their own pledge. The full list, and removing a
+ * pledge, are ADMIN and above: Admin, Admin Head, Pastor and Super Admin.
  */
 @ApiTags('pledges')
 @Controller('pledges')
@@ -124,5 +125,13 @@ export class PledgesController {
   @ApiOperation({ summary: 'Every pledge to this project, with totals (ADMIN+)' })
   list(@Param('campaign') campaign: string) {
     return this.pledges.list(campaign);
+  }
+
+  @Delete(':campaign/:id')
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Remove a pledge and its recorded installments (ADMIN+)' })
+  remove(@Param('campaign') campaign: string, @Param('id') id: string) {
+    return this.pledges.remove(campaign, id);
   }
 }

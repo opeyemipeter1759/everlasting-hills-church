@@ -154,6 +154,20 @@ export function usePledges(campaign: string = SOUND_MEDIA.key) {
   });
 }
 
+/**
+ * Remove a pledge for good, with its recorded installments. Leaders only; the
+ * member sees the appeal again as if they had never pledged.
+ */
+export function useDeletePledge(campaign: string = SOUND_MEDIA.key) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<{ id: string; deleted: boolean }>(`/pledges/${campaign}/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["pledges", campaign, "all"] });
+    },
+  });
+}
+
 /** Open the progress page associated with a private public tracking link. */
 export function useTrackedPledge(token: string, campaign: string = SOUND_MEDIA.key) {
   return useQuery({

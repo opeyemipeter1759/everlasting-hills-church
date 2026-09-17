@@ -450,6 +450,22 @@ export class PledgeService {
     return this.present(saved);
   }
 
+  /**
+   * Removes a pledge for good, along with any installments recorded on it.
+   * For leaders only: a test entry, a duplicate, or someone who asked the
+   * church to withdraw. The member simply sees the appeal again.
+   */
+  async remove(campaignKey: string, id: string) {
+    const campaign = this.campaignOrThrow(campaignKey);
+    const { count } = await this.prisma.formSubmission.deleteMany({
+      where: { id, tenantId: this.tenantId, type: this.type(campaign) },
+    });
+    if (count === 0) {
+      throw new NotFoundException('That pledge no longer exists. It may already have been removed.');
+    }
+    return { id, deleted: true };
+  }
+
   /** Every pledge to the project, newest first, with the totals leaders ask for. */
   async list(campaignKey: string) {
     const campaign = this.campaignOrThrow(campaignKey);

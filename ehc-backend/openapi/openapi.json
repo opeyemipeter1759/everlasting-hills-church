@@ -21629,6 +21629,70 @@
         ]
       }
     },
+    "/pledges/{campaign}/{id}": {
+      "delete": {
+        "operationId": "PledgesController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove a pledge and its recorded installments (ADMIN+)",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
     "/pledges/{campaign}/mine": {
       "get": {
         "operationId": "PledgesController_mine",

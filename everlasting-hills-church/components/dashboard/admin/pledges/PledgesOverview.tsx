@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CircleDollarSign, Download, HandCoins, Loader2, PhoneCall, RefreshCw, Search, Users } from "lucide-react";
-import { formatNaira, normalizePledge, pledgePlan, usePledges, type Pledge } from "@/lib/api/pledges";
+import { CircleDollarSign, Download, HandCoins, Loader2, PhoneCall, RefreshCw, Search, Trash2, Users } from "lucide-react";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { showToast } from "@/components/ui/toast/toast";
+import { userMessageForError } from "@/lib/api/user-message";
+import { formatNaira, normalizePledge, pledgePlan, useDeletePledge, usePledges, type Pledge } from "@/lib/api/pledges";
 
 /**
  * Pledges to the Sound & Media Project, for pastors, admins and the project
@@ -69,8 +72,21 @@ function downloadCsv(pledges: Pledge[]) {
 
 export default function PledgesOverview() {
   const { data, isLoading, isError, isFetching, refetch } = usePledges();
+  const deletePledge = useDeletePledge();
   const [search, setSearch] = useState("");
   const [contactOnly, setContactOnly] = useState(false);
+  const [removing, setRemoving] = useState<Pledge | null>(null);
+
+  async function confirmRemove() {
+    if (!removing) return;
+    try {
+      await deletePledge.mutateAsync(removing.id);
+      showToast.success(`${removing.fullName}'s pledge was removed.`);
+      setRemoving(null);
+    } catch (error) {
+      showToast.error(userMessageForError(error, "The pledge couldn't be removed. Please try again."));
+    }
+  }
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -207,6 +223,9 @@ export default function PledgesOverview() {
                     <th scope="col" className="px-4 py-3">Complete by</th>
                     <th scope="col" className="px-4 py-3">Contact</th>
                     <th scope="col" className="px-4 py-3">Pledged</th>
+                    <th scope="col" className="px-4 py-3">
+                      <span className="sr-only">Actions</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/5">
@@ -275,6 +294,17 @@ export default function PledgesOverview() {
                           <span className="block text-xs">updated {shortDate(pledge.updatedAt)}</span>
                         )}
                       </td>
+                      <td className="px-2 py-2">
+                        <button
+                          type="button"
+                          onClick={() => setRemoving(pledge)}
+                          aria-label={`Remove ${pledge.fullName}'s pledge`}
+                          title="Remove this pledge"
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-gray-400 hover:bg-red-50 hover:text-red-600 dark:text-white/40 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+                        >
+                          <Trash2 size={16} aria-hidden="true" />
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -283,6 +313,31 @@ export default function PledgesOverview() {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={Boolean(removing)}
+        title="Remove this pledge?"
+        description={
+          removing ? (
+            <>
+              <strong>{removing.fullName}</strong>&apos;s pledge of {formatNaira(removing.amount)}
+              {removing.installments.length > 0 && (
+                <>
+                  , and the {removing.installments.length}{" "}
+                  {removing.installments.length === 1 ? "installment" : "installments"} recorded on it (
+                  {formatNaira(removing.amountGiven)}),
+                </>
+              )}{" "}
+              will be deleted. This cannot be undone, and no email is sent.
+            </>
+          ) : null
+        }
+        confirmLabel="Remove pledge"
+        tone="danger"
+        loading={deletePledge.isPending}
+        onConfirm={confirmRemove}
+        onCancel={() => setRemoving(null)}
+      />
     </div>
   );
 }

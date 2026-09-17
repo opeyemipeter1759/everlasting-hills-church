@@ -58,6 +58,7 @@ function makeService(existing: Record<string, unknown> | null = null) {
       delete: jest.fn(async ({ where }: { where: { id: string } }) => ({
         id: where.id,
       })),
+      deleteMany: jest.fn(async () => ({ count: 1 })),
       findMany: jest.fn(async () => []),
     },
   };
@@ -597,5 +598,40 @@ describe('the list leaders see', () => {
         where: { tenantId: 'tenant-1', type: 'pledge:sound-media' },
       }),
     );
+  });
+});
+
+describe('a leader removing a pledge', () => {
+  it('removes only that pledge, within this church and this project', async () => {
+    const { service, prisma } = makeService();
+
+    await expect(service.remove('sound-media', 'pledge-1')).resolves.toEqual({
+      id: 'pledge-1',
+      deleted: true,
+    });
+    expect(prisma.formSubmission.deleteMany).toHaveBeenCalledWith({
+      where: { id: 'pledge-1', tenantId: 'tenant-1', type: 'pledge:sound-media' },
+    });
+  });
+
+  it('says so when the pledge is already gone', async () => {
+    const { service, prisma } = makeService();
+    (prisma.formSubmission.deleteMany as jest.Mock).mockResolvedValue({ count: 0 });
+
+    await expect(service.remove('sound-media', 'missing')).rejects.toThrow(
+      /no longer exists/,
+    );
+    await expect(service.remove('sound-media', 'missing')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('never reaches the database for an appeal that does not exist', async () => {
+    const { service, prisma } = makeService();
+
+    await expect(service.remove('new-roof', 'pledge-1')).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    expect(prisma.formSubmission.deleteMany).not.toHaveBeenCalled();
   });
 });
