@@ -22,12 +22,12 @@ interface ListResponse {
 
 const STAGE_LABELS: Record<string, string> = {
   SECOND_TIMER: "2nd Visit",
-  RETURNING: "Returning",
+  ONLINE_MEMBER: "Member",
 };
 
 const STAGE_CLASSES: Record<string, string> = {
   SECOND_TIMER: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-  RETURNING:    "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+  ONLINE_MEMBER: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
 };
 
 function fmt(d: string) {
@@ -56,12 +56,12 @@ export default function OnlineAudiencePage() {
   const records = q.data?.data ?? [];
   const total = q.data?.meta.total ?? 0;
   const secondTimers = records.filter((r) => r.stage === "SECOND_TIMER").length;
-  const returning = records.filter((r) => r.stage !== "SECOND_TIMER").length;
+  const onlineMembers = records.filter((r) => r.stage === "ONLINE_MEMBER").length;
 
   const stages = [
     { value: "", label: "All" },
     { value: "SECOND_TIMER", label: "2nd Visit" },
-    { value: "RETURNING", label: "Returning" },
+    { value: "ONLINE_MEMBER", label: "Members" },
   ];
 
   return (
@@ -74,7 +74,7 @@ export default function OnlineAudiencePage() {
           </p>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Online Audience</h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-white/50">
-            Track visitors who check in via the online attendance link.
+            Members and visitors who check in as watching online.
           </p>
         </div>
         <button
@@ -91,7 +91,7 @@ export default function OnlineAudiencePage() {
         {[
           { label: "Total Check-ins", value: total, icon: Users, color: "text-[#87102C] dark:text-[#e8768a]", bg: "bg-[#87102C]/10 dark:bg-[#87102C]/20" },
           { label: "2nd Visit", value: secondTimers, icon: CheckCircle2, color: "text-amber-500", bg: "bg-amber-500/10" },
-          { label: "Returning", value: returning, icon: Calendar, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+          { label: "Members", value: onlineMembers, icon: Calendar, color: "text-emerald-500", bg: "bg-emerald-500/10" },
         ].map((card) => (
           <div key={card.label} className="flex items-center gap-4 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5">
             <div className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl ${card.bg}`}>
@@ -141,7 +141,7 @@ export default function OnlineAudiencePage() {
             </div>
             <p className="text-sm font-semibold text-gray-500 dark:text-white/40">No check-ins yet</p>
             <p className="text-xs text-gray-400 dark:text-white/30">
-              Online visitors who submit their email will appear here.
+              Members and visitors who check in as watching online will appear here.
             </p>
           </div>
         ) : (

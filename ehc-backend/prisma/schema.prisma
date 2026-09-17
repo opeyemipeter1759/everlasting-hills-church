@@ -943,6 +943,8 @@ model Tenant {
   MemberArticle          MemberArticle[]
   MemberArticleLike      MemberArticleLike[]
   Announcement           Announcement[]
+  Book                   Book[]
+  BookCollection         BookCollection[]
   EmailTemplate          EmailTemplate[]
   EmailSend              EmailSend[]
   EmailSettings          EmailSettings?
@@ -1678,6 +1680,46 @@ model Announcement {
 
   @@index([tenantId, createdAt])
   @@index([tenantId, status])
+}
+
+/// A book the church makes available to members — admin-uploaded (PDF) via
+/// /uploads/document, read in-browser rather than downloaded. A flat library,
+/// not a "currently reading" pick: every PUBLISHED book stays visible to
+/// members until unpublished or deleted. DRAFT lets an admin stage one before
+/// it's visible, same status pattern as Announcement.
+model Book {
+  id           String          @id
+  tenantId     String
+  title        String
+  author       String?
+  description  String?
+  coverUrl     String?
+  fileUrl      String
+  status       EventStatus     @default(PUBLISHED)
+  collectionId String?
+  createdById  String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  Tenant       Tenant          @relation(fields: [tenantId], references: [id])
+  Collection   BookCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status])
+  @@index([collectionId])
+}
+
+/// A named shelf ("Faith", "Power", "Healing") that books are grouped under.
+/// Deleting one does not delete its books — they fall back to uncategorized.
+model BookCollection {
+  id        String   @id
+  tenantId  String
+  name      String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  Book      Book[]
+
+  @@index([tenantId])
 }
 
 /// Reusable, saved email content an admin can send (possibly more than once) to a

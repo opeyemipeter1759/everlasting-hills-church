@@ -371,6 +371,13 @@ export function useCheckIn() {
   });
 }
 
+/** For a member watching from home rather than in the building — distinct from useCheckIn. */
+export function useOnlineCheckIn() {
+  return useMutation({
+    mutationFn: () => api.post<{ action: string; stage: string; visitCount: number }>('/online-attendance/me'),
+  });
+}
+
 export interface MemberAttendanceOverview {
   attendance: {
     marked: number;

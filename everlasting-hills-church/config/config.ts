@@ -137,6 +137,7 @@ import {
   BookMarked,
   Newspaper,
   UserCog,
+  Library,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -202,6 +203,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Calendar",      href: "/dashboard/admin/calendar",      icon: CalendarRange, minRole: "ADMIN" },
       { label: "Usher",         href: "/dashboard/admin/usher",         icon: Tally5,        minRole: "HEAD_USHER" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
+      { label: "Books",         href: "/dashboard/admin/books",         icon: Library,       minRole: "ADMIN" },
       { label: "Emails",        href: "/dashboard/admin/emails",        icon: Mail,          minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
@@ -251,6 +253,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // read. Both were reachable only from a dashboard card before this.
       { label: "Bible Plan",          href: "/dashboard/reading",            icon: BookMarked,          minRole: "MEMBER" },
       { label: "Articles",            href: "/dashboard/articles",           icon: Newspaper,           minRole: "MEMBER" },
+      { label: "Books",                href: "/dashboard/books",             icon: Library,             minRole: "MEMBER" },
       { label: "My Course",           href: "/dashboard/courses",            icon: GraduationCap,       minRole: "MEMBER" },
       { label: "Explore Course",           href: "/dashboard/explore-courses",            icon: Compass,       minRole: "MEMBER" },
       { label: "Unit", href: "/dashboard/unit", icon: Users2, minRole: "MEMBER", requiresAccess: "unitMember", dynamicUnits: "member" },

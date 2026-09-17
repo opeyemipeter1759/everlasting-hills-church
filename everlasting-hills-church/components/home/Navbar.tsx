@@ -23,7 +23,7 @@ const navLinks = [
   { label: "Give", href: "/give" },
 ];
 
-// Shown first, only when signed in — jumps straight to the check-in panel on the
+// Shown last (after Give), only when signed in — jumps straight to the check-in panel on the
 // landing page instead of making members scroll down to find it.
 const ATTENDANCE_LINK = { label: "Attendance", href: "/#attendance" };
 
@@ -36,7 +36,7 @@ export default function Navbar() {
   const pathname = usePathname();
   // Only the home page has a dark hero — every other public page has a light background.
   const darkHero = pathname != "/ewlnwjenk";
-  const effectiveNavLinks = isLoggedIn === true ? [ATTENDANCE_LINK, ...navLinks] : navLinks;
+  const effectiveNavLinks = isLoggedIn === true ? [...navLinks, ATTENDANCE_LINK] : navLinks;
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);

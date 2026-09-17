@@ -29,6 +29,7 @@ import {
   History,
   Newspaper,
   UserCog,
+  Library,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -72,6 +73,7 @@ export const NAV_GROUPS: NavGroup[] = [
       // church. It sits beside the reading plan because that is where most of
       // them start.
       { label: "Articles",        href: "/dashboard/articles",         icon: Newspaper,       minRole: "MEMBER" },
+      { label: "Books",           href: "/dashboard/books",            icon: Library,         minRole: "MEMBER" },
       { label: "Notifications",   href: "/dashboard/settings/notifications", icon: Bell,      minRole: "MEMBER" },
       { label: "Prayer Requests", href: "/prayer-request",             icon: Heart,           minRole: "MEMBER" },
       { label: "Testimonies",     href: "/testimony",                  icon: MessageSquare,   minRole: "MEMBER" },
@@ -114,6 +116,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
+      { label: "Books",         href: "/dashboard/admin/books",   icon: Library,       minRole: "ADMIN" },
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
       { label: "Units",         href: "/dashboard/admin/units",   icon: Network,       minRole: "ADMIN" },
