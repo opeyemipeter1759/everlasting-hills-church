@@ -39,11 +39,13 @@ async function safeGet<T>(path: string): Promise<T | null> {
 export default async function FirstTimersPage() {
   const [visitorsRaw, onlineRaw] = await Promise.all([
     safeGet<VisitorApi[]>("/visitors?limit=200"),
-    safeGet<{ email: string }[]>("/online-attendance?take=500"),
+    // This endpoint paginates, so after serverApi strips the outer envelope the
+    // rows are still one level down in `data`, not a bare array.
+    safeGet<{ data: { email: string }[] }>("/online-attendance?take=200"),
   ]);
 
   const onlineEmails = new Set(
-    (onlineRaw ?? []).map((r) => r.email.toLowerCase()),
+    (onlineRaw?.data ?? []).map((r) => r.email.toLowerCase()),
   );
 
   const visitors: VisitorRow[] = (visitorsRaw ?? []).map((v) => ({
