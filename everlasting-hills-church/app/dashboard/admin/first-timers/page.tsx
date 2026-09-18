@@ -39,11 +39,11 @@ async function safeGet<T>(path: string): Promise<T | null> {
 export default async function FirstTimersPage() {
   const [visitorsRaw, onlineRaw] = await Promise.all([
     safeGet<VisitorApi[]>("/visitors?limit=200"),
-    safeGet<{ data: { email: string }[] }>("/online-attendance?take=500"),
+    safeGet<{ email: string }[]>("/online-attendance?take=500"),
   ]);
 
   const onlineEmails = new Set(
-    (onlineRaw?.data ?? []).map((r) => r.email.toLowerCase()),
+    (onlineRaw ?? []).map((r) => r.email.toLowerCase()),
   );
 
   const visitors: VisitorRow[] = (visitorsRaw ?? []).map((v) => ({
