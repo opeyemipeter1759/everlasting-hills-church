@@ -4852,6 +4852,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pledges/{campaign}/track/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Email a pledger their private tracking link again
+         * @description Always answers the same way, whether or not that address has a pledge. A new link replaces any earlier one.
+         */
+        post: operations["PledgesController_resendTrackingLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/push/preferences": {
         parameters: {
             query?: never;
@@ -6651,6 +6671,23 @@ export interface paths {
         patch: operations["VisitorsController_update"];
         trace?: never;
     };
+    "/visitors/{id}/whatsapp-community": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark someone added to the WhatsApp community, or undo it */
+        patch: operations["VisitorsController_setWhatsappAdded"];
+        trace?: never;
+    };
     "/visitors/count": {
         parameters: {
             query?: never;
@@ -6694,6 +6731,23 @@ export interface paths {
         };
         /** First-timer count broken down by attendance type */
         get: operations["VisitorsController_stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/visitors/whatsapp-community": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** First-timers who asked to join the WhatsApp community, waiting first */
+        get: operations["VisitorsController_whatsappCommunity"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7512,6 +7566,10 @@ export interface components {
              */
             note?: string;
         };
+        PledgeTrackingLinkDto: {
+            /** @example tomike@example.com */
+            email: string;
+        };
         PrayerRequestDto: {
             /** @example john@example.com */
             email?: string;
@@ -8162,6 +8220,10 @@ export interface components {
             /** @description Original submission timestamp, for backfilling historical data */
             submittedAt?: string;
             whatsappInterest?: boolean;
+        };
+        WhatsappCommunityDto: {
+            /** @description True once this person has been added to the WhatsApp community */
+            added: boolean;
         };
     };
     responses: never;
@@ -19480,6 +19542,43 @@ export interface operations {
             };
         };
     };
+    PledgesController_resendTrackingLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PledgeTrackingLinkDto"];
+            };
+        };
+        responses: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     PushController_getPreferences: {
         parameters: {
             query?: never;
@@ -24186,6 +24285,43 @@ export interface operations {
             };
         };
     };
+    VisitorsController_setWhatsappAdded: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WhatsappCommunityDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     VisitorsController_count: {
         parameters: {
             query?: never;
@@ -24263,6 +24399,39 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description { total, onsite, online } */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    VisitorsController_whatsappCommunity: {
+        parameters: {
+            query?: {
+                includeAdded?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
             200: {
                 headers: {
                     [name: string]: unknown;

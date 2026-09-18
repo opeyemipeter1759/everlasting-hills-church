@@ -6,6 +6,9 @@ import { VisitorsService } from './visitors.service';
 import { VisitorBulkImportService } from './services/visitor-bulk-import.service';
 import { BulkImportVisitorsDto } from './dto/bulk-import-visitor.dto';
 import { UpdateVisitorDto } from './dto/update-visitor.dto';
+import { WhatsappCommunityDto } from './dto/whatsapp-community.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthUser } from '../auth/types/auth-user';
 
 /**
  * Admin visitor endpoints. ADMIN+ via class-level @Roles.
@@ -45,6 +48,28 @@ export class VisitorsController {
 
   // Declared before :id — a literal segment route below a wildcard :id route
   // would otherwise be swallowed by getById("stats").
+  @Get('whatsapp-community')
+  @ApiOperation({
+    summary: 'First-timers who asked to join the WhatsApp community, waiting first',
+  })
+  @ApiQuery({ name: 'includeAdded', required: false, type: Boolean })
+  async whatsappCommunity(@Query('includeAdded') includeAdded?: string) {
+    return this.visitorsService.whatsappCommunity({
+      includeAdded: includeAdded === 'true',
+    });
+  }
+
+  @Patch(':id/whatsapp-community')
+  @ApiOperation({ summary: 'Mark someone added to the WhatsApp community, or undo it' })
+  @ApiBody({ type: WhatsappCommunityDto })
+  async setWhatsappAdded(
+    @Param('id') id: string,
+    @Body() body: WhatsappCommunityDto,
+    @CurrentUser() actor: AuthUser,
+  ) {
+    return this.visitorsService.setWhatsappAdded(id, body.added, actor.profileId);
+  }
+
   @Get('stats')
   @ApiOperation({ summary: 'First-timer count broken down by attendance type' })
   @ApiOkResponse({ description: '{ total, onsite, online }' })

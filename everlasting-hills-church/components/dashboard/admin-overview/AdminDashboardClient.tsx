@@ -30,6 +30,7 @@ import MinistryUnitsOverview from "./MinistryUnitsOverview";
 import RecentActivitiesCard from "./RecentActivitiesCard";
 import QuickActionsCard from "./QuickActionsCard";
 import FollowUpCard from "./FollowUpCard";
+import WhatsAppCommunityCard from "./WhatsAppCommunityCard";
 
 const STAT_META: Record<StatKey, { icon: LucideIcon; iconBg: string; iconColor: string; href: string }> = {
   members: { icon: Users, iconBg: "bg-[#FFE8ED] dark:bg-[#87102C]/25", iconColor: "text-[#87102C] dark:text-[#FFB3C1]", href: "/dashboard/admin/members" },
@@ -148,9 +149,11 @@ export default function AdminDashboardClient() {
             )}
           </div>
 
-          {/* Follow-up status — members absent 3+ Sundays (moved from /dashboard) */}
+          {/* Two to-do lists side by side: who to call back, and who is still
+              waiting to be added to the WhatsApp community. */}
           <div className="grid gap-6 lg:grid-cols-2">
             <FollowUpCard />
+            <WhatsAppCommunityCard />
           </div>
 
           {/* Ministry units — full width */}

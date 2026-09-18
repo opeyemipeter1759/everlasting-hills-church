@@ -1575,6 +1575,11 @@ model Visitor {
   serviceExperience   String?
   prayerPoint         String?
   whatsappInterest    Boolean?
+  /// Set when someone who asked for the WhatsApp community has actually been
+  /// added to it, and by which profile. Null means still waiting: that is the
+  /// church's to-do list on the admin home page.
+  whatsappAddedAt     DateTime?
+  whatsappAddedBy     String?
   /// Consent checkbox on the first-timer form: only when true may this person be
   /// surfaced as a suggested friend-match for someone else (their own reason for
   /// matching them to another guest, not a blanket "may we share your info" flag).

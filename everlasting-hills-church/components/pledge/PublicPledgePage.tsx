@@ -7,6 +7,7 @@ import PledgeForm, {
   PLEDGE_INTRO,
 } from "@/components/dashboard/member/member-home/PledgeForm";
 import { formatNaira, pledgePlan, type Pledge } from "@/lib/api/pledges";
+import RemittanceAccount from "@/components/pledge/RemittanceAccount";
 
 const longDate = (date: string) =>
   new Intl.DateTimeFormat("en-GB", {
@@ -73,8 +74,13 @@ export default function PublicPledgePage() {
             <h2 className="mt-3 text-3xl font-black tracking-tight text-[#261015]">Financial Pledge Form</h2>
             <p className="mt-5 text-sm leading-7 text-[#6d565b]">{PLEDGE_INTRO}</p>
 
-            <Link href="/give" className="mt-7 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#87102C] hover:underline">
-              View church giving accounts <ArrowRight size={16} aria-hidden="true" />
+            <RemittanceAccount className="mt-7" />
+
+            <Link href="/give" className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#87102C] hover:underline">
+              View all church giving accounts <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link href="/pledge/track" className="mt-1 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-[#87102C] hover:underline">
+              Already pledged? Find my tracking link <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
 
@@ -94,8 +100,10 @@ export default function PublicPledgePage() {
                 {saved.trackingToken && (
                   <p className="mt-4 max-w-md rounded-xl bg-[#fff3e1] p-3 text-xs leading-relaxed text-[#765b45]">
                     Your private tracking link is also in your confirmation email. Keep it private and use it whenever you record an installment.
+                    If you lose it, <Link href="/pledge/track" className="font-bold underline">ask for it again</Link>.
                   </p>
                 )}
+                <RemittanceAccount className="mt-5 w-full max-w-md text-left" />
                 <Link
                   href={saved.trackingToken ? `/pledge/track/${saved.trackingToken}` : "/dashboard"}
                   className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl bg-[#87102C] px-7 font-bold text-white hover:bg-[#6f0d24]"

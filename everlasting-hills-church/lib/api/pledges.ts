@@ -15,6 +15,18 @@ export const PLEDGE_METHOD_LABEL: Record<PledgeMethod, string> = {
 /** The Sound & Media Project appeal. The key is the API path segment. */
 export const SOUND_MEDIA = { key: "sound-media", title: "Sound & Media Project" } as const;
 
+/**
+ * Where pledges to the project are remitted. The same account the API repeats
+ * in every pledge email (PLEDGE_CAMPAIGNS in pledge.service.ts), and the
+ * "Building / Project" line on the giving page.
+ */
+export const SOUND_MEDIA_ACCOUNT = {
+  bank: "Globus Bank",
+  purpose: "Building / Project",
+  accountNumber: "2007060223",
+  accountName: "EVERLASTING HEIGHTS MINISTRIES",
+} as const;
+
 export interface PledgeInput {
   fullName: string;
   phone: string;
@@ -165,6 +177,18 @@ export function useDeletePledge(campaign: string = SOUND_MEDIA.key) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["pledges", campaign, "all"] });
     },
+  });
+}
+
+/**
+ * Emails a pledger their private tracking link again, for someone who pledged
+ * without an account. The answer is the same whether or not that address has a
+ * pledge, so nobody can use it to discover who gives.
+ */
+export function useRequestTrackingLink(campaign: string = SOUND_MEDIA.key) {
+  return useMutation({
+    mutationFn: (email: string) =>
+      api.post<{ sent: boolean }>(`/pledges/${campaign}/track/resend`, { email }),
   });
 }
 

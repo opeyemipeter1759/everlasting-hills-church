@@ -21,7 +21,18 @@ import type { PledgeInstallmentDto } from '../dto/pledge-installment.dto';
  * appeal is one line here rather than a new feature.
  */
 export const PLEDGE_CAMPAIGNS = {
-  'sound-media': { title: 'Sound & Media Project' },
+  'sound-media': {
+    title: 'Sound & Media Project',
+    // The church's project account. Shown on the pledge pages and repeated in
+    // every pledge email, so nobody has to hunt for where to send the money.
+    // Same account as the "Building / Project" line on the giving page.
+    remittance: {
+      bank: 'Globus Bank',
+      accountName: 'EVERLASTING HEIGHTS MINISTRIES',
+      accountNumber: '2007060223',
+      purpose: 'Building / Project',
+    },
+  },
 } as const;
 export type PledgeCampaign = keyof typeof PLEDGE_CAMPAIGNS;
 
@@ -378,6 +389,83 @@ export class PledgeService {
     return this.addInstallment(campaign, row, input);
   }
 
+  /**
+   * Emails a pledger their private tracking link again.
+   *
+   * People who pledge without an account only hold that link, and links get
+   * lost. A fresh token replaces the old one, so a forwarded or leaked link
+   * stops working. The answer never says whether the address has a pledge:
+   * the same reply goes to everyone, or an unrelated person could use this to
+   * learn who has given.
+   */
+  async resendTrackingLink(campaignKey: string, email: string) {
+    const campaign = this.campaignOrThrow(campaignKey);
+    const row = await this.findByEmail(campaign, email);
+    const sent = { sent: true } as const;
+    if (!row) return sent;
+
+    const pledge = row.data as unknown as StoredPledge;
+    const title = PLEDGE_CAMPAIGNS[campaign].title;
+    if (pledge.profileId) {
+      this.emails.dispatch({
+        to: pledge.email,
+        subject: `Tracking your ${title} pledge`,
+        text: [
+          `Dear ${pledge.fullName.split(/\s+/)[0]},`,
+          '',
+          `This pledge belongs to your church account, so it is on your dashboard rather than a private link: ${this.frontendUrl}/dashboard`,
+          '',
+          'Sign in with this email address to see your giving and record an installment.',
+          '',
+          'Everlasting Hills Church',
+        ].join('\n'),
+        tag: 'pledge-tracking-link',
+      });
+      return sent;
+    }
+
+    const trackingToken = randomBytes(24).toString('base64url');
+    await this.prisma.formSubmission.update({
+      where: { id: row.id },
+      data: {
+        data: {
+          ...pledge,
+          trackingTokenHash: this.hashTrackingToken(trackingToken),
+          updatedAt: new Date().toISOString(),
+        } as unknown as Prisma.InputJsonValue,
+      },
+    });
+    this.emails.dispatch({
+      to: pledge.email,
+      subject: `Your private tracking link for the ${title}`,
+      text: [
+        `Dear ${pledge.fullName.split(/\s+/)[0]},`,
+        '',
+        `Track your giving here: ${this.frontendUrl}/pledge/track/${trackingToken}`,
+        '',
+        'Keep this link private; anyone who has it can see and update your pledge. Any link you were sent before this one no longer works.',
+        '',
+        ...this.remittanceLines(campaign),
+        '',
+        'Everlasting Hills Church',
+      ].join('\n'),
+      tag: 'pledge-tracking-link',
+    });
+    return sent;
+  }
+
+  /** Where to send the money, for every pledge email. */
+  private remittanceLines(campaign: PledgeCampaign) {
+    const { bank, accountName, accountNumber, purpose } =
+      PLEDGE_CAMPAIGNS[campaign].remittance;
+    return [
+      'Account to remit to:',
+      `  ${bank} (${purpose})`,
+      `  ${accountNumber}`,
+      `  ${accountName}`,
+    ];
+  }
+
   private hashTrackingToken(token: string) {
     return createHash('sha256').update(token).digest('hex');
   }
@@ -590,6 +678,8 @@ export class PledgeService {
         '',
         ...details.slice(3),
         '',
+        ...this.remittanceLines(campaign),
+        '',
         trackingLine,
         '',
         'If your circumstances change, you can update your pledge from your dashboard or let the project team know.',
@@ -622,6 +712,7 @@ export class PledgeService {
         `Total recorded: ${naira(amountGiven)}`,
         `Balance remaining: ${naira(balance)}`,
         '',
+        ...(balance > 0 ? [...this.remittanceLines(campaign), ''] : []),
         'Thank you for your support.',
         'Everlasting Hills Church',
       ].join('\n'),
