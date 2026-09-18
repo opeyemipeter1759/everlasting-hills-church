@@ -24,6 +24,7 @@ interface VisitorApi {
   dateOfBirth?: string | null;
   address?: string | null;
   whatsappInterest?: boolean | null;
+  whatsappAddedAt?: string | null;
   serviceExperience?: string | null;
   prayerPoint?: string | null;
 }
@@ -66,6 +67,7 @@ export default async function FirstTimersPage() {
     dateOfBirth: v.dateOfBirth ?? null,
     address: v.address ?? null,
     whatsappInterest: v.whatsappInterest ?? null,
+    whatsappAddedAt: v.whatsappAddedAt ?? null,
     hasOnlineCheckIn: v.email ? onlineEmails.has(v.email.toLowerCase()) : false,
     serviceExperience: v.serviceExperience ?? null,
     prayerPoint: v.prayerPoint ?? null,

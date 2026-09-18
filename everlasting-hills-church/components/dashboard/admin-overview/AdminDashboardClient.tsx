@@ -31,6 +31,7 @@ import RecentActivitiesCard from "./RecentActivitiesCard";
 import QuickActionsCard from "./QuickActionsCard";
 import FollowUpCard from "./FollowUpCard";
 import WhatsAppCommunityCard from "./WhatsAppCommunityCard";
+import ProjectPledgesCard from "./ProjectPledgesCard";
 
 const STAT_META: Record<StatKey, { icon: LucideIcon; iconBg: string; iconColor: string; href: string }> = {
   members: { icon: Users, iconBg: "bg-[#FFE8ED] dark:bg-[#87102C]/25", iconColor: "text-[#87102C] dark:text-[#FFB3C1]", href: "/dashboard/admin/members" },
@@ -155,6 +156,9 @@ export default function AdminDashboardClient() {
             <FollowUpCard />
             <WhatsAppCommunityCard />
           </div>
+
+          {/* What the project has been pledged, and what has actually come in. */}
+          <ProjectPledgesCard />
 
           {/* Ministry units — full width */}
           {visible("units") && (

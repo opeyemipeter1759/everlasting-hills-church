@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Loader2, MessageCircle, Undo2 } from "lucide-react";
+import Link from "next/link";
+import { Check, ChevronRight, Loader2, MessageCircle, Undo2 } from "lucide-react";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
 import {
@@ -33,12 +34,15 @@ function waitedFor(submittedAt: string) {
 
 export default function WhatsAppCommunityCard() {
   const [showAdded, setShowAdded] = useState(false);
-  const { data, isLoading } = useWhatsappCommunity(showAdded);
+  const { data, isLoading, isError, refetch } = useWhatsappCommunity(showAdded);
   const mark = useMarkWhatsappAdded();
   const [pending, setPending] = useState<string | null>(null);
 
   const waiting = data?.waiting ?? [];
   const added = data?.added ?? [];
+  // A long list belongs on the first-timers page; this is a to-do card.
+  const SHOWN = 8;
+  const shown = waiting.slice(0, SHOWN);
 
   async function setAdded(person: WhatsappCommunityPerson, added: boolean) {
     setPending(person.id);
@@ -75,13 +79,20 @@ export default function WhatsAppCommunityCard() {
 
       {isLoading ? (
         <p className="px-6 py-6 text-center text-sm text-[#8a7e80] dark:text-white/40">Loading…</p>
+      ) : isError ? (
+        <p role="alert" className="px-6 py-6 text-center text-sm text-[#8a7e80] dark:text-white/40">
+          This list couldn&apos;t load.{" "}
+          <button type="button" onClick={() => refetch()} className="min-h-9 font-bold text-[#87102C] underline dark:text-[#FFB3C1]">
+            Try again
+          </button>
+        </p>
       ) : waiting.length === 0 ? (
         <p className="px-6 py-6 text-center text-sm text-[#8a7e80] dark:text-white/40">
           Everyone who asked has been added.
         </p>
       ) : (
         <ul className="max-h-64 divide-y divide-[#E7CDD3]/30 overflow-y-auto dark:divide-white/[0.06]">
-          {waiting.map((person) => {
+          {shown.map((person) => {
             const chat = person.phone ? whatsappChatLink(person.phone) : null;
             return (
               <li key={person.id} className="flex items-center gap-3 px-6 py-3.5">
@@ -120,6 +131,14 @@ export default function WhatsAppCommunityCard() {
       )}
 
       <div className="border-t border-[#E7CDD3]/40 px-6 py-3 dark:border-white/[0.07]">
+        {waiting.length > SHOWN && (
+          <Link
+            href="/dashboard/admin/first-timers"
+            className="mb-2 flex min-h-9 items-center gap-1 text-xs font-bold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+          >
+            View all {waiting.length} in First Timers <ChevronRight size={13} aria-hidden="true" />
+          </Link>
+        )}
         <button
           type="button"
           onClick={() => setShowAdded((current) => !current)}

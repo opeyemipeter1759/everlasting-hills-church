@@ -21,6 +21,8 @@ export interface VisitorRow {
   dateOfBirth?: string | null;
   address?: string | null;
   whatsappInterest?: boolean | null;
+  /** Set once they have been added to the WhatsApp community. */
+  whatsappAddedAt?: string | null;
   serviceExperience?: string | null;
   prayerPoint?: string | null;
 }

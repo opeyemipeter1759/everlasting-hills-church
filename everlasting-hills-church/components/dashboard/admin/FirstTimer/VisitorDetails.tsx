@@ -14,6 +14,10 @@ import {
   Phone,
   Sparkles,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { showToast } from "@/components/ui/toast/toast";
+import { userMessageForError } from "@/lib/api/user-message";
+import { useMarkWhatsappAdded, whatsappChatLink } from "@/lib/api/whatsapp-community";
 import type { VisitorRow } from "./types";
 import type { FirstTimerAnalysis } from "@/app/api/ai/first-timer/route";
 import { postAi } from "@/lib/ai/client";
@@ -141,12 +145,13 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
                 {visitor.address}
               </span>
             )}
-            {visitor.whatsappInterest != null && (
+            {visitor.whatsappInterest === false && (
               <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
                 <MessageCircle size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
-                {visitor.whatsappInterest ? "Wants the WhatsApp group" : "Not interested in WhatsApp"}
+                Not interested in WhatsApp
               </span>
             )}
+            {visitor.whatsappInterest === true && <WhatsappCommunityAction visitor={visitor} />}
           </div>
 
           {/* How they found us */}
@@ -255,5 +260,64 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
         </div>
       </td>
     </tr>
+  );
+}
+
+/**
+ * The WhatsApp community answer, with the action beside it: somebody asked to
+ * be added, and this is where whoever adds them says so. The same flag drives
+ * the to-do card on the admin home page, so marking it here clears it there.
+ */
+function WhatsappCommunityAction({ visitor }: { visitor: VisitorRow }) {
+  const router = useRouter();
+  const mark = useMarkWhatsappAdded();
+  const [added, setAdded] = useState(Boolean(visitor.whatsappAddedAt));
+  const chat = visitor.phone ? whatsappChatLink(visitor.phone) : null;
+
+  async function toggle() {
+    const next = !added;
+    try {
+      await mark.mutateAsync({ id: visitor.id, added: next });
+      setAdded(next);
+      showToast.success(
+        next
+          ? `${visitor.firstName} marked as added to the community.`
+          : `${visitor.firstName} is back on the to-add list.`,
+      );
+      // The page is server-rendered, so pull the saved value back.
+      router.refresh();
+    } catch (error) {
+      showToast.error(userMessageForError(error, "That couldn't be saved. Please try again."));
+    }
+  }
+
+  return (
+    <span className="flex flex-wrap items-center gap-2 text-[#8a7e80] dark:text-white/45">
+      <MessageCircle size={12} className="flex-shrink-0 text-[#b8a8ac] dark:text-white/30" />
+      {added ? "In the WhatsApp community" : "Wants the WhatsApp group"}
+      {chat && (
+        <a
+          href={chat}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
+        >
+          Open chat
+        </a>
+      )}
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={mark.isPending}
+        className={`inline-flex min-h-8 items-center gap-1 rounded-lg px-2.5 text-[11px] font-bold transition-colors disabled:opacity-60 ${
+          added
+            ? "border border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-400 dark:hover:bg-emerald-500/10"
+            : "bg-emerald-600 text-white hover:bg-emerald-700"
+        }`}
+      >
+        {mark.isPending ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+        {added ? "Added — undo" : "Mark as added"}
+      </button>
+    </span>
   );
 }

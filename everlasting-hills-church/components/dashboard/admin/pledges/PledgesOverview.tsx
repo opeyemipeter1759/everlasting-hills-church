@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CircleDollarSign, Download, HandCoins, Loader2, PhoneCall, RefreshCw, Search, Trash2, Users } from "lucide-react";
+import { CheckCircle2, CircleDollarSign, Download, HandCoins, Loader2, PhoneCall, RefreshCw, Search, Trash2, Users } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
@@ -106,9 +106,14 @@ export default function PledgesOverview() {
   const tiles = totals
     ? [
         { label: "Total pledged", value: formatNaira(totals.amount), icon: HandCoins },
-        { label: "Giving recorded", value: formatNaira(totals.amountGiven), icon: CircleDollarSign },
+        { label: "Received so far", value: formatNaira(totals.amountGiven), icon: CircleDollarSign },
         { label: "Balance remaining", value: formatNaira(totals.balance), icon: HandCoins },
         { label: "Pledges", value: totals.pledges.toLocaleString("en-NG"), icon: Users },
+        {
+          label: "Pledges completed",
+          value: `${(data?.pledges ?? []).filter((pledge) => pledge.balance <= 0).length} of ${totals.pledges}`,
+          icon: CheckCircle2,
+        },
         { label: "Asked to be contacted", value: totals.wantContact.toLocaleString("en-NG"), icon: PhoneCall },
       ]
     : [];
@@ -258,7 +263,13 @@ export default function PledgesOverview() {
                         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
                           <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pledge.progressPercent}%` }} />
                         </div>
-                        <p className="mt-1 text-[11px] text-gray-500 dark:text-white/50">{formatNaira(pledge.balance)} remaining</p>
+                        {pledge.balance <= 0 ? (
+                          <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+                            <CheckCircle2 size={12} aria-hidden="true" /> Completed
+                          </p>
+                        ) : (
+                          <p className="mt-1 text-[11px] text-gray-500 dark:text-white/50">{formatNaira(pledge.balance)} remaining</p>
+                        )}
                         {pledge.installments.length > 0 && (
                           <details className="mt-1.5">
                             <summary className="cursor-pointer text-[11px] font-semibold text-[#87102C] dark:text-rose-300">

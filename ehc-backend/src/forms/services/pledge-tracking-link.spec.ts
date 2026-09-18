@@ -58,7 +58,8 @@ describe('asking for a tracking link again', () => {
     expect(mail.text).toContain('2007060223');
     expect(mail.text).toContain('EVERLASTING HEIGHTS MINISTRIES');
 
-    const saved = prisma.formSubmission.update.mock.calls[0][0].data.data;
+    const saved = (prisma.formSubmission.update as jest.Mock).mock.calls[0][0].data
+      .data as Record<string, string>;
     expect(saved.trackingTokenHash).not.toBe('old-hash');
     expect(saved.trackingTokenHash).toHaveLength(64);
     // The token itself is never stored.

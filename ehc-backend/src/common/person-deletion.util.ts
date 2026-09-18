@@ -20,6 +20,7 @@ export async function deletePersonRecords(
     await tx.sermonReaction.deleteMany({ where: { memberId } });
     await tx.unitMember.deleteMany({ where: { memberId } });
     await tx.sermonComment.deleteMany({ where: { memberId } });
+    await tx.bookComment.deleteMany({ where: { memberId } });
 
     // The member can appear on either side of these relationships.
     await tx.careAssignment.deleteMany({
