@@ -6,6 +6,7 @@ import { WelcomeHero } from "./WelcomeHero";
 import { BirthdayCard } from "./BirthdayCard";
 import { QuickActionsStrip } from "./QuickActionsStrip";
 import { CheckInPanel } from "./CheckInPanel";
+import { OnlineCheckInBar } from "./OnlineCheckInBar";
 import { JourneyBand } from "./JourneyBand";
 import { FeaturedSermonCard } from "./FeaturedSermonCard";
 import { ContinueListeningCard } from "./ContinueListeningCard";
@@ -93,9 +94,10 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           nextService={nextService}
         />
         <AnnouncementsPanel announcements={announcements} />
-
-     
       </div>
+
+      <OnlineCheckInBar />
+
       <JourneyBand
         isNewMember={isNewMember}
         member={member}

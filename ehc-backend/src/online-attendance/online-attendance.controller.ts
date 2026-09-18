@@ -1,10 +1,12 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
 import { Role } from '@prisma/client';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthUser } from '../auth/types/auth-user';
 import { OnlineAttendanceService } from './online-attendance.service';
 
 class CheckInDto {
@@ -23,6 +25,15 @@ export class OnlineAttendanceController {
   @ApiOperation({ summary: 'Record an online attendance check-in (YouTube or Telegram)' })
   checkIn(@Body() dto: CheckInDto) {
     return this.svc.checkIn(dto.email);
+  }
+
+  @Roles(Role.MEMBER)
+  @ApiBearerAuth('access-token')
+  @Post('me')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'A signed-in member marks themselves present while watching online' })
+  checkInMember(@CurrentUser() actor: AuthUser) {
+    return this.svc.checkInMember({ userId: actor.userId, email: actor.email, memberId: actor.memberId });
   }
 
   @Roles(Role.SUPER_ADMIN, Role.ADMIN, Role.PASTOR)
