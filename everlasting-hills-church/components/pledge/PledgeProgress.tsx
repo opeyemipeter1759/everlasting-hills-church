@@ -15,6 +15,7 @@ import {
   type Pledge,
   type PledgeInstallmentTarget,
 } from "@/lib/api/pledges";
+import RemittanceAccount from "@/components/pledge/RemittanceAccount";
 import { userMessageForError } from "@/lib/api/user-message";
 
 const lagosToday = () =>
@@ -188,6 +189,7 @@ export default function PledgeProgress({
                 Record this after you make a payment or transfer. It updates
                 your progress; it does not charge your card.
               </p>
+              <RemittanceAccount tone="surface" />
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="text-xs font-bold text-gray-700 dark:text-white/75">
                   Amount given

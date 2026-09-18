@@ -12,6 +12,7 @@ import {
   type Pledge,
 } from "@/lib/api/pledges";
 import PledgeForm, { PLEDGE_INTRO } from "./PledgeForm";
+import RemittanceAccount from "@/components/pledge/RemittanceAccount";
 import PledgeProgress from "@/components/pledge/PledgeProgress";
 
 /**
@@ -169,6 +170,9 @@ export function PledgeAppeal({ member, userEmail = "" }: PledgeAppealProps) {
           </p>
           <h2 className="mt-2 pr-10 text-2xl font-black tracking-tight">Financial Pledge Form</h2>
           <p className="mt-3 text-sm leading-relaxed text-white/85">{PLEDGE_INTRO}</p>
+        </div>
+        <div className="px-5 pt-5 sm:px-7">
+          <RemittanceAccount tone="surface" />
         </div>
         {saved ? (
           <div role="status" className="space-y-4 p-6 text-center sm:p-8">

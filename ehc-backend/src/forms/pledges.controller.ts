@@ -26,6 +26,7 @@ import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import type { AuthUser } from '../auth/types/auth-user';
 import { PledgeDto } from './dto/pledge.dto';
 import { PledgeInstallmentDto } from './dto/pledge-installment.dto';
+import { PledgeTrackingLinkDto } from './dto/pledge-tracking-link.dto';
 import { PledgeService } from './services/pledge.service';
 
 /**
@@ -67,6 +68,22 @@ export class PledgesController {
     @CurrentUser() actor?: AuthUser,
   ) {
     return this.pledges.submitPublic(actor, campaign, body);
+  }
+
+  @Public()
+  @Post(':campaign/track/resend')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @ApiOperation({
+    summary: 'Email a pledger their private tracking link again',
+    description:
+      'Always answers the same way, whether or not that address has a pledge. A new link replaces any earlier one.',
+  })
+  resendTrackingLink(
+    @Param('campaign') campaign: string,
+    @Body() body: PledgeTrackingLinkDto,
+  ) {
+    return this.pledges.resendTrackingLink(campaign, body.email);
   }
 
   @Public()

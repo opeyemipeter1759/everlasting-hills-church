@@ -78,6 +78,71 @@ export class OnlineAttendanceService {
     return { action: 'checked_in', stage: 'SECOND_TIMER', visitCount: 1 };
   }
 
+  /**
+   * A logged-in member marking themselves present while watching online —
+   * distinct from `checkIn`, which is the public, email-only "second-timer
+   * visitor" funnel gated on an existing Visitor row. This one is always
+   * allowed for any signed-in member and carries their real identity.
+   */
+  async checkInMember(actor: { userId: string; email: string; memberId: string | null }) {
+    const normEmail = actor.email.trim().toLowerCase();
+    const channel = 'DASHBOARD' as const;
+
+    let displayName = normEmail.split('@')[0];
+    if (actor.memberId) {
+      const member = await this.prisma.member.findUnique({
+        where: { id: actor.memberId },
+        select: { firstName: true, lastName: true },
+      });
+      if (member) displayName = `${member.firstName} ${member.lastName}`.trim();
+    }
+
+    const record = await this.prisma.onlineCheckIn.upsert({
+      where: { tenantId_email_channel: { tenantId: this.tenantId, email: normEmail, channel } },
+      update: {
+        visitCount: { increment: 1 },
+        lastCheckedIn: new Date(),
+        supabaseUserId: actor.userId,
+        name: displayName,
+      },
+      create: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        email: normEmail,
+        name: displayName,
+        channel,
+        stage: 'ONLINE_MEMBER',
+        visitCount: 1,
+        lastCheckedIn: new Date(),
+        supabaseUserId: actor.userId,
+      },
+    });
+
+    this.logger.log(`Online member check-in: ${normEmail} (visit #${record.visitCount})`);
+    return { action: 'checked_in', stage: record.stage, visitCount: record.visitCount };
+  }
+
+  /**
+   * Called on every login. If this account's email already has an online
+   * check-in record from before they had an account (SECOND_TIMER), upgrade
+   * it to ONLINE_MEMBER now that they really are one — otherwise the admin's
+   * Online Audience list never reflects that a visitor became a member.
+   */
+  async upgradeToMemberIfKnown(email: string, supabaseUserId: string, name?: string) {
+    const normEmail = email.trim().toLowerCase();
+    const result = await this.prisma.onlineCheckIn.updateMany({
+      where: { tenantId: this.tenantId, email: normEmail, stage: { not: 'ONLINE_MEMBER' } },
+      data: {
+        stage: 'ONLINE_MEMBER',
+        supabaseUserId,
+        ...(name ? { name } : {}),
+      },
+    });
+    if (result.count > 0) {
+      this.logger.log(`Upgraded ${result.count} online check-in record(s) for ${normEmail} to ONLINE_MEMBER`);
+    }
+  }
+
   async list(opts: { channel?: string; stage?: string; take: number; skip: number }) {
     const where = {
       tenantId: this.tenantId,

@@ -59,64 +59,44 @@ export class UploadsService {
   }
 
   /**
-   * PUT a file buffer into R2 under `<prefix>/<timestamp>-<rand>.<ext>` and return
-   * its public URL + key. Throws ServiceUnavailableException if R2 isn't configured.
+   * Upload a file buffer into Supabase Storage under `<prefix>/<timestamp>-<rand>.<ext>`
+   * and return its public URL + key. Reuses the same project credentials as auth
+   * (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY) rather than a separate R2 account —
+   * this project never had Cloudflare R2 credentials configured, so this avoids
+   * needing a second storage provider. Throws ServiceUnavailableException if
+   * those credentials are missing.
    */
   async uploadObject(
     file: { buffer: Buffer; mimetype: string; originalname: string },
     prefix: string,
   ): Promise<UploadResult> {
-    if (
-      !process.env.R2_ACCOUNT_ID ||
-      !process.env.R2_ACCESS_KEY_ID ||
-      !process.env.R2_SECRET_ACCESS_KEY
-    ) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       throw new ServiceUnavailableException(
-        'R2 storage is not configured. Add R2_* env vars.',
+        'Storage is not configured. Add SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY env vars.',
       );
     }
 
     const ext = SAFE_EXTENSIONS[file.mimetype.toLowerCase()] ?? 'bin';
     const key = `${prefix}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET ?? 'ehc-uploads';
 
     try {
-      // Lazily require the AWS SDK v3 to avoid a hard compile-time dependency.
       // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+      const { createClient } = require('@supabase/supabase-js');
+      const client = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-      const endpoint =
-        process.env.R2_ENDPOINT ??
-        `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
-      const bucket =
-        process.env.R2_BUCKET ??
-        process.env.R2_BUCKET_NAME ??
-        process.env.R2_ACCOUNT_ID;
-
-      const client = new S3Client({
-        endpoint,
-        region: 'auto',
-        credentials: {
-          accessKeyId: process.env.R2_ACCESS_KEY_ID,
-          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-        },
+      const { error } = await client.storage.from(bucket).upload(key, file.buffer, {
+        contentType: file.mimetype,
+        cacheControl: '31536000',
+        upsert: false,
       });
+      if (error) throw new Error(error.message);
 
-      await client.send(
-        new PutObjectCommand({
-          Bucket: bucket,
-          Key: key,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-          CacheControl: 'public, max-age=31536000, immutable',
-        }),
-      );
+      const { data } = client.storage.from(bucket).getPublicUrl(key);
+      return { url: data.publicUrl, key };
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      throw new InternalServerErrorException(`Upload to R2 failed: ${msg}`);
+      throw new InternalServerErrorException(`Upload failed: ${msg}`);
     }
-
-    const publicUrl = (process.env.R2_PUBLIC_URL ?? '').replace(/\/$/, '');
-    const url = publicUrl ? `${publicUrl}/${key}` : key;
-    return { url, key };
   }
 }

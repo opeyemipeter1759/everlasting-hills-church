@@ -1792,6 +1792,18 @@
         ],
         "type": "object"
       },
+      "PledgeTrackingLinkDto": {
+        "properties": {
+          "email": {
+            "example": "tomike@example.com",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "type": "object"
+      },
       "PrayerRequestDto": {
         "properties": {
           "email": {
@@ -3299,6 +3311,18 @@
         "required": [
           "firstName",
           "lastName"
+        ],
+        "type": "object"
+      },
+      "WhatsappCommunityDto": {
+        "properties": {
+          "added": {
+            "description": "True once this person has been added to the WhatsApp community",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "added"
         ],
         "type": "object"
       }
@@ -22015,6 +22039,68 @@
         ]
       }
     },
+    "/pledges/{campaign}/track/resend": {
+      "post": {
+        "description": "Always answers the same way, whether or not that address has a pledge. A new link replaces any earlier one.",
+        "operationId": "PledgesController_resendTrackingLink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campaign",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PledgeTrackingLinkDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Email a pledger their private tracking link again",
+        "tags": [
+          "pledges"
+        ]
+      }
+    },
     "/push/preferences": {
       "get": {
         "operationId": "PushController_getPreferences",
@@ -30037,6 +30123,72 @@
         ]
       }
     },
+    "/visitors/{id}/whatsapp-community": {
+      "patch": {
+        "operationId": "VisitorsController_setWhatsappAdded",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WhatsappCommunityDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Mark someone added to the WhatsApp community, or undo it",
+        "tags": [
+          "visitors"
+        ]
+      }
+    },
     "/visitors/count": {
       "get": {
         "operationId": "VisitorsController_count",
@@ -30183,6 +30335,62 @@
           }
         ],
         "summary": "First-timer count broken down by attendance type",
+        "tags": [
+          "visitors"
+        ]
+      }
+    },
+    "/visitors/whatsapp-community": {
+      "get": {
+        "operationId": "VisitorsController_whatsappCommunity",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "includeAdded",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "First-timers who asked to join the WhatsApp community, waiting first",
         "tags": [
           "visitors"
         ]

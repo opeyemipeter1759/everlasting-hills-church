@@ -114,6 +114,14 @@ export const envSchema = z.object({
   R2_PUBLIC_URL: z.url().optional(),
 
   /**
+   * Generic file uploads (uploads.service.ts — book covers/PDFs, announcement
+   * attachments, etc). This project has no R2 credentials, so uploads live in
+   * Supabase Storage instead, reusing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
+   * above. Bucket must be created and public (see ehc-uploads).
+   */
+  SUPABASE_STORAGE_BUCKET: z.string().min(1).default('ehc-uploads'),
+
+  /**
    * Web Push (VAPID). Absent → push endpoints return 503 and scheduled dispatch
    * is skipped, following the same optional-integration pattern as Resend,
    * Paystack and R2 above.

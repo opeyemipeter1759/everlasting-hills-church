@@ -39,6 +39,8 @@ import { InventoryModule } from './inventory/inventory.module';
 import { GivingModule } from './giving/giving.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { BooksModule } from './books/books.module';
+import { BookCollectionsModule } from './book-collections/book-collections.module';
 import { EmailsModule } from './emails/emails.module';
 import { CommunityModule } from './community/community.module';
 import { HomeCellModule } from './home-cell/home-cell.module';
@@ -147,6 +149,8 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     GivingModule,
     InboxModule,
     AnnouncementsModule,
+    BookCollectionsModule,
+    BooksModule,
     EmailsModule,
     CommunityModule,
     HomeCellModule,

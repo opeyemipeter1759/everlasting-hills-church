@@ -8,6 +8,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { EffectiveRolesService } from './effective-roles.service';
 import { PrismaModule } from '../prisma/prisma.module';
+import { OnlineAttendanceModule } from '../online-attendance/online-attendance.module';
 import { AuthSupabaseService } from './services/auth-supabase.service';
 import { AuthProfileSummaryService } from './services/auth-profile-summary.service';
 import { SuperAdminBootstrapService } from './services/super-admin-bootstrap.service';
@@ -17,7 +18,7 @@ import { AuthPasswordService } from './services/auth-password.service';
 import { AuthMeService } from './services/auth-me.service';
 
 @Module({
-  imports: [PrismaModule, PassportModule],
+  imports: [PrismaModule, PassportModule, OnlineAttendanceModule],
   controllers: [AuthController, AuthAccountController],
   providers: [
     JwtStrategy,

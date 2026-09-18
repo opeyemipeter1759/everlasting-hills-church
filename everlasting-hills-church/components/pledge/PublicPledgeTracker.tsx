@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Loader2, LockKeyhole } from "lucide-react";
 import PledgeProgress from "./PledgeProgress";
 import { pledgePlan, useTrackedPledge } from "@/lib/api/pledges";
+import RemittanceAccount from "@/components/pledge/RemittanceAccount";
 
 export default function PublicPledgeTracker({ token }: { token: string }) {
   const { data: pledge, isLoading, isError, refetch } = useTrackedPledge(token);
@@ -23,11 +24,16 @@ export default function PublicPledgeTracker({ token }: { token: string }) {
           <LockKeyhole size={36} className="mx-auto text-[#87102C]" aria-hidden="true" />
           <h1 className="mt-4 text-2xl font-black text-[#211317]">Tracking link unavailable</h1>
           <p className="mt-3 text-sm leading-relaxed text-[#6d565b]">
-            This private link is invalid or no longer available. Check the link in your pledge confirmation email.
+This private link is invalid, or a newer one has replaced it. Check the most recent pledge email, or ask for the link again.
           </p>
-          <button type="button" onClick={() => refetch()} className="mt-5 min-h-11 font-bold text-[#87102C] underline">
-            Try again
-          </button>
+          <div className="mt-5 flex flex-wrap justify-center gap-4">
+            <button type="button" onClick={() => refetch()} className="min-h-11 font-bold text-[#87102C] underline">
+              Try again
+            </button>
+            <Link href="/pledge/track" className="min-h-11 font-bold text-[#87102C] underline">
+              Email me my link
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -48,6 +54,7 @@ export default function PublicPledgeTracker({ token }: { token: string }) {
             </div>
             <LockKeyhole size={22} className="shrink-0 text-[#87102C]" aria-label="Private tracking page" />
           </div>
+          <RemittanceAccount className="mt-5" />
           <PledgeProgress pledge={pledge} target={{ access: "public", token }} />
           <p className="mt-5 text-center text-xs text-[#806970]">This page is private to anyone who has its link.</p>
         </section>

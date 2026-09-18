@@ -9,6 +9,7 @@ import { buildNewDeviceLoginEmail } from '../../notifications/templates/new-devi
 import { describeUserAgent, type LoginContext } from '../auth.types';
 import { AuthSupabaseService } from './auth-supabase.service';
 import { AuthProfileSummaryService } from './auth-profile-summary.service';
+import { OnlineAttendanceService } from '../../online-attendance/online-attendance.service';
 
 @Injectable()
 export class AuthLoginService {
@@ -21,6 +22,7 @@ export class AuthLoginService {
     private readonly events: EventEmitter2,
     private readonly supabase: AuthSupabaseService,
     private readonly profileSummary: AuthProfileSummaryService,
+    private readonly onlineAttendance: OnlineAttendanceService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -47,6 +49,14 @@ export class AuthLoginService {
 
     // Fire-and-forget: record the device and alert if it's new for this account.
     void this.checkLoginDevice(data.user.id, data.user.email, summary.firstName, ctx);
+
+    // Fire-and-forget: if this email was previously an anonymous online
+    // second-timer, this login proves they're a real member now.
+    if (data.user.email) {
+      void this.onlineAttendance
+        .upgradeToMemberIfKnown(data.user.email, data.user.id, fullName ?? undefined)
+        .catch((err) => this.logger.warn(`Online check-in upgrade failed for ${email}: ${(err as Error).message}`));
+    }
 
     const needsPasswordChange = Boolean(
       (data.user.user_metadata as Record<string, unknown> | null | undefined)?.['needs_password_change'],
