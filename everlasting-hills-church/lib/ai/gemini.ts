@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { serverApi, type ApiError } from "@/lib/api/server";
 
-if (!process.env.GEMINI_API_KEY) {
-  // Warn at module load time so developers know immediately what's missing.
-  if (process.env.NODE_ENV !== "production") {
-    console.warn("[EHC AI] GEMINI_API_KEY is not set — AI features will report themselves unavailable.");
-  }
-}
-
-/** True when a key is actually present. Whitespace-only counts as absent. */
+/**
+ * The website's AI helpers run their prompts through the API server
+ * (POST /ai/generate), which holds the Gemini key. The website needs no key of
+ * its own, and the API only answers signed-in admins, so the Gemini quota
+ * can't be spent by anyone who finds these routes.
+ *
+ * Whether AI is switched on is the API's call: it answers 503 when it has no
+ * key, and aiFailed() turns that into the AI_NOT_CONFIGURED response below.
+ */
 export function isAiConfigured(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY?.trim());
+  return true;
 }
 
 /**
@@ -27,15 +28,19 @@ export function aiUnavailable() {
     {
       error: {
         code: "AI_NOT_CONFIGURED",
-        message: "AI features are switched off — this server has no GEMINI_API_KEY set.",
+        message: "AI features are switched off — the API server has no GEMINI_API_KEY set.",
       },
     },
     { status: 503 },
   );
 }
 
+/** Thrown when the API reports it has no Gemini key (503). */
+class AiNotConfiguredError extends Error {}
+
 /** A real failure from the model or the network, as opposed to a missing key. */
 export function aiFailed(scope: string, err: unknown) {
+  if (err instanceof AiNotConfiguredError) return aiUnavailable();
   console.error(`[AI ${scope}]`, err);
   const detail = err instanceof Error ? err.message : String(err);
   return NextResponse.json(
@@ -52,21 +57,25 @@ export function aiFailed(scope: string, err: unknown) {
   );
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
-
-/** Gemini 3.6 Flash — fast, low-cost. Use for all Phase 1 features.
- * (gemini-1.5-flash and gemini-2.5-flash were both retired by Google — confirmed
- * live against the API on 2026-08-21; gemini-3.6-flash is the current replacement.) */
-export const flashModel = genAI.getGenerativeModel({
-  model: "gemini-3.6-flash",
-  generationConfig: {
-    temperature: 0.4,
-    // 3.6 Flash spends part of this budget on internal "thinking" before writing
-    // output (observed ~390 tokens on a two-sentence draft) — headroom above the
-    // old 1024 so a real-length announcement doesn't get cut off mid-JSON.
-    maxOutputTokens: 2048,
+/**
+ * Drop-in for the Gemini SDK model the routes used to hold directly: same
+ * `generateContent(prompt)` → `result.response.text()` shape, so no route
+ * changed. Model and generation settings live on the API (AiService).
+ */
+export const flashModel = {
+  async generateContent(prompt: string) {
+    let text: string;
+    try {
+      ({ text } = await serverApi.post<{ text: string }>("/ai/generate", { prompt }, { cache: "no-store" }));
+    } catch (err) {
+      // serverApi rejects with a plain ApiError object, not an Error.
+      const apiErr = err as Partial<ApiError>;
+      if (apiErr?.status === 503) throw new AiNotConfiguredError(apiErr.message);
+      throw new Error(apiErr?.message ?? String(err));
+    }
+    return { response: { text: () => text } };
   },
-});
+};
 
 /** Parse a JSON block out of a Gemini response (strips markdown code fences). */
 export function parseJSON<T>(text: string): T {

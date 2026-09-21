@@ -49,6 +49,7 @@ import { SchedulingModule } from './scheduling/scheduling.module';
 import { CoursesModule } from './courses/courses.module';
 import { StatusReportsModule } from './status-reports/status-reports.module';
 import { OnlineAttendanceModule } from './online-attendance/online-attendance.module';
+import { AiModule } from './ai/ai.module';
 import { validateEnv } from './config/env.validation';
 import type { Env } from './config/env.validation';
 import { CalendarModule } from './calendar/calendar.module';
@@ -165,6 +166,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     CoursesModule,
     StatusReportsModule,
     OnlineAttendanceModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [
