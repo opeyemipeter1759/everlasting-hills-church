@@ -1,4 +1,4 @@
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
@@ -12,7 +12,7 @@ RUN npx prisma generate
 # 2026-09-16. Type errors are caught by CI's `npm run typecheck`, not here.
 RUN npm run build
 
-FROM node:20-slim
+FROM node:22-slim
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 ENV NODE_ENV=production
