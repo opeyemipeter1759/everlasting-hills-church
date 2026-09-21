@@ -5,6 +5,7 @@ import { NavGrantType, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
+import { PageAccessService } from '../../auth/page-access/page-access.service';
 import type { NavPermissionItemDto } from '../dto/set-nav-permissions.dto';
 import type { CreateNavGrantDto } from '../dto/nav-permission-grant.dto';
 
@@ -41,6 +42,7 @@ export class NavPermissionsService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly pageAccess: PageAccessService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -71,6 +73,7 @@ export class NavPermissionsService {
         }),
       ),
     );
+    this.pageAccess.invalidate();
     return this.getAll();
   }
 
@@ -79,6 +82,7 @@ export class NavPermissionsService {
     await this.prisma.navPermission.deleteMany({
       where: { tenantId: this.tenantId, itemHref },
     });
+    this.pageAccess.invalidate();
   }
 
   /** Every named exception, with the target's display name resolved for the admin table. */
@@ -139,6 +143,7 @@ export class NavPermissionsService {
       const row = await this.prisma.navPermissionGrant.create({
         data: { id: randomUUID(), tenantId: this.tenantId, itemHref: dto.itemHref, type: dto.type, targetId: dto.targetId },
       });
+    this.pageAccess.invalidate();
       return { id: row.id, itemHref: row.itemHref, type: row.type, targetId: row.targetId, name: `${member.firstName} ${member.lastName}`, photoUrl: member.photoUrl };
     }
 
@@ -150,12 +155,14 @@ export class NavPermissionsService {
     const row = await this.prisma.navPermissionGrant.create({
       data: { id: randomUUID(), tenantId: this.tenantId, itemHref: dto.itemHref, type: dto.type, targetId: dto.targetId },
     });
+    this.pageAccess.invalidate();
     return { id: row.id, itemHref: row.itemHref, type: row.type, targetId: row.targetId, name: unit.name, photoUrl: null };
   }
 
   async removeGrant(id: string): Promise<void> {
     const { count } = await this.prisma.navPermissionGrant.deleteMany({ where: { id, tenantId: this.tenantId } });
     if (count === 0) throw new NotFoundException('Grant not found');
+    this.pageAccess.invalidate();
   }
 
   /**
@@ -165,26 +172,8 @@ export class NavPermissionsService {
    * `unitLeadOf` comes straight off the already-resolved AuthUser, so no
    * extra lookup is needed for the lead case.
    */
-  async getGrantedHrefsForActor(actor: AuthUser): Promise<string[]> {
-    const memberUnitIds = actor.memberId
-      ? (
-          await this.prisma.unitMember.findMany({
-            where: { tenantId: this.tenantId, memberId: actor.memberId },
-            select: { unitId: true },
-          })
-        ).map((m) => m.unitId)
-      : [];
-
-    const or: Array<{ type: NavGrantType; targetId: { in: string[] } }> = [];
-    if (actor.profileId) or.push({ type: NavGrantType.MEMBER, targetId: { in: [actor.profileId] } });
-    if (memberUnitIds.length) or.push({ type: NavGrantType.UNIT_MEMBER, targetId: { in: memberUnitIds } });
-    if (actor.unitLeadOf.length) or.push({ type: NavGrantType.UNIT_LEAD, targetId: { in: actor.unitLeadOf } });
-    if (or.length === 0) return [];
-
-    const rows = await this.prisma.navPermissionGrant.findMany({
-      where: { tenantId: this.tenantId, OR: or },
-      select: { itemHref: true },
-    });
-    return Array.from(new Set(rows.map((r) => r.itemHref)));
+  getGrantedHrefsForActor(actor: AuthUser): Promise<string[]> {
+    return this.pageAccess.getGrantedHrefsForActor(actor);
   }
+
 }
