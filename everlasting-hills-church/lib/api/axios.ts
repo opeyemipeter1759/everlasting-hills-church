@@ -41,7 +41,7 @@ apiClient.interceptors.response.use(
         window.dispatchEvent(new CustomEvent(AUTH_ERROR_EVENT));
       }
     }
-    return Promise.reject(normalizeError(error));
+    return Promise.reject(normalizeError(error, isLoginOrRecovery));
   },
 );
 
@@ -53,7 +53,19 @@ export interface ApiError {
   details?: unknown;
 }
 
-function normalizeError(error: AxiosError): ApiError {
+/**
+ * What to show when signing in is refused. Wrong details get a plain,
+ * actionable sentence; any other reason the API gives (e.g. an opted-out
+ * account) is already written for people and is shown as-is.
+ */
+function signInFailureMessage(message: string): string {
+  if (!message || /invalid (email|login)|credentials/i.test(message)) {
+    return "That email and password don't match. Check them and try again, or use Forgot password to reset it.";
+  }
+  return userMessageForError({ message });
+}
+
+function normalizeError(error: AxiosError, isLoginOrRecovery = false): ApiError {
   if (error.response) {
     const body = error.response.data as
       | {
@@ -65,7 +77,14 @@ function normalizeError(error: AxiosError): ApiError {
     const status = error.response.status;
     const message = enveloped?.message ?? body?.message ?? error.message;
     return {
-      message: userMessageForError({ message, status, code: enveloped?.code }),
+      // A 401 from signing in means the details were wrong (or the account is
+      // blocked), not that a session expired — every failed login used to be
+      // reported as "Your session has expired", so people with a mistyped
+      // password kept retrying without knowing why.
+      message:
+        status === 401 && isLoginOrRecovery
+          ? signInFailureMessage(message)
+          : userMessageForError({ message, status, code: enveloped?.code }),
       status,
       code: enveloped?.code,
       requestId: enveloped?.requestId,
