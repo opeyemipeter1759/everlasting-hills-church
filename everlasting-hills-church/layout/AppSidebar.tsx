@@ -14,6 +14,7 @@ import { useFollowUpAccess } from '@/lib/api/follow-up-pipeline';
 import { canRoleAccessItem, toNavPermissionsMap, useMyNavGrantedHrefs, useNavPermissions } from '@/lib/nav-permissions';
 import { getInitials, truncateText } from '@/utils/stringUtils';
 import { SidebarSkeleton } from '@/components/ui/skeleton/SidebarSkeleton';
+import { isAudioProductionUnitName } from '@/lib/audio-production';
 
 type NavItem = {
   name: string;
@@ -113,11 +114,23 @@ const AppSidebar: React.FC = () => {
   const { data: grantedHrefsData } = useMyNavGrantedHrefs();
   const grantedHrefs = useMemo(() => new Set(grantedHrefsData ?? []), [grantedHrefsData]);
 
+  // myUnits (leads/assists) and myMemberships (plain member) are two disjoint
+  // lists — a lead is deliberately excluded from myMemberships, so both must
+  // be checked or the unit's own lead would be the one person locked out.
+  const inAudioProduction =
+    !!myUnits?.some((u) => isAudioProductionUnitName(u.name)) ||
+    !!myMemberships?.some((u) => isAudioProductionUnitName(u.name));
+
   const visibleGroups = activeRoles.length > 0
     ? NAV_GROUPS.map((group) => ({
         ...group,
         items: group.items
           .filter((item) => {
+            // Audio Production membership grants its items outright, like a
+            // named grant: a role list saved for the page on the Permissions
+            // screen (typically PASTOR-only, from before members could use it)
+            // must not hide it from the team it exists for.
+            if (item.requiresAccess === 'audioProduction' && inAudioProduction) return true;
             if (
               !activeRoles.some((role) => canRoleAccessItem(role, item, navPermissionsMap)) &&
               !grantedHrefs.has(item.href)
@@ -126,17 +139,13 @@ const AppSidebar: React.FC = () => {
             if (item.requiresAccess === 'unitLead' && !myUnits?.length) return false;
             if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
             if (item.requiresAccess === 'followUp' && !followUpAccess?.hasAccess) return false;
-            // PASTOR+ already sees this via the (now-lowered) minRole check above —
-            // this only needs to additionally admit Audio Production, lead or plain
-            // member. myUnits (leads/assists) and myMemberships (plain member) are
-            // two disjoint lists — a lead is deliberately excluded from
-            // myMemberships, so both must be checked or the unit's own lead would
-            // be the one person Audio Production locked out.
+            // Audio Production members were admitted above; everyone else needs
+            // PASTOR+ or a named grant for the page (the item's minRole is
+            // lowered to MEMBER only so the team can pass the role check).
             if (
               item.requiresAccess === 'audioProduction' &&
               !canAccessRole('PASTOR') &&
-              !myUnits?.some((u) => u.name === 'Audio Production') &&
-              !myMemberships?.some((u) => u.name === 'Audio Production')
+              !grantedHrefs.has(item.href)
             ) {
               return false;
             }

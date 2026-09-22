@@ -24,6 +24,7 @@ import { verifySupabaseJwt } from "@/lib/auth/verify-jwt";
 import { getBackendBaseUrl } from "@/lib/api/backend-url";
 import { resolveTrustedRoutingRole } from "@/lib/auth/routing-role";
 import { NAV_ITEMS_FLAT, type UserRole as ConfigUserRole } from "@/config/config";
+import { isAudioProductionUnitName } from "@/lib/audio-production";
 import {
   canRoleAccessItem,
   matchNavItemForPath,
@@ -60,7 +61,7 @@ async function unitListIncludesAudioProduction(path: string, accessToken: string
     const payload = unwrapBackendPayload(await response.json());
     if (!Array.isArray(payload)) return false;
     return payload.some(
-      (unit) => unit && typeof unit === "object" && (unit as { name?: unknown }).name === "Audio Production",
+      (unit) => unit && typeof unit === "object" && isAudioProductionUnitName((unit as { name?: unknown }).name),
     );
   } catch {
     return false;
@@ -304,10 +305,6 @@ export async function middleware(request: NextRequest) {
     const liveRoles = await loadLiveRoles();
     roleAllowed = hasAnyMinRole(liveRoles?.effectiveRoles ?? [], requiredRole);
   }
-  if (!roleAllowed && accessToken && isAudioProductionSermonPath(pathname)) {
-    roleAllowed = await isAudioProductionMember(accessToken);
-  }
-
   // Admin-configured Role Access Permissions: if the matched nav item has a
   // saved override, that explicit role set is authoritative for this request
   // — it replaces (not adds to) the hierarchy-based result above, so an admin
@@ -332,6 +329,14 @@ export async function middleware(request: NextRequest) {
         );
       }
     }
+  }
+
+  // Audio Production's sermon carve-out. Checked after the saved role list
+  // above on purpose: that list replaces the role result, and a list saved
+  // for Sermons (typically PASTOR-only) used to silently overwrite this and
+  // lock the whole team out. Like a named grant, it only ever widens access.
+  if (!roleAllowed && accessToken && isAudioProductionSermonPath(pathname)) {
+    roleAllowed = await isAudioProductionMember(accessToken);
   }
 
   // Named exceptions: only consulted once every role-based path above has
