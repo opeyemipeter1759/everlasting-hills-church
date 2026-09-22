@@ -10,13 +10,14 @@ const PASTOR_PLUS: Role[] = [Role.PASTOR, Role.ADMIN, Role.ADMIN_HEAD, Role.SUPE
 /**
  * Whether a unit is Audio Production — the one unit whose members get
  * sermon-management access without the PASTOR role. Unit names are typed by
- * admins, so an exact 'Audio Production' match locked the whole team out the
- * moment it was named "Audio production" or "Audio Production Unit". Case,
- * spacing and punctuation are ignored. Keep in step with the website's
- * isAudioProductionUnitName (everlasting-hills-church/lib/audio-production.ts).
+ * admins, so an exact 'Audio Production' match locked the whole team out —
+ * the church's unit is actually "Audio Post Production Unit". Any name with
+ * "audio" followed later by "prod…" matches, ignoring case, spacing and
+ * punctuation (so a misspelt "Prodution" still counts). Keep in step with the
+ * website's isAudioProductionUnitName (everlasting-hills-church/lib/audio-production.ts).
  */
 export function isAudioProductionUnitName(name: string): boolean {
-  return name.toLowerCase().replace(/[^a-z]/g, '').includes('audioproduction');
+  return /audio.*prod/.test(name.toLowerCase().replace(/[^a-z]/g, ''));
 }
 
 /**

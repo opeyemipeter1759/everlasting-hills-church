@@ -10,11 +10,14 @@ describe("isAudioProductionUnitName", () => {
     "Audio-Production",
     "Audio Production Unit",
     "Audio Production Team",
+    "Audio Post Production Unit",
+    "Audio post Prodution unit",
+    "AUDIO POST-PRODUCTION",
   ])("recognises %j", (name) => {
     expect(isAudioProductionUnitName(name)).toBe(true);
   });
 
-  it.each(["Audio", "Production", "Media", "Visual Production", "", null, undefined, 42])(
+  it.each(["Audio", "Production", "Media", "Visual Production", "Production Audio", "", null, undefined, 42])(
     "rejects %j",
     (name) => {
       expect(isAudioProductionUnitName(name)).toBe(false);
