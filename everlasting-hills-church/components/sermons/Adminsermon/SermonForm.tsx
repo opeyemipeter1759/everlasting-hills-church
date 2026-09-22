@@ -538,6 +538,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
                     <FileUpload
                       type="audio"
                       endpoint="/sermons/upload-audio"
+                      directUploadEndpoint="/sermons/audio-upload-url"
                       value={form.audioUrl}
                       onChange={(url) => set('audioUrl', url)}
                       onDurationDetected={(secs) => set('audioDuration', String(secs))}
@@ -645,6 +646,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
                             <FileUpload
                               type="audio"
                               endpoint="/sermons/upload-audio"
+                              directUploadEndpoint="/sermons/audio-upload-url"
                               value={ep.url}
                               onChange={(url) => updateEpisode(i, 'url', url)}
                               onDurationDetected={(secs) =>

@@ -4,12 +4,20 @@ import { useRef, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { X, Loader2, Music, ImageIcon, FileText, RefreshCw } from 'lucide-react';
 import { apiClient } from '@/lib/api/axios';
+import { uploadAudioDirect } from '@/lib/api/direct-audio-upload';
 
 export type FileUploadType = 'audio' | 'image' | 'document';
 
 export type FileUploadProps = {
   type: FileUploadType;
   endpoint: string;
+  /**
+   * Audio only: an endpoint that issues a direct-to-storage upload link
+   * (e.g. /sermons/audio-upload-url). When set, the file skips the API and
+   * goes straight to storage, which is what lets recordings up to 1 GB
+   * through; `endpoint` is then unused.
+   */
+  directUploadEndpoint?: string;
   fieldName?: string;
   value: string;
   onChange: (url: string) => void;
@@ -20,6 +28,7 @@ export type FileUploadProps = {
 export default function FileUpload({
   type,
   endpoint,
+  directUploadEndpoint,
   fieldName = 'file',
   value,
   onChange,
@@ -37,23 +46,28 @@ export default function FileUpload({
       setError(null);
       setUploading(true);
       setProgress(0);
-      const formData = new FormData();
-      formData.append(fieldName, file);
       try {
-        const res = await apiClient.post<
-          { url?: string; audioUrl?: string; imageUrl?: string } | string
-        >(endpoint, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          timeout: 120_000,
-          onUploadProgress: (evt) => {
-            if (evt.total) setProgress(Math.round((evt.loaded * 100) / evt.total));
-          },
-        });
-        const data = res.data;
-        const url =
-          typeof data === 'string'
-            ? data
-            : (data.url ?? data.audioUrl ?? data.imageUrl ?? '');
+        let url: string;
+        if (type === 'audio' && directUploadEndpoint) {
+          url = await uploadAudioDirect(file, directUploadEndpoint, setProgress);
+        } else {
+          const formData = new FormData();
+          formData.append(fieldName, file);
+          const res = await apiClient.post<
+            { url?: string; audioUrl?: string; imageUrl?: string } | string
+          >(endpoint, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            timeout: 120_000,
+            onUploadProgress: (evt) => {
+              if (evt.total) setProgress(Math.round((evt.loaded * 100) / evt.total));
+            },
+          });
+          const data = res.data;
+          url =
+            typeof data === 'string'
+              ? data
+              : (data.url ?? data.audioUrl ?? data.imageUrl ?? '');
+        }
         onChange(url);
         if (type === 'audio' && url && onDurationDetected) {
           const audio = new Audio(url);
@@ -67,7 +81,7 @@ export default function FileUpload({
         setUploading(false);
       }
     },
-    [endpoint, fieldName, onChange, onDurationDetected, type],
+    [endpoint, directUploadEndpoint, fieldName, onChange, onDurationDetected, type],
   );
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -86,7 +100,9 @@ export default function FileUpload({
   const isAudio = type === 'audio';
   const isDocument = type === 'document';
   const accept = isAudio ? 'audio/*' : isDocument ? 'application/pdf' : 'image/*';
-  const hint = isAudio ? 'MP3, WAV, M4A, OGG' : isDocument ? 'PDF' : 'JPG, PNG, WebP, GIF';
+  const hint = isAudio
+    ? `MP3, WAV, M4A, OGG${directUploadEndpoint ? ' · up to 1 GB' : ''}`
+    : isDocument ? 'PDF' : 'JPG, PNG, WebP, GIF';
 
   return (
     <div className="space-y-1.5">
