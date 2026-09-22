@@ -29,8 +29,52 @@ function makeRequest(user: AuthUser | undefined, path: string) {
 /** A PageAccessService stub granting exactly the listed page hrefs. */
 function grants(...hrefs: string[]) {
   const canReach = jest.fn(async (_actor: AuthUser, href: string) => hrefs.includes(href));
-  return { service: { canReach } as unknown as PageAccessService, canReach };
+  const isInAudioProduction = jest.fn(async () => false);
+  return { service: { canReach, isInAudioProduction } as unknown as PageAccessService, canReach };
 }
+
+/** A PageAccessService stub for someone in the Audio (Post) Production unit. */
+function audioProductionMember() {
+  const isInAudioProduction = jest.fn(async () => true);
+  const canReach = jest.fn(async () => false);
+  return { service: { canReach, isInAudioProduction } as unknown as PageAccessService, isInAudioProduction };
+}
+
+describe('PageAccessGuard — Audio (Post) Production', () => {
+  it.each(['/sermons/analytics', '/sermons/abc/featured', '/sermons/audio-upload-url', '/uploads/image'])(
+    'gives a unit member Super Admin power on %s',
+    async (path) => {
+      const { service } = audioProductionMember();
+      const { req, ctx } = makeRequest(makeUser(Role.MEMBER), path);
+
+      await new PageAccessGuard(service).canActivate(ctx);
+
+      expect(req.user?.role).toBe(Role.SUPER_ADMIN);
+      expect(req.user?.effectiveRoles).toEqual([Role.MEMBER, Role.SUPER_ADMIN]);
+    },
+  );
+
+  it('gives them nothing outside the Sermons section', async () => {
+    const { service, isInAudioProduction } = audioProductionMember();
+    const user = makeUser(Role.MEMBER);
+    const { req, ctx } = makeRequest(user, '/members/abc');
+
+    await new PageAccessGuard(service).canActivate(ctx);
+
+    expect(isInAudioProduction).not.toHaveBeenCalled();
+    expect(req.user).toBe(user);
+  });
+
+  it('leaves people outside the unit as they are on sermon endpoints', async () => {
+    const { service } = grants();
+    const user = makeUser(Role.MEMBER);
+    const { req, ctx } = makeRequest(user, '/sermons/analytics');
+
+    await new PageAccessGuard(service).canActivate(ctx);
+
+    expect(req.user).toBe(user);
+  });
+});
 
 describe('PageAccessGuard', () => {
   it("gives a member granted First Timers the page's role on its endpoints", async () => {

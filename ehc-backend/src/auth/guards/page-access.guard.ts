@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import type { Role } from '@prisma/client';
-import { PAGE_ACCESS, pathUnder } from '../page-access/page-access.map';
+import { Role } from '@prisma/client';
+import { AUDIO_PRODUCTION_PATHS, PAGE_ACCESS, pathUnder } from '../page-access/page-access.map';
 import { PageAccessService } from '../page-access/page-access.service';
 import type { AuthUser } from '../types/auth-user';
 import { meetsRole, ROLE_LEVEL } from './roles.guard';
@@ -33,6 +33,18 @@ export class PageAccessGuard implements CanActivate {
 
     const path = req.path ?? '';
     const effective = effectiveRolesOf(user);
+
+    // Audio (Post) Production runs the Sermons section: its members get full
+    // Super Admin power there (and only there), whatever their own role.
+    if (
+      AUDIO_PRODUCTION_PATHS.some((prefix) => pathUnder(path, prefix)) &&
+      !meetsRole(effective, Role.SUPER_ADMIN) &&
+      (await this.pageAccess.isInAudioProduction(user))
+    ) {
+      req.user = elevate(user, Role.SUPER_ADMIN);
+      return true;
+    }
+
     const candidates = PAGE_ACCESS.filter(
       (page) => page.paths.some((prefix) => pathUnder(path, prefix)) && !meetsRole(effective, page.role),
     );

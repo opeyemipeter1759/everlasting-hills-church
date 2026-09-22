@@ -36,15 +36,11 @@ import {
 const AUTH_PAGES = new Set(["/login", "/register", "/forgot-password"]);
 const ROLELESS_LANDING = "/dashboard/profile";
 
-// Sermon management is PASTOR+ by role, but a plain member of the "Audio
-// Production" unit gets the same access to these specific pages (list, new,
-// edit — not analytics, which stays PASTOR-only). Mirrors the same carve-out
-// already enforced on the backend by SermonsAuthService.
-const AUDIO_PRODUCTION_SERMON_PATHS = [
-  /^\/dashboard\/pastor\/sermons$/,
-  /^\/dashboard\/pastor\/sermons\/new$/,
-  /^\/dashboard\/pastor\/sermons\/[^/]+\/edit$/,
-];
+// Sermon management is PASTOR+ by role, but every member of the Audio
+// (Post) Production unit gets full Super Admin power over the whole Sermons
+// section — list, new, edit, analytics, per-sermon engagement. Mirrors the
+// API, where PageAccessGuard elevates the unit on /sermons endpoints.
+const AUDIO_PRODUCTION_SERMON_PATHS = [/^\/dashboard\/pastor\/sermons(\/.*)?$/];
 
 function isAudioProductionSermonPath(pathname: string): boolean {
   return AUDIO_PRODUCTION_SERMON_PATHS.some((re) => re.test(pathname));

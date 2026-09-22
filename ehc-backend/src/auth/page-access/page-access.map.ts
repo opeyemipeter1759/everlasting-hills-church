@@ -114,6 +114,14 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
   { href: '/dashboard/audit-log', role: Role.SUPER_ADMIN, paths: ['/status-reports'] },
 ];
 
+/**
+ * API prefixes of the Sermons section. Members of the Audio (Post) Production
+ * unit act as SUPER_ADMIN on these — full power over sermons (analytics,
+ * featured, scheduled publishing included), nothing beyond. `/uploads/image`
+ * is the sermon thumbnail uploader and `/ai` the sermon summary helper.
+ */
+export const AUDIO_PRODUCTION_PATHS = ['/sermons', '/uploads/image', '/ai'];
+
 /** True when `path` is `prefix` itself or sits under it on a segment boundary. */
 export function pathUnder(path: string, prefix: string): boolean {
   return path === prefix || path.startsWith(`${prefix}/`);

@@ -4,31 +4,18 @@ import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
+import { isAudioProductionUnitName } from '../../common/audio-production.util';
 
 const PASTOR_PLUS: Role[] = [Role.PASTOR, Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
 
 /**
- * Whether a unit is Audio Production — the one unit whose members get
- * sermon-management access without the PASTOR role. Unit names are typed by
- * admins, so an exact 'Audio Production' match locked the whole team out —
- * the church's unit is actually "Audio Post Production Unit". Any name with
- * "audio" followed later by "prod…" matches, ignoring case, spacing and
- * punctuation (so a misspelt "Prodution" still counts). Keep in step with the
- * website's isAudioProductionUnitName (everlasting-hills-church/lib/audio-production.ts).
- */
-export function isAudioProductionUnitName(name: string): boolean {
-  return /audio.*prod/.test(name.toLowerCase().replace(/[^a-z]/g, ''));
-}
-
-/**
- * Core sermon management (list, view, upload, edit, delete) is PASTOR+ by
- * default, but the Audio Production team handles day-to-day uploads — so a
- * plain member of that one unit gets the same access to those core actions,
- * without needing the PASTOR role itself. Pastoral-only actions (analytics,
- * subscribers, engagement detail, featured sermon, publish-scheduled) stay
- * gated to PASTOR+ directly on their own routes and don't go through this
- * check — same "coarse @Roles at the controller, fine-grained check in a
- * service" split used by FollowUpAuthService.
+ * Sermon management is PASTOR+ by role, but the Audio (Post) Production team
+ * runs sermons day to day, so every member of that unit — lead or not — gets
+ * full Super Admin power over the whole Sermons section: core management
+ * here, and the pastoral-only routes (analytics, subscribers, engagement,
+ * featured sermon, publish-scheduled) because PageAccessGuard elevates the
+ * unit to SUPER_ADMIN on /sermons requests. This check stays as the
+ * service-level backstop for the core actions.
  */
 @Injectable()
 export class SermonsAuthService {

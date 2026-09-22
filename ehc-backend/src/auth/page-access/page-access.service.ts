@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NavGrantType, Role } from '@prisma/client';
+import { NavGrantType, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { isAudioProductionUnitName } from '../../common/audio-production.util';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../types/auth-user';
 
@@ -25,6 +26,7 @@ export class PageAccessService {
   private readonly tenantId: string;
   private roleTable: { byHref: Map<string, Role[]>; expires: number } | null = null;
   private readonly grantCache = new Map<string, { hrefs: Set<string>; expires: number }>();
+  private readonly audioProductionCache = new Map<string, { member: boolean; expires: number }>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -36,6 +38,29 @@ export class PageAccessService {
   invalidate(): void {
     this.roleTable = null;
     this.grantCache.clear();
+    this.audioProductionCache.clear();
+  }
+
+  /**
+   * Whether this person is in the Audio (Post) Production unit — as a member,
+   * lead or assistant. Cached briefly like the page permissions, so being
+   * added to or removed from the unit takes effect within CACHE_TTL_MS.
+   */
+  async isInAudioProduction(actor: AuthUser): Promise<boolean> {
+    const cached = this.audioProductionCache.get(actor.userId);
+    if (cached && cached.expires > Date.now()) return cached.member;
+
+    const or: Prisma.UnitWhereInput[] = [];
+    if (actor.memberId) or.push({ UnitMember: { some: { memberId: actor.memberId } } });
+    if (actor.unitLeadOf.length) or.push({ id: { in: actor.unitLeadOf } });
+    const units = or.length
+      ? await this.prisma.unit.findMany({ where: { tenantId: this.tenantId, OR: or }, select: { name: true } })
+      : [];
+    const member = units.some((unit) => isAudioProductionUnitName(unit.name));
+
+    if (this.audioProductionCache.size >= MAX_CACHED_ACTORS) this.audioProductionCache.clear();
+    this.audioProductionCache.set(actor.userId, { member, expires: Date.now() + CACHE_TTL_MS });
+    return member;
   }
 
   async canReach(actor: AuthUser, href: string): Promise<boolean> {
