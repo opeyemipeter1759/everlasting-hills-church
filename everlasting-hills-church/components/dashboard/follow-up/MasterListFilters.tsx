@@ -1,8 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { CircleDot, UserRound, X } from "lucide-react";
-import { useFollowUpWorkload, type MasterListQuery, type MasterListStatus } from "@/lib/api/follow-up-pipeline";
+import { CalendarX, CircleDot, UserRound, X } from "lucide-react";
+import {
+  useFollowUpServices,
+  useFollowUpWorkload,
+  type MasterListQuery,
+  type MasterListStatus,
+} from "@/lib/api/follow-up-pipeline";
 import { Select } from "@/components/ui/select";
 import { useFollowUpLeadership } from "./useFollowUpLeadership";
 import { MasterListDates } from "./MasterListDates";
@@ -28,9 +33,15 @@ export function MasterListFilters({
 }) {
   const { canRunUnit } = useFollowUpLeadership();
   const { data: workload = [] } = useFollowUpWorkload(canRunUnit);
+  // The Integration Team watches for members who stop coming, so their list
+  // can be narrowed to whoever missed one service. Special services are not
+  // called for everyone, so nobody is absent from them.
+  const showAbsence = scope === "INTEGRATION";
+  const { data: services = [] } = useFollowUpServices();
+  const serviceOptions = services.filter((s) => s.serviceType !== "SPECIAL");
   const [preset, setPreset] = useState<DatePreset>("");
   const set = (patch: Partial<MasterListQuery>) => onChange({ ...value, ...patch });
-  const filtering = !!(value.status || value.from || value.to || value.assigneeId);
+  const filtering = !!(value.status || value.from || value.to || value.assigneeId || value.absentFrom);
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50/60 p-2 dark:border-white/10 dark:bg-white/[0.03]">
@@ -46,6 +57,22 @@ export function MasterListFilters({
           prefixLabel="Status:"
           placeholder="Any"
           options={[{ value: "", label: "Any status" }, ...statusOptionsFor(scope)]}
+        />
+      )}
+
+      {showAbsence && (
+        <Select
+          aria-label="Show members absent from a service"
+          value={value.absentFrom ?? ""}
+          onChange={(absentFrom) => set({ absentFrom })}
+          className={`${PILL} w-[17rem]`}
+          icon={<CalendarX size={15} aria-hidden="true" />}
+          prefixLabel="Absent from:"
+          placeholder="Any service"
+          options={[
+            { value: "", label: "Any service" },
+            ...serviceOptions.map((service) => ({ value: service.id, label: service.name })),
+          ]}
         />
       )}
 

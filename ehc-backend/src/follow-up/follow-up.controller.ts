@@ -125,6 +125,7 @@ export class FollowUpController {
     enum: ['FOLLOW_UP', 'INTEGRATION', 'ALL'],
     description: "FOLLOW_UP leaves out anyone integrated; INTEGRATION shows only those and anyone who has gone away.",
   })
+  @ApiQuery({ name: 'absentFrom', required: false, description: 'A service id: only the members who missed that service.' })
   async masterList(
     @CurrentUser() actor: AuthUser,
     @Query('search') search?: string,
@@ -133,6 +134,7 @@ export class FollowUpController {
     @Query('to') to?: string,
     @Query('assigneeId') assigneeId?: string,
     @Query('scope') scope?: MasterListScope,
+    @Query('absentFrom') absentFrom?: string,
     @Query('take') take?: string,
     @Query('skip') skip?: string,
   ) {
@@ -144,6 +146,7 @@ export class FollowUpController {
       to,
       assigneeId,
       scope,
+      absentFrom,
       take: take ? parseInt(take, 10) : 50,
       skip: skip ? parseInt(skip, 10) : 0,
     });

@@ -30,6 +30,8 @@ export interface MasterListFilters {
   assigneeId?: string;
   /** Whose list this is: Follow Up's, the Integration Team's, or both. */
   scope?: MasterListScope;
+  /** A service id: only the members who missed that service. */
+  absentFrom?: string;
   take: number;
   skip: number;
 }
@@ -54,4 +56,21 @@ export function matchesFilters(row: MasterListRow, filters: MasterListFilters): 
     if ((row.assignedTo?.id ?? null) !== wanted) return false;
   }
   return withinDates(row, filters.from, filters.to);
+}
+
+/** Who checked in for one service, and the end of that service's day. */
+export interface ServiceAttendance {
+  presentIds: Set<string>;
+  dayEndMs: number;
+}
+
+/**
+ * Whether this person missed the service: a member with no check-in for it
+ * who had already joined by that day. First-timers without an account have
+ * no attendance of their own to miss.
+ */
+export function missedService(row: MasterListRow, attendance: ServiceAttendance): boolean {
+  if (row.kind !== 'MEMBER' || attendance.presentIds.has(row.id)) return false;
+  const since = new Date(row.since).getTime();
+  return Number.isNaN(since) || since < attendance.dayEndMs;
 }

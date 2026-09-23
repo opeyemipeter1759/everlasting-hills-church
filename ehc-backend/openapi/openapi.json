@@ -13,6 +13,22 @@
         ],
         "type": "object"
       },
+      "AddFollowUpNoteDto": {
+        "properties": {
+          "body": {
+            "maxLength": 4000,
+            "type": "string"
+          },
+          "parentId": {
+            "description": "The message this answers, when it is a reply.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "type": "object"
+      },
       "ApiError": {
         "properties": {
           "code": {
@@ -177,6 +193,10 @@
         ],
         "type": "object"
       },
+      "AudioUploadUrlDto": {
+        "properties": {},
+        "type": "object"
+      },
       "BulkCreateUsersDto": {
         "properties": {
           "members": {
@@ -306,6 +326,69 @@
           "unitId",
           "fromAssigneeId",
           "toAssigneeId"
+        ],
+        "type": "object"
+      },
+      "BulkStatusChangeDto": {
+        "properties": {
+          "note": {
+            "type": "string"
+          },
+          "subjects": {
+            "description": "The people whose status changes together.",
+            "items": {
+              "$ref": "#/components/schemas/BulkStatusSubjectDto"
+            },
+            "type": "array"
+          },
+          "toStatus": {
+            "description": "What they all become.",
+            "enum": [
+              "FIRST_TIMER",
+              "SECOND_TIMER",
+              "THIRD_TIMER",
+              "INTEGRATED",
+              "AWAY",
+              "OPTED_OUT"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjects",
+          "toStatus"
+        ],
+        "type": "object"
+      },
+      "BulkStatusSubjectDto": {
+        "properties": {
+          "fromStatus": {
+            "description": "The status the leader saw — kept for the record.",
+            "enum": [
+              "FIRST_TIMER",
+              "SECOND_TIMER",
+              "THIRD_TIMER",
+              "INTEGRATED",
+              "AWAY",
+              "OPTED_OUT"
+            ],
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "subjectKind": {
+            "enum": [
+              "MEMBER",
+              "VISITOR"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectKind",
+          "subjectId",
+          "fromStatus"
         ],
         "type": "object"
       },
@@ -1323,6 +1406,18 @@
         ],
         "type": "object"
       },
+      "DecideStatusChangeDto": {
+        "properties": {
+          "approve": {
+            "description": "True to approve, false to reject.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "approve"
+        ],
+        "type": "object"
+      },
       "DiscussionResponseDto": {
         "properties": {
           "content": {
@@ -1332,6 +1427,22 @@
         },
         "required": [
           "content"
+        ],
+        "type": "object"
+      },
+      "EditFollowUpNoteDto": {
+        "properties": {
+          "body": {
+            "maxLength": 4000,
+            "type": "string"
+          },
+          "parentId": {
+            "description": "The message this answers, when it is a reply.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
         ],
         "type": "object"
       },
@@ -1453,6 +1564,10 @@
         "required": [
           "email"
         ],
+        "type": "object"
+      },
+      "GenerateDto": {
+        "properties": {},
         "type": "object"
       },
       "HomeCellDto": {
@@ -1995,6 +2110,18 @@
         ],
         "type": "object"
       },
+      "ReactToNoteDto": {
+        "properties": {
+          "emoji": {
+            "description": "A single emoji.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "emoji"
+        ],
+        "type": "object"
+      },
       "RefreshTokenDto": {
         "properties": {
           "refresh_token": {
@@ -2034,6 +2161,54 @@
         },
         "required": [
           "comment"
+        ],
+        "type": "object"
+      },
+      "RequestStatusChangeDto": {
+        "properties": {
+          "fromStatus": {
+            "description": "The status the requester saw — kept for the record.",
+            "enum": [
+              "FIRST_TIMER",
+              "SECOND_TIMER",
+              "THIRD_TIMER",
+              "INTEGRATED",
+              "AWAY",
+              "OPTED_OUT"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "description": "Why — shown to whoever approves it.",
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "subjectKind": {
+            "enum": [
+              "MEMBER",
+              "VISITOR"
+            ],
+            "type": "string"
+          },
+          "toStatus": {
+            "enum": [
+              "FIRST_TIMER",
+              "SECOND_TIMER",
+              "THIRD_TIMER",
+              "INTEGRATED",
+              "AWAY",
+              "OPTED_OUT"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "subjectKind",
+          "subjectId",
+          "fromStatus",
+          "toStatus"
         ],
         "type": "object"
       },
@@ -4459,6 +4634,63 @@
         "summary": "Get unit member attendance",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/ai/generate": {
+      "post": {
+        "operationId": "AiController_generate",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Run a Gemini prompt for the website AI helpers (admin)",
+        "tags": [
+          "ai"
         ]
       }
     },
@@ -13519,6 +13751,53 @@
         ]
       }
     },
+    "/departments/my-units": {
+      "get": {
+        "operationId": "DepartmentsMineController_getMyUnits",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Units the caller can open, grouped by department (MEMBER+)",
+        "tags": [
+          "departments"
+        ]
+      }
+    },
     "/emails/recipients/preview": {
       "post": {
         "operationId": "EmailsController_previewRecipients",
@@ -15980,6 +16259,53 @@
         ]
       }
     },
+    "/follow-up/counts": {
+      "get": {
+        "operationId": "FollowUpController_masterListCounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Master List totals by status, plus your own caseload (Follow-Up team only)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/leaderboard": {
       "get": {
         "operationId": "FollowUpController_leaderboard",
@@ -16040,6 +16366,136 @@
         ]
       }
     },
+    "/follow-up/master-list": {
+      "get": {
+        "operationId": "FollowUpController_masterList",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "One of the Master List statuses.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Joined or first came on or after this day.",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "\"none\" for nobody assigned.",
+            "in": "query",
+            "name": "assigneeId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "A service id: only the members who missed that service.",
+            "in": "query",
+            "name": "absentFrom",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "take",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "FOLLOW_UP leaves out anyone integrated; INTEGRATION shows only those and anyone who has gone away.",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "enum": [
+                "FOLLOW_UP",
+                "INTEGRATION",
+                "ALL"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Every church member with their follow-up status (Follow-Up team only)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/my-unit": {
       "get": {
         "operationId": "FollowUpController_myUnit",
@@ -16082,6 +16538,392 @@
           }
         ],
         "summary": "The unit whose leader controls (Team roster, Bulk reassign) the caller should see: their own led/assisted unit, or the \"Follow-Up\" unit for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own (MEMBER+ auth, null for anyone else).",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/notes/{kind}/{id}": {
+      "get": {
+        "operationId": "FollowUpController_listNotes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Messages on someone's follow-up thread (Follow-Up team only)",
+        "tags": [
+          "follow-up"
+        ]
+      },
+      "post": {
+        "operationId": "FollowUpController_addNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFollowUpNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Post a message to the thread (Follow-Up team only)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/notes/{noteId}": {
+      "delete": {
+        "operationId": "FollowUpController_deleteNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete your own message, or any if you lead the unit",
+        "tags": [
+          "follow-up"
+        ]
+      },
+      "patch": {
+        "operationId": "FollowUpController_editNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditFollowUpNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit your own message",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/notes/{noteId}/reactions": {
+      "post": {
+        "operationId": "FollowUpController_reactToNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReactToNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Add or take back an emoji on a message (Follow-Up team only)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/person/{kind}/{id}": {
+      "get": {
+        "operationId": "FollowUpController_person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Full details of one first-timer or member (Follow-Up team only)",
         "tags": [
           "follow-up"
         ]
@@ -16488,6 +17330,233 @@
         ]
       }
     },
+    "/follow-up/status": {
+      "post": {
+        "operationId": "FollowUpController_requestStatusChange",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestStatusChangeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Request a Master List status change (Follow-Up team; approved on sight for a lead/HOD)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/status/{id}/decide": {
+      "post": {
+        "operationId": "FollowUpController_decideStatusChange",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideStatusChangeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Approve or reject a status change (UNIT_LEAD/HOD+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/status/bulk": {
+      "post": {
+        "operationId": "FollowUpController_bulkStatusChange",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkStatusChangeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Set the Master List status of several people at once (UNIT_LEAD/HOD+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/status/pending": {
+      "get": {
+        "operationId": "FollowUpController_pendingStatusChanges",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Status changes waiting on approval (UNIT_LEAD/HOD+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/team": {
       "get": {
         "operationId": "FollowUpController_team",
@@ -16586,6 +17655,53 @@
           }
         ],
         "summary": "Recent wins across the church — confirmed positive outcomes and connections made (MEMBER+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/workload": {
+      "get": {
+        "operationId": "FollowUpController_workloadByAssignee",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "How many people each team member is following up (UNIT_LEAD/HOD+)",
         "tags": [
           "follow-up"
         ]
@@ -21676,6 +22792,53 @@
         ]
       }
     },
+    "/members/total": {
+      "get": {
+        "operationId": "MembersSelfServiceController_total",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "{ total: number }"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Total church members, including those who have never signed in (MEMBER+)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/nav-permissions": {
       "delete": {
         "operationId": "NavPermissionsController_resetOne",
@@ -24485,6 +25648,63 @@
         ]
       }
     },
+    "/sermons/audio-upload-url": {
+      "post": {
+        "operationId": "SermonsUploadController_audioUploadUrl",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AudioUploadUrlDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "PUT the file to uploadUrl with the given headers, then save audioUrl on the sermon"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Get a direct-to-storage upload link for sermon audio, up to 1 GB (PASTOR+ or Audio Production)",
+        "tags": [
+          "sermons"
+        ]
+      }
+    },
     "/sermons/featured": {
       "get": {
         "operationId": "SermonsPublicController_getFeaturedSermon",
@@ -25875,7 +27095,7 @@
     },
     "/sermons/upload-audio": {
       "post": {
-        "description": "Uploads an audio file to R2 and returns a public URL.",
+        "description": "Small files only. Large recordings use /sermons/audio-upload-url and go straight to R2.",
         "operationId": "SermonsUploadController_uploadAudio",
         "parameters": [],
         "requestBody": {
@@ -25932,7 +27152,7 @@
             "access-token": []
           }
         ],
-        "summary": "Upload sermon audio (PASTOR+ or Audio Production)",
+        "summary": "Upload sermon audio through the API (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
         ]
@@ -30987,7 +32207,7 @@
             "access-token": []
           }
         ],
-        "summary": "Get visitor by id",
+        "summary": "Get visitor by id (UNIT_LEAD/HOD+)",
         "tags": [
           "visitors"
         ]
@@ -31051,7 +32271,7 @@
             "access-token": []
           }
         ],
-        "summary": "Edit a visitor record (e.g. correct a name or phone number)",
+        "summary": "Edit a visitor record, e.g. correct a name or phone number (UNIT_LEAD/HOD+)",
         "tags": [
           "visitors"
         ]

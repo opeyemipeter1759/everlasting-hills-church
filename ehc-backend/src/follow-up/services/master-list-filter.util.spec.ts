@@ -1,4 +1,4 @@
-import { inScope, matchesFilters } from './master-list-filter.util';
+import { inScope, matchesFilters, missedService } from './master-list-filter.util';
 import type { MasterListRow } from './master-list.util';
 
 function row(over: Partial<MasterListRow>): MasterListRow {
@@ -53,5 +53,28 @@ describe('list scopes', () => {
     expect(matchesFilters(away, { ...page, scope: 'INTEGRATION', assigneeId: 'm-1' })).toBe(true);
     expect(matchesFilters(away, { ...page, scope: 'INTEGRATION', assigneeId: 'none' })).toBe(false);
     expect(matchesFilters(away, { ...page, scope: 'INTEGRATION', from: '2026-06-01' })).toBe(false);
+  });
+});
+
+describe('missedService', () => {
+  const attendance = {
+    presentIds: new Set(['came']),
+    dayEndMs: new Date('2026-09-23T23:00:00.000Z').getTime(),
+  };
+
+  it('counts a member with no check-in for the service', () => {
+    expect(missedService(row({ id: 'stayed-home' }), attendance)).toBe(true);
+  });
+
+  it('leaves out whoever checked in', () => {
+    expect(missedService(row({ id: 'came' }), attendance)).toBe(false);
+  });
+
+  it('leaves out members who joined after the service', () => {
+    expect(missedService(row({ id: 'new', since: '2026-09-25T10:00:00.000Z' }), attendance)).toBe(false);
+  });
+
+  it('leaves out first-timers with no account', () => {
+    expect(missedService(row({ id: 'v-1', kind: 'VISITOR' }), attendance)).toBe(false);
   });
 });

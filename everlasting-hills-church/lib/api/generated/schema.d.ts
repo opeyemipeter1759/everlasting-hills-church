@@ -326,6 +326,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ai/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run a Gemini prompt for the website AI helpers (admin) */
+        post: operations["AiController_generate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/analytics/absentee-trend": {
         parameters: {
             query?: never;
@@ -2643,6 +2660,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/departments/my-units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Units the caller can open, grouped by department (MEMBER+) */
+        get: operations["DepartmentsMineController_getMyUnits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/emails/recipients/preview": {
         parameters: {
             query?: never;
@@ -3213,6 +3247,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Master List totals by status, plus your own caseload (Follow-Up team only) */
+        get: operations["FollowUpController_masterListCounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/follow-up/leaderboard": {
         parameters: {
             query?: never;
@@ -3230,6 +3281,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/master-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every church member with their follow-up status (Follow-Up team only) */
+        get: operations["FollowUpController_masterList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/follow-up/my-unit": {
         parameters: {
             query?: never;
@@ -3239,6 +3307,76 @@ export interface paths {
         };
         /** The unit whose leader controls (Team roster, Bulk reassign) the caller should see: their own led/assisted unit, or the "Follow-Up" unit for ADMIN+/PASTOR/SUPER_ADMIN with no team of their own (MEMBER+ auth, null for anyone else). */
         get: operations["FollowUpController_myUnit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/notes/{kind}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Messages on someone's follow-up thread (Follow-Up team only) */
+        get: operations["FollowUpController_listNotes"];
+        put?: never;
+        /** Post a message to the thread (Follow-Up team only) */
+        post: operations["FollowUpController_addNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/notes/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete your own message, or any if you lead the unit */
+        delete: operations["FollowUpController_deleteNote"];
+        options?: never;
+        head?: never;
+        /** Edit your own message */
+        patch: operations["FollowUpController_editNote"];
+        trace?: never;
+    };
+    "/follow-up/notes/{noteId}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add or take back an emoji on a message (Follow-Up team only) */
+        post: operations["FollowUpController_reactToNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/person/{kind}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Full details of one first-timer or member (Follow-Up team only) */
+        get: operations["FollowUpController_person"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3366,6 +3504,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a Master List status change (Follow-Up team; approved on sight for a lead/HOD) */
+        post: operations["FollowUpController_requestStatusChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/status/{id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve or reject a status change (UNIT_LEAD/HOD+) */
+        post: operations["FollowUpController_decideStatusChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/status/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set the Master List status of several people at once (UNIT_LEAD/HOD+) */
+        post: operations["FollowUpController_bulkStatusChange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/status/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Status changes waiting on approval (UNIT_LEAD/HOD+) */
+        get: operations["FollowUpController_pendingStatusChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/follow-up/team": {
         parameters: {
             query?: never;
@@ -3392,6 +3598,23 @@ export interface paths {
         };
         /** Recent wins across the church — confirmed positive outcomes and connections made (MEMBER+) */
         get: operations["FollowUpController_wins"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/workload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How many people each team member is following up (UNIT_LEAD/HOD+) */
+        get: operations["FollowUpController_workloadByAssignee"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4697,6 +4920,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/total": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Total church members, including those who have never signed in (MEMBER+) */
+        get: operations["MembersSelfServiceController_total"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/nav-permissions": {
         parameters: {
             query?: never;
@@ -5426,6 +5666,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sermons/audio-upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get a direct-to-storage upload link for sermon audio, up to 1 GB (PASTOR+ or Audio Production) */
+        post: operations["SermonsUploadController_audioUploadUrl"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sermons/featured": {
         parameters: {
             query?: never;
@@ -5829,8 +6086,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Upload sermon audio (PASTOR+ or Audio Production)
-         * @description Uploads an audio file to R2 and returns a public URL.
+         * Upload sermon audio through the API (PASTOR+ or Audio Production)
+         * @description Small files only. Large recordings use /sermons/audio-upload-url and go straight to R2.
          */
         post: operations["SermonsUploadController_uploadAudio"];
         delete?: never;
@@ -6834,7 +7091,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get visitor by id */
+        /** Get visitor by id (UNIT_LEAD/HOD+) */
         get: operations["VisitorsController_getById"];
         put?: never;
         post?: never;
@@ -6842,7 +7099,7 @@ export interface paths {
         delete: operations["VisitorsController_delete"];
         options?: never;
         head?: never;
-        /** Edit a visitor record (e.g. correct a name or phone number) */
+        /** Edit a visitor record, e.g. correct a name or phone number (UNIT_LEAD/HOD+) */
         patch: operations["VisitorsController_update"];
         trace?: never;
     };
@@ -6939,6 +7196,11 @@ export interface components {
             /** @example Thanks — updated with attendance numbers. */
             content: string;
         };
+        AddFollowUpNoteDto: {
+            body: string;
+            /** @description The message this answers, when it is a reply. */
+            parentId?: string;
+        };
         ApiError: {
             /** @example BAD_REQUEST */
             code: string;
@@ -7011,6 +7273,7 @@ export interface components {
             /** @description Required when mode is UNIT */
             unitId?: string;
         };
+        AudioUploadUrlDto: Record<string, never>;
         BulkCreateUsersDto: {
             members: components["schemas"]["CreateUserDto"][];
         };
@@ -7061,6 +7324,26 @@ export interface components {
             fromAssigneeId: string;
             toAssigneeId: string;
             unitId: string;
+        };
+        BulkStatusChangeDto: {
+            note?: string;
+            /** @description The people whose status changes together. */
+            subjects: components["schemas"]["BulkStatusSubjectDto"][];
+            /**
+             * @description What they all become.
+             * @enum {string}
+             */
+            toStatus: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "AWAY" | "OPTED_OUT";
+        };
+        BulkStatusSubjectDto: {
+            /**
+             * @description The status the leader saw — kept for the record.
+             * @enum {string}
+             */
+            fromStatus: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "AWAY" | "OPTED_OUT";
+            subjectId: string;
+            /** @enum {string} */
+            subjectKind: "MEMBER" | "VISITOR";
         };
         ChangePasswordDto: {
             /** @example newpassword123 */
@@ -7511,9 +7794,18 @@ export interface components {
             /** @example World English Bible */
             translationName: string;
         };
+        DecideStatusChangeDto: {
+            /** @description True to approve, false to reject. */
+            approve: boolean;
+        };
         DiscussionResponseDto: {
             /** @example I want to start applying this by praying daily. */
             content: string;
+        };
+        EditFollowUpNoteDto: {
+            body: string;
+            /** @description The message this answers, when it is a reply. */
+            parentId?: string;
         };
         EmailAttachmentDto: {
             /** @example flyer.png */
@@ -7570,6 +7862,7 @@ export interface components {
             /** @example user@example.com */
             email: string;
         };
+        GenerateDto: Record<string, never>;
         HomeCellDto: {
             /** @example 12 Adeyemi Street, Ikeja, Lagos */
             address?: string;
@@ -7826,6 +8119,10 @@ export interface components {
              */
             type: "LIKE" | "AMEN" | "CONVICTED";
         };
+        ReactToNoteDto: {
+            /** @description A single emoji. */
+            emoji: string;
+        };
         RefreshTokenDto: {
             /** @description The Supabase refresh token issued at login. */
             refresh_token: string;
@@ -7839,6 +8136,20 @@ export interface components {
         RequestCorrectionDto: {
             /** @example Please add attendance numbers for each service. */
             comment: string;
+        };
+        RequestStatusChangeDto: {
+            /**
+             * @description The status the requester saw — kept for the record.
+             * @enum {string}
+             */
+            fromStatus: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "AWAY" | "OPTED_OUT";
+            /** @description Why — shown to whoever approves it. */
+            note?: string;
+            subjectId: string;
+            /** @enum {string} */
+            subjectKind: "MEMBER" | "VISITOR";
+            /** @enum {string} */
+            toStatus: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "AWAY" | "OPTED_OUT";
         };
         ReviewArticleDto: {
             /** @description A word to the author with the approval */
@@ -9093,6 +9404,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AiController_generate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -14541,6 +14887,37 @@ export interface operations {
             };
         };
     };
+    DepartmentsMineController_getMyUnits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     EmailsController_previewRecipients: {
         parameters: {
             query?: never;
@@ -15985,10 +16362,87 @@ export interface operations {
             };
         };
     };
+    FollowUpController_masterListCounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_leaderboard: {
         parameters: {
             query?: {
                 period?: "week" | "month";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_masterList: {
+        parameters: {
+            query: {
+                search: string;
+                /** @description One of the Master List statuses. */
+                status?: string;
+                /** @description Joined or first came on or after this day. */
+                from?: string;
+                to?: string;
+                /** @description "none" for nobody assigned. */
+                assigneeId?: string;
+                /** @description A service id: only the members who missed that service. */
+                absentFrom?: string;
+                take: string;
+                skip: string;
+                /** @description FOLLOW_UP leaves out anyone integrated; INTEGRATION shows only those and anyone who has gone away. */
+                scope?: "FOLLOW_UP" | "INTEGRATION" | "ALL";
             };
             header?: never;
             path?: never;
@@ -16023,6 +16477,219 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_listNotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_addNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddFollowUpNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_deleteNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_editNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditFollowUpNoteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_reactToNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactToNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_person: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -16284,6 +16951,144 @@ export interface operations {
             };
         };
     };
+    FollowUpController_requestStatusChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestStatusChangeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_decideStatusChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecideStatusChangeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_bulkStatusChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkStatusChangeDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_pendingStatusChanges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_team: {
         parameters: {
             query?: {
@@ -16318,6 +17123,37 @@ export interface operations {
         };
     };
     FollowUpController_wins: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpController_workloadByAssignee: {
         parameters: {
             query?: never;
             header?: never;
@@ -19481,6 +20317,38 @@ export interface operations {
             };
         };
     };
+    MembersSelfServiceController_total: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description { total: number } */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     NavPermissionsController_getAll: {
         parameters: {
             query?: never;
@@ -21165,6 +22033,42 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    SermonsUploadController_audioUploadUrl: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AudioUploadUrlDto"];
+            };
+        };
+        responses: {
+            /** @description PUT the file to uploadUrl with the given headers, then save audioUrl on the sermon */
             200: {
                 headers: {
                     [name: string]: unknown;
