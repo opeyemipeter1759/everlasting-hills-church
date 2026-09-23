@@ -96,8 +96,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         <AnnouncementsPanel announcements={announcements} />
       </div>
 
-      <OnlineCheckInBar />
-
+{/*       <OnlineCheckInBar />
+ */}
       <JourneyBand
         isNewMember={isNewMember}
         member={member}

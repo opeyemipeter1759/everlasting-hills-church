@@ -39,8 +39,21 @@ export class AttendanceCheckInService {
       },
     });
 
-    if (existing) {
+    if (existing?.present) {
       return { alreadyCheckedIn: true as const, service };
+    }
+
+    if (existing) {
+      // An ABSENT record written early must not lock a member out while the
+      // window is open; once it has closed, the absence stands.
+      if (!(await this.sessionWindow.getActiveSession())) {
+        return { alreadyCheckedIn: true as const, service };
+      }
+      await this.prisma.attendanceRecord.update({
+        where: { id: existing.id },
+        data: { present: true, markedBy: 'SELF', checkedInAt: new Date() },
+      });
+      return { alreadyCheckedIn: false as const, service };
     }
 
     await this.prisma.attendanceRecord.create({
