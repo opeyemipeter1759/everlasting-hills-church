@@ -1,3 +1,4 @@
+import Link from "next/link";
 import LegalLayout from "@/components/marketing/LegalLayout";
 import LegalSections, { type LegalContent } from "@/components/marketing/LegalSections";
 import { getStructuredContent } from "@/lib/cms-page";
@@ -33,6 +34,22 @@ export default async function TermsPage({ searchParams }: { searchParams: { prev
   return (
     <LegalLayout eyebrow={c.eyebrow} title={c.title} accent={c.accent} updated={c.updated}>
       <LegalSections content={c} />
+      {/* Outside the CMS content on purpose, like the privacy policy's Google section. */}
+      <section>
+        <h2>Google Calendar</h2>
+        <p>
+          Connecting your Google Calendar is optional. When you connect it, you also agree to Google&rsquo;s own terms of
+          service, and you can disconnect at any time. What the connection does is explained on the{" "}
+          <Link href="/google-calendar" className="text-[#87102C] hover:underline">
+            Google Calendar connection
+          </Link>{" "}
+          page, and how we handle your Google data is set out in our{" "}
+          <Link href="/privacy#google-user-data" className="text-[#87102C] hover:underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+      </section>
     </LegalLayout>
   );
 }

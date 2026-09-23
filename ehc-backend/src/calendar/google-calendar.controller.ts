@@ -133,6 +133,17 @@ export class GoogleCalendarController {
     if (!actor.profileId || !actor.tenantId) {
       throw new ServiceUnavailableException('No profile is linked to this account');
     }
+    // Withdraw the grant at Google too, so disconnecting here is the same as
+    // removing the app from the member's Google Account. Best effort: a token
+    // Google has already invalidated must not stop the local wipe below.
+    const tokens = await this.connections.getDecryptedTokens(actor.profileId, actor.tenantId);
+    const token = tokens?.refreshToken || tokens?.accessToken;
+    if (token && this.oauth.isConfigured) {
+      await this.oauth
+        .createClient()
+        .revokeToken(token)
+        .catch((err: Error) => this.logger.warn(`Google token revoke failed: ${err.message}`));
+    }
     await this.connections.revoke(actor.profileId, actor.tenantId);
     return { disconnected: true };
   }

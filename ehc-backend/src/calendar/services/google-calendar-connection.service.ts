@@ -133,9 +133,15 @@ export class GoogleCalendarConnectionService {
   async revoke(userId: string, tenantId: string): Promise<void> {
     const existing = await this.findActive(userId, tenantId);
     if (!existing) throw new NotFoundException('No Google Calendar connection to disconnect');
-    await this.prisma.googleCalendarConnection.update({
-      where: { id: existing.id },
-      data: { revokedAt: new Date() },
-    });
+    // Disconnecting deletes what we hold for this member, as the privacy
+    // policy promises: the tokens are wiped (the columns are required, so
+    // they're blanked rather than nulled) and the event mappings go with them.
+    await this.prisma.$transaction([
+      this.prisma.googleCalendarSyncedEvent.deleteMany({ where: { connectionId: existing.id } }),
+      this.prisma.googleCalendarConnection.update({
+        where: { id: existing.id },
+        data: { revokedAt: new Date(), accessToken: '', refreshToken: '', googleEmail: null },
+      }),
+    ]);
   }
 }
