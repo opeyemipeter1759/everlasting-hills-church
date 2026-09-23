@@ -15,6 +15,15 @@ import { isAllowedOrigin } from '../../common/allowed-origins.util';
  */
 export const CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar';
 
+/**
+ * Whether a granted scope string includes Calendar access. Google's consent
+ * screen lets people untick individual permissions, so a successful connect
+ * can come back with only the email scope — which can never read or sync.
+ */
+export function hasCalendarScope(scope: string | null | undefined): boolean {
+  return (scope ?? '').split(/\s+/).includes(CALENDAR_SCOPE);
+}
+
 /** State tokens are short-lived — just long enough for the Google consent redirect round trip. */
 const STATE_TTL_MS = 10 * 60 * 1000;
 

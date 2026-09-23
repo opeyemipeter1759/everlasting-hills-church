@@ -31,6 +31,13 @@ export default function ConnectPersonalGoogleCalendarCard() {
       toast.error("We couldn't connect your Google Calendar. Please try again.");
       return;
     }
+    if (result === "missing_scope") {
+      toast.error(
+        "Google Calendar wasn't connected because calendar access was left unticked. Connect again and tick the Google Calendar box on Google's screen.",
+        { duration: 10_000 },
+      );
+      return;
+    }
     if (result !== "connected") return;
 
     // The backend already saved the connection before redirecting here, so
@@ -139,14 +146,21 @@ export default function ConnectPersonalGoogleCalendarCard() {
                 </button>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={handleConnect}
-                disabled={connect.isPending}
-                className="rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-50"
-              >
-                {connect.isPending ? "Connecting..." : "Connect Google Calendar"}
-              </button>
+              <div className="space-y-2.5">
+                <button
+                  type="button"
+                  onClick={handleConnect}
+                  disabled={connect.isPending}
+                  className="rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-50"
+                >
+                  {connect.isPending ? "Connecting..." : "Connect Google Calendar"}
+                </button>
+                {/* Google's screen leaves the calendar box unticked; skipping it connects nothing useful. */}
+                <p className="text-[12.5px] leading-relaxed text-[#8a7e80] dark:text-white/45">
+                  On Google&rsquo;s screen, <strong className="font-semibold text-[#5A4A4D] dark:text-white/70">tick the box to allow access to your Google Calendar</strong>{" "}
+                  (or choose &ldquo;Select all&rdquo;) before you press Continue.
+                </p>
+              </div>
             )}
           </div>
         </div>
