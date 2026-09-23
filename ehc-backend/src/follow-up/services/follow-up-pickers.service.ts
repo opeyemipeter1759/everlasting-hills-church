@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { FollowUpAuthService } from './follow-up-auth.service';
+import { FollowUpAssignableService } from './follow-up-assignable.service';
 
 /** "Add to Master List" candidate search and the assignee-picker team roster. */
 @Injectable()
@@ -14,6 +15,7 @@ export class FollowUpPickersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auth: FollowUpAuthService,
+    private readonly assignable: FollowUpAssignableService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -70,18 +72,32 @@ export class FollowUpPickersService {
     }));
   }
 
+  /**
+   * The roster to pick an assignee from.
+   *
+   * With no unit asked for: the unit this person leads, or the Follow Up unit
+   * for an admin or head of department who leads no team of their own, and
+   * only then their own membership. Resolving by membership alone left the
+   * picker empty for anyone not sitting in a unit — which is most leaders.
+   */
   async team(actor: AuthUser, requestedUnitId?: string) {
-    const unitId = await this.auth.resolveActorUnitId(actor, requestedUnitId);
+    const unitId = requestedUnitId
+      ? await this.auth.resolveActorUnitId(actor, requestedUnitId)
+      : ((await this.auth.resolveMyUnit(actor))?.id ?? (await this.auth.resolveActorUnitId(actor)));
     const rows = await this.prisma.unitMember.findMany({
       where: { tenantId: this.tenantId, unitId },
       include: { Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true } } },
       orderBy: { Member: { firstName: 'asc' } },
     });
-    return rows.map((r) => ({
-      id: r.Member.id,
-      name: `${r.Member.firstName} ${r.Member.lastName}`.trim(),
-      photoUrl: r.Member.photoUrl,
-      isLead: r.isLead,
-    }));
+    // A Super Admin runs the system rather than carrying calls, so they are
+    // never offered as someone to assign work to.
+    return this.assignable.assignableOnly(
+      rows.map((r) => ({
+        id: r.Member.id,
+        name: `${r.Member.firstName} ${r.Member.lastName}`.trim(),
+        photoUrl: r.Member.photoUrl,
+        isLead: r.isLead,
+      })),
+    );
   }
 }

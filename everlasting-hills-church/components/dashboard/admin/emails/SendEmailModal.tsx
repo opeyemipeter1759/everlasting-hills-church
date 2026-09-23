@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { FileText, ImageIcon, Loader2, Paperclip, Search, Send, Users, X } from "lucide-react";
 import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
+import { Select } from "@/components/ui/select";
 import { useUnitsList } from "@/lib/api";
 import { usePeople, type PersonRow } from "@/lib/api/people";
 import { ROLE_LABEL } from "@/components/dashboard/admin/people/peopleShared";
@@ -258,37 +259,25 @@ export default function SendEmailModal({
         </div>
 
         {audience.mode === "UNIT" && (
-          <select
+          <Select
+            aria-label="Unit to email"
             value={audience.unitId ?? ""}
-            onChange={(e) => setAudience({ mode: "UNIT", unitId: e.target.value })}
+            onChange={(unitId) => setAudience({ mode: "UNIT", unitId })}
             className={fieldCls}
-          >
-            <option value="" disabled>
-              Select a unit…
-            </option>
-            {(units ?? []).map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
+            placeholder="Select a unit…"
+            options={(units ?? []).map((u) => ({ value: u.id, label: u.name }))}
+          />
         )}
 
         {audience.mode === "ROLE" && (
-          <select
+          <Select
+            aria-label="Role to email"
             value={audience.role ?? ""}
-            onChange={(e) => setAudience({ mode: "ROLE", role: e.target.value as AudienceFilter["role"] })}
+            onChange={(role) => setAudience({ mode: "ROLE", role: role as AudienceFilter["role"] })}
             className={fieldCls}
-          >
-            <option value="" disabled>
-              Select a role…
-            </option>
-            {Object.entries(ROLE_LABEL).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            placeholder="Select a role…"
+            options={Object.entries(ROLE_LABEL).map(([value, label]) => ({ value, label }))}
+          />
         )}
 
         {audience.mode === "SPECIFIC" && (

@@ -153,7 +153,10 @@ export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
   ["/dashboard/questions", "ADMIN"],
   ["/dashboard/settings/homepage", "ADMIN"],
   ["/dashboard/admin", "ADMIN"],
-  ["/dashboard/follow-up", "MEMBER"],
+  // Membership and Assimilation unit pages. Signing in is enough to route
+  // here; which units a person can actually see comes from the API
+  // (GET /departments/my-units), which is also what builds their sidebar.
+  ["/dashboard/membership-assimilation", "MEMBER"],
   ["/dashboard", "MEMBER"],
   ["/me", "MEMBER"],
   ["/admin", "SUPER_ADMIN"],

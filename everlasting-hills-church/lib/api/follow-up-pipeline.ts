@@ -409,3 +409,191 @@ export function useSendServiceReport() {
     onError: (err) => showToast.error(errorMessage(err, "Couldn't send this report")),
   });
 }
+
+// ── Master list: every church member, with their follow-up status ────────────
+
+export type MasterListStatus =
+  | "FIRST_TIMER"
+  | "SECOND_TIMER"
+  | "THIRD_TIMER"
+  | "INTEGRATED"
+  | "AWAY"
+  | "OPTED_OUT";
+
+export interface MasterListRow {
+  /** A status asked for but not yet approved by a leader. */
+  statusAwaitingApproval?: MasterListStatus | null;
+  /** Member id, or Visitor id for a first-timer with no account yet. */
+  id: string;
+  kind: "MEMBER" | "VISITOR";
+  name: string;
+  photoUrl: string | null;
+  assignedTo: { id: string; name: string } | null;
+  status: MasterListStatus;
+  /** False for a first-timer nobody has created an account for yet. */
+  hasAccount: boolean;
+  /** Services attended — what first/second/third timer is counted from. */
+  attended: number;
+}
+
+export interface MasterListPage {
+  data: MasterListRow[];
+  meta: { total: number; take: number; skip: number };
+}
+
+export interface MasterListQuery {
+  search?: string;
+  status?: MasterListStatus | "";
+  /** Joined or first came on or after this day. */
+  from?: string;
+  to?: string;
+  /** A member id, or "none" for nobody assigned. */
+  assigneeId?: string;
+  /**
+   * Whose list this is. Follow Up leaves out anyone integrated — that work is
+   * finished; the Integration Team takes those people and the ones who have
+   * since stopped coming.
+   */
+  scope?: "FOLLOW_UP" | "INTEGRATION" | "ALL";
+  take?: number;
+  skip?: number;
+}
+
+/** Everyone on the church roll, filtered and paged, for the Master list. */
+export function useFollowUpMasterList(params: MasterListQuery) {
+  const { search = "", status = "", from = "", to = "", assigneeId = "", scope = "ALL", take = 50, skip = 0 } = params;
+  return useQuery({
+    queryKey: ["follow-up", "master-list", { search, status, from, to, assigneeId, scope, take, skip }],
+    queryFn: () =>
+      api.get<MasterListPage>("/follow-up/master-list", {
+        ...(search ? { search } : {}),
+        ...(status ? { status } : {}),
+        ...(from ? { from } : {}),
+        ...(to ? { to } : {}),
+        ...(assigneeId ? { assigneeId } : {}),
+        ...(scope !== "ALL" ? { scope } : {}),
+        take,
+        skip,
+      }),
+    enabled: typeof window !== "undefined",
+  });
+}
+
+export interface AssigneeLoad {
+  memberId: string;
+  name: string;
+  photoUrl: string | null;
+  /** People currently on their plate. */
+  count: number;
+}
+
+/** How many people each team member is following up — leaders only. */
+export function useFollowUpWorkload(enabled: boolean) {
+  return useQuery({
+    queryKey: ["follow-up", "workload"],
+    queryFn: () => api.get<AssigneeLoad[]>("/follow-up/workload"),
+    enabled: enabled && typeof window !== "undefined",
+  });
+}
+
+export interface FollowUpPerson extends MasterListRow {
+  /** The follow-up entry to reassign, when one exists. */
+  entryId: string | null;
+  phone: string | null;
+  email: string | null;
+  gender: string | null;
+  dateOfBirth: string | null;
+  address: string | null;
+  /** First-timers only — what the first-timer form asked them. */
+  occupation: string | null;
+  invitedBy: string | null;
+  howTheyHeard: string | null;
+  membershipInterest: string | null;
+  prayerPoint: string | null;
+  /** Members only. */
+  memberSince: string | null;
+  /** When they first came to the church's notice. */
+  since: string;
+}
+
+/** One person from the Master list, in full — for the detail drawer. */
+export function useFollowUpPerson(person: { kind: string; id: string } | null) {
+  return useQuery({
+    queryKey: ["follow-up", "person", person?.kind, person?.id],
+    queryFn: () => api.get<FollowUpPerson>(`/follow-up/person/${person?.kind}/${person?.id}`),
+    enabled: !!person,
+  });
+}
+
+// ── Status changes: anyone asks, a unit lead or HOD approves ────────────────
+
+export interface PendingStatusChange {
+  id: string;
+  subjectKind: string;
+  subjectId: string;
+  name: string;
+  fromStatus: MasterListStatus;
+  toStatus: MasterListStatus;
+  note: string | null;
+  requestedBy: string;
+  requestedAt: string;
+}
+
+/** Ask for someone's status to be changed; a leader's own ask is approved on sight. */
+export function useRequestStatusChange() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: {
+      subjectKind: string;
+      subjectId: string;
+      fromStatus: MasterListStatus;
+      toStatus: MasterListStatus;
+      note?: string;
+    }) => api.post<{ id: string; state: string }>("/follow-up/status", body),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["follow-up"] }),
+    onError: (err) => showToast.error(errorMessage(err, "Couldn't save that change")),
+  });
+}
+
+export function usePendingStatusChanges(enabled: boolean) {
+  return useQuery({
+    queryKey: ["follow-up", "status", "pending"],
+    queryFn: () => api.get<PendingStatusChange[]>("/follow-up/status/pending"),
+    enabled: enabled && typeof window !== "undefined",
+  });
+}
+
+export function useDecideStatusChange() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, approve }: { id: string; approve: boolean }) =>
+      api.post<{ id: string; state: string }>(`/follow-up/status/${id}/decide`, { approve }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["follow-up"] }),
+    onError: (err) => showToast.error(errorMessage(err, "Couldn't save that change")),
+  });
+}
+
+// ── The team's conversation about one person ────────────────────────────────
+
+export interface NoteReaction {
+  emoji: string;
+  count: number;
+  /** True when you are one of them. */
+  mine: boolean;
+  names: string[];
+}
+
+export interface FollowUpNote {
+  id: string;
+  body: string;
+  createdAt: string;
+  editedAt: string | null;
+  author: { profileId: string; name: string; photoUrl: string | null };
+  reactions: NoteReaction[];
+  replies: FollowUpNote[];
+  canEdit: boolean;
+  canDelete: boolean;
+}
+
+export { useFollowUpNotes, useFollowUpNoteActions } from "./follow-up-notes";
+

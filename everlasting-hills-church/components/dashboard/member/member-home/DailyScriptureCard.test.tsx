@@ -1,3 +1,4 @@
+import { chooseOption } from "@/test/choose-option";
 import {
   render,
   screen,
@@ -121,9 +122,7 @@ describe("DailyScriptureCard", () => {
     } as never));
 
     render(<DailyScriptureCard />);
-    fireEvent.change(screen.getByRole("combobox", { name: "Bible version for this status" }), {
-      target: { value: "KJV" },
-    });
+    chooseOption("Bible version for this status", /^KJV/);
 
     expect(useDailyScripture).toHaveBeenLastCalledWith("KJV");
     await waitFor(() =>

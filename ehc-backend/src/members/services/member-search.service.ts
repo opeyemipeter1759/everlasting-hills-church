@@ -17,6 +17,22 @@ export class MemberSearchService {
   }
 
   /**
+   * Everyone on the church's roll, counted. Every member record counts —
+   * including people an admin entered who have never signed in, since not
+   * having an account says nothing about belonging to the church. People who
+   * have left (transferred, deceased, opted out) are left out.
+   */
+  async countAll(): Promise<{ total: number }> {
+    const total = await this.prisma.member.count({
+      where: {
+        tenantId: this.tenantId,
+        status: { in: [MemberStatus.ACTIVE, MemberStatus.INACTIVE] },
+      },
+    });
+    return { total };
+  }
+
+  /**
    * Member-safe search for "pick a person" UI (e.g. addressing a sermon note/question to
    * someone, or a unit lead adding a member to their unit). Deliberately returns only
    * display-safe fields — no email/phone/tags — since, unlike getAllMembers/getDirectory,

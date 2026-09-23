@@ -6,18 +6,38 @@ import { usePathname } from 'next/navigation';
 import React, { useEffect, useMemo, useState } from 'react';
 import SessionActionMenu from '@/components/auth/SessionActionMenu';
 import { AppHeaderSkeleton } from '@/components/ui/skeleton/AppHeaderSkeleton';
+import { useMyDepartmentUnits } from '@/lib/api';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function titleCase(segment: string): string {
+  return segment
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
 
 function usePageTitle() {
   const pathname = usePathname();
+  // Already loaded for the sidebar, so this costs nothing extra here.
+  const { data: departments = [] } = useMyDepartmentUnits();
+
   return useMemo(() => {
     if (!pathname) return 'Dashboard';
     const segments = pathname.replace('/dashboard', '').split('/').filter(Boolean);
     if (segments.length === 0) return 'Dashboard';
-    return segments[segments.length - 1]
-      .split('-')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
-  }, [pathname]);
+
+    const last = segments[segments.length - 1];
+    // An id in the URL is not a title. Name the unit if we know it, otherwise
+    // fall back to the section the id sits under — never the raw id.
+    if (UUID.test(last)) {
+      const unit = departments.flatMap((d) => d.units).find((u) => u.id === last);
+      if (unit) return unit.name;
+      const parent = segments[segments.length - 2];
+      if (parent) return titleCase(parent);
+    }
+    return titleCase(last);
+  }, [pathname, departments]);
 }
 
 /* short weekday + date string */

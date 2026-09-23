@@ -6,6 +6,7 @@ import { BookOpen, Check, Clock, Loader2, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import Modal from "@/components/ui/overlay/Modal";
+import { Select } from "@/components/ui/select";
 import WordTabs from "./WordTabs";
 import { readingHref, useReadingPlans, useReadingSubscriptions, useSubscribeToPlan, useTranslations, type ReadingIntensity, type ReadingPlanSummary, type ReadingTrack } from "@/lib/api/reading-plan";
 
@@ -106,15 +107,33 @@ export default function PlanChooser() {
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="min-w-0 text-xs font-semibold text-gray-600 dark:text-white/65">
             Plan length
-            <select value={duration} onChange={(event) => setDuration(event.target.value)} className="mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900">
-              <option value="ALL">Any length</option><option value="SHORT">Up to 31 days</option><option value="MEDIUM">32–180 days</option><option value="LONG">Over 180 days</option>
-            </select>
+            <Select
+              aria-label="Plan length"
+              value={duration}
+              onChange={setDuration}
+              className="mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900"
+              options={[
+                { value: "ALL", label: "Any length" },
+                { value: "SHORT", label: "Up to 31 days" },
+                { value: "MEDIUM", label: "32–180 days" },
+                { value: "LONG", label: "Over 180 days" },
+              ]}
+            />
           </label>
           <label className="min-w-0 text-xs font-semibold text-gray-600 dark:text-white/65">
             Suggest a plan for me
-            <select value={familiarity} onChange={(event) => setFamiliarity(event.target.value as ReadingTrack | "")} className="mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900">
-              <option value="">Choose familiarity (optional)</option><option value="NEW_BELIEVER">I am new to the Bible</option><option value="GROWING">I know some of it</option><option value="MATURE">I read regularly</option>
-            </select>
+            <Select
+              aria-label="Suggest a plan for me"
+              value={familiarity}
+              onChange={(track) => setFamiliarity(track as ReadingTrack | "")}
+              placeholder="Choose familiarity (optional)"
+              className="mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900"
+              options={[
+                { value: "NEW_BELIEVER", label: "I am new to the Bible" },
+                { value: "GROWING", label: "I know some of it" },
+                { value: "MATURE", label: "I read regularly" },
+              ]}
+            />
           </label>
         </div>
         <label className="relative block">
@@ -181,7 +200,7 @@ export default function PlanChooser() {
             {selectedPaused ? `Continue from day ${selectedPaused.currentDayIndex}, with your ${selectedPaused.completedDays} completed days saved.` : "This plan starts at day 1. Your other plans stay active, each with its own progress."}
           </p>
           <p className="text-sm leading-relaxed text-gray-600 dark:text-white/65">Read at your own pace. You can do more than one day or take a break; unread days stay ready for you.</p>
-          {!selectedPaused && translations && translations.length > 0 && <label className="block text-sm font-semibold text-gray-700 dark:text-white/75">Bible translation<select value={chosenTranslation} onChange={(event) => setTranslationCode(event.target.value)} disabled={subscribe.isPending} className="mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-gray-200 bg-white px-2 text-sm dark:border-white/10 dark:bg-gray-900">{translations.map((translation) => <option key={translation.code} value={translation.code}>{translation.code} — {translation.name}</option>)}</select></label>}
+          {!selectedPaused && translations && translations.length > 0 && <label className="block text-sm font-semibold text-gray-700 dark:text-white/75">Bible translation<Select aria-label="Bible translation" value={chosenTranslation ?? ""} onChange={setTranslationCode} disabled={subscribe.isPending} className="mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900" options={translations.map((translation) => ({ value: translation.code, label: `${translation.code} — ${translation.name}` }))} /></label>}
           {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setSelected(null)} disabled={subscribe.isPending} className="min-h-11 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70">Cancel</button>

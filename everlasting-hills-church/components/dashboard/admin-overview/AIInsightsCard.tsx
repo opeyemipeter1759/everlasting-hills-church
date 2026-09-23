@@ -100,19 +100,14 @@ export default function AIInsightsCard({ trend, fallback, ...chrome }: Props) {
         />
       </ul>
 
-      {/* Follow-up CTA */}
-      <Link
-        href="/dashboard/follow-up"
-        className="group mt-4 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 transition-colors hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40 dark:border-amber-500/20 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
-      >
-        <span className="flex items-center gap-2.5">
-          <UserCheck size={16} className="text-amber-600 dark:text-amber-400" aria-hidden="true" />
-          <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-            {display.membersNeedingFollowUp} members need follow-up
-          </span>
+      {/* How many need following up. Stated, not linked: the Follow Up screen
+          it used to open has been removed. */}
+      <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 dark:border-amber-500/20 dark:bg-amber-500/10">
+        <UserCheck size={16} className="text-amber-600 dark:text-amber-400" aria-hidden="true" />
+        <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+          {display.membersNeedingFollowUp} members need follow-up
         </span>
-        <ArrowRight size={15} className="text-amber-600 transition-transform group-hover:translate-x-0.5 dark:text-amber-400" aria-hidden="true" />
-      </Link>
+      </div>
     </DashboardCard>
   );
 }

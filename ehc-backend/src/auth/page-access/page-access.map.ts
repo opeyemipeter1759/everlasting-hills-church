@@ -56,7 +56,18 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
   {
     href: '/dashboard/admin/first-timers',
     role: Role.ADMIN,
-    paths: ['/visitors', '/admin/first-timer', '/members/convert-visitor', '/online-attendance', '/ai'],
+    // The funnel under this page reads the same people from the follow-up
+    // side, by status — a listing, not the run of the pipeline.
+    paths: [
+      '/visitors',
+      '/admin/first-timer',
+      '/members/convert-visitor',
+      '/online-attendance',
+      '/ai',
+      '/follow-up/counts',
+      '/follow-up/master-list',
+      '/follow-up/person',
+    ],
   },
   { href: '/dashboard/admin/gatherings', role: Role.ADMIN, paths: ['/gatherings'] },
   { href: '/dashboard/admin/home-cell', role: Role.ADMIN, paths: ['/home-cell'] },

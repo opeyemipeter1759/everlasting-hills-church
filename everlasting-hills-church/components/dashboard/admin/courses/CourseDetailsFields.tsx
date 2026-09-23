@@ -1,5 +1,6 @@
 import { fieldCls } from "@/components/ui/overlay/FormModal";
 import { useCourseCategories } from "@/lib/api/courses";
+import { Select } from "@/components/ui/select";
 
 export interface CourseFormFields {
   title: string;
@@ -51,23 +52,29 @@ export default function CourseDetailsFields({
 
       <div>
         <label className={LABEL}>Category</label>
-        <select value={selectedTopId} onChange={(e) => onChange({ categoryId: e.target.value })} className={fieldCls}>
-          <option value="">Select a category</option>
-          {topLevel.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+        <Select
+          aria-label="Category"
+          value={selectedTopId}
+          onChange={(categoryId) => onChange({ categoryId })}
+          className={fieldCls}
+          placeholder="Select a category"
+          options={topLevel.map((c) => ({ value: c.id, label: c.name }))}
+        />
       </div>
 
       {children.length > 0 && (
         <div>
           <label className={LABEL}>Subcategory</label>
-          <select value={selectedChildId} onChange={(e) => onChange({ categoryId: e.target.value || selectedTopId })} className={fieldCls}>
-            <option value="">All of this category</option>
-            {children.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <Select
+            aria-label="Subcategory"
+            value={selectedChildId}
+            onChange={(childId) => onChange({ categoryId: childId || selectedTopId })}
+            className={fieldCls}
+            options={[
+              { value: "", label: "All of this category" },
+              ...children.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+          />
         </div>
       )}
 

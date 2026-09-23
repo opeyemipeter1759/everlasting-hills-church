@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ImageIcon, Loader2, Plus, Trash2, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
+import { Select } from "@/components/ui/select";
 
 /**
  * A generic, field-driven structured content form. Each designed page declares a
@@ -107,11 +108,12 @@ function FieldView({ field, value, onChange }: { field: FieldDef; value: unknown
   if (field.kind === "select") {
     return (
       <Labeled label={field.label} help={field.help}>
-        <select className={inp} value={(value as string) ?? ""} onChange={(e) => onChange(e.target.value)}>
-          {field.options.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
+        <Select
+          className={inp}
+          value={(value as string) ?? ""}
+          onChange={(next) => onChange(next)}
+          options={field.options}
+        />
       </Labeled>
     );
   }

@@ -48,11 +48,6 @@ export interface AttendancePoint {
   firstTimers?: number;
 }
 
-export interface FunnelStage {
-  label: string;
-  value: number;
-}
-
 export interface MinistryUnit {
   name: string;
   members: number;
@@ -94,7 +89,6 @@ export interface AdminDashboardData {
     membersNeedingFollowUp: number;
   };
   attendanceTrend: AttendancePoint[];
-  firstTimerFunnel: FunnelStage[];
   upcomingEvents: UpcomingEvent[];
   pastoralCare: { prayerRequests: number; counseling: number; hospitalVisits: number };
   celebrations: { birthdaysToday: number; anniversaries: number };
@@ -143,13 +137,6 @@ const MOCK: AdminDashboardData = {
     { label: "May 20", value: 258, serviceType: "WEDNESDAY", men: 77, women: 90, children: 91, firstTimers: 13 },
     { label: "May 24", value: 612, serviceType: "SUNDAY", men: 184, women: 214, children: 214, firstTimers: 30 },
     { label: "May 27", value: 271, serviceType: "WEDNESDAY", men: 81, women: 95, children: 95, firstTimers: 15 },
-  ],
-  firstTimerFunnel: [
-    { label: "Registered", value: 19 },
-    { label: "Contacted", value: 17 },
-    { label: "Followed Up", value: 13 },
-    { label: "Returned", value: 9 },
-    { label: "Joined Class", value: 5 },
   ],
   upcomingEvents: [
     { id: "e1", title: "Prayer School", when: "Saturday · 10:00 AM" },

@@ -5,6 +5,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { DepartmentsMineService } from './services/departments-mine.service';
+import { DepartmentsMyUnitsService } from './services/departments-my-units.service';
 import { DepartmentsEngagementService } from './services/departments-engagement.service';
 import { DepartmentsUnitsService } from './services/departments-units.service';
 
@@ -18,9 +19,23 @@ import { DepartmentsUnitsService } from './services/departments-units.service';
 export class DepartmentsMineController {
   constructor(
     private readonly mine: DepartmentsMineService,
+    private readonly myUnits: DepartmentsMyUnitsService,
     private readonly engagement: DepartmentsEngagementService,
     private readonly units: DepartmentsUnitsService,
   ) {}
+
+  /**
+   * Powers department-led sidebar sections: a member gets the units they serve
+   * in, a department's Admin Head/HOD gets every unit under it, and a
+   * church-wide admin gets them all. MEMBER+ because it only ever returns what
+   * the caller may already see.
+   */
+  @Get('my-units')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Units the caller can open, grouped by department (MEMBER+)' })
+  getMyUnits(@CurrentUser() user: AuthUser) {
+    return this.myUnits.getMine(user);
+  }
 
   @Get('mine')
   @Roles(Role.HOD)

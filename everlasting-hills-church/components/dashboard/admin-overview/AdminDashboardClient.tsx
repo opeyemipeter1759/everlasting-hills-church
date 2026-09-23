@@ -94,7 +94,6 @@ export default function AdminDashboardClient() {
               <AIInsightsCard
                 trend={data.attendanceTrend}
                 fallback={data.aiInsights}
-                viewMoreHref="/dashboard/follow-up"
                 onDismiss={() => dismiss("ai")}
               />
             )}
@@ -119,8 +118,7 @@ export default function AdminDashboardClient() {
           <div className="grid gap-6 lg:grid-cols-2">
             {visible("funnel") && (
               <FirstTimerFunnelCard
-                stages={data.firstTimerFunnel}
-                viewMoreHref="/dashboard/admin/first-timers"
+                viewMoreHref="/dashboard/admin/first-timers/funnel"
                 onDismiss={() => dismiss("funnel")}
               />
             )}

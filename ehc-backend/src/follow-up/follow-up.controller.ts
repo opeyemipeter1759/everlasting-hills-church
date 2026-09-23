@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FollowUpSourceType, FollowUpStage, Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -22,6 +22,17 @@ import { FollowUpAutoSurfaceService } from './services/follow-up-auto-surface.se
 import { FollowUpPastorEscalationService } from './services/follow-up-pastor-escalation.service';
 import { FollowUpConnectionsService } from './services/follow-up-connections.service';
 import { FollowUpGamificationService } from './services/follow-up-gamification.service';
+import { FollowUpMasterListService } from './services/follow-up-master-list.service';
+import { FollowUpPersonService } from './services/follow-up-person.service';
+import { FollowUpStatusService } from './services/follow-up-status.service';
+import { FollowUpStatusPendingService } from './services/follow-up-status-pending.service';
+import { FollowUpStatusBulkService } from './services/follow-up-status-bulk.service';
+import { FollowUpCountsService } from './services/follow-up-counts.service';
+import type { MasterListScope } from './services/master-list-filter.util';
+import { FollowUpWorkloadService } from './services/follow-up-workload.service';
+import { RequestStatusChangeDto, DecideStatusChangeDto, BulkStatusChangeDto } from './dto/status-change.dto';
+import { AddFollowUpNoteDto, EditFollowUpNoteDto, ReactToNoteDto } from './dto/follow-up-note.dto';
+import { FollowUpNotesService } from './services/follow-up-notes.service';
 
 function parseStage(stage?: string): FollowUpStage | undefined {
   if (!stage) return undefined;
@@ -63,6 +74,14 @@ export class FollowUpController {
     private readonly pastorEscalation: FollowUpPastorEscalationService,
     private readonly connections: FollowUpConnectionsService,
     private readonly gamification: FollowUpGamificationService,
+    private readonly masterListService: FollowUpMasterListService,
+    private readonly personService: FollowUpPersonService,
+    private readonly statusService: FollowUpStatusService,
+    private readonly statusPending: FollowUpStatusPendingService,
+    private readonly statusBulk: FollowUpStatusBulkService,
+    private readonly counts: FollowUpCountsService,
+    private readonly notes: FollowUpNotesService,
+    private readonly workload: FollowUpWorkloadService,
   ) {}
 
   // ── Pickers (declared before :id so Express doesn't swallow them as params) ──
@@ -87,6 +106,149 @@ export class FollowUpController {
   @ApiOperation({ summary: 'Recent services, for the Follow-Up page\'s service-day filter (MEMBER+)' })
   async listServices() {
     return this.read.listServices();
+  }
+
+  /**
+   * The Master List: every member of the church, with who is following them up
+   * and where they stand. Behind the same team check as the rest of Follow Up
+   * — it names every member, so it is not for anyone who merely signed in.
+   */
+  @Get('master-list')
+  @ApiOperation({ summary: 'Every church member with their follow-up status (Follow-Up team only)' })
+  @ApiQuery({ name: 'status', required: false, description: 'One of the Master List statuses.' })
+  @ApiQuery({ name: 'from', required: false, description: 'Joined or first came on or after this day.' })
+  @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'assigneeId', required: false, description: '"none" for nobody assigned.' })
+  @ApiQuery({
+    name: 'scope',
+    required: false,
+    enum: ['FOLLOW_UP', 'INTEGRATION', 'ALL'],
+    description: "FOLLOW_UP leaves out anyone integrated; INTEGRATION shows only those and anyone who has gone away.",
+  })
+  async masterList(
+    @CurrentUser() actor: AuthUser,
+    @Query('search') search?: string,
+    @Query('status') status?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('assigneeId') assigneeId?: string,
+    @Query('scope') scope?: MasterListScope,
+    @Query('take') take?: string,
+    @Query('skip') skip?: string,
+  ) {
+    await this.auth.requireAccess(actor);
+    return this.masterListService.list({
+      search,
+      status,
+      from,
+      to,
+      assigneeId,
+      scope,
+      take: take ? parseInt(take, 10) : 50,
+      skip: skip ? parseInt(skip, 10) : 0,
+    });
+  }
+
+  @Get('workload')
+  @ApiOperation({ summary: 'How many people each team member is following up (UNIT_LEAD/HOD+)' })
+  async workloadByAssignee(@CurrentUser() actor: AuthUser) {
+    return this.workload.byAssignee(actor);
+  }
+
+  /** One person from the Master List in full, for the detail drawer. */
+  @Get('person/:kind/:id')
+  @ApiOperation({ summary: 'Full details of one first-timer or member (Follow-Up team only)' })
+  async person(@CurrentUser() actor: AuthUser, @Param('kind') kind: string, @Param('id') id: string) {
+    await this.auth.requireAccess(actor);
+    if (kind !== 'MEMBER' && kind !== 'VISITOR') {
+      throw new BadRequestException('kind must be MEMBER or VISITOR');
+    }
+    return this.personService.get(kind, id);
+  }
+
+  /** The figures above the Master List, counted over the same people it lists. */
+  @Get('counts')
+  @ApiOperation({ summary: 'Master List totals by status, plus your own caseload (Follow-Up team only)' })
+  async masterListCounts(@CurrentUser() actor: AuthUser) {
+    await this.auth.requireAccess(actor);
+    return this.counts.summary(actor);
+  }
+
+  /**
+   * Ask for someone's status to be changed. Anyone on the team may ask; it
+   * waits for a unit lead or head of department unless the asker is one.
+   */
+  @Post('status')
+  @ApiOperation({ summary: 'Request a Master List status change (Follow-Up team; approved on sight for a lead/HOD)' })
+  async requestStatusChange(@CurrentUser() actor: AuthUser, @Body() body: RequestStatusChangeDto) {
+    await this.auth.requireAccess(actor);
+    return this.statusService.request(actor, body);
+  }
+
+  /** Set the status of everyone a leader has ticked, in one go. */
+  @Post('status/bulk')
+  @ApiOperation({ summary: 'Set the Master List status of several people at once (UNIT_LEAD/HOD+)' })
+  async bulkStatusChange(@CurrentUser() actor: AuthUser, @Body() body: BulkStatusChangeDto) {
+    await this.auth.requireAccess(actor);
+    return this.statusBulk.apply(actor, body);
+  }
+
+  @Get('status/pending')
+  @ApiOperation({ summary: 'Status changes waiting on approval (UNIT_LEAD/HOD+)' })
+  async pendingStatusChanges(@CurrentUser() actor: AuthUser) {
+    return this.statusPending.list(actor);
+  }
+
+  @Post('status/:id/decide')
+  @ApiOperation({ summary: 'Approve or reject a status change (UNIT_LEAD/HOD+)' })
+  async decideStatusChange(
+    @CurrentUser() actor: AuthUser,
+    @Param('id') id: string,
+    @Body() body: DecideStatusChangeDto,
+  ) {
+    return this.statusService.decide(actor, id, body.approve);
+  }
+
+  // ── The team's conversation about one person ─────────────────────────────
+
+  @Get('notes/:kind/:id')
+  @ApiOperation({ summary: "Messages on someone's follow-up thread (Follow-Up team only)" })
+  async listNotes(@CurrentUser() actor: AuthUser, @Param('kind') kind: string, @Param('id') id: string) {
+    await this.auth.requireAccess(actor);
+    return this.notes.list(actor, kind, id);
+  }
+
+  @Post('notes/:kind/:id')
+  @ApiOperation({ summary: 'Post a message to the thread (Follow-Up team only)' })
+  async addNote(
+    @CurrentUser() actor: AuthUser,
+    @Param('kind') kind: string,
+    @Param('id') id: string,
+    @Body() body: AddFollowUpNoteDto,
+  ) {
+    await this.auth.requireAccess(actor);
+    return this.notes.add(actor, kind, id, body.body, body.parentId);
+  }
+
+  @Post('notes/:noteId/reactions')
+  @ApiOperation({ summary: 'Add or take back an emoji on a message (Follow-Up team only)' })
+  async reactToNote(@CurrentUser() actor: AuthUser, @Param('noteId') noteId: string, @Body() body: ReactToNoteDto) {
+    await this.auth.requireAccess(actor);
+    return this.notes.react(actor, noteId, body.emoji);
+  }
+
+  @Patch('notes/:noteId')
+  @ApiOperation({ summary: 'Edit your own message' })
+  async editNote(@CurrentUser() actor: AuthUser, @Param('noteId') noteId: string, @Body() body: EditFollowUpNoteDto) {
+    await this.auth.requireAccess(actor);
+    return this.notes.edit(actor, noteId, body.body);
+  }
+
+  @Delete('notes/:noteId')
+  @ApiOperation({ summary: "Delete your own message, or any if you lead the unit" })
+  async deleteNote(@CurrentUser() actor: AuthUser, @Param('noteId') noteId: string) {
+    await this.auth.requireAccess(actor);
+    return this.notes.remove(actor, noteId);
   }
 
   @Get('access')

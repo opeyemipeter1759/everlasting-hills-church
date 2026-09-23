@@ -212,8 +212,8 @@ model Member {
   Question                      Question[]
   Testimonial                   Testimonial[]
   UnitTaskAssigned              UnitTask[]
-  UnitMessageSent               UnitMessage[]            @relation("UnitMessageSender")
-  UnitMessageReceived           UnitMessage[]            @relation("UnitMessageRecipient")
+  UnitMessageSent               UnitMessage[]              @relation("UnitMessageSender")
+  UnitMessageReceived           UnitMessage[]              @relation("UnitMessageRecipient")
   ServiceAssignment             ServiceAssignment[]
 
   @@index([tenantId, status])
@@ -573,47 +573,47 @@ enum QuestionStatus {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Profile {
-  id                            String                  @id
-  userId                        String                  @unique
+  id                            String                     @id
+  userId                        String                     @unique
   /// DEPRECATED: no longer the source of truth for authorization. Effective roles
   /// are derived from RoleGrant + assignments (UnitLeadAssignment, DepartmentHead,
   /// HeadUsherAssignment). Kept as a frozen pre-migration snapshot; do not read it.
-  legacyRole                    Role                    @default(MEMBER)
+  legacyRole                    Role                       @default(MEMBER)
   tenantId                      String
-  createdAt                     DateTime                @default(now())
+  createdAt                     DateTime                   @default(now())
   Member                        Member?
   Notification                  Notification[]
   RoleAssignment                RoleAssignment[]
   CommunityPost                 CommunityPost[]
-  DepartmentHeadOf              DepartmentHead[]        @relation("DepartmentHeadUser")
-  DepartmentHeadAssigned        DepartmentHead[]        @relation("DepartmentHeadAssignedBy")
-  DepartmentHodOf               DepartmentHod[]         @relation("DepartmentHodUser")
-  DepartmentHodAssigned         DepartmentHod[]         @relation("DepartmentHodAssignedBy")
-  ReadingPlanCreated            ReadingPlan[]           @relation("ReadingPlanCreatedBy")
-  MemberArticlesAuthored        MemberArticle[]         @relation("MemberArticleAuthor")
+  DepartmentHeadOf              DepartmentHead[]           @relation("DepartmentHeadUser")
+  DepartmentHeadAssigned        DepartmentHead[]           @relation("DepartmentHeadAssignedBy")
+  DepartmentHodOf               DepartmentHod[]            @relation("DepartmentHodUser")
+  DepartmentHodAssigned         DepartmentHod[]            @relation("DepartmentHodAssignedBy")
+  ReadingPlanCreated            ReadingPlan[]              @relation("ReadingPlanCreatedBy")
+  MemberArticlesAuthored        MemberArticle[]            @relation("MemberArticleAuthor")
   MemberArticlesReviewed        MemberArticle[]            @relation("MemberArticleReviewer")
-  MemberArticleLikes            MemberArticleLike[]     @relation("MemberArticleLiker")
+  MemberArticleLikes            MemberArticleLike[]        @relation("MemberArticleLiker")
   MemberPlanSubscription        MemberPlanSubscription[]
-  RoleGrantOf                   RoleGrant[]             @relation("RoleGrantUser")
-  RoleGrantGranted              RoleGrant[]             @relation("RoleGrantGrantedBy")
-  UnitLeadOf                    UnitLeadAssignment[]    @relation("UnitLeadUser")
-  UnitLeadAssigned              UnitLeadAssignment[]    @relation("UnitLeadAssignedBy")
-  HeadUsherOf                   HeadUsherAssignment[]   @relation("HeadUsherUser")
-  HeadUsherAssigned             HeadUsherAssignment[]   @relation("HeadUsherAssignedBy")
-  FollowUpAdded                 FollowUpEntry[]         @relation("FollowUpAddedBy")
-  FollowUpSentToPastor          FollowUpEntry[]         @relation("FollowUpSentToPastorBy")
-  ServiceFollowUpReportCompiled ServiceFollowUpReport[] @relation("ServiceFollowUpReportCompiledBy")
-  ReportSubmitted               Report[]                @relation("ReportSubmittedBy")
-  ReportReviewed                Report[]                @relation("ReportReviewedBy")
+  RoleGrantOf                   RoleGrant[]                @relation("RoleGrantUser")
+  RoleGrantGranted              RoleGrant[]                @relation("RoleGrantGrantedBy")
+  UnitLeadOf                    UnitLeadAssignment[]       @relation("UnitLeadUser")
+  UnitLeadAssigned              UnitLeadAssignment[]       @relation("UnitLeadAssignedBy")
+  HeadUsherOf                   HeadUsherAssignment[]      @relation("HeadUsherUser")
+  HeadUsherAssigned             HeadUsherAssignment[]      @relation("HeadUsherAssignedBy")
+  FollowUpAdded                 FollowUpEntry[]            @relation("FollowUpAddedBy")
+  FollowUpSentToPastor          FollowUpEntry[]            @relation("FollowUpSentToPastorBy")
+  ServiceFollowUpReportCompiled ServiceFollowUpReport[]    @relation("ServiceFollowUpReportCompiledBy")
+  ReportSubmitted               Report[]                   @relation("ReportSubmittedBy")
+  ReportReviewed                Report[]                   @relation("ReportReviewedBy")
   ReportComment                 ReportComment[]
   UnitTaskCreated               UnitTask[]
   UnitExpenseCreated            UnitExpense[]
   UnitTaskCommentAuthor         UnitTaskComment[]
-  UnitTaskReportAuthored        UnitTaskReport[]        @relation("UnitTaskReportAuthor")
-  UnitTaskReportReviewed        UnitTaskReport[]        @relation("UnitTaskReportReviewer")
-  CalendarFeedToken             CalendarFeedToken[]     @relation("CalendarFeedTokenUser")
-  PushSubscription              PushSubscription[]      @relation("PushSubscriptionUser")
-  NotificationPreference        NotificationPreference? @relation("NotificationPreferenceUser")
+  UnitTaskReportAuthored        UnitTaskReport[]           @relation("UnitTaskReportAuthor")
+  UnitTaskReportReviewed        UnitTaskReport[]           @relation("UnitTaskReportReviewer")
+  CalendarFeedToken             CalendarFeedToken[]        @relation("CalendarFeedTokenUser")
+  PushSubscription              PushSubscription[]         @relation("PushSubscriptionUser")
+  NotificationPreference        NotificationPreference?    @relation("NotificationPreferenceUser")
   GoogleCalendarConnection      GoogleCalendarConnection[] @relation("GoogleCalendarConnectionUser")
 }
 
@@ -940,96 +940,99 @@ model ServiceHeadcount {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Tenant {
-  id                     String                   @id
-  name                   String
-  slug                   String                   @unique
-  createdAt              DateTime                 @default(now())
-  ReadingPlan            ReadingPlan[]
-  MemberPlanSubscription MemberPlanSubscription[]
-  MemberArticle          MemberArticle[]
-  MemberArticleLike      MemberArticleLike[]
-  Announcement           Announcement[]
-  Book                   Book[]
-  BookCollection         BookCollection[]
-  BookComment            BookComment[]
-  EmailTemplate          EmailTemplate[]
-  EmailSend              EmailSend[]
-  EmailSettings          EmailSettings?
-  Course                 Course[]
-  CommunityPost          CommunityPost[]
-  AttendanceRecord       AttendanceRecord[]
-  AuditLog               AuditLog[]
-  CareAssignment         CareAssignment[]
-  FollowUpEntry          FollowUpEntry[]
-  FollowUpContactLog     FollowUpContactLog[]
-  CmsPage                Page[]
-  ContentVersion         ContentVersion[]
-  MediaAsset             MediaAsset[]
-  SiteConfig             SiteConfig?
-  ContactMessage         ContactMessage[]
-  DiscussionQuestion     DiscussionQuestion[]
-  DiscussionResponse     DiscussionResponse[]
-  EmailSubscriber        EmailSubscriber[]
-  EngagementScore        EngagementScore[]
-  Event                  Event[]
-  EventRsvp              EventRsvp[]
-  FollowUpTask           FollowUpTask[]
-  FormSubmission         FormSubmission[]
-  GivingRecord           GivingRecord[]
-  Household              Household[]
-  InventoryItem          InventoryItem[]
-  InventoryHistory       InventoryHistory[]
-  KnownDevice            KnownDevice[]
-  ListenProgress         ListenProgress[]
-  Member                 Member[]
-  Notification           Notification[]
-  OnlineCheckIn          OnlineCheckIn[]
-  PastorNote             PastorNote[]
-  PastoralAlert          PastoralAlert[]
-  PaystackWebhookLog     PaystackWebhookLog[]
-  PrayerRequest          PrayerRequest[]
-  RoleAssignment         RoleAssignment[]
-  Sermon                 Sermon[]
-  SermonBookmark         SermonBookmark[]
-  SermonComment          SermonComment[]
-  SermonDirectMessage    SermonDirectMessage[]
-  BirthdayGreeting       BirthdayGreeting[]
-  SermonEpisode          SermonEpisode[]
-  SermonNote             SermonNote[]
-  SermonReaction         SermonReaction[]
-  Service                Service[]
-  ServiceHeadcount       ServiceHeadcount[]
-  Department             Department[]
-  DepartmentHead         DepartmentHead[]
-  DepartmentHod          DepartmentHod[]
-  RoleGrant              RoleGrant[]
-  UnitLeadAssignment     UnitLeadAssignment[]
-  HeadUsherAssignment    HeadUsherAssignment[]
-  SiteSettings           SiteSettings[]
-  Testimonial            Testimonial[]
-  Unit                   Unit[]
-  Visitor                Visitor[]
-  Report                 Report[]
-  ReportComment          ReportComment[]
-  HomeCell               HomeCell[]
-  CourseCategory         CourseCategory[]
-  Question               Question[]
-  UnitPosition           UnitPosition[]
-  UnitTask               UnitTask[]
-  UnitExpense            UnitExpense[]
-  UnitTaskComment        UnitTaskComment[]
-  UnitTaskReport         UnitTaskReport[]
-  UnitMessage             UnitMessage[]
-  CalendarFeedToken      CalendarFeedToken[]
-  PushSubscription       PushSubscription[]
-  NotificationPreference NotificationPreference[]
-  RecurringGathering     RecurringGathering[]
-  ServiceAssignment      ServiceAssignment[]
-  FollowUpConnection     FollowUpConnection[]
-  ServiceFollowUpReport  ServiceFollowUpReport[]
+  id                       String                     @id
+  name                     String
+  slug                     String                     @unique
+  createdAt                DateTime                   @default(now())
+  ReadingPlan              ReadingPlan[]
+  MemberPlanSubscription   MemberPlanSubscription[]
+  MemberArticle            MemberArticle[]
+  MemberArticleLike        MemberArticleLike[]
+  Announcement             Announcement[]
+  Book                     Book[]
+  BookCollection           BookCollection[]
+  BookComment              BookComment[]
+  EmailTemplate            EmailTemplate[]
+  EmailSend                EmailSend[]
+  EmailSettings            EmailSettings?
+  Course                   Course[]
+  CommunityPost            CommunityPost[]
+  AttendanceRecord         AttendanceRecord[]
+  AuditLog                 AuditLog[]
+  CareAssignment           CareAssignment[]
+  FollowUpEntry            FollowUpEntry[]
+  FollowUpStatusChange     FollowUpStatusChange[]
+  FollowUpContactLog       FollowUpContactLog[]
+  CmsPage                  Page[]
+  ContentVersion           ContentVersion[]
+  MediaAsset               MediaAsset[]
+  SiteConfig               SiteConfig?
+  ContactMessage           ContactMessage[]
+  DiscussionQuestion       DiscussionQuestion[]
+  DiscussionResponse       DiscussionResponse[]
+  EmailSubscriber          EmailSubscriber[]
+  EngagementScore          EngagementScore[]
+  Event                    Event[]
+  EventRsvp                EventRsvp[]
+  FollowUpTask             FollowUpTask[]
+  FormSubmission           FormSubmission[]
+  GivingRecord             GivingRecord[]
+  Household                Household[]
+  InventoryItem            InventoryItem[]
+  InventoryHistory         InventoryHistory[]
+  KnownDevice              KnownDevice[]
+  ListenProgress           ListenProgress[]
+  Member                   Member[]
+  Notification             Notification[]
+  OnlineCheckIn            OnlineCheckIn[]
+  PastorNote               PastorNote[]
+  PastoralAlert            PastoralAlert[]
+  PaystackWebhookLog       PaystackWebhookLog[]
+  PrayerRequest            PrayerRequest[]
+  RoleAssignment           RoleAssignment[]
+  Sermon                   Sermon[]
+  SermonBookmark           SermonBookmark[]
+  SermonComment            SermonComment[]
+  SermonDirectMessage      SermonDirectMessage[]
+  BirthdayGreeting         BirthdayGreeting[]
+  SermonEpisode            SermonEpisode[]
+  SermonNote               SermonNote[]
+  SermonReaction           SermonReaction[]
+  Service                  Service[]
+  ServiceHeadcount         ServiceHeadcount[]
+  Department               Department[]
+  DepartmentHead           DepartmentHead[]
+  DepartmentHod            DepartmentHod[]
+  RoleGrant                RoleGrant[]
+  UnitLeadAssignment       UnitLeadAssignment[]
+  HeadUsherAssignment      HeadUsherAssignment[]
+  SiteSettings             SiteSettings[]
+  Testimonial              Testimonial[]
+  Unit                     Unit[]
+  Visitor                  Visitor[]
+  Report                   Report[]
+  ReportComment            ReportComment[]
+  HomeCell                 HomeCell[]
+  CourseCategory           CourseCategory[]
+  Question                 Question[]
+  UnitPosition             UnitPosition[]
+  UnitTask                 UnitTask[]
+  UnitExpense              UnitExpense[]
+  UnitTaskComment          UnitTaskComment[]
+  UnitTaskReport           UnitTaskReport[]
+  UnitMessage              UnitMessage[]
+  CalendarFeedToken        CalendarFeedToken[]
+  PushSubscription         PushSubscription[]
+  NotificationPreference   NotificationPreference[]
+  RecurringGathering       RecurringGathering[]
+  ServiceAssignment        ServiceAssignment[]
+  FollowUpConnection       FollowUpConnection[]
+  ServiceFollowUpReport    ServiceFollowUpReport[]
   GoogleCalendarConnection GoogleCalendarConnection[]
-  NavPermission          NavPermission[]
-  NavPermissionGrant     NavPermissionGrant[]
+  NavPermission            NavPermission[]
+  NavPermissionGrant       NavPermissionGrant[]
+  followUpNotes            FollowUpNote[]
+  followUpNoteReactions    FollowUpNoteReaction[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1259,7 +1262,7 @@ model Unit {
   UnitPosition          UnitPosition[]
   UnitTask              UnitTask[]
   UnitExpense           UnitExpense[]
-  UnitMessage            UnitMessage[]
+  UnitMessage           UnitMessage[]
   ServiceAssignment     ServiceAssignment[]
 
   @@index([departmentId])
@@ -1490,24 +1493,24 @@ enum UnitTaskReportStatus {
 /// lead's status report to the Super Admin). A task can accumulate several —
 /// one per check-in — and the lead acknowledges each or sends it back.
 model UnitTaskReport {
-  id             String                @id
-  tenantId       String
-  taskId         String
-  authorId       String // Profile.id of the assignee who wrote it
-  outcome        UnitTaskReportOutcome
-  summary        String
-  challenges     String?
-  nextSteps      String?
-  status         UnitTaskReportStatus  @default(SUBMITTED)
-  reviewNote     String?
-  reviewedById   String? // Profile.id of the lead/assistant who last acted on it
-  reviewedAt     DateTime?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @default(now()) @updatedAt
-  Tenant         Tenant                @relation(fields: [tenantId], references: [id])
-  Task           UnitTask              @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  Author         Profile               @relation("UnitTaskReportAuthor", fields: [authorId], references: [id])
-  ReviewedBy     Profile?              @relation("UnitTaskReportReviewer", fields: [reviewedById], references: [id])
+  id           String                @id
+  tenantId     String
+  taskId       String
+  authorId     String // Profile.id of the assignee who wrote it
+  outcome      UnitTaskReportOutcome
+  summary      String
+  challenges   String?
+  nextSteps    String?
+  status       UnitTaskReportStatus  @default(SUBMITTED)
+  reviewNote   String?
+  reviewedById String? // Profile.id of the lead/assistant who last acted on it
+  reviewedAt   DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @default(now()) @updatedAt
+  Tenant       Tenant                @relation(fields: [tenantId], references: [id])
+  Task         UnitTask              @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  Author       Profile               @relation("UnitTaskReportAuthor", fields: [authorId], references: [id])
+  ReviewedBy   Profile?              @relation("UnitTaskReportReviewer", fields: [reviewedById], references: [id])
 
   @@index([taskId, createdAt])
   @@index([authorId])
@@ -1515,23 +1518,23 @@ model UnitTaskReport {
 
 /// A direct message between two members of the same unit.
 model UnitMessage {
-  id          String   @id
+  id          String        @id
   tenantId    String
   unitId      String
   senderId    String
   recipientId String
   content     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   editedAt    DateTime?
   deletedAt   DateTime?
   readAt      DateTime?
   replyToId   String?
-  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
-  Unit        Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  Sender      Member   @relation("UnitMessageSender", fields: [senderId], references: [id])
-  Recipient   Member   @relation("UnitMessageRecipient", fields: [recipientId], references: [id])
-  ReplyTo     UnitMessage? @relation("UnitMessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  Tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  Unit        Unit          @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  Sender      Member        @relation("UnitMessageSender", fields: [senderId], references: [id])
+  Recipient   Member        @relation("UnitMessageRecipient", fields: [recipientId], references: [id])
+  ReplyTo     UnitMessage?  @relation("UnitMessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
   Replies     UnitMessage[] @relation("UnitMessageReplies")
 
   @@index([tenantId, unitId, createdAt])
@@ -1870,25 +1873,25 @@ model CalendarFeedToken {
 /// write access, so a DB leak must not hand over the member's whole Google
 /// Calendar.
 model GoogleCalendarConnection {
-  id             String    @id
-  tenantId       String
-  userId         String // Profile.id
-  googleEmail    String?
-  accessToken    String
-  refreshToken   String
-  tokenExpiry    DateTime
-  scope          String
+  id               String                      @id
+  tenantId         String
+  userId           String // Profile.id
+  googleEmail      String?
+  accessToken      String
+  refreshToken     String
+  tokenExpiry      DateTime
+  scope            String
   /// The id of the "Everlasting Hills Church" secondary calendar this app
   /// created in the member's Google account. Null until the first sync
   /// creates it; if Google reports it deleted, the sync recreates it and
   /// updates this field rather than falling over.
   googleCalendarId String?
-  connectedAt    DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  revokedAt      DateTime? // null = active
-  Tenant         Tenant    @relation(fields: [tenantId], references: [id])
-  User           Profile   @relation("GoogleCalendarConnectionUser", fields: [userId], references: [id], onDelete: Cascade)
-  SyncedEvents   GoogleCalendarSyncedEvent[]
+  connectedAt      DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  revokedAt        DateTime? // null = active
+  Tenant           Tenant                      @relation(fields: [tenantId], references: [id])
+  User             Profile                     @relation("GoogleCalendarConnectionUser", fields: [userId], references: [id], onDelete: Cascade)
+  SyncedEvents     GoogleCalendarSyncedEvent[]
 
   @@index([tenantId])
   @@index([userId])
@@ -1900,11 +1903,11 @@ model GoogleCalendarConnection {
 /// kind-prefixed ids already used elsewhere for these items (e.g.
 /// "service-<id>"), so the two stay easy to cross-reference by inspection.
 model GoogleCalendarSyncedEvent {
-  id            String   @id
+  id            String                   @id
   connectionId  String
   itemKey       String
   googleEventId String
-  updatedAt     DateTime @updatedAt
+  updatedAt     DateTime                 @updatedAt
   Connection    GoogleCalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
 
   @@unique([connectionId, itemKey])
@@ -2613,4 +2616,80 @@ model MemberArticleLike {
   Profile   Profile       @relation("MemberArticleLiker", fields: [profileId], references: [id], onDelete: Cascade)
 
   @@unique([articleId, profileId], map: "MemberArticleLike_once")
+}
+
+/// A request to change how someone reads on the Follow Up Master List —
+/// first timer, second timer, integrated, away and so on.
+///
+/// The status itself is normally worked out from attendance and follow-up
+/// outcomes. When the team knows better than the arithmetic, anyone on the
+/// team can ask for it to be changed; the change only counts once a unit lead
+/// or head of department approves it, and the latest approved row is what the
+/// list then shows. Keeping it as a record rather than a column on Member
+/// leaves an account of who asked, who agreed, and when.
+model FollowUpStatusChange {
+  id            String    @id
+  tenantId      String
+  /// 'MEMBER' or 'VISITOR' — the Master List has both.
+  subjectKind   String
+  /// Member.id or Visitor.id. No FK: one column cannot point at two tables.
+  subjectId     String
+  fromStatus    String
+  toStatus      String
+  /// PENDING | APPROVED | REJECTED
+  state         String    @default("PENDING")
+  note          String?
+  requestedById String // Profile.id
+  requestedAt   DateTime  @default(now())
+  decidedById   String? // Profile.id of the leader who approved or rejected
+  decidedAt     DateTime?
+  Tenant        Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, state])
+  @@index([tenantId, subjectKind, subjectId, state])
+}
+
+/// A message on someone's Follow Up thread — what the team said to each other
+/// about this person, read like a chat rather than an audit trail.
+///
+/// Keyed by subject rather than by FollowUpEntry so that anyone on the Master
+/// List can be discussed, including a first-timer nobody has opened an entry
+/// for yet. Edits keep the original row and stamp editedAt, so a message that
+/// changed says so.
+model FollowUpNote {
+  id          String                 @id
+  tenantId    String
+  /// 'MEMBER' or 'VISITOR' — the Master List has both.
+  subjectKind String
+  /// Member.id or Visitor.id. No FK: one column cannot point at two tables.
+  subjectId   String
+  authorId    String // Profile.id
+  body        String
+  /// Set when this message is a reply — the message it answers.
+  parentId    String?
+  createdAt   DateTime               @default(now())
+  editedAt    DateTime?
+  Tenant      Tenant                 @relation(fields: [tenantId], references: [id])
+  Parent      FollowUpNote?          @relation("FollowUpNoteReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  Replies     FollowUpNote[]         @relation("FollowUpNoteReplies")
+  Reactions   FollowUpNoteReaction[]
+
+  @@index([tenantId, subjectKind, subjectId, createdAt])
+  @@index([parentId])
+}
+
+/// One person's emoji on one message. The unique key is what makes a second
+/// tap of the same emoji take it back rather than stacking duplicates.
+model FollowUpNoteReaction {
+  id        String       @id
+  tenantId  String
+  noteId    String
+  profileId String
+  emoji     String
+  createdAt DateTime     @default(now())
+  Note      FollowUpNote @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  Tenant    Tenant       @relation(fields: [tenantId], references: [id])
+
+  @@unique([noteId, profileId, emoji])
+  @@index([noteId])
 }

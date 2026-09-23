@@ -148,7 +148,7 @@ export type NavItem = {
   icon: LucideIcon;
   minRole: UserRole;
   maxRole?: UserRole;
-  requiresAccess?: "unitLead" | "unitMember" | "followUp" | "audioProduction";
+  requiresAccess?: "unitLead" | "unitMember" | "audioProduction";
   dynamicUnits?: "lead" | "member";
 };
 
@@ -173,12 +173,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead", dynamicUnits: "lead" },
     ],
   },
-    {
-    section: "Follow up",
-    items: [
-      { label: "Follow Up", href: "/dashboard/follow-up", icon: Users, minRole: "MEMBER", requiresAccess: "followUp" },
-    ],
-  },
   {
     section: "My Department",
     items: [
@@ -191,13 +185,9 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "People",        href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
-      // Everyone serving, read person-first — the same UnitMember rows the unit
-      // screens show team-first. Sits with People and First Timers because all
-      // three answer "who", not "what".
+
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
-      // How the church is reading, read-only, so leaders know who to encourage.
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
-      // Sound & Media Project pledges members make from their home page.
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
       { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
@@ -252,8 +242,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Home",           href: "/dashboard",            icon: BookOpen,       minRole: "MEMBER" },
       { label: "Attendance",     href: "/dashboard/attendance", icon: CheckCircle,    minRole: "MEMBER" },
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
-      // The daily reading plan, and the articles members write about what they
-      // read. Both were reachable only from a dashboard card before this.
       { label: "Bible Plan",          href: "/dashboard/reading",            icon: BookMarked,          minRole: "MEMBER" },
       { label: "Articles",            href: "/dashboard/articles",           icon: Newspaper,           minRole: "MEMBER" },
       { label: "Books",                href: "/dashboard/books",             icon: Library,             minRole: "MEMBER" },

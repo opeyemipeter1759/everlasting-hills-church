@@ -16,6 +16,8 @@ import { FollowUpAuditService } from './follow-up-audit.service';
 import { FollowUpAutoAssignService } from './follow-up-auto-assign.service';
 import { FollowUpNotifyService } from './follow-up-notify.service';
 import { FollowUpUnitLeaderLookupService } from './follow-up-unit-leader-lookup.service';
+import { FollowUpAssignableService } from './follow-up-assignable.service';
+import { findFollowUpUnit } from '../follow-up-unit.util';
 
 function personName(p: { firstName: string; lastName: string }): string {
   return `${p.firstName} ${p.lastName}`.trim();
@@ -34,6 +36,7 @@ export class FollowUpIntakeService {
     private readonly autoAssign: FollowUpAutoAssignService,
     private readonly notify: FollowUpNotifyService,
     private readonly unitLeaderLookup: FollowUpUnitLeaderLookupService,
+    private readonly assignable: FollowUpAssignableService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -75,6 +78,9 @@ export class FollowUpIntakeService {
         select: { id: true },
       });
       if (!isMember) throw new BadRequestException('Assignee must be a member of this unit');
+      if (await this.assignable.isSuperAdmin(dto.assigneeId)) {
+        throw new BadRequestException('A Super Admin cannot be assigned follow-up work');
+      }
     }
 
     // One entry per person, full stop — not per team. Without this, a leader
@@ -143,6 +149,11 @@ export class FollowUpIntakeService {
     const entry = await this.prisma.followUpEntry.findFirst({ where: { id, tenantId: this.tenantId } });
     if (!entry) throw new NotFoundException('Follow-up entry not found');
 
+    // Super Admins run the system; follow-up work is never theirs to carry.
+    if (await this.assignable.isSuperAdmin(dto.assigneeId)) {
+      throw new BadRequestException('A Super Admin cannot be assigned follow-up work');
+    }
+
     // The assignee's own unit — not the entry's current unit — decides both who's
     // allowed to make this assignment and where the entry ends up. This is what
     // lets a leader claim someone from the shared "Follow-Up" pool into their team.
@@ -156,10 +167,7 @@ export class FollowUpIntakeService {
       throw new ForbiddenException('You can only assign to your own team');
     }
 
-    const followUpUnit = await this.prisma.unit.findFirst({
-      where: { tenantId: this.tenantId, name: 'Follow-Up' },
-      select: { id: true },
-    });
+    const followUpUnit = await findFollowUpUnit(this.prisma, this.tenantId);
     if (entry.unitId !== assigneeMembership.unitId && entry.unitId !== followUpUnit?.id) {
       throw new ForbiddenException('This entry already belongs to a different team');
     }
@@ -252,6 +260,9 @@ export class FollowUpIntakeService {
     ]);
     if (!fromMembership || !toMembership) {
       throw new BadRequestException('Both members must belong to this unit');
+    }
+    if (await this.assignable.isSuperAdmin(dto.toAssigneeId)) {
+      throw new BadRequestException('A Super Admin cannot be assigned follow-up work');
     }
 
     const result = await this.prisma.followUpEntry.updateMany({

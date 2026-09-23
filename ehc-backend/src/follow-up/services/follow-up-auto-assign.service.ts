@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FollowUpStage, MemberStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { FollowUpAssignableService } from './follow-up-assignable.service';
 import type { Env } from '../../config/env.validation';
 
 /**
@@ -18,6 +19,7 @@ export class FollowUpAutoAssignService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly assignable: FollowUpAssignableService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -34,10 +36,20 @@ export class FollowUpAutoAssignService {
       return null;
     }
 
+    // Never hand work to a Super Admin: they run the system rather than
+    // carrying calls, and auto-assign would otherwise quietly park people on
+    // someone who was never going to ring them.
+    const superAdmins = await this.assignable.superAdminMemberIds(roster.map((r) => r.memberId));
+    const assignable = roster.filter((r) => !superAdmins.has(r.memberId));
+    if (assignable.length === 0) {
+      this.logger.debug(`auto-assign: unit ${unitId} has nobody assignable, leaving unassigned`);
+      return null;
+    }
+
     const genderMatched = subjectGender
-      ? roster.filter((r) => (r.Member.gender ?? '').trim().toLowerCase() === subjectGender.trim().toLowerCase())
+      ? assignable.filter((r) => (r.Member.gender ?? '').trim().toLowerCase() === subjectGender.trim().toLowerCase())
       : [];
-    const pool = genderMatched.length > 0 ? genderMatched : roster;
+    const pool = genderMatched.length > 0 ? genderMatched : assignable;
 
     const loads = await this.prisma.followUpEntry.groupBy({
       by: ['assigneeId'],

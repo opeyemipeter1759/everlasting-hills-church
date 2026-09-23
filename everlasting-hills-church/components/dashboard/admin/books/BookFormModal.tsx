@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Modal from "@/components/ui/overlay/Modal";
+import { Select } from "@/components/ui/select";
 import FileUpload from "@/components/ui/form/FileUpload";
 import { EMPTY_FORM } from "./types";
 import type { Book, BookCollection, BookFormValues } from "./types";
@@ -86,20 +87,14 @@ export default function BookFormModal({
 
         <div>
           <label className={labelCls}>Collection</label>
-          <select
+          <Select
+            aria-label="Collection"
             value={values.collectionId}
-            onChange={(e) => set("collectionId", e.target.value)}
+            onChange={(collectionId) => set("collectionId", collectionId)}
             className={inputCls}
-          >
-            <option value="" disabled>
-              Choose a collection
-            </option>
-            {collections.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            placeholder="Choose a collection"
+            options={collections.map((c) => ({ value: c.id, label: c.name }))}
+          />
           {collections.length === 0 && (
             <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
               Add a collection first (e.g. Faith, Power, Healing) before adding a book.

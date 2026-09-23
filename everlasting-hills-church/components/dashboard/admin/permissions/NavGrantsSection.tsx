@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Loader2, Trash2, UserPlus, Users, Crown } from "lucide-react";
 import { NAV_GROUPS } from "@/config/config";
+import { Select } from "@/components/ui/select";
 import {
   NAV_GRANT_TYPE_LABELS,
   useAddNavGrant,
@@ -77,39 +78,32 @@ export default function NavGrantsSection() {
       <div className="mb-5 flex flex-wrap items-end gap-2 rounded-xl border border-dashed border-gray-200 dark:border-white/10 p-3">
         <div className="min-w-[200px] flex-1">
           <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">Item</label>
-          <select
+          <Select
+            aria-label="Page to grant"
             value={itemHref}
-            onChange={(e) => setItemHref(e.target.value)}
+            onChange={setItemHref}
             className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-xs text-gray-800 dark:text-white/80"
-          >
-            {allItems.map((group) => (
-              <optgroup key={group.section} label={group.section}>
-                {group.items.map((item) => (
-                  <option key={item.href} value={item.href}>
-                    {item.label}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
+            options={allItems.flatMap((group) =>
+              group.items.map((item) => ({ value: item.href, label: item.label, group: group.section })),
+            )}
+          />
         </div>
 
         <div className="min-w-[170px]">
           <label className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-gray-400">Grant to</label>
-          <select
+          <Select
+            aria-label="Who the grant is for"
             value={type}
-            onChange={(e) => {
-              setType(e.target.value as NavGrantType);
+            onChange={(next) => {
+              setType(next as NavGrantType);
               resetTarget();
             }}
             className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-xs text-gray-800 dark:text-white/80"
-          >
-            {(Object.keys(NAV_GRANT_TYPE_LABELS) as NavGrantType[]).map((t) => (
-              <option key={t} value={t}>
-                {NAV_GRANT_TYPE_LABELS[t]}
-              </option>
-            ))}
-          </select>
+            options={(Object.keys(NAV_GRANT_TYPE_LABELS) as NavGrantType[]).map((t) => ({
+              value: t,
+              label: NAV_GRANT_TYPE_LABELS[t],
+            }))}
+          />
         </div>
 
         <div className="min-w-[200px] flex-1">
@@ -132,22 +126,17 @@ export default function NavGrantsSection() {
               )}
             </button>
           ) : (
-            <select
+            <Select
+              aria-label="Unit to grant to"
               value={targetId ?? ""}
-              onChange={(e) => {
-                const unit = units.data?.find((u) => u.id === e.target.value);
-                setTargetId(e.target.value || null);
-                setTargetLabel(unit?.name ?? null);
+              onChange={(id) => {
+                setTargetId(id || null);
+                setTargetLabel(units.data?.find((u) => u.id === id)?.name ?? null);
               }}
               className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-xs text-gray-800 dark:text-white/80"
-            >
-              <option value="">Choose a unit…</option>
-              {units.data?.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Choose a unit…"
+              options={(units.data ?? []).map((u) => ({ value: u.id, label: u.name }))}
+            />
           )}
         </div>
 

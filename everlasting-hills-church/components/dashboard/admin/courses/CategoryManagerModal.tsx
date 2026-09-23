@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import FormModal, { fieldCls, btnPrimary } from "@/components/ui/overlay/FormModal";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import {
@@ -64,14 +65,16 @@ export default function CategoryManagerModal({ open, onClose }: { open: boolean;
             className={`${fieldCls} resize-none`}
           />
           <div className="flex items-center gap-2">
-            <select value={parentId} onChange={(e) => setParentId(e.target.value)} className={fieldCls}>
-              <option value="">— Top level —</option>
-              {topLevel.map((c) => (
-                <option key={c.id} value={c.id}>
-                  Subcategory of {c.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              aria-label="Where this category sits"
+              value={parentId}
+              onChange={setParentId}
+              className={fieldCls}
+              options={[
+                { value: "", label: "— Top level —" },
+                ...topLevel.map((c) => ({ value: c.id, label: `Subcategory of ${c.name}` })),
+              ]}
+            />
             <button
               type="button"
               onClick={handleAdd}

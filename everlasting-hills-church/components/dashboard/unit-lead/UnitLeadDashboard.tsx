@@ -8,6 +8,7 @@ import UnitRoster from "@/components/dashboard/units/UnitRoster";
 import UnitConversationPanel from "@/components/dashboard/units/UnitConversationPanel";
 import AddMemberForm from "@/components/dashboard/admin/unit/AddMemberForm";
 import UnitLeadTabs from "./UnitLeadTabs";
+import { Select } from "@/components/ui/select";
 import RefreshButton from "@/components/ui/button/RefreshButton";
 import Link from "next/link";
 
@@ -26,20 +27,13 @@ function MemberPositionPicker({
   if (!positions || positions.length === 0) return null;
 
   return (
-    <select
+    <Select
+      aria-label="Role in this unit"
       value={currentPositionId ?? ""}
-      onChange={(e) =>
-        setPosition.mutate({ unitId, memberId, positionId: e.target.value || null })
-      }
-      className="text-[11px] rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-gray-600 dark:text-gray-300 px-1.5 py-1 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20"
-    >
-      <option value="">No role</option>
-      {positions.map((p) => (
-        <option key={p.id} value={p.id}>
-          {p.name}
-        </option>
-      ))}
-    </select>
+      onChange={(positionId) => setPosition.mutate({ unitId, memberId, positionId: positionId || null })}
+      className="text-[11px] rounded-md border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-gray-600 dark:text-gray-300 px-1.5 py-1"
+      options={[{ value: "", label: "No role" }, ...positions.map((p) => ({ value: p.id, label: p.name }))]}
+    />
   );
 }
 

@@ -41,6 +41,19 @@ export class MembersSelfServiceController {
     private readonly search: MemberSearchService,
   ) {}
 
+  /**
+   * How many people the church has on its roll — every member record, whether
+   * or not anyone has signed in with it. A plain total, no names, so it is
+   * safe for any signed-in member to read (the Follow Up header states it).
+   */
+  @Get('total')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Total church members, including those who have never signed in (MEMBER+)' })
+  @ApiOkResponse({ description: '{ total: number }' })
+  total() {
+    return this.search.countAll();
+  }
+
   @Get('search')
   @Roles(Role.MEMBER)
   @ApiOperation({ summary: 'Search active members by name, or list them when q is empty — for "pick a person" pickers (MEMBER+)' })

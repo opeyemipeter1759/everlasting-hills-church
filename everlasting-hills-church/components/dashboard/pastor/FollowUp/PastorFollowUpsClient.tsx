@@ -9,7 +9,7 @@ import { useFollowUpEntries, useLogFollowUpContact } from "@/lib/api/follow-up-p
 import { timeAgo } from "@/lib/utils/time";
 import { EmptyState } from "@/components/ui/display/EmptyState";
 import { Select } from "@/components/ui/select";
-import { PersonAvatar } from "@/components/dashboard/follow-up/PersonAvatar";
+import { PersonAvatar } from "./PersonAvatar";
 
 const METHOD_OPTIONS: { value: ContactMethod; label: string }[] = [
   { value: "CALL", label: "Call" },
