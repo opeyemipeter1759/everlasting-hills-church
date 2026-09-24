@@ -41,13 +41,13 @@ describe('JobsController (Cloud Scheduler entry point)', () => {
 describe('JobsRunnerService', () => {
   it('awaits the job and reports a thrown error instead of swallowing it', async () => {
     const scheduling = { sendBirthdayGreetings: jest.fn().mockRejectedValue(new Error('boom')) };
-    const runner = new JobsRunnerService(scheduling as never, {} as never, {} as never);
+    const runner = new JobsRunnerService(scheduling as never, {} as never, {} as never, {} as never);
     const result = await runner.run('birthday-greetings');
     expect(result).toMatchObject({ job: 'birthday-greetings', ok: false, error: 'boom' });
   });
 
   it('404s an unknown job name', async () => {
-    const runner = new JobsRunnerService({} as never, {} as never, {} as never);
+    const runner = new JobsRunnerService({} as never, {} as never, {} as never, {} as never);
     await expect(runner.run('not-a-job')).rejects.toThrow(/Unknown job/);
   });
 });

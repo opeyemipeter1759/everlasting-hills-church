@@ -30,11 +30,12 @@ JOBS=(
   "anniversary-greetings|0 8 * * *|Wedding-anniversary emails"
   "follow-up-auto-surface|0 9 * * *|Create follow-up entries for absentees and new visitors"
   "follow-up-reminders|30 9 * * *|48h reminders, 5-day escalations, they're-back prompts"
-  "attendance-absentee-emails|*/30 * * * 0,3|We-missed-you emails to absent members once attendance closes (Sun/Wed, self-checks the window)"
+  "attendance-absentee-emails|*/30 * * * *|We-missed-you emails to absent members once attendance closes (self-checks which service is due, catches up for 48h)"
   "google-calendar-sync|0 */6 * * *|Push services/events/gatherings to Google Calendar"
   "push-service-reminder|0 * * * *|Push: upcoming service reminders"
   "push-serving-reminder|0 * * * *|Push: serving-roster reminders"
   "push-prayer-meeting|*/5 * * * *|Push: prayer-meeting starting soon"
+  "sermon-digest|15 */3 * * *|Sermon summary + Word of the Day from the newest YouTube service (Gemini)"
 )
 
 for spec in "${JOBS[@]}"; do

@@ -1,6 +1,7 @@
 "use client";
 
 import type { MasterListRow } from "@/lib/api/follow-up-pipeline";
+import { AbsenceBadge } from "./AbsenceBadge";
 import { MasterStatusBadge } from "./MasterStatusBadge";
 import { RowAvatar } from "./table-bits";
 import { RowCheckbox } from "./RowCheckbox";
@@ -17,11 +18,15 @@ interface RowsProps {
   onOpen: (row: MasterListRow) => void;
   /** Present only for a unit lead or head of department, who may tick rows. */
   selection: Selection | null;
+  /** An Attendance column with each person's absences. */
+  showAbsence?: boolean;
 }
 
 /** The body of the Master list table: a row per person, or a stand-in while it loads. */
-export function MasterListRows({ rows, isLoading, canEdit, onEdit, onOpen, selection }: RowsProps) {
-  const cols = selection ? 5 : 4;
+export function MasterListRows({ rows, isLoading, canEdit, onEdit, onOpen, selection, showAbsence = false }: RowsProps) {
+  // The Integration list trades the Edit column (first-timers only, and it
+  // holds none) for Attendance.
+  const cols = 4 + (selection ? 1 : 0);
   if (isLoading) return <TableSkeletonRows cols={cols} />;
   if (rows.length === 0) {
     return <TableEmptyRow cols={cols} title="Nobody here" body="No one matches that name." />;
@@ -81,9 +86,17 @@ export function MasterListRows({ rows, isLoading, canEdit, onEdit, onOpen, selec
             <MasterStatusBadge status={row.status} />
           </td>
 
-          <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-            <RowEditButton row={row} canEdit={canEdit} onEdit={onEdit} />
-          </td>
+          {showAbsence && (
+            <td className="px-4 py-3">
+              <AbsenceBadge absence={row.absence} />
+            </td>
+          )}
+
+          {!showAbsence && (
+            <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+              <RowEditButton row={row} canEdit={canEdit} onEdit={onEdit} />
+            </td>
+          )}
         </tr>
       ))}
     </>

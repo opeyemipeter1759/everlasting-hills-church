@@ -84,8 +84,9 @@ export default function MemberHome(props: MemberHomePropsOptional) {
 
       <QuickActionsStrip />
 
-      <TodayReadingCard />
-      <DailyScriptureCard />
+      {/* Side by side from lg up: the reading and the day's word are read together. */}
+        <TodayReadingCard />
+        <DailyScriptureCard />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CheckInPanel

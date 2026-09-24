@@ -15,27 +15,6 @@ export function Th({ children, className = "" }: { children: React.ReactNode; cl
   );
 }
 
-export function PageButton({
-  children,
-  disabled,
-  onClick,
-}: {
-  children: React.ReactNode;
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-40 dark:border-white/10 dark:text-gray-300 dark:hover:bg-white/5"
-    >
-      {children}
-    </button>
-  );
-}
-
 /**
  * Their photo, or their initials when there isn't one — every row has one or
  * the other. A photo that won't load (a host we don't allow, a deleted file)

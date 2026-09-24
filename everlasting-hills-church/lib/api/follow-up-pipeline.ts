@@ -434,12 +434,29 @@ export interface MasterListRow {
   hasAccount: boolean;
   /** Services attended — what first/second/third timer is counted from. */
   attended: number;
+  /**
+   * Missed services out of those held since they joined (past Sundays and
+   * Wednesdays where attendance was taken). Null for first-timers without an
+   * account, and for members no service has counted for yet.
+   */
+  absence?: { missed: number; total: number; missedLatest: boolean } | null;
 }
 
 export interface MasterListPage {
   data: MasterListRow[];
-  meta: { total: number; take: number; skip: number };
+  meta: {
+    total: number;
+    take: number;
+    skip: number;
+    /** How many of the matching people missed `absenceServiceId`. */
+    absent: number;
+    /** The service `absent` counts: the one filtered on, or else the latest that counts. */
+    absenceServiceId: string | null;
+  };
 }
+
+/** `absentFrom` value for the most recent service that counts for absences. */
+export const LATEST_SERVICE = "latest";
 
 export interface MasterListQuery {
   search?: string;
@@ -455,7 +472,7 @@ export interface MasterListQuery {
    * since stopped coming.
    */
   scope?: "FOLLOW_UP" | "INTEGRATION" | "ALL";
-  /** A service id: only the members who missed that service. */
+  /** A service id, or LATEST_SERVICE: only the members who missed that service. */
   absentFrom?: string;
   take?: number;
   skip?: number;

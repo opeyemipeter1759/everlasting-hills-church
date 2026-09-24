@@ -54,6 +54,8 @@ const config: Config = {
         "shine": "shine 3.2s ease-in-out infinite",
         "bounce-soft": "bounceSoft 2s ease-in-out infinite",
         "marquee": "marquee 32s linear infinite",
+        // A hand-drawn stroke writing itself in ("both": hidden until it starts, drawn after). The path needs pathLength="1" and strokeDasharray="1".
+        "draw": "draw 1.1s ease-out 1.6s both",
       },
       keyframes: {
         fadeUp: {
@@ -83,6 +85,10 @@ const config: Config = {
         marquee: {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
+        },
+        draw: {
+          "0%": { strokeDashoffset: "1" },
+          "100%": { strokeDashoffset: "0" },
         },
       },
     },

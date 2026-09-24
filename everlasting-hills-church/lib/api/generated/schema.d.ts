@@ -16437,7 +16437,7 @@ export interface operations {
                 to?: string;
                 /** @description "none" for nobody assigned. */
                 assigneeId?: string;
-                /** @description A service id: only the members who missed that service. */
+                /** @description A service id, or "latest" for the most recent service with attendance taken: only the members who missed it. */
                 absentFrom?: string;
                 take: string;
                 skip: string;

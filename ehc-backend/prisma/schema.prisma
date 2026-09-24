@@ -1033,6 +1033,7 @@ model Tenant {
   NavPermissionGrant       NavPermissionGrant[]
   followUpNotes            FollowUpNote[]
   followUpNoteReactions    FollowUpNoteReaction[]
+  sermonDigests            SermonDigest[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -2692,4 +2693,40 @@ model FollowUpNoteReaction {
 
   @@unique([noteId, profileId, emoji])
   @@index([noteId])
+}
+
+/// One row per YouTube video the sermon digest has looked at with Gemini, so
+/// no video is sent twice. READY rows carry the summary and Word of the Day;
+/// REJECTED rows (no sermon, or preaching under 10 minutes) are kept so the
+/// video is skipped from then on; FAILED rows are retried a few times.
+model SermonDigest {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  videoId            String
+  videoTitle         String
+  publishedAt        DateTime
+  /// SUNDAY | WEDNESDAY | OTHER, by the Lagos weekday the service started.
+  serviceDay         String
+  /// READY | REJECTED | FAILED
+  status             String
+  reason             String?
+  attempts           Int      @default(0)
+  model              String?
+  sermonStartSeconds Int?
+  sermonEndSeconds   Int?
+  sermonTitle        String?
+  preacher           String?
+  /// string[]
+  bibleReferences    Json?
+  summary            String?
+  /// string[]
+  keyPoints          Json?
+  /// { word, meaning, verse: { reference, text }, reflection, preacherQuote, confession[] }
+  wordOfTheDay       Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  Tenant             Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, videoId])
+  @@index([tenantId, status, publishedAt])
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CalendarX, CircleDot, UserRound, X } from "lucide-react";
 import {
+  LATEST_SERVICE,
   useFollowUpServices,
   useFollowUpWorkload,
   type MasterListQuery,
@@ -23,12 +24,15 @@ export function MasterListFilters({
   value,
   scope,
   statusLocked = false,
+  latestServiceId = null,
   onChange,
 }: {
   value: MasterListQuery;
   scope?: MasterListQuery["scope"];
   /** The tab already fixes the status, so offering to change it would mislead. */
   statusLocked?: boolean;
+  /** Which service "latest" resolved to, so the filter can name it. */
+  latestServiceId?: string | null;
   onChange: (next: MasterListQuery) => void;
 }) {
   const { canRunUnit } = useFollowUpLeadership();
@@ -41,7 +45,14 @@ export function MasterListFilters({
   const serviceOptions = services.filter((s) => s.serviceType !== "SPECIAL");
   const [preset, setPreset] = useState<DatePreset>("");
   const set = (patch: Partial<MasterListQuery>) => onChange({ ...value, ...patch });
-  const filtering = !!(value.status || value.from || value.to || value.assigneeId || value.absentFrom);
+  // On the Integration list the latest service is the starting point, so
+  // only a different choice counts as filtering.
+  const absenceFiltered = showAbsence
+    ? value.absentFrom !== LATEST_SERVICE && value.absentFrom !== latestServiceId
+    : !!value.absentFrom;
+  // "latest" is shown as the service it stands for, by name.
+  const absenceValue = value.absentFrom === LATEST_SERVICE ? (latestServiceId ?? "") : (value.absentFrom ?? "");
+  const filtering = !!(value.status || value.from || value.to || value.assigneeId || absenceFiltered);
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50/60 p-2 dark:border-white/10 dark:bg-white/[0.03]">
@@ -52,7 +63,7 @@ export function MasterListFilters({
           aria-label="Filter by status"
           value={value.status ?? ""}
           onChange={(status) => set({ status: status as MasterListStatus | "" })}
-          className={`${PILL} w-[12.5rem]`}
+          className={`${PILL} w-full sm:w-[12.5rem]`}
           icon={<CircleDot size={15} aria-hidden="true" />}
           prefixLabel="Status:"
           placeholder="Any"
@@ -63,15 +74,15 @@ export function MasterListFilters({
       {showAbsence && (
         <Select
           aria-label="Show members absent from a service"
-          value={value.absentFrom ?? ""}
+          value={absenceValue}
           onChange={(absentFrom) => set({ absentFrom })}
-          className={`${PILL} w-[17rem]`}
+          className={`${PILL} w-full sm:w-[17rem]`}
           icon={<CalendarX size={15} aria-hidden="true" />}
           prefixLabel="Absent from:"
-          placeholder="Any service"
+          placeholder="Loading…"
           options={[
-            { value: "", label: "Any service" },
             ...serviceOptions.map((service) => ({ value: service.id, label: service.name })),
+            { value: "", label: "Any service" },
           ]}
         />
       )}
@@ -81,7 +92,7 @@ export function MasterListFilters({
           aria-label="Filter by who it is assigned to"
           value={value.assigneeId ?? ""}
           onChange={(assigneeId) => set({ assigneeId })}
-          className={`${PILL} w-[14rem]`}
+          className={`${PILL} w-full sm:w-[14rem]`}
           icon={<UserRound size={15} aria-hidden="true" />}
           prefixLabel="Assigned:"
           placeholder="Anyone"
@@ -105,7 +116,7 @@ export function MasterListFilters({
           type="button"
           onClick={() => {
             setPreset("");
-            onChange({ search: value.search });
+            onChange({ search: value.search, ...(showAbsence ? { absentFrom: LATEST_SERVICE } : {}) });
           }}
           className="flex h-10 items-center gap-1 rounded-xl px-2.5 text-sm font-semibold text-[#87102C] transition-colors hover:bg-[#FFE8ED] dark:text-[#FFB3C1] dark:hover:bg-white/10"
         >

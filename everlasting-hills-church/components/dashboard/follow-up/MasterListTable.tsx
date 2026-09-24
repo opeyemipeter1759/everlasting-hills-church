@@ -1,6 +1,7 @@
 "use client";
 
 import type { MasterListRow } from "@/lib/api/follow-up-pipeline";
+import { MasterListCards } from "./MasterListCards";
 import { MasterListRows } from "./MasterListRows";
 import { RowCheckbox } from "./RowCheckbox";
 import { Th } from "./table-bits";
@@ -8,7 +9,10 @@ import type { useMasterSelection } from "./useMasterSelection";
 
 export type Selection = ReturnType<typeof useMasterSelection>;
 
-/** The table itself, with a tick column when the viewer may change many at once. */
+/**
+ * The table itself, with a tick column when the viewer may change many at once.
+ * On a phone the same rows show as cards, since the columns cannot fit.
+ */
 export function MasterListTable({
   rows,
   isLoading,
@@ -16,6 +20,7 @@ export function MasterListTable({
   onEdit,
   onOpen,
   selection,
+  showAbsence = false,
 }: {
   rows: MasterListRow[];
   isLoading: boolean;
@@ -23,12 +28,25 @@ export function MasterListTable({
   onEdit: (row: MasterListRow) => void;
   onOpen: (row: MasterListRow) => void;
   selection: Selection | null;
+  /** Add how often each person has been absent (the Integration Team's list). */
+  showAbsence?: boolean;
 }) {
   const ticked = selection ? rows.filter((row) => selection.has(row)).length : 0;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-white/[0.04]">
-      <table className="w-full text-left">
+      <div className="sm:hidden">
+        <MasterListCards
+          rows={rows}
+          isLoading={isLoading}
+          canEdit={canEdit}
+          onEdit={onEdit}
+          onOpen={onOpen}
+          selection={selection}
+          showAbsence={showAbsence}
+        />
+      </div>
+      <table className="hidden w-full text-left sm:table">
         <thead className="border-b border-gray-200 bg-gray-50/80 dark:border-white/10 dark:bg-white/[0.03]">
           <tr>
             {selection && (
@@ -44,7 +62,8 @@ export function MasterListTable({
             <Th>Name</Th>
             <Th className="hidden sm:table-cell">Assigned to</Th>
             <Th>Status</Th>
-            <Th className="text-right">Edit</Th>
+            {showAbsence && <Th>Attendance</Th>}
+            {!showAbsence && <Th className="text-right">Edit</Th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-white/[0.06]">
@@ -55,6 +74,7 @@ export function MasterListTable({
             onEdit={onEdit}
             onOpen={onOpen}
             selection={selection}
+            showAbsence={showAbsence}
           />
         </tbody>
       </table>

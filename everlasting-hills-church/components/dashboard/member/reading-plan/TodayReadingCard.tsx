@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Check, ChevronRight, Flame } from "lucide-react";
+import { BookOpen, Check, ChevronRight, Flame, Share2 } from "lucide-react";
 import { readingHref, useReadingSubscriptions, useTodayReading } from "@/lib/api/reading-plan";
 import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle, muted, linkCl } from "../member-home/tokens";
 
@@ -18,6 +19,7 @@ import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle, muted, linkCl } from "
 export default function TodayReadingCard() {
   const { data, isLoading, isError, refetch } = useTodayReading();
   const { data: subscriptions, isLoading: plansLoading, isError: plansError, refetch: retryPlans } = useReadingSubscriptions();
+  const [sharing, setSharing] = useState(false);
 
   if (isLoading || plansLoading) {
     return (
@@ -71,7 +73,7 @@ export default function TodayReadingCard() {
   const otherPlans = (subscriptions ?? []).filter((subscription) => subscription.status === "ACTIVE" && subscription.subscriptionId !== subscriptionId);
 
   return (
-    <section className={`${card} overflow-hidden`}>
+    <section className={`${card} flex flex-col overflow-hidden`}>
       {/* The plan's own art, sized down to a strip. It is the one card on the
           dashboard a member is meant to open every day, and the cover is what
           makes it recognisable at a glance among a column of bordered boxes. */}
@@ -142,6 +144,17 @@ export default function TodayReadingCard() {
             {completedToday ? "Keep reading" : "Read now"} <ChevronRight size={15} />
           </Link>
 
+          {day && (
+            <button
+              type="button"
+              onClick={() => setSharing(true)}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-gray-200 px-3 text-sm font-semibold text-gray-700 transition-colors hover:border-[#87102C]/30 hover:text-[#87102C] dark:border-white/15 dark:text-gray-200 dark:hover:text-[#FFB3C1]"
+            >
+              <Share2 size={14} aria-hidden="true" />
+              Share
+            </button>
+          )}
+
           {completedToday && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
               <Check size={13} /> Read today
@@ -153,7 +166,7 @@ export default function TodayReadingCard() {
           </Link>
         </div>
       </div>
-      <div className={`px-5 py-4 border-t border-gray-100 dark:border-white/10`}>
+      <div className={`mt-auto px-5 py-4 border-t border-gray-100 dark:border-white/10`}>
         {otherPlans.length > 0 && <div className="mb-3 space-y-2">
           <p className={`${kicker} mb-2`}>Also reading</p>
           {otherPlans.slice(0, 2).map((subscription) => (
@@ -168,6 +181,8 @@ export default function TodayReadingCard() {
           View all plans and progress <ChevronRight size={13} aria-hidden="true" />
         </Link>
       </div>
-    </section>
+
+{/*       <ShareSheet open={sharing} onClose={() => setSharing(false)} initialContent="reading" />
+ */}    </section>
   );
 }

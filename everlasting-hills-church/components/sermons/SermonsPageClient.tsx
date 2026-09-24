@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useSermonPlayer } from '@/context/SermonPlayerContext';
 import SermonHero from './SermonHero';
 import SermonBrowseGrid from './SermonBrowseGrid';
+import LatestSermonSummary from '@/components/sermon-digest/LatestSermonSummary';
 
 export default function SermonsPageClient() {
   const { play } = useSermonPlayer();
@@ -13,6 +14,7 @@ export default function SermonsPageClient() {
       <SermonHero onPlay={play} />
 
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">
+        <LatestSermonSummary />
         <SermonBrowseGrid onPlay={play} />
         <EmailSubscribeCard />
       </div>

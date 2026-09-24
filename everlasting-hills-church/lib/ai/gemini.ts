@@ -38,10 +38,21 @@ export function aiUnavailable() {
 /** Thrown when the API reports it has no Gemini key (503). */
 class AiNotConfiguredError extends Error {}
 
+/**
+ * Thrown when Google's model stayed busy through the API's retries (AI_BUSY).
+ * The API client replaces every 5xx message with a generic one, so the
+ * wording lives here rather than coming from the API.
+ */
+const AI_BUSY_MESSAGE = "Google's Gemini AI is very busy right now and couldn't take this request. Please try again in a minute.";
+class AiBusyError extends Error {}
+
 /** A real failure from the model or the network, as opposed to a missing key. */
 export function aiFailed(scope: string, err: unknown) {
   if (err instanceof AiNotConfiguredError) return aiUnavailable();
   console.error(`[AI ${scope}]`, err);
+  if (err instanceof AiBusyError) {
+    return NextResponse.json({ error: { code: "AI_BUSY", message: AI_BUSY_MESSAGE } }, { status: 503 });
+  }
   const detail = err instanceof Error ? err.message : String(err);
   return NextResponse.json(
     {
@@ -71,6 +82,7 @@ export const flashModel = {
       // serverApi rejects with a plain ApiError object, not an Error.
       const apiErr = err as Partial<ApiError>;
       if (apiErr?.status === 503) throw new AiNotConfiguredError(apiErr.message);
+      if (apiErr?.code === "AI_BUSY") throw new AiBusyError(AI_BUSY_MESSAGE);
       throw new Error(apiErr?.message ?? String(err));
     }
     return { response: { text: () => text } };

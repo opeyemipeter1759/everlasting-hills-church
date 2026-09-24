@@ -97,6 +97,22 @@ export const envSchema = z.object({
 
   /** Gemini (prayer-request AI triage). Absent → triage is skipped, request still saves. */
   GEMINI_API_KEY: z.string().min(1).optional(),
+  /**
+   * Gemini models to try, in order, comma-separated. Google turns away one
+   * model at a time when it is busy (503 "high demand"), so a request moves
+   * down the list. Absent → the defaults in src/ai/gemini-client.ts.
+   */
+  GEMINI_MODELS: z.string().min(1).optional(),
+
+  /**
+   * YouTube Data API, server side, for the sermon digest (Word of the Day).
+   * Needs a key with no HTTP-referrer restriction. Absent → the digest job
+   * does nothing. YOUTUBE_SERVICES_PLAYLIST_ID, when set, limits the digest
+   * to that playlist of full services.
+   */
+  YOUTUBE_API_KEY: z.string().min(1).optional(),
+  YOUTUBE_CHANNEL_ID: z.string().min(1).optional(),
+  YOUTUBE_SERVICES_PLAYLIST_ID: z.string().min(1).optional(),
 
   /**
    * Cloudflare R2 object storage. Absent → upload endpoints return 503.

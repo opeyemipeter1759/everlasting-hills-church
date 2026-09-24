@@ -1,10 +1,48 @@
 import { CHURCH } from "@/config/config";
 import type { DailyScripture } from "@/lib/api/daily-scripture";
+import { HILLS_CONFESSION } from "@/lib/hills-confession";
 
 export const CHURCH_WEBSITE = "https://everlastinghills.church";
 
 export function scriptureCaption(scripture: DailyScripture) {
   return `${scripture.text}\n\n${scripture.reference} (${scripture.translationCode})\n\n${CHURCH.name}\nWorship with us: ${CHURCH_WEBSITE}`;
+}
+
+/** What a member chose to copy from the daily card. */
+export type ShareMode = "scripture" | "reading" | "both" | "confession";
+
+/** Today's Bible-reading-plan portion, when the member follows a plan. */
+export interface ShareReading {
+  referenceLabel: string;
+  planTitle: string;
+  dayIndex: number;
+  durationDays: number;
+}
+
+const CHURCH_SIGN_OFF = `${CHURCH.name}\nWorship with us: ${CHURCH_WEBSITE}`;
+
+/**
+ * The text copied for each share choice, always signed with the church and its
+ * website. "reading" needs a reading plan: without one it is empty, and "both"
+ * falls back to the scripture alone.
+ */
+export function shareCaption(mode: ShareMode, scripture: DailyScripture, reading: ShareReading | null): string {
+  const readingLines = reading
+    ? `Today's Bible reading: ${reading.referenceLabel}\nDay ${reading.dayIndex} of ${reading.durationDays} · ${reading.planTitle}`
+    : null;
+
+  switch (mode) {
+    case "scripture":
+      return scriptureCaption(scripture);
+    case "reading":
+      return readingLines ? `${readingLines}\n\n${CHURCH_SIGN_OFF}` : "";
+    case "both":
+      return readingLines
+        ? `${scripture.text}\n\n${scripture.reference} (${scripture.translationCode})\n\n${readingLines}\n\n${CHURCH_SIGN_OFF}`
+        : scriptureCaption(scripture);
+    case "confession":
+      return confessionCaption({ date: scripture.date, lines: [...HILLS_CONFESSION] });
+  }
 }
 
 export function wrapScripture(
@@ -533,4 +571,125 @@ export function saveScriptureImage(file: File) {
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+// ── The Hills Confession ─────────────────────────────────────────────────────
+
+export interface ConfessionShare {
+  /** The Lagos date it is shared on, YYYY-MM-DD. */
+  date: string;
+  /** One line per breath, as said out loud. */
+  lines: string[];
+  /** From the latest sermon, when the confession came from one. */
+  sermon?: { word: string; verseReference: string; source: string };
+}
+
+export function confessionCaption(confession: ConfessionShare) {
+  const lines = ["The Hills Confession", "", ...confession.lines];
+  if (confession.sermon) {
+    const { word, verseReference, source } = confession.sermon;
+    lines.push("", `Word of the Day: ${word}${verseReference ? ` (${verseReference})` : ""}`, source);
+  }
+  lines.push("", CHURCH.name, `Worship with us: ${CHURCH_WEBSITE}`);
+  return lines.join("\n");
+}
+
+/** Scripture and confession as one message: the verse first, then the confession, then the church once. */
+export function scriptureAndConfessionCaption(scripture: DailyScripture, confession: ConfessionShare) {
+  return [scripture.text, `${scripture.reference} (${scripture.translationCode})`, "", confessionCaption(confession)].join("\n");
+}
+
+/**
+ * The confession as a WhatsApp status image, in the same designs as the
+ * scripture image. It takes the design three days on from the scripture's, so
+ * sharing both on one day never posts the same picture twice.
+ */
+export async function createConfessionImage(confession: ConfessionShare): Promise<File> {
+  const count = SCRIPTURE_THEMES.length;
+  const day = dayNumber(confession.date);
+  const theme = SCRIPTURE_THEMES[Number.isFinite(day) ? (((day + 3) % count) + count) % count : 0];
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Image creation is unavailable in this browser");
+
+  ctx.save();
+  theme.paint(ctx, seededRandom(day + 3));
+  ctx.restore();
+
+  const { ink } = theme;
+  const left = theme.align === "left";
+  const x = left ? 130 : W / 2;
+  const measureWidth = left ? 820 : 870;
+  ctx.textAlign = left ? "left" : "center";
+
+  try {
+    const logo = await loadImage(theme.logo === "dark" ? "/logoblack.png" : "/logo.png");
+    const logoHeight = Math.min(120, (220 * logo.height) / logo.width);
+    const logoWidth = (logoHeight * logo.width) / logo.height;
+    ctx.drawImage(logo, left ? x : (W - logoWidth) / 2, 135, logoWidth, logoHeight);
+  } catch {
+    // The church name below is always included in the exported image.
+  }
+
+  const write = (value: string, y: number, font: string, color: string) => {
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.fillText(value, x, y, measureWidth);
+  };
+
+  write(CHURCH.name, 305, "bold 38px Arial, sans-serif", ink.name);
+  write("THE HILLS CONFESSION", 397, "24px Arial, sans-serif", ink.label);
+  write("Say it out loud", 447, "26px Arial, sans-serif", ink.date);
+
+  // Each confession line keeps its own paragraph, with a little air between
+  // them, so it still reads one line per breath.
+  const box = { top: 550, height: 760, width: left ? 820 : 850, ...theme.verseBox };
+  const ratio = theme.lineHeight ?? 1.35;
+  let fontSize = 64;
+  let paragraphs: string[][] = [];
+  let height = 0;
+  do {
+    ctx.font = theme.verseFont(fontSize);
+    paragraphs = confession.lines.map((line) => wrapScripture(line, box.width, (l) => ctx.measureText(l).width));
+    const rows = paragraphs.reduce((sum, p) => sum + p.length, 0);
+    height = rows * fontSize * ratio + (paragraphs.length - 1) * fontSize * 0.45;
+    if (height <= box.height) break;
+    fontSize -= 2;
+  } while (fontSize >= 28);
+  if (height > box.height) throw new Error("This confession is too long for the status image");
+
+  ctx.fillStyle = ink.verse;
+  const lineHeight = fontSize * ratio;
+  let y = box.top + (box.height - height) / 2 + fontSize;
+  paragraphs.forEach((rows, index) => {
+    // The last line is the church's own close; it takes the accent colour.
+    ctx.fillStyle = index === paragraphs.length - 1 ? ink.reference : ink.verse;
+    for (const row of rows) {
+      ctx.fillText(row, x, y);
+      y += lineHeight;
+    }
+    y += fontSize * 0.45;
+  });
+
+  const referenceY = box.top + box.height + 100;
+  if (confession.sermon) {
+    write(`Word of the Day: ${confession.sermon.word}`, referenceY, "bold 38px Arial, sans-serif", ink.reference);
+    const detail = [confession.sermon.verseReference, confession.sermon.source].filter(Boolean).join(" · ");
+    write(detail, referenceY + 45, "24px Arial, sans-serif", ink.translation);
+  }
+
+  const footerTop = theme.footerTop ?? 1550;
+  ctx.fillStyle = ink.rule;
+  ctx.fillRect(left ? x : 450, footerTop, 180, 2);
+  write("You are welcome here.", footerTop + 90, "32px Georgia, serif", ink.footer);
+  write("everlastinghills.church", footerTop + 160, "bold 34px Arial, sans-serif", ink.footer);
+  write("Worship with us in Ibadan", footerTop + 220, "24px Arial, sans-serif", ink.footerMuted);
+
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((value) => (value ? resolve(value) : reject(new Error("Could not create image"))), "image/png");
+  });
+  return new File([blob], `everlasting-hills-confession-${confession.date}.png`, { type: "image/png" });
 }

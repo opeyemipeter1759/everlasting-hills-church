@@ -51,7 +51,7 @@ export function BulkStatusBar({
         aria-label="Status to set for everyone selected"
         value={toStatus}
         onChange={(next) => setToStatus(next as MasterListStatus)}
-        className={`${PILL} w-[13rem]`}
+        className={`${PILL} w-full sm:w-[13rem]`}
         prefixLabel="Set status:"
         placeholder="Choose one"
         options={STATUS_OPTIONS}
