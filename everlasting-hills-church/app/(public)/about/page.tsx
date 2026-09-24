@@ -75,7 +75,7 @@ export default async function AboutPage({ searchParams }: { searchParams: { prev
             {c.cards.map((card, i) => {
               const Icon = CARD_ICONS[i] ?? Heart;
               return (
-                <div key={i} className="rounded-3xl border border-brand-rose/60 bg-white p-8 shadow-[0_1px_20px_rgba(135,16,44,0.05)]">
+                <div key={i} className="rounded-3xl border border-brand-rose/60 bg-white p-5 sm:p-8 shadow-[0_1px_20px_rgba(135,16,44,0.05)]">
                   <span className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#87102C]/10 text-[#87102C]"><Icon size={22} /></span>
                   <h3 className="mb-3 text-xl font-bold text-[#111]">{card.title}</h3>
                   <p className="text-sm leading-relaxed text-[#4a4a4a]">{card.body}</p>

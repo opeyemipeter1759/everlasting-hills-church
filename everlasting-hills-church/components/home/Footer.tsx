@@ -99,11 +99,11 @@ export default async function Footer() {
               {cfg.footerTagline}
             </p>
 
-            <div className="flex items-center gap-0 mb-6">
+            <div className="flex flex-wrap items-center gap-y-2 mb-6">
               {["Word", "Spirit", "Community"].map((p, i) => (
                 <span key={p} className="flex items-center">
                   <span className="text-white/30 text-xs tracking-[0.12em] uppercase">{p}</span>
-                  {i < 2 && <span className="w-px h-2.5 bg-white/15 mx-3" />}
+                  {i < 2 && <span className="w-px h-2.5 bg-white/15 mx-2 sm:mx-3" />}
                 </span>
               ))}
             </div>
@@ -148,7 +148,7 @@ export default async function Footer() {
             <p className="text-white/50 text-xs tracking-[0.2em] uppercase font-medium mb-5">
               Follow Us
             </p>
-            <div className="flex gap-3 mb-6">
+            <div className="flex flex-wrap gap-2.5 sm:gap-3 mb-6">
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
@@ -170,12 +170,12 @@ export default async function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/[0.08] pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="border-t border-white/[0.08] pt-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <p className="text-white/25 text-xs">
             &copy; {new Date().getFullYear()} Everlasting Hills Church. All
             rights reserved.
           </p>
-          <div className="flex items-center gap-5">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <a
               href="/privacy"
               className="text-white/25 text-xs hover:text-white/60 transition-colors"

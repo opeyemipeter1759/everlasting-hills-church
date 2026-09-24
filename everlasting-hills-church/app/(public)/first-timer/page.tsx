@@ -232,7 +232,7 @@ function FirstTimerPage() {
 
         {/* Form card */}
         <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-2xl mb-5">
+          <div className="bg-white rounded-3xl p-4 xs:p-6 sm:p-10 shadow-2xl mb-5">
             {stepComponents[currentStep]}
           </div>
 

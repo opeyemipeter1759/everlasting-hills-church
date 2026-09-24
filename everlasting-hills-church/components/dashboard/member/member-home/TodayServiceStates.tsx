@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { CheckCircle2, Calendar, Youtube, MessageCircle, Mic, BookOpen, Play } from "lucide-react";
+import SermonCover from "@/components/sermons/SermonCover";
 import { CHURCH } from "@/config/config";
 import type { MemberHomeProps } from "./types";
 import { iconCl, kicker, muted } from "./tokens";
@@ -74,7 +74,7 @@ export function TodayFeaturedSermonTeaser({ featuredSermon }: {
       <div className="space-y-4">
         {featuredSermon.thumbnailUrl ? (
           <div className="relative w-full aspect-video rounded-xl overflow-hidden">
-            <Image src={featuredSermon.thumbnailUrl} alt={featuredSermon.title} fill sizes="(max-width: 640px) 100vw, 320px" className="object-cover" />
+            <SermonCover src={featuredSermon.thumbnailUrl} alt={featuredSermon.title} sizes="(max-width: 640px) 100vw, 320px" />
           </div>
         ) : (
           <div className="w-full aspect-video rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/20 flex items-center justify-center">

@@ -31,9 +31,35 @@ html {
   scroll-behavior: smooth;
 }
 
+/* One stray wide element anywhere on a page used to give the whole document a
+   horizontal scrollbar on 320-360px phones, and every section then read as
+   "not responsive" even where its own layout was fine.
+
+   `clip`, not `hidden`: clip does not turn the root into a scroll container,
+   so sticky headers (the public navbar, the dashboard header) keep working.
+   Guarded by @supports so a browser without it simply keeps today's behaviour
+   rather than losing sticky. */
+@supports (overflow: clip) {
+  html {
+    overflow-x: clip;
+  }
+}
+
 body {
   @apply antialiased;
   font-family: var(--font-sans);
+  /* Bank references, sermon URLs and long email addresses have no break
+     opportunity — without this they set a card's min-content width and push
+     narrow layouts past the viewport. */
+  overflow-wrap: break-word;
+}
+
+/* Media never outgrows its column, whatever intrinsic size it was given. */
+img,
+video,
+canvas,
+iframe {
+  max-width: 100%;
 }
 
 ::selection {

@@ -69,8 +69,8 @@ export default function ConfirmDialog({
     <div role="dialog" aria-modal="true" aria-labelledby="confirm-title" className="fixed inset-0 z-[100] flex items-center justify-center px-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => !loading && onCancel()} aria-hidden="true" />
       <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 shadow-2xl overflow-hidden">
-        <div className="p-6">
-          <div className="flex items-start gap-4">
+        <div className="p-4 sm:p-6">
+          <div className="flex items-start gap-3 sm:gap-4">
             <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 ${styles.iconWrap}`}>
               <AlertTriangle size={20} className={styles.icon} />
             </div>
@@ -80,7 +80,7 @@ export default function ConfirmDialog({
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-4 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10">
           <button ref={cancelRef} type="button" onClick={onCancel} disabled={loading} className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors disabled:opacity-50">
             {cancelLabel}
           </button>

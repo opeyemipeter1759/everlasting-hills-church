@@ -54,7 +54,7 @@ export default function FormModal({
             onClick={(e) => e.stopPropagation()}
             className={`w-full ${maxWidth} max-h-[88vh] no-scrollbar flex flex-col rounded-2xl bg-white dark:bg-[#140b10] border border-[#E7CDD3]/60 dark:border-white/10 shadow-2xl overflow-hidden`}
           >
-            <div className="flex items-start justify-between gap-4 px-6 py-5 border-b border-[#E7CDD3]/50 dark:border-white/10">
+            <div className="flex items-start justify-between gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5 border-b border-[#E7CDD3]/50 dark:border-white/10">
               <div>
                 <h2 className="text-base font-bold text-gray-900 dark:text-white">{title}</h2>
                 {subtitle && (
@@ -71,10 +71,10 @@ export default function FormModal({
               </button>
             </div>
 
-            <div className="px-6 py-5 overflow-y-auto no-scrollbar">{children}</div>
+            <div className="px-4 sm:px-6 py-4 sm:py-5 overflow-y-auto no-scrollbar">{children}</div>
 
             {footer && (
-              <div className="px-6 py-4 border-t border-[#E7CDD3]/50 dark:border-white/10 flex items-center justify-end gap-2 bg-[#FFF4F6]/40 dark:bg-white/[0.02]">
+              <div className="px-4 sm:px-6 py-4 border-t border-[#E7CDD3]/50 dark:border-white/10 flex flex-wrap items-center justify-end gap-2 bg-[#FFF4F6]/40 dark:bg-white/[0.02]">
                 {footer}
               </div>
             )}

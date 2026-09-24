@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { useBook } from "@/lib/api/books";
 import BookComments from "./BookComments";
+import BookShareButton from "./BookShareButton";
 
 /**
  * Reads the PDF in-browser via the native viewer rather than forcing a
@@ -23,14 +24,17 @@ export default function BookReader({ id }: { id: string }) {
           <ArrowLeft size={15} /> Library
         </Link>
         {book && (
-          <a
-            href={book.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
-          >
-            <Download size={13} /> Open in new tab
-          </a>
+          <div className="flex items-center gap-2">
+            <BookShareButton book={book} variant="button" />
+            <a
+              href={book.fileUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-600 dark:text-white/60 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors"
+            >
+              <Download size={13} /> <span className="hidden sm:inline">Open in new tab</span><span className="sm:hidden">Open</span>
+            </a>
+          </div>
         )}
       </div>
 

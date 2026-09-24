@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { BookOpen, Library } from "lucide-react";
 import { useBookCollectionsFeed, useBooksFeed, type Book } from "@/lib/api/books";
+import BookShareButton from "./BookShareButton";
 
 function Shelf({ title, books }: { title: string; books: Book[] }) {
   return (
@@ -14,6 +15,7 @@ function Shelf({ title, books }: { title: string; books: Book[] }) {
         {books.map((b) => (
           <Link key={b.id} href={`/dashboard/books/${b.id}`} className="group block">
             <div className="relative aspect-[2/3] overflow-hidden rounded-xl bg-gray-100 dark:bg-white/5 shadow-sm ring-1 ring-black/5 dark:ring-white/10 transition-transform group-hover:-translate-y-0.5 group-hover:shadow-md">
+              <BookShareButton book={b} />
               {b.coverUrl ? (
                 <Image
                   src={b.coverUrl}
