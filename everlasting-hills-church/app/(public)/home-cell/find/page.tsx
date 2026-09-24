@@ -197,7 +197,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
               <FormField label="Leader WhatsApp Phone" required
                 input={<input value={form.leaderPhone} onChange={e => field("leaderPhone", e.target.value)} placeholder="+234 801 234 5678" required />}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                 <FormField label="Meeting Day" required
                   input={
                     <Select
@@ -226,7 +226,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
                   />
                 }
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                 <FormField label="City / Area"
                   input={<input value={form.city} onChange={e => field("city", e.target.value)} placeholder="e.g. Bodija" />}
                 />
@@ -615,7 +615,7 @@ export default function FindCellPage() {
         {/* count */}
         {!loading && !apiErr && filtered.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="flex items-center justify-between mb-8">
+            className="flex flex-wrap items-center justify-between gap-3 mb-8">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
               {filtered.length} cell{filtered.length !== 1 ? "s" : ""}{stateFilter !== "All" ? ` · ${stateFilter}` : " · Nigeria"}
             </p>

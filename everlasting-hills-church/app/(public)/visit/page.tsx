@@ -68,14 +68,14 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
       <section className="mx-auto max-w-[1100px] px-5 py-20 sm:px-8">
         <div className="grid gap-8 lg:grid-cols-2 lg:items-stretch">
           <div className="flex flex-col gap-4">
-            <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-8">
+            <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-5 sm:p-8">
               <div className="mb-5 flex items-center gap-3">
                 <Clock size={20} className="text-[#87102C]" />
                 <h2 className="text-xl font-bold text-[#111]">{c.serviceTimesHeading}</h2>
               </div>
               <div className="space-y-4">
                 {c.serviceTimes.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between border-b border-brand-rose/50 pb-4 last:border-0 last:pb-0">
+                  <div key={i} className="flex items-center justify-between gap-3 border-b border-brand-rose/50 pb-4 last:border-0 last:pb-0">
                     <div>
                       <p className="font-semibold text-[#111]">{s.name}</p>
                       <p className="text-sm text-[#777]">{s.day}</p>
@@ -86,7 +86,7 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
               </div>
             </div>
 
-            <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-8">
+            <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-5 sm:p-8">
               <div className="mb-3 flex items-center gap-3">
                 <MapPin size={20} className="text-[#87102C]" />
                 <h2 className="text-xl font-bold text-[#111]">{c.locationHeading}</h2>

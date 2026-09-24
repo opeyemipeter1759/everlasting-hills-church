@@ -86,8 +86,8 @@ export default function AuthSplitScreen({
         </div>
       </aside>
 
-      <section className="bg-white p-8 sm:p-12 flex flex-col justify-center">
-        <div className="lg:hidden flex items-center gap-3 justify-center mb-8">
+      <section className="bg-white p-5 xs:p-8 sm:p-12 flex flex-col justify-center">
+        <div className="lg:hidden flex items-center gap-2.5 xs:gap-3 justify-center mb-8">
           <Image
             src="/logoblack.png"
             alt="Everlasting Hills"
@@ -96,7 +96,7 @@ export default function AuthSplitScreen({
             className="object-contain"
           />
           <div className="leading-tight">
-            <p className="text-[10px] tracking-[0.3em] uppercase text-gray-500 font-semibold">
+            <p className="text-[10px] tracking-[0.2em] xs:tracking-[0.3em] uppercase text-gray-500 font-semibold">
               Everlasting Hills
             </p>
             <p className="text-sm font-bold text-gray-900">Community Church</p>

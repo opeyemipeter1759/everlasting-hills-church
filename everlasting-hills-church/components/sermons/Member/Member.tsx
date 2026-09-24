@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { History, Bookmark, Play, BookOpen, Loader2, CheckCircle2, Clock, Sparkles, Heart, MessageCircle, Layers, Mic2 } from 'lucide-react';
 import {
   useMemberSermonHistory,
@@ -13,6 +12,7 @@ import {
 import { useSermonPlayer } from '@/context/SermonPlayerContext';
 import { formatSermonDuration } from '@/lib/api/sermon-types';
 import SermonBrowseGrid from '@/components/sermons/SermonBrowseGrid';
+import SermonCover from '@/components/sermons/SermonCover';
 import type { LatestSermon } from '@/types';
 
 /* ── Overview stat card — matches the StatCard pattern used across the dashboard ────── */
@@ -85,12 +85,11 @@ function ShelfCard({
     <button type="button" onClick={() => onPlay(sermon.slug)} className="group w-56 shrink-0 text-left">
       <div className="relative aspect-video rounded-xl overflow-hidden bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10">
         {sermon.thumbnailUrl ? (
-          <Image
+          <SermonCover
             src={sermon.thumbnailUrl}
             alt={sermon.title}
-            fill
             sizes="224px"
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            imageClassName="group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-[#87102C]/10 to-[#87102C]/5 dark:from-[#87102C]/20 dark:to-transparent flex items-center justify-center">

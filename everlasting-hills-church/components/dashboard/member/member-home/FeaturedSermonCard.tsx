@@ -2,8 +2,8 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Mic, BookOpen, Play, Pause } from "lucide-react";
+import SermonCover from "@/components/sermons/SermonCover";
 import type { MemberHomeProps } from "./types";
 import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle, muted } from "./tokens";
 import { fmtDate } from "./helpers";
@@ -42,7 +42,7 @@ export function FeaturedSermonCard({ sermon }: {
         <div className="flex-shrink-0 w-full sm:w-52">
           {sermon.thumbnailUrl ? (
             <div className="relative w-full sm:w-52 aspect-video rounded-xl overflow-hidden">
-              <Image src={sermon.thumbnailUrl} alt={sermon.title} fill sizes="(max-width: 640px) 100vw, 208px" className="object-cover" />
+              <SermonCover src={sermon.thumbnailUrl} alt={sermon.title} sizes="(max-width: 640px) 100vw, 208px" />
             </div>
           ) : (
             <div className="w-full sm:w-52 aspect-video rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/20 flex items-center justify-center">
