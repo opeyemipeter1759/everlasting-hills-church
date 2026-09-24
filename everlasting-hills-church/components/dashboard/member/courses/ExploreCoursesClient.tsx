@@ -51,7 +51,7 @@ export default function ExploreCoursesClient() {
 
       {searching ? (
         filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
             <SearchX size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-700" />
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No courses match your search</p>
             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Try a different keyword.</p>
@@ -68,7 +68,7 @@ export default function ExploreCoursesClient() {
           </div>
         )
       ) : catalog.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
           <GraduationCap size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-700" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No courses yet</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Check back soon — new courses are on the way.</p>

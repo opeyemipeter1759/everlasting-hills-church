@@ -221,9 +221,9 @@ export default function AdminOverview({
           EHC
         </div>
 
-        <div className="relative z-10 p-7 sm:p-9 lg:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div className="relative z-10 p-4 xs:p-7 sm:p-9 lg:p-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <p className="text-[10px] tracking-[0.32em] uppercase font-bold text-[#FFB3C1] mb-2">
+            <p className="text-[10px] tracking-[0.16em] xs:tracking-[0.32em] uppercase font-bold text-[#FFB3C1] mb-2">
               {getDateString()}
             </p>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-[1.1]">
@@ -256,7 +256,7 @@ export default function AdminOverview({
           <Link
             key={label}
             href={href}
-            className="group bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-6 flex flex-col gap-4
+            className="group bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-4 xs:p-6 flex flex-col gap-4
               hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] dark:hover:shadow-none hover:-translate-y-1
               transition-all duration-300 shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none"
           >
@@ -285,7 +285,7 @@ export default function AdminOverview({
       ──────────────────────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0">
+          <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold flex-shrink-0">
             Sign In Attendance
           </p>
           <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
@@ -306,7 +306,7 @@ export default function AdminOverview({
                 <Cake size={15} className="text-rose-500 dark:text-rose-400" aria-hidden="true" />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
+                <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
                   Pastoral Care
                 </p>
                 <h3 className="text-sm font-bold text-[#111] dark:text-white -mt-0.5">Birthdays This Week</h3>
@@ -358,7 +358,7 @@ export default function AdminOverview({
       ──────────────────────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0">
+          <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold flex-shrink-0">
             Quick Actions
           </p>
           <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
@@ -399,7 +399,7 @@ export default function AdminOverview({
               <Users size={15} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
+              <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
                 Congregation
               </p>
               <div className="flex items-center gap-2 -mt-0.5">
@@ -441,9 +441,9 @@ export default function AdminOverview({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
-                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em]">Member</th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em] hidden sm:table-cell">Phone</th>
-                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.2em] hidden md:table-cell">Joined</th>
+                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.1em] xs:tracking-[0.2em]">Member</th>
+                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.1em] xs:tracking-[0.2em] hidden sm:table-cell">Phone</th>
+                  <th className="text-left px-5 py-3.5 text-[10px] font-semibold text-[#87102C]/60 dark:text-white/35 uppercase tracking-[0.1em] xs:tracking-[0.2em] hidden md:table-cell">Joined</th>
                 </tr>
               </thead>
               <tbody>

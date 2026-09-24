@@ -33,7 +33,7 @@ export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, at
         EHC
       </div>
 
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-7 sm:p-9">
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-4 xs:p-7 sm:p-9">
         <div className="flex md:items-center flex-col md:flex-row gap-5">
           <div className="relative flex-shrink-0">
             <div className="w-16 h-16 rounded-2xl ring-2 ring-white/20 ring-offset-2 ring-offset-transparent overflow-hidden bg-white/10 flex items-center justify-center">
@@ -50,7 +50,7 @@ export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, at
             <button
               type="button"
               onClick={() => setShowQR(true)}
-              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.32em] text-[#FFB3C1] mb-1.5 hover:text-white transition-colors group"
+              className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] xs:tracking-[0.32em] text-[#FFB3C1] mb-1.5 hover:text-white transition-colors group"
               title="Tap to show QR code"
             > {date}
               <QrCode size={11} className="opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" />

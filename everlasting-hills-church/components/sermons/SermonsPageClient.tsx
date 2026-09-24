@@ -12,7 +12,7 @@ export default function SermonsPageClient() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#111]">
       <SermonHero onPlay={play} />
 
-      <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-8 xs:py-10 space-y-6">
         <SermonBrowseGrid onPlay={play} />
         <EmailSubscribeCard />
       </div>

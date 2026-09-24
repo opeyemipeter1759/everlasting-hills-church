@@ -30,7 +30,7 @@ export default function PlanSchedule() {
 
   if (meLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-5 py-8">
+      <div className="mx-auto max-w-3xl px-4 xs:px-5 py-8">
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
     );
@@ -72,7 +72,7 @@ export default function PlanSchedule() {
       <ReadingPlanSelector subscriptionId={me.subscriptionId} page="schedule" />
 
       <header className="mt-4">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
           {me.plan.title}
         </p>
         <h1 className="mt-1 font-serif text-3xl font-bold tracking-tight text-[#111] dark:text-white">

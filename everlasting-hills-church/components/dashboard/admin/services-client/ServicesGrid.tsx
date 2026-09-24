@@ -23,7 +23,7 @@ export default function ServicesGrid({
 
   if (services.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-10 text-center">
+      <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-10 text-center">
         <CalendarDays className="mx-auto mb-3 text-gray-300 dark:text-white/20" size={32} />
         <p className="text-sm text-gray-400 dark:text-white/40">No services yet.</p>
       </div>

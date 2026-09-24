@@ -19,7 +19,7 @@ export function TodayAnnouncementsList({ announcements }: {
             <BellRing size={15} className="text-[#FFB3C1]" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFB3C1]/70">
+            <p className="text-[10px] font-bold uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#FFB3C1]/70">
               From the Church
             </p>
             <h3 className="text-sm font-bold text-white truncate">Announcements</h3>
@@ -59,7 +59,7 @@ export function TodayAnnouncementsList({ announcements }: {
                   {a.title}
                 </p>
                 {i === 0 && (
-                  <span className="flex-shrink-0 text-[9px] font-bold uppercase tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1] bg-[#FFE8ED] dark:bg-[#87102C]/25 px-2 py-0.5 rounded-full mt-0.5">
+                  <span className="flex-shrink-0 text-[9px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1] bg-[#FFE8ED] dark:bg-[#87102C]/25 px-2 py-0.5 rounded-full mt-0.5">
                     New
                   </span>
                 )}

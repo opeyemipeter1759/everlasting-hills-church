@@ -138,7 +138,7 @@ export default function MyAttendanceClient() {
     <div className="mx-auto px-2 md:px-4   space-y-5">
       {/* Section label + heading */}
       <div>
-        <p className="text-[10px] tracking-[0.25em] uppercase font-bold text-[#87102C] dark:text-[#FFB3C1]">
+        <p className="text-[10px] tracking-[0.13em] xs:tracking-[0.25em] uppercase font-bold text-[#87102C] dark:text-[#FFB3C1]">
           Attendance
         </p>
         <h1 className="text-2xl font-bold tracking-tight text-[#111] dark:text-white">
@@ -206,7 +206,7 @@ export default function MyAttendanceClient() {
               {COLS.map((c) => (
                 <th
                   key={c.key}
-                  className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.15em] text-[#87102C]/70 dark:text-white/45 whitespace-nowrap"
+                  className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-[0.08em] xs:tracking-[0.15em] text-[#87102C]/70 dark:text-white/45 whitespace-nowrap"
                 >
                   {c.label}
                 </th>

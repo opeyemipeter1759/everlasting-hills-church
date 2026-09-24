@@ -31,7 +31,7 @@ export default function EventFlier({ event, dayNum, monthShort, countdown }: Eve
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/5 to-black/5 pointer-events-none" />
 
       {event.featured && (
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-[#87102C] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-lg">
+        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-[#87102C] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-white shadow-lg">
           <Sparkles size={10} /> Featured
         </span>
       )}

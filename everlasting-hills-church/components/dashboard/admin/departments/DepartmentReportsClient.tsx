@@ -22,7 +22,7 @@ export default function DepartmentReportsClient() {
               <ArrowLeft size={16} className="text-[#87102C] dark:text-[#e8768a]" /> 
               <Link href='/dashboard/my-department' className='flex text-[#6E0C24]  font-medium text-sm rounded-md  items-center'>Back</Link>
               </div>
-        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
           <Inbox size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">You have not been assigned a department yet.</p>
           <p className="mt-1 text-sm text-gray-400 dark:text-white/40">

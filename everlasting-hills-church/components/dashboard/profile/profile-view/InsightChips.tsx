@@ -11,7 +11,7 @@ export function InsightChip({ icon: Icon, label, value }: { icon: LucideIcon; la
         <Icon size={15} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
       </div>
       <div className="min-w-0">
-        <p className="text-[9px] tracking-[0.18em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
+        <p className="text-[9px] tracking-[0.09em] xs:tracking-[0.18em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
           {label}
         </p>
         <p className="text-sm font-bold text-[#111] dark:text-white mt-0.5 truncate">{value}</p>
@@ -41,7 +41,7 @@ export function DarkInsightChip({
         <Icon size={15} className="text-[#FFB3C1]" aria-hidden="true" />
       </div>
       <div className="min-w-0">
-        <p className="text-[9px] tracking-[0.18em] uppercase font-semibold text-white/40">
+        <p className="text-[9px] tracking-[0.09em] xs:tracking-[0.18em] uppercase font-semibold text-white/40">
           {label}
         </p>
         <p className="text-sm font-bold text-white mt-0.5 truncate">{value}</p>

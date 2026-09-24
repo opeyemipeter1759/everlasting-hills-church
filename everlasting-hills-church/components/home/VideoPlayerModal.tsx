@@ -82,7 +82,7 @@ export default function VideoPlayerModal({ video, onClose }: VideoPlayerModalPro
       >
         <div className="flex items-start justify-between gap-4 border-b border-white/8 px-5 py-4 sm:px-6">
           <div className="min-w-0">
-            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.28em] text-[#FFB3C1]">
+            <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.14em] xs:tracking-[0.28em] text-[#FFB3C1]">
               Now Playing
             </p>
             <h3 className="line-clamp-2 text-lg font-semibold text-white sm:text-xl">
@@ -154,7 +154,7 @@ export default function VideoPlayerModal({ video, onClose }: VideoPlayerModalPro
 
             <div className="rounded-[26px] border border-[#FFB3C1]/15 bg-[#87102C]/12 p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
-                <span className="inline-flex rounded-full bg-[#FFB3C1] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#3b0714]">
+                <span className="inline-flex rounded-full bg-[#FFB3C1] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#3b0714]">
                   {video.category}
                 </span>
                 <span className="text-xs text-white/55">{video.duration}</span>
@@ -165,7 +165,7 @@ export default function VideoPlayerModal({ video, onClose }: VideoPlayerModalPro
             </div>
 
           {/*   <div className="space-y-3 rounded-[26px] border border-white/10 bg-white/5 p-4">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#FFB3C1]">
+              <p className="text-xs font-bold uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#FFB3C1]">
                 Keep interacting
               </p>
               <p className="text-sm leading-relaxed text-white/65">

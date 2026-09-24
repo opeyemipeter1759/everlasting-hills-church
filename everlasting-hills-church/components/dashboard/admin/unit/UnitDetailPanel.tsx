@@ -58,7 +58,7 @@ export default function UnitDetailPanel({
 
       <div className="p-5">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400 dark:text-gray-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-gray-400 dark:text-gray-500">
             Members ({unit.UnitMember.length})
           </p>
           {!showAdd && (

@@ -59,7 +59,7 @@ export default function CmsMediaLibrary() {
   return (
     <div className="space-y-6">
       {/* Upload zone */}
-      <div className="rounded-2xl border border-dashed border-[#E7CDD3] dark:border-white/15 bg-[#FFF4F6]/40 dark:bg-white/[0.02] p-6">
+      <div className="rounded-2xl border border-dashed border-[#E7CDD3] dark:border-white/15 bg-[#FFF4F6]/40 dark:bg-white/[0.02] p-4 xs:p-6">
         <input
           ref={fileRef}
           type="file"
@@ -123,7 +123,7 @@ export default function CmsMediaLibrary() {
           ))}
         </div>
       ) : !media || media.length === 0 ? (
-        <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 p-12 text-center">
+        <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
           <ImagePlus size={28} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No media yet</p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Upload your first image above.</p>

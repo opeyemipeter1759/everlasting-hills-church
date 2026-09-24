@@ -178,7 +178,7 @@ export default function PersonalInformationForm({ user }: Props) {
               <ShieldCheck size={14} />
               {roleLabel}
             </span>
-            <span className="text-[10px] tracking-[0.2em] uppercase text-[#8a7e80] dark:text-white/35 font-semibold">
+            <span className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase text-[#8a7e80] dark:text-white/35 font-semibold">
               Read-only
             </span>
           </div>

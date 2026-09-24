@@ -22,7 +22,7 @@ export default function CmsLayout({ children }: { children: React.ReactNode }) {
           <PanelsTopLeft size={20} />
         </span>
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
             Administration
           </p>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">

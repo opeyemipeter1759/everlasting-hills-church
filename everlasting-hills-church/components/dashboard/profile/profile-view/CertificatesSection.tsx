@@ -22,7 +22,7 @@ export function CertificatesSection() {
     <ScrollReveal delay={0.05}>
       <section aria-labelledby="certificates-section-title">
         <div className="flex items-center gap-3 mb-5">
-          <h2 id="certificates-section-title" className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0">
+          <h2 id="certificates-section-title" className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold flex-shrink-0">
             Certificates & Badges
           </h2>
           <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />

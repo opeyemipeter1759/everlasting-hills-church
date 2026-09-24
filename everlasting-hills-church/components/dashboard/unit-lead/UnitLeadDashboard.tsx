@@ -60,7 +60,7 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
     return (
       <div className="max-w-full mx-auto">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">My Unit</h1>
-        <div className="mt-6 bg-white dark:bg-[#1c1c1e] border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-12 text-center">
+        <div className="mt-6 bg-white dark:bg-[#1c1c1e] border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-5 xs:p-8 sm:p-12 text-center">
           <Users size={28} className="text-gray-200 dark:text-gray-700 mx-auto mb-3" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             You are not assigned as lead of any unit
@@ -131,7 +131,7 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
       {/* Member panel */}
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-white/8 flex items-center justify-between">
-          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400 dark:text-gray-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-gray-400 dark:text-gray-500">
             Members {unit ? `(${unit.UnitMember.length})` : ""}
           </p>
           {!showAdd && (

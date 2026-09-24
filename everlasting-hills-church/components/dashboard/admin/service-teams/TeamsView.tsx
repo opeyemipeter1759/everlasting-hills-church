@@ -57,7 +57,7 @@ export default function TeamsView({
     <div className="space-y-6">
       {Array.from(byDepartment.entries()).map(([department, teams]) => (
         <section key={department}>
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-white/35">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-gray-400 dark:text-white/35">
             {department}
           </h2>
 

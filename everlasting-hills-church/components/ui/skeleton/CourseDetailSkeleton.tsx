@@ -7,7 +7,7 @@ export default function CourseDetailSkeleton() {
     <div className="max-w-5xl space-y-6">
       <Block className="h-4 w-32" />
 
-      <div className="rounded-2xl bg-gray-100 dark:bg-white/5 p-9 space-y-3">
+      <div className="rounded-2xl bg-gray-100 dark:bg-white/5 p-5 xs:p-9 space-y-3">
         <div className="flex gap-2">
           <Block className="h-6 w-24 rounded-full" />
           <Block className="h-6 w-20 rounded-full" />

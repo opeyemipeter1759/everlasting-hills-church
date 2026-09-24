@@ -116,7 +116,7 @@ export function PledgeAppeal({ member, userEmail = "" }: PledgeAppealProps) {
           />
           <Levels />
           <div className="relative p-5 sm:p-8">
-            <p className="inline-flex items-center gap-2 rounded-full bg-[#f2b84b] px-3 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-[#3a0612]">
+            <p className="inline-flex items-center gap-2 rounded-full bg-[#f2b84b] px-3 py-1 text-[11px] font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#3a0612]">
               <HandCoins size={14} aria-hidden="true" />
               Sacrificial giving
             </p>
@@ -165,7 +165,7 @@ export function PledgeAppeal({ member, userEmail = "" }: PledgeAppealProps) {
 
       <Drawer open={open} onClose={close} maxWidth="xl">
         <div className="bg-gradient-to-br from-[#3f0615] to-[#87102C] px-5 pb-6 pt-6 text-white sm:px-7">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#f2b84b]">
+          <p className="text-[11px] font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#f2b84b]">
             {SOUND_MEDIA.title}
           </p>
           <h2 className="mt-2 pr-10 text-2xl font-black tracking-tight">Financial Pledge Form</h2>
@@ -175,7 +175,7 @@ export function PledgeAppeal({ member, userEmail = "" }: PledgeAppealProps) {
           <RemittanceAccount tone="surface" />
         </div>
         {saved ? (
-          <div role="status" className="space-y-4 p-6 text-center sm:p-8">
+          <div role="status" className="space-y-4 p-4 xs:p-6 text-center sm:p-8">
             <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300">
               <CheckCircle2 size={34} aria-hidden="true" />
             </span>

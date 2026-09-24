@@ -58,7 +58,7 @@ export default function ServiceCountdownHero({ opensAt, onComplete, compact = fa
       </div>
 
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-amber-300/80">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] xs:tracking-[0.28em] text-amber-300/80">
           Today&apos;s Service
         </p>
         <h3 className={`mt-2 font-bold tracking-tight text-white ${compact ? "text-lg" : "text-2xl sm:text-3xl"}`}>

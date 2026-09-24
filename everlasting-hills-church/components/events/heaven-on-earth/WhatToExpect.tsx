@@ -51,9 +51,9 @@ const ITEMS: Item[] = [
 export default function WhatToExpect() {
   return (
     <section className="py-24 md:py-32 bg-[#FFF4F6]">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
         <ScrollReveal>
-          <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3">
+          <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3">
             What to Expect
           </p>
         </ScrollReveal>
@@ -75,7 +75,7 @@ export default function WhatToExpect() {
         <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 gap-5 md:gap-6">
           {ITEMS.map((item, i) => (
             <ScrollReveal key={item.number} delay={0.3 + i * 0.08}>
-              <article className="group relative h-full overflow-hidden rounded-2xl bg-white border border-[#E7CDD3]/60 p-8 hover:border-[#E7CDD3] hover:shadow-[0_12px_50px_rgba(135,16,44,0.12)] hover:-translate-y-1 transition-all duration-300">
+              <article className="group relative h-full overflow-hidden rounded-2xl bg-white border border-[#E7CDD3]/60 p-5 xs:p-8 hover:border-[#E7CDD3] hover:shadow-[0_12px_50px_rgba(135,16,44,0.12)] hover:-translate-y-1 transition-all duration-300">
                 {/* Number accent — large faint number bottom-right */}
                 <span
                   aria-hidden="true"

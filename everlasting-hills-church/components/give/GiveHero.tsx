@@ -70,13 +70,13 @@ export default function GiveHero({
         />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-4xl px-5 py-32 text-center sm:px-8">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 xs:px-5 py-20 xs:py-32 text-center sm:px-8">
         {/* Eyebrow badge */}
         <motion.span
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: EASE }}
-          className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/70 backdrop-blur-sm"
+          className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/70 backdrop-blur-sm"
         >
           <HandHeart size={12} className="text-[#FFB3C1]" />
           {eyebrow}

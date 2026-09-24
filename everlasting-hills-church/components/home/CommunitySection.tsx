@@ -8,12 +8,12 @@ export default function CommunitySection({ content }: { content?: CommunityConte
   const c = content ?? COMMUNITY_FALLBACK;
   return (
     <section id="community" className="py-24 md:py-32 bg-[#FFF4F6]">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left: Text content */}
           <div>
             <ScrollReveal>
-              <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3">
+              <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3">
                 {c.label}
               </p>
             </ScrollReveal>
@@ -92,7 +92,7 @@ export default function CommunitySection({ content }: { content?: CommunityConte
                     </div>
                   </div>
 
-                  <p className="text-white/50 text-xs tracking-[0.2em] uppercase mb-3">
+                  <p className="text-white/50 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase mb-3">
                     {c.visualCard.eyebrow}
                   </p>
                   <h3 className="text-white text-2xl font-bold mb-4 leading-tight">

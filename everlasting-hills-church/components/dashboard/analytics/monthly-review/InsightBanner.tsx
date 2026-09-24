@@ -8,8 +8,8 @@ export default function InsightBanner({ rate, members, teams }: Props) {
   const width = Math.min(Math.max(rate, 0), 100);
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-[#87102C] to-[#4a0819] p-6 text-white">
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-white/60">Team Integration</p>
+    <div className="rounded-2xl bg-gradient-to-br from-[#87102C] to-[#4a0819] p-4 xs:p-6 text-white">
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/60">Team Integration</p>
 
       <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
         <p className="text-3xl font-bold tabular-nums">{rate}%</p>

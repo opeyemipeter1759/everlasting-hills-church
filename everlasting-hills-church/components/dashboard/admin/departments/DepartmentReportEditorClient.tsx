@@ -17,7 +17,7 @@ export default function DepartmentReportEditorClient({ mode, reportId }: { mode:
   if (departments.length === 0) {
     return (
       <div className="mx-auto max-w-3xl">
-        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
           <Inbox size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">You have not been assigned a department yet.</p>
           <p className="mt-1 text-sm text-gray-400 dark:text-white/40">

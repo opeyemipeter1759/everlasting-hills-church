@@ -30,7 +30,7 @@ export default function AuthSplitScreen({
 }: AuthSplitScreenProps) {
   return (
     <div className="grid lg:grid-cols-2 rounded-3xl overflow-hidden bg-white shadow-2xl ring-1 ring-black/5 w-full">
-      <aside className="relative hidden lg:flex flex-col justify-between p-10 bg-gradient-to-br from-[#87102C] via-[#6E0C24] to-[#4a081a] text-white overflow-hidden">
+      <aside className="relative hidden lg:flex flex-col justify-between p-5 xs:p-8 sm:p-10 bg-gradient-to-br from-[#87102C] via-[#6E0C24] to-[#4a081a] text-white overflow-hidden">
         <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-200/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
@@ -44,7 +44,7 @@ export default function AuthSplitScreen({
               className="object-contain flex-shrink-0"
             />
             <div className="leading-tight">
-              <p className="text-[10px] tracking-[0.3em] uppercase text-white/60 font-semibold">
+              <p className="text-[10px] tracking-[0.15em] xs:tracking-[0.3em] uppercase text-white/60 font-semibold">
                 Everlasting Hills
               </p>
               <p className="text-base font-bold tracking-wide">Community Church</p>
@@ -61,7 +61,7 @@ export default function AuthSplitScreen({
           <blockquote className="text-2xl font-serif leading-snug mt-4">
             &ldquo;{scripture}&rdquo;
           </blockquote>
-          <p className="mt-3 text-[10px] tracking-[0.3em] uppercase text-amber-300/90 font-bold">
+          <p className="mt-3 text-[10px] tracking-[0.15em] xs:tracking-[0.3em] uppercase text-amber-300/90 font-bold">
             {scriptureRef}
           </p>
           <p className="mt-6 text-sm text-white/70 leading-relaxed max-w-sm">

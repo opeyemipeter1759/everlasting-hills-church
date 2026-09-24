@@ -40,8 +40,8 @@ export default function PageHero({
         <div className="absolute bottom-[-30%] left-[-10%] h-[50%] w-[50%] rounded-full bg-[#87102C]/10 blur-[120px]" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-4xl px-5 pb-16 pt-36 text-center sm:px-8 sm:pt-44">
-        <p className="mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-church-accent">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 xs:px-5 pb-16 pt-36 text-center sm:px-8 sm:pt-44">
+        <p className="mb-5 text-[10px] font-black uppercase tracking-[0.2em] xs:tracking-[0.4em] text-church-accent">
           {eyebrow}
         </p>
         <h1 className="text-balance text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">

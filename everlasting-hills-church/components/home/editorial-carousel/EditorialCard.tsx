@@ -64,7 +64,7 @@ export default function EditorialCard({
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-transparent" />
 
-      <span className="absolute top-4 left-4 inline-flex items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold tracking-[0.25em] text-white/80 backdrop-blur-sm sm:top-5 sm:left-5 sm:px-2.5 sm:py-1 sm:text-xs md:top-7 md:left-7 md:text-sm">
+      <span className="absolute top-4 left-4 inline-flex items-center rounded-full bg-black/40 px-2 py-0.5 text-[10px] font-bold tracking-[0.13em] xs:tracking-[0.25em] text-white/80 backdrop-blur-sm sm:top-5 sm:left-5 sm:px-2.5 sm:py-1 sm:text-xs md:top-7 md:left-7 md:text-sm">
         {slide.index}
       </span>
 
@@ -74,7 +74,7 @@ export default function EditorialCard({
         transition={{ duration: 0.5, delay: isActive ? 0.15 : 0 }}
         className="absolute inset-x-4 bottom-4 sm:inset-x-5 sm:bottom-6 md:inset-x-8 md:bottom-8"
       >
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-church-accent sm:text-xs">
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-church-accent sm:text-xs">
           Life at EHC
         </p>
         <span className="mt-3 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-white/90 sm:mt-4 sm:text-xs">

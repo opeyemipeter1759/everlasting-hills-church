@@ -136,7 +136,7 @@ export default function GiveClient({
       <section id="ways-to-give" className="scroll-mt-20 bg-white py-20 md:py-28">
         <div className="mx-auto max-w-6xl px-4 xs:px-5 sm:px-8">
           <ScrollReveal>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#87102C]">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C]">
               {content.sectionLabel}
             </p>
           </ScrollReveal>
@@ -287,7 +287,7 @@ function WireModal({ acc, onClose }: { acc: Account; onClose: () => void }) {
       >
         <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-[#E7CDD3]/70 bg-white px-4 xs:px-6 py-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#87102C]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C]">
               {acc.currency} Wire Instructions
             </p>
             <p className="mt-0.5 text-sm text-[#8a7e80]">For transfers sent from abroad</p>
@@ -305,7 +305,7 @@ function WireModal({ acc, onClose }: { acc: Account; onClose: () => void }) {
         <div className="px-6 py-5">
           {acc.wire!.map((section, si) => (
             <div key={section.title} className={si === 0 ? "" : "mt-5"}>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a7e80]">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#8a7e80]">
                 {section.title}
               </p>
               <div className="overflow-hidden rounded-xl border border-[#E7CDD3]/70">

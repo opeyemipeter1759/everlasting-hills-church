@@ -159,7 +159,7 @@ export default function ArticleEditor() {
 
   if (editingSlug && isLoading) {
     return (
-      <div className="mx-auto max-w-full space-y-4 md:px-5 py-10">
+      <div className="mx-auto max-w-full space-y-4 md:px-5 py-8 xs:py-10">
         <div className="h-9 w-3/4 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
@@ -170,7 +170,7 @@ export default function ArticleEditor() {
   const isPending = existing?.status === "PENDING_REVIEW";
 
   if (editingSlug && (loadError || !existing || !existing.isAuthor)) {
-    return <p role="alert" className="mx-auto max-w-2xl px-5 py-10 text-sm">This article could not be opened for editing. <Link href="/dashboard/articles/mine" className="underline">Back to my writing</Link></p>;
+    return <p role="alert" className="mx-auto max-w-2xl px-4 xs:px-5 py-8 xs:py-10 text-sm">This article could not be opened for editing. <Link href="/dashboard/articles/mine" className="underline">Back to my writing</Link></p>;
   }
 
   return (

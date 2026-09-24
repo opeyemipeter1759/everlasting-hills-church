@@ -7,7 +7,7 @@ import { ShieldCheck } from "lucide-react";
 export function MembershipCard({ role }: { role: string }) {
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-6 flex flex-col gap-4 h-full min-h-[160px]"
+      className="relative overflow-hidden rounded-2xl p-4 xs:p-6 flex flex-col gap-4 h-full min-h-[160px]"
       style={{ background: "linear-gradient(150deg, #87102C 0%, #6E0C24 55%, #4a0819 100%)" }}
     >
       <div
@@ -25,7 +25,7 @@ export function MembershipCard({ role }: { role: string }) {
         <ShieldCheck size={17} className="text-white" aria-hidden="true" />
       </div>
       <div className="relative z-10 flex-1">
-        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-white/50 mb-1.5">
+        <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-white/50 mb-1.5">
           Membership Status
         </p>
         <p className="text-[15px] font-bold text-white">Active {role}</p>

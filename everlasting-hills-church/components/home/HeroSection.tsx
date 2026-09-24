@@ -41,7 +41,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           {c.scriptureBadge.visible && (
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-church-maroon/30 border border-church-maroon/50 backdrop-blur-sm">
               <Sparkles className="w-3 h-3 text-church-accent" />
-              <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-black text-church-accent">
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.13em] xs:tracking-[0.25em] font-black text-church-accent">
                 {c.scriptureBadge.text}
               </span>
             </span>
@@ -195,7 +195,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
 
         <p
           style={{ animationDelay: "980ms" }}
-          className="opacity-0 animate-fade-up text-[10px] uppercase tracking-[0.25em] text-white/35 font-bold mt-6"
+          className="opacity-0 animate-fade-up text-[10px] uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/35 font-bold mt-6"
         >
           {c.mediaCard.title} — {c.mediaCard.subtitle}
         </p>
@@ -206,7 +206,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           style={{ animationDelay: "1100ms" }}
           className="opacity-0 animate-fade-in hidden sm:flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors mt-10"
         >
-          <span className="text-[10px] uppercase tracking-[0.3em] font-bold">
+          <span className="text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] font-bold">
             Scroll
           </span>
           <ChevronDown className="w-4 h-4 animate-bounce-soft" />

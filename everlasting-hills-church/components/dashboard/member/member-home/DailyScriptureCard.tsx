@@ -173,7 +173,7 @@ export default function DailyScriptureCard() {
         >
           <p
             id="hills-confession-title"
-            className="text-[11px] font-black uppercase tracking-[0.22em] text-[#f5d49a]"
+            className="text-[11px] font-black uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#f5d49a]"
           >
             The Hills Confession
             <span className="font-semibold normal-case tracking-normal text-white/60">

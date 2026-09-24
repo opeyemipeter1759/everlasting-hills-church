@@ -82,11 +82,11 @@ export default function SermonsSection({
         <div className="absolute inset-0 bg-grain opacity-[0.05] mix-blend-overlay" />
       </div>
 
-      <div className="relative mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="relative mx-auto max-w-[1200px] px-4 xs:px-5 sm:px-8">
         {/* Header */}
         <div className="mb-14 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-xl">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-[#FFB3C1]">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-[#FFB3C1]">
               {c.label}
             </p>
             <h2 className="font-serif text-3xl font-bold leading-[1.1] tracking-tight text-balance sm:text-4xl md:text-5xl">

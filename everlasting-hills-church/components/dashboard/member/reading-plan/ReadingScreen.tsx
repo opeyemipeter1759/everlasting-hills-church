@@ -222,7 +222,7 @@ export default function ReadingScreen() {
               <Image src={plan.coverImageUrl} alt="" fill sizes="28px" className="object-cover" unoptimized />
             </span>
           )}
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
             {plan.title}
           </p>
         </div>
@@ -285,7 +285,7 @@ export default function ReadingScreen() {
 
       {day.reflectionPrompt && (
         <div className="mt-8 rounded-2xl border border-[#E7CDD3]/60 bg-[#FFF4F6]/50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">
             To sit with
           </p>
           <p className="mt-1.5 text-sm text-gray-700 dark:text-white/70">{day.reflectionPrompt}</p>

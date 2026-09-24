@@ -141,7 +141,7 @@ export default function Sidebar({ user, mobileOpen, onMobileClose }: Props) {
                 disabled={hasActiveItem}
                 className="flex w-full items-center justify-between px-3 mb-2 group disabled:cursor-default"
               >
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/25 group-hover:text-white/40 transition-colors">
+                <span className="text-[9px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/25 group-hover:text-white/40 transition-colors">
                   {group.section}
                 </span>
                 {!hasActiveItem && (

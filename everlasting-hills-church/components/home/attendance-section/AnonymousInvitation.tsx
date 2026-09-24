@@ -45,7 +45,7 @@ export default function AnonymousInvitation() {
             <Hand size={48} className="text-white/85" />
           </motion.div>
         </div>
-        <p className="absolute -bottom-1 text-[10px] tracking-[0.25em] uppercase font-bold text-white/40">
+        <p className="absolute -bottom-1 text-[10px] tracking-[0.13em] xs:tracking-[0.25em] uppercase font-bold text-white/40">
           Members only · sign in to enable
         </p>
       </div>

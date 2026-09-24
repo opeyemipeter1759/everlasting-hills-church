@@ -12,7 +12,7 @@ export default function AboutSection({ content }: { content?: AboutContent }) {
   const sliderImages: EhcImage[] = c.gallery.map((g) => ({ name: g.name, src: g.src }));
   return (
     <section id="about" className="pt-24 px-2 md:px-4 md:pt-32 bg-white overflow-hidden">
-      <div className=" mx-auto max-w-[1400px] px-5 sm:px-8">
+      <div className=" mx-auto max-w-[1400px] px-4 xs:px-5 sm:px-8">
         <div className="grid lg:grid-cols-2 gap-14 md:gap-20 items-center">
           {/* ── Left: animated gallery carousel ── */}
           <ScrollReveal direction="left">
@@ -22,7 +22,7 @@ export default function AboutSection({ content }: { content?: AboutContent }) {
             <ScrollReveal delay={0.1}>
               <div className="flex items-center gap-3 mb-5">
                 <span className="w-full max-w-8 h-[1px] bg-[#87102C]/40" />
-                <p className="text-[#87102C] text-xs tracking-[0.25em] uppercase font-semibold">
+                <p className="text-[#87102C] text-xs tracking-[0.13em] xs:tracking-[0.25em] uppercase font-semibold">
                   {c.label}
                 </p>
               </div>

@@ -45,7 +45,7 @@ export default function MyCoursesClient() {
         <div className="flex items-start gap-3">
           <span aria-hidden="true" className="mt-1.5 h-9 w-1 flex-shrink-0 rounded-full bg-[#87102C]" />
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
               My Courses
             </p>
             <h1 className="mt-1 text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
@@ -67,7 +67,7 @@ export default function MyCoursesClient() {
       </div>
 
       {enrolled.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-10 text-center sm:p-16">
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 text-center sm:p-16">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#87102C]/10 dark:bg-[#87102C]/20">
             <GraduationCap size={26} className="text-[#87102C] dark:text-[#e8768a]" />
           </span>

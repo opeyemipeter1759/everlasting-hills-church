@@ -219,9 +219,9 @@ function WelcomeHero({ members, attendance }: { members?: number; attendance?: n
         EHC
       </div>
 
-      <div className="relative z-10 flex flex-col justify-between gap-6 p-7 sm:flex-row sm:items-center sm:p-9">
+      <div className="relative z-10 flex flex-col justify-between gap-6 p-4 xs:p-7 sm:flex-row sm:items-center sm:p-9">
         <div>
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.32em] text-[#FFB3C1]">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.16em] xs:tracking-[0.32em] text-[#FFB3C1]">
             Super Admin{hero.date ? ` · ${hero.date}` : ""}
           </p>
           <h1 className="text-2xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-3xl">

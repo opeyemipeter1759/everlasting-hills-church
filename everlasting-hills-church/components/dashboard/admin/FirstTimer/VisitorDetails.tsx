@@ -82,7 +82,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
 
           {/* Contact */}
           <div className="space-y-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">Contact</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">Contact</p>
             {visitor.email && (
               <a href={`mailto:${visitor.email}`} className="flex items-center gap-2 text-[#555] dark:text-white/60 hover:text-[#87102C] dark:hover:text-[#FFB3C1] transition-colors">
                 <Mail size={12} className="text-[#b8a8ac] dark:text-white/30 flex-shrink-0" />
@@ -105,7 +105,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
 
           {/* About */}
           <div className="space-y-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">About</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">About</p>
             {visitor.gender && (
               <span className="flex items-center gap-2 text-[#8a7e80] dark:text-white/45">
                 <span className="text-[#b8a8ac] dark:text-white/30">Gender:</span> {visitor.gender}
@@ -157,7 +157,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
           {/* How they found us */}
           {visitor.howDidYouLearn && (
             <div className="space-y-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">How They Found Us</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">How They Found Us</p>
               <p className="text-[#555] dark:text-white/60">{visitor.howDidYouLearn}</p>
               {visitor.invitedBy && (
                 <p className="text-[#8a7e80] dark:text-white/45">
@@ -175,7 +175,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
             <div className="space-y-3">
               {visitor.serviceExperience && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
                     How the service felt
                   </p>
                   <p className="whitespace-pre-line text-[#555] dark:text-white/60">
@@ -185,7 +185,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
               )}
               {visitor.prayerPoint && (
                 <div className="space-y-1">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
                     Prayer request
                   </p>
                   <p className="whitespace-pre-line text-[#555] dark:text-white/60">{visitor.prayerPoint}</p>

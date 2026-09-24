@@ -142,7 +142,7 @@ export default function PageEditor({ pageKey }: { pageKey: string }) {
           {isStructured ? (
             <StructuredEditor contentType={data.def.contentType ?? ""} content={content} onChange={update} />
           ) : showPreview ? (
-            <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] p-6 sm:p-8">
+            <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] p-4 xs:p-6 sm:p-8">
               <BlockRenderer blocks={blocks} />
             </div>
           ) : (

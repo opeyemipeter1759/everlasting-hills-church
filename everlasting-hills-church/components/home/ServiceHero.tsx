@@ -28,7 +28,7 @@ export default function ServiceHero({
           <ScrollReveal>
                <div className="flex items-center gap-3 mb-3">
             <span className="w-full max-w-8 h-[1px] bg-[#87102C]/40" />
-        <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold ">
+        <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold ">
           {eyebrowLabel}
                   </p>
                   </div>

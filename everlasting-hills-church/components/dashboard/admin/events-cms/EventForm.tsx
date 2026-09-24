@@ -27,7 +27,7 @@ export default function EventForm({
   return (
     <form
       onSubmit={submit}
-      className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-6 space-y-5"
+      className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-4 xs:p-6 space-y-5"
     >
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-gray-900 dark:text-white">

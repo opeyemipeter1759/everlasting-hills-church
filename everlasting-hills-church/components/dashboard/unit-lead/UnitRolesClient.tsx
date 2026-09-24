@@ -43,7 +43,7 @@ export default function UnitRolesClient({ unitId }: { unitId: string }) {
 
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-white/8">
-          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-gray-400 dark:text-gray-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-gray-400 dark:text-gray-500">
             Roles {positions ? `(${positions.length})` : ""}
           </p>
         </div>

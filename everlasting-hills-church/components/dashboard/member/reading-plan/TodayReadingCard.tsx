@@ -88,7 +88,7 @@ export default function TodayReadingCard() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#4A0817]/85 via-[#4A0817]/45 to-transparent" />
 
           <div className="relative min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-white/60">
               Today&apos;s reading
             </p>
             <h3 className="mt-0.5 truncate font-serif text-lg font-bold text-white">{plan.title}</h3>

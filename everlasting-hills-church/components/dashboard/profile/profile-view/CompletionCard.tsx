@@ -23,7 +23,7 @@ export function CompletionCard({ profile }: { profile: ProfileViewModel }) {
   if (pct === 100) return null;
 
   return (
-    <div className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-6 sm:p-7">
+    <div className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-4 xs:p-6 sm:p-7">
       <div className="flex items-center justify-between gap-4 mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/25 flex items-center justify-center flex-shrink-0">

@@ -56,7 +56,7 @@ export default function GivingAccounts() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 py-12 relative">
+      <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 py-8 xs:py-12 relative">
       {/* Toast */}
       {copiedValue && (
         <div className="fixed right-4 sm:right-6 top-20 sm:top-6 z-50 max-w-[calc(100vw-2rem)]">
@@ -108,7 +108,7 @@ export default function GivingAccounts() {
                     <div className="flex min-w-0 items-center gap-3">
                       <BankLogo bank={a.bank} currency={a.currency} />
                       <div>
-                        <p className="text-white/40 text-xs uppercase tracking-[0.18em] break-words">{a.bank}</p>
+                        <p className="text-white/40 text-xs uppercase tracking-[0.09em] xs:tracking-[0.18em] break-words">{a.bank}</p>
                         <p className="text-white font-semibold text-lg mt-2">{a.label}</p>
                       </div>
                     </div>
@@ -138,7 +138,7 @@ export default function GivingAccounts() {
                   <div className="flex min-w-0 items-center gap-3">
                     <BankLogo bank={a.bank} currency={a.currency} size={44} />
                     <div className="min-w-0">
-                      <p className="text-white/40 text-xs uppercase tracking-[0.18em] break-words">{a.bank}</p>
+                      <p className="text-white/40 text-xs uppercase tracking-[0.09em] xs:tracking-[0.18em] break-words">{a.bank}</p>
                       <p className="text-white font-semibold">{a.label}</p>
                       <p className="text-white/60 mt-1 break-all">{a.number} <span className="ml-2 text-white/50 text-sm">{a.currency}</span></p>
                     </div>
@@ -166,7 +166,7 @@ export default function GivingAccounts() {
                   <div className="flex min-w-0 items-center gap-3">
                     <BankLogo bank={a.bank} currency={a.currency} />
                     <div>
-                      <p className="text-white/40 text-xs uppercase tracking-[0.18em] break-words">{a.bank}</p>
+                      <p className="text-white/40 text-xs uppercase tracking-[0.09em] xs:tracking-[0.18em] break-words">{a.bank}</p>
                       <p className="text-white font-semibold text-lg mt-2">{a.label}</p>
                     </div>
                   </div>

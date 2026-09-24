@@ -28,7 +28,7 @@ export function SocialCard({
         <Icon size={18} aria-hidden="true" style={{ color: connected ? brandColor : "#c9b0b5" }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#8a7e80] dark:text-white/40 mb-1">
+        <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-[#8a7e80] dark:text-white/40 mb-1">
           {label}
         </p>
         {connected ? (

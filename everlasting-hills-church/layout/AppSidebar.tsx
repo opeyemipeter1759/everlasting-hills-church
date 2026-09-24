@@ -359,7 +359,7 @@ const AppSidebar: React.FC = () => {
               <p className="truncate text-[13px] font-bold text-gray-900 dark:text-white leading-tight">
                 Everlasting Hills
               </p>
-              <p className="truncate text-[9.5px] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500">
+              <p className="truncate text-[9.5px] font-semibold uppercase tracking-[0.08em] xs:tracking-[0.16em] text-gray-400 dark:text-gray-500">
                 Church Portal
               </p>
             </div>

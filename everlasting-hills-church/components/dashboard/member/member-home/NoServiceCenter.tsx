@@ -36,7 +36,7 @@ export function NoServiceCenter({ nextService }: { nextService: MemberHomeProps[
     const countdown = getServiceCountdown(nextService.scheduledAt);
     return (
       <div className="text-center max-w-sm w-full">
-        <p className="text-[#FFB3C1]/60 text-[10px] uppercase tracking-[0.3em] font-bold mb-2">
+        <p className="text-[#FFB3C1]/60 text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] font-bold mb-2">
           Next Service In
         </p>
         <p className="text-white text-5xl font-black tracking-tight tabular-nums">{countdown}</p>

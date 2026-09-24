@@ -17,7 +17,7 @@ const EMPTY_FORM = {
 function FormField({ label, required, input }: { label: string; required?: boolean; input: React.ReactElement }) {
   return (
     <div>
-      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-1.5">
+      <label className="block text-[10px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/35 mb-1.5">
         {label}{required && <span className="text-church-accent ml-0.5">*</span>}
       </label>
       <div className="w-full border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white bg-white/[0.03] focus-within:border-church-accent/40 focus-within:bg-white/[0.05] transition-all [&_input]:w-full [&_input]:bg-transparent [&_input]:outline-none [&_input]:placeholder:text-white/20 [&_textarea]:w-full [&_textarea]:bg-transparent [&_textarea]:outline-none [&_textarea]:placeholder:text-white/20 [&_textarea]:resize-none">
@@ -97,7 +97,7 @@ export default function AddCellModal({ onClose }: { onClose: () => void }) {
 
         <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent mb-0.5">Home Cell</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] xs:tracking-[0.3em] text-church-accent mb-0.5">Home Cell</p>
             <h3 className="text-white font-black text-lg leading-tight">Register Your Cell</h3>
             <p className="text-white/35 text-xs mt-0.5">A confirmation will be sent to your email.</p>
           </div>
@@ -188,7 +188,7 @@ export default function AddCellModal({ onClose }: { onClose: () => void }) {
 
               {/* Are you submitted to Pastor Opeyemi Peter */}
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/35 mb-2">
                   Are you submitted to Pastor Opeyemi Peter?<span className="text-church-accent ml-0.5">*</span>
                 </p>
                 <div className="flex gap-3">

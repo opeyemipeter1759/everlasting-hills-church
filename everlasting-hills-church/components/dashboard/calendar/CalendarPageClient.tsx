@@ -17,7 +17,7 @@ export default function CalendarPageClient() {
         className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
       >
         <div>
-          <p className="text-[10px] tracking-[0.28em] uppercase font-semibold text-[#87102C]/80 dark:text-white/40 mb-1.5">
+          <p className="text-[10px] tracking-[0.14em] xs:tracking-[0.28em] uppercase font-semibold text-[#87102C]/80 dark:text-white/40 mb-1.5">
             Member Portal
           </p>
           <h1 className="text-3xl font-bold text-[#111] dark:text-white tracking-tight">Calendar</h1>

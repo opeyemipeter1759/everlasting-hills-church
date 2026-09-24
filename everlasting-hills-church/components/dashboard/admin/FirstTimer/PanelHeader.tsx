@@ -37,7 +37,7 @@ export default function PanelHeader({
           <UserPlus size={15} className="text-amber-600 dark:text-amber-400" aria-hidden="true" />
         </div>
         <div>
-          <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
+          <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
             Newcomers
           </p>
           <div className="flex items-center gap-2 -mt-0.5">

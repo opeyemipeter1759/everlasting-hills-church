@@ -13,9 +13,9 @@ import { HEAVEN_ON_EARTH } from "./event-constants";
 export default function EventDetailsBento() {
   return (
     <section id="details" className="py-24 md:py-32 bg-white">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
         <ScrollReveal>
-          <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3">
+          <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3">
             Event Details
           </p>
         </ScrollReveal>
@@ -114,12 +114,12 @@ export default function EventDetailsBento() {
 
           {/* Special notes — full width */}
           <ScrollReveal delay={0.65} className="lg:col-span-2">
-            <div className="h-full rounded-2xl bg-[#FFF4F6] border border-[#E7CDD3]/60 p-6 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.06)] transition-all duration-300">
+            <div className="h-full rounded-2xl bg-[#FFF4F6] border border-[#E7CDD3]/60 p-4 xs:p-6 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.06)] transition-all duration-300">
               <div className="flex items-start gap-3 mb-3">
                 <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-[#FFE8ED] text-[#87102C] flex items-center justify-center">
                   <Info size={16} />
                 </span>
-                <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#888] pt-2.5">
+                <p className="text-[10px] uppercase tracking-[0.13em] xs:tracking-[0.25em] font-bold text-[#888] pt-2.5">
                   Good to know
                 </p>
               </div>
@@ -156,11 +156,11 @@ interface ChipProps {
 
 function AnchorChip({ icon, eyebrow, primary, secondary }: ChipProps) {
   return (
-    <div className="h-full rounded-2xl bg-white border border-[#E7CDD3]/60 p-6 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] hover:-translate-y-0.5 transition-all duration-300">
+    <div className="h-full rounded-2xl bg-white border border-[#E7CDD3]/60 p-4 xs:p-6 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] hover:-translate-y-0.5 transition-all duration-300">
       <span className="inline-flex w-11 h-11 rounded-xl bg-[#FFE8ED] text-[#87102C] items-center justify-center mb-4">
         {icon}
       </span>
-      <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#888] mb-1.5">
+      <p className="text-[10px] uppercase tracking-[0.13em] xs:tracking-[0.25em] font-bold text-[#888] mb-1.5">
         {eyebrow}
       </p>
       <p className="text-base sm:text-lg font-bold text-[#111] leading-snug">{primary}</p>
@@ -183,12 +183,12 @@ function LinkAnchorChip({
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="group h-full block rounded-2xl bg-white border border-[#E7CDD3]/60 p-6 hover:border-[#87102C]/40 hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] hover:-translate-y-0.5 transition-all duration-300"
+      className="group h-full block rounded-2xl bg-white border border-[#E7CDD3]/60 p-4 xs:p-6 hover:border-[#87102C]/40 hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] hover:-translate-y-0.5 transition-all duration-300"
     >
       <span className="inline-flex w-11 h-11 rounded-xl bg-[#FFE8ED] text-[#87102C] items-center justify-center mb-4 group-hover:bg-[#87102C] group-hover:text-white transition-colors">
         {icon}
       </span>
-      <p className="text-[10px] uppercase tracking-[0.25em] font-bold text-[#888] mb-1.5">
+      <p className="text-[10px] uppercase tracking-[0.13em] xs:tracking-[0.25em] font-bold text-[#888] mb-1.5">
         {eyebrow}
       </p>
       <p className="text-base sm:text-lg font-bold text-[#111] leading-snug break-words group-hover:text-[#87102C] transition-colors">
@@ -206,7 +206,7 @@ function InvertedAnchorCard({
 }: ChipProps & { size?: "large" }) {
   return (
     <div
-      className="relative h-full overflow-hidden rounded-2xl p-8 sm:p-10 text-white"
+      className="relative h-full overflow-hidden rounded-2xl p-5 xs:p-8 sm:p-10 text-white"
       style={{
         background:
           "linear-gradient(160deg, #2a0410 0%, #4a0819 30%, #87102C 70%, #a01535 100%)",
@@ -226,7 +226,7 @@ function InvertedAnchorCard({
         <span className="inline-flex w-12 h-12 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 items-center justify-center mb-6">
           {icon}
         </span>
-        <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#FFB3C1] mb-2">
+        <p className="text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] font-bold text-[#FFB3C1] mb-2">
           {eyebrow}
         </p>
         <p className="text-3xl sm:text-4xl font-bold leading-tight font-serif italic">

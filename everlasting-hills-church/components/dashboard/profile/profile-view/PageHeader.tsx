@@ -13,7 +13,7 @@ export function PageHeader() {
       className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
     >
       <div>
-        <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold mb-2">
+        <p className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-2">
           Member Portal
         </p>
         <h1 className="text-3xl sm:text-4xl font-bold text-[#111] dark:text-white tracking-tight leading-[1.1] text-balance">

@@ -232,11 +232,11 @@ export default function ScriptureSection({ content }: { content?: ScriptureConte
         }
       `}</style>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-16 md:mb-10">
           <ScrollReveal>
-            <p className="text-white/40 text-xs tracking-[0.25em] uppercase font-medium mb-4">
+            <p className="text-white/40 text-xs tracking-[0.13em] xs:tracking-[0.25em] uppercase font-medium mb-4">
               {c.label}
             </p>
           </ScrollReveal>
@@ -283,7 +283,7 @@ export default function ScriptureSection({ content }: { content?: ScriptureConte
               <p className="text-white/40 text-sm italic leading-relaxed">
                 &ldquo;{c.bottomQuote.text}&rdquo;
               </p>
-              <p className="text-white/30 text-xs tracking-[0.15em] uppercase mt-2">
+              <p className="text-white/30 text-xs tracking-[0.08em] xs:tracking-[0.15em] uppercase mt-2">
                 {c.bottomQuote.reference}
               </p>
             </div>

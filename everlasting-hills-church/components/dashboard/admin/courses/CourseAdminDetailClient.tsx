@@ -60,7 +60,7 @@ export default function CourseAdminDetailClient({ id }: { id: string }) {
           <Icon size={40} className="relative text-white/85" strokeWidth={1.5} />
         </div>
 
-        <div className="space-y-5 p-6">
+        <div className="space-y-5 p-4 xs:p-6">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-[#87102C] dark:text-[#e8768a]">
               {course.category.name}

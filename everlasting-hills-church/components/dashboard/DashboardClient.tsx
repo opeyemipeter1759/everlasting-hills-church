@@ -787,7 +787,7 @@ function SectionHeader({ count, label }: { count: number; label: string }) {
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div className="rounded-2xl bg-white/5 border border-white/10 p-8 text-center text-white/30 text-sm">
+    <div className="rounded-2xl bg-white/5 border border-white/10 p-5 xs:p-8 text-center text-white/30 text-sm">
       {label}
     </div>
   );

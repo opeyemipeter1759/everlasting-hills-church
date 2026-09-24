@@ -23,10 +23,10 @@ export default function EventSpotlight({ events }: { events: EventSummary[] }) {
       <div className="pointer-events-none absolute -top-24 left-[-8%] h-96 w-96 rounded-full bg-[#FFE8ED]/70 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-[-10%] right-[-8%] h-96 w-96 rounded-full bg-[#FFF4F6] blur-[120px]" />
 
-      <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+      <div className="relative mx-auto max-w-6xl px-4 xs:px-5 sm:px-8">
         <ScrollReveal>
           <div className="flex flex-col items-start text-start">
-            <span className="inline-flex items-start gap-2 text-xs font-bold uppercase tracking-[0.3em] text-[#87102C]">
+            <span className="inline-flex items-start gap-2 text-xs font-bold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-[#87102C]">
               <Sparkles size={13} />
               Upcoming Events
             </span>

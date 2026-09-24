@@ -140,7 +140,7 @@ export default function ReadingOverview() {
       <WordTabs />
       <header className="mt-5 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">Growing in the Word</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">Growing in the Word</p>
           <h1 className="mt-1 font-serif text-2xl font-bold tracking-tight text-[#111] dark:text-white sm:text-3xl">Your reading overview</h1>
           <p className="mt-2 max-w-xl text-sm leading-relaxed text-gray-500 dark:text-white/55">See the effort you have put in and keep growing, one reading at a time.</p>
         </div>

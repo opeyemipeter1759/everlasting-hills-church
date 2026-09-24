@@ -216,7 +216,7 @@ export default function AnnouncementComposerModal({
 
         {showPreview && values.body.trim().length > 0 && (
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
-            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 dark:text-white/30">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-gray-400 dark:text-white/30">
               How members will see it
             </p>
             <RichText

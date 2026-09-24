@@ -57,7 +57,7 @@ export default function MonthlyReviewSkeleton() {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 p-6">
+      <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 p-4 xs:p-6">
         <Block className="mb-3 h-3 w-32" />
         <Block className="mb-3 h-8 w-20" />
         <Block className="h-2 w-full rounded-full" />

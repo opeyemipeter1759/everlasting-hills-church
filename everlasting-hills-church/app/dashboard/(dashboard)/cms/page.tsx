@@ -65,7 +65,7 @@ export default function CmsPagesOverview() {
 
       {groups.map((group) => (
         <section key={group.name}>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-white/40 mb-3">
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-gray-400 dark:text-white/40 mb-3">
             {group.name}
           </p>
           <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06] overflow-hidden">

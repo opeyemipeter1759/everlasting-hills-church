@@ -258,7 +258,7 @@ export default function SermonEngagementContent({
 
       {/* ── New here CTA ─────────────────────────────────────────── */}
       {!isLoggedIn && (
-        <div className="bg-[#87102C] text-white rounded-2xl p-6 sm:p-8 text-center space-y-3">
+        <div className="bg-[#87102C] text-white rounded-2xl p-4 xs:p-6 sm:p-8 text-center space-y-3">
           <p className="text-sm font-bold uppercase tracking-widest text-white/60">New Here?</p>
           <h3 className="text-xl font-black">Join the Everlasting Hills Church Family</h3>
           <p className="text-white/70 text-sm max-w-sm mx-auto">

@@ -30,9 +30,9 @@ export default function FinalInvitation() {
       {/* Glow */}
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[600px] bg-[#FFB3C1]/12 blur-[140px] rounded-full pointer-events-none" />
 
-      <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 text-center text-white">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 xs:px-5 sm:px-8 text-center text-white">
         <ScrollReveal>
-          <p className="text-[#FFB3C1] text-xs tracking-[0.4em] uppercase font-bold mb-6">
+          <p className="text-[#FFB3C1] text-xs tracking-[0.2em] xs:tracking-[0.4em] uppercase font-bold mb-6">
             One last thing
           </p>
         </ScrollReveal>
@@ -62,7 +62,7 @@ export default function FinalInvitation() {
               Reserve My Seat
               <ArrowUpRight size={18} />
             </a>
-            <p className="mt-6 text-xs uppercase tracking-[0.3em] text-white/60 font-semibold">
+            <p className="mt-6 text-xs uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/60 font-semibold">
               {HEAVEN_ON_EARTH.dateDisplay} · {HEAVEN_ON_EARTH.venue.name}
             </p>
           </div>

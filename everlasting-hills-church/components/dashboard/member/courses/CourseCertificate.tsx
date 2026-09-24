@@ -71,12 +71,12 @@ const CourseCertificate = forwardRef<HTMLDivElement, CourseCertificateProps>(
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logoblack.png" alt="Everlasting Hills Church" className="h-14 w-auto object-contain" />
 
-          <p className="mt-3 text-xs font-bold tracking-[0.4em] text-[#87102C]">EVERLASTING HILLS CHURCH</p>
+          <p className="mt-3 text-xs font-bold tracking-[0.2em] xs:tracking-[0.4em] text-[#87102C]">EVERLASTING HILLS CHURCH</p>
 
           <h1 className="mt-8 font-serif text-6xl font-bold leading-tight text-[#87102C]">
             Certificate of Training
           </h1>
-          <p className="mt-2 text-sm font-bold tracking-[0.35em] text-[#5c4a4f]">OF ACHIEVEMENT</p>
+          <p className="mt-2 text-sm font-bold tracking-[0.18em] xs:tracking-[0.35em] text-[#5c4a4f]">OF ACHIEVEMENT</p>
 
           <div className="mt-7">
             <Divider />

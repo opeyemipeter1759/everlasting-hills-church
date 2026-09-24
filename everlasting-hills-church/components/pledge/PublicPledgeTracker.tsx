@@ -48,7 +48,7 @@ This private link is invalid, or a newer one has replaced it. Check the most rec
         <section className="mt-4 rounded-[2rem] border border-[#ead8cd] bg-gradient-to-br from-[#fff8e8] to-[#fff0f3] p-5 shadow-2xl shadow-[#3f0615]/10 sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#87102C]">Sound &amp; Media Project</p>
+              <p className="text-xs font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#87102C]">Sound &amp; Media Project</p>
               <h1 className="mt-2 text-2xl font-black tracking-tight text-[#211317] sm:text-3xl">{pledge.fullName}&apos;s pledge</h1>
               <p className="mt-2 text-sm text-[#6d565b]">{pledgePlan(pledge)} · complete by {pledge.completeBy}</p>
             </div>

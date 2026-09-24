@@ -72,7 +72,7 @@ function Empty({ label, backHref, courseTitle }: { label: string; backHref: stri
       >
         <ArrowLeft size={14} /> {courseTitle ?? "Courses"}
       </Link>
-      <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-16 text-center">
+      <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-6 xs:p-10 sm:p-16 text-center">
         <GraduationCap size={28} className="text-gray-300 dark:text-gray-700" />
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</p>
       </div>

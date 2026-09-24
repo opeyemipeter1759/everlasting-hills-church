@@ -7,7 +7,7 @@ export default function CourseHero({ course }: { course: CourseDetail }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-7 sm:p-9"
+      className="relative overflow-hidden rounded-2xl p-4 xs:p-7 sm:p-9"
       style={{ background: `linear-gradient(150deg, ${from} 0%, ${to} 100%)` }}
     >
       <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />

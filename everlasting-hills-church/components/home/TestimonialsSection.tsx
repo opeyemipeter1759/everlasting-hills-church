@@ -27,7 +27,7 @@ export default async function TestimonialsSection({ content }: { content: Testim
       <div className="mx-auto max-w-[1100px]">
         {/* Header */}
         <div className="mb-16 text-center">
-          <span className="inline-flex items-center rounded-full bg-[#FFE8ED] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:bg-white/10 dark:text-[#e8768a]">
+          <span className="inline-flex items-center rounded-full bg-[#FFE8ED] px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:bg-white/10 dark:text-[#e8768a]">
             {content.label}
           </span>
           <h2

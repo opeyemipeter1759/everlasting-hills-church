@@ -65,12 +65,12 @@ export default async function BirthdayTeaserSection() {
       <div aria-hidden="true" className="absolute left-10 top-6 text-3xl opacity-80 animate-bounce hidden sm:block" style={{ animationDuration: "3s" }}>🎈</div>
       <div aria-hidden="true" className="absolute right-14 top-10 text-2xl opacity-80 animate-bounce hidden sm:block" style={{ animationDuration: "3.4s", animationDelay: "0.4s" }}>🎈</div>
 
-      <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
+      <div className="relative z-10 mx-auto max-w-4xl px-4 xs:px-6 text-center">
         <span className="relative mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 shadow-lg shadow-amber-500/30">
           <PartyPopper size={22} className="text-[#4a0819]" aria-hidden="true" />
           <Sparkles size={13} className="absolute -right-1 -top-1 text-amber-200 animate-pulse" aria-hidden="true" />
         </span>
-        <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-amber-200">Celebrating With Us ✨</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] xs:tracking-[0.32em] text-amber-200">Celebrating With Us ✨</p>
         <h2 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">Happy Birthday! 🎂</h2>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/60">
           Join us in celebrating members of our church family this week.

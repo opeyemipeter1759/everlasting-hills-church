@@ -72,12 +72,12 @@ export default function CultureSection({ content }: { content?: CultureContent }
 
   return (
     <section id="culture" className="py-24 w-full md:px-4  md:py-32 bg-white">
-      <div className="px-8 mx-auto w-full max-w-[1400px] sm:px-8">
+      <div className="px-4 xs:px-8 mx-auto w-full max-w-[1400px] sm:px-8">
         <div className="mb-10">
           <ScrollReveal>
             <div className="flex items-center gap-3 mb-3">
               <span className="w-full max-w-8 h-[1px] bg-[#87102C]/40" />
-              <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold ">
+              <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold ">
                 {c.label}
               </p>
             </div>
@@ -162,7 +162,7 @@ function CultureCard({
       >
         {/* ── FRONT ── */}
         <div
-          className={`absolute inset-0 rounded-2xl border p-8 flex flex-col [backface-visibility:hidden] overflow-hidden ${card.bg} ${card.border} shadow-sm transition-shadow duration-300 group-hover:shadow-[0_24px_60px_-15px_rgba(135,16,44,0.35)]`}
+          className={`absolute inset-0 rounded-2xl border p-5 xs:p-8 flex flex-col [backface-visibility:hidden] overflow-hidden ${card.bg} ${card.border} shadow-sm transition-shadow duration-300 group-hover:shadow-[0_24px_60px_-15px_rgba(135,16,44,0.35)]`}
         >
           {card.inverted && <DotPattern />}
 

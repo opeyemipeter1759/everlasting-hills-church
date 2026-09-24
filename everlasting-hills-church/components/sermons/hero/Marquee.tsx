@@ -12,7 +12,7 @@ export default function Marquee({ items }: { items: string[] }) {
     <div className="flex shrink-0 items-center gap-6 pr-6">
       {content.map((item, i) => (
         <span key={`${keyPrefix}-${i}`} className="flex items-center gap-6 whitespace-nowrap">
-          <span className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">{item}</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/40">{item}</span>
           <span className="h-1 w-1 rounded-full bg-[#87102C]" />
         </span>
       ))}

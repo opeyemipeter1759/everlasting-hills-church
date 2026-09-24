@@ -40,7 +40,7 @@ export default function QRCodeModal({ text, open, onClose, title }: Props) {
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-6 z-10">
+      <div className="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-4 xs:p-6 z-10">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-lg font-semibold text-church-dark">{title ?? "QR Code"}</h3>

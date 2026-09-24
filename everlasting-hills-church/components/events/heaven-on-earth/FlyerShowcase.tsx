@@ -57,9 +57,9 @@ export default function FlyerShowcase() {
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#87102C]/8 blur-3xl rounded-full pointer-events-none" />
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#FFB3C1]/15 blur-3xl rounded-full pointer-events-none" />
 
-      <div className="relative max-w-5xl mx-auto px-5 sm:px-8">
+      <div className="relative max-w-5xl mx-auto px-4 xs:px-5 sm:px-8">
         <ScrollReveal>
-          <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3 text-center">
+          <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3 text-center">
             The Invitation
           </p>
         </ScrollReveal>
@@ -181,7 +181,7 @@ export default function FlyerShowcase() {
 function FlyerPlaceholder({ loading = false }: { loading?: boolean }) {
   return (
     <div
-      className="w-full h-full relative flex flex-col items-center justify-center text-center p-8"
+      className="w-full h-full relative flex flex-col items-center justify-center text-center p-5 xs:p-8"
       style={{
         background:
           "linear-gradient(160deg, #2a0410 0%, #4a0819 30%, #87102C 70%, #a01535 100%)",
@@ -198,7 +198,7 @@ function FlyerPlaceholder({ loading = false }: { loading?: boolean }) {
         <p className="text-3xl sm:text-4xl font-bold font-serif italic mb-2">
           Heaven on Earth
         </p>
-        <p className="text-xs uppercase tracking-[0.3em] text-white/50 font-semibold mb-6">
+        <p className="text-xs uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/50 font-semibold mb-6">
           {HEAVEN_ON_EARTH.dateDisplay}
         </p>
         <p className="text-xs text-white/35 leading-relaxed max-w-[200px] mx-auto">

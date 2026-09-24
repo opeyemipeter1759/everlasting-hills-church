@@ -35,7 +35,7 @@ export function ContactRow({
         <Icon size={17} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1] mb-0.5">
+        <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1] mb-0.5">
           {label}
         </p>
         {value ? (

@@ -40,7 +40,7 @@ export default function CmsAuditLog() {
 
   if (entries.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 p-12 text-center">
+      <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No activity yet</p>
         <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Every publish, edit, and delete will appear here.</p>
       </div>

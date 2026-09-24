@@ -60,7 +60,7 @@ export default function CalendarClient() {
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.32em] text-[#87102C] dark:text-[#FFB3C1]">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] xs:tracking-[0.32em] text-[#87102C] dark:text-[#FFB3C1]">
               Church Calendar
             </p>
             <h1 className="text-2xl font-extrabold tracking-tight text-[#111] dark:text-white">

@@ -33,7 +33,7 @@ export default function ServicesClient() {
   );
 
   return (
-    <div className="max-w-full mx-auto md:p-4 p-6 space-y-6">
+    <div className="max-w-full mx-auto md:p-4 p-4 xs:p-6 space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Services</h1>

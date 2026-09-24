@@ -9,7 +9,7 @@ interface SectionHeadingProps {
 export default function SectionHeading({ eyebrow, heading, compact = false }: SectionHeadingProps) {
   return (
     <div>
-      <p className="mb-3 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-[#FFB3C1]/80">
+      <p className="mb-3 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-[#FFB3C1]/80">
         <Sparkles size={13} className="text-amber-300" />
         {eyebrow}
       </p>

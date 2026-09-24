@@ -8,9 +8,9 @@ export default function PledgeProjectSection() {
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_78%_30%,rgba(242,184,75,0.34),transparent_34%),linear-gradient(120deg,#26030d,#87102c)]"
       />
-      <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_auto]">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 xs:px-5 sm:px-8 lg:grid-cols-[1fr_auto]">
         <div>
-          <p className="inline-flex items-center gap-2 rounded-full bg-[#f2b84b] px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-[#3a0612]">
+          <p className="inline-flex items-center gap-2 rounded-full bg-[#f2b84b] px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#3a0612]">
             <HandCoins size={15} aria-hidden="true" /> Sacrificial giving
           </p>
           <h2 className="mt-5 max-w-3xl text-3xl font-black leading-tight tracking-tight [text-wrap:balance] sm:text-5xl">

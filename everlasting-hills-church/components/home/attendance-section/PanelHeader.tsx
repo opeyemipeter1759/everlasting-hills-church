@@ -19,7 +19,7 @@ export default function PanelHeader({ icon: Icon, eyebrow, title, badge }: Panel
           <Icon size={15} className="text-[#FFB3C1]" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFB3C1]/70">{eyebrow}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#FFB3C1]/70">{eyebrow}</p>
           <h3 className="truncate text-sm font-bold text-white">{title}</h3>
         </div>
       </div>

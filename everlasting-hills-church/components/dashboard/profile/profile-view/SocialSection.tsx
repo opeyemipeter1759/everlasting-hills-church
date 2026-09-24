@@ -12,14 +12,14 @@ export function SocialSection({ profile }: { profile: ProfileViewModel }) {
     <ScrollReveal delay={0.05}>
       <section aria-labelledby="social-section-title">
         <div className="flex items-center gap-3 mb-5">
-          <h2 id="social-section-title" className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0">
+          <h2 id="social-section-title" className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold flex-shrink-0">
             Connect with me
           </h2>
           <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
         </div>
 
         {noneConnected ? (
-          <div className="bg-[#FFF4F6] dark:bg-white/[0.03] border border-[#E7CDD3]/40 dark:border-white/[0.06] rounded-2xl p-7 sm:p-8 flex items-center gap-4">
+          <div className="bg-[#FFF4F6] dark:bg-white/[0.03] border border-[#E7CDD3]/40 dark:border-white/[0.06] rounded-2xl p-4 xs:p-7 sm:p-8 flex items-center gap-4">
             <div className="w-11 h-11 rounded-xl bg-[#FFE8ED] dark:bg-[#87102C]/20 flex items-center justify-center flex-shrink-0">
               <Globe size={17} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
             </div>

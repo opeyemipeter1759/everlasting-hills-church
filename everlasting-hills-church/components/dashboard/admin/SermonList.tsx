@@ -74,7 +74,7 @@ export default function SermonList({ sermons: initial }: { sermons: Sermon[] }) 
       </div>
 
       {sermons.length === 0 ? (
-        <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+        <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-2xl p-5 xs:p-8 sm:p-12 flex flex-col items-center justify-center text-center">
           <BookOpen size={32} className="text-gray-200 dark:text-gray-700 mb-3" />
           <p className="text-sm font-medium text-gray-400 dark:text-gray-500">No sermons yet.</p>
           <Link href="/dashboard/pastor/sermons/new"

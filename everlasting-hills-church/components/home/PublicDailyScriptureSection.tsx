@@ -17,9 +17,9 @@ export default function PublicDailyScriptureSection() {
         className="absolute -right-20 bottom-0 h-72 w-72 rounded-full bg-[#f5d49a]/30 blur-3xl dark:bg-[#87102C]/15"
       />
 
-      <div className="relative mx-auto grid max-w-6xl items-start gap-8 px-5 sm:px-8 lg:grid-cols-[0.7fr_1.3fr] lg:gap-12">
+      <div className="relative mx-auto grid max-w-6xl items-start gap-8 px-4 xs:px-5 sm:px-8 lg:grid-cols-[0.7fr_1.3fr] lg:gap-12">
         <div className="pt-2 lg:sticky lg:top-28">
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-[#87102C] dark:text-[#f5d49a]">
+          <p className="text-xs font-black uppercase tracking-[0.12em] xs:tracking-[0.24em] text-[#87102C] dark:text-[#f5d49a]">
             A word for today
           </p>
           <h2

@@ -58,11 +58,11 @@ export default function OurPastorsPage() {
         <span className="absolute bottom-6 left-6 h-3 w-3 border-b border-l border-black/20 sm:bottom-8 sm:left-8" />
         <span className="absolute bottom-6 right-6 h-3 w-3 border-b border-r border-black/20 sm:bottom-8 sm:right-8" />
 
-        <div className="mx-auto max-w-6xl px-6 pb-16 pt-28 sm:px-8 sm:pb-20 sm:pt-36">
+        <div className="mx-auto max-w-6xl px-4 xs:px-6 pb-16 pt-28 sm:px-8 sm:pb-20 sm:pt-36">
           {/* Headline row — left-aligned type against a large-scale mountain mark */}
           <div className="flex items-end justify-between gap-8">
             <div>
-              <p className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.5em] text-black/40">
+              <p className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.25em] xs:tracking-[0.5em] text-black/40">
                 <span className="h-1.5 w-1.5 bg-[#87102C]" />
                 Leadership
               </p>
@@ -87,7 +87,7 @@ export default function OurPastorsPage() {
             <p className="max-w-md text-base leading-relaxed text-black/50">
               Shepherds of the Everlasting Hills Church family — given to the word, to people, and to the next generation.
             </p>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-black/30">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-black/30">
               Everlasting Hills Church — Ibadan
             </p>
           </div>
@@ -101,11 +101,11 @@ export default function OurPastorsPage() {
           return (
             <ScrollReveal key={pastor.role}>
               <article className={`border-black/[0.07] ${i > 0 ? "border-t" : ""}`}>
-                <div className="mx-auto max-w-6xl px-6 py-20 sm:px-8 sm:py-28">
+                <div className="mx-auto max-w-6xl px-4 xs:px-6 py-12 xs:py-20 sm:px-8 sm:py-28">
                   <div className="grid items-start gap-12 md:grid-cols-2 md:gap-20">
                     {/* Photo */}
                     <div className={reversed ? "md:order-2" : ""}>
-                      <p className="mb-5 font-serif text-sm tracking-[0.3em] text-black/25">
+                      <p className="mb-5 font-serif text-sm tracking-[0.15em] xs:tracking-[0.3em] text-black/25">
                         0{i + 1}
                       </p>
                       <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#141414]">
@@ -123,7 +123,7 @@ export default function OurPastorsPage() {
 
                     {/* Content */}
                     <div className={reversed ? "md:order-1" : ""}>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-[#87102C]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] xs:tracking-[0.35em] text-[#87102C]">
                         {pastor.role}
                       </p>
                       <h2 className="mt-3 text-balance font-serif text-3xl font-normal tracking-tight text-[#111] sm:text-4xl">
@@ -145,7 +145,7 @@ export default function OurPastorsPage() {
                       </div>
 
                       <div className="mt-9 border-t border-black/[0.08] pt-6">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-black/35">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-black/35">
                           {pastor.scripture}
                         </p>
                         <p className="mt-1.5 text-sm italic leading-relaxed text-black/45">
@@ -182,8 +182,8 @@ export default function OurPastorsPage() {
 
       {/* CTA */}
       <section className="bg-[#0a0a0a] py-24 text-center text-white">
-        <div className="mx-auto max-w-xl px-6 sm:px-8">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.4em] text-white/35">
+        <div className="mx-auto max-w-xl px-4 xs:px-6 sm:px-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] xs:tracking-[0.4em] text-white/35">
             Come as you are
           </p>
           <h2 className="mt-4 text-balance font-serif text-3xl font-normal tracking-tight sm:text-4xl">

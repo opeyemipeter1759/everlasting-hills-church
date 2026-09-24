@@ -52,7 +52,7 @@ export function NewMemberWelcomeNote() {
 
         {/* Message */}
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#FFB3C1]/70 mb-0.5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#FFB3C1]/70 mb-0.5">
             Personal message
           </p>
           <p className="text-sm font-bold text-white leading-snug">

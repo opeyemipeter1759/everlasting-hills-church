@@ -28,7 +28,7 @@ export default function ProfileSkeleton() {
 
         {/* ── Main Content ── */}
         <main className="flex-1 min-w-0">
-          <div className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm p-6 space-y-6">
+          <div className="bg-white dark:bg-[#1c1c1e] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm p-4 xs:p-6 space-y-6">
 
             {/* Section heading */}
             <div className="space-y-1.5">

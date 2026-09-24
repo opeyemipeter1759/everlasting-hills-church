@@ -66,9 +66,9 @@ export default async function MinistriesPage({ searchParams }: { searchParams: {
           <div className="absolute right-[-10%] top-[-20%] h-[60%] w-[60%] rounded-full bg-[#87102C]/15 blur-[140px]" />
           <div className="absolute bottom-[-30%] left-[-10%] h-[50%] w-[50%] rounded-full bg-[#87102C]/10 blur-[120px]" />
         </div>
-        <div className="relative z-10 mx-auto max-w-4xl px-5 pb-20 pt-36 text-center sm:px-8 sm:pt-44">
+        <div className="relative z-10 mx-auto max-w-4xl px-4 xs:px-5 pb-20 pt-36 text-center sm:px-8 sm:pt-44">
           <ScrollReveal>
-            <p className="mb-5 text-[10px] font-black uppercase tracking-[0.4em] text-church-accent">
+            <p className="mb-5 text-[10px] font-black uppercase tracking-[0.2em] xs:tracking-[0.4em] text-church-accent">
               {c.eyebrow}
             </p>
           </ScrollReveal>
@@ -90,12 +90,12 @@ export default async function MinistriesPage({ searchParams }: { searchParams: {
 
       {/* ── CARDS — light section ────────────────────────────────────────── */}
       <section className="py-24 md:py-32 bg-white">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
           <div className="mb-10">
             <ScrollReveal>
               <div className="flex items-center gap-3 mb-3">
                 <span className="w-full max-w-8 h-[1px] bg-[#87102C]/40" />
-                <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold">
+                <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold">
                   {c.sectionLabel}
                 </p>
               </div>
@@ -126,12 +126,12 @@ export default async function MinistriesPage({ searchParams }: { searchParams: {
           <div className="absolute left-[-10%] top-[-20%] h-[55%] w-[55%] rounded-full bg-[#87102C]/12 blur-[130px]" />
           <div className="absolute bottom-[-20%] right-[-10%] h-[50%] w-[50%] rounded-full bg-[#87102C]/10 blur-[120px]" />
         </div>
-        <div className="relative z-10 mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="relative z-10 mx-auto max-w-6xl px-4 xs:px-5 sm:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* left — copy */}
             <div>
               <ScrollReveal>
-                <p className="text-[10px] font-black uppercase tracking-[0.35em] text-[#FFB3C1]/60 mb-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] xs:tracking-[0.35em] text-[#FFB3C1]/60 mb-4">
                   Stay Connected
                 </p>
               </ScrollReveal>

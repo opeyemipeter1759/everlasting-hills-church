@@ -30,7 +30,7 @@ export function QRModal({ memberDisplayId, onClose }: { memberDisplayId: string;
         exit={{ scale: 0.9, opacity: 0 }}
         transition={{ type: "spring", duration: 0.4, bounce: 0.3 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative z-10 bg-white dark:bg-[#1a0610] rounded-3xl shadow-2xl p-7 flex flex-col items-center gap-4 max-w-xs w-full border border-[#E7CDD3]/60 dark:border-white/[0.12]"
+        className="relative z-10 bg-white dark:bg-[#1a0610] rounded-3xl shadow-2xl p-4 xs:p-7 flex flex-col items-center gap-4 max-w-xs w-full border border-[#E7CDD3]/60 dark:border-white/[0.12]"
       >
         <button
           onClick={onClose}

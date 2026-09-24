@@ -189,7 +189,7 @@ export default function BirthdayCelebration() {
               role="dialog"
               aria-modal="false"
               aria-labelledby={titleId}
-              className="pointer-events-auto relative w-full max-w-sm rounded-3xl bg-white/95 p-6 text-center shadow-2xl ring-1 ring-[#E7CDD3] backdrop-blur dark:bg-[#1a0b10]/95 dark:ring-white/10"
+              className="pointer-events-auto relative w-full max-w-sm rounded-3xl bg-white/95 p-4 xs:p-6 text-center shadow-2xl ring-1 ring-[#E7CDD3] backdrop-blur dark:bg-[#1a0b10]/95 dark:ring-white/10"
               initial={{ y: -16, scale: 0.96, opacity: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 260, damping: 22 }}

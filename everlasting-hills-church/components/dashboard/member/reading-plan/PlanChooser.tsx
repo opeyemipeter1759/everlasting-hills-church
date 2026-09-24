@@ -80,7 +80,7 @@ export default function PlanChooser() {
     <div className="mx-auto min-w-0 max-w-4xl px-0 py-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-3 sm:py-6">
       <WordTabs />
       <header className="mt-5">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">A rhythm that fits your life</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">A rhythm that fits your life</p>
         <h1 className="mt-1 font-serif text-2xl font-bold tracking-tight text-[#111] dark:text-white sm:text-3xl">Choose a Bible plan</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#8a7e80] dark:text-white/50">
           Start with a few minutes or make room for a longer reading. Every plan is self-paced:
@@ -153,7 +153,7 @@ export default function PlanChooser() {
           {(effort !== "ALL" || duration !== "ALL" || search) && <button type="button" onClick={resetFilters} className="min-h-11 text-xs font-bold text-[#87102C] dark:text-[#FFB3C1]">Clear filters</button>}
         </div>
         {recommended && <p role="status" className="mb-3 text-sm text-gray-600 dark:text-white/65">Suggested for you: <strong>{recommended.title}</strong>, within your selected time and length.</p>}
-        {visiblePlans.length === 0 ? <div className="mt-3 rounded-2xl border border-dashed border-gray-200 p-6 text-center dark:border-white/10"><p className="text-sm text-gray-600 dark:text-white/65">No plans match these filters.</p><button type="button" onClick={resetFilters} className="mt-2 min-h-11 font-semibold text-[#87102C] dark:text-[#FFB3C1]">Show all plans</button></div> :
+        {visiblePlans.length === 0 ? <div className="mt-3 rounded-2xl border border-dashed border-gray-200 p-4 xs:p-6 text-center dark:border-white/10"><p className="text-sm text-gray-600 dark:text-white/65">No plans match these filters.</p><button type="button" onClick={resetFilters} className="mt-2 min-h-11 font-semibold text-[#87102C] dark:text-[#FFB3C1]">Show all plans</button></div> :
           <div className="mt-3 grid items-stretch gap-4 sm:grid-cols-2">
             {visiblePlans.map((plan) => {
               const intensity = intensityFor(plan);

@@ -22,7 +22,7 @@ export default function HeroCopy({
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       >
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#FFB3C1]">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#FFB3C1]">
           {slide.label}
         </span>
 

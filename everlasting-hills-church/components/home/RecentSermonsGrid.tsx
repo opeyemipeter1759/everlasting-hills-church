@@ -106,17 +106,17 @@ function SermonCard({ sermon }: { sermon: RecentSermon }) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex flex-1 flex-col p-4 xs:p-6">
         {/* Badge row — height reserved so badged/unbadged cards align */}
         <div className="mb-3 flex h-6 items-start">
           {sermon.series && (
-            <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/75">
+            <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] xs:tracking-[0.15em] text-white/75">
               {sermon.series}
             </span>
           )}
         </div>
 
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FFB3C1]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#FFB3C1]">
           {sermon.speaker}
           {dateLabel ? ` · ${dateLabel}` : ""}
         </p>

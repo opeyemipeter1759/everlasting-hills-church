@@ -69,9 +69,9 @@ export default function RsvpForm() {
 
   return (
     <section id="rsvp" className="py-24 md:py-32 bg-[#FFF4F6]">
-      <div className="max-w-3xl mx-auto px-5 sm:px-8">
+      <div className="max-w-3xl mx-auto px-4 xs:px-5 sm:px-8">
         <ScrollReveal>
-          <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3 text-center">
+          <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3 text-center">
             Reserve your seat
           </p>
         </ScrollReveal>
@@ -89,7 +89,7 @@ export default function RsvpForm() {
         </ScrollReveal>
 
         <ScrollReveal delay={0.3}>
-          <div className="mt-12 rounded-3xl bg-white border border-[#E7CDD3]/60 shadow-[0_24px_80px_-30px_rgba(135,16,44,0.2)] p-6 sm:p-10 relative overflow-hidden">
+          <div className="mt-12 rounded-3xl bg-white border border-[#E7CDD3]/60 shadow-[0_24px_80px_-30px_rgba(135,16,44,0.2)] p-4 xs:p-6 sm:p-10 relative overflow-hidden">
             {/* ── Success state ── */}
             {success ? (
               <motion.div

@@ -61,11 +61,11 @@ export default function VideoCard({ video, onOpen }: VideoCardProps) {
 
         <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/90 via-[#0a0a0a]/25 to-transparent" />
         <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-          <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ${badgeClass}`}>
+          <span className={`inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] ${badgeClass}`}>
             {video.category}
           </span>
           {video.duration ? (
-            <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] font-semibold tracking-[0.18em] text-white/80 backdrop-blur-sm">
+            <span className="rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] font-semibold tracking-[0.09em] xs:tracking-[0.18em] text-white/80 backdrop-blur-sm">
               {video.duration}
             </span>
           ) : null}

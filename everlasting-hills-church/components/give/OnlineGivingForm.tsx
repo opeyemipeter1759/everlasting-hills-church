@@ -40,8 +40,8 @@ export default function OnlineGivingForm() {
   }
 
   return (
-    <section id="give-online" className="relative z-10 container mx-auto px-6 pt-12 max-w-3xl">
-      <div className="rounded-3xl border border-church-accent/15 bg-white/[0.02] backdrop-blur-md p-8 sm:p-10">
+    <section id="give-online" className="relative z-10 container mx-auto px-4 xs:px-6 pt-12 max-w-3xl">
+      <div className="rounded-3xl border border-church-accent/15 bg-white/[0.02] backdrop-blur-md p-5 xs:p-8 sm:p-10">
         <div className="flex items-center gap-3 mb-6">
           <span className="w-11 h-11 rounded-2xl bg-church-maroon/20 flex items-center justify-center text-church-accent">
             <HeartHandshake size={20} />

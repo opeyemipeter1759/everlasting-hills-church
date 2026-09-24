@@ -20,8 +20,8 @@ export default function ExploreCoursesHero({
         LEARN
       </div>
 
-      <div className="relative z-10 flex flex-col gap-6 p-7 sm:p-9">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.32em] text-[#FFB3C1]">
+      <div className="relative z-10 flex flex-col gap-6 p-4 xs:p-7 sm:p-9">
+        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] xs:tracking-[0.32em] text-[#FFB3C1]">
           <GraduationCap size={13} />
           Explore Courses
         </div>

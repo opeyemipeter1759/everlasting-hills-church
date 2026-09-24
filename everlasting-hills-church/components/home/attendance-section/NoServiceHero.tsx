@@ -6,7 +6,7 @@ import { CHURCH } from "@/config/config";
 
 export default function NoServiceHero() {
   return (
-    <div className="flex flex-col items-center gap-7 py-10 text-center max-w-md mx-auto">
+    <div className="flex flex-col items-center gap-7 py-8 xs:py-10 text-center max-w-md mx-auto">
       <div className="w-16 h-16 rounded-2xl bg-white/8 border border-white/12 flex items-center justify-center backdrop-blur-sm">
         <Clock size={22} className="text-[#FFB3C1]" />
       </div>

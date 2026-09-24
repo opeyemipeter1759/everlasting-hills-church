@@ -82,7 +82,7 @@ export default async function Footer() {
         </svg>
       </div>
 
-      <div className="relative  max-w-6xl mx-auto px-5 sm:px-8 pt-32 pb-10">
+      <div className="relative  max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 pt-32 pb-10">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
 
           {/* Brand block */}
@@ -91,7 +91,7 @@ export default async function Footer() {
               <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={48} height={48} className="flex-shrink-0" />
               <div>
                 <p className="text-white font-bold text-sm leading-none">Everlasting Hills</p>
-                <p className="text-white/40 text-[10px] tracking-[0.15em] uppercase mt-0.5">Church</p>
+                <p className="text-white/40 text-[10px] tracking-[0.08em] xs:tracking-[0.15em] uppercase mt-0.5">Church</p>
               </div>
             </div>
 
@@ -113,7 +113,7 @@ export default async function Footer() {
 
           {/* Quick Links — original 2-column grid */}
           <div>
-            <p className="text-white/50 text-xs tracking-[0.2em] uppercase font-medium mb-5">
+            <p className="text-white/50 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-medium mb-5">
               Quick Links
             </p>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -129,7 +129,7 @@ export default async function Footer() {
 
           {/* Connect — page links from Connect page */}
           <div>
-            <p className="text-white/50 text-xs tracking-[0.2em] uppercase font-medium mb-5">
+            <p className="text-white/50 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-medium mb-5">
               Connect
             </p>
             <ul className="space-y-3">
@@ -145,7 +145,7 @@ export default async function Footer() {
 
           {/* Follow Us — social icons, same as original */}
           <div>
-            <p className="text-white/50 text-xs tracking-[0.2em] uppercase font-medium mb-5">
+            <p className="text-white/50 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-medium mb-5">
               Follow Us
             </p>
             <div className="flex flex-wrap gap-2.5 sm:gap-3 mb-6">
