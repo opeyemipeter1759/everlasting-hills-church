@@ -60,7 +60,7 @@ export default function CommunitySection({ content }: { content?: CommunityConte
             <div className="relative">
               {/* Main card */}
               <div
-                className="relative rounded-2xl overflow-hidden p-10 text-center"
+                className="relative rounded-2xl overflow-hidden p-5 xs:p-8 sm:p-10 text-center"
                 style={{
                   background:
                     "linear-gradient(135deg, #87102C 0%, #4a0819 100%)",

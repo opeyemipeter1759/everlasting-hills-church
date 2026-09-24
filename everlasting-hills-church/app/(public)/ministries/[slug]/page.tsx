@@ -413,7 +413,7 @@ export default async function MinistryDetailPage({
             <div className="flex flex-col gap-5 lg:pt-10">
               {/* Inverted (burgundy) pull-quote card — matches CultureSection inverted card */}
               <ScrollReveal delay={0.15}>
-                <div className="relative overflow-hidden rounded-2xl p-8 bg-[#87102C] shadow-[0_24px_60px_-15px_rgba(135,16,44,0.35)]">
+                <div className="relative overflow-hidden rounded-2xl p-5 xs:p-8 bg-[#87102C] shadow-[0_24px_60px_-15px_rgba(135,16,44,0.35)]">
                   <DotOverlay />
                   <span className="absolute top-4 left-5 text-white/10 text-7xl font-serif leading-none select-none">
                     &ldquo;

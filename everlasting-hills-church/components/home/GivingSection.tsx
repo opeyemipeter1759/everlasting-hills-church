@@ -40,7 +40,7 @@ export default function GivingSection({ content }: { content: GivingContent }) {
   return (
     <section
       aria-labelledby="giving-heading"
-      className="max-w-[1400px] mx-auto px-5 sm:px-8 mb-16"
+      className="max-w-[1400px] mx-auto px-4 xs:px-5 sm:px-8 mb-16"
     >
       <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-[#1a0610]/80 via-[#0e0407]/80 to-[#1a0610]/80 backdrop-blur-sm shadow-2xl">
         {/* Decorative glows + a stylized "vine" SVG behind */}
@@ -48,17 +48,17 @@ export default function GivingSection({ content }: { content: GivingContent }) {
         <div className="absolute -bottom-32 -right-16 w-96 h-96 bg-amber-500/8 blur-3xl rounded-full pointer-events-none" />
         <VineMotif />
 
-        <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-10 p-8 sm:p-10 items-start">
+        <div className="relative grid lg:grid-cols-2 gap-8 lg:gap-10 p-4 xs:p-6 sm:p-10 items-start">
           {/* LEFT: headline + impact tiles */}
           <div className="flex flex-col">
-            <span className="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-md">
-              <Sprout size={12} className="text-[#e8768a]" />
+            <span className="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-white/5 px-3 xs:px-3.5 py-1.5 text-[10px] uppercase tracking-[0.2em] xs:tracking-[0.3em] text-white/60 backdrop-blur-md">
+              <Sprout size={12} className="shrink-0 text-[#e8768a]" />
               {content.eyebrow}
             </span>
 
             <h2
               id="giving-heading"
-              className="mt-5 text-3xl sm:text-4xl lg:text-[2.6rem] font-semibold text-white tracking-tight leading-[1.08]"
+              className="mt-5 text-2xl xs:text-3xl sm:text-4xl lg:text-[2.6rem] font-semibold text-white tracking-tight leading-[1.08]"
             >
               <Headline headline={content.headline} accent={content.headlineAccent} />
             </h2>
@@ -68,25 +68,25 @@ export default function GivingSection({ content }: { content: GivingContent }) {
             </p>
 
             {/* Giving categories — icon + title only, evenly aligned 2x2 grid */}
-            <ul className="mt-7 grid grid-cols-2 gap-3">
+            <ul className="mt-7 grid grid-cols-1 xs:grid-cols-2 gap-2.5 xs:gap-3">
               {GIVING_CATEGORIES.map((category) => (
                 <li
                   key={category.title}
-                  className="flex items-center gap-2.5 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5 hover:bg-white/[0.06] hover:border-white/15 transition-colors"
+                  className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-white/8 bg-white/[0.03] px-3.5 py-3 xs:px-4 xs:py-3.5 hover:bg-white/[0.06] hover:border-white/15 transition-colors"
                 >
                   <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#87102C]/25 text-[#e8768a]">
                     <category.icon size={15} aria-hidden="true" />
                   </span>
-                  <p className="text-sm font-bold text-white leading-tight">{category.title}</p>
+                  <p className="min-w-0 break-words text-sm font-bold text-white leading-tight">{category.title}</p>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* RIGHT: How to give panel + CTA */}
-          <aside className="relative rounded-[20px] border border-white/8 bg-[#0a0306]/95 p-6 sm:p-7 shadow-inner">
+          <aside className="relative rounded-[20px] border border-white/8 bg-[#0a0306]/95 p-4 xs:p-6 sm:p-7 shadow-inner">
             <div className="flex flex-col md:flex-row items-center justify-between mb-5">
-              <p className="text-white/50 text-[10px] uppercase tracking-[0.3em] font-bold">
+              <p className="text-white/50 text-[10px] uppercase tracking-[0.2em] xs:tracking-[0.3em] font-bold">
                 Ways to give
               </p>
               {content.badge.visible && (
@@ -110,7 +110,7 @@ export default function GivingSection({ content }: { content: GivingContent }) {
 
             <Link
               href={content.cta.href}
-              className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white text-[#87102C] px-5 py-3.5 font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-black/20"
+              className="group mt-6 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white text-[#87102C] px-4 xs:px-5 py-3.5 text-center font-bold text-sm hover:bg-amber-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-black/20"
             >
               {content.cta.label}
               <ArrowUpRight
@@ -120,7 +120,7 @@ export default function GivingSection({ content }: { content: GivingContent }) {
             </Link>
 
             {content.footnote && (
-              <p className="mt-4 text-center text-[10px] uppercase tracking-[0.25em] text-white/30">
+              <p className="mt-4 text-center text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.25em] text-white/30">
                 {content.footnote}
               </p>
             )}
@@ -163,8 +163,8 @@ function GiveRow({
   description: string;
 }) {
   return (
-    <li className="flex items-start gap-3.5 rounded-xl border border-white/5 bg-white/[0.03] p-3.5 hover:bg-white/[0.06] hover:border-white/15 transition-colors">
-      <span className="flex-shrink-0 w-9 h-9 rounded-lg bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center font-mono font-bold text-xs">
+    <li className="flex items-start gap-3 xs:gap-3.5 rounded-xl border border-white/5 bg-white/[0.03] p-3 xs:p-3.5 hover:bg-white/[0.06] hover:border-white/15 transition-colors">
+      <span className="flex-shrink-0 w-8 h-8 xs:w-9 xs:h-9 rounded-lg bg-[#87102C]/25 text-[#e8768a] flex items-center justify-center font-mono font-bold text-xs">
         {stepNumber}
       </span>
       <div className="min-w-0">

@@ -214,7 +214,7 @@ function CultureCard({
 
         {/* ── BACK ── */}
         <div
-          className="absolute inset-0 rounded-2xl border border-transparent p-8 flex flex-col justify-center bg-[#87102C] [backface-visibility:hidden] overflow-hidden shadow-[0_24px_60px_-15px_rgba(135,16,44,0.45)]"
+          className="absolute inset-0 rounded-2xl border border-transparent p-5 xs:p-8 flex flex-col justify-center bg-[#87102C] [backface-visibility:hidden] overflow-hidden shadow-[0_24px_60px_-15px_rgba(135,16,44,0.45)]"
           style={{ transform: "rotateY(180deg)" }}
         >
           <DotPattern />

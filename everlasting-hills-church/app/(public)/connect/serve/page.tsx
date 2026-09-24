@@ -219,7 +219,7 @@ function JoinModal({
         className="relative z-10 w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-[#E7CDD3]/60">
+        <div className="flex items-start justify-between gap-3 p-4 xs:p-6 border-b border-[#E7CDD3]/60">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-[#FFE8ED] flex items-center justify-center text-[#87102C] flex-shrink-0">
               <unit.icon size={18} />

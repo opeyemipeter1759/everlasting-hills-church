@@ -20,7 +20,7 @@ export default function PublicPledgeTracker({ token }: { token: string }) {
   if (isError || !pledge) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fffaf7] px-5 pt-20">
-        <div className="max-w-md rounded-3xl border border-[#ead8cd] bg-white p-8 text-center shadow-xl shadow-[#3f0615]/5">
+        <div className="max-w-md rounded-3xl border border-[#ead8cd] bg-white p-5 xs:p-8 text-center shadow-xl shadow-[#3f0615]/5">
           <LockKeyhole size={36} className="mx-auto text-[#87102C]" aria-hidden="true" />
           <h1 className="mt-4 text-2xl font-black text-[#211317]">Tracking link unavailable</h1>
           <p className="mt-3 text-sm leading-relaxed text-[#6d565b]">

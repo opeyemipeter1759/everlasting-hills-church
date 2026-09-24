@@ -189,7 +189,7 @@ export default function ContactSection({ content }: { content?: ContactContent }
           {/* Right: Contact form */}
           <ScrollReveal delay={0.2} direction="right" className="pt-[3px]">
             {submitted ? (
-              <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center rounded-2xl border border-dashed border-[#E7CDD3] p-12">
+              <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center rounded-2xl border border-dashed border-[#E7CDD3] p-6 xs:p-9 sm:p-12">
                 <div className="w-14 h-14 rounded-full bg-[#FFE8ED] flex items-center justify-center mb-5">
                   <Send size={22} className="text-[#87102C]" />
                 </div>
