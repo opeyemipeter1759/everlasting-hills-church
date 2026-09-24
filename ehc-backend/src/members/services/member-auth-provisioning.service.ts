@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -21,6 +22,22 @@ export interface ProvisionedAuthUser {
   tempPassword: string;
 }
 
+/** Supabase rejected the password itself, not the request. Projects can require
+ * a minimum length or a mix of character classes, and the visitor phone number
+ * used as a temp password is all digits — so this is expected, not a fault. */
+function isPasswordRejection(message: string | undefined): boolean {
+  return /password/i.test(message ?? '');
+}
+
+/** Wrong data the admin can see and correct, rather than a server fault —
+ * surfaced as a 400 so the reason reaches the screen instead of being flattened
+ * into "something went wrong on our side". */
+function isCallerFixable(message: string | undefined): boolean {
+  return /invalid format|unable to validate email|email address.*invalid|not a valid email/i.test(
+    message ?? '',
+  );
+}
+
 /** Creates or safely links the Supabase identity backing a converted member. */
 @Injectable()
 export class MemberAuthProvisioningService {
@@ -40,17 +57,35 @@ export class MemberAuthProvisioningService {
    * password length. */
   async createOrReuseAuthUser(email: string, password?: string): Promise<ProvisionedAuthUser> {
     const supabase = createAdminClient();
-    const tempPassword = password && password.trim().length >= 6 ? password.trim() : generateTempPassword();
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password: tempPassword,
-      email_confirm: true,
-      app_metadata: { role: Role.MEMBER },
-      user_metadata: {
-        needs_password_change: true,
-        provisioned_by: 'member-onboarding',
-      },
-    } as any);
+    const supplied = password && password.trim().length >= 6 ? password.trim() : null;
+
+    const create = (pw: string) =>
+      supabase.auth.admin.createUser({
+        email,
+        password: pw,
+        email_confirm: true,
+        app_metadata: { role: Role.MEMBER },
+        user_metadata: {
+          needs_password_change: true,
+          provisioned_by: 'member-onboarding',
+        },
+      } as any);
+
+    let tempPassword = supplied ?? generateTempPassword();
+    let { data: authData, error: authError } = await create(tempPassword);
+
+    // The visitor's phone number is a convenience, not a requirement. A project
+    // password policy that rejects it (all digits fails a character-class rule)
+    // used to fail the whole conversion with an unexplained 500, which is how
+    // "Create Account" came to look broken. Fall back to a generated password —
+    // the same fallback the too-short case already takes — and carry on.
+    if (authError && supplied && isPasswordRejection(authError.message)) {
+      this.logger.warn(
+        `Supabase rejected the phone-derived temp password for ${email} (${authError.message}); using a generated one instead`,
+      );
+      tempPassword = generateTempPassword();
+      ({ data: authData, error: authError } = await create(tempPassword));
+    }
 
     if (!authError && authData.user) {
       return { userId: authData.user.id, created: true, tempPassword };
@@ -58,6 +93,13 @@ export class MemberAuthProvisioningService {
 
     const isDuplicate = /already.*registered|already.*exists/i.test(authError?.message ?? '');
     if (!isDuplicate) {
+      // Logged here as well as in the exception filter: the filter only sees
+      // the wrapped message, and this is the one place that knows which email
+      // and which Supabase call failed.
+      this.logger.error(`Supabase createUser failed for ${email}: ${authError?.message ?? 'unknown error'}`);
+      if (isCallerFixable(authError?.message)) {
+        throw new BadRequestException(`Could not create the account: ${authError?.message}`);
+      }
       throw new InternalServerErrorException(
         `Could not create auth account: ${authError?.message ?? 'unknown error'}`,
       );

@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException, InternalServerErrorException } from '@nestjs/common';
 import { MemberAuthProvisioningService } from './member-auth-provisioning.service';
 import { createAdminClient } from '../members-supabase-admin.util';
 
@@ -109,5 +109,70 @@ describe('MemberAuthProvisioningService', () => {
     // rejected at the API.
     await service.createOrReuseAuthUser('other@example.com', '123');
     expect(admin.createUser.mock.calls[1][0].password).toHaveLength(12);
+  });
+
+  // A Supabase project that requires mixed character classes rejects an
+  // all-digit phone number. That used to surface as an unexplained 500 on
+  // "Create Account", making the button look broken.
+  it('retries with a generated password when the project rejects the phone number', async () => {
+    const admin = {
+      createUser: jest
+        .fn()
+        .mockResolvedValueOnce({
+          data: { user: null },
+          error: { message: 'Password should contain at least one character of each: a-z, A-Z, 0-9.' },
+        })
+        .mockResolvedValueOnce({ data: { user: { id: 'auth-new' } }, error: null }),
+    };
+    (createAdminClient as jest.Mock).mockReturnValue({ auth: { admin } });
+    const service = new MemberAuthProvisioningService(
+      { profile: { findUnique: jest.fn() } } as never,
+      { get: jest.fn().mockReturnValue('https://church.test') } as never,
+    );
+
+    const result = await service.createOrReuseAuthUser('person@example.com', '08012345678');
+
+    expect(admin.createUser).toHaveBeenCalledTimes(2);
+    expect(admin.createUser.mock.calls[0][0].password).toBe('08012345678');
+    expect(admin.createUser.mock.calls[1][0].password).toHaveLength(12);
+    // The password the caller is handed has to be the one that actually took,
+    // or the welcome email would quote a password that does not work.
+    expect(result.tempPassword).toBe(admin.createUser.mock.calls[1][0].password);
+    expect(result.created).toBe(true);
+  });
+
+  it('reports a rejected email address as a 400 carrying the reason', async () => {
+    const admin = {
+      createUser: jest.fn().mockResolvedValue({
+        data: { user: null },
+        error: { message: 'Unable to validate email address: invalid format' },
+      }),
+    };
+    (createAdminClient as jest.Mock).mockReturnValue({ auth: { admin } });
+    const service = new MemberAuthProvisioningService(
+      { profile: { findUnique: jest.fn() } } as never,
+      { get: jest.fn().mockReturnValue('https://church.test') } as never,
+    );
+
+    await expect(service.createOrReuseAuthUser('not-an-email')).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('still reports a genuine Supabase fault as a 500', async () => {
+    const admin = {
+      createUser: jest
+        .fn()
+        .mockResolvedValue({ data: { user: null }, error: { message: 'service unavailable' } }),
+    };
+    (createAdminClient as jest.Mock).mockReturnValue({ auth: { admin } });
+    const service = new MemberAuthProvisioningService(
+      { profile: { findUnique: jest.fn() } } as never,
+      { get: jest.fn().mockReturnValue('https://church.test') } as never,
+    );
+
+    await expect(service.createOrReuseAuthUser('person@example.com')).rejects.toBeInstanceOf(
+      InternalServerErrorException,
+    );
   });
 });
