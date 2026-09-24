@@ -141,7 +141,7 @@ export default function UshersReport() {
             </div>
           </>
         ) : (
-          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-10 text-center">
+          <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-10 text-center">
             <ClipboardList size={24} className="mx-auto mb-2 text-gray-300 dark:text-white/20" />
             <p className="text-sm font-semibold text-gray-700 dark:text-white/80">No reports yet</p>
             <p className="mt-1 text-xs text-gray-400 dark:text-white/40">

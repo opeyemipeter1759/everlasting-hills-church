@@ -15,7 +15,7 @@ export function CourseCertificateBadge({ course, completedAt }: { course: Course
   return (
     <Link
       href={`/dashboard/courses/${course.slug}/certificate`}
-      className="group flex flex-col items-center gap-3 rounded-2xl border border-[#E7CDD3]/60 dark:border-white/[0.09] bg-white dark:bg-white/[0.05] p-6 text-center
+      className="group flex flex-col items-center gap-3 rounded-2xl border border-[#E7CDD3]/60 dark:border-white/[0.09] bg-white dark:bg-white/[0.05] p-4 xs:p-6 text-center
         hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] dark:hover:shadow-[0_8px_40px_rgba(255,255,255,0.03)]
         transition-all duration-300"
     >

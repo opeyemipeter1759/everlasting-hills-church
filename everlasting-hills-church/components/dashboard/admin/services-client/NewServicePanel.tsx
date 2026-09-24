@@ -37,7 +37,7 @@ export default function NewServicePanel({
   }
 
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#140b10] p-6 space-y-4">
+    <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#140b10] p-4 xs:p-6 space-y-4">
       <ServiceForm
         name={name}
         onNameChange={setName}

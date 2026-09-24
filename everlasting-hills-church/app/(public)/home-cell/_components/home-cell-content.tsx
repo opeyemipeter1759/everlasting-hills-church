@@ -177,7 +177,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
           className="absolute top-28 right-6 sm:right-10 z-20 hidden sm:flex items-center gap-2 rounded-full border border-white/15 bg-white/5 backdrop-blur-md px-4 py-2"
         >
           <span className="w-2 h-2 rounded-full bg-church-accent animate-pulse" />
-          <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white/60">Weekly · Citywide</span>
+          <span className="text-[11px] font-black uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/60">Weekly · Citywide</span>
         </motion.div>
 
         <div className="relative z-10 px-6 sm:px-10 lg:px-16 pb-20 md:pb-28 max-w-5xl">
@@ -185,7 +185,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-[10px] font-black uppercase tracking-[0.5em] text-church-accent mb-5"
+            className="text-[10px] font-black uppercase tracking-[0.25em] xs:tracking-[0.5em] text-church-accent mb-5"
           >
             Home Cell
           </motion.p>
@@ -239,7 +239,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
           transition={{ delay: 1, duration: 1 }}
           className="absolute bottom-8 right-8 z-10 hidden lg:flex flex-col items-center gap-2"
         >
-          <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/20 [writing-mode:vertical-rl]">Scroll</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] xs:tracking-[0.4em] text-white/20 [writing-mode:vertical-rl]">Scroll</span>
           <div className="w-px h-12 bg-gradient-to-b from-white/20 to-transparent" />
         </motion.div>
       </section>
@@ -255,7 +255,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-5"
+              className="text-[10px] font-black uppercase tracking-[0.23em] xs:tracking-[0.45em] text-church-accent mb-5"
             >
               What is a Home Cell?
             </motion.p>
@@ -286,12 +286,12 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
             className="relative"
           >
             <div className="absolute -inset-px rounded-3xl bg-gradient-to-br from-church-maroon/30 via-transparent to-transparent" />
-            <div className="relative glass-card p-10 sm:p-12">
+            <div className="relative glass-card p-5 xs:p-8 sm:p-12">
               <p className="text-[7rem] font-serif leading-none text-church-maroon/20 mb-2 -mt-4">&ldquo;</p>
               <blockquote className="text-xl sm:text-2xl font-display font-black leading-snug text-white/80 mb-6 -mt-8">
                 They broke bread in their homes and ate together with glad and sincere hearts.
               </blockquote>
-              <cite className="text-[11px] font-black uppercase tracking-[0.3em] text-church-accent/60 not-italic">
+              <cite className="text-[11px] font-black uppercase tracking-[0.15em] xs:tracking-[0.3em] text-church-accent/60 not-italic">
                 Acts 2 : 46
               </cite>
             </div>
@@ -309,7 +309,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-5"
+              className="text-[10px] font-black uppercase tracking-[0.23em] xs:tracking-[0.45em] text-church-accent mb-5"
             >
               The classic explanation
             </motion.p>
@@ -342,7 +342,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className="bg-church-dark p-8 sm:p-12 group hover:bg-[#110208] transition-colors duration-300"
+                className="bg-church-dark p-5 xs:p-8 sm:p-12 group hover:bg-[#110208] transition-colors duration-300"
               >
                 <div className="flex items-start gap-5">
                   <span className="font-serif text-4xl sm:text-5xl leading-none text-church-maroon/40 group-hover:text-church-accent/60 transition-colors duration-300 select-none">
@@ -357,7 +357,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
                     </h3>
                     <p className="text-white/45 text-[14px] leading-relaxed">{p.body}</p>
                     {p.verse && (
-                      <cite className="mt-4 block text-[11px] font-black uppercase tracking-[0.3em] text-church-accent/60 not-italic">
+                      <cite className="mt-4 block text-[11px] font-black uppercase tracking-[0.15em] xs:tracking-[0.3em] text-church-accent/60 not-italic">
                         {p.verse}
                       </cite>
                     )}
@@ -384,7 +384,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
         <div className="relative z-10 max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-3">Why join?</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.23em] xs:tracking-[0.45em] text-church-accent mb-3">Why join?</p>
               <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight leading-[1.05]">
                 Five things that<br />
                 <span className="font-serif italic font-normal text-white/40">change when you join.</span>
@@ -420,12 +420,12 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
               transition={{ delay: 0.5 }}
-              className="bg-church-maroon/10 border-0 p-8 sm:p-10 flex flex-col justify-between"
+              className="bg-church-maroon/10 border-0 p-5 xs:p-8 sm:p-10 flex flex-col justify-between"
             >
               <p className="text-[clamp(3.5rem,6vw,5rem)] font-display font-black text-church-accent leading-none">
                 100<span className="text-4xl">%</span>
               </p>
-              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-white/35 mt-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/35 mt-4">
                 Open to all.<br />No barriers.<br />Always.
               </p>
             </motion.div>
@@ -466,7 +466,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
-              <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.23em] xs:tracking-[0.45em] text-church-accent mb-5">
                 A place for everyone
               </p>
               <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight leading-[1.05] mb-8">
@@ -489,7 +489,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
       <section className="py-24 md:py-28 px-4 border-t border-white/[0.06]">
         <div className="max-w-6xl mx-auto">
           <div className="mb-14">
-            <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-4">FAQ</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.23em] xs:tracking-[0.45em] text-church-accent mb-4">FAQ</p>
             <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight leading-[1.05]">
               Honest answers<br />
               <span className="font-serif italic font-normal text-white/40">to honest questions.</span>
@@ -516,7 +516,7 @@ export default function HomeCellContent({ heroImageUrl }: Props) {
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-[10px] font-black uppercase tracking-[0.5em] text-church-accent mb-5"
+            className="text-[10px] font-black uppercase tracking-[0.25em] xs:tracking-[0.5em] text-church-accent mb-5"
           >
             Ready?
           </motion.p>

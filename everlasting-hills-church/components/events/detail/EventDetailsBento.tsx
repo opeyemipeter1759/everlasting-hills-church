@@ -17,9 +17,9 @@ export default function EventDetailsBento({ event }: { event: EventDetail }) {
 
   return (
     <section id="details" className="py-20 md:py-28 bg-white">
-      <div className="max-w-4xl mx-auto px-5 sm:px-8">
+      <div className="max-w-4xl mx-auto px-4 xs:px-5 sm:px-8">
 
-        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#87102C] text-center mb-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] xs:tracking-[0.28em] text-[#87102C] text-center mb-2">
           The Details
         </p>
         <h2 className="text-2xl sm:text-3xl font-bold text-[#111] text-center tracking-tight mb-12">
@@ -40,7 +40,7 @@ export default function EventDetailsBento({ event }: { event: EventDetail }) {
                     <Icon size={16} className="text-[#87102C]" />
                   </span>
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.18em] font-bold text-[#aaa] mb-0.5">
+                    <p className="text-[10px] uppercase tracking-[0.09em] xs:tracking-[0.18em] font-bold text-[#aaa] mb-0.5">
                       {c.label}
                     </p>
                     <p className="text-[#111] font-semibold text-sm leading-snug">{c.value}</p>

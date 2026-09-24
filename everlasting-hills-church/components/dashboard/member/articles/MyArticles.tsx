@@ -91,7 +91,7 @@ function Section({ title, articles }: { title: string; articles: MyArticle[] }) 
 
   return (
     <section>
-      <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-white/35">
+      <h2 className="text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-gray-400 dark:text-white/35">
         {title}
       </h2>
       <ul className="mt-3 divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200 dark:divide-white/[0.06] dark:border-white/10">

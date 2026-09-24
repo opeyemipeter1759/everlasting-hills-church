@@ -23,7 +23,7 @@ function Dialog({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[#141414] border border-gray-200 dark:border-white/10 shadow-2xl p-6 space-y-5">
+      <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[#141414] border border-gray-200 dark:border-white/10 shadow-2xl p-4 xs:p-6 space-y-5">
         <div className="space-y-1.5">
           <h2 className="text-base font-bold text-gray-900 dark:text-white">{title}</h2>
           <p className="text-sm text-gray-500 dark:text-white/50">{description}</p>

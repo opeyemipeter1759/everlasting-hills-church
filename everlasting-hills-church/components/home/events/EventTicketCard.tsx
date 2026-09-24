@@ -95,7 +95,7 @@ export default function EventTicketCard({
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <RegisterButton
             onClick={handleRegisterClick}
             registering={registering}

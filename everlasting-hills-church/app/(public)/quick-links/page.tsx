@@ -54,7 +54,7 @@ export default function QuickLinksPage() {
     <main className="min-h-screen bg-church-dark text-white py-20 px-5">
       <div className="max-w-2xl mx-auto">
         <div className="mb-12">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-church-accent font-black mb-4">
+          <p className="text-[10px] uppercase tracking-[0.2em] xs:tracking-[0.4em] text-church-accent font-black mb-4">
             Quick Links
           </p>
           <h1 className="text-4xl sm:text-5xl font-display font-black tracking-tight leading-tight mb-4">

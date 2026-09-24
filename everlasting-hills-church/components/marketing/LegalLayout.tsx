@@ -21,7 +21,7 @@ export default function LegalLayout({
   return (
     <main className="bg-white">
       <PageHero eyebrow={eyebrow} title={title} accent={accent} />
-      <article className="mx-auto max-w-3xl px-5 py-16 sm:px-8">
+      <article className="mx-auto max-w-3xl px-4 xs:px-5 py-10 xs:py-16 sm:px-8">
         <p className="mb-10 text-sm text-[#999]">Last updated: {updated}</p>
         <div className="space-y-8 leading-relaxed text-[#3a3a3a] [&_h2]:mb-3 [&_h2]:text-xl [&_h2]:font-bold [&_h2]:text-[#111] [&_li]:mb-2 [&_p]:mb-3 [&_ul]:list-disc [&_ul]:pl-5">
           {children}

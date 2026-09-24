@@ -10,7 +10,7 @@ export default function FallbackArt() {
         style={{ background: "radial-gradient(circle, #FFB3C1 0%, transparent 70%)", filter: "blur(80px)" }}
       />
       <div className="absolute inset-0 flex items-center justify-center">
-        <p className="text-4xl font-black uppercase tracking-[0.2em] text-white/[0.08]">EHC</p>
+        <p className="text-4xl font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/[0.08]">EHC</p>
       </div>
     </div>
   );

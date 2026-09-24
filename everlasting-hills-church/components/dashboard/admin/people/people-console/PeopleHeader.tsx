@@ -5,7 +5,7 @@ export default function PeopleHeader({ onAssign, onCreate }: { onAssign: () => v
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#e8768a] mb-1.5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#e8768a] mb-1.5">
           Administration
         </p>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">People</h1>

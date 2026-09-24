@@ -162,7 +162,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
 
         <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent mb-0.5">New Home Cell</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] xs:tracking-[0.3em] text-church-accent mb-0.5">New Home Cell</p>
             <h3 className="text-white font-black text-lg leading-tight">Add a Cell</h3>
             <p className="text-white/35 text-xs mt-0.5">A super admin will review and approve your submission.</p>
           </div>
@@ -197,7 +197,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
               <FormField label="Leader WhatsApp Phone" required
                 input={<input value={form.leaderPhone} onChange={e => field("leaderPhone", e.target.value)} placeholder="+234 801 234 5678" required />}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                 <FormField label="Meeting Day" required
                   input={
                     <Select
@@ -226,7 +226,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
                   />
                 }
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                 <FormField label="City / Area"
                   input={<input value={form.city} onChange={e => field("city", e.target.value)} placeholder="e.g. Bodija" />}
                 />
@@ -254,7 +254,7 @@ function AddCellModal({ onClose }: { onClose: () => void }) {
 function FormField({ label, required, input }: { label: string; required?: boolean; input: React.ReactElement }) {
   return (
     <div>
-      <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-1.5">
+      <label className="block text-[10px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/35 mb-1.5">
         {label}{required && <span className="text-church-accent ml-0.5">*</span>}
       </label>
       <div className="w-full border border-white/[0.1] rounded-xl px-4 py-3 text-sm text-white bg-white/[0.03] focus-within:border-church-accent/40 focus-within:bg-white/[0.05] transition-all [&_input]:w-full [&_input]:bg-transparent [&_input]:outline-none [&_input]:placeholder:text-white/20 [&_select]:w-full [&_select]:outline-none [&_select]:text-white [&_select]:appearance-none">
@@ -312,7 +312,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
         {/* header */}
         <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent mb-0.5">Join Cell</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] xs:tracking-[0.3em] text-church-accent mb-0.5">Join Cell</p>
             <h3 className="text-white font-black text-lg leading-tight">{cell.name}</h3>
             <p className="text-white/35 text-xs mt-0.5">Led by {cell.leaderName}</p>
           </div>
@@ -348,7 +348,7 @@ function JoinModal({ cell, onClose }: { cell: Cell; onClose: () => void }) {
                 { name: "email", label: "Email", placeholder: "tunde@example.com", required: true, type: "email" },
               ].map((f) => (
                 <div key={f.name}>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-white/35 mb-1.5">
+                  <label className="block text-[10px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/35 mb-1.5">
                     {f.label}{f.required && <span className="text-church-accent ml-0.5">*</span>}
                   </label>
                   <input
@@ -418,14 +418,14 @@ function CellCard({ cell, index, onJoin }: { cell: Cell; index: number; onJoin: 
 
         {/* location badge top-left */}
         <div className="absolute top-3 left-3">
-          <span className="px-2.5 py-1 rounded-full bg-church-maroon/80 backdrop-blur-sm text-[9px] font-black uppercase tracking-[0.2em] text-white/90">
+          <span className="px-2.5 py-1 rounded-full bg-church-maroon/80 backdrop-blur-sm text-[9px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/90">
             {locationLabel}
           </span>
         </div>
 
         {/* day badge top-right */}
         <div className="absolute top-3 right-3">
-          <span className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-sm text-[9px] font-black uppercase tracking-[0.15em] text-white/70 border border-white/10">
+          <span className="px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-sm text-[9px] font-black uppercase tracking-[0.08em] xs:tracking-[0.15em] text-white/70 border border-white/10">
             {cell.meetingDay}
           </span>
         </div>
@@ -547,7 +547,7 @@ export default function FindCellPage() {
             <Link href="/home-cell"
               className="inline-flex items-center gap-2 text-white/30 hover:text-white/60 transition-all group">
               <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Home Cell</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] xs:tracking-[0.4em]">Home Cell</span>
             </Link>
           </div>
 
@@ -555,7 +555,7 @@ export default function FindCellPage() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
             className="inline-flex items-center gap-2 rounded-full border border-church-maroon/40 bg-church-maroon/15 backdrop-blur-sm px-4 py-1.5 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-church-accent animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-church-accent/90">Home Cell</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.15em] xs:tracking-[0.3em] text-church-accent/90">Home Cell</span>
           </motion.div>
 
           {/* Heading */}
@@ -610,18 +610,18 @@ export default function FindCellPage() {
       {/* ══════════════════════════════════════════════════════════════════════
           GRID
       ══════════════════════════════════════════════════════════════════════ */}
-      <div className="px-4 sm:px-6 py-12 max-w-7xl mx-auto">
+      <div className="px-4 sm:px-6 py-8 xs:py-12 max-w-7xl mx-auto">
 
         {/* count */}
         {!loading && !apiErr && filtered.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="flex items-center justify-between mb-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">
+            className="flex flex-wrap items-center justify-between gap-3 mb-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/20">
               {filtered.length} cell{filtered.length !== 1 ? "s" : ""}{stateFilter !== "All" ? ` · ${stateFilter}` : " · Nigeria"}
             </p>
             {query || stateFilter !== "All" ? (
               <button onClick={() => { setQuery(""); setStateFilter("All"); }}
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-church-accent/60 hover:text-church-accent transition-colors">
+                className="text-[10px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-church-accent/60 hover:text-church-accent transition-colors">
                 Clear filters
               </button>
             ) : null}
@@ -698,7 +698,7 @@ export default function FindCellPage() {
         <div className="relative max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-            <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-4">Lead a Cell</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.23em] xs:tracking-[0.45em] text-church-accent mb-4">Lead a Cell</p>
             <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight leading-[1.05] mb-6">
               Don&rsquo;t just find one.<br />
               <span className="font-serif italic font-normal text-white/40">Start one.</span>
@@ -711,7 +711,7 @@ export default function FindCellPage() {
             initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
             transition={{ delay: 0.1 }}
             className="lg:flex lg:justify-end">
-            <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-8 sm:p-10 max-w-sm w-full">
+            <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-5 xs:p-8 sm:p-10 max-w-sm w-full">
               <button
                 onClick={() => setShowAdd(true)}
                 className="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-church-maroon text-white text-sm font-black tracking-wide hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-church-maroon/30 transition-all">
@@ -728,7 +728,7 @@ export default function FindCellPage() {
       <section className="py-24 md:py-28 px-4 border-t border-white/[0.06]">
         <div className="max-w-6xl mx-auto">
           <div className="mb-14">
-            <p className="text-[10px] font-black uppercase tracking-[0.45em] text-church-accent mb-4">FAQ</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.23em] xs:tracking-[0.45em] text-church-accent mb-4">FAQ</p>
             <h2 className="text-3xl sm:text-5xl font-display font-black tracking-tight leading-[1.05]">
               Honest answers<br />
               <span className="font-serif italic font-normal text-white/40">to honest questions.</span>

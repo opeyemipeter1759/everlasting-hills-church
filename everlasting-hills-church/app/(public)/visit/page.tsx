@@ -65,17 +65,17 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
       <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} backgroundImage={c.heroImage} />
 
       {/* Service times + map */}
-      <section className="mx-auto max-w-[1100px] px-5 py-20 sm:px-8">
+      <section className="mx-auto max-w-[1100px] px-4 xs:px-5 py-12 xs:py-20 sm:px-8">
         <div className="grid gap-8 lg:grid-cols-2 lg:items-stretch">
           <div className="flex flex-col gap-4">
-            <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-8">
+            <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-5 sm:p-8">
               <div className="mb-5 flex items-center gap-3">
                 <Clock size={20} className="text-[#87102C]" />
                 <h2 className="text-xl font-bold text-[#111]">{c.serviceTimesHeading}</h2>
               </div>
               <div className="space-y-4">
                 {c.serviceTimes.map((s, i) => (
-                  <div key={i} className="flex items-center justify-between border-b border-brand-rose/50 pb-4 last:border-0 last:pb-0">
+                  <div key={i} className="flex items-center justify-between gap-3 border-b border-brand-rose/50 pb-4 last:border-0 last:pb-0">
                     <div>
                       <p className="font-semibold text-[#111]">{s.name}</p>
                       <p className="text-sm text-[#777]">{s.day}</p>
@@ -86,7 +86,7 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
               </div>
             </div>
 
-            <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-8">
+            <div className="rounded-3xl border border-brand-rose/60 bg-brand-blush/40 p-5 sm:p-8">
               <div className="mb-3 flex items-center gap-3">
                 <MapPin size={20} className="text-[#87102C]" />
                 <h2 className="text-xl font-bold text-[#111]">{c.locationHeading}</h2>
@@ -104,16 +104,16 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
 
       {/* What to expect */}
       <section className="bg-brand-blush py-20">
-        <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+        <div className="mx-auto max-w-[1100px] px-4 xs:px-5 sm:px-8">
           <div className="mb-10 text-center">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-[#87102C]">{c.expect.label}</p>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-[#87102C]">{c.expect.label}</p>
             <h2 className="text-balance text-3xl font-bold tracking-tight text-[#111] sm:text-4xl">{c.expect.heading}</h2>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {c.expectItems.map((item, i) => {
               const Icon = EXPECT_ICONS[i % EXPECT_ICONS.length];
               return (
-                <div key={i} className="relative rounded-3xl border border-brand-rose/60 bg-white p-7">
+                <div key={i} className="relative rounded-3xl border border-brand-rose/60 bg-white p-4 xs:p-7">
                   <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#87102C]/10 text-[#87102C]"><Icon size={20} /></span>
                   <h3 className="mb-2 text-lg font-bold text-[#111]">{item.title}</h3>
                   <p className="text-sm leading-relaxed text-[#4a4a4a]">{item.body}</p>
@@ -126,7 +126,7 @@ export default async function VisitPage({ searchParams }: { searchParams: { prev
 
       {/* CTA */}
       <section className="bg-church-dark py-20 text-center text-white">
-        <div className="mx-auto max-w-2xl px-5 sm:px-8">
+        <div className="mx-auto max-w-2xl px-4 xs:px-5 sm:px-8">
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{c.cta.heading}</h2>
           <p className="mx-auto mt-4 max-w-xl text-white/55">{c.cta.body}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

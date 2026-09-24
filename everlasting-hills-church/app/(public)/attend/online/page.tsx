@@ -110,14 +110,14 @@ export default function OnlineAttendancePage() {
         {/* Church mark */}
         <div className="mb-8 flex items-center gap-2.5 opacity-70">
           <Image src="/logo.png" alt="EHC" width={32} height={32} />
-          <span className="text-white/60 text-xs font-semibold uppercase tracking-[0.3em]">Everlasting Hills</span>
+          <span className="text-white/60 text-xs font-semibold uppercase tracking-[0.15em] xs:tracking-[0.3em]">Everlasting Hills</span>
         </div>
 
         {/* Header */}
         <div className="text-center mb-12 max-w-lg">
           <div className="inline-flex items-center gap-2 bg-church-maroon/20 border border-church-maroon/30 rounded-full px-4 py-1.5 mb-5">
             <span className="w-1.5 h-1.5 rounded-full bg-church-accent animate-pulse" />
-            <span className="text-[11px] font-bold uppercase tracking-[0.35em] text-church-accent">
+            <span className="text-[11px] font-bold uppercase tracking-[0.18em] xs:tracking-[0.35em] text-church-accent">
               Live Online · Check In
             </span>
           </div>
@@ -184,7 +184,7 @@ export default function OnlineAttendancePage() {
               transition={transition}
               className="w-full max-w-md"
             >
-              <div className="rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm p-8 sm:p-10">
+              <div className="rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm p-5 xs:p-8 sm:p-10">
                 <button
                   type="button"
                   onClick={() => { setPhase("select"); setServerError(""); setEmailError(""); setEmail(""); }}
@@ -206,7 +206,7 @@ export default function OnlineAttendancePage() {
 
                 <form onSubmit={handleEmailSubmit} className="space-y-4" noValidate>
                   <div>
-                    <label className="block text-[11px] font-bold uppercase tracking-[0.35em] text-white/30 mb-2">
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.18em] xs:tracking-[0.35em] text-white/30 mb-2">
                       Email address
                     </label>
                     <input
@@ -267,7 +267,7 @@ export default function OnlineAttendancePage() {
               transition={transition}
               className="w-full max-w-md"
             >
-              <div className="rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm p-8 sm:p-10 text-center">
+              <div className="rounded-3xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-sm p-5 xs:p-8 sm:p-10 text-center">
                 <motion.div
                   initial={{ scale: 0, rotate: -10 }}
                   animate={{ scale: 1, rotate: 0 }}

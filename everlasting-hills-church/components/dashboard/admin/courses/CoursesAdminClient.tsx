@@ -46,7 +46,7 @@ export default function CoursesAdminClient() {
     <div className="max-w-full space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#e8768a] mb-1.5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#e8768a] mb-1.5">
             Courses
           </p>
           <h1 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Manage Courses</h1>
@@ -76,7 +76,7 @@ export default function CoursesAdminClient() {
       </div>
 
       {catalog.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
           <GraduationCap size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-700" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No courses in the catalog yet</p>
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Create your first course to get started.</p>
@@ -89,7 +89,7 @@ export default function CoursesAdminClient() {
 
           {searching ? (
             filtered.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+              <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
                 <SearchX size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-700" />
                 <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No courses match your search</p>
                 <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Try a different keyword.</p>
@@ -110,7 +110,7 @@ export default function CoursesAdminClient() {
               </div>
             )
           ) : topLevelCategories.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+            <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
               <FolderCog size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-700" />
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No categories yet</p>
               <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Create a category to start organizing the catalog.</p>

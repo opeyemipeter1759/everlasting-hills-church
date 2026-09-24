@@ -19,9 +19,9 @@ export default function InvitationLetter() {
       {/* Soft top fade so the dark hero transitions cleanly */}
       <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#FFF4F6]/50 to-transparent pointer-events-none" />
 
-      <div className="relative max-w-3xl mx-auto px-5 sm:px-8">
+      <div className="relative max-w-3xl mx-auto px-4 xs:px-5 sm:px-8">
         <ScrollReveal>
-          <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3 text-center">
+          <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3 text-center">
             A Personal Letter
           </p>
         </ScrollReveal>
@@ -42,7 +42,7 @@ export default function InvitationLetter() {
             standard marketing copy; readers should feel they're reading something
             written to them, not at them.
           */}
-          <article className="relative mt-12 rounded-3xl bg-white border border-[#E7CDD3]/60 shadow-[0_24px_80px_-20px_rgba(135,16,44,0.18)] p-8 sm:p-12 md:p-16">
+          <article className="relative mt-12 rounded-3xl bg-white border border-[#E7CDD3]/60 shadow-[0_24px_80px_-20px_rgba(135,16,44,0.18)] p-5 xs:p-8 sm:p-12 md:p-16">
             {/* Decorative top corner accent */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-[#FFE8ED] border border-[#E7CDD3] flex items-center justify-center">
               <svg
@@ -118,7 +118,7 @@ export default function InvitationLetter() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] uppercase tracking-[0.3em] text-[#888] font-semibold mb-1">
+                <p className="text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] text-[#888] font-semibold mb-1">
                   RSVP by
                 </p>
                 <p className="text-sm font-bold text-[#111]">

@@ -37,13 +37,13 @@ export default function UnitHero({
         EHC
       </div>
 
-      <div className="relative z-10 p-6 sm:p-8">
+      <div className="relative z-10 p-4 xs:p-6 sm:p-8">
         <div className="flex items-start gap-4">
           <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur-sm">
             <Users2 size={22} className="text-white" />
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-[#FFB3C1] mb-1">My Unit</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] xs:tracking-[0.28em] text-[#FFB3C1] mb-1">My Unit</p>
             <h1 className="text-2xl font-extrabold leading-tight tracking-tight text-white truncate">{unit.name}</h1>
             {unit.description && <p className="mt-1.5 text-sm text-white/60 max-w-lg">{unit.description}</p>}
           </div>

@@ -38,7 +38,7 @@ export default function HomeCellTable({
       {/* header row */}
       <div className="hidden sm:grid grid-cols-[2fr_1.5fr_1.5fr_1fr_auto] gap-4 px-5 py-3 bg-gray-50 dark:bg-white/[0.03] border-b border-gray-200 dark:border-white/[0.06]">
         {["Cell", "Leader", "Venue", "Schedule", ""].map((h, i) => (
-          <span key={i} className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-white/25">{h}</span>
+          <span key={i} className="text-[10px] font-black uppercase tracking-[0.08em] xs:tracking-[0.15em] text-gray-400 dark:text-white/25">{h}</span>
         ))}
       </div>
 

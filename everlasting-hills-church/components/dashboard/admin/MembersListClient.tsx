@@ -110,7 +110,7 @@ export default function MembersListClient({ initialMembers, searchQuery }: Props
 
   if (members.length === 0) {
     return (
-      <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-12 text-center">
+      <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-5 xs:p-8 sm:p-12 text-center">
         <Users size={28} className="text-gray-200 dark:text-gray-700 mx-auto mb-3" />
         <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
           No members found
@@ -160,7 +160,7 @@ export default function MembersListClient({ initialMembers, searchQuery }: Props
           onClick={() => !tagSaving && setTagTarget(null)}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 p-6"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 p-4 xs:p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">

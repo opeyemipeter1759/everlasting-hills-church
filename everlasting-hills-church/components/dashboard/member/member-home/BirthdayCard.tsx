@@ -78,14 +78,14 @@ function MyBirthdayWall({ memberId }: { memberId: string }) {
       <div aria-hidden="true" className="absolute right-16 top-10 text-2xl opacity-80 animate-bounce" style={{ animationDuration: "3.4s", animationDelay: "0.4s" }}>🎈</div>
       <div aria-hidden="true" className="absolute left-8 bottom-6 text-2xl opacity-70 animate-bounce hidden sm:block" style={{ animationDuration: "2.8s", animationDelay: "0.8s" }}>🎊</div>
 
-      <div className="relative z-10 p-6 sm:p-8 space-y-5">
+      <div className="relative z-10 p-4 xs:p-6 sm:p-8 space-y-5">
         <div className="flex items-center gap-3.5">
           <span className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 shadow-lg shadow-amber-500/30">
             <PartyPopper size={22} className="text-[#4a0819]" aria-hidden="true" />
             <Sparkles size={13} className="absolute -right-1 -top-1 text-amber-200 animate-pulse" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-amber-200">It&apos;s your day ✨</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] xs:tracking-[0.28em] text-amber-200">It&apos;s your day ✨</p>
             <h2 className="text-2xl font-extrabold text-white tracking-tight">Happy Birthday! 🎉🎂</h2>
           </div>
         </div>

@@ -273,7 +273,7 @@ export function Step1PersonalInfo({ register, errors, isOnlineSource }: StepProp
 
       <div>
         <GroupLabel required>How are you joining us today?</GroupLabel>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
           <RadioCard
             value="In-Person"
             label="In-Person"
@@ -299,7 +299,7 @@ export function Step1PersonalInfo({ register, errors, isOnlineSource }: StepProp
 
       <div>
         <GroupLabel required>Gender</GroupLabel>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
           {(["Male", "Female"] as const).map((g) => (
             <RadioCard
               key={g}
@@ -409,7 +409,7 @@ export function Step3Interest({ register, errors, isOnline, firstName, lastName 
       {!isOnline && (
         <div>
           <GroupLabel required>Do you reside in Ibadan?</GroupLabel>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
             <RadioCard
               value="true"
               label="Yes, I do"
@@ -487,7 +487,7 @@ export function Step5Details({ register, errors, control, watch }: Step5Props) {
 
       <div>
         <GroupLabel required>Date of Birth</GroupLabel>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
           <Controller
             control={control}
             name="birth_month"
@@ -526,7 +526,7 @@ export function Step5Details({ register, errors, control, watch }: Step5Props) {
 
       <div>
         <GroupLabel required>Are you a student?</GroupLabel>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
           <RadioCard
             value="true"
             label="Yes, I am"
@@ -635,7 +635,7 @@ export function Step6Experience({ register, errors }: StepProps) {
         <GroupLabel required>
           Would you like to join our WhatsApp community?
         </GroupLabel>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
           <RadioCard
             value="true"
             label="Yes, add me"
@@ -660,7 +660,7 @@ export function Step6Experience({ register, errors }: StepProps) {
         <GroupLabel required>
           Can we introduce you to someone with things in common — same area, similar age?
         </GroupLabel>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
           <RadioCard
             value="true"
             label="Yes, I'd love that"

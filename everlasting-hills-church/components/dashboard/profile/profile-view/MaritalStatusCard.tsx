@@ -7,7 +7,7 @@ export function MaritalStatusCard({ isMarried, anniversary }: { isMarried: boole
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-6 flex flex-col gap-4 h-full min-h-[160px]"
+      className="relative overflow-hidden rounded-2xl p-4 xs:p-6 flex flex-col gap-4 h-full min-h-[160px]"
       style={{ background: "linear-gradient(150deg, #87102C 0%, #6E0C24 55%, #4a0819 100%)" }}
     >
       <div
@@ -22,7 +22,7 @@ export function MaritalStatusCard({ isMarried, anniversary }: { isMarried: boole
         <Heart size={17} className="text-white" aria-hidden="true" />
       </div>
       <div className="relative z-10 flex-1">
-        <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-white/50 mb-1.5">Marital status</p>
+        <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-white/50 mb-1.5">Marital status</p>
         <p className="text-[15px] font-bold text-white">Married</p>
         {anniversary && <p className="text-xs text-white/50 mt-2">Anniversary · {anniversary}</p>}
       </div>

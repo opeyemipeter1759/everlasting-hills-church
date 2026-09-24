@@ -10,7 +10,7 @@ export default function MemberHero({ member: m, completionPct }: { member: Membe
   const name = `${m.firstName} ${m.lastName}`.trim();
 
   return (
-    <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] p-6 sm:p-7">
+    <div className="rounded-2xl border border-[#E7CDD3]/60 dark:border-white/10 bg-white dark:bg-[#140b10] p-4 xs:p-6 sm:p-7">
       <div className="flex flex-col sm:flex-row sm:items-center gap-5">
         <Avatar photoUrl={m.photoUrl} firstName={m.firstName} lastName={m.lastName} size={72} />
         <div className="flex-1 min-w-0">

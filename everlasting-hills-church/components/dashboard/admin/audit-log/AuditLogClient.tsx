@@ -49,7 +49,7 @@ export default function AuditLogClient() {
   return (
     <div className="max-w-full space-y-6">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 dark:border-white/10 dark:bg-[#161618]">
+      <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 xs:p-6 dark:border-white/10 dark:bg-[#161618]">
         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#87102C] via-[#c23a5b] to-[#87102C]/30" />
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3.5">
@@ -57,7 +57,7 @@ export default function AuditLogClient() {
               <Shield size={19} className="text-[#87102C] dark:text-[#e8768a]" />
             </span>
             <div>
-              <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
+              <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
                 Administration
               </p>
               <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Audit Log</h1>
@@ -119,7 +119,7 @@ export default function AuditLogClient() {
           Couldn&apos;t load reports.
         </p>
       ) : reports.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 p-12 text-center dark:border-white/15 dark:bg-white/[0.02]">
+        <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50/60 p-5 xs:p-8 sm:p-12 text-center dark:border-white/15 dark:bg-white/[0.02]">
           <Shield size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">No reports yet.</p>
           <p className="mt-1 text-sm text-gray-400 dark:text-white/40">Reports logged from My Department, My Unit, or a Pastor's dashboard will show up here.</p>

@@ -13,7 +13,7 @@ export default function HillsConfession({ date }: { date: string }) {
 
   return (
     <div role="group" aria-labelledby="hills-confession-title" className="mt-6 border-t border-[#f5d49a]/30 pt-5">
-      <p id="hills-confession-title" className="text-[11px] font-black uppercase tracking-[0.22em] text-[#f5d49a]">
+      <p id="hills-confession-title" className="text-[11px] font-black uppercase tracking-[0.11em] text-[#f5d49a] xs:tracking-[0.22em]">
         The Hills Confession
         <span className="font-semibold normal-case tracking-normal text-white/60"> · say it out loud</span>
       </p>

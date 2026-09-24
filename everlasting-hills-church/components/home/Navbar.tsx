@@ -65,25 +65,26 @@ export default function Navbar() {
             : "bg-transparent"
         }`}
       >
-        <div className="max-w-[1400px]  mx-auto px-5 sm:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
-            {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
+        <div className="max-w-[1400px]  mx-auto px-4 xs:px-5 sm:px-8">
+          <div className="flex items-center justify-between gap-2 h-16 md:h-20">
+            {/* Logo — the mark and wordmark both step down under 400px so the
+                hamburger and the signed-in avatar still fit on a 320px phone. */}
+            <Link href="/" className="flex min-w-0 items-center gap-2 xs:gap-2.5 group">
             {scrolled || !darkHero ? (
-              <Image src="/logoblack.png" alt="Everlasting Hills Church Logo" width={62} height={62} className="flex-shrink-0" />
+              <Image src="/logoblack.png" alt="Everlasting Hills Church Logo" width={62} height={62} className="h-11 w-11 xs:h-[62px] xs:w-[62px] flex-shrink-0" />
             ) : (
-              <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={52} height={52} className="flex-shrink-0" />
+              <Image src="/logo.png" alt="Everlasting Hills Church Logo" width={52} height={52} className="h-10 w-10 xs:h-[52px] xs:w-[52px] flex-shrink-0" />
             )}
-              <div className="flex flex-col leading-none">
+              <div className="flex min-w-0 flex-col leading-none">
                 <span
-                  className={`font-bold  tracking-wide transition-colors duration-300 ${
+                  className={`truncate text-sm xs:text-base font-bold tracking-wide transition-colors duration-300 ${
                     scrolled || !darkHero ? "text-[#111111]" : "text-white"
                   }`}
                 >
                   Everlasting Hills
                 </span>
                 <span
-                  className={`text-sm tracking-[0.15em] uppercase font-medium transition-colors duration-300 ${
+                  className={`text-xs xs:text-sm tracking-[0.15em] uppercase font-medium transition-colors duration-300 ${
                     scrolled || !darkHero ? "text-burgundy font-semibold" : "text-white/70"
                   }`}
                 >
@@ -106,7 +107,7 @@ export default function Navbar() {
                 </Link>
               ))}
             </nav>
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2 xs:gap-3">
               {/* Authenticated → avatar + dropdown. Anonymous → Login + Join CTAs. */}
               {isLoggedIn === true ? (
                 <NavUserBadge scrolled={scrolled} />
@@ -130,7 +131,7 @@ export default function Navbar() {
               )}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className={`lg:hidden p-2 rounded-lg transition-colors ${
+                className={`lg:hidden shrink-0 p-1.5 xs:p-2 rounded-lg transition-colors ${
                   scrolled || !darkHero
                     ? "text-[#111] hover:bg-brand-blush"
                     : "text-white hover:bg-white/10"
@@ -152,7 +153,7 @@ export default function Navbar() {
             transition={{ duration: 0.2 }}
             className="fixed top-16 inset-x-0 z-40 bg-white border-b border-brand-rose shadow-xl lg:hidden"
           >
-            <nav className="flex flex-col py-4 px-5">
+            <nav className="flex flex-col py-4 px-4 xs:px-5">
               {[...effectiveNavLinks, ...mobileOnlyLinks].map((link, i) => (
                 <MotionLink
                   key={link.href}

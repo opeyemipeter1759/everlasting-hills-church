@@ -116,7 +116,7 @@ export default function ServiceSection({ content }: { content?: ServiceContent }
 
   return (
     <section id="services" className="py-24 md:py-32 bg-[#FFF4F6]">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+      <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
         {c.specialAnnouncement && (
           <div
             role="status"

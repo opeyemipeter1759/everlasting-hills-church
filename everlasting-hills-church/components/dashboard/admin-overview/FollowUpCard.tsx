@@ -45,7 +45,7 @@ export default function FollowUpCard() {
           <AlertTriangle size={15} className="text-amber-600 dark:text-amber-400" aria-hidden="true" />
         </div>
         <div className="flex-1">
-          <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
+          <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1]">
             Follow-Up Needed
           </p>
           <h3 className="text-sm font-bold text-[#111] dark:text-white -mt-0.5">Absent 3+ Sundays</h3>

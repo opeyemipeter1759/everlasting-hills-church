@@ -9,7 +9,7 @@ export default function CourseAdminDetailSkeleton() {
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618]">
         <Block className="h-32 w-full rounded-none" />
-        <div className="space-y-4 p-6">
+        <div className="space-y-4 p-4 xs:p-6">
           <div className="space-y-2">
             <Block className="h-2.5 w-20" />
             <Block className="h-6 w-1/2" />

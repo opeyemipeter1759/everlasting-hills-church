@@ -284,7 +284,7 @@ export default async function MinistryDetailPage({
           <div className="absolute bottom-[-20%] left-[-5%] h-[50%] w-[50%] rounded-full bg-[#87102C]/10 blur-[120px]" />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-20">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 pt-20">
 
           {/* Back link */}
           <ScrollReveal>
@@ -303,7 +303,7 @@ export default async function MinistryDetailPage({
             {/* ── Left: text ── */}
             <div>
               <ScrollReveal delay={0.05}>
-                <p className="text-white/40 text-xs tracking-[0.3em] uppercase font-semibold mb-4">
+                <p className="text-white/40 text-xs tracking-[0.15em] xs:tracking-[0.3em] uppercase font-semibold mb-4">
                   {m.heroLabel}
                 </p>
               </ScrollReveal>
@@ -352,7 +352,7 @@ export default async function MinistryDetailPage({
                   </div>
 
                   {/* Verse content */}
-                  <div className="relative z-10 p-8 sm:p-10 flex flex-col h-full justify-between" style={{ minHeight: "360px" }}>
+                  <div className="relative z-10 p-5 xs:p-8 sm:p-10 flex flex-col h-full justify-between" style={{ minHeight: "360px" }}>
                     <span className="text-white/10 text-8xl font-serif leading-none select-none -ml-1">
                       &ldquo;
                     </span>
@@ -386,13 +386,13 @@ export default async function MinistryDetailPage({
           2. OVERVIEW — blush background, two-column
       ════════════════════════════════════════════════════════════════ */}
       <section className="py-24 md:py-32 bg-[#FFF4F6]">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
           <div className="grid lg:grid-cols-[1fr_400px] gap-12 lg:gap-16 items-start">
 
             {/* Left: story */}
             <div>
               <ScrollReveal>
-                <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3">
+                <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3">
                   About
                 </p>
               </ScrollReveal>
@@ -413,7 +413,7 @@ export default async function MinistryDetailPage({
             <div className="flex flex-col gap-5 lg:pt-10">
               {/* Inverted (burgundy) pull-quote card — matches CultureSection inverted card */}
               <ScrollReveal delay={0.15}>
-                <div className="relative overflow-hidden rounded-2xl p-8 bg-[#87102C] shadow-[0_24px_60px_-15px_rgba(135,16,44,0.35)]">
+                <div className="relative overflow-hidden rounded-2xl p-5 xs:p-8 bg-[#87102C] shadow-[0_24px_60px_-15px_rgba(135,16,44,0.35)]">
                   <DotOverlay />
                   <span className="absolute top-4 left-5 text-white/10 text-7xl font-serif leading-none select-none">
                     &ldquo;
@@ -432,12 +432,12 @@ export default async function MinistryDetailPage({
 
               {/* White elevated info card */}
               <ScrollReveal delay={0.25}>
-                <div className="rounded-2xl bg-white border border-[#E7CDD3] p-6 flex items-center gap-4 shadow-sm">
+                <div className="rounded-2xl bg-white border border-[#E7CDD3] p-4 xs:p-6 flex items-center gap-4 shadow-sm">
                   <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFE8ED]">
                     <Icon size={20} strokeWidth={1.8} className="text-[#87102C]" />
                   </span>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#87102C] mb-1">
+                    <p className="text-[10px] font-black uppercase tracking-[0.13em] xs:tracking-[0.25em] text-[#87102C] mb-1">
                       Ministry Group
                     </p>
                     <p className="text-[#111] font-bold text-base">{m.name}</p>
@@ -456,7 +456,7 @@ export default async function MinistryDetailPage({
       <section className="relative overflow-hidden py-24 md:py-32 bg-[#87102C]">
         <DotOverlay />
 
-        <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 text-center">
+        <div className="relative z-10 max-w-4xl mx-auto px-4 xs:px-5 sm:px-8 text-center">
           <ScrollReveal>
             <span className="text-white/10 text-[9rem] font-serif leading-none block -mb-10 select-none">
               &ldquo;
@@ -483,11 +483,11 @@ export default async function MinistryDetailPage({
           4. ACTIVITIES — blush background, bento with number accents
       ════════════════════════════════════════════════════════════════ */}
       <section className="py-24 md:py-32 bg-[#FFF4F6]">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
 
           <div className="mb-16">
             <ScrollReveal>
-              <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3">
+              <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3">
                 Activities
               </p>
             </ScrollReveal>
@@ -570,10 +570,10 @@ export default async function MinistryDetailPage({
           <Icon size={420} strokeWidth={0.4} className="text-white" />
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
           <div className="max-w-2xl">
             <ScrollReveal>
-              <p className="text-white/30 text-xs tracking-[0.3em] uppercase font-semibold mb-6">
+              <p className="text-white/30 text-xs tracking-[0.15em] xs:tracking-[0.3em] uppercase font-semibold mb-6">
                 {m.name}
               </p>
             </ScrollReveal>

@@ -33,7 +33,7 @@ export default function SectionCard({
         <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 flex-shrink-0">
           <Icon size={14} className="text-[#87102C] dark:text-[#e8768a]" />
         </span>
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-gray-500 dark:text-gray-400">
           {title}
           {count !== undefined ? ` (${count})` : ""}
         </p>

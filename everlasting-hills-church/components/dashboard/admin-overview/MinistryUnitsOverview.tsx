@@ -37,13 +37,13 @@ export default function MinistryUnitsOverview({
           </caption>
           <thead>
             <tr className="border-b border-[#E7CDD3]/40 dark:border-white/[0.07]">
-              <th scope="col" className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C]/60 dark:text-white/35">
+              <th scope="col" className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C]/60 dark:text-white/35">
                 Unit
               </th>
-              <th scope="col" className="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C]/60 dark:text-white/35">
+              <th scope="col" className="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C]/60 dark:text-white/35">
                 Members
               </th>
-              <th scope="col" className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C]/60 dark:text-white/35">
+              <th scope="col" className="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C]/60 dark:text-white/35">
                 Active Members
               </th>
             </tr>

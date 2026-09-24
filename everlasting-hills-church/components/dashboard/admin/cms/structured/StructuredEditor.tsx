@@ -19,7 +19,7 @@ export default function StructuredEditor({
   const fields = structuredFields(contentType);
   if (!fields) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#E7CDD3] p-8 text-center text-sm text-gray-400">
+      <div className="rounded-2xl border border-dashed border-[#E7CDD3] p-5 xs:p-8 text-center text-sm text-gray-400">
         No structured editor is registered for &quot;{contentType}&quot;.
       </div>
     );

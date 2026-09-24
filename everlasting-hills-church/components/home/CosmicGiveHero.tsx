@@ -35,14 +35,14 @@ export default function CosmicGiveHero() {
         />
       </div>
 
-      <div className="relative z-10 max-w-[1400px] mx-auto px-5 sm:px-8">
+      <div className="relative z-10 max-w-[1400px] mx-auto px-4 xs:px-5 sm:px-8">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* ── LEFT: headline + visual orb ── */}
           <div>
             <motion.span
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-sm mb-6"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/60 backdrop-blur-sm mb-6"
             >
               <Sparkles size={12} className="text-[#e8768a]" />
               Partnership & Stewardship
@@ -163,7 +163,7 @@ function TrustCard({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1">
+        <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/40 mb-1">
           {eyebrow}
         </p>
         <p className="text-sm text-white font-bold mb-1">{primary}</p>

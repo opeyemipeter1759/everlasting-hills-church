@@ -16,7 +16,7 @@ export function ContactMembershipSection({ profile, role }: { profile: ProfileVi
     <section aria-labelledby="contact-section-label">
       <ScrollReveal>
         <div className="flex items-center gap-3 mb-5">
-          <h2 id="contact-section-label" className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0">
+          <h2 id="contact-section-label" className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold flex-shrink-0">
             How we reach you
           </h2>
           <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
@@ -30,7 +30,7 @@ export function ContactMembershipSection({ profile, role }: { profile: ProfileVi
               hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] dark:hover:shadow-[0_8px_40px_rgba(255,255,255,0.03)]
               transition-all duration-300"
             >
-              <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1] pt-1.5">
+              <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1] pt-1.5">
                 Direct contact
               </p>
               <ContactRow icon={Mail} label="Email" value={profile.email} href={profile.email ? `mailto:${profile.email}` : null} />

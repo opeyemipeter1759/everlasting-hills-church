@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Play } from "lucide-react";
+import SermonCover from "@/components/sermons/SermonCover";
 
 export interface RecentSermon {
   id: string;
@@ -75,12 +75,11 @@ function SermonCard({ sermon }: { sermon: RecentSermon }) {
       <div className="relative aspect-video overflow-hidden">
         {sermon.thumbnailUrl ? (
           <>
-            <Image
+            <SermonCover
               src={sermon.thumbnailUrl}
               alt=""
-              fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              imageClassName="transition-transform duration-700 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           </>
@@ -107,17 +106,17 @@ function SermonCard({ sermon }: { sermon: RecentSermon }) {
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex flex-1 flex-col p-4 xs:p-6">
         {/* Badge row — height reserved so badged/unbadged cards align */}
         <div className="mb-3 flex h-6 items-start">
           {sermon.series && (
-            <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-white/75">
+            <span className="inline-flex items-center rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] xs:tracking-[0.15em] text-white/75">
               {sermon.series}
             </span>
           )}
         </div>
 
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#FFB3C1]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#FFB3C1]">
           {sermon.speaker}
           {dateLabel ? ` · ${dateLabel}` : ""}
         </p>

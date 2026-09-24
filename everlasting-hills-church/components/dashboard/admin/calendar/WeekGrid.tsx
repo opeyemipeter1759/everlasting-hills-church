@@ -34,7 +34,7 @@ export default function WeekGrid({
                   today ? "bg-[#FFE8ED] dark:bg-[#87102C]/25" : "bg-[#FFF4F6]/60 hover:bg-[#FFF4F6] dark:bg-white/[0.03] dark:hover:bg-white/[0.06]",
                 ].join(" ")}
               >
-                <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#8a7e80] dark:text-white/40">
+                <span className="block text-[10px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#8a7e80] dark:text-white/40">
                   {WEEKDAYS[day.getDay()]}
                 </span>
                 <span

@@ -6,7 +6,7 @@ export default function GetInTouch() {
   return (
     <div className="text-center max-w-2xl mx-auto mb-16">
       <ScrollReveal>
-        <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3">
+        <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3">
           Get in Touch
         </p>
       </ScrollReveal>

@@ -26,7 +26,7 @@ export default function MonthGrid({
         {WEEKDAYS.map((d) => (
           <div
             key={d}
-            className="px-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[#8a7e80] dark:text-white/40"
+            className="px-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#8a7e80] dark:text-white/40"
           >
             <span className="hidden sm:inline">{d}</span>
             <span className="sm:hidden">{d[0]}</span>

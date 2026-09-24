@@ -52,7 +52,7 @@ export default function DirectionsSection({ content }: { content: DirectionsCont
     <section
       id="directions"
       aria-labelledby="directions-heading"
-      className="max-w-[1400px] mx-auto px-5 sm:px-8 mb-16"
+      className="max-w-[1400px] mx-auto px-4 xs:px-5 sm:px-8 mb-16"
     >
       <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-white/5 via-white/[0.03] to-white/[0.02] backdrop-blur-sm shadow-2xl">
         {/* Decorative burgundy glow + faint topographic hill silhouettes */}
@@ -60,7 +60,7 @@ export default function DirectionsSection({ content }: { content: DirectionsCont
         <div className="absolute -bottom-32 -left-16 w-80 h-80 bg-[#e8768a]/8 blur-3xl rounded-full pointer-events-none" />
         <HillsSilhouette />
 
-        <div className="relative grid lg:grid-cols-5 gap-8 lg:gap-12 p-8 sm:p-10 lg:p-12 items-center">
+        <div className="relative grid lg:grid-cols-5 gap-8 lg:gap-12 p-5 xs:p-8 sm:p-10 lg:p-12 items-center">
           {/* LEFT (3/5): live status + headline */}
           <div className="lg:col-span-3">
             {/* Live indicator pill */}
@@ -151,7 +151,7 @@ function AddressTile({ address, label }: { address: string; label: string }) {
           <MapPin size={16} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/40 mb-1.5">
             {label}
           </p>
           <p className="text-sm text-white/90 leading-snug font-medium">{address}</p>
@@ -178,7 +178,7 @@ function NextServiceTile({
           <Radio size={16} className={live ? "animate-pulse" : ""} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/40 mb-1.5">
             {live ? "Happening now" : "Next gathering"}
           </p>
           <p className="text-sm text-white/90 leading-snug font-bold">{next.label}</p>
@@ -199,7 +199,7 @@ function EmailTile({ email }: { email: string }) {
         <Mail size={16} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/40 mb-1.5">
           Email us
         </p>
         <p className="text-sm text-white/90 leading-snug font-medium truncate">

@@ -41,7 +41,7 @@ export function HeroCard({ photoUrl, displayName, initials, role, bio, tenure, j
           <HeroAvatar photoUrl={photoUrl} displayName={displayName} initials={initials} />
 
           <div className="min-w-0 flex-1 basis-56">
-            <p className="text-[10px] tracking-[0.32em] uppercase font-bold text-[#FFB3C1] mb-2">
+            <p className="text-[10px] tracking-[0.16em] xs:tracking-[0.32em] uppercase font-bold text-[#FFB3C1] mb-2">
               Everlasting Hills Church · {role}
             </p>
             <h2 id="profile-hero-name" className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-[1.1] text-balance break-words">

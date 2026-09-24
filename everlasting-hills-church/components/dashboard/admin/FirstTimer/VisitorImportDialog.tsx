@@ -225,7 +225,7 @@ export default function VisitorImportDialog() {
           onClick={() => !busy && reset()}
         >
           <div
-            className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 p-6 max-h-[85vh] overflow-y-auto"
+            className="w-full max-w-lg rounded-2xl bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 p-4 xs:p-6 max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">

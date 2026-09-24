@@ -60,7 +60,7 @@ export default async function BeliefsPage({
       )}
       <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} backgroundImage={c.heroImage} />
 
-      <section className="mx-auto max-w-[1000px] px-5 py-20 sm:px-8">
+      <section className="mx-auto max-w-[1000px] px-4 xs:px-5 py-12 xs:py-20 sm:px-8">
         <div className="relative space-y-5">
           {/* Connecting thread behind the icon column — reinforces these as one
               unbroken sequence rather than five unrelated cards. */}
@@ -74,7 +74,7 @@ export default async function BeliefsPage({
             return (
               <div
                 key={n}
-                className="group relative flex flex-col gap-5 rounded-3xl border border-[#E7CDD3]/70 bg-white p-6 shadow-[0_1px_3px_rgba(135,16,44,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#87102C]/25 hover:shadow-[0_12px_28px_-8px_rgba(135,16,44,0.18)] sm:flex-row sm:items-start sm:gap-7 sm:p-8"
+                className="group relative flex flex-col gap-5 rounded-3xl border border-[#E7CDD3]/70 bg-white p-4 xs:p-6 shadow-[0_1px_3px_rgba(135,16,44,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:border-[#87102C]/25 hover:shadow-[0_12px_28px_-8px_rgba(135,16,44,0.18)] sm:flex-row sm:items-start sm:gap-7 sm:p-8"
               >
                 <div className="relative z-10 flex-shrink-0 self-start">
                   <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#87102C]/15 to-[#87102C]/5 text-[#87102C] ring-1 ring-[#87102C]/10 transition-colors group-hover:from-[#87102C]/20 group-hover:to-[#87102C]/10 sm:h-[70px] sm:w-[70px]">
@@ -100,7 +100,7 @@ export default async function BeliefsPage({
       </section>
 
       <section className="bg-church-dark py-20 text-center text-white">
-        <div className="mx-auto max-w-2xl px-5 sm:px-8">
+        <div className="mx-auto max-w-2xl px-4 xs:px-5 sm:px-8">
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{c.cta.heading}</h2>
           <p className="mx-auto mt-4 max-w-xl text-white/55">{c.cta.body}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

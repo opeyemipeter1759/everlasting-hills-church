@@ -67,7 +67,7 @@ export default function SermonHero({ slides = [], onPlay }: SermonHeroProps) {
 
   return (
     <section
-      className="relative overflow-hidden bg-[#060606] max-h-[80vh] text-white"
+      className="relative overflow-hidden bg-[#060606] lg:max-h-[80vh] text-white"
       aria-roledescription="carousel"
       aria-label="Sermon highlights"
       onMouseEnter={() => setPaused(true)}
@@ -84,13 +84,13 @@ export default function SermonHero({ slides = [], onPlay }: SermonHeroProps) {
           <StoryProgress count={safeSlides.length} active={active} paused={paused} onJump={setActive} />
         </div>
 
-        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+        <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-2 lg:gap-14">
           <HeroCopy slide={slide} onPlay={onPlay} />
 
           <SermonWaveform
             slide={slide}
             onPlay={onPlay}
-            className="h-[360px] sm:h-[400px] lg:h-[340px]"
+            className="h-[260px] xs:h-[300px] sm:h-[400px] lg:h-[340px]"
           />
         </div>
       </div>

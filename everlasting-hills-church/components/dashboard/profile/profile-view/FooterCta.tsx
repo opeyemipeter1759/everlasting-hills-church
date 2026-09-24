@@ -7,7 +7,7 @@ export function FooterCta() {
   return (
     <ScrollReveal delay={0.05}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5
-        p-6 sm:p-8 bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl
+        p-4 xs:p-6 sm:p-8 bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl
         hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_8px_40px_rgba(135,16,44,0.06)] dark:hover:shadow-none
         transition-all duration-300">
         <div className="flex items-center gap-4">

@@ -68,7 +68,7 @@ export default function LatestSermonsWidget({
               ) : (
                 <div className="absolute inset-0 bg-gradient-to-br from-[#6E0C24] to-[#87102C]" />
               )}
-              <div className="relative p-8 flex flex-col gap-3 min-h-[260px] justify-end">
+              <div className="relative p-5 xs:p-8 flex flex-col gap-3 min-h-[260px] justify-end">
                 <span className="self-start text-[11px] font-bold uppercase tracking-widest text-white/60 bg-white/10 px-2.5 py-1 rounded-full">
                   Featured Message
                 </span>

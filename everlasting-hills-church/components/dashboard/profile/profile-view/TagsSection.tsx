@@ -8,15 +8,15 @@ export function TagsSection({ tags }: { tags: ProfileViewModel["tags"] }) {
     <ScrollReveal delay={0.05}>
       <section aria-labelledby="tags-section-title">
         <div className="flex items-center gap-3 mb-5">
-          <h2 id="tags-section-title" className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.2em] uppercase font-semibold flex-shrink-0">
+          <h2 id="tags-section-title" className="text-[#87102C] dark:text-white/40 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold flex-shrink-0">
             Ministry tags
           </h2>
           <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
         </div>
 
         {tags.length > 0 ? (
-          <div className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-7 sm:p-8">
-            <p className="text-[10px] tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1] mb-5">
+          <div className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-4 xs:p-7 sm:p-8">
+            <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-[#87102C] dark:text-[#FFB3C1] mb-5">
               {tags.length} tag{tags.length === 1 ? "" : "s"} assigned
             </p>
             <div className="flex flex-wrap gap-3">
@@ -36,7 +36,7 @@ export function TagsSection({ tags }: { tags: ProfileViewModel["tags"] }) {
             </div>
           </div>
         ) : (
-          <div className="relative overflow-hidden bg-[#FFF4F6] dark:bg-white/[0.03] border border-dashed border-[#E7CDD3] dark:border-white/[0.10] rounded-2xl p-8 sm:p-10">
+          <div className="relative overflow-hidden bg-[#FFF4F6] dark:bg-white/[0.03] border border-dashed border-[#E7CDD3] dark:border-white/[0.10] rounded-2xl p-5 xs:p-8 sm:p-10">
             <Tag
               size={96}
               aria-hidden="true"

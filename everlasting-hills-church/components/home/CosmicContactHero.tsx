@@ -38,14 +38,14 @@ export default function CosmicContactHero({
         <div className="absolute inset-0 bg-black/70 pointer-events-none" />
 
         {/* Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-52 pb-44 text-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 pt-52 pb-44 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center gap-4"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/60 backdrop-blur-sm">
               <MapPin size={12} className="text-[#e8768a]" />
               {eyebrow}
             </span>

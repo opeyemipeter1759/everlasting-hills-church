@@ -15,6 +15,12 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        // Tailwind's smallest breakpoint is 640px, which left the 320-400px
+        // band — every small Android and the iPhone SE — with no way to step
+        // type and padding down. `xs` is that step.
+        xs: "400px",
+      },
       colors: {
         // Brand palette
         burgundy: {

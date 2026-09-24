@@ -53,9 +53,9 @@ export default function ScriptureMoment() {
       </svg>
 
       {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8 text-center">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 xs:px-5 sm:px-8 text-center">
         <ScrollReveal>
-          <p className="text-[#FFB3C1] text-xs tracking-[0.4em] uppercase font-bold mb-8">
+          <p className="text-[#FFB3C1] text-xs tracking-[0.2em] xs:tracking-[0.4em] uppercase font-bold mb-8">
             Scripture
           </p>
         </ScrollReveal>
@@ -80,7 +80,7 @@ export default function ScriptureMoment() {
         <ScrollReveal delay={0.3}>
           <div className="mt-12 inline-flex items-center gap-3">
             <span className="block w-8 h-px bg-[#FFB3C1]/60" />
-            <p className="text-xs tracking-[0.4em] uppercase font-bold text-[#FFB3C1]">
+            <p className="text-xs tracking-[0.2em] xs:tracking-[0.4em] uppercase font-bold text-[#FFB3C1]">
               {HEAVEN_ON_EARTH.scripture.reference}
             </p>
             <span className="block w-8 h-px bg-[#FFB3C1]/60" />

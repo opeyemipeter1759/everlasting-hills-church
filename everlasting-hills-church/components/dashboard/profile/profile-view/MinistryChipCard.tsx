@@ -8,7 +8,7 @@ export function MinistryChipCard({ ministry }: { ministry: MinistryInfo }) {
   return (
     <Link
       href={`/ministries/${ministry.slug}`}
-      className="group bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-6
+      className="group bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl p-4 xs:p-6
         hover:border-[#E7CDD3] dark:hover:border-white/[0.18] hover:shadow-[0_8px_40px_rgba(135,16,44,0.08)] dark:hover:shadow-[0_8px_40px_rgba(255,255,255,0.03)] hover:-translate-y-1
         transition-all duration-300 flex flex-col gap-4 h-full"
     >

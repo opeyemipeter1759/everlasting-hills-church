@@ -82,11 +82,11 @@ export default function SermonsSection({
         <div className="absolute inset-0 bg-grain opacity-[0.05] mix-blend-overlay" />
       </div>
 
-      <div className="relative mx-auto max-w-[1200px] px-5 sm:px-8">
+      <div className="relative mx-auto max-w-[1200px] px-4 xs:px-5 sm:px-8">
         {/* Header */}
         <div className="mb-14 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-xl">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-[#FFB3C1]">
+            <p className="mb-3 text-sm font-semibold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-[#FFB3C1]">
               {c.label}
             </p>
             <h2 className="font-serif text-3xl font-bold leading-[1.1] tracking-tight text-balance sm:text-4xl md:text-5xl">
@@ -141,7 +141,7 @@ export default function SermonsSection({
         {source === "YouTube" && (
           <>
             {error && (
-              <div className="rounded-[28px] border border-white/10 bg-white/5 px-6 py-8 text-center backdrop-blur-xl">
+              <div className="rounded-[28px] border border-white/10 bg-white/5 px-4 xs:px-6 py-8 text-center backdrop-blur-xl">
                 <p className="mb-1 text-sm font-medium text-[#FFB3C1]">Could not load videos</p>
                 <p className="text-xs text-white/55">{error}</p>
               </div>
@@ -226,7 +226,7 @@ export default function SermonsSection({
 
 function EmptyState({ viewAllHref, viewAllLabel }: { viewAllHref: string; viewAllLabel: string }) {
   return (
-    <div className="rounded-[28px] border border-white/10 bg-white/[0.03] px-8 py-16 text-center backdrop-blur-xl">
+    <div className="rounded-[28px] border border-white/10 bg-white/[0.03] px-5 xs:px-8 py-12 xs:py-16 text-center backdrop-blur-xl">
       <svg
         viewBox="0 0 120 64"
         className="mx-auto mb-6 h-14 w-28 text-[#FFB3C1]/70"

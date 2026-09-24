@@ -23,10 +23,10 @@ export default function DashboardError({
   }, [error]);
 
   return (
-    <div className="mx-auto max-w-lg px-5 py-10">
+    <div className="mx-auto max-w-lg px-4 xs:px-5 py-8 xs:py-10">
       <div
         role="alert"
-        className="rounded-3xl border border-amber-200 bg-amber-50/70 p-6 text-center dark:border-amber-500/25 dark:bg-amber-500/10 sm:p-8"
+        className="rounded-3xl border border-amber-200 bg-amber-50/70 p-4 xs:p-6 text-center dark:border-amber-500/25 dark:bg-amber-500/10 sm:p-8"
       >
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-amber-600 shadow-sm dark:bg-white/10 dark:text-amber-300">
           <TriangleAlert size={26} aria-hidden="true" />

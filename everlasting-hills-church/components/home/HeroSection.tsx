@@ -33,7 +33,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
         <div className="absolute inset-0 bg-grid-white" />
       </div>
 
-      <div className="relative z-10 w-full flex flex-col items-center px-6 lg:px-12">
+      <div className="relative z-10 w-full flex flex-col items-center px-4 xs:px-6 lg:px-12">
         {/* Badges */}
         <div
           style={{ animationDelay: "0ms" }}
@@ -42,7 +42,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           {c.scriptureBadge.visible && (
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-church-maroon/30 border border-church-maroon/50 backdrop-blur-sm">
               <Sparkles className="w-3 h-3 text-church-accent" />
-              <span className="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-black text-church-accent">
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.13em] xs:tracking-[0.25em] font-black text-church-accent">
                 {c.scriptureBadge.text}
               </span>
             </span>
@@ -97,7 +97,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
               in via pure CSS (not Framer Motion's initial/animate) so it never sits
               invisible waiting on JS hydration behind an already-painted background.
               Each word carries its own staggered delay for a cascading reveal. */}
-          <h1 className="text-[40px] sm:text-[64px] text-white lg:text-[76px] leading-[1.02] font-bold font-display tracking-tight mb-6">
+          <h1 className="text-[30px] xs:text-[40px] sm:text-[64px] text-white lg:text-[76px] leading-[1.05] sm:leading-[1.02] font-bold font-display tracking-tight mb-6">
             {words.map((word, i) => (
               <span
                 key={`${word}-${i}`}
@@ -123,7 +123,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           <div className="relative max-w-2xl mx-auto">
             <p
               style={{ animationDelay: "620ms" }}
-              className="opacity-0 animate-fade-up text-white/60 text-lg sm:text-xl leading-relaxed font-sans font-medium"
+              className="opacity-0 animate-fade-up text-white/60 text-base xs:text-lg sm:text-xl leading-relaxed font-sans font-medium"
             >
               {c.subtext}
             </p>
@@ -135,7 +135,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
         {/* Animated photo marquee */}
         <div
           style={{ animationDelay: "500ms" }}
-          className="opacity-0 animate-fade-up w-[calc(100%+3rem)] lg:w-[calc(100%+6rem)] -mx-6 lg:-mx-12 mt-12 lg:mt-16"
+          className="opacity-0 animate-fade-up w-[calc(100%+2rem)] xs:w-[calc(100%+3rem)] lg:w-[calc(100%+6rem)] -mx-4 xs:-mx-6 lg:-mx-12 mt-12 lg:mt-16"
         >
           <PhotoMarquee images={c.carouselImages} />
         </div>
@@ -143,7 +143,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
         {/* CTAs */}
         <div
           style={{ animationDelay: "900ms" }}
-          className="opacity-0 animate-fade-up flex flex-col sm:flex-row items-center gap-4 mt-10"
+          className="opacity-0 animate-fade-up flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mt-10"
         >
           <div className="hidden lg:flex flex-col items-end justify-center pr-2 text-white/35 whitespace-nowrap">
             <span
@@ -178,7 +178,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
             href={c.ctaPrimary.href}
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.97 }}
-            className="group relative overflow-hidden px-10 py-4 bg-white text-church-dark font-bold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-2xl shadow-white/10"
+            className="group relative overflow-hidden px-6 sm:px-10 py-3.5 sm:py-4 bg-white text-church-dark font-bold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-2xl shadow-white/10"
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent w-1/2 animate-shine" />
             <span className="relative">{c.ctaPrimary.label}</span>
@@ -191,9 +191,9 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
               backgroundColor: "rgba(255,255,255,0.05)",
             }}
             whileTap={{ scale: 0.97 }}
-            className="group px-10 py-4 bg-transparent border border-white/20 font-bold rounded-xl transition-all flex items-center justify-center gap-3 text-white"
+            className="group px-6 sm:px-10 py-3.5 sm:py-4 bg-transparent border border-white/20 font-bold rounded-xl transition-all flex items-center justify-center gap-3 text-white"
           >
-            <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:scale-110">
+            <div className="w-6 h-6 shrink-0 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:scale-110">
               <Play className="w-3 h-3 fill-white" />
             </div>
             {c.ctaSecondary.label}
@@ -202,7 +202,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
 
         <p
           style={{ animationDelay: "980ms" }}
-          className="opacity-0 animate-fade-up text-[10px] uppercase tracking-[0.25em] text-white/35 font-bold mt-6"
+          className="opacity-0 animate-fade-up text-[10px] uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/35 font-bold mt-6"
         >
           {c.mediaCard.title} — {c.mediaCard.subtitle}
         </p>
@@ -213,7 +213,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           style={{ animationDelay: "1100ms" }}
           className="opacity-0 animate-fade-in hidden sm:flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors mt-10"
         >
-          <span className="text-[10px] uppercase tracking-[0.3em] font-bold">
+          <span className="text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] font-bold">
             Scroll
           </span>
           <ChevronDown className="w-4 h-4 animate-bounce-soft" />

@@ -47,10 +47,10 @@ export default function GroupFinder() {
 
   return (
     /* glassmorphic container — for use on dark backgrounds */
-    <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm p-8 sm:p-10">
+    <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm p-5 xs:p-8 sm:p-10">
 
       {/* header */}
-      <p className="text-[10px] font-black uppercase tracking-[0.35em] text-white/40 mb-1">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] xs:tracking-[0.35em] text-white/40 mb-1">
         Find Your Group
       </p>
       <h3 className="text-xl font-bold tracking-tight text-white mb-8 text-balance">
@@ -121,7 +121,7 @@ export default function GroupFinder() {
                     </span>
                     <div>
                       <p className="font-bold text-white leading-tight">{name}</p>
-                      <p className="text-[11px] uppercase tracking-[0.15em] text-white/35 mt-0.5">{tag}</p>
+                      <p className="text-[11px] uppercase tracking-[0.08em] xs:tracking-[0.15em] text-white/35 mt-0.5">{tag}</p>
                     </div>
                   </div>
                   <a

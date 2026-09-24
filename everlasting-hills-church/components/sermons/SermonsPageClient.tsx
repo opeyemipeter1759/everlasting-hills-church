@@ -13,7 +13,7 @@ export default function SermonsPageClient() {
     <div className="min-h-screen bg-gray-50 dark:bg-[#111]">
       <SermonHero onPlay={play} />
 
-      <div className="max-w-6xl mx-auto px-4 py-10 space-y-6">
+      <div className="max-w-6xl mx-auto px-4 py-8 xs:py-10 space-y-6">
         <LatestSermonSummary />
         <SermonBrowseGrid onPlay={play} />
         <EmailSubscribeCard />
@@ -39,21 +39,21 @@ function EmailSubscribeCard() {
   }
 
   return (
-    <div className="bg-[#87102C] text-white rounded-2xl p-8 text-center space-y-4">
+    <div className="bg-[#87102C] text-white rounded-2xl p-5 xs:p-8 text-center space-y-4">
       <p className="text-sm font-bold uppercase tracking-widest text-white/60">Stay Connected</p>
-      <h3 className="text-2xl font-black">Get new sermons in your inbox</h3>
+      <h3 className="text-xl xs:text-2xl font-black">Get new sermons in your inbox</h3>
       <p className="text-white/70 text-sm max-w-sm mx-auto">No account needed. Just your email — we'll notify you when a new message is published.</p>
       {state === 'done' ? (
         <p className="text-white font-semibold">You're subscribed!</p>
       ) : (
-        <form onSubmit={subscribe} className="flex gap-2 max-w-sm mx-auto">
+        <form onSubmit={subscribe} className="flex flex-col xs:flex-row gap-2 max-w-sm mx-auto">
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="your@email.com"
-            className="flex-1 px-4 py-2.5 rounded-xl text-sm text-gray-900 focus:outline-none"
+            className="w-full xs:flex-1 min-w-0 px-4 py-2.5 rounded-xl text-sm text-gray-900 focus:outline-none"
           />
           <button
             type="submit"

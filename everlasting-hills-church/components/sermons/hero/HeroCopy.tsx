@@ -22,11 +22,11 @@ export default function HeroCopy({
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
       >
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#FFB3C1]">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 text-[10px] font-black uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#FFB3C1]">
           {slide.label}
         </span>
 
-        <h1 className="mt-4 line-clamp-2 text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
+        <h1 className="mt-4 line-clamp-2 text-[28px] xs:text-4xl font-black leading-[1.08] sm:leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-[3.4rem]">
           {slide.title}
         </h1>
 
@@ -45,28 +45,28 @@ export default function HeroCopy({
           {slide.reactions && <span className="text-white/35"> — {slide.reactions}</span>}
         </p>
 
-        <div className="mt-7 flex flex-wrap items-center gap-3">
+        <div className="mt-7 flex flex-wrap items-center gap-2.5 xs:gap-3">
           {onPlay && slide.slug ? (
             <button
               type="button"
               onClick={() => onPlay(slide.slug)}
-              className="inline-flex items-center gap-2.5 rounded-full bg-white px-5 py-3 text-sm font-black text-[#87102C] shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-[1.03] active:scale-95"
+              className="inline-flex items-center gap-2.5 rounded-full bg-white px-4 xs:px-5 py-2.5 xs:py-3 text-sm font-black text-[#87102C] shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-[1.03] active:scale-95"
             >
-              <Play className="h-4 w-4 fill-current" />
+              <Play className="h-4 w-4 shrink-0 fill-current" />
               Play Now
             </button>
           ) : (
             <Link
               href={slide.href}
-              className="inline-flex items-center gap-2.5 rounded-full bg-white px-5 py-3 text-sm font-black text-[#87102C] shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-[1.03] active:scale-95"
+              className="inline-flex items-center gap-2.5 rounded-full bg-white px-4 xs:px-5 py-2.5 xs:py-3 text-sm font-black text-[#87102C] shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:scale-[1.03] active:scale-95"
             >
-              <Play className="h-4 w-4 fill-current" />
+              <Play className="h-4 w-4 shrink-0 fill-current" />
               Play Now
             </Link>
           )}
           <Link
             href="/sermons"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 px-5 py-3 text-sm font-bold text-white/75 transition-colors hover:border-white/35 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 xs:px-5 py-2.5 xs:py-3 text-sm font-bold text-white/75 transition-colors hover:border-white/35 hover:text-white"
           >
             All sermons
             <ArrowUpRight className="h-4 w-4" />

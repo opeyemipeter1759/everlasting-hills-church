@@ -48,9 +48,9 @@ export function StoryPanel({ profile, tenure, role }: StoryPanelProps) {
       />
       <div aria-hidden="true" className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-white/8 blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 p-6 sm:p-7 flex flex-col gap-5">
+      <div className="relative z-10 p-4 xs:p-6 sm:p-7 flex flex-col gap-5">
         <div>
-          <p className="text-white/40 text-xs tracking-[0.2em] uppercase font-semibold mb-1.5">Member Insights</p>
+          <p className="text-white/40 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-1.5">Member Insights</p>
           <h3 id="story-heading" className="text-lg font-bold text-white tracking-tight">
             Your story at EHC
           </h3>

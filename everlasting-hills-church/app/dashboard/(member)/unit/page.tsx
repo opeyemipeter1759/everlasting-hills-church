@@ -28,7 +28,7 @@ export default function UnitIndexPage() {
     return (
       <div className="max-w-4xl mx-auto">
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-1">Unit</h1>
-        <div className="mt-6 bg-white dark:bg-[#1c1c1e] border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-12 text-center">
+        <div className="mt-6 bg-white dark:bg-[#1c1c1e] border border-dashed border-gray-200 dark:border-white/10 rounded-xl p-5 xs:p-8 sm:p-12 text-center">
           <Users2 size={28} className="text-gray-200 dark:text-gray-700 mx-auto mb-3" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             You're not on a unit yet

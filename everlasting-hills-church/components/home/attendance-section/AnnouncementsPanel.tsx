@@ -55,7 +55,7 @@ export default function AnnouncementsPanel({ announcements, loading }: Announcem
         <div className="max-h-[380px] flex-1 space-y-5 overflow-y-auto px-4 py-4 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20">
           {groups.map(([bucket, items]) => (
             <div key={bucket}>
-              <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/35">{bucket}</p>
+              <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-white/35">{bucket}</p>
               <div className="space-y-2.5">
                 {items.map((a, i) => (
                   <motion.div

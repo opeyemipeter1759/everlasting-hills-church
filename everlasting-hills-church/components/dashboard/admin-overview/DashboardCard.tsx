@@ -54,7 +54,7 @@ export default function DashboardCard({
             )}
             <div className="min-w-0">
               {kicker && (
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
                   {kicker}
                 </p>
               )}

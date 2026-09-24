@@ -56,10 +56,10 @@ export default function GivingAccounts() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12 relative">
+      <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 py-8 xs:py-12 relative">
       {/* Toast */}
       {copiedValue && (
-        <div className="fixed right-6 top-6 z-50">
+        <div className="fixed right-4 sm:right-6 top-20 sm:top-6 z-50 max-w-[calc(100vw-2rem)]">
           <div className="flex items-center gap-3 bg-white/95 text-church-dark px-4 py-2 rounded-lg shadow">
             <Check size={16} />
             <div className="text-sm">Copied {copiedValue}</div>
@@ -67,14 +67,14 @@ export default function GivingAccounts() {
         </div>
       )}
 
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-white/5 text-xs uppercase tracking-wide text-white/70">Give — Accounts</div>
           <h2 className="mt-3 text-2xl font-bold">All account numbers</h2>
           <p className="mt-1 text-white/60">Select an account to copy its number. Use the Domiciliary tab for foreign-currency transfers.</p>
         </div>
-        <div className="flex gap-3">
-          <div role="tablist" aria-label="Account types" className="inline-flex gap-2">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <div role="tablist" aria-label="Account types" className="inline-flex flex-wrap gap-2">
             <button onClick={() => setTab("local")} aria-pressed={tab === "local"} className={`px-4 py-2 rounded-full text-sm font-semibold transition ${tab === "local" ? "bg-church-maroon text-white" : "bg-white/5 text-white/70"}`}>Local</button>
             <button onClick={() => setTab("dom")} aria-pressed={tab === "dom"} className={`px-4 py-2 rounded-full text-sm font-semibold transition ${tab === "dom" ? "bg-church-maroon text-white" : "bg-white/5 text-white/70"}`}>Domiciliary</button>
           </div>
@@ -84,7 +84,7 @@ export default function GivingAccounts() {
               <CreditCard size={14} /> Give Online
             </button>
             {donateOpen && (
-              <div id="donate-panel" role="dialog" aria-label="Online giving options" className="absolute right-0 mt-2 w-56 bg-white/5 border border-white/6 rounded-xl p-3 shadow">
+              <div id="donate-panel" role="dialog" aria-label="Online giving options" className="absolute right-0 z-20 mt-2 w-[calc(100vw-3rem)] max-w-[14rem] bg-white/5 border border-white/6 rounded-xl p-3 shadow backdrop-blur-md">
                 <a href="#" onClick={(e) => e.preventDefault()} className="block px-3 py-2 rounded hover:bg-white/6">Stripe (placeholder)</a>
                 <a href="#" onClick={(e) => e.preventDefault()} className="block px-3 py-2 rounded hover:bg-white/6">PayPal (placeholder)</a>
                 <a href="mailto:give@example.com" className="block px-3 py-2 rounded hover:bg-white/6">Contact to Give</a>
@@ -103,16 +103,16 @@ export default function GivingAccounts() {
             <h3 className="text-white font-semibold mb-4">Primary Accounts</h3>
             <div className="grid md:grid-cols-2 gap-4">
               {LOCAL_ACCOUNTS.map((a) => (
-                <article key={a.id} className="group relative overflow-hidden rounded-2xl p-5 bg-gradient-to-b from-white/5 to-white/3 border border-white/6 hover:shadow-lg transition-transform transform hover:-translate-y-1">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
+                <article key={a.id} className="group relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-white/5 to-white/3 border border-white/6 hover:shadow-lg transition-transform transform hover:-translate-y-1">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
                       <BankLogo bank={a.bank} currency={a.currency} />
                       <div>
-                        <p className="text-white/40 text-xs uppercase tracking-[0.18em]">{a.bank}</p>
+                        <p className="text-white/40 text-xs uppercase tracking-[0.09em] xs:tracking-[0.18em] break-words">{a.bank}</p>
                         <p className="text-white font-semibold text-lg mt-2">{a.label}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                       <div className="text-white/50 text-sm">{a.currency}</div>
                       <button onClick={() => { copy(a.number, a.id); }} aria-label={`Copy ${a.number}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-church-accent/10 text-church-accent font-semibold">
                         {copied === a.id ? <Check size={14} /> : <Copy size={14} />} <span className="hidden sm:inline">Copy</span>
@@ -123,7 +123,7 @@ export default function GivingAccounts() {
                     </div>
                   </div>
                   <div className="mt-4">
-                    <p className="text-white font-extrabold text-2xl tracking-tight">{a.number}</p>
+                    <p className="text-white font-extrabold text-xl xs:text-2xl tracking-tight break-all">{a.number}</p>
                   </div>
                 </article>
               ))}
@@ -134,13 +134,13 @@ export default function GivingAccounts() {
             <h3 className="text-white font-semibold mb-4">Other Accounts</h3>
             <div className="space-y-3">
               {OTHER_ACCOUNTS.map((a) => (
-                <article key={a.id} className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/3 border border-white/6 hover:shadow-sm transition">
-                  <div className="flex items-center gap-3">
+                <article key={a.id} className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 p-4 rounded-2xl bg-white/3 border border-white/6 hover:shadow-sm transition">
+                  <div className="flex min-w-0 items-center gap-3">
                     <BankLogo bank={a.bank} currency={a.currency} size={44} />
-                    <div>
-                      <p className="text-white/40 text-xs uppercase tracking-[0.18em]">{a.bank}</p>
+                    <div className="min-w-0">
+                      <p className="text-white/40 text-xs uppercase tracking-[0.09em] xs:tracking-[0.18em] break-words">{a.bank}</p>
                       <p className="text-white font-semibold">{a.label}</p>
-                      <p className="text-white/60 mt-1">{a.number} <span className="ml-2 text-white/50 text-sm">{a.currency}</span></p>
+                      <p className="text-white/60 mt-1 break-all">{a.number} <span className="ml-2 text-white/50 text-sm">{a.currency}</span></p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -161,16 +161,16 @@ export default function GivingAccounts() {
           <h3 className="text-white font-semibold mb-4">Domiciliary Account</h3>
           <div className="grid gap-3 max-w-2xl">
             {DOMICILIARY.map((a) => (
-              <article key={a.id} className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-b from-white/5 to-white/3 border border-white/6 hover:shadow-lg transition-transform transform hover:-translate-y-1">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
+              <article key={a.id} className="relative overflow-hidden rounded-2xl p-4 sm:p-5 bg-gradient-to-b from-white/5 to-white/3 border border-white/6 hover:shadow-lg transition-transform transform hover:-translate-y-1">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
                     <BankLogo bank={a.bank} currency={a.currency} />
                     <div>
-                      <p className="text-white/40 text-xs uppercase tracking-[0.18em]">{a.bank}</p>
+                      <p className="text-white/40 text-xs uppercase tracking-[0.09em] xs:tracking-[0.18em] break-words">{a.bank}</p>
                       <p className="text-white font-semibold text-lg mt-2">{a.label}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <div className="text-white/50 text-sm">{a.currency}</div>
                     <button onClick={() => { copy(a.number, a.id); }} aria-label={`Copy ${a.number}`} className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-church-accent/10 text-church-accent font-semibold">
                       {copied === a.id ? <Check size={14} /> : <Copy size={14} />} <span className="hidden sm:inline">Copy</span>
@@ -181,7 +181,7 @@ export default function GivingAccounts() {
                   </div>
                 </div>
                 <div className="mt-4">
-                  <p className="text-white font-extrabold text-2xl tracking-tight">{a.number}</p>
+                  <p className="text-white font-extrabold text-xl xs:text-2xl tracking-tight break-all">{a.number}</p>
                 </div>
               </article>
             ))}

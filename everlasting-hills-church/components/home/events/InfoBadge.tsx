@@ -15,7 +15,7 @@ export default function InfoBadge({
         <Icon size={13} />
       </span>
       <div className="min-w-0 leading-tight">
-        <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#87102C]/70">{label}</p>
+        <p className="text-[9px] font-bold uppercase tracking-[0.08em] xs:tracking-[0.15em] text-[#87102C]/70">{label}</p>
         <p className="truncate text-xs font-bold text-[#111]">{children}</p>
       </div>
     </div>

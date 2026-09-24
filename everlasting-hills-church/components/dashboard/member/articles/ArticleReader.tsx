@@ -39,7 +39,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-full space-y-4 px-5 py-10">
+      <div className="mx-auto max-w-full space-y-4 px-4 xs:px-5 py-8 xs:py-10">
         <div className="h-4 w-32 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-9 w-3/4 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
         <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
@@ -49,7 +49,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
 
   if (error || !article) {
     return (
-      <div className="mx-auto max-w-full md:px-5 py-16 text-center">
+      <div className="mx-auto max-w-full md:px-5 py-10 xs:py-16 text-center">
         <BookOpen size={22} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
         <p className="font-serif text-lg font-bold text-[#111] dark:text-white">
           This article is not here.
@@ -70,7 +70,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
   const more = (feed?.articles ?? []).filter((a) => a.slug !== slug).slice(0, 3);
 
   return (
-    <article className="mx-auto max-w-2xl px-5 py-6">
+    <article className="mx-auto max-w-2xl px-4 xs:px-5 py-6">
       <div className="flex items-center justify-between gap-3">
         <button
           type="button"
@@ -186,7 +186,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
         >
           <BookOpen size={18} className="flex-shrink-0 text-[#87102C] dark:text-[#FFB3C1]" />
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1]">
               From the reading
             </p>
             <p className="mt-0.5 text-sm font-semibold text-gray-700 dark:text-white/70">
@@ -213,7 +213,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
 
         {more.length > 0 && (
           <>
-            <h2 className="mt-10 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-white/35">
+            <h2 className="mt-10 text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-gray-400 dark:text-white/35">
               Read next
             </h2>
             <ul className="mt-3 divide-y divide-gray-100 dark:divide-white/[0.07]">

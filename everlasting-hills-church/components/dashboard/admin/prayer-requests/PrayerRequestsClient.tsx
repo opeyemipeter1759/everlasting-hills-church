@@ -102,7 +102,7 @@ export default function PrayerRequestsClient() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
+          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
             Administration
           </p>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Prayer Requests</h1>
@@ -178,19 +178,19 @@ export default function PrayerRequestsClient() {
           Couldn&apos;t load prayer requests.
         </p>
       ) : requests.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-5 xs:p-8 sm:p-12 text-center">
           <Heart size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">No prayer requests yet.</p>
           <p className="mt-1 text-sm text-gray-400 dark:text-white/40">Submissions from the public prayer request form will show up here.</p>
         </div>
       ) : filtered.length === 0 && !hasFilters && status === "" ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-5 xs:p-8 sm:p-12 text-center">
           <CheckCircle2 size={26} className="mx-auto mb-3 text-emerald-300 dark:text-emerald-500/40" />
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">All caught up.</p>
           <p className="mt-1 text-sm text-gray-400 dark:text-white/40">Every prayer request has been prayed for — see the &quot;Prayed for&quot; tab.</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-5 xs:p-8 sm:p-12 text-center">
           <Search size={24} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">No requests match your filters.</p>
           <button type="button" onClick={clearFilters} className="mt-2 text-sm font-semibold text-[#87102C] hover:underline dark:text-[#e8768a]">

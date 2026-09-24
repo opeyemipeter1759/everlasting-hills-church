@@ -105,7 +105,7 @@ export default function GetInvolvedPage() {
           className="inline-flex items-center gap-2 text-church-accent/60 hover:text-church-accent transition-all mb-12 group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          <span className="text-[10px] font-black uppercase tracking-[0.4em]">Home</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] xs:tracking-[0.4em]">Home</span>
         </Link>
 
         {/* Header Section */}
@@ -116,7 +116,7 @@ export default function GetInvolvedPage() {
             className="flex items-center gap-3 mb-6"
           >
             <div className="h-px w-12 bg-church-accent" />
-            <span className="text-[10px] uppercase font-black tracking-[0.5em] text-church-accent">Connect with Purpose</span>
+            <span className="text-[10px] uppercase font-black tracking-[0.25em] xs:tracking-[0.5em] text-church-accent">Connect with Purpose</span>
           </motion.div>
           
           <motion.h1 
@@ -209,39 +209,39 @@ export default function GetInvolvedPage() {
           <motion.a 
             href="#giving"
             whileHover={{ scale: 0.99, backgroundColor: "rgba(255,255,255,0.08)" }}
-            className="md:col-span-3 h-20 glass-card bg-white/5 flex items-center justify-between px-8 group cursor-pointer"
+            className="md:col-span-3 h-20 glass-card bg-white/5 flex items-center justify-between gap-3 px-5 sm:px-8 group cursor-pointer"
           >
-            <div className="flex items-center gap-4">
-              <Gift className="text-church-accent" />
-              <span className="font-display font-black text-xl">Online Giving</span>
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <Gift className="shrink-0 text-church-accent" />
+              <span className="font-display font-black text-lg sm:text-xl">Online Giving</span>
             </div>
-            <ChevronRight className="group-hover:translate-x-1 transition-transform text-white/20" />
+            <ChevronRight className="shrink-0 group-hover:translate-x-1 transition-transform text-white/20" />
           </motion.a>
 
           <motion.a 
             href="/testimony"
             whileHover={{ scale: 0.99, backgroundColor: "rgba(255,255,255,0.08)" }}
-            className="md:col-span-3 h-20 glass-card bg-white/5 flex items-center justify-between px-8 group cursor-pointer"
+            className="md:col-span-3 h-20 glass-card bg-white/5 flex items-center justify-between gap-3 px-5 sm:px-8 group cursor-pointer"
           >
-            <div className="flex items-center gap-4">
-              <Sparkles className="text-church-accent" />
-              <span className="font-display font-black text-xl">Share Testimony</span>
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+              <Sparkles className="shrink-0 text-church-accent" />
+              <span className="font-display font-black text-lg sm:text-xl">Share Testimony</span>
             </div>
-            <ChevronRight className="group-hover:translate-x-1 transition-transform text-white/20" />
+            <ChevronRight className="shrink-0 group-hover:translate-x-1 transition-transform text-white/20" />
           </motion.a>
         </div>
 
         {/* Footer CTA */}
         <div className="mt-40 flex flex-col items-center text-center">
           <div className="w-px h-24 bg-gradient-to-b from-church-accent/50 to-transparent mb-12" />
-          <h2 className="text-4xl font-display font-black mb-6 italic text-church-accent">Still have questions?</h2>
+          <h2 className="text-3xl xs:text-4xl font-display font-black mb-6 italic text-church-accent">Still have questions?</h2>
           <p className="text-white/50 max-w-md mb-12 font-bold tracking-tight uppercase text-sm">
             Our welcome team is ready to help you find the perfect community or resource.
           </p>
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="px-12 py-5 bg-white text-church-dark font-black rounded-2xl hover:bg-church-accent transition-all shadow-2xl"
+            className="px-8 sm:px-12 py-4 sm:py-5 bg-white text-church-dark font-black rounded-2xl hover:bg-church-accent transition-all shadow-2xl"
           >
             Contact Support
           </motion.button>
@@ -260,7 +260,7 @@ function BentoCard({ title, desc, icon, href, className, featured = false }: any
       viewport={{ once: true }}
       whileHover={{ y: -5, backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.2)" }}
       className={`
-        glass-card p-10 flex flex-col transition-all duration-500 group relative overflow-hidden shadow-2xl
+        glass-card p-5 xs:p-8 sm:p-10 flex flex-col transition-all duration-500 group relative overflow-hidden shadow-2xl
         ${className}
       `}
     >
@@ -276,7 +276,7 @@ function BentoCard({ title, desc, icon, href, className, featured = false }: any
           {title}
         </h3>
         {desc && (
-          <p className="text-white/40 text-[10px] font-black leading-relaxed transition-colors uppercase tracking-[0.2em]">
+          <p className="text-white/40 text-[10px] font-black leading-relaxed transition-colors uppercase tracking-[0.1em] xs:tracking-[0.2em]">
             {desc}
           </p>
         )}

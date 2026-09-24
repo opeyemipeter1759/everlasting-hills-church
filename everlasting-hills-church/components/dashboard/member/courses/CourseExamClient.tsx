@@ -69,7 +69,7 @@ export default function CourseExamClient({ slug }: { slug: string }) {
     return (
       <div className="max-w-2xl space-y-4">
         <BackLink href={backHref} label={course.title} />
-        <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-16 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-6 xs:p-10 sm:p-16 text-center">
           <GraduationCap size={28} className="text-gray-300 dark:text-gray-700" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             {status === "category-locked"
@@ -92,7 +92,7 @@ export default function CourseExamClient({ slug }: { slug: string }) {
     return (
       <div className="max-w-2xl space-y-4">
         <BackLink href={backHref} label={course.title} />
-        <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-16 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-6 xs:p-10 sm:p-16 text-center">
           <GraduationCap size={28} className="text-gray-300 dark:text-gray-700" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             {!allWatched ? "Watch all the lessons first to unlock this exam." : "Pass every module checkpoint first to unlock this exam."}
@@ -106,7 +106,7 @@ export default function CourseExamClient({ slug }: { slug: string }) {
     return (
       <div className="max-w-2xl space-y-4">
         <BackLink href={backHref} label={course.title} />
-        <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-16 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/10 p-6 xs:p-10 sm:p-16 text-center">
           <GraduationCap size={28} className="text-gray-300 dark:text-gray-700" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             No exam has been set up for this course yet.

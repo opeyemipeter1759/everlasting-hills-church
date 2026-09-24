@@ -20,7 +20,7 @@ export default function PublicPledgeTracker({ token }: { token: string }) {
   if (isError || !pledge) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#fffaf7] px-5 pt-20">
-        <div className="max-w-md rounded-3xl border border-[#ead8cd] bg-white p-8 text-center shadow-xl shadow-[#3f0615]/5">
+        <div className="max-w-md rounded-3xl border border-[#ead8cd] bg-white p-5 xs:p-8 text-center shadow-xl shadow-[#3f0615]/5">
           <LockKeyhole size={36} className="mx-auto text-[#87102C]" aria-hidden="true" />
           <h1 className="mt-4 text-2xl font-black text-[#211317]">Tracking link unavailable</h1>
           <p className="mt-3 text-sm leading-relaxed text-[#6d565b]">
@@ -48,7 +48,7 @@ This private link is invalid, or a newer one has replaced it. Check the most rec
         <section className="mt-4 rounded-[2rem] border border-[#ead8cd] bg-gradient-to-br from-[#fff8e8] to-[#fff0f3] p-5 shadow-2xl shadow-[#3f0615]/10 sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#87102C]">Sound &amp; Media Project</p>
+              <p className="text-xs font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#87102C]">Sound &amp; Media Project</p>
               <h1 className="mt-2 text-2xl font-black tracking-tight text-[#211317] sm:text-3xl">{pledge.fullName}&apos;s pledge</h1>
               <p className="mt-2 text-sm text-[#6d565b]">{pledgePlan(pledge)} · complete by {pledge.completeBy}</p>
             </div>

@@ -134,9 +134,9 @@ export default function GiveClient({
 
       {/* ── Ways to give (light) ── */}
       <section id="ways-to-give" className="scroll-mt-20 bg-white py-20 md:py-28">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8">
+        <div className="mx-auto max-w-6xl px-4 xs:px-5 sm:px-8">
           <ScrollReveal>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#87102C]">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C]">
               {content.sectionLabel}
             </p>
           </ScrollReveal>
@@ -159,7 +159,7 @@ export default function GiveClient({
                       setTab(t.key);
                       setQuery("");
                     }}
-                    className={`rounded-full px-5 py-2 text-xs font-bold uppercase tracking-wider transition-colors ${
+                    className={`rounded-full px-3.5 xs:px-5 py-2 text-xs font-bold uppercase tracking-wide xs:tracking-wider transition-colors ${
                       tab === t.key
                         ? "bg-[#87102C] text-white shadow-sm"
                         : "text-[#8a7e80] hover:text-[#87102C]"
@@ -285,9 +285,9 @@ function WireModal({ acc, onClose }: { acc: Account; onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
         className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-[0_20px_60px_rgba(135,16,44,0.25)]"
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-[#E7CDD3]/70 bg-white px-6 py-4">
+        <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-[#E7CDD3]/70 bg-white px-4 xs:px-6 py-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#87102C]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C]">
               {acc.currency} Wire Instructions
             </p>
             <p className="mt-0.5 text-sm text-[#8a7e80]">For transfers sent from abroad</p>
@@ -305,7 +305,7 @@ function WireModal({ acc, onClose }: { acc: Account; onClose: () => void }) {
         <div className="px-6 py-5">
           {acc.wire!.map((section, si) => (
             <div key={section.title} className={si === 0 ? "" : "mt-5"}>
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a7e80]">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#8a7e80]">
                 {section.title}
               </p>
               <div className="overflow-hidden rounded-xl border border-[#E7CDD3]/70">
@@ -372,7 +372,7 @@ function AccountCard({
 
   return (
     <ScrollReveal delay={delay}>
-      <div className="group h-full w-full rounded-2xl border border-[#E7CDD3]/60 bg-white p-6 text-left shadow-[0_1px_3px_rgba(135,16,44,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.1)]">
+      <div className="group h-full w-full rounded-2xl border border-[#E7CDD3]/60 bg-white p-4 xs:p-6 text-left shadow-[0_1px_3px_rgba(135,16,44,0.04)] transition-all duration-300 hover:-translate-y-1 hover:border-[#E7CDD3] hover:shadow-[0_8px_40px_rgba(135,16,44,0.1)]">
         {/* Icon chip + currency */}
         <div className="mb-5 flex items-start justify-between">
           {showLogo ? (
@@ -404,11 +404,11 @@ function AccountCard({
           aria-label={hasNumber ? `Copy ${acc.purpose} account number ${acc.number}` : undefined}
           className={`w-full text-left ${hasNumber ? "" : "cursor-default"}`}
         >
-          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a7e80]">
+          <p className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] xs:tracking-[0.2em] text-[#8a7e80]">
             {acc.bank} · {acc.purpose}
           </p>
           <p
-            className={`font-mono text-2xl font-bold tracking-tight ${
+            className={`break-all font-mono text-xl xs:text-2xl font-bold tracking-tight ${
               hasNumber ? "text-[#111]" : "italic text-[#b8a8ac]"
             }`}
           >
@@ -418,7 +418,7 @@ function AccountCard({
         </button>
 
         {/* Footer affordances */}
-        <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#E7CDD3]/50 pt-4">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-[#E7CDD3]/50 pt-4">
           {hasNumber ? (
             <button
               type="button"

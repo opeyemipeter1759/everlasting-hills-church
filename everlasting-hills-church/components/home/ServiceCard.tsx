@@ -88,7 +88,7 @@ export default function ServiceCards({
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-[#999] tracking-[0.15em] uppercase font-medium mb-0.5">
+              <p className="text-xs text-[#999] tracking-[0.08em] xs:tracking-[0.15em] uppercase font-medium mb-0.5">
                 {card.label}
               </p>
               <p className="text-[#111] font-semibold text-base">{card.value}</p>

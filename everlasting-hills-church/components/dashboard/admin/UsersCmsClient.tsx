@@ -215,7 +215,7 @@ export default function UsersCmsClient() {
 
       {/* Empty state */}
       {users !== null && filteredUsers !== null && filteredUsers.length === 0 && !creating && (
-        <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-12 text-center">
+        <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-5 xs:p-8 sm:p-12 text-center">
           <UserPlus size={28} className="text-gray-200 dark:text-gray-700 mx-auto mb-3" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             {users.length === 0 ? "No users yet" : "No matches"}
@@ -416,7 +416,7 @@ function CreateUserForm({ assignableRoles, onCancel, onCreated }: CreateFormProp
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-6 space-y-4"
+      className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl p-4 xs:p-6 space-y-4"
     >
       <div className="flex items-center justify-between">
         <h2 className="text-base font-bold text-gray-900 dark:text-white">New user</h2>

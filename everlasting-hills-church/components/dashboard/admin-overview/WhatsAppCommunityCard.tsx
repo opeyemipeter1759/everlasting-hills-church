@@ -67,7 +67,7 @@ export default function WhatsAppCommunityCard() {
           <MessageCircle size={15} className="text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
         </div>
         <div className="flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
             To add
           </p>
           <h3 className="-mt-0.5 text-sm font-bold text-[#111] dark:text-white">WhatsApp community</h3>

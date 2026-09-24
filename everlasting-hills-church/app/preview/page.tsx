@@ -45,7 +45,7 @@ export default async function PreviewPage({
       <div className="bg-[#87102C] text-white text-center text-xs font-semibold py-2 tracking-wide">
         PREVIEW — {data?.title ?? "Draft"} · not published
       </div>
-      <div className="max-w-3xl mx-auto px-5 py-12">
+      <div className="max-w-3xl mx-auto px-4 xs:px-5 py-8 xs:py-12">
         <BlockRenderer blocks={blocks} />
       </div>
     </main>

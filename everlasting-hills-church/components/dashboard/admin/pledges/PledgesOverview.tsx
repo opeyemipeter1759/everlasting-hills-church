@@ -212,7 +212,7 @@ export default function PledgesOverview() {
           </div>
 
           {rows.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500 dark:border-white/10 dark:text-white/50">
+            <p className="rounded-2xl border border-dashed border-gray-200 p-5 xs:p-8 text-center text-sm text-gray-500 dark:border-white/10 dark:text-white/50">
               {data?.pledges.length ? "No pledges match." : "No pledges yet. They appear here as members make them."}
             </p>
           ) : (

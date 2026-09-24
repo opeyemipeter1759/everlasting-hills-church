@@ -52,10 +52,10 @@ export default function EditorialCarousel({
       <div className="pointer-events-none absolute bottom-[-15%] right-[-10%] h-[28rem] w-[28rem] rounded-full bg-church-accent/10 blur-[160px]" />
       <div className="pointer-events-none absolute inset-0 bg-grain opacity-50 mix-blend-overlay" />
 
-      <div className="relative mx-auto max-w-6xl px-5 sm:px-8">
+      <div className="relative mx-auto max-w-6xl px-4 xs:px-5 sm:px-8">
         <ScrollReveal>
           <div className="flex flex-col items-start text-start">
-            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.3em] text-church-accent">
+            <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-church-accent">
               <Sparkles size={13} />
               {eyebrow}
             </span>

@@ -57,10 +57,10 @@ export default async function AboutPage({ searchParams }: { searchParams: { prev
       <PageHero eyebrow={c.eyebrow} title={c.title} accent={c.accent} lead={c.lead} backgroundImage={c.heroImage} />
 
       {/* Story */}
-      <section className="mx-auto max-w-3xl px-5 py-20 sm:px-8">
+      <section className="mx-auto max-w-3xl px-4 xs:px-5 py-12 xs:py-20 sm:px-8">
         <div className="mb-6 flex items-center gap-3">
           <span className="h-px w-10 bg-[#87102C]/40" />
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#87102C]">Our Story</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-[#87102C]">Our Story</p>
         </div>
         <h2 className="mb-8 text-balance text-3xl font-bold tracking-tight text-[#111] sm:text-4xl">{c.story.heading}</h2>
         {c.story.paragraphs.map((para, i) => (
@@ -70,12 +70,12 @@ export default async function AboutPage({ searchParams }: { searchParams: { prev
 
       {/* Vision / Mission / Heart */}
       <section className="bg-brand-blush py-20">
-        <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
+        <div className="mx-auto max-w-[1100px] px-4 xs:px-5 sm:px-8">
           <div className="grid gap-6 md:grid-cols-3">
             {c.cards.map((card, i) => {
               const Icon = CARD_ICONS[i] ?? Heart;
               return (
-                <div key={i} className="rounded-3xl border border-brand-rose/60 bg-white p-8 shadow-[0_1px_20px_rgba(135,16,44,0.05)]">
+                <div key={i} className="rounded-3xl border border-brand-rose/60 bg-white p-5 sm:p-8 shadow-[0_1px_20px_rgba(135,16,44,0.05)]">
                   <span className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#87102C]/10 text-[#87102C]"><Icon size={22} /></span>
                   <h3 className="mb-3 text-xl font-bold text-[#111]">{card.title}</h3>
                   <p className="text-sm leading-relaxed text-[#4a4a4a]">{card.body}</p>
@@ -88,7 +88,7 @@ export default async function AboutPage({ searchParams }: { searchParams: { prev
 
       {/* CTA */}
       <section className="bg-church-dark py-20 text-center text-white">
-        <div className="mx-auto max-w-2xl px-5 sm:px-8">
+        <div className="mx-auto max-w-2xl px-4 xs:px-5 sm:px-8">
           <h2 className="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{c.cta.heading}</h2>
           <p className="mx-auto mt-4 max-w-xl text-white/55">{c.cta.body}</p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

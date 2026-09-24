@@ -165,7 +165,7 @@ export default function NotificationSettingsClient() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: EASE }}
       >
-        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#87102C]/80 dark:text-white/40">
+        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] xs:tracking-[0.28em] text-[#87102C]/80 dark:text-white/40">
           Member Portal
         </p>
         <h1 className="text-3xl font-bold tracking-tight text-[#111] dark:text-white">

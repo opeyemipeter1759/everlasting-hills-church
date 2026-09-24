@@ -71,9 +71,9 @@ export default function CountdownTimer() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#FFB3C1]/12 blur-3xl rounded-full pointer-events-none" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 blur-3xl rounded-full pointer-events-none" />
 
-      <div className="relative z-10 max-w-5xl mx-auto px-5 sm:px-8 text-center text-white">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 xs:px-5 sm:px-8 text-center text-white">
         <ScrollReveal>
-          <p className="text-[#FFB3C1] text-xs tracking-[0.4em] uppercase font-bold mb-3">
+          <p className="text-[#FFB3C1] text-xs tracking-[0.2em] xs:tracking-[0.4em] uppercase font-bold mb-3">
             The wait
           </p>
         </ScrollReveal>
@@ -180,7 +180,7 @@ function CountCard({
           </span>
         )}
       </div>
-      <p className="mt-2 text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#FFB3C1] font-bold text-center">
+      <p className="mt-2 text-[10px] sm:text-xs uppercase tracking-[0.15em] xs:tracking-[0.3em] text-[#FFB3C1] font-bold text-center">
         {label}
       </p>
     </div>

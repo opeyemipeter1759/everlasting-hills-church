@@ -27,7 +27,7 @@ export default function ProjectPledgesCard() {
           <HandCoins size={15} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
         </div>
         <div className="flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1]">
             Sacrificial giving
           </p>
           <h3 className="-mt-0.5 text-sm font-bold text-[#111] dark:text-white">{SOUND_MEDIA.title}</h3>

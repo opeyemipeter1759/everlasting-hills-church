@@ -47,8 +47,8 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
 
   return (
     <section id="rsvp" className="py-24 md:py-32 bg-[#FFF4F6]">
-      <div className="max-w-3xl mx-auto px-5 sm:px-8">
-        <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3 text-center">
+      <div className="max-w-3xl mx-auto px-4 xs:px-5 sm:px-8">
+        <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3 text-center">
           Reserve your seat
         </p>
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#111] leading-[1.1] tracking-tight text-balance text-center">
@@ -59,7 +59,7 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
           It&apos;s free. RSVPing helps us prepare a seat for you.
         </p>
 
-        <div className="mt-12 rounded-3xl bg-white border border-[#E7CDD3]/60 shadow-[0_24px_80px_-30px_rgba(135,16,44,0.2)] p-6 sm:p-10">
+        <div className="mt-12 rounded-3xl bg-white border border-[#E7CDD3]/60 shadow-[0_24px_80px_-30px_rgba(135,16,44,0.2)] p-4 xs:p-6 sm:p-10">
           {success ? (
             <motion.div
               initial={{ scale: 0.94, opacity: 0 }}

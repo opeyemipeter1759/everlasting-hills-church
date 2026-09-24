@@ -30,7 +30,7 @@ export default function CourseCategoryAdminClient({ categoryId }: { categoryId: 
         <Link href="/dashboard/admin/courses" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
           <ArrowLeft size={14} /> Courses
         </Link>
-        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Category not found</p>
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function CourseCategoryAdminClient({ categoryId }: { categoryId: 
     <div className="max-w-6xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
             <Link href="/dashboard/admin/courses" className="hover:underline">Courses</Link>
             {parent && (
               <>
@@ -87,7 +87,7 @@ export default function CourseCategoryAdminClient({ categoryId }: { categoryId: 
       )}
 
       {courses.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-12 text-center">
+        <div className="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 p-5 xs:p-8 sm:p-12 text-center">
           <GraduationCap size={28} className="mx-auto mb-3 text-gray-300 dark:text-gray-700" />
           <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">No courses in this category yet</p>
         </div>

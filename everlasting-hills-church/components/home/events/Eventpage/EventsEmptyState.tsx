@@ -19,7 +19,7 @@ const COPY: Record<EventsTab, { title: string; body: string }> = {
 export default function EventsEmptyState({ tab }: { tab: EventsTab }) {
   const { title, body } = COPY[tab];
   return (
-    <div className="rounded-[28px] border border-[#E7CDD3] bg-[#FFF8F9] px-8 py-20 text-center">
+    <div className="rounded-[28px] border border-[#E7CDD3] bg-[#FFF8F9] px-5 xs:px-8 py-14 xs:py-20 text-center">
       <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white shadow-sm">
         <CalendarX size={22} className="text-[#87102C]" />
       </span>

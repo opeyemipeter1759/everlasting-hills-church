@@ -60,14 +60,14 @@ export default function EventHero({ event }: { event: EventDetail }) {
       />
 
       {/* ── Content ─────────────────────────────────────────────────────── */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-5 sm:px-10 pb-16 sm:pb-24 pt-48">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 xs:px-5 sm:px-10 pb-16 sm:pb-24 pt-48">
 
         {/* Eyebrow */}
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: EASE }}
-          className="text-[10px] font-bold uppercase tracking-[0.35em] text-[#FFB3C1]/70 mb-4"
+          className="text-[10px] font-bold uppercase tracking-[0.18em] xs:tracking-[0.35em] text-[#FFB3C1]/70 mb-4"
         >
           Everlasting Hills Church &nbsp;·&nbsp; Event
         </motion.p>
@@ -154,7 +154,7 @@ export default function EventHero({ event }: { event: EventDetail }) {
         animate={{ opacity: scrolled ? 0 : 1 }}
         transition={{ duration: 0.4 }}
       >
-        <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/30">Scroll</span>
+        <span className="text-[9px] font-bold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/30">Scroll</span>
         <motion.span
           className="w-px h-8 bg-gradient-to-b from-white/30 to-transparent"
           animate={{ scaleY: [1, 0.4, 1], opacity: [0.4, 1, 0.4] }}
@@ -204,7 +204,7 @@ function FallbackCanvas() {
       {/* Brand text watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
         <p
-          className="font-black text-white/[0.04] text-center uppercase tracking-[0.2em] leading-none"
+          className="font-black text-white/[0.04] text-center uppercase tracking-[0.1em] xs:tracking-[0.2em] leading-none"
           style={{ fontSize: "clamp(4rem, 18vw, 14rem)" }}
           aria-hidden="true"
         >

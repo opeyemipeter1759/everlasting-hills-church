@@ -23,7 +23,7 @@ function CourseCardSkeleton() {
 export default function ExploreCoursesSkeleton() {
   return (
     <div className="max-w-6xl space-y-6">
-      <div className="rounded-2xl bg-gray-100 dark:bg-white/5 p-9">
+      <div className="rounded-2xl bg-gray-100 dark:bg-white/5 p-5 xs:p-9">
         <Block className="mb-3 h-3 w-32" />
         <Block className="mb-2 h-8 w-72" />
         <Block className="mb-6 h-4 w-96" />

@@ -219,13 +219,13 @@ function JoinModal({
         className="relative z-10 w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl"
       >
         {/* Header */}
-        <div className="flex items-start justify-between p-6 border-b border-[#E7CDD3]/60">
+        <div className="flex items-start justify-between gap-3 p-4 xs:p-6 border-b border-[#E7CDD3]/60">
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-[#FFE8ED] flex items-center justify-center text-[#87102C] flex-shrink-0">
               <unit.icon size={18} />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#87102C] mb-0.5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-[#87102C] mb-0.5">
                 Join Team
               </p>
               <h3 className="text-[#111] font-bold text-base leading-tight">{unit.name}</h3>
@@ -241,7 +241,7 @@ function JoinModal({
         </div>
 
         {/* Body */}
-        <div className="p-6">
+        <div className="p-4 xs:p-6">
           {submitted ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.96 }}
@@ -359,7 +359,7 @@ function UnitCard({ unit, index, onJoin }: { unit: Unit; index: number; onJoin: 
   const Icon = unit.icon;
   return (
     <ScrollReveal delay={0.05 + (index % 3) * 0.08}>
-      <div className="group bg-white border border-[#E7CDD3]/60 rounded-2xl p-6 hover:shadow-[0_8px_40px_rgba(135,16,44,0.10)] hover:border-[#E7CDD3] hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
+      <div className="group bg-white border border-[#E7CDD3]/60 rounded-2xl p-4 xs:p-6 hover:shadow-[0_8px_40px_rgba(135,16,44,0.10)] hover:border-[#E7CDD3] hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
         {/* Icon */}
         <div className="w-12 h-12 rounded-xl bg-[#FFE8ED] flex items-center justify-center text-[#87102C] flex-shrink-0 mb-4">
           <Icon size={20} />
@@ -412,14 +412,14 @@ export default function ServeTeamPage() {
           }}
         />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-52 pb-44 text-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 xs:px-5 sm:px-8 pt-52 pb-44 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center gap-4"
           >
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] uppercase tracking-[0.3em] text-white/60 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-2 text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/60 backdrop-blur-sm">
               <MapPin size={12} className="text-[#FFB3C1]" />
               Serve the House
             </span>
@@ -459,11 +459,11 @@ export default function ServeTeamPage() {
 
       {/* ── Teams grid ── */}
       <section id="teams" className="py-24 md:py-32 bg-white">
-        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
           {/* Section header */}
           <div className="max-w-2xl mb-16">
             <ScrollReveal>
-              <p className="text-[#87102C] text-sm tracking-[0.2em] uppercase font-semibold mb-3">
+              <p className="text-[#87102C] text-sm tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold mb-3">
                 Service Units
               </p>
             </ScrollReveal>

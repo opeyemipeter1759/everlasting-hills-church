@@ -38,7 +38,7 @@ export default function OfflinePage() {
         aria-hidden
       />
 
-      <div className="relative mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="relative mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center px-4 xs:px-6 py-10 xs:py-16 text-center">
         <div className="mb-8 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl">
           <svg
             viewBox="0 0 24 24"

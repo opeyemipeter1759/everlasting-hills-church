@@ -92,7 +92,7 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`inline-flex items-center gap-2.5 px-2 py-1.5 rounded-full transition-colors duration-200 ${
+        className={`inline-flex items-center gap-1.5 xs:gap-2.5 px-1.5 xs:px-2 py-1.5 rounded-full transition-colors duration-200 ${
           scrolled
             ? "hover:bg-[#87102C]/5 text-[#222]"
             : "hover:bg-white/10 text-white/95"
@@ -111,7 +111,7 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
             {initial}
           </span>
         )}
-        <span className="text-sm font-semibold leading-tight max-w-[140px] truncate">
+        <span className="hidden xs:block text-sm font-semibold leading-tight max-w-[100px] sm:max-w-[140px] truncate">
           {displayName}
         </span>
         <ChevronDown
@@ -123,7 +123,7 @@ export default function NavUserBadge({ scrolled }: { scrolled: boolean }) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-64 rounded-xl bg-white border border-gray-200 shadow-xl overflow-hidden z-50"
+          className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-[16rem] rounded-xl bg-white border border-gray-200 shadow-xl overflow-hidden z-50"
         >
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100">

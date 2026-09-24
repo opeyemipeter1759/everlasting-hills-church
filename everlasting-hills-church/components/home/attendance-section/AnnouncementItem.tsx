@@ -52,7 +52,7 @@ export default function AnnouncementItem({ announcement, isNew }: AnnouncementIt
             {announcement.title}
           </p>
           {isNew && (
-            <span className="mt-0.5 flex-shrink-0 rounded-full bg-[#87102C]/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-[#FFB3C1]">
+            <span className="mt-0.5 flex-shrink-0 rounded-full bg-[#87102C]/25 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#FFB3C1]">
               New
             </span>
           )}

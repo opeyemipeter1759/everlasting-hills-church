@@ -40,8 +40,8 @@ export default function PublicPledgePage() {
           ))}
         </div>
 
-        <div className="mx-auto max-w-6xl px-5 pb-24 pt-16 sm:px-8 sm:pb-32 sm:pt-24">
-          <p className="inline-flex items-center gap-2 rounded-full bg-[#f2b84b] px-3 py-1.5 text-xs font-black uppercase tracking-[0.16em] text-[#3a0612]">
+        <div className="mx-auto max-w-6xl px-4 xs:px-5 pb-24 pt-16 sm:px-8 sm:pb-32 sm:pt-24">
+          <p className="inline-flex items-center gap-2 rounded-full bg-[#f2b84b] px-3 py-1.5 text-xs font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#3a0612]">
             <HandCoins size={15} aria-hidden="true" />
             Sacrificial giving
           </p>
@@ -67,10 +67,10 @@ export default function PublicPledgePage() {
         </div>
       </section>
 
-      <section id="pledge-form" className="relative z-10 mx-auto -mt-14 max-w-6xl px-5 sm:-mt-20 sm:px-8">
+      <section id="pledge-form" className="relative z-10 mx-auto -mt-14 max-w-6xl px-4 xs:px-5 sm:-mt-20 sm:px-8">
         <div className="grid overflow-hidden rounded-[2rem] border border-[#ead8cd] bg-white shadow-2xl shadow-[#3f0615]/10 lg:grid-cols-[0.82fr_1.18fr]">
-          <div className="bg-[#fff3e1] p-6 sm:p-9 lg:p-12">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#87102C]">Sound &amp; Media Project</p>
+          <div className="bg-[#fff3e1] p-4 xs:p-6 sm:p-9 lg:p-12">
+            <p className="text-xs font-black uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#87102C]">Sound &amp; Media Project</p>
             <h2 className="mt-3 text-3xl font-black tracking-tight text-[#261015]">Financial Pledge Form</h2>
             <p className="mt-5 text-sm leading-7 text-[#6d565b]">{PLEDGE_INTRO}</p>
 
@@ -86,11 +86,11 @@ export default function PublicPledgePage() {
 
           <div className="min-w-0 bg-white">
             {saved ? (
-              <div role="status" className="flex min-h-[620px] flex-col items-center justify-center p-7 text-center sm:p-12">
+              <div role="status" className="flex min-h-[620px] flex-col items-center justify-center p-4 xs:p-7 text-center sm:p-12">
                 <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
                   <CheckCircle2 size={42} aria-hidden="true" />
                 </span>
-                <p className="mt-6 text-xs font-black uppercase tracking-[0.16em] text-[#87102C]">Pledge received</p>
+                <p className="mt-6 text-xs font-black uppercase tracking-[0.08em] xs:tracking-[0.16em] text-[#87102C]">Pledge received</p>
                 <h2 className="mt-2 text-3xl font-black tracking-tight text-[#211317]">Thank you, {saved.fullName.split(/\s+/)[0]}.</h2>
                 <p className="mt-4 text-4xl font-black tabular-nums text-[#87102C]">{formatNaira(saved.amount)}</p>
                 <p className="mt-3 max-w-md text-sm leading-relaxed text-[#6d565b]">

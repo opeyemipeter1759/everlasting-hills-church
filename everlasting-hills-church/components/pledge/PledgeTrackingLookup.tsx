@@ -35,7 +35,7 @@ export default function PledgeTrackingLookup() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#fffaf7] px-5 py-28 text-[#211317]">
-      <div className="w-full max-w-md rounded-[2rem] border border-[#ead8cd] bg-white p-7 shadow-2xl shadow-[#3f0615]/10 sm:p-9">
+      <div className="w-full max-w-md rounded-[2rem] border border-[#ead8cd] bg-white p-4 xs:p-7 shadow-2xl shadow-[#3f0615]/10 sm:p-9">
         {sent ? (
           <div role="status" className="text-center">
             <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">

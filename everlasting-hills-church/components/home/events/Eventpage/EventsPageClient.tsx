@@ -28,7 +28,7 @@ export default function EventsPageClient({ ongoing, upcoming, past, hero }: Even
     <main className="min-h-screen bg-white">
       <EventsHero {...hero} />
 
-      <div className="mx-auto max-w-6xl px-5 py-14 sm:px-8 md:py-20">
+      <div className="mx-auto max-w-6xl px-4 xs:px-5 py-10 xs:py-14 sm:px-8 md:py-20">
         <div className="mb-10 flex justify-start">
           <EventsTabBar
             active={tab}

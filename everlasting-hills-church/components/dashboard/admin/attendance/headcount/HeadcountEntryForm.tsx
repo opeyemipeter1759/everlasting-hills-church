@@ -100,7 +100,7 @@ export default function HeadcountEntryForm({
 
   if (!canRecord) {
     return (
-      <div className="rounded-xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] p-6 text-center">
+      <div className="rounded-xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/[0.02] p-4 xs:p-6 text-center">
         <Users size={22} className="mx-auto mb-2 text-gray-300 dark:text-white/20" />
         <p className="text-sm font-semibold text-gray-700 dark:text-white/80">Not open for counting yet</p>
         <p className="mt-1 text-xs text-gray-400 dark:text-white/40">

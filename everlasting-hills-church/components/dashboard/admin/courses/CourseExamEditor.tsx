@@ -44,7 +44,7 @@ export default function CourseExamEditor({
       </div>
 
       {questions.length === 0 && (
-        <p className="rounded-xl border border-dashed border-gray-200 dark:border-white/10 p-6 text-center text-xs text-gray-400 dark:text-white/40">
+        <p className="rounded-xl border border-dashed border-gray-200 dark:border-white/10 p-4 xs:p-6 text-center text-xs text-gray-400 dark:text-white/40">
           No exam questions yet — members can enroll and complete this course without a test.
         </p>
       )}
