@@ -16,6 +16,7 @@ import { ProfileCompletionToast } from "./ProfileCompletionToast";
 import TodayReadingCard from "../reading-plan/TodayReadingCard";
 import DailyScriptureCard from "./DailyScriptureCard";
 import { PledgeAppeal } from "./PledgeAppeal";
+import LatestSermonSummary from "@/components/sermon-digest/LatestSermonSummary";
 
 const DEFAULT_STREAK: StreakState = {
   level: 1,
@@ -121,8 +122,10 @@ export default function MemberHome(props: MemberHomePropsOptional) {
       {featuredSermon && <FeaturedSermonCard sermon={featuredSermon} />}
          <div className="grid grid-cols-1 gap-5">
           <ContinueListeningCard listenHistory={listenHistory} />
-          <GatheringsPanel />
+                  <LatestSermonSummary />
+          
         </div>
+          <GatheringsPanel />
     </div>
   );
 }
