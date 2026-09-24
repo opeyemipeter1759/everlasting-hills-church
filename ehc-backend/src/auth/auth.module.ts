@@ -6,6 +6,8 @@ import { AuthAccountController } from './auth-account.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { PageAccessGuard } from './guards/page-access.guard';
+import { PageAccessService } from './page-access/page-access.service';
 import { EffectiveRolesService } from './effective-roles.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { OnlineAttendanceModule } from '../online-attendance/online-attendance.module';
@@ -30,9 +32,14 @@ import { AuthMeService } from './services/auth-me.service';
     AuthSessionService,
     AuthPasswordService,
     AuthMeService,
+    PageAccessService,
+    // Order matters: global guards run in registration order. PageAccessGuard
+    // needs the signed-in user from JwtAuthGuard, and RolesGuard must see the
+    // page-permission elevation PageAccessGuard applies.
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: PageAccessGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
-  exports: [EffectiveRolesService],
+  exports: [EffectiveRolesService, PageAccessService],
 })
 export class AuthModule {}

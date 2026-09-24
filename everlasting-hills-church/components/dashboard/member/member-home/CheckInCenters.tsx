@@ -75,7 +75,7 @@ export function CheckedInCenter() {
       </motion.div>
       <div>
         <p className="text-white text-xl font-bold tracking-tight">You&apos;re in.</p>
-        <p className="text-white/55 text-xs mt-1.5">God bless you — see you in service.</p>
+        <p className="text-white/55 text-xs mt-1.5">You're in the right place!.</p>
       </div>
     </div>
   );

@@ -7,6 +7,16 @@ import { FollowUpServiceReportsController } from './follow-up-service-reports.co
 import { FollowUpController } from './follow-up.controller';
 import { FollowUpMemberStatusController } from './follow-up-member-status.controller';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
+import { FollowUpAssignableService } from './services/follow-up-assignable.service';
+import { FollowUpMasterListService } from './services/follow-up-master-list.service';
+import { FollowUpPersonService } from './services/follow-up-person.service';
+import { FollowUpStatusService } from './services/follow-up-status.service';
+import { FollowUpStatusPendingService } from './services/follow-up-status-pending.service';
+import { FollowUpStatusBulkService } from './services/follow-up-status-bulk.service';
+import { FollowUpCountsService } from './services/follow-up-counts.service';
+import { FollowUpRollService } from './services/follow-up-roll.service';
+import { FollowUpNotesService } from './services/follow-up-notes.service';
+import { FollowUpWorkloadService } from './services/follow-up-workload.service';
 import { FollowUpAuditService } from './services/follow-up-audit.service';
 import { FollowUpEntryMapperService } from './services/follow-up-entry-mapper.service';
 import { FollowUpAbsenteeDetailService } from './services/follow-up-absentee-detail.service';
@@ -37,6 +47,16 @@ import { FollowUpRemindersService } from './services/follow-up-reminders.service
   controllers: [FollowUpServiceReportsController, FollowUpController, FollowUpMemberStatusController],
   providers: [
     FollowUpAuthService,
+    FollowUpAssignableService,
+    FollowUpMasterListService,
+    FollowUpPersonService,
+    FollowUpStatusService,
+    FollowUpStatusPendingService,
+    FollowUpStatusBulkService,
+    FollowUpCountsService,
+    FollowUpRollService,
+    FollowUpNotesService,
+    FollowUpWorkloadService,
     FollowUpAuditService,
     FollowUpEntryMapperService,
     FollowUpAbsenteeDetailService,

@@ -15,6 +15,7 @@ import {
   type WritableReportStatus,
 } from "@/lib/api/status-reports";
 import { showToast } from "@/components/ui/toast/toast";
+import { Select } from "@/components/ui/select";
 import type { ApiError } from "@/lib/api/axios";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import ReportStatusBadge from "./ReportStatusBadge";
@@ -200,15 +201,13 @@ export default function ReportEditorPage({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1 space-y-3">
               {mode === "create" && targets.length > 1 && (
-                <select
-                  value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
-                  className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 text-xs font-bold text-gray-600 dark:text-white/70 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20"
-                >
-                  {targets.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
+                <Select
+                  aria-label="What this report is for"
+                  value={targetId ?? ""}
+                  onChange={setTargetId}
+                  className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 text-xs font-bold text-gray-600 dark:text-white/70"
+                  options={targets.map((t) => ({ value: t.id, label: t.name }))}
+                />
               )}
 
               {editing ? (

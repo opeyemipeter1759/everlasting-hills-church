@@ -44,11 +44,6 @@ export interface AttendancePoint {
   firstTimers?: number;
 }
 
-export interface FunnelStage {
-  label: string;
-  value: number;
-}
-
 export interface MinistryUnit {
   name: string;
   members: number;
@@ -87,7 +82,6 @@ export interface AdminDashboardData {
     membersNeedingFollowUp: number;
   };
   attendanceTrend: AttendancePoint[];
-  firstTimerFunnel: FunnelStage[];
   pastoralCare: { prayerRequests: number; openFollowUps: number; atRiskMembers: number };
   celebrations: {
     birthdaysToday: number;

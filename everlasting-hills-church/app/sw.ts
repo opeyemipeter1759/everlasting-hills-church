@@ -76,11 +76,27 @@ const runtimeCaching: RuntimeCaching[] = [
     handler: new NetworkOnly(),
   },
 
-  // Every mutation. A cached POST/PATCH/DELETE response is never useful and a
-  // replayed one is dangerous.
+  // Every mutation to our own origin. Always straight to the network — a cached
+  // POST/PATCH/DELETE response is never useful and a replayed one is dangerous.
+  //
+  // A successful change also drops the member API cache. Reads below are
+  // stale-while-revalidate, so without this the refetch the page makes right
+  // after a delete or edit was answered from the cache with the pre-change
+  // data: the deleted sermon stayed in the list until a manual reload. The
+  // cache simply refills from the next reads.
+  //
+  // Cross-origin mutations (a sermon recording PUT straight to storage) are
+  // left alone entirely — nothing to do here, and a 1 GB upload shouldn't be
+  // piped through the worker.
   {
-    matcher: ({ request }) => request.method !== "GET",
-    handler: new NetworkOnly(),
+    matcher: ({ request, url }) => request.method !== "GET" && url.origin === self.location.origin,
+    handler: async ({ request }) => {
+      const response = await fetch(request);
+      if (response.ok && /^\/api\//.test(new URL(request.url).pathname)) {
+        await caches.delete(MEMBER_API_CACHE);
+      }
+      return response;
+    },
   },
 
   // ── Stale-while-revalidate, short TTL ─────────────────────────────────────

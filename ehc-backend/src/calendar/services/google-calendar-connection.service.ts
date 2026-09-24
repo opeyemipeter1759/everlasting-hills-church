@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { GoogleTokenCipherService } from './google-token-cipher.service';
+import { hasCalendarScope } from './google-calendar-oauth.service';
 
 export interface GoogleCalendarTokens {
   accessToken: string;
@@ -35,12 +36,13 @@ export class GoogleCalendarConnectionService {
     });
   }
 
-  /** Every currently-connected member, for the periodic sync job. */
+  /** Every currently-connected member with Calendar access, for the periodic sync job. */
   async listAllActive() {
-    return this.prisma.googleCalendarConnection.findMany({
+    const rows = await this.prisma.googleCalendarConnection.findMany({
       where: { revokedAt: null },
-      select: { userId: true, tenantId: true },
+      select: { userId: true, tenantId: true, scope: true },
     });
+    return rows.filter((r) => hasCalendarScope(r.scope)).map(({ userId, tenantId }) => ({ userId, tenantId }));
   }
 
   async setCalendarId(connectionId: string, googleCalendarId: string): Promise<void> {
@@ -52,8 +54,11 @@ export class GoogleCalendarConnectionService {
 
   async status(userId: string, tenantId: string): Promise<GoogleCalendarConnectionStatus> {
     const row = await this.findActive(userId, tenantId);
+    // A connection made with the Calendar permission unticked can't do
+    // anything, so it reads as not connected and the member is offered the
+    // Connect button again rather than an error on every load.
     return {
-      connected: Boolean(row),
+      connected: Boolean(row) && hasCalendarScope(row?.scope),
       googleEmail: row?.googleEmail ?? null,
       connectedAt: row?.connectedAt.toISOString() ?? null,
     };
@@ -133,9 +138,15 @@ export class GoogleCalendarConnectionService {
   async revoke(userId: string, tenantId: string): Promise<void> {
     const existing = await this.findActive(userId, tenantId);
     if (!existing) throw new NotFoundException('No Google Calendar connection to disconnect');
-    await this.prisma.googleCalendarConnection.update({
-      where: { id: existing.id },
-      data: { revokedAt: new Date() },
-    });
+    // Disconnecting deletes what we hold for this member, as the privacy
+    // policy promises: the tokens are wiped (the columns are required, so
+    // they're blanked rather than nulled) and the event mappings go with them.
+    await this.prisma.$transaction([
+      this.prisma.googleCalendarSyncedEvent.deleteMany({ where: { connectionId: existing.id } }),
+      this.prisma.googleCalendarConnection.update({
+        where: { id: existing.id },
+        data: { revokedAt: new Date(), accessToken: '', refreshToken: '', googleEmail: null },
+      }),
+    ]);
   }
 }

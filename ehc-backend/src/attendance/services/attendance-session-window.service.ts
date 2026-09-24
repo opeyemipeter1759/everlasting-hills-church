@@ -161,7 +161,8 @@ export class AttendanceSessionWindowService {
       },
     });
 
-    if (existing) {
+    // An ABSENT record doesn't count — the member can still check in while open.
+    if (existing?.present) {
       return { canMark: false as const, reason: 'ALREADY_MARKED' as const };
     }
 

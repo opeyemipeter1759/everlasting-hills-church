@@ -1,6 +1,8 @@
 import LegalLayout from "@/components/marketing/LegalLayout";
 import LegalSections, { type LegalContent } from "@/components/marketing/LegalSections";
+import GoogleDataPolicy from "@/components/marketing/GoogleDataPolicy";
 import { getStructuredContent } from "@/lib/cms-page";
+import { getSiteConfig } from "@/lib/site-config";
 
 export const metadata = {
   title: "Privacy Policy — Everlasting Hills Church",
@@ -12,7 +14,7 @@ const FALLBACK: LegalContent = {
   eyebrow: "Legal",
   title: "Privacy",
   accent: "Policy",
-  updated: "18 June 2026",
+  updated: "23 September 2026",
   intro: "Everlasting Hills Church values your trust. This policy explains what information we collect, why we collect it, and how we keep it safe.",
   sections: [
     { heading: "Information we collect", body: "- Contact details you provide through our forms (name, email, phone).\n- Membership and attendance records when you join or check in.\n- Prayer requests, testimonies, and messages you choose to share.\n- Basic technical data such as device and browser information." },
@@ -28,10 +30,15 @@ function isLegal(c: unknown): c is LegalContent {
 }
 
 export default async function PrivacyPage({ searchParams }: { searchParams: { preview?: string } }) {
-  const c = await getStructuredContent("privacy", { preview: searchParams.preview, fallback: FALLBACK, valid: isLegal });
+  const [c, site] = await Promise.all([
+    getStructuredContent("privacy", { preview: searchParams.preview, fallback: FALLBACK, valid: isLegal }),
+    getSiteConfig(),
+  ]);
   return (
     <LegalLayout eyebrow={c.eyebrow} title={c.title} accent={c.accent} updated={c.updated}>
       <LegalSections content={c} />
+      {/* Outside the CMS content on purpose — see GoogleDataPolicy. */}
+      <GoogleDataPolicy contactEmail={site.contactEmail} />
     </LegalLayout>
   );
 }

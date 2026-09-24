@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Check, Copy, Download, Languages, Loader2, Share2 } from "lucide-react";
 import { useDailyScripture, useScriptureVersions } from "@/lib/api/daily-scripture";
+import { Select } from "@/components/ui/select";
 import { HILLS_CONFESSION } from "@/lib/hills-confession";
 import {
   createScriptureImage,
@@ -203,26 +204,23 @@ export default function DailyScriptureCard() {
             The scripture stays the same; the wording, image and copied text use the version you choose.
           </span>
           <span className="relative mt-2 block">
-            <select
+            <Select
               aria-label="Bible version for this status"
               value={translationCode || data.translationCode}
-              onChange={(event) => {
+              onChange={(code) => {
                 setMessage("");
                 setCopied(false);
-                setTranslationCode(event.target.value);
+                setTranslationCode(code);
               }}
               disabled={!translations?.length}
-              className="min-h-11 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-10 text-sm font-semibold text-gray-800 outline-none transition focus:border-[#87102C] focus:ring-2 focus:ring-[#87102C]/15 disabled:opacity-60 dark:border-white/15 dark:bg-[#171719] dark:text-white"
-            >
-              {!translations?.some((translation) => translation.code === data.translationCode) && (
-                <option value={data.translationCode}>{data.translationName}</option>
-              )}
-              {translations?.map((translation) => (
-                <option key={translation.code} value={translation.code}>
-                  {translation.code} — {translation.name}
-                </option>
-              ))}
-            </select>
+              className="min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-[#87102C] dark:border-white/15 dark:bg-[#171719] dark:text-white"
+              options={[
+                ...(translations?.some((t) => t.code === data.translationCode)
+                  ? []
+                  : [{ value: data.translationCode, label: data.translationName }]),
+                ...(translations ?? []).map((t) => ({ value: t.code, label: `${t.code} — ${t.name}` })),
+              ]}
+            />
             <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
               {translationChanging || isFetching ? <Loader2 size={15} className="animate-spin" /> : "⌄"}
             </span>

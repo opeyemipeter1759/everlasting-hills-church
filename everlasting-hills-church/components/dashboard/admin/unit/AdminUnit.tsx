@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Network, Plus } from "lucide-react";
 import { getFrontendSessionUser } from "@/lib/auth/frontend-session";
-import { isAdminPlus, type Role } from "@/types";
+import type { Role } from "@/types";
 import UnitList from "./UnitList";
 import CreateUnitForm from "./CreateUnitForm";
 import UnitDetailPanel from "./UnitDetailPanel";
@@ -36,8 +36,12 @@ export default function AdminUnit() {
     setRole((getFrontendSessionUser()?.role as Role) ?? "ADMIN");
   }, []);
 
-  const canCreateUnit = isAdminPlus(role);
-  const canPromoteLead = isAdminPlus(role);
+  // Reaching this page at all means the person is allowed on it — by role or
+  // by a page permission — and a page permission grants everything on the
+  // page (the API elevates them for its endpoints), so don't hide the
+  // management actions behind the admin role here.
+  const canCreateUnit = true;
+  const canPromoteLead = true;
 
   const unitList = units ?? [];
 

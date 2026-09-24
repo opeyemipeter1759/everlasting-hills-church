@@ -77,14 +77,20 @@ export class VisitorsController {
     return this.visitorsService.getStats();
   }
 
+  // Reading and correcting one first-timer's record is follow-up work, not
+  // administration: unit leads and heads of department do it from the Master
+  // List. HOD is listed explicitly because the guard treats it as lateral, so
+  // it never inherits UNIT_LEAD routes. Deleting a record stays ADMIN+.
   @Get(':id')
-  @ApiOperation({ summary: 'Get visitor by id' })
+  @Roles(Role.UNIT_LEAD, Role.HOD)
+  @ApiOperation({ summary: 'Get visitor by id (UNIT_LEAD/HOD+)' })
   async getById(@Param('id') id: string) {
     return this.visitorsService.getById(id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Edit a visitor record (e.g. correct a name or phone number)' })
+  @Roles(Role.UNIT_LEAD, Role.HOD)
+  @ApiOperation({ summary: 'Edit a visitor record, e.g. correct a name or phone number (UNIT_LEAD/HOD+)' })
   @ApiBody({ type: UpdateVisitorDto })
   async update(@Param('id') id: string, @Body() body: UpdateVisitorDto) {
     return this.visitorsService.update(id, body);

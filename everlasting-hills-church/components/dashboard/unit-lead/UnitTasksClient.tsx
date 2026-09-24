@@ -6,6 +6,7 @@ import { useUnitLeadContext } from "./useUnitLeadContext";
 import { useMe, useUnitTasks, useCreateUnitTask, useUpdateUnitTask, useDeleteUnitTask } from "@/lib/api";
 import type { UnitTaskStatus } from "@/types";
 import UnitLeadTabs from "./UnitLeadTabs";
+import { Select } from "@/components/ui/select";
 import SubmitButton from "@/components/ui/form/SubmitButton";
 import TaskCommentThread from "@/components/dashboard/units/TaskCommentThread";
 import TaskReportsPanel from "@/components/dashboard/units/TaskReportsPanel";
@@ -90,18 +91,19 @@ export default function UnitTasksClient({ unitId }: { unitId: string }) {
               maxLength={140}
               className="sm:col-span-2 text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-gray-700 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 focus:border-[#87102C]/40 transition-all"
             />
-            <select
+            <Select
+              aria-label="Who the task is for"
               value={assignedToId}
-              onChange={(e) => setAssignedToId(e.target.value)}
-              className="text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-gray-700 dark:text-gray-200 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20"
-            >
-              <option value="">Whole unit</option>
-              {unit?.UnitMember.map((m) => (
-                <option key={m.memberId} value={m.memberId}>
-                  {m.Member.firstName} {m.Member.lastName}
-                </option>
-              ))}
-            </select>
+              onChange={setAssignedToId}
+              className="text-sm rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1c1c1e] text-gray-700 dark:text-gray-200 px-2 py-2"
+              options={[
+                { value: "", label: "Whole unit" },
+                ...(unit?.UnitMember ?? []).map((m) => ({
+                  value: m.memberId,
+                  label: `${m.Member.firstName} ${m.Member.lastName}`,
+                })),
+              ]}
+            />
             <div className="flex items-center gap-2">
               <input
                 type="date"

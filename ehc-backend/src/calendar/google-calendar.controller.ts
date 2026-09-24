@@ -7,8 +7,11 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { GoogleCalendarConnectionService } from './services/google-calendar-connection.service';
 import { GoogleCalendarEventsService } from './services/google-calendar-events.service';
-import { GoogleCalendarOAuthService } from './services/google-calendar-oauth.service';
+import { GoogleCalendarOAuthService, hasCalendarScope } from './services/google-calendar-oauth.service';
 import { GoogleCalendarSyncService } from './services/google-calendar-sync.service';
+
+/** Where the OAuth callback sends the browser back to, as ?google=<result>. */
+type CallbackResult = 'connected' | 'error' | 'missing_scope';
 
 /**
  * Connects a member's personal Google Calendar, both directions: reads their
@@ -64,7 +67,7 @@ export class GoogleCalendarController {
     // to — a bare failure at this point (missing code/state, or a state that
     // fails verification) has nowhere safe to send the browser but the
     // server's own fallback default.
-    const fallbackRedirect = (status: 'connected' | 'error') =>
+    const fallbackRedirect = (status: CallbackResult) =>
       res.redirect(`${this.oauth.resolveReturnOrigin(undefined)}/dashboard/calendar?google=${status}`);
 
     if (error || !code || !state) {
@@ -77,7 +80,7 @@ export class GoogleCalendarController {
     } catch {
       return fallbackRedirect('error');
     }
-    const redirect = (status: 'connected' | 'error') => res.redirect(`${origin}/dashboard/calendar?google=${status}`);
+    const redirect = (status: CallbackResult) => res.redirect(`${origin}/dashboard/calendar?google=${status}`);
 
     try {
       const client = this.oauth.createClient();
@@ -85,6 +88,16 @@ export class GoogleCalendarController {
 
       if (!tokens.access_token || !tokens.expiry_date) {
         return redirect('error');
+      }
+
+      // Google lets the member untick the Calendar permission and still
+      // "succeed". Saving that would look connected but fail on every read,
+      // so hand the grant back and ask them to try again with it ticked.
+      if (!hasCalendarScope(tokens.scope)) {
+        await client
+          .revokeToken(tokens.access_token)
+          .catch((err: Error) => this.logger.warn(`Revoking a calendar-less grant failed: ${err.message}`));
+        return redirect('missing_scope');
       }
 
       client.setCredentials(tokens);
@@ -132,6 +145,17 @@ export class GoogleCalendarController {
   async disconnect(@CurrentUser() actor: AuthUser) {
     if (!actor.profileId || !actor.tenantId) {
       throw new ServiceUnavailableException('No profile is linked to this account');
+    }
+    // Withdraw the grant at Google too, so disconnecting here is the same as
+    // removing the app from the member's Google Account. Best effort: a token
+    // Google has already invalidated must not stop the local wipe below.
+    const tokens = await this.connections.getDecryptedTokens(actor.profileId, actor.tenantId);
+    const token = tokens?.refreshToken || tokens?.accessToken;
+    if (token && this.oauth.isConfigured) {
+      await this.oauth
+        .createClient()
+        .revokeToken(token)
+        .catch((err: Error) => this.logger.warn(`Google token revoke failed: ${err.message}`));
     }
     await this.connections.revoke(actor.profileId, actor.tenantId);
     return { disconnected: true };

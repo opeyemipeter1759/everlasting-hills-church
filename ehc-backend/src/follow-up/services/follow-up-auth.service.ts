@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
+import { findFollowUpUnit } from '../follow-up-unit.util';
 import { ADMIN_PLUS } from '../follow-up.types';
 
 /** Authorization + unit-resolution helpers shared across the Follow-Up pipeline. */
@@ -76,6 +77,13 @@ export class FollowUpAuthService {
     return !!membership;
   }
 
+  /** Same gate as hasUnitAccess, for routes that must refuse rather than report. */
+  async requireAccess(actor: AuthUser): Promise<void> {
+    if (!(await this.hasUnitAccess(actor))) {
+      throw new ForbiddenException('Only the follow-up team can see this');
+    }
+  }
+
   /** Public wrapper for the nav link's visibility check on the frontend. */
   async checkAccess(actor: AuthUser): Promise<{ hasAccess: boolean }> {
     return { hasAccess: await this.hasUnitAccess(actor) };
@@ -103,11 +111,8 @@ export class FollowUpAuthService {
     }
 
     if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) {
-      const followUpUnit = await this.prisma.unit.findFirst({
-        where: { tenantId: this.tenantId, name: 'Follow-Up' },
-        select: { id: true, name: true },
-      });
-      if (followUpUnit) return followUpUnit;
+      const followUpUnit = await findFollowUpUnit(this.prisma, this.tenantId);
+      if (followUpUnit) return { id: followUpUnit.id, name: followUpUnit.name };
     }
 
     // A department head leads every unit in their department. Prefer Follow-Up
@@ -118,11 +123,11 @@ export class FollowUpAuthService {
         orderBy: [{ name: 'asc' }],
         select: { id: true, name: true },
       });
-      const followUpUnit = await this.prisma.unit.findFirst({
-        where: { tenantId: this.tenantId, name: 'Follow-Up', departmentId: { in: actor.hodOf } },
-        select: { id: true, name: true },
+      const followUpUnit = await findFollowUpUnit(this.prisma, this.tenantId, {
+        departmentId: { in: actor.hodOf },
       });
-      if (followUpUnit ?? unit) return followUpUnit ?? unit;
+      const preferred = followUpUnit ? { id: followUpUnit.id, name: followUpUnit.name } : unit;
+      if (preferred) return preferred;
     }
 
     return null;
@@ -138,10 +143,7 @@ export class FollowUpAuthService {
    * legitimately about "your own team", whichever one that is.
    */
   async resolveReportsUnit(actor: AuthUser): Promise<{ id: string; name: string } | null> {
-    const followUpUnit = await this.prisma.unit.findFirst({
-      where: { tenantId: this.tenantId, name: 'Follow-Up' },
-      select: { id: true, name: true, departmentId: true },
-    });
+    const followUpUnit = await findFollowUpUnit(this.prisma, this.tenantId);
     if (!followUpUnit) return null;
 
     const { departmentId, ...unit } = followUpUnit;

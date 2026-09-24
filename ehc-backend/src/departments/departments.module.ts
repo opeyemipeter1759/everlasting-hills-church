@@ -12,6 +12,7 @@ import { DepartmentsCrudService } from './services/departments-crud.service';
 import { DepartmentHeadService } from './services/department-head.service';
 import { DepartmentsUnitsService } from './services/departments-units.service';
 import { DepartmentsMineService } from './services/departments-mine.service';
+import { DepartmentsMyUnitsService } from './services/departments-my-units.service';
 import { DepartmentsEngagementService } from './services/departments-engagement.service';
 
 @Module({
@@ -29,6 +30,7 @@ import { DepartmentsEngagementService } from './services/departments-engagement.
     DepartmentHeadService,
     DepartmentsUnitsService,
     DepartmentsMineService,
+    DepartmentsMyUnitsService,
     DepartmentsEngagementService,
   ],
 })

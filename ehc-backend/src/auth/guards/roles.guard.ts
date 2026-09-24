@@ -8,7 +8,7 @@ import type { AuthUser } from '../types/auth-user';
  * Role hierarchy. Higher number subsumes everything below.
  * VISITOR exists in the Prisma enum but is treated as level 0 (no dashboard access).
  */
-const ROLE_LEVEL: Record<Role, number> = {
+export const ROLE_LEVEL: Record<Role, number> = {
   VISITOR: 0,
   MEMBER: 1,
   UNIT_LEAD: 2,
@@ -46,6 +46,22 @@ const LATERAL_IMPLICATIONS: Partial<Record<Role, ReadonlySet<Role>>> = {
   [Role.HOD]: new Set([Role.MEMBER, Role.HOD]),
 };
 
+/**
+ * Whether any of `effective` clears a route that requires `needed` — the
+ * hierarchy RolesGuard enforces, shared with PageAccessGuard so both agree.
+ */
+export function meetsRole(effective: readonly Role[], needed: Role): boolean {
+  return effective.some((actual) => {
+    if (CHURCH_WIDE_ROLES.has(actual)) {
+      return ROLE_LEVEL[actual] >= ROLE_LEVEL[needed];
+    }
+    if (LATERAL_ROLES.has(actual)) {
+      return LATERAL_IMPLICATIONS[actual]?.has(needed) ?? false;
+    }
+    return ROLE_LEVEL[actual] >= ROLE_LEVEL[needed];
+  });
+}
+
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
@@ -70,17 +86,7 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('No role assigned to user');
     }
 
-    const allowed = required.some((needed) =>
-      effective.some((actual) => {
-        if (CHURCH_WIDE_ROLES.has(actual)) {
-          return ROLE_LEVEL[actual] >= ROLE_LEVEL[needed];
-        }
-        if (LATERAL_ROLES.has(actual)) {
-          return LATERAL_IMPLICATIONS[actual]?.has(needed) ?? false;
-        }
-        return ROLE_LEVEL[actual] >= ROLE_LEVEL[needed];
-      }),
-    );
+    const allowed = required.some((needed) => meetsRole(effective, needed));
 
     if (!allowed) {
       throw new ForbiddenException(

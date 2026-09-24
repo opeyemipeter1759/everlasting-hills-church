@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import { findFollowUpUnit } from '../follow-up-unit.util';
 import type { Env } from '../../config/env.validation';
 
 @Injectable()
@@ -72,11 +73,8 @@ export class FollowUpUnitLeaderLookupService {
   }
 
   async getFollowUpUnitId(): Promise<string | null> {
-    const unit = await this.prisma.unit.findFirst({
-      where: { tenantId: this.tenantId, name: 'Follow-Up' },
-      select: { id: true },
-    });
-    if (!unit) this.logger.warn('auto-surface: no unit named "Follow-Up" found — no fallback available');
+    const unit = await findFollowUpUnit(this.prisma, this.tenantId);
+    if (!unit) this.logger.warn('auto-surface: no Follow Up unit found — no fallback available');
     return unit?.id ?? null;
   }
 }

@@ -5,6 +5,7 @@ import { Send } from "lucide-react";
 import { useSendUnitMessage } from "@/lib/api";
 import { showToast } from "@/components/ui/toast/toast";
 import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
+import { Select } from "@/components/ui/select";
 
 interface Recipient {
   id: string;
@@ -78,18 +79,14 @@ export default function MessageMemberModal({
         {!recipient && recipients && (
           <div>
             <label className="block text-xs font-semibold text-gray-500 dark:text-white/50 mb-1.5">To</label>
-            <select
+            <Select
+              aria-label="Who the message goes to"
               value={recipientId}
-              onChange={(e) => setRecipientId(e.target.value)}
+              onChange={setRecipientId}
               className={fieldCls}
-            >
-              <option value="">Choose a member…</option>
-              {recipients.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
+              placeholder="Choose a member…"
+              options={recipients.map((r) => ({ value: r.id, label: r.name }))}
+            />
           </div>
         )}
 

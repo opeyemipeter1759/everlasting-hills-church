@@ -88,7 +88,6 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
     givingSummary,
     givingCategories,
     unassignedFollowUps,
-    firstTimerPipeline,
     adminAnalytics,
     openFollowUpTasks,
     atRisk,
@@ -104,7 +103,6 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
     apiClient.get<{ thisMonthNaira: number; momChange: number }>("/admin/giving/summary"),
     apiClient.get<{ category: string; amountNaira: number }[]>("/admin/giving/categories"),
     apiClient.get<unknown[]>("/follow-up?stage=UNASSIGNED"),
-    apiClient.get<{ total: number; interestedCount: number; convertedCount: number }>("/admin/first-timer/pipeline"),
     apiClient.get<{ totalPrayers: number }>("/admin/analytics"),
     apiClient.get<unknown[]>("/members/follow-ups"),
     apiClient.get<AtRiskResponse>("/members/at-risk"),
@@ -137,11 +135,6 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
       visitorRetentionChange: signedTrend(stats, "visitors"),
       membersNeedingFollowUp: unassignedFollowUps.data.length,
     },
-    firstTimerFunnel: [
-      { label: "Registered", value: firstTimerPipeline.data.total },
-      { label: "Interested", value: firstTimerPipeline.data.interestedCount },
-      { label: "Became Member", value: firstTimerPipeline.data.convertedCount },
-    ],
     pastoralCare: {
       prayerRequests: adminAnalytics.data.totalPrayers,
       openFollowUps: openFollowUpTasks.data.length,

@@ -1,3 +1,4 @@
+import { chooseOption } from "@/test/choose-option";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ReadingScreen from "./ReadingScreen";
@@ -133,7 +134,7 @@ describe("ReadingScreen with multiple plans", () => {
 
     expect(useTodayReading).toHaveBeenCalledWith("b");
     expect(useCompletedDays).toHaveBeenCalledWith("b");
-    expect(screen.getByRole("combobox", { name: "Your plans" })).toHaveValue("b");
+    expect(screen.getByRole("combobox", { name: "Your plans" })).toHaveTextContent("Plan B");
     expect(screen.getByRole("button", { name: "Mark as read" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Undo" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("heading", { level: 3 }).map((heading) => heading.textContent))
@@ -161,7 +162,7 @@ describe("ReadingScreen with multiple plans", () => {
     expect(navigation.router.push).toHaveBeenLastCalledWith("/dashboard/reading?subscription=b&day=1");
     fireEvent.click(screen.getByRole("button", { name: "Next day" }));
     expect(navigation.router.push).toHaveBeenLastCalledWith("/dashboard/reading?subscription=b&day=3");
-    fireEvent.change(screen.getByRole("combobox", { name: "Your plans" }), { target: { value: "c" } });
+    chooseOption("Your plans", /Plan C/);
     expect(navigation.router.push).toHaveBeenLastCalledWith("/dashboard/reading?subscription=c");
   });
 
@@ -202,7 +203,7 @@ describe("ReadingScreen with multiple plans", () => {
     fireEvent.click(screen.getByRole("button", { name: "Mark as read" }));
 
     expect(await screen.findByRole("status")).toHaveTextContent("Plan complete. You have read all 3 days.");
-    expect(screen.getByRole("combobox", { name: "Your plans" })).toHaveValue("b");
+    expect(screen.getByRole("combobox", { name: "Your plans" })).toHaveTextContent("Plan B");
     expect(useTodayReading).toHaveBeenLastCalledWith("b");
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Genesis 1:31–2:2");
     expect(screen.getByText("Day 3 of 3")).toBeInTheDocument();

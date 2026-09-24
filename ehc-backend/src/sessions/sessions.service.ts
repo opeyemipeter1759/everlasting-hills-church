@@ -72,10 +72,30 @@ export class SessionsService implements OnModuleInit {
     return false;
   }
 
+  /**
+   * True while today is a service day whose window has not closed yet — i.e.
+   * before it opens as well as while it is open. "Not open" alone is not
+   * "closed": treating the morning of a Wednesday as closed is what marked
+   * every member absent before the evening window opened.
+   */
+  private isBeforeTodaysClose(): boolean {
+    const wat = new Date(Date.now() + WAT);
+    const day = wat.getUTCDay();
+    const min = wat.getUTCHours() * 60 + wat.getUTCMinutes();
+    const close =
+      day === 0
+        ? this.config.get('ATTENDANCE_SUNDAY_CLOSE', { infer: true })
+        : day === 3
+          ? this.config.get('ATTENDANCE_WEDNESDAY_CLOSE', { infer: true })
+          : null;
+    return close !== null && min < parseHHMM(close);
+  }
+
   private async checkAndAutoClose() {
     try {
       const open = this.isWindowOpen();
       if (open) return; // Session is currently open — nothing to close
+      if (this.isBeforeTodaysClose()) return; // Window hasn't closed yet today
 
       const { startUtc, endUtc } = todayBounds();
       const service = await this.prisma.service.findFirst({

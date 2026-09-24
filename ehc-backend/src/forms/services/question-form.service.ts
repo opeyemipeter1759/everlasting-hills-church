@@ -4,7 +4,7 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { QuestionDto } from '../dto/question.dto';
-import { buildQuestionAdminText, buildQuestionVisitorText } from '../forms-text-templates.util';
+import { buildQuestionAdminText, buildQuestionVisitorHtml, buildQuestionVisitorText } from '../forms-text-templates.util';
 import { FormsEmailDispatchService } from './forms-email-dispatch.service';
 
 @Injectable()
@@ -50,6 +50,7 @@ export class QuestionFormService {
         to: normalizedEmail,
         subject: 'We received your question',
         text: buildQuestionVisitorText(data),
+        html: buildQuestionVisitorHtml(data),
         tag: 'question-visitor',
       });
     }

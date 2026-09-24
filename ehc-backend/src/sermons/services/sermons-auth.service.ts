@@ -1,24 +1,21 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
+import { isAudioProductionUnitName } from '../../common/audio-production.util';
 
 const PASTOR_PLUS: Role[] = [Role.PASTOR, Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
 
-/** The one unit whose plain members get sermon-management access without the PASTOR role. */
-const AUDIO_PRODUCTION_UNIT_NAME = 'Audio Production';
-
 /**
- * Core sermon management (list, view, upload, edit, delete) is PASTOR+ by
- * default, but the Audio Production team handles day-to-day uploads — so a
- * plain member of that one unit gets the same access to those core actions,
- * without needing the PASTOR role itself. Pastoral-only actions (analytics,
- * subscribers, engagement detail, featured sermon, publish-scheduled) stay
- * gated to PASTOR+ directly on their own routes and don't go through this
- * check — same "coarse @Roles at the controller, fine-grained check in a
- * service" split used by FollowUpAuthService.
+ * Sermon management is PASTOR+ by role, but the Audio (Post) Production team
+ * runs sermons day to day, so every member of that unit — lead or not — gets
+ * full Super Admin power over the whole Sermons section: core management
+ * here, and the pastoral-only routes (analytics, subscribers, engagement,
+ * featured sermon, publish-scheduled) because PageAccessGuard elevates the
+ * unit to SUPER_ADMIN on /sermons requests. This check stays as the
+ * service-level backstop for the core actions.
  */
 @Injectable()
 export class SermonsAuthService {
@@ -33,19 +30,18 @@ export class SermonsAuthService {
 
   async canManage(actor: AuthUser): Promise<boolean> {
     if (actor.effectiveRoles.some((r) => PASTOR_PLUS.includes(r))) return true;
-    if (!actor.memberId) return false;
+    // The person's own units — as a member (leads included, via isLead) or as
+    // a lead recorded on their session — checked by name in code.
+    const or: Prisma.UnitWhereInput[] = [];
+    if (actor.memberId) or.push({ UnitMember: { some: { memberId: actor.memberId } } });
+    if (actor.unitLeadOf.length) or.push({ id: { in: actor.unitLeadOf } });
+    if (or.length === 0) return false;
 
-    const unit = await this.prisma.unit.findFirst({
-      where: { tenantId: this.tenantId, name: AUDIO_PRODUCTION_UNIT_NAME },
-      select: { id: true },
+    const units = await this.prisma.unit.findMany({
+      where: { tenantId: this.tenantId, OR: or },
+      select: { name: true },
     });
-    if (!unit) return false;
-
-    const membership = await this.prisma.unitMember.findFirst({
-      where: { tenantId: this.tenantId, unitId: unit.id, memberId: actor.memberId },
-      select: { id: true },
-    });
-    return !!membership;
+    return units.some((unit) => isAudioProductionUnitName(unit.name));
   }
 
   async requireManage(actor: AuthUser): Promise<void> {

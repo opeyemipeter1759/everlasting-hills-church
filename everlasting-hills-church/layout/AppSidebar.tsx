@@ -2,18 +2,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Users2 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useTheme } from '@/context/ThemeContext';
 import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
 import { normalizeRole } from '@/lib/auth/frontend-session';
 import Image from 'next/image';
 import { useCurrentUser, useNavDropdown } from '@/hooks';
-import { useMe, useMyUnits, useMyMemberships } from '@/lib/api';
-import { useFollowUpAccess } from '@/lib/api/follow-up-pipeline';
+import { useMe, useMyUnits, useMyMemberships, useMyDepartmentUnits } from '@/lib/api';
 import { canRoleAccessItem, toNavPermissionsMap, useMyNavGrantedHrefs, useNavPermissions } from '@/lib/nav-permissions';
 import { getInitials, truncateText } from '@/utils/stringUtils';
 import { SidebarSkeleton } from '@/components/ui/skeleton/SidebarSkeleton';
+import { isAudioProductionUnitName } from '@/lib/audio-production';
+import { isMembershipAssimilationDepartment, MEMBERSHIP_ASSIMILATION_BASE } from '@/lib/membership-assimilation';
 
 type NavItem = {
   name: string;
@@ -100,7 +101,7 @@ const AppSidebar: React.FC = () => {
   // and then disappears.
   const { data: myUnits } = useMyUnits();
   const { data: myMemberships } = useMyMemberships();
-  const { data: followUpAccess } = useFollowUpAccess();
+  const { data: myDepartmentUnits = [] } = useMyDepartmentUnits();
   // Admin-configurable per-item role overrides (Roles > Permissions page).
   // Undefined/empty while loading just means every item falls back to its
   // static minRole for now — the same behavior as before this existed.
@@ -113,11 +114,23 @@ const AppSidebar: React.FC = () => {
   const { data: grantedHrefsData } = useMyNavGrantedHrefs();
   const grantedHrefs = useMemo(() => new Set(grantedHrefsData ?? []), [grantedHrefsData]);
 
+  // myUnits (leads/assists) and myMemberships (plain member) are two disjoint
+  // lists — a lead is deliberately excluded from myMemberships, so both must
+  // be checked or the unit's own lead would be the one person locked out.
+  const inAudioProduction =
+    !!myUnits?.some((u) => isAudioProductionUnitName(u.name)) ||
+    !!myMemberships?.some((u) => isAudioProductionUnitName(u.name));
+
   const visibleGroups = activeRoles.length > 0
     ? NAV_GROUPS.map((group) => ({
         ...group,
         items: group.items
           .filter((item) => {
+            // Audio Production membership grants its items outright, like a
+            // named grant: a role list saved for the page on the Permissions
+            // screen (typically PASTOR-only, from before members could use it)
+            // must not hide it from the team it exists for.
+            if (item.requiresAccess === 'audioProduction' && inAudioProduction) return true;
             if (
               !activeRoles.some((role) => canRoleAccessItem(role, item, navPermissionsMap)) &&
               !grantedHrefs.has(item.href)
@@ -125,18 +138,13 @@ const AppSidebar: React.FC = () => {
             if (item.maxRole && canAccessRole(item.maxRole)) return false;
             if (item.requiresAccess === 'unitLead' && !myUnits?.length) return false;
             if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
-            if (item.requiresAccess === 'followUp' && !followUpAccess?.hasAccess) return false;
-            // PASTOR+ already sees this via the (now-lowered) minRole check above —
-            // this only needs to additionally admit Audio Production, lead or plain
-            // member. myUnits (leads/assists) and myMemberships (plain member) are
-            // two disjoint lists — a lead is deliberately excluded from
-            // myMemberships, so both must be checked or the unit's own lead would
-            // be the one person Audio Production locked out.
+            // Audio Production members were admitted above; everyone else needs
+            // PASTOR+ or a named grant for the page (the item's minRole is
+            // lowered to MEMBER only so the team can pass the role check).
             if (
               item.requiresAccess === 'audioProduction' &&
               !canAccessRole('PASTOR') &&
-              !myUnits?.some((u) => u.name === 'Audio Production') &&
-              !myMemberships?.some((u) => u.name === 'Audio Production')
+              !grantedHrefs.has(item.href)
             ) {
               return false;
             }
@@ -156,7 +164,38 @@ const AppSidebar: React.FC = () => {
       })).filter((group) => group.items.length > 0)
     : [];
 
-  const allPaths = visibleGroups.flatMap((group) =>
+  // Membership and Assimilation is led by its units rather than by fixed pages:
+  // one item per unit, named after the unit. The API decides who sees what — a
+  // member gets only their own units, the department's Admin Head gets all of
+  // them — so there is nothing to gate here beyond having any at all.
+  const assimilation = myDepartmentUnits.find((d) => isMembershipAssimilationDepartment(d.department.name));
+  const assimilationGroup =
+    assimilation && assimilation.units.length > 0
+      ? {
+          section: assimilation.department.name,
+          items: assimilation.units.map((unit) => ({
+            label: unit.name,
+            href: `${MEMBERSHIP_ASSIMILATION_BASE}/${unit.id}`,
+            icon: Users2,
+            minRole: 'MEMBER' as const,
+          })),
+        }
+      : null;
+
+  // Sits directly above the Member section, which is last — so it reads as the
+  // work you do for the church, before your own member pages.
+  const navGroups = (() => {
+    if (!assimilationGroup) return visibleGroups;
+    const memberIndex = visibleGroups.findIndex((group) => group.section === 'Member');
+    if (memberIndex === -1) return [...visibleGroups, assimilationGroup];
+    return [
+      ...visibleGroups.slice(0, memberIndex),
+      assimilationGroup,
+      ...visibleGroups.slice(memberIndex),
+    ];
+  })();
+
+  const allPaths = navGroups.flatMap((group) =>
     group.items.flatMap((item) => [
       item.href,
       ...((item as { children?: { href: string }[] }).children ?? []).map((c) => c.href),
@@ -164,7 +203,7 @@ const AppSidebar: React.FC = () => {
   );
   const isActive = buildActiveMatcher(pathname, allPaths);
 
-  const { openDropdown, setOpenDropdown } = useNavDropdown(pathname, visibleGroups, isActive);
+  const { openDropdown, setOpenDropdown } = useNavDropdown(pathname, navGroups, isActive);
   // Every section starts collapsed; the effect below opens whichever one holds
   // the active route. Manual toggles after that are left alone — navigating
   // elsewhere doesn't re-collapse a section the user opened.
@@ -173,7 +212,7 @@ const AppSidebar: React.FC = () => {
   );
 
   useEffect(() => {
-    const activeSection = visibleGroups.find(
+    const activeSection = navGroups.find(
       (group) =>
         group.section &&
         group.items.some((item) => {
@@ -191,7 +230,7 @@ const AppSidebar: React.FC = () => {
     // Re-run when the route changes, or when access-gated groups (My Unit,
     // Unit, Follow Up) resolve and change which section the active item lives in.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, myUnits, myMemberships, followUpAccess?.hasAccess]);
+  }, [pathname, myUnits, myMemberships]);
 
   const toggleSection = (section: string) => {
     setCollapsedSections((prev) => {
@@ -344,7 +383,7 @@ const AppSidebar: React.FC = () => {
       {/* Nav */}
       <div className="flex-1 no-scrollbar overflow-y-auto overflow-x-hidden px-2 py-3">
         <nav className="space-y-5">
-          {visibleGroups.map((group) => {
+          {navGroups.map((group) => {
             const sectionKey = group.section ?? 'root';
             const isCollapsed = group.section ? collapsedSections.has(group.section) : false;
             return (

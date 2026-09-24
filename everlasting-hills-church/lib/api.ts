@@ -272,6 +272,19 @@ export function useAnswerQuestion() {
 
 /* ── Direct notes/questions to another member, about a sermon ──────────────────────── */
 
+/**
+ * Everyone on the church's roll — including people entered by an admin who
+ * have never signed in. Readable by any signed-in member: a plain total, no
+ * names.
+ */
+export function useTotalMembers() {
+  return useQuery({
+    queryKey: ["members", "total"],
+    queryFn: () => api.get<{ total: number }>("/members/total"),
+    enabled: typeof window !== "undefined",
+  });
+}
+
 export function useMemberSearch(q: string) {
   return useQuery({
     queryKey: ["members", "search", q],
@@ -748,6 +761,25 @@ export function useUnitDetail(unitId: string | null) {
     queryKey: ["units", unitId],
     queryFn: () => api.get<UnitDetail>(`/units/${unitId}`),
     enabled: !!unitId,
+  });
+}
+
+export interface MyDepartmentUnits {
+  department: { id: string; name: string };
+  units: { id: string; name: string; isMember: boolean }[];
+}
+
+/**
+ * The units the current user may open, grouped by department — what the
+ * department-led sidebar sections are built from. The API decides the scope: a
+ * member gets only the units they serve in, a department's Admin Head or HOD
+ * gets every unit under it, and a church-wide admin gets them all.
+ */
+export function useMyDepartmentUnits() {
+  return useQuery({
+    queryKey: ["departments", "my-units"],
+    queryFn: () => api.get<MyDepartmentUnits[]>("/departments/my-units"),
+    enabled: typeof window !== "undefined",
   });
 }
 

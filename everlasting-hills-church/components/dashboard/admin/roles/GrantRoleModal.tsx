@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Loader2, Search } from "lucide-react";
 import FormModal, { fieldCls } from "@/components/ui/overlay/FormModal";
+import { Select } from "@/components/ui/select";
 import { usePeople, useGrantRole, useAssignHeadUsher, type PersonRole } from "@/lib/api/people";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
@@ -54,11 +55,13 @@ export default function GrantRoleModal({
     <FormModal open={open} title="Grant a role" subtitle="Additive — doesn't remove any role they already hold" onClose={onClose} maxWidth="max-w-lg">
       <div className="mb-3">
         <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">Role to grant</label>
-        <select value={role} onChange={(e) => setRole(e.target.value as PersonRole)} className={fieldCls}>
-          {grantableRoles.map((r) => (
-            <option key={r} value={r}>{ROLE_LABEL[r]}</option>
-          ))}
-        </select>
+        <Select
+          aria-label="Role to grant"
+          value={role}
+          onChange={(next) => setRole(next as PersonRole)}
+          className={fieldCls}
+          options={grantableRoles.map((r) => ({ value: r, label: ROLE_LABEL[r] }))}
+        />
       </div>
 
       <div className="relative mb-3">

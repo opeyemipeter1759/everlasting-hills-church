@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import WordTabs from "./WordTabs";
 import ReadingPlanSelector from "./ReadingPlanSelector";
+import { Select } from "@/components/ui/select";
 import { ChapterPassage } from "./ChapterPassage";
 import {
   readingHref,
@@ -146,21 +147,14 @@ export default function ReadingScreen() {
           {/* Translation belongs on the reading screen, where a verse that reads
               oddly is the reason somebody reaches for another one. */}
           {translations && translations.length > 1 && (
-            <select
+            <Select
               aria-label="Translation"
               value={translation.code}
               disabled={setTranslation.isPending}
-              onChange={(e) =>
-                setTranslation.mutate({ subscriptionId, translationCode: e.target.value })
-              }
+              onChange={(translationCode) => setTranslation.mutate({ subscriptionId, translationCode })}
               className="min-h-11 max-w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-700 dark:border-white/10 dark:bg-gray-900 dark:text-white/70"
-            >
-              {translations.map((t) => (
-                <option key={t.code} value={t.code}>
-                  {t.code}
-                </option>
-              ))}
-            </select>
+              options={translations.map((t) => ({ value: t.code, label: t.code }))}
+            />
           )}
         </div>
       </div>
