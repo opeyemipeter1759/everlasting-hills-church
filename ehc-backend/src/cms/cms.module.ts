@@ -31,5 +31,6 @@ import { CmsMediaService } from './services/cms-media.service';
     CmsPreviewService,
     CmsMediaService,
   ],
+  exports: [CmsRevalidateService],
 })
 export class CmsModule {}

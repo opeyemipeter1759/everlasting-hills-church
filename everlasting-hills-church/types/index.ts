@@ -165,7 +165,61 @@ export interface LatestSermonsResponse {
 
 /* ── Events ──────────────────────────────────────────────────────────────── */
 
-export type EventStatus = "DRAFT" | "PUBLISHED";
+export type EventStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type EventLocationType = "PHYSICAL" | "ONLINE" | "HYBRID";
+export type EventSectionType =
+  | "RICH_TEXT"
+  | "SCHEDULE"
+  | "EXPECTATIONS"
+  | "PRAYER_FOCUS"
+  | "FAQ"
+  | "TESTIMONY"
+  | "CTA";
+
+export interface EventSchedule {
+  id: string;
+  eventId: string;
+  title: string;
+  description: string | null;
+  startTime: string;
+  endTime: string | null;
+  recurrenceRule: string | null;
+  meetingUrl: string | null;
+  sortOrder: number;
+}
+
+interface EventSectionBase<T extends EventSectionType, C> {
+  id: string;
+  eventId: string;
+  type: T;
+  title: string | null;
+  subtitle: string | null;
+  content: C;
+  sortOrder: number;
+  isVisible: boolean;
+  version: number;
+}
+
+export type EventSection =
+  | EventSectionBase<"RICH_TEXT", { body: string }>
+  | EventSectionBase<"SCHEDULE", { introduction?: string; tags: string[] }>
+  | EventSectionBase<"EXPECTATIONS", {
+      introduction?: string;
+      items: { title: string; description: string; scripture?: string; icon?: string }[];
+    }>
+  | EventSectionBase<"PRAYER_FOCUS", {
+      focuses: {
+        title: string;
+        introduction?: string;
+        dayDate?: string;
+        declaration?: string;
+        scriptures: string[];
+        prayerPoints: string[];
+      }[];
+    }>
+  | EventSectionBase<"FAQ", { items: { question: string; answer: string }[] }>
+  | EventSectionBase<"TESTIMONY", { body: string; buttonLabel: string; url?: string }>
+  | EventSectionBase<"CTA", { body?: string; buttonLabel: string; url?: string }>;
 
 /** Slim shape returned by GET /events (public index). */
 export interface EventSummary {
@@ -173,15 +227,28 @@ export interface EventSummary {
   slug: string;
   title: string;
   tagline: string | null;
+  theme: string | null;
+  shortDescription: string | null;
   startAt: string;
   endAt: string | null;
+  timezone: string;
+  locationType: EventLocationType;
   venueName: string | null;
   flyerImageUrl: string | null;
+  coverImageUrl: string | null;
+  heroImageUrl: string | null;
+  socialImageUrl: string | null;
+  liveUrl: string | null;
+  registrationUrl: string | null;
+  primaryCtaLabel: string | null;
+  primaryCtaUrl: string | null;
   featured: boolean;
   customPath: string | null;
   /** Whether this event is taking RSVPs at all. Cards must not offer to
    * register somebody for an event that was never accepting them. */
   rsvpEnabled: boolean;
+  registrationRequired: boolean;
+  Schedules: EventSchedule[];
 }
 
 /** Full event returned by GET /events/:slug and the admin endpoints. */
@@ -195,6 +262,11 @@ export interface EventDetail extends EventSummary {
   contactPhone: string | null;
   contactEmail: string | null;
   contactWhatsapp: string | null;
+  testimonyUrl: string | null;
+  secondaryCtaLabel: string | null;
+  secondaryCtaUrl: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
   status: EventStatus;
   rsvpEnabled: boolean;
   capacity: number | null;
@@ -202,6 +274,7 @@ export interface EventDetail extends EventSummary {
   publishedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  Sections: EventSection[];
   _count?: { Rsvps: number };
 }
 

@@ -9,8 +9,11 @@ import { randomUUID } from 'crypto';
 import slugify from 'slugify';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
+import { CmsRevalidateService } from '../cms/services/cms-revalidate.service';
+import { AnnouncementsService } from '../announcements/announcements.service';
 import type { CreateEventDto, UpdateEventDto } from './dto/event.dto';
 import type { CreateEventRsvpDto } from './dto/event-rsvp.dto';
+import { eventSectionInputSchema } from './schemas/event-section.schema';
 
 /**
  * Church events: admin-managed CRUD + public reads + public RSVP capture.
@@ -25,6 +28,8 @@ export class EventsService {
   constructor(
     private readonly prisma: PrismaService,
     config: ConfigService<Env, true>,
+    private readonly revalidate: CmsRevalidateService,
+    private readonly announcements: AnnouncementsService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -35,12 +40,26 @@ export class EventsService {
     slug: true,
     title: true,
     tagline: true,
+    theme: true,
+    shortDescription: true,
     startAt: true,
     endAt: true,
+    timezone: true,
+    locationType: true,
     venueName: true,
     flyerImageUrl: true,
+    coverImageUrl: true,
+    heroImageUrl: true,
+    socialImageUrl: true,
+    liveUrl: true,
+    registrationUrl: true,
+    primaryCtaLabel: true,
+    primaryCtaUrl: true,
     featured: true,
     customPath: true,
+    rsvpEnabled: true,
+    registrationRequired: true,
+    Schedules: { orderBy: { sortOrder: 'asc' as const } },
   } satisfies Prisma.EventSelect;
 
   /** Public: published events, featured first then soonest. */
@@ -56,9 +75,20 @@ export class EventsService {
   async getBySlug(slug: string) {
     const event = await this.prisma.event.findFirst({
       where: { tenantId: this.tenantId, slug, status: EventStatus.PUBLISHED },
+      include: {
+        Schedules: { orderBy: { sortOrder: 'asc' } },
+        Sections: { where: { isVisible: true }, orderBy: { sortOrder: 'asc' } },
+      },
     });
     if (!event) throw new NotFoundException('Event not found');
-    return event;
+    return {
+      ...event,
+      // A legacy/manual database write cannot smuggle an unvalidated section
+      // into the public renderer. Invalid rows remain available to admins to fix.
+      Sections: event.Sections.filter((section) =>
+        eventSectionInputSchema.safeParse({ type: section.type, content: section.content }).success,
+      ),
+    };
   }
 
   /** Admin: all events including drafts, with RSVP counts. */
@@ -66,7 +96,11 @@ export class EventsService {
     return this.prisma.event.findMany({
       where: { tenantId: this.tenantId },
       orderBy: [{ startAt: 'desc' }],
-      include: { _count: { select: { Rsvps: true } } },
+      include: {
+        Schedules: { orderBy: { sortOrder: 'asc' } },
+        Sections: { orderBy: { sortOrder: 'asc' } },
+        _count: { select: { Rsvps: true } },
+      },
     });
   }
 
@@ -146,50 +180,92 @@ export class EventsService {
   async getById(id: string) {
     const event = await this.prisma.event.findFirst({
       where: { id, tenantId: this.tenantId },
-      include: { _count: { select: { Rsvps: true } } },
+      include: {
+        Schedules: { orderBy: { sortOrder: 'asc' } },
+        Sections: { orderBy: { sortOrder: 'asc' } },
+        _count: { select: { Rsvps: true } },
+      },
     });
     if (!event) throw new NotFoundException('Event not found');
     return event;
   }
 
   async create(data: CreateEventDto) {
+    this.validateEventWindow(data);
+    const sections = this.validateSections(data.sections);
     const now = new Date();
     const status = data.status ?? EventStatus.DRAFT;
     const slug = await this.uniqueSlug(data.slug || data.title);
+    const id = randomUUID();
 
-    return this.prisma.event.create({
-      data: {
-        id: randomUUID(),
-        tenantId: this.tenantId,
-        slug,
-        title: data.title,
-        tagline: data.tagline ?? null,
-        description: data.description ?? null,
-        startAt: new Date(data.startAt),
-        endAt: data.endAt ? new Date(data.endAt) : null,
-        venueName: data.venueName ?? null,
-        venueAddress: data.venueAddress ?? null,
-        mapsLink: data.mapsLink ?? null,
-        flyerImageUrl: data.flyerImageUrl ?? null,
-        hostName: data.hostName ?? null,
-        guestMinister: data.guestMinister ?? null,
-        contactPhone: data.contactPhone ?? null,
-        contactEmail: data.contactEmail ?? null,
-        contactWhatsapp: data.contactWhatsapp ?? null,
-        status,
-        featured: data.featured ?? false,
-        rsvpEnabled: data.rsvpEnabled ?? true,
-        capacity: data.capacity ?? null,
-        customPath: data.customPath ?? null,
-        order: data.order ?? 0,
-        publishedAt: status === EventStatus.PUBLISHED ? now : null,
-        updatedAt: now,
-      },
+    const event = await this.prisma.$transaction(async (tx) => {
+      await tx.event.create({
+        data: {
+          id,
+          tenantId: this.tenantId,
+          slug,
+          title: data.title,
+          tagline: data.tagline ?? null,
+          theme: data.theme ?? null,
+          shortDescription: data.shortDescription ?? null,
+          description: data.description ?? null,
+          startAt: new Date(data.startAt),
+          endAt: data.endAt ? new Date(data.endAt) : null,
+          timezone: data.timezone ?? 'Africa/Lagos',
+          locationType: data.locationType ?? 'PHYSICAL',
+          venueName: data.venueName ?? null,
+          venueAddress: data.venueAddress ?? null,
+          mapsLink: data.mapsLink ?? null,
+          flyerImageUrl: data.flyerImageUrl ?? data.coverImageUrl ?? null,
+          coverImageUrl: data.coverImageUrl ?? data.flyerImageUrl ?? null,
+          heroImageUrl: data.heroImageUrl ?? null,
+          socialImageUrl: data.socialImageUrl ?? null,
+          liveUrl: data.liveUrl ?? null,
+          registrationUrl: data.registrationUrl ?? null,
+          testimonyUrl: data.testimonyUrl ?? null,
+          primaryCtaLabel: data.primaryCtaLabel ?? null,
+          primaryCtaUrl: data.primaryCtaUrl ?? null,
+          secondaryCtaLabel: data.secondaryCtaLabel ?? null,
+          secondaryCtaUrl: data.secondaryCtaUrl ?? null,
+          seoTitle: data.seoTitle ?? null,
+          seoDescription: data.seoDescription ?? null,
+          hostName: data.hostName ?? null,
+          guestMinister: data.guestMinister ?? null,
+          contactPhone: data.contactPhone ?? null,
+          contactEmail: data.contactEmail ?? null,
+          contactWhatsapp: data.contactWhatsapp ?? null,
+          status,
+          featured: data.featured ?? false,
+          rsvpEnabled: data.rsvpEnabled ?? true,
+          registrationRequired: data.registrationRequired ?? data.rsvpEnabled ?? true,
+          capacity: data.capacity ?? null,
+          customPath: data.customPath ?? null,
+          order: data.order ?? 0,
+          publishedAt: status === EventStatus.PUBLISHED ? now : null,
+          updatedAt: now,
+        },
+      });
+      await this.replaceSchedules(tx, id, data.schedules ?? []);
+      await this.replaceSections(tx, id, sections ?? []);
+      return tx.event.findUniqueOrThrow({
+        where: { id },
+        include: {
+          Schedules: { orderBy: { sortOrder: 'asc' } },
+          Sections: { orderBy: { sortOrder: 'asc' } },
+          _count: { select: { Rsvps: true } },
+        },
+      });
     });
+
+    this.revalidateEvent(slug);
+    if (status === EventStatus.PUBLISHED) await this.announceIfPublished(event);
+    return event;
   }
 
   async update(id: string, data: UpdateEventDto) {
     const current = await this.getById(id); // 404 if foreign tenant
+    this.validateEventWindow(data, current.startAt, current.endAt);
+    const sections = this.validateSections(data.sections);
     const nowPublishing =
       data.status === EventStatus.PUBLISHED && current.status !== EventStatus.PUBLISHED;
 
@@ -198,41 +274,104 @@ export class EventsService {
         ? await this.uniqueSlug(data.slug, id)
         : undefined;
 
-    return this.prisma.event.update({
-      where: { id },
-      data: {
-        ...(slug && { slug }),
-        ...(data.title !== undefined && { title: data.title }),
-        ...(data.tagline !== undefined && { tagline: data.tagline }),
-        ...(data.description !== undefined && { description: data.description }),
-        ...(data.startAt !== undefined && { startAt: new Date(data.startAt) }),
-        ...(data.endAt !== undefined && { endAt: data.endAt ? new Date(data.endAt) : null }),
-        ...(data.venueName !== undefined && { venueName: data.venueName }),
-        ...(data.venueAddress !== undefined && { venueAddress: data.venueAddress }),
-        ...(data.mapsLink !== undefined && { mapsLink: data.mapsLink }),
-        ...(data.flyerImageUrl !== undefined && { flyerImageUrl: data.flyerImageUrl }),
-        ...(data.hostName !== undefined && { hostName: data.hostName }),
-        ...(data.guestMinister !== undefined && { guestMinister: data.guestMinister }),
-        ...(data.contactPhone !== undefined && { contactPhone: data.contactPhone }),
-        ...(data.contactEmail !== undefined && { contactEmail: data.contactEmail }),
-        ...(data.contactWhatsapp !== undefined && { contactWhatsapp: data.contactWhatsapp }),
-        ...(data.status !== undefined && { status: data.status }),
-        ...(data.featured !== undefined && { featured: data.featured }),
-        ...(data.rsvpEnabled !== undefined && { rsvpEnabled: data.rsvpEnabled }),
-        ...(data.capacity !== undefined && { capacity: data.capacity }),
-        ...(data.customPath !== undefined && { customPath: data.customPath }),
-        ...(data.order !== undefined && { order: data.order }),
-        ...(nowPublishing && { publishedAt: new Date() }),
-        updatedAt: new Date(),
-      },
+    const event = await this.prisma.$transaction(async (tx) => {
+      await tx.event.update({
+        where: { id },
+        data: {
+          ...(slug && { slug }),
+          ...(data.title !== undefined && { title: data.title }),
+          ...(data.tagline !== undefined && { tagline: data.tagline || null }),
+          ...(data.theme !== undefined && { theme: data.theme || null }),
+          ...(data.shortDescription !== undefined && { shortDescription: data.shortDescription || null }),
+          ...(data.description !== undefined && { description: data.description || null }),
+          ...(data.startAt !== undefined && { startAt: new Date(data.startAt) }),
+          ...(data.endAt !== undefined && { endAt: data.endAt ? new Date(data.endAt) : null }),
+          ...(data.timezone !== undefined && { timezone: data.timezone }),
+          ...(data.locationType !== undefined && { locationType: data.locationType }),
+          ...(data.venueName !== undefined && { venueName: data.venueName || null }),
+          ...(data.venueAddress !== undefined && { venueAddress: data.venueAddress || null }),
+          ...(data.mapsLink !== undefined && { mapsLink: data.mapsLink || null }),
+          ...(data.flyerImageUrl !== undefined && { flyerImageUrl: data.flyerImageUrl || null }),
+          ...(data.coverImageUrl !== undefined && {
+            coverImageUrl: data.coverImageUrl || null,
+            flyerImageUrl: data.coverImageUrl || null,
+          }),
+          ...(data.heroImageUrl !== undefined && { heroImageUrl: data.heroImageUrl || null }),
+          ...(data.socialImageUrl !== undefined && { socialImageUrl: data.socialImageUrl || null }),
+          ...(data.liveUrl !== undefined && { liveUrl: data.liveUrl || null }),
+          ...(data.registrationUrl !== undefined && { registrationUrl: data.registrationUrl || null }),
+          ...(data.testimonyUrl !== undefined && { testimonyUrl: data.testimonyUrl || null }),
+          ...(data.primaryCtaLabel !== undefined && { primaryCtaLabel: data.primaryCtaLabel || null }),
+          ...(data.primaryCtaUrl !== undefined && { primaryCtaUrl: data.primaryCtaUrl || null }),
+          ...(data.secondaryCtaLabel !== undefined && { secondaryCtaLabel: data.secondaryCtaLabel || null }),
+          ...(data.secondaryCtaUrl !== undefined && { secondaryCtaUrl: data.secondaryCtaUrl || null }),
+          ...(data.seoTitle !== undefined && { seoTitle: data.seoTitle || null }),
+          ...(data.seoDescription !== undefined && { seoDescription: data.seoDescription || null }),
+          ...(data.hostName !== undefined && { hostName: data.hostName || null }),
+          ...(data.guestMinister !== undefined && { guestMinister: data.guestMinister || null }),
+          ...(data.contactPhone !== undefined && { contactPhone: data.contactPhone || null }),
+          ...(data.contactEmail !== undefined && { contactEmail: data.contactEmail || null }),
+          ...(data.contactWhatsapp !== undefined && { contactWhatsapp: data.contactWhatsapp || null }),
+          ...(data.status !== undefined && { status: data.status }),
+          ...(data.featured !== undefined && { featured: data.featured }),
+          ...(data.rsvpEnabled !== undefined && { rsvpEnabled: data.rsvpEnabled }),
+          ...(data.registrationRequired !== undefined && { registrationRequired: data.registrationRequired }),
+          ...(data.capacity !== undefined && { capacity: data.capacity }),
+          ...(data.customPath !== undefined && { customPath: data.customPath || null }),
+          ...(data.order !== undefined && { order: data.order }),
+          ...(nowPublishing && { publishedAt: new Date() }),
+          updatedAt: new Date(),
+        },
+      });
+      if (data.schedules !== undefined) await this.replaceSchedules(tx, id, data.schedules);
+      if (sections !== undefined) await this.replaceSections(tx, id, sections);
+      return tx.event.findUniqueOrThrow({
+        where: { id },
+        include: {
+          Schedules: { orderBy: { sortOrder: 'asc' } },
+          Sections: { orderBy: { sortOrder: 'asc' } },
+          _count: { select: { Rsvps: true } },
+        },
+      });
     });
+
+    this.revalidateEvent(current.slug);
+    if (slug) this.revalidateEvent(slug);
+    if (nowPublishing) await this.announceIfPublished(event);
+    return event;
+  }
+
+  /**
+   * Publishing an event tells the church about it: the announcement it raises
+   * reaches the dashboard and the notification inbox, where members already
+   * look, rather than waiting to be found on the events page.
+   *
+   * announceEvent is idempotent on the event id and swallows its own failures,
+   * so a republish announces nothing twice and a failed announcement never
+   * fails the publish.
+   */
+  private async announceIfPublished(event: {
+    id: string;
+    slug: string;
+    title: string;
+    tagline: string | null;
+    shortDescription: string | null;
+    description: string | null;
+    startAt: Date;
+    venueName: string | null;
+    flyerImageUrl: string | null;
+    customPath: string | null;
+  }) {
+    await this.announcements.announceEvent(event);
   }
 
   async delete(id: string) {
+    const current = await this.getById(id);
     const result = await this.prisma.event.deleteMany({
       where: { id, tenantId: this.tenantId },
     });
     if (result.count === 0) throw new NotFoundException('Event not found');
+    this.revalidateEvent(current.slug);
     return { id, deleted: true };
   }
 
@@ -242,7 +381,7 @@ export class EventsService {
   async createRsvp(slug: string, data: CreateEventRsvpDto) {
     const event = await this.getBySlug(slug); // 404 if not published
     const attendees = data.attendees ?? 1;
-    await this.assertRsvpAllowed(event.id, event.rsvpEnabled, event.capacity, attendees);
+    await this.assertRsvpAllowed(event.id, event.registrationRequired && event.rsvpEnabled, event.capacity, attendees);
 
     await this.saveRsvp(event.id, {
       fullName: data.fullName,
@@ -273,7 +412,7 @@ export class EventsService {
       return { success: true, message: 'Already registered' };
     }
 
-    await this.assertRsvpAllowed(event.id, event.rsvpEnabled, event.capacity, 1);
+    await this.assertRsvpAllowed(event.id, event.registrationRequired && event.rsvpEnabled, event.capacity, 1);
 
     await this.saveRsvp(event.id, {
       fullName: `${member.firstName} ${member.lastName}`.trim(),
@@ -380,6 +519,101 @@ export class EventsService {
   }
 
   // ── helpers ───────────────────────────────────────────────────────────────
+
+  private validateEventWindow(
+    data: UpdateEventDto,
+    currentStart?: Date,
+    currentEnd?: Date | null,
+  ) {
+    const start = data.startAt ? new Date(data.startAt) : currentStart;
+    const end = data.endAt !== undefined
+      ? (data.endAt ? new Date(data.endAt) : null)
+      : currentEnd;
+    if (start && end && end < start) {
+      throw new BadRequestException('Event end date must be on or after its start date.');
+    }
+    if (data.timezone) {
+      try {
+        new Intl.DateTimeFormat('en-NG', { timeZone: data.timezone }).format();
+      } catch {
+        throw new BadRequestException('timezone must be a valid IANA timezone.');
+      }
+    }
+  }
+
+  private validateSections(sections: CreateEventDto['sections']) {
+    if (sections === undefined) return undefined;
+    return sections.map((section, index) => {
+      const result = eventSectionInputSchema.safeParse({
+        type: section.type,
+        content: section.content,
+      });
+      if (!result.success) {
+        throw new BadRequestException({
+          message: 'Invalid event section',
+          details: result.error.issues.map((issue) => ({
+            path: `sections.${index}.${issue.path.join('.')}`,
+            message: issue.message,
+          })),
+        });
+      }
+      return { ...section, content: result.data.content };
+    });
+  }
+
+  private async replaceSchedules(
+    tx: Prisma.TransactionClient,
+    eventId: string,
+    schedules: NonNullable<CreateEventDto['schedules']>,
+  ) {
+    await tx.eventSchedule.deleteMany({ where: { eventId, tenantId: this.tenantId } });
+    if (!schedules.length) return;
+    await tx.eventSchedule.createMany({
+      data: schedules.map((schedule, index) => ({
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        eventId,
+        title: schedule.title.trim(),
+        description: schedule.description?.trim() || null,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime || null,
+        recurrenceRule: schedule.recurrenceRule?.trim() || null,
+        meetingUrl: schedule.meetingUrl?.trim() || null,
+        sortOrder: schedule.sortOrder ?? index,
+        updatedAt: new Date(),
+      })),
+    });
+  }
+
+  private async replaceSections(
+    tx: Prisma.TransactionClient,
+    eventId: string,
+    sections: NonNullable<ReturnType<EventsService['validateSections']>>,
+  ) {
+    await tx.eventSection.deleteMany({ where: { eventId, tenantId: this.tenantId } });
+    if (!sections.length) return;
+    await tx.eventSection.createMany({
+      data: sections.map((section, index) => ({
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        eventId,
+        type: section.type,
+        title: section.title?.trim() || null,
+        subtitle: section.subtitle?.trim() || null,
+        content: section.content as Prisma.InputJsonValue,
+        sortOrder: section.sortOrder ?? index,
+        isVisible: section.isVisible ?? true,
+        updatedAt: new Date(),
+      })),
+    });
+  }
+
+  private revalidateEvent(slug: string) {
+    this.revalidate.trigger(
+      ['events', `event:${slug}`],
+      ['/', '/events', `/events/${slug}`],
+    );
+  }
 
   /** Tenant-unique slug; appends a short suffix on collision. */
   private async uniqueSlug(base: string, excludeId?: string): Promise<string> {

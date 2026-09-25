@@ -21,8 +21,9 @@ export function useEventShare(event: EventSummary, href: string, dateLabel: stri
     const url = buildUrl();
     const text = `${shareText}\n${url}`;
     try {
-      if (event.flyerImageUrl && navigator.canShare) {
-        const res = await fetch(event.flyerImageUrl);
+      const shareImage = event.socialImageUrl || event.coverImageUrl || event.flyerImageUrl;
+      if (shareImage && navigator.canShare) {
+        const res = await fetch(shareImage);
         const blob = await res.blob();
         const file = new File([blob], `${event.slug}-flyer.jpg`, { type: blob.type || "image/jpeg" });
         if (navigator.canShare({ files: [file] })) {
@@ -43,7 +44,7 @@ export function useEventShare(event: EventSummary, href: string, dateLabel: stri
     try {
       await navigator.clipboard.writeText(buildUrl());
       setCopied(true);
-      showToast.success("Registration link copied");
+      showToast.success("Event link copied");
       setTimeout(() => setCopied(false), 2000);
     } catch {
       showToast.error("Couldn't copy the link");

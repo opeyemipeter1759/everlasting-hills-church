@@ -2,6 +2,7 @@
 
 import { CalendarDays, CheckCircle2, EyeOff, Pencil, Trash2, Users } from "lucide-react";
 import Loader from "@/components/ui/feedback/Loader";
+import Image from "next/image";
 import type { EventDetail } from "@/types";
 import { formatRange } from "./helpers";
 
@@ -31,13 +32,16 @@ export default function EventCard({
       className="group bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-[#87102C]/30 hover:shadow-md transition-all flex flex-col"
     >
       <div className="h-32 bg-[#FFE8ED] dark:bg-[#87102C]/20 flex items-center justify-center overflow-hidden">
-        {ev.flyerImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={ev.flyerImageUrl}
-            alt=""
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+        {ev.coverImageUrl || ev.flyerImageUrl ? (
+          <div className="relative h-full w-full">
+            <Image
+              src={ev.coverImageUrl || ev.flyerImageUrl || ""}
+              alt={`${ev.title} poster`}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+              className="object-contain"
+            />
+          </div>
         ) : (
           <CalendarDays size={28} className="text-[#87102C]" />
         )}
@@ -48,6 +52,10 @@ export default function EventCard({
           {ev.status === "PUBLISHED" ? (
             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
               Published
+            </span>
+          ) : ev.status === "ARCHIVED" ? (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400">
+              Archived
             </span>
           ) : (
             <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400">

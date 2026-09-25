@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Sparkles } from "lucide-react";
 import type { EventSummary } from "@/types";
 import FallbackArt from "./FallbackArt";
@@ -13,17 +14,19 @@ interface EventFlierProps {
 }
 
 export default function EventFlier({ event, dayNum, monthShort, countdown }: EventFlierProps) {
-  const [flyerOk, setFlyerOk] = useState(Boolean(event.flyerImageUrl));
+  const image = event.coverImageUrl || event.flyerImageUrl;
+  const [flyerOk, setFlyerOk] = useState(Boolean(image));
 
   return (
     <div className="relative aspect-[4/3] flex-shrink-0 bg-[#0E020A]">
-      {flyerOk && event.flyerImageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={event.flyerImageUrl}
+      {flyerOk && image ? (
+        <Image
+          src={image}
           alt={event.title}
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onError={() => setFlyerOk(false)}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="object-contain"
         />
       ) : (
         <FallbackArt />

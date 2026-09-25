@@ -51,10 +51,12 @@ interface FetchOptions extends Omit<RequestInit, "body" | "headers"> {
   cache?: RequestCache;
   /** Next.js ISR revalidation. Useful for public, cache-friendly endpoints. */
   revalidate?: number;
+  /** Cache tags invalidated by the backend after content mutations. */
+  tags?: string[];
 }
 
 async function request<T>(method: string, path: string, options: FetchOptions = {}): Promise<T> {
-  const { body, headers = {}, withAuth = true, cache, revalidate, ...rest } = options;
+  const { body, headers = {}, withAuth = true, cache, revalidate, tags, ...rest } = options;
   const authHeaders = withAuth ? await getAuthHeader() : {};
 
   // Cast to any to bridge Node's RequestInit and Next.js's augmented fetch options.
@@ -70,7 +72,7 @@ async function request<T>(method: string, path: string, options: FetchOptions = 
     },
     ...(body !== undefined && { body: JSON.stringify(body) }),
     ...(cache && { cache }),
-    ...(revalidate !== undefined && { next: { revalidate } }),
+    ...((revalidate !== undefined || tags) && { next: { revalidate, tags } }),
   } as RequestInit;
 
   const response = await fetch(buildUrl(path), init);

@@ -8,6 +8,7 @@ async function fetchSpotlightEvents(): Promise<EventSummary[]> {
     const events = await serverApi.get<EventSummary[]>("/events", {
       withAuth: false,
       revalidate: 300,
+      tags: ["events"],
     });
     const upcoming = events
       .filter((e) => !isPastEventDate(e.startAt, e.endAt))

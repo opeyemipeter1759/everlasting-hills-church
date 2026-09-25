@@ -1,216 +1,67 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { ArrowDown, CalendarDays, MapPin, CalendarPlus } from "lucide-react";
+import { CalendarDays, CalendarPlus, MapPin, Radio } from "lucide-react";
 import type { EventDetail } from "@/types";
-import { formatEventDate, formatEventTimeRange } from "./event-format";
-
-const EASE = [0.22, 1, 0.36, 1] as const;
+import { formatEventDateRange, getEventStatus } from "./event-format";
+import EventShareButton from "./EventShareButton";
 
 export default function EventHero({ event }: { event: EventDetail }) {
-  const [flyerOk, setFlyerOk] = useState(Boolean(event.flyerImageUrl));
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  const dateLabel = formatEventDate(event.startAt);
-  const timeLabel = formatEventTimeRange(event.startAt, event.endAt);
+  const poster = event.coverImageUrl || event.flyerImageUrl;
+  const primaryUrl = event.primaryCtaUrl || event.liveUrl || (event.registrationRequired ? event.registrationUrl : null);
+  const primaryLabel = event.primaryCtaLabel || (event.liveUrl ? "Join Live" : event.registrationRequired ? "Register" : null);
+  const status = getEventStatus(event.startAt, event.endAt, event.timezone);
   const venue = [event.venueName, event.venueAddress].filter(Boolean).join(" · ");
+  const dateLabel = formatEventDateRange(event.startAt, event.endAt, event.timezone);
 
   return (
-    <section className="relative w-full min-h-screen flex flex-col justify-end overflow-hidden bg-[#0E020A]">
-
-      {/* ── Background ──────────────────────────────────────────────────── */}
-      {flyerOk && event.flyerImageUrl ? (
-        <Image
-          src={event.flyerImageUrl}
-          alt=""
-          aria-hidden="true"
-          onError={() => setFlyerOk(false)}
-          fill
-          sizes="100vw"
-          priority
-          className="object-cover object-top"
-        />
-      ) : (
-        <FallbackCanvas />
+    <section className="relative overflow-hidden bg-[#10080b] text-white">
+      {event.heroImageUrl && (
+        <div className="absolute inset-0 opacity-35" aria-hidden="true">
+          <Image src={event.heroImageUrl} alt="" fill priority sizes="100vw" className="object-cover" />
+        </div>
       )}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(135,16,44,0.38),transparent_42%),linear-gradient(110deg,rgba(16,8,11,0.98),rgba(16,8,11,0.76))]" aria-hidden="true" />
 
-      {/* Bottom-heavy gradient so text is always readable */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(to top, #0E020A 0%, rgba(14,2,10,0.88) 28%, rgba(14,2,10,0.5) 52%, rgba(14,2,10,0.15) 75%, transparent 100%)",
-        }}
-      />
-      {/* Subtle side vignette */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 120% 100% at 50% 100%, transparent 40%, rgba(14,2,10,0.45) 100%)",
-        }}
-      />
+      <div className="relative mx-auto grid min-h-[680px] max-w-7xl items-center gap-10 px-4 pb-20 pt-32 xs:px-5 sm:px-8 lg:grid-cols-[1.08fr_0.72fr] lg:gap-16 lg:py-36">
+        <div className="min-w-0">
+          <div className="mb-7 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#E7CDD3]">
+            <span>Everlasting Hills Church</span><span aria-hidden="true">·</span><span>{status}</span>
+          </div>
+          <h1 className="max-w-4xl text-balance text-5xl font-black leading-[0.94] tracking-[-0.045em] sm:text-7xl lg:text-8xl">{event.title}</h1>
+          {(event.theme || event.tagline) && <p className="mt-5 max-w-2xl text-xl font-medium leading-snug text-[#FFE8ED] sm:text-2xl">{event.theme || event.tagline}</p>}
+          {event.shortDescription && <p className="mt-6 max-w-2xl break-words text-base leading-7 text-white/66 sm:text-lg">{event.shortDescription}</p>}
 
-      {/* ── Content ─────────────────────────────────────────────────────── */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 xs:px-5 sm:px-10 pb-16 sm:pb-24 pt-48">
+          <dl className="mt-8 flex flex-col gap-3 text-sm text-white/80 sm:flex-row sm:flex-wrap sm:gap-5">
+            <div className="flex items-center gap-2"><CalendarDays size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Dates</dt><dd>{dateLabel}</dd></div>
+            {event.Schedules.length > 0 && <div className="flex items-center gap-2"><Radio size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Meeting times</dt><dd>{event.Schedules.map((item) => formatClock(item.startTime)).join(" & ")} · {timeZoneLabel(event.timezone)}</dd></div>}
+            {venue && <div className="flex items-center gap-2"><MapPin size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Location</dt><dd>{venue}</dd></div>}
+          </dl>
 
-        {/* Eyebrow */}
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: EASE }}
-          className="text-[10px] font-bold uppercase tracking-[0.18em] xs:tracking-[0.35em] text-[#FFB3C1]/70 mb-4"
-        >
-          Everlasting Hills Church &nbsp;·&nbsp; Event
-        </motion.p>
+          <div className="mt-9 flex flex-wrap gap-3">
+            {primaryUrl && primaryLabel && <a href={primaryUrl} target={primaryUrl.startsWith("http") ? "_blank" : undefined} rel={primaryUrl.startsWith("http") ? "noopener noreferrer" : undefined} className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.08em] text-[#6E0C24] transition hover:bg-[#FFE8ED] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40">{primaryLabel}</a>}
+            {event.registrationRequired && event.rsvpEnabled && !primaryUrl && <a href="#rsvp" className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.08em] text-[#6E0C24]">Register</a>}
+            <EventShareButton event={event} />
+            {event.secondaryCtaUrl && event.secondaryCtaLabel && <a href={event.secondaryCtaUrl} className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/25 px-6 text-sm font-bold text-white hover:bg-white/10">{event.secondaryCtaLabel}</a>}
+            <a href={`${(process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "")}/calendar/event/${encodeURIComponent(event.slug)}.ics`} download className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 px-5 text-sm font-semibold text-white/80 hover:bg-white/10"><CalendarPlus size={15} /> Add to calendar</a>
+          </div>
+        </div>
 
-        {/* Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, delay: 0.1, ease: EASE }}
-          className="font-black text-white leading-[0.95] tracking-tight text-balance"
-          style={{ fontSize: "clamp(2.8rem, 8vw, 6.5rem)" }}
-        >
-          {event.title}
-        </motion.h1>
-
-        {event.tagline && (
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.22, ease: EASE }}
-            className="mt-4 text-white/55 text-base sm:text-lg leading-relaxed max-w-xl"
-          >
-            {event.tagline}
-          </motion.p>
+        {poster && (
+          <div className="relative mx-auto aspect-[4/5] w-full min-w-0 max-w-[430px] overflow-hidden rounded-sm bg-black/30 shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/10">
+            <Image src={poster} alt={`${event.title}${event.theme ? ` — ${event.theme}` : ""} poster`} fill priority sizes="(max-width: 1024px) 90vw, 430px" className="object-contain" />
+          </div>
         )}
-
-        {/* Meta chips */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.34, ease: EASE }}
-          className="mt-7 flex flex-wrap gap-2.5"
-        >
-          {dateLabel && (
-            <MetaChip icon={CalendarDays}>
-              {dateLabel}{timeLabel ? ` · ${timeLabel}` : ""}
-            </MetaChip>
-          )}
-          {venue && (
-            <MetaChip icon={MapPin}>{venue}</MetaChip>
-          )}
-        </motion.div>
-
-        {/* CTAs */}
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.46, ease: EASE }}
-          className="mt-8 flex flex-wrap gap-3"
-        >
-          {event.rsvpEnabled && (
-            <a
-              href="#rsvp"
-              className="group inline-flex items-center gap-2.5 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-[#87102C] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#FFE8ED] hover:shadow-[0_12px_40px_rgba(135,16,44,0.35)]"
-            >
-              Reserve My Seat
-              <ArrowDown size={13} className="group-hover:translate-y-0.5 transition-transform" />
-            </a>
-          )}
-          <a
-            href="#details"
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 backdrop-blur-md px-7 py-3.5 text-sm font-semibold text-white/85 transition-all duration-200 hover:border-white/35 hover:bg-white/10"
-          >
-            Event Details
-          </a>
-          {/* Plain anchor with the API's Content-Disposition doing the work, so
-              the browser hands the file to the member's calendar app. A fetched
-              blob URL opens a blank preview on iOS instead of handing off. */}
-          <a
-            href={`${(process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "")}/calendar/event/${encodeURIComponent(event.slug)}.ics`}
-            download
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 backdrop-blur-md px-7 py-3.5 text-sm font-semibold text-white/85 transition-all duration-200 hover:border-white/35 hover:bg-white/10"
-          >
-            <CalendarPlus size={14} />
-            Add to Calendar
-          </a>
-        </motion.div>
       </div>
-
-      {/* ── Scroll cue ──────────────────────────────────────────────────── */}
-      <motion.div
-        className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: scrolled ? 0 : 1 }}
-        transition={{ duration: 0.4 }}
-      >
-        <span className="text-[9px] font-bold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-white/30">Scroll</span>
-        <motion.span
-          className="w-px h-8 bg-gradient-to-b from-white/30 to-transparent"
-          animate={{ scaleY: [1, 0.4, 1], opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </motion.div>
     </section>
   );
 }
 
-/* ── Meta chip ───────────────────────────────────────────────────────────── */
-function MetaChip({ icon: Icon, children }: { icon: React.ElementType; children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/30 backdrop-blur-md px-4 py-2.5 text-sm text-white/80">
-      <Icon size={13} className="text-[#FFB3C1] flex-shrink-0" />
-      <span>{children}</span>
-    </span>
-  );
+function formatClock(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`;
 }
 
-/* ── Fallback canvas (no flyer image) ────────────────────────────────────── */
-function FallbackCanvas() {
-  return (
-    <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-      {/* Base gradient */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(145deg, #1a0410 0%, #3a0818 35%, #87102C 75%, #a8163a 100%)",
-        }}
-      />
-      {/* Large soft orb */}
-      <div
-        className="absolute -top-1/4 -right-1/4 w-[70vw] h-[70vw] rounded-full opacity-30"
-        style={{ background: "radial-gradient(circle, #FFB3C1 0%, transparent 70%)", filter: "blur(80px)" }}
-      />
-      {/* Subtle grid texture */}
-      <div
-        className="absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-      {/* Brand text watermark */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-        <p
-          className="font-black text-white/[0.04] text-center uppercase tracking-[0.1em] xs:tracking-[0.2em] leading-none"
-          style={{ fontSize: "clamp(4rem, 18vw, 14rem)" }}
-          aria-hidden="true"
-        >
-          EHC
-        </p>
-      </div>
-    </div>
-  );
+function timeZoneLabel(timezone: string) {
+  return timezone === "Africa/Lagos" ? "WAT" : timezone;
 }

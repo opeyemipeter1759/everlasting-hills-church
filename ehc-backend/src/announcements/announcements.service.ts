@@ -12,6 +12,10 @@ import { roleFilter } from '../members/members-directory.util';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { PushEvents, type AnnouncementPublishedPayload } from '../push/push.events';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
+import {
+  buildEventAnnouncementBody,
+  formatEventTimeOfDay,
+} from './announcement-from-event.util';
 import type { Env } from '../config/env.validation';
 
 /** One email recipient plus what we need to address them personally. */
@@ -144,6 +148,7 @@ export class AnnouncementsService {
     targeting: AudienceTargeting,
     imageUrl?: string | null,
     greeting?: string | null,
+    link = '/dashboard',
   ): Promise<number> {
     const allProfiles = await this.prisma.profile.findMany({
       where: { tenantId: this.tenantId },
@@ -157,7 +162,7 @@ export class AnnouncementsService {
         title,
         body,
         type: 'announcement',
-        link: '/dashboard',
+        link,
       })),
     );
 
@@ -253,6 +258,84 @@ export class AnnouncementsService {
     return created;
   }
 
+  /**
+   * Raise an announcement from an event that has just been published, so the
+   * church hears about it in the same place it hears everything else instead
+   * of only finding it on the events page.
+   *
+   * Idempotent on eventId: republishing, or an edit that re-saves an already
+   * published event, must not announce it twice. Returns null when there is
+   * already an announcement for this event.
+   *
+   * Never throws into the caller — an announcement failing is not a reason for
+   * publishing the event itself to fail.
+   */
+  async announceEvent(event: {
+    id: string;
+    slug: string;
+    title: string;
+    tagline: string | null;
+    shortDescription: string | null;
+    description: string | null;
+    startAt: Date;
+    venueName: string | null;
+    flyerImageUrl: string | null;
+    customPath: string | null;
+  }): Promise<{ id: string } | null> {
+    try {
+      const existing = await this.prisma.announcement.findUnique({
+        where: { eventId: event.id },
+        select: { id: true },
+      });
+      if (existing) return null;
+
+      const body = buildEventAnnouncementBody(event);
+      const link = event.customPath ?? `/events/${event.slug}`;
+      const recipients = await this.fanOut(
+        event.title,
+        body,
+        false, // email is the admin's deliberate choice, not a side effect of publishing
+        { targetRoles: [], targetGenders: [], targetProfileIds: [] },
+        event.flyerImageUrl,
+        null,
+        link,
+      );
+
+      const created = await this.prisma.announcement.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          eventId: event.id,
+          title: event.title,
+          body,
+          imageUrl: event.flyerImageUrl ?? null,
+          greeting: null,
+          audience: 'all',
+          sendEmail: false,
+          status: EventStatus.PUBLISHED,
+          createdById: null,
+          recipients,
+          targetRoles: [],
+          targetGenders: [],
+          targetProfileIds: [],
+          targetProfileNames: [],
+          eventTime: formatEventTimeOfDay(event.startAt),
+          venue: event.venueName ?? null,
+        },
+      });
+
+      this.emitPush(created);
+      return { id: created.id };
+    } catch (err) {
+      // A unique-constraint race (two publishes landing together) is the
+      // expected case here and means the announcement already exists.
+      this.logger.warn(
+        `Could not raise an announcement for event ${event.slug}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      return null;
+    }
+  }
+
   /** Fire-and-forget push fan-out. Never awaited, never allowed to fail a request. */
   private emitPush(announcement: { id: string; title: string; body: string; audience: string }) {
     this.emitter.emit(PushEvents.AnnouncementPublished, {
@@ -272,12 +355,26 @@ export class AnnouncementsService {
     });
   }
 
+  /** The member-facing feed. Takes 20 rather than 5 because the dashboard
+   * popover scrolls through them; the home panel still shows its own top few. */
   async listFeed() {
     return this.prisma.announcement.findMany({
       where: { tenantId: this.tenantId, status: EventStatus.PUBLISHED },
       orderBy: { createdAt: 'desc' },
-      take: 5,
-      select: { id: true, title: true, body: true, imageUrl: true, createdAt: true, eventTime: true, venue: true },
+      take: 20,
+      select: {
+        id: true,
+        title: true,
+        body: true,
+        imageUrl: true,
+        createdAt: true,
+        eventTime: true,
+        venue: true,
+        // Present only on announcements raised from an event, so the reader can
+        // open the event itself rather than stopping at the summary.
+        eventId: true,
+        Event: { select: { slug: true, customPath: true } },
+      },
     });
   }
 

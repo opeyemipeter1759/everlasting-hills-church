@@ -1,11 +1,11 @@
 import { CalendarDays, Clock, ExternalLink, MapPin, Mic, UserRound, type LucideIcon } from "lucide-react";
 import type { EventDetail } from "@/types";
-import { formatEventDate, formatEventTimeRange } from "./event-format";
+import { formatEventDateRange, formatEventTimeRange } from "./event-format";
 
 export default function EventDetailsBento({ event }: { event: EventDetail }) {
   const chips: { icon: LucideIcon; label: string; value: string | null }[] = [
-    { icon: CalendarDays, label: "Date",           value: formatEventDate(event.startAt) || null },
-    { icon: Clock,        label: "Time",           value: formatEventTimeRange(event.startAt, event.endAt) || null },
+    { icon: CalendarDays, label: "Date",           value: formatEventDateRange(event.startAt, event.endAt, event.timezone) || null },
+    { icon: Clock,        label: "Time",           value: event.Schedules.length ? event.Schedules.map((item) => `${formatClock(item.startTime)} ${item.title}`).join(" · ") : formatEventTimeRange(event.startAt, null, event.timezone) || null },
     { icon: MapPin,       label: "Venue",          value: [event.venueName, event.venueAddress].filter(Boolean).join(" · ") || null },
     { icon: UserRound,    label: "Host",           value: event.hostName },
     { icon: Mic,          label: "Guest Minister", value: event.guestMinister },
@@ -76,4 +76,9 @@ export default function EventDetailsBento({ event }: { event: EventDetail }) {
       </div>
     </section>
   );
+}
+
+function formatClock(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
 }

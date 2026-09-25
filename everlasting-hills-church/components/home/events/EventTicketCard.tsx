@@ -56,7 +56,7 @@ export default function EventTicketCard({
   // Explicitly false, not merely falsy: the field only reaches the summary
   // payload once the API carrying it is deployed, and until then treating a
   // missing value as "no RSVPs" would hide Register on every event.
-  const takingRsvps = event.rsvpEnabled !== false;
+  const takingRsvps = event.registrationRequired !== false && event.rsvpEnabled !== false;
 
   const { copied, handleShareLink, handleWhatsApp } = useEventShare(event, href, dateLabel);
   const { registering, registered, handleRegisterClick } = useEventRegistration(
@@ -80,6 +80,7 @@ export default function EventTicketCard({
         <h3 className="text-base font-bold leading-snug tracking-tight text-[#111] line-clamp-2">
           {event.title}
         </h3>
+        {event.theme && <p className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-[#87102C]">{event.theme}</p>}
 
         <div className="mt-3 space-y-2">
           {startDateLabel && (
@@ -99,12 +100,22 @@ export default function EventTicketCard({
               {event.venueName}
             </InfoBadge>
           )}
+          {event.Schedules?.length > 0 && (
+            <InfoBadge icon={CalendarCheck} label="Daily rhythm">
+              {event.Schedules.map((schedule) => formatScheduleTime(schedule.startTime)).join(" & ")}
+            </InfoBadge>
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {/* An event created without RSVPs has nothing to register for, so
               the card offers its page instead of a dead Register button. */}
-          {takingRsvps ? (
+          {event.liveUrl ? (
+            <a href={event.liveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-w-[7rem] flex-1 items-center justify-center gap-2 rounded-lg bg-[#87102C] px-2 py-2.5 text-xs font-bold text-white transition-colors hover:bg-[#6E0C24]">
+              {event.primaryCtaLabel || "Join Live"}
+              <ArrowRight size={13} aria-hidden="true" />
+            </a>
+          ) : takingRsvps ? (
             <RegisterButton
               onClick={handleRegisterClick}
               registering={registering}
@@ -132,7 +143,7 @@ export default function EventTicketCard({
           </IconButton>
           {/* When Register takes the primary slot, the event's own page still
               needs a way in — the flier and title are not links. */}
-          {takingRsvps && (
+          {(takingRsvps || event.liveUrl) && (
             <Link
               href={href}
               className="inline-flex h-9 flex-shrink-0 items-center gap-1 rounded-lg border border-[#E7CDD3] px-2.5 text-xs font-bold text-[#87102C] transition-colors hover:bg-[#FFF4F6]"
@@ -147,4 +158,9 @@ export default function EventTicketCard({
       {inviteOpen && <EventInviteModal event={event} onClose={() => setInviteOpen(false)} />}
     </div>
   );
+}
+
+function formatScheduleTime(value: string) {
+  const [hour, minute] = value.split(":").map(Number);
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${hour >= 12 ? "PM" : "AM"}`;
 }

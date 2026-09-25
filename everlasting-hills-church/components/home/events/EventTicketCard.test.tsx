@@ -19,19 +19,34 @@ const event = (over: Partial<EventSummary> = {}): EventSummary => ({
   slug: "furnace-2026",
   title: "Furnace 2026",
   tagline: "Dominion",
+  theme: "Dominion",
+  shortDescription: null,
   startAt: "2026-10-02T05:00:00.000Z",
   endAt: null,
+  timezone: "Africa/Lagos",
+  locationType: "ONLINE",
   venueName: "Youtube Channel",
   flyerImageUrl: null,
+  coverImageUrl: null,
+  heroImageUrl: null,
+  socialImageUrl: null,
+  liveUrl: null,
+  registrationUrl: null,
+  primaryCtaLabel: null,
+  primaryCtaUrl: null,
   featured: false,
   customPath: null,
   rsvpEnabled: true,
+  registrationRequired: true,
+  Schedules: [],
   ...over,
 });
 
+const registeredEvents = { isRegistered: () => false, markRegistered: vi.fn() };
+
 function renderCard(over: Partial<EventSummary> = {}) {
   return render(
-    <EventTicketCard event={event(over)} onNeedsRsvpModal={vi.fn()} registeredEvents={{}} />,
+    <EventTicketCard event={event(over)} onNeedsRsvpModal={vi.fn()} registeredEvents={registeredEvents} />,
   );
 }
 
@@ -67,7 +82,7 @@ describe("EventTicketCard", () => {
       <EventTicketCard
         event={withoutFlag as EventSummary}
         onNeedsRsvpModal={vi.fn()}
-        registeredEvents={{}}
+        registeredEvents={registeredEvents}
       />,
     );
 

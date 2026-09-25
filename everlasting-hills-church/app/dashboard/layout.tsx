@@ -6,6 +6,7 @@ import { HeaderProvider } from '@/layout/Head';
 import { ThemeProvider } from '@/context/ThemeContext';
 import DashboardLayouts from '@/layout/DashboardLayouts';
 import { GlobalAuthGuard } from '@/components/auth/GlobalAuthGuard';
+import AnnouncementsPopover from '@/components/dashboard/shell/AnnouncementsPopover';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,6 +15,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <ThemeProvider>
           <HeaderProvider>
             <DashboardLayouts>{children}</DashboardLayouts>
+            {/* Mounted on the shell, not a page, so arriving anywhere in the
+                dashboard surfaces what the church has said. */}
+            <AnnouncementsPopover />
             <Toaster
               position="top-right"
               toastOptions={{

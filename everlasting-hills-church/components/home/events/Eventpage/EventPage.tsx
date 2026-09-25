@@ -10,6 +10,7 @@ async function fetchAllEvents(): Promise<EventSummary[]> {
     return await serverApi.get<EventSummary[]>("/events", {
       withAuth: false,
       revalidate: 300,
+      tags: ["events"],
     });
   } catch {
     return [];

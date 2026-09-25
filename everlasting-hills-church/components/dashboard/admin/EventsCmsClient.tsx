@@ -92,6 +92,7 @@ export default function EventsCmsClient() {
 
   const publishedCount = items?.filter((e) => e.status === "PUBLISHED").length ?? 0;
   const draftCount = items?.filter((e) => e.status === "DRAFT").length ?? 0;
+  const archivedCount = items?.filter((e) => e.status === "ARCHIVED").length ?? 0;
 
   return (
     <div className="space-y-5 max-w-full">
@@ -104,7 +105,7 @@ export default function EventsCmsClient() {
             {items && (
               <>
                 {" "}
-                · {publishedCount} published, {draftCount} drafts
+                · {publishedCount} published, {draftCount} drafts, {archivedCount} archived
               </>
             )}
           </p>
@@ -164,7 +165,7 @@ export default function EventsCmsClient() {
         title="Delete event?"
         description={
           <>
-            This permanently deletes <span className="font-semibold">{toDelete?.title}</span> and all its RSVPs.
+            This permanently deletes <span className="font-semibold">{toDelete?.title}</span>, its schedules, page sections, and all RSVPs.
             This cannot be undone.
           </>
         }
