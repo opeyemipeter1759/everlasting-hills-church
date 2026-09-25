@@ -135,7 +135,6 @@ export default function AdminDashboardClient() {
             {visible("pastoral") && (
               <PastoralCareCard
                 care={data.pastoralCare}
-                viewMoreHref="/dashboard/prayer-requests"
                 onDismiss={() => dismiss("pastoral")}
               />
             )}

@@ -19,19 +19,6 @@ interface UpcomingBirthday {
   daysUntil: number;
 }
 
-interface AtRiskEntry {
-  userId: string;
-  userName: string;
-  photoUrl: string | null;
-  phone: string | null;
-}
-
-interface AtRiskResponse {
-  absentConsecutiveWeeks: (AtRiskEntry & { consecutiveAbsences: number })[];
-  neverAttended: (AtRiskEntry & { joinedAt: string })[];
-  belowFiftyPercent: (AtRiskEntry & { rate: number })[];
-}
-
 interface AuditEntry {
   id: string;
   actorId: string | null;
@@ -92,8 +79,6 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
     givingCategories,
     unassignedFollowUps,
     adminAnalytics,
-    openFollowUpTasks,
-    atRisk,
     units,
     audit,
   ] = await Promise.all([
@@ -106,42 +91,17 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
     apiClient.get<{ thisMonthNaira: number; momChange: number }>("/admin/giving/summary"),
     apiClient.get<{ category: string; amountNaira: number }[]>("/admin/giving/categories"),
     apiClient.get<unknown[]>("/follow-up?stage=UNASSIGNED"),
-    apiClient.get<{ totalPrayers: number; pendingPrayers: number }>("/admin/analytics"),
-    apiClient.get<unknown[]>("/members/follow-ups"),
-    apiClient.get<AtRiskResponse>("/members/at-risk"),
+    apiClient.get<{
+      totalPrayers: number;
+      pendingPrayers: number;
+      pendingQuestions: number;
+      draftTestimonials: number;
+    }>("/admin/analytics"),
     apiClient.get<{ name: string; totalMembers: number; activeMembers: number }[]>("/admin/units"),
     apiClient.get<AuditEntry[]>("/cms/audit?limit=10"),
   ]);
 
   const stats = summary.data?.stats ?? [];
-
-  // The endpoint already returns who each person is, why they're at risk and
-  // how to reach them. Keeping only the count meant an admin could see "8 at
-  // risk" on the home page and had nowhere to go with it — so the names are
-  // carried through, most-absent first, and the count is derived from them.
-  const atRiskPeople: AdminDashboardData["pastoralCare"]["atRisk"] = [];
-  const seenAtRisk = new Set<string>();
-  const addAtRisk = (e: AtRiskEntry, reason: string, weight: number) => {
-    if (seenAtRisk.has(e.userId)) return;
-    seenAtRisk.add(e.userId);
-    atRiskPeople.push({
-      id: e.userId,
-      name: e.userName,
-      photoUrl: e.photoUrl,
-      phone: e.phone,
-      reason,
-      weight,
-    });
-  };
-  // Consecutive absence first: it is the most recent, most actionable signal.
-  for (const e of atRisk.data.absentConsecutiveWeeks) {
-    addAtRisk(e, `Missed ${e.consecutiveAbsences} in a row`, 1000 + e.consecutiveAbsences);
-  }
-  for (const e of atRisk.data.neverAttended) addAtRisk(e, "Never attended", 500);
-  for (const e of atRisk.data.belowFiftyPercent) {
-    addAtRisk(e, `${Math.round(e.rate * 100)}% attendance`, Math.round(100 - e.rate * 100));
-  }
-  atRiskPeople.sort((a, b) => b.weight - a.weight);
 
   const data: AdminDashboardData = {
     stats,
@@ -164,9 +124,8 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
       // Pending, not every request ever submitted — this sits beside two
       // outstanding-work counts, and a lifetime total can never reach zero.
       prayerRequests: adminAnalytics.data.pendingPrayers,
-      openFollowUps: openFollowUpTasks.data.length,
-      atRiskMembers: seenAtRisk.size,
-      atRisk: atRiskPeople,
+      questions: adminAnalytics.data.pendingQuestions,
+      testimonies: adminAnalytics.data.draftTestimonials,
     },
     celebrations: {
       birthdaysToday: upcomingBirthdays.data.filter((b) => b.daysUntil === 0).length,

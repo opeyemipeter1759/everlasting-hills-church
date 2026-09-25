@@ -83,19 +83,10 @@ export interface AdminDashboardData {
   };
   attendanceTrend: AttendancePoint[];
   pastoralCare: {
-    /** Requests still PENDING — outstanding work, not the lifetime total. */
+    /** Outstanding intake work only; completed/published records are excluded. */
     prayerRequests: number;
-    openFollowUps: number;
-    atRiskMembers: number;
-    /** Who they are, why, and how to reach them — most urgent first. */
-    atRisk: Array<{
-      id: string;
-      name: string;
-      photoUrl: string | null;
-      phone: string | null;
-      reason: string;
-      weight: number;
-    }>;
+    questions: number;
+    testimonies: number;
   };
   celebrations: {
     birthdaysToday: number;

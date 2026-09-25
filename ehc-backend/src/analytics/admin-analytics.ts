@@ -1,5 +1,6 @@
-import { PrayerRequestStatus } from '@prisma/client';
+import { PrayerRequestStatus, QuestionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ACTIVE_MEMBER } from '../members/active-members';
 
 export function getLast6Months() {
   return Array.from({ length: 6 }, (_, i) => {
@@ -44,6 +45,8 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     totalVisitors,
     totalPrayers,
     pendingPrayers,
+    pendingQuestions,
+    draftTestimonials,
     recentMembers,
     visitors,
     prayers,
@@ -60,14 +63,16 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     visitorsThisYear,
     visitorsLastYear,
   ] = await Promise.all([
-    prisma.member.count({ where: { tenantId } }),
+    prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER } }),
     prisma.visitor.count({ where: { tenantId } }),
     prisma.prayerRequest.count({ where: { tenantId } }),
     // Still waiting to be prayed over. totalPrayers is every request ever
     // submitted, which only ever grows — useful as an analytics total, useless
     // as a "what needs attention today" figure.
     prisma.prayerRequest.count({ where: { tenantId, status: PrayerRequestStatus.PENDING } }),
-    prisma.member.findMany({ where: { tenantId, joinedAt: { gte: sixMonthsAgo } }, select: { joinedAt: true } }),
+    prisma.question.count({ where: { tenantId, status: QuestionStatus.PENDING } }),
+    prisma.testimonial.count({ where: { tenantId, published: false } }),
+    prisma.member.findMany({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: sixMonthsAgo } }, select: { joinedAt: true } }),
     prisma.visitor.findMany({ where: { tenantId }, select: { membershipInterest: true, howDidYouLearn: true, attendanceType: true } }),
     prisma.prayerRequest.findMany({ where: { tenantId, submittedAt: { gte: sixMonthsAgo } }, select: { submittedAt: true } }),
     prisma.givingRecord.aggregate({ where: { tenantId, paystackStatus: 'success' }, _sum: { amount: true } }),
@@ -77,10 +82,10 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
       take: 8,
       include: { _count: { select: { AttendanceRecord: true } } },
     }),
-    prisma.member.count({ where: { tenantId, joinedAt: { gte: monthStart } } }),
-    prisma.member.count({ where: { tenantId, joinedAt: { gte: lastMonthStart, lt: monthStart } } }),
-    prisma.member.count({ where: { tenantId, joinedAt: { gte: yearStart } } }),
-    prisma.member.count({ where: { tenantId, joinedAt: { gte: lastYearStart, lt: yearStart } } }),
+    prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: monthStart } } }),
+    prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: lastMonthStart, lt: monthStart } } }),
+    prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: yearStart } } }),
+    prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: lastYearStart, lt: yearStart } } }),
     prisma.visitor.count({ where: { tenantId, submittedAt: { gte: todayStart } } }),
     prisma.visitor.count({ where: { tenantId, submittedAt: { gte: yesterdayStart, lt: todayStart } } }),
     prisma.visitor.count({ where: { tenantId, submittedAt: { gte: monthStart } } }),
@@ -136,6 +141,8 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     totalVisitors,
     totalPrayers,
     pendingPrayers,
+    pendingQuestions,
+    draftTestimonials,
     totalGivingNaira,
     avgAttendance,
     memberGrowth,
