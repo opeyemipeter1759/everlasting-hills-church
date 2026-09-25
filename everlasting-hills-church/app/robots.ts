@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 
 /**
  * Robots policy.
@@ -7,9 +8,7 @@ import type { MetadataRoute } from "next";
  *
  * NEXT_PUBLIC_APP_URL is set in .env (defaults to localhost in dev).
  */
-const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-  "https://everlastinghills.org";
+const SITE_URL = getSiteUrl();
 
 export default function robots(): MetadataRoute.Robots {
   return {

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 import { serverApi } from "@/lib/api/server";
 
 /**
@@ -8,9 +9,7 @@ import { serverApi } from "@/lib/api/server";
  * on demand). If the backend is down at crawl time, we degrade to the static routes
  * so we don't 500 the sitemap.
  */
-const SITE_URL =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-  "https://everlastinghills.org";
+const SITE_URL = getSiteUrl();
 
 interface PublishedSermon {
   slug: string;

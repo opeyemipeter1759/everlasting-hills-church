@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getSiteUrl } from "@/lib/site-url";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { serverApi, type ApiError } from "@/lib/api/server";
@@ -10,7 +11,7 @@ import EventSectionsRenderer from "@/components/events/detail/EventSectionsRende
 import MobileLiveBar from "@/components/events/detail/MobileLiveBar";
 import { formatEventDateRange } from "@/components/events/detail/event-format";
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "https://everlastinghills.org";
+const SITE_URL = getSiteUrl();
 
 /**
  * The frontend deploys on push and the API does not, so this page has to cope
