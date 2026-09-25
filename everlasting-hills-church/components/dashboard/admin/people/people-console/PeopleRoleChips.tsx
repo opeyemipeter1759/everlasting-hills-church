@@ -10,7 +10,11 @@ export default function PeopleRoleChips({
   counts?: DirectoryMeta["counts"];
   onSelect: (c: Chip) => void;
 }) {
+  const viewingDeactivated = params.status === "INACTIVE";
+
   function chipActive(c: Chip): boolean {
+    if (c.key === "deactivated") return viewingDeactivated;
+    if (viewingDeactivated) return false;
     if (c.key === "all") return !params.role && params.hasUnit !== "false";
     if (c.key === "noUnit") return params.hasUnit === "false";
     return params.role === c.role;
@@ -21,7 +25,13 @@ export default function PeopleRoleChips({
       {ROLE_CHIPS.map((chip) => {
         const active = chipActive(chip);
         const count =
-          chip.key === "all" ? counts?.total : chip.key === "role" ? counts?.byRole[chip.role] : undefined;
+          chip.key === "all"
+            ? counts?.total
+            : chip.key === "role"
+              ? counts?.byRole[chip.role]
+              : chip.key === "deactivated"
+                ? counts?.deactivated
+                : undefined;
         return (
           <button
             key={chip.label}

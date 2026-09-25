@@ -37,7 +37,9 @@ export default function RowActions({
               danger: p.status === "ACTIVE",
               onClick: () => onChangeStatus(p),
             },
-            ...(p.profileId
+            // A deactivated member cannot sign in, so the API refuses to resend
+            // their login. Offering it anyway only produces an error.
+            ...(p.profileId && p.status === "ACTIVE"
               ? [{ label: "Resend login details", icon: Mail, onClick: () => onResendLogin(p) }]
               : []),
             ...(manageable

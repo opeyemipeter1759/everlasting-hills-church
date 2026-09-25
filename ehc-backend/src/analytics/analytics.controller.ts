@@ -21,6 +21,8 @@ export class AnalyticsController {
         totalVisitors: 45,
         totalPrayers: 10,
         pendingPrayers: 3,
+        pendingQuestions: 2,
+        draftTestimonials: 4,
         totalGivingNaira: 250000,
         avgAttendance: 80,
         newMembersThisMonth: 5,

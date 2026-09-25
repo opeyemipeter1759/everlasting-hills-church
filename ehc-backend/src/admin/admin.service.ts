@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { ACTIVE_MEMBER, activeMembersOf } from '../members/active-members';
 import { HeadcountReadService } from '../headcount/services/headcount-read.service';
 import type { Env } from '../config/env.validation';
 
@@ -33,7 +34,7 @@ export class AdminService {
     const { startUtc, endUtc } = todayBounds();
 
     const [totalMembers, todayPresent, activeThisMonthRows] = await Promise.all([
-      this.prisma.member.count({ where: { tenantId: this.tenantId } }),
+      this.prisma.member.count({ where: activeMembersOf(this.tenantId) }),
       this.prisma.attendanceRecord.count({
         where: {
           tenantId: this.tenantId,
@@ -90,9 +91,9 @@ export class AdminService {
       volunteerRows, volThis, volLast,
       recentHeadcounts,
     ] = await Promise.all([
-      this.prisma.member.count({ where: { tenantId: t } }),
-      this.prisma.member.count({ where: { tenantId: t, joinedAt: thisM } }),
-      this.prisma.member.count({ where: { tenantId: t, joinedAt: lastM } }),
+      this.prisma.member.count({ where: { tenantId: t, ...ACTIVE_MEMBER } }),
+      this.prisma.member.count({ where: { tenantId: t, ...ACTIVE_MEMBER, joinedAt: thisM } }),
+      this.prisma.member.count({ where: { tenantId: t, ...ACTIVE_MEMBER, joinedAt: lastM } }),
       this.prisma.visitor.count({ where: { tenantId: t } }),
       this.prisma.visitor.count({ where: { tenantId: t, submittedAt: thisM } }),
       this.prisma.visitor.count({ where: { tenantId: t, submittedAt: lastM } }),

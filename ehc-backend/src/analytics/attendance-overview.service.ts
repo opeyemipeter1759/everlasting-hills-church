@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { ACTIVE_MEMBER } from '../members/active-members';
 import type { Env } from '../config/env.validation';
 import { QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere } from './attendance-analytics.utils';
 
@@ -24,7 +25,7 @@ export class AttendanceOverviewService {
       this.prisma.attendanceRecord.count({ where: { ...arWhere(prevStart, prevEnd), present: true } }),
       this.prisma.service.count({ where: { tenantId: this.tid, scheduledAt: { gte: start, lt: end }, ...svcWhere } }),
       this.prisma.service.count({ where: { tenantId: this.tid, scheduledAt: { gte: prevStart, lt: prevEnd }, ...svcWhere } }),
-      this.prisma.member.count({ where: { tenantId: this.tid } }),
+      this.prisma.member.count({ where: { tenantId: this.tid, ...ACTIVE_MEMBER } }),
     ]);
 
     const rate = curr > 0 ? currPresent / curr : 0;

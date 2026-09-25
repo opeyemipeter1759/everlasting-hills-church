@@ -43,10 +43,15 @@ export default function PeopleConsole() {
   }
 
   function selectChip(c: Chip) {
-    if (c.key === "all") patch({ role: "", hasUnit: "" });
-    else if (c.key === "noUnit") patch({ role: "", hasUnit: "false" });
-    else patch({ role: c.role, hasUnit: "" });
+    // Leaving the deactivated feed has to clear the status filter, or every
+    // other chip would keep filtering inside it and come back empty.
+    if (c.key === "deactivated") patch({ role: "", hasUnit: "", status: "INACTIVE" });
+    else if (c.key === "all") patch({ role: "", hasUnit: "", status: "" });
+    else if (c.key === "noUnit") patch({ role: "", hasUnit: "false", status: "" });
+    else patch({ role: c.role, hasUnit: "", status: "" });
   }
+
+  const viewingDeactivated = params.status === "INACTIVE";
 
   const counts = meta?.counts;
   const leaders =
@@ -78,6 +83,7 @@ export default function PeopleConsole() {
 
       <PeopleTable
         rows={rows}
+        deactivated={viewingDeactivated}
         loading={isLoading}
         selected={new Set(selectedIds)}
         onToggleRow={toggleRow}

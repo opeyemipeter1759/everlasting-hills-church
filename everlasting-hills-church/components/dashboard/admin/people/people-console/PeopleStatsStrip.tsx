@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Activity, CalendarPlus, Network, ShieldCheck, Users } from "lucide-react";
+import { CalendarPlus, Network, ShieldCheck, UserMinus, Users } from "lucide-react";
 import type { DirectoryMeta } from "@/lib/api/people";
 
 function StatCard({ icon, label, value }: { icon: ReactNode; label: string; value?: number }) {
@@ -23,11 +23,14 @@ export default function PeopleStatsStrip({
 }) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-      <StatCard icon={<Users size={16} />} label="Total" value={counts?.total} />
-      <StatCard icon={<Activity size={16} />} label="Active" value={counts?.active} />
+      {/* "Members" is the active membership now, which made the old Total and
+          Active tiles the same number. Deactivated takes that slot — it is the
+          figure the pair used to imply but never actually showed. */}
+      <StatCard icon={<Users size={16} />} label="Members" value={counts?.total} />
       <StatCard icon={<ShieldCheck size={16} />} label="Leaders" value={leaders} />
       <StatCard icon={<Network size={16} />} label="On a team" value={counts?.withUnit} />
       <StatCard icon={<CalendarPlus size={16} />} label="New this month" value={counts?.thisMonth} />
+      <StatCard icon={<UserMinus size={16} />} label="Deactivated" value={counts?.deactivated} />
     </div>
   );
 }

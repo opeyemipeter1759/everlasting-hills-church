@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MemberStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ACTIVE_MEMBER, DEACTIVATED_MEMBER } from '../active-members';
 import type { Env } from '../../config/env.validation';
 
 /** Lightweight member search: the "pick a person" picker and the flat active-member list. */
@@ -70,8 +71,11 @@ export class MemberSearchService {
 
   async getAllMembers(opts?: { search?: string; status?: string }) {
     const where: any = { tenantId: this.tenantId };
-    if (opts?.status === MemberStatus.ACTIVE) where.status = MemberStatus.ACTIVE;
-    if (opts?.status === MemberStatus.INACTIVE) where.status = { not: MemberStatus.ACTIVE };
+    // Same rule as the directory: active unless the deactivated feed is asked
+    // for by name. This endpoint feeds member pickers, and a deactivated person
+    // should not be offered for a unit or a task.
+    if (opts?.status === MemberStatus.INACTIVE) where.status = DEACTIVATED_MEMBER.status;
+    else if (opts?.status !== 'all') where.status = ACTIVE_MEMBER.status;
     if (opts?.search) {
       where.OR = [
         { firstName: { contains: opts.search, mode: 'insensitive' } },

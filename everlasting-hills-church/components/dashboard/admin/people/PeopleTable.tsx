@@ -8,6 +8,8 @@ import EmptyState from "./people-table/EmptyState";
 interface Props {
   rows: PersonRow[];
   loading: boolean;
+  /** Viewing the deactivated feed — changes only the empty state's wording. */
+  deactivated?: boolean;
   selected: Set<string>;
   onToggleRow: (id: string) => void;
   onToggleAll: () => void;
@@ -27,6 +29,7 @@ interface Props {
 export default function PeopleTable({
   rows,
   loading,
+  deactivated,
   selected,
   onToggleRow,
   onToggleAll,
@@ -75,7 +78,7 @@ export default function PeopleTable({
         </table>
       </div>
 
-      {rows.length === 0 && <EmptyState loading={loading} />}
+      {rows.length === 0 && <EmptyState loading={loading} deactivated={deactivated} />}
     </div>
   );
 }

@@ -66,10 +66,13 @@ export interface DirectoryMeta {
   limit: number;
   totalPages: number;
   counts: {
+    /** The membership — active people only. Deactivated are not members. */
     total: number;
     active: number;
     withUnit: number;
     thisMonth: number;
+    /** Size of the deactivated feed, reported separately from the membership. */
+    deactivated: number;
     byRole: Record<string, number>;
   };
 }

@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { DirectoryQuery } from '../members.types';
 import { roleFilter } from '../members-directory.util';
+import { ACTIVE_MEMBER, DEACTIVATED_MEMBER } from '../active-members';
 
 /** Builds the where-clause, ordering, and tenant-wide counts backing the People directory. */
 @Injectable()
@@ -30,8 +31,11 @@ export class MemberDirectoryQueryService {
         { phone: { contains: s, mode: 'insensitive' } },
       ];
     }
-    if (q.status === MemberStatus.ACTIVE) where.status = MemberStatus.ACTIVE;
-    if (q.status === MemberStatus.INACTIVE) where.status = { not: MemberStatus.ACTIVE };
+    // Deactivating somebody takes them out of the membership, so the directory
+    // shows active people unless it is explicitly asked for the deactivated
+    // feed. "all" exists for the rare case of wanting both at once.
+    if (q.status === MemberStatus.INACTIVE) where.status = DEACTIVATED_MEMBER.status;
+    else if (q.status !== 'all') where.status = ACTIVE_MEMBER.status;
     if (q.gender) where.gender = q.gender.toUpperCase();
     if (q.role) where.Profile = { is: roleFilter(q.role as Role) };
     if (q.unit) where.UnitMember = { some: { unitId: q.unit } };
@@ -69,16 +73,19 @@ export class MemberDirectoryQueryService {
     monthStart.setUTCHours(0, 0, 0, 0);
 
     const t = this.tenantId;
-    const [grantRows, unitLeads, deptHeads, deptHods, ushers, active, withUnit, thisMonth, total] = await Promise.all([
+    const [grantRows, unitLeads, deptHeads, deptHods, ushers, active, withUnit, thisMonth, total, deactivated] = await Promise.all([
       this.prisma.roleGrant.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true, role: true } }),
       this.prisma.unitLeadAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.departmentHead.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.departmentHod.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.headUsherAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
-      this.prisma.member.count({ where: { tenantId: t, status: 'ACTIVE' } }),
-      this.prisma.member.count({ where: { tenantId: t, UnitMember: { some: {} } } }),
-      this.prisma.member.count({ where: { tenantId: t, joinedAt: { gte: monthStart } } }),
-      this.prisma.member.count({ where: { tenantId: t } }),
+      this.prisma.member.count({ where: { tenantId: t, ...ACTIVE_MEMBER } }),
+      this.prisma.member.count({ where: { tenantId: t, ...ACTIVE_MEMBER, UnitMember: { some: {} } } }),
+      this.prisma.member.count({ where: { tenantId: t, ...ACTIVE_MEMBER, joinedAt: { gte: monthStart } } }),
+      // The membership total. Deactivated people are counted separately so the
+      // console can offer their feed without folding them back into the total.
+      this.prisma.member.count({ where: { tenantId: t, ...ACTIVE_MEMBER } }),
+      this.prisma.member.count({ where: { tenantId: t, ...DEACTIVATED_MEMBER } }),
     ]);
 
     // Counts by effective role (grants + assignments). MEMBER is the base = total.
@@ -119,6 +126,6 @@ export class MemberDirectoryQueryService {
       UNIT_LEAD: unitLeadIds.size,
       MEMBER: total,
     };
-    return { total, active, withUnit, thisMonth, byRole };
+    return { total, active, withUnit, thisMonth, deactivated, byRole };
   }
 }

@@ -19,7 +19,8 @@ export const DEFAULT_PARAMS: DirectoryParams = {
 export type Chip =
   | { key: "all"; label: string }
   | { key: "role"; label: string; role: PersonRole }
-  | { key: "noUnit"; label: string };
+  | { key: "noUnit"; label: string }
+  | { key: "deactivated"; label: string };
 
 export const ROLE_CHIPS: Chip[] = [
   { key: "all", label: "All" },
@@ -30,6 +31,9 @@ export const ROLE_CHIPS: Chip[] = [
   { key: "role", label: "Unit Leads", role: "UNIT_LEAD" },
   { key: "role", label: "Members", role: "MEMBER" },
   { key: "noUnit", label: "No team" },
+  // Deactivated people are no longer part of the membership, so this is a
+  // separate feed rather than a filter over the list beside it.
+  { key: "deactivated", label: "Deactivated" },
 ];
 
 export const btnPrimaryHdr =
