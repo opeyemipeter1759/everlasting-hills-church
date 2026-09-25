@@ -19,6 +19,19 @@ interface UpcomingBirthday {
   daysUntil: number;
 }
 
+interface AtRiskEntry {
+  userId: string;
+  userName: string;
+  photoUrl: string | null;
+  phone: string | null;
+}
+
+interface AtRiskResponse {
+  absentConsecutiveWeeks: (AtRiskEntry & { consecutiveAbsences: number })[];
+  neverAttended: (AtRiskEntry & { joinedAt: string })[];
+  belowFiftyPercent: (AtRiskEntry & { rate: number })[];
+}
+
 interface AuditEntry {
   id: string;
   actorId: string | null;
@@ -79,6 +92,8 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
     givingCategories,
     unassignedFollowUps,
     adminAnalytics,
+    openFollowUpTasks,
+    atRisk,
     units,
     audit,
   ] = await Promise.all([
@@ -97,11 +112,41 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
       pendingQuestions: number;
       draftTestimonials: number;
     }>("/admin/analytics"),
+    apiClient.get<unknown[]>("/members/follow-ups"),
+    apiClient.get<AtRiskResponse>("/members/at-risk"),
     apiClient.get<{ name: string; totalMembers: number; activeMembers: number }[]>("/admin/units"),
     apiClient.get<AuditEntry[]>("/cms/audit?limit=10"),
   ]);
 
   const stats = summary.data?.stats ?? [];
+
+  // /members/at-risk already returns who each person is, why they were flagged
+  // and how to reach them. Keeping only a count left an admin reading "8 at
+  // risk" with nowhere to go, so the names are carried through, most urgent
+  // first, and the count is derived from them.
+  const atRiskPeople: AdminDashboardData["pastoralCare"]["atRisk"] = [];
+  const seenAtRisk = new Set<string>();
+  const addAtRisk = (e: AtRiskEntry, reason: string, weight: number) => {
+    if (seenAtRisk.has(e.userId)) return;
+    seenAtRisk.add(e.userId);
+    atRiskPeople.push({
+      id: e.userId,
+      name: e.userName,
+      photoUrl: e.photoUrl,
+      phone: e.phone,
+      reason,
+      weight,
+    });
+  };
+  // Consecutive absence first: it is the most recent, most actionable signal.
+  for (const e of atRisk.data.absentConsecutiveWeeks) {
+    addAtRisk(e, `Missed ${e.consecutiveAbsences} in a row`, 1000 + e.consecutiveAbsences);
+  }
+  for (const e of atRisk.data.neverAttended) addAtRisk(e, "Never attended", 500);
+  for (const e of atRisk.data.belowFiftyPercent) {
+    addAtRisk(e, `${Math.round(e.rate * 100)}% attendance`, Math.round(100 - e.rate * 100));
+  }
+  atRiskPeople.sort((a, b) => b.weight - a.weight);
 
   const data: AdminDashboardData = {
     stats,
@@ -126,6 +171,9 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
       prayerRequests: adminAnalytics.data.pendingPrayers,
       questions: adminAnalytics.data.pendingQuestions,
       testimonies: adminAnalytics.data.draftTestimonials,
+      openFollowUps: openFollowUpTasks.data.length,
+      atRiskMembers: seenAtRisk.size,
+      atRisk: atRiskPeople,
     },
     celebrations: {
       birthdaysToday: upcomingBirthdays.data.filter((b) => b.daysUntil === 0).length,

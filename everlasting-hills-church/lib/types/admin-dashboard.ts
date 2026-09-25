@@ -87,6 +87,17 @@ export interface AdminDashboardData {
     prayerRequests: number;
     questions: number;
     testimonies: number;
+    openFollowUps: number;
+    atRiskMembers: number;
+    /** Who they are, why, and how to reach them — most urgent first. */
+    atRisk: Array<{
+      id: string;
+      name: string;
+      photoUrl: string | null;
+      phone: string | null;
+      reason: string;
+      weight: number;
+    }>;
   };
   celebrations: {
     birthdaysToday: number;
