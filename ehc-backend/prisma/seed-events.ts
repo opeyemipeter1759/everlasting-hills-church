@@ -92,7 +92,7 @@ function furnaceSections(tenantId: string, eventId: string, updatedAt: Date) {
     row(EventSectionType.SCHEDULE, 2, 'Daily Rhythm', 'Every day · October 2–31', { introduction: 'Join us twice daily throughout Furnace.', tags: ['Prayer', 'Word', 'Spiritual Intensity', 'Fasting'] }),
     row(EventSectionType.PRAYER_FOCUS, 3, 'Prayer Focus', 'Pray with understanding', { focuses: [] }),
     row(EventSectionType.RESPONSE, 4, 'Respond', 'However God is meeting you', { introduction: 'Two ways to respond during Furnace.', actions: [
-      { heading: 'Have a Testimony?', body: 'Share what God has done during Furnace — healing, miracles, answered prayer, restoration, direction, encounters, and every other work of God.', buttonLabel: 'Share Your Testimony', url: '/testimony', note: 'You choose whether your testimony may be shared live during the watches, and whether it may be shared on the church's platforms.' },
+      { heading: 'Have a Testimony?', body: 'Share what God has done during Furnace — healing, miracles, answered prayer, restoration, direction, encounters, and every other work of God.', buttonLabel: 'Share Your Testimony', url: '/testimony', note: 'You choose whether your testimony may be shared live during the watches, and whether it may be shared on the church’s platforms.' },
       { heading: 'Giving Your Life to Christ?', body: 'Whether you are coming to Christ for the first time or returning to Him, tell us — someone from the church will reach out to you personally.', buttonLabel: 'I Gave My Life to Christ', url: '/first-timer', note: 'For first-time decisions and rededications alike.' },
     ] }),
     row(EventSectionType.FAQ, 5, 'Frequently Asked Questions', 'Before you join', { items: [
