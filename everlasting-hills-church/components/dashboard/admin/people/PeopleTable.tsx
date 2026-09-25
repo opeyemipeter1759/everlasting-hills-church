@@ -19,6 +19,7 @@ interface Props {
   onChangeRole: (person: PersonRow, role: PersonRole) => void;
   onEdit: (person: PersonRow) => void;
   onTags: (person: PersonRow) => void;
+  onChangeStatus: (person: PersonRow) => void;
   onResendLogin: (person: PersonRow) => void;
   onDelete: (person: PersonRow) => void;
 }
@@ -37,6 +38,7 @@ export default function PeopleTable({
   onChangeRole,
   onEdit,
   onTags,
+  onChangeStatus,
   onResendLogin,
   onDelete,
 }: Props) {
@@ -64,6 +66,7 @@ export default function PeopleTable({
                 onChangeRole={onChangeRole}
                 onEdit={onEdit}
                 onTags={onTags}
+                onChangeStatus={onChangeStatus}
                 onResendLogin={onResendLogin}
                 onDelete={onDelete}
               />

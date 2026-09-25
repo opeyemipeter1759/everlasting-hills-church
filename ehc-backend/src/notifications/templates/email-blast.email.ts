@@ -56,6 +56,7 @@ export function buildEmailBlast({ email, firstName, subject, greeting, body, att
     text,
     html,
     tag: 'email-blast',
+    memberOnly: true,
     ...(attachments?.length ? { attachments: attachments.map((a) => ({ filename: a.name, url: a.url })) } : {}),
   };
 }

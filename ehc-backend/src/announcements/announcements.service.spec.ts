@@ -80,15 +80,22 @@ describe('AnnouncementsService.unpublish', () => {
  * branch, so an announcement aimed at first-timers silently went to members and
  * reached none of the 126 people who had actually filled in the welcome form.
  */
+/** A member is either an address (ACTIVE, as Member.status defaults in the
+ * schema) or an explicit { email, status } pair for the non-active cases. */
+type MemberFixture = string | { email: string; status: string };
+
 function makeAudienceService(options: {
-  members?: string[];
+  members?: MemberFixture[];
   visitors?: string[];
 }) {
   const dispatch = jest.fn();
   const prisma = {
     profile: {
       findMany: jest.fn().mockResolvedValue(
-        (options.members ?? []).map((email, i) => ({ id: `p${i}`, Member: { email } })),
+        (options.members ?? []).map((m, i) => {
+          const member = typeof m === 'string' ? { email: m, status: 'ACTIVE' } : m;
+          return { id: `p${i}`, Member: member };
+        }),
       ),
     },
     visitor: {
@@ -142,6 +149,36 @@ describe('AnnouncementsService email audience', () => {
     await service.create({ ...BASE_DTO, targetRoles: ['MEMBER', 'VISITOR'] } as never, null);
 
     expect(sentTo(dispatch)).toEqual(['Shared@Example.com', 'other@example.com']);
+  });
+
+  // Marking someone non-active has to take their email away too, or the one
+  // thing an admin can do about a person who asked to be left alone keeps
+  // mailing them.
+  it('leaves a non-active member out of the audience', async () => {
+    const { service, dispatch } = makeAudienceService({
+      members: [
+        'active@example.com',
+        { email: 'left@example.com', status: 'INACTIVE' },
+        { email: 'optedout@example.com', status: 'OPTED_OUT' },
+      ],
+    });
+
+    await service.create({ ...BASE_DTO, targetRoles: ['MEMBER'] } as never, null);
+
+    expect(sentTo(dispatch)).toEqual(['active@example.com']);
+  });
+
+  // A non-active member who is also an unconverted first-timer must not be
+  // quietly reached through the visitor list instead.
+  it('does not reach a non-active member through the first-timer list', async () => {
+    const { service, dispatch } = makeAudienceService({
+      members: [{ email: 'left@example.com', status: 'INACTIVE' }],
+      visitors: ['left@example.com'],
+    });
+
+    await service.create({ ...BASE_DTO, targetRoles: ['MEMBER', 'VISITOR'] } as never, null);
+
+    expect(sentTo(dispatch)).toEqual([]);
   });
 
   it('addresses a first-timer as a first-timer, not as a member', async () => {

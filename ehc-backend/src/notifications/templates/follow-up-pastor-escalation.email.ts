@@ -61,5 +61,6 @@ export function buildFollowUpPastorEscalationEmail(args: Args): SendEmailPayload
     text,
     html: renderEmailLayout({ heading: `A first-timer for your call list`, bodyHtml, cta: { label: 'Open your Follow-ups', href: url } }),
     tag: 'follow-up-pastor-escalation',
+    memberOnly: true,
   };
 }

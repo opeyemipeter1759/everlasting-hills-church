@@ -29,5 +29,6 @@ export function buildFollowUpAssignedEmail({ to, workerFirstName, subjectName, a
     text,
     html: renderEmailLayout({ heading: `New assignment: ${escapeHtml(subjectName)}`, bodyHtml, cta: { label: 'Open the Follow-Up Pipeline', href: url } }),
     tag: 'follow-up-assigned',
+    memberOnly: true,
   };
 }

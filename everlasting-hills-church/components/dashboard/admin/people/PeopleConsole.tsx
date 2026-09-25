@@ -90,6 +90,7 @@ export default function PeopleConsole() {
         onChangeRole={(person, role) => actions.setPendingRole({ person, role })}
         onEdit={actions.setEditTarget}
         onTags={actions.setTagTarget}
+        onChangeStatus={actions.requestRowStatusChange}
         onResendLogin={actions.resendLogin}
         onDelete={actions.setDeleteTarget}
       />
@@ -109,7 +110,7 @@ export default function PeopleConsole() {
         onClear={clearSelection}
         onAssign={() => actions.openAssign(Object.values(selectedRows))}
         onAddToTeam={() => setAddToTeamOpen(true)}
-        onSetStatus={actions.bulkStatus}
+        onSetStatus={actions.requestBulkStatusChange}
         onTag={actions.bulkTag}
         onExport={() => exportRowsCsv(Object.values(selectedRows))}
         onDelete={() => actions.setBulkDelete(true)}
@@ -164,6 +165,10 @@ export default function PeopleConsole() {
         onConfirmBulkDelete={actions.confirmBulkDelete}
         onCancelBulkDelete={actions.cancelBulkDelete}
         actionError={actions.actionError}
+        pendingStatus={actions.pendingStatus}
+        onConfirmStatusChange={actions.confirmStatusChange}
+        onCancelStatusChange={actions.cancelStatusChange}
+        statusChangePending={actions.bulkOp.isPending}
       />
     </div>
   );

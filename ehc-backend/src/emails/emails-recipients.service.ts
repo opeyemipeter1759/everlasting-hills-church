@@ -36,7 +36,11 @@ export class EmailsRecipientsService {
   }
 
   private buildWhere(filter: AudienceFilterDto): Prisma.MemberWhereInput {
-    const where: Prisma.MemberWhereInput = { tenantId: this.tenantId, email: { not: null } };
+    const where: Prisma.MemberWhereInput = {
+      tenantId: this.tenantId,
+      status: 'ACTIVE',
+      email: { not: null },
+    };
 
     switch (filter.mode) {
       case 'WORKERS':

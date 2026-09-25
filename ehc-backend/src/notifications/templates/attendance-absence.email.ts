@@ -65,5 +65,5 @@ export function buildAttendanceAbsenceEmail({ email, firstName, serviceLabel, ap
     cta: { label: 'Share a prayer request', href: `${base}/prayer-request` },
   });
 
-  return { to: email, subject, text, html, tag: 'attendance-absence' };
+  return { to: email, subject, text, html, tag: 'attendance-absence', memberOnly: true };
 }

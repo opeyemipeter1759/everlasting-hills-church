@@ -30,7 +30,8 @@ export class MemberDirectoryQueryService {
         { phone: { contains: s, mode: 'insensitive' } },
       ];
     }
-    if (q.status) where.status = q.status as MemberStatus;
+    if (q.status === MemberStatus.ACTIVE) where.status = MemberStatus.ACTIVE;
+    if (q.status === MemberStatus.INACTIVE) where.status = { not: MemberStatus.ACTIVE };
     if (q.gender) where.gender = q.gender.toUpperCase();
     if (q.role) where.Profile = { is: roleFilter(q.role as Role) };
     if (q.unit) where.UnitMember = { some: { unitId: q.unit } };

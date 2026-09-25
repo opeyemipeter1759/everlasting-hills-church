@@ -11,6 +11,7 @@ import {
   profileCompletion,
   ProfileCompletionMeter,
   STATUS_BADGE,
+  memberStatusLabel,
 } from "../peopleShared";
 import { COL, TD, stickyBg } from "./constants";
 import PersonCell from "./PersonCell";
@@ -25,6 +26,7 @@ export default function PeopleTableRow({
   onChangeRole,
   onEdit,
   onTags,
+  onChangeStatus,
   onResendLogin,
   onDelete,
 }: {
@@ -36,6 +38,7 @@ export default function PeopleTableRow({
   onChangeRole: (person: PersonRow, role: PersonRole) => void;
   onEdit: (person: PersonRow) => void;
   onTags: (person: PersonRow) => void;
+  onChangeStatus: (person: PersonRow) => void;
   onResendLogin: (person: PersonRow) => void;
   onDelete: (person: PersonRow) => void;
 }) {
@@ -100,7 +103,7 @@ export default function PeopleTableRow({
 
       <td className={TD}>
         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${STATUS_BADGE[p.status] ?? STATUS_BADGE.INACTIVE}`}>
-          {p.status}
+          {memberStatusLabel(p.status)}
         </span>
       </td>
 
@@ -112,7 +115,15 @@ export default function PeopleTableRow({
 
       <td className={`${TD} text-sm text-gray-500 dark:text-white/50 whitespace-nowrap`}>{fmtDate(p.joinedAt)}</td>
 
-      <RowActions p={p} manageable={manageable} onEdit={onEdit} onTags={onTags} onResendLogin={onResendLogin} onDelete={onDelete} />
+      <RowActions
+        p={p}
+        manageable={manageable}
+        onEdit={onEdit}
+        onTags={onTags}
+        onChangeStatus={onChangeStatus}
+        onResendLogin={onResendLogin}
+        onDelete={onDelete}
+      />
     </tr>
   );
 }

@@ -56,5 +56,5 @@ export function buildPasswordChangedEmail({ email, firstName, when, ip, appUrl }
     cta: { label: 'Secure my account', href: forgotUrl },
   });
 
-  return { to: email, subject, text, html, tag: 'password-changed' };
+  return { to: email, subject, text, html, tag: 'password-changed', memberOnly: true };
 }

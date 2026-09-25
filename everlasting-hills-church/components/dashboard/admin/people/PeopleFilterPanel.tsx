@@ -118,7 +118,7 @@ export default function PeopleFilterPanel({
             onChange={(v) => set({ status: v })}
             options={[
               { value: "", label: "Any status" },
-              ...STATUS_OPTIONS.map((s) => ({ value: s, label: s.charAt(0) + s.slice(1).toLowerCase() })),
+              ...STATUS_OPTIONS,
             ]}
           />
         </Field>

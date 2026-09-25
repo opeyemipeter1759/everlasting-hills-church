@@ -39,5 +39,5 @@ export function buildBirthdayEmail(args: Args): SendEmailPayload {
     cta: { label: 'See your birthday wishes', href: `${FRONTEND_URL}/dashboard` },
   });
 
-  return { to: email, subject, text, html, tag: 'birthday' };
+  return { to: email, subject, text, html, tag: 'birthday', memberOnly: true };
 }

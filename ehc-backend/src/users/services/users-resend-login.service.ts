@@ -40,7 +40,7 @@ export class UsersResendLoginService {
         id: true,
         tenantId: true,
         userId: true,
-        Member: { select: { id: true, firstName: true, email: true, phone: true } },
+        Member: { select: { id: true, firstName: true, email: true, phone: true, status: true } },
       },
     });
     if (!target || target.tenantId !== this.tenantId) {
@@ -53,6 +53,10 @@ export class UsersResendLoginService {
     }
     if (!target.Member.email) {
       throw new BadRequestException('This person has no email address on file — login details cannot be sent');
+    }
+
+    if (target.Member.status !== 'ACTIVE') {
+      throw new BadRequestException('This membership is non-active. Reactivate it before resending login details.');
     }
 
     // Same phone-number-as-temp-password convention as first-timer conversion

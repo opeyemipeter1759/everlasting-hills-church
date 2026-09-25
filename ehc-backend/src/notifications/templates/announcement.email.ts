@@ -91,5 +91,12 @@ export function buildAnnouncementEmail({
     cta,
   });
 
-  return { to: email, subject: `📢 ${title}`, text, html, tag: 'announcement' };
+  return {
+    to: email,
+    subject: `📢 ${title}`,
+    text,
+    html,
+    tag: 'announcement',
+    memberOnly: recipientKind === 'member',
+  };
 }

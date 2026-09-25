@@ -1,4 +1,4 @@
-import type { PersonRole } from "@/lib/api/people";
+import type { MemberStatus, PersonRole } from "@/lib/api/people";
 
 export const ROLE_LABEL: Record<PersonRole, string> = {
   SUPER_ADMIN: "Super Admin",
@@ -34,8 +34,13 @@ export const ROLE_BADGE: Record<PersonRole, string> = {
 export const STATUS_BADGE: Record<string, string> = {
   ACTIVE: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
   INACTIVE: "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400",
-  TRANSFERRED: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-  DECEASED: "bg-gray-100 text-gray-500 dark:bg-white/5 dark:text-gray-400",
 };
 
-export const STATUS_OPTIONS = ["ACTIVE", "INACTIVE", "TRANSFERRED", "DECEASED"] as const;
+export const STATUS_OPTIONS: ReadonlyArray<{ value: MemberStatus; label: string }> = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Non-active / Left" },
+];
+
+export function memberStatusLabel(status: string): string {
+  return status === "ACTIVE" ? "Active" : "Non-active / Left";
+}

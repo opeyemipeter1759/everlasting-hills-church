@@ -70,7 +70,8 @@ export class MemberSearchService {
 
   async getAllMembers(opts?: { search?: string; status?: string }) {
     const where: any = { tenantId: this.tenantId };
-    if (opts?.status) where.status = opts.status;
+    if (opts?.status === MemberStatus.ACTIVE) where.status = MemberStatus.ACTIVE;
+    if (opts?.status === MemberStatus.INACTIVE) where.status = { not: MemberStatus.ACTIVE };
     if (opts?.search) {
       where.OR = [
         { firstName: { contains: opts.search, mode: 'insensitive' } },

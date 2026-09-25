@@ -4,6 +4,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Resend } from 'resend';
 import type { Env } from '../config/env.validation';
 import { NotificationEvents, type SendEmailPayload } from './notification-events';
+import { PrismaService } from '../prisma/prisma.service';
 
 /**
  * Email dispatcher. Runs out-of-band via @OnEvent — callers fire-and-forget.
@@ -15,9 +16,14 @@ import { NotificationEvents, type SendEmailPayload } from './notification-events
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
   private readonly fromAddress: string;
+  private readonly tenantId: string;
   private resend?: Resend;
 
-  constructor(config: ConfigService<Env, true>) {
+  constructor(
+    config: ConfigService<Env, true>,
+    private readonly prisma: PrismaService,
+  ) {
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
     this.fromAddress = `Everlasting Hills <${config.get('RESEND_FROM', { infer: true }) ?? 'onboarding@resend.dev'}>`;
     const apiKey = config.get('RESEND_API_KEY', { infer: true });
     if (apiKey) {
@@ -57,6 +63,22 @@ export class NotificationsService {
         `[${payload.tag}] dropped email to ${payload.to} — Resend not configured`,
       );
       return;
+    }
+    if (payload.memberOnly) {
+      const activeMember = await this.prisma.member.findFirst({
+        where: {
+          tenantId: this.tenantId,
+          status: 'ACTIVE',
+          email: { equals: payload.to.trim(), mode: 'insensitive' },
+        },
+        select: { id: true },
+      });
+      if (!activeMember) {
+        this.logger.debug(
+          `[${payload.tag}] suppressed member email to non-active recipient ${payload.to}`,
+        );
+        return;
+      }
     }
     // Resend returns { data, error } — it does NOT throw on API-level failures
     // (e.g. unverified sender, sandbox recipient restrictions). Inspect `error`

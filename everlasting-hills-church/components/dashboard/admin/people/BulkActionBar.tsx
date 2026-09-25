@@ -77,7 +77,7 @@ export default function BulkActionBar({
                 className={`${chip} cursor-pointer`}
                 options={[
                   { value: "", label: "Set status…", disabled: true },
-                  ...STATUS_OPTIONS.map((s) => ({ value: s, label: s.charAt(0) + s.slice(1).toLowerCase() })),
+                  ...STATUS_OPTIONS,
                 ]}
               />
             </div>

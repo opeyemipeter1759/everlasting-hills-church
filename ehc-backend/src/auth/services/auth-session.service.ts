@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../config/env.validation';
 import { AuthSupabaseService } from './auth-supabase.service';
 import { AuthProfileSummaryService } from './auth-profile-summary.service';
+import { assertActiveMemberAccount, isMemberAccountInactive } from '../member-account-status';
 
 @Injectable()
 export class AuthSessionService {
@@ -31,10 +32,10 @@ export class AuthSessionService {
     }
 
     const summary = await this.profileSummary.getProfileSummary(data.user.id);
-    if (summary.memberStatus === 'OPTED_OUT') {
-      this.logger.warn(`Session refresh blocked for opted-out member: ${data.user.email}`);
-      throw new UnauthorizedException('This account has been opted out. Contact your team leader to be restored.');
+    if (isMemberAccountInactive(summary.memberStatus)) {
+      this.logger.warn(`Session refresh blocked for non-active member: ${data.user.email}`);
     }
+    assertActiveMemberAccount(summary.memberStatus);
     const fullName =
       summary.firstName || summary.lastName
         ? `${summary.firstName ?? ''} ${summary.lastName ?? ''}`.trim()

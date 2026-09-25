@@ -130,6 +130,7 @@ export function buildMemberWelcomeEmail(args: BuildArgs): SendEmailPayload {
     text,
     html,
     tag: `member-welcome:${source}`,
+    memberOnly: true,
   };
 }
 

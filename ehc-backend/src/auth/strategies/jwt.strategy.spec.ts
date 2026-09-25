@@ -68,7 +68,7 @@ describe('JwtStrategy', () => {
     const finder = jest.fn().mockResolvedValue({
       id: 'profile-1',
       tenantId: 'tenant-1',
-      Member: { id: 'member-1' },
+      Member: { id: 'member-1', status: 'ACTIVE' },
     });
     const strategy = makeStrategy(finder, Role.ADMIN);
     const result = await strategy.validate({
@@ -94,5 +94,18 @@ describe('JwtStrategy', () => {
     const strategy = makeStrategy(jest.fn().mockResolvedValue(null));
     const result = await strategy.validate({ sub: 'user-uuid' } as never);
     expect(result.email).toBe('');
+  });
+
+  it('rejects an existing session when the member is no longer active', async () => {
+    const finder = jest.fn().mockResolvedValue({
+      id: 'profile-1',
+      tenantId: 'tenant-1',
+      Member: { id: 'member-1', status: 'INACTIVE' },
+    });
+    const strategy = makeStrategy(finder);
+
+    await expect(
+      strategy.validate({ sub: 'user-uuid-123', email: 'former@example.com' } as never),
+    ).rejects.toThrow(UnauthorizedException);
   });
 });

@@ -1,5 +1,5 @@
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
-import type { PersonRole, PersonRow } from "@/lib/api/people";
+import type { MemberStatus, PersonRole, PersonRow } from "@/lib/api/people";
 import { ROLE_LABEL } from "../peopleShared";
 
 export default function PeopleConfirmDialogs({
@@ -16,6 +16,10 @@ export default function PeopleConfirmDialogs({
   onConfirmBulkDelete,
   onCancelBulkDelete,
   actionError,
+  pendingStatus,
+  onConfirmStatusChange,
+  onCancelStatusChange,
+  statusChangePending,
 }: {
   pendingRole: { person: PersonRow; role: PersonRole } | null;
   onConfirmRoleChange: () => void;
@@ -30,9 +34,41 @@ export default function PeopleConfirmDialogs({
   onConfirmBulkDelete: () => void;
   onCancelBulkDelete: () => void;
   actionError: string | null;
+  pendingStatus: { people: PersonRow[]; status: MemberStatus } | null;
+  onConfirmStatusChange: () => void;
+  onCancelStatusChange: () => void;
+  statusChangePending: boolean;
 }) {
+  const statusCount = pendingStatus?.people.length ?? 0;
+  const statusNames = pendingStatus?.people.slice(0, 2).map((person) => person.name).join(", ") ?? "";
+  const statusSubject = statusCount === 1 ? statusNames : `${statusCount} selected members`;
+
   return (
     <>
+      <ConfirmDialog
+        open={pendingStatus !== null}
+        title={pendingStatus?.status === "INACTIVE" ? "Mark as non-active / left?" : "Reactivate membership?"}
+        description={
+          <span>
+            <strong className="text-gray-900 dark:text-white">{statusSubject}</strong>{" "}
+            {pendingStatus?.status === "INACTIVE" ? (
+              <>
+                will immediately lose account access and stop receiving member emails, including absence emails.
+                Their membership records will be kept.
+              </>
+            ) : (
+              <>will regain account access and receive member emails again.</>
+            )}
+            {actionError && <span className="block mt-2 text-red-600 dark:text-red-400 text-xs">{actionError}</span>}
+          </span>
+        }
+        confirmLabel={pendingStatus?.status === "INACTIVE" ? "Mark Non-active" : "Reactivate Member"}
+        tone={pendingStatus?.status === "INACTIVE" ? "danger" : "info"}
+        loading={statusChangePending}
+        onConfirm={onConfirmStatusChange}
+        onCancel={onCancelStatusChange}
+      />
+
       <ConfirmDialog
         open={pendingRole !== null}
         title={pendingRole ? `Change role to ${ROLE_LABEL[pendingRole.role]}?` : ""}

@@ -15,7 +15,7 @@ export class BulkMemberOpDto {
 
   @ApiProperty({
     description:
-      'For op=status: ACTIVE|INACTIVE|TRANSFERRED|DECEASED. For tags: the tag string.',
+      'For op=status: ACTIVE|INACTIVE. For tags: the tag string.',
   })
   @IsString()
   value!: string;

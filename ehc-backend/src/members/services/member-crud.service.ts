@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, Role } from '@prisma/client';
+import { MemberStatus, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
@@ -76,10 +76,24 @@ export class MemberCrudService {
     return this.prisma.member.update({ where: { id }, data });
   }
 
-  async updateMemberStatus(memberId: string, status: string) {
+  async updateMemberStatus(
+    memberId: string,
+    status: Extract<MemberStatus, 'ACTIVE' | 'INACTIVE'>,
+  ) {
+    const member = await this.prisma.member.findFirst({
+      where: { id: memberId, tenantId: this.tenantId },
+      select: { id: true },
+    });
+    if (!member) throw new NotFoundException('Member not found');
+
     return this.prisma.member.update({
-      where: { id: memberId },
-      data: { status } as any,
+      where: { id: member.id },
+      data: {
+        status,
+        // An administrator-managed status change is not a pending self-delete.
+        deactivationRequestedAt: null,
+      },
+      select: { id: true, status: true },
     });
   }
 }

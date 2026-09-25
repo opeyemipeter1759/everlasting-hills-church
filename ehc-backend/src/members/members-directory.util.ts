@@ -86,7 +86,8 @@ export function toPersonRow(r: DirectoryRow, roleMap?: Map<string, Role>) {
     gender: r.gender,
     photoUrl: r.photoUrl,
     role: (r.Profile?.id ? roleMap?.get(r.Profile.id) : undefined) ?? 'MEMBER',
-    status: r.status,
+    // Collapse legacy departed states into the single status used by the People UI.
+    status: r.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE',
     tags: r.tags ?? [],
     dateOfBirth: r.dateOfBirth ? r.dateOfBirth.toISOString() : null,
     address: r.address,

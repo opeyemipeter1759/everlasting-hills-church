@@ -61,5 +61,6 @@ export function buildUnitTaskReportEmail({
     text,
     html: renderEmailLayout({ heading: 'New task report', bodyHtml, cta: { label: 'Review the report', href: url } }),
     tag: 'unit-task-report',
+    memberOnly: true,
   };
 }

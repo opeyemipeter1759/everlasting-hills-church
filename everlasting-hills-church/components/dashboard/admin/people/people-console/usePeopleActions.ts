@@ -4,6 +4,7 @@ import {
   useChangeRole,
   useDeletePerson,
   useResendLoginDetails,
+  type MemberStatus,
   type PersonRole,
   type PersonRow,
 } from "@/lib/api/people";
@@ -19,6 +20,7 @@ export function usePeopleActions(selectedRows: Record<string, PersonRow>, clearS
   const [deleteTarget, setDeleteTarget] = useState<PersonRow | null>(null);
   const [pendingRole, setPendingRole] = useState<{ person: PersonRow; role: PersonRole } | null>(null);
   const [bulkDelete, setBulkDelete] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState<{ people: PersonRow[]; status: MemberStatus } | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const changeRole = useChangeRole();
@@ -83,9 +85,42 @@ export function usePeopleActions(selectedRows: Record<string, PersonRow>, clearS
     }
   }
 
-  async function bulkStatus(status: string) {
-    await bulkOp.mutateAsync({ ids: Object.keys(selectedRows), op: "status", value: status });
-    clearSelection();
+  function requestRowStatusChange(person: PersonRow) {
+    setActionError(null);
+    setPendingStatus({ people: [person], status: person.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" });
+  }
+
+  function requestBulkStatusChange(status: string) {
+    if (status !== "ACTIVE" && status !== "INACTIVE") return;
+    setActionError(null);
+    setPendingStatus({ people: Object.values(selectedRows), status });
+  }
+
+  function cancelStatusChange() {
+    if (bulkOp.isPending) return;
+    setPendingStatus(null);
+    setActionError(null);
+  }
+
+  async function confirmStatusChange() {
+    if (!pendingStatus || pendingStatus.people.length === 0) return;
+    setActionError(null);
+    try {
+      await bulkOp.mutateAsync({
+        ids: pendingStatus.people.map((person) => person.id),
+        op: "status",
+        value: pendingStatus.status,
+      });
+      showToast.success(
+        pendingStatus.status === "ACTIVE"
+          ? `${pendingStatus.people.length} member${pendingStatus.people.length === 1 ? "" : "s"} reactivated`
+          : `${pendingStatus.people.length} member${pendingStatus.people.length === 1 ? "" : "s"} marked non-active`,
+      );
+      setPendingStatus(null);
+      clearSelection();
+    } catch (err) {
+      setActionError((err as { message?: string }).message ?? "Status change failed");
+    }
   }
 
   async function bulkTag(op: "addTag" | "removeTag", tag: string) {
@@ -137,7 +172,11 @@ export function usePeopleActions(selectedRows: Record<string, PersonRow>, clearS
     resendLogin,
     confirmRoleChange,
     confirmDelete,
-    bulkStatus,
+    pendingStatus,
+    requestRowStatusChange,
+    requestBulkStatusChange,
+    cancelStatusChange,
+    confirmStatusChange,
     bulkTag,
     confirmBulkDelete,
   };

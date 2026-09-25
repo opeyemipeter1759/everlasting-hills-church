@@ -10,6 +10,7 @@ import { describeUserAgent, type LoginContext } from '../auth.types';
 import { AuthSupabaseService } from './auth-supabase.service';
 import { AuthProfileSummaryService } from './auth-profile-summary.service';
 import { OnlineAttendanceService } from '../../online-attendance/online-attendance.service';
+import { assertActiveMemberAccount, isMemberAccountInactive } from '../member-account-status';
 
 @Injectable()
 export class AuthLoginService {
@@ -38,10 +39,10 @@ export class AuthLoginService {
     }
 
     const summary = await this.profileSummary.getProfileSummary(data.user.id);
-    if (summary.memberStatus === 'OPTED_OUT') {
-      this.logger.warn(`Login blocked for opted-out member: ${email}`);
-      throw new UnauthorizedException('This account has been opted out. Contact your team leader to be restored.');
+    if (isMemberAccountInactive(summary.memberStatus)) {
+      this.logger.warn(`Login blocked for non-active member: ${email}`);
     }
+    assertActiveMemberAccount(summary.memberStatus);
     const fullName =
       summary.firstName || summary.lastName
         ? `${summary.firstName ?? ''} ${summary.lastName ?? ''}`.trim()

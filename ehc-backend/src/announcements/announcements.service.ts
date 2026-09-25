@@ -83,7 +83,7 @@ export class AnnouncementsService {
    */
   private async resolveEmailAudience(
     targeting: AudienceTargeting,
-    allProfiles: { Member: { email: string | null; firstName?: string | null } | null }[],
+    allProfiles: { Member: { email: string | null; firstName?: string | null; status: string } | null }[],
   ): Promise<EmailRecipient[]> {
     const visitorsTargeted = targeting.targetRoles.includes(Role.VISITOR);
     const profileTargeting: AudienceTargeting = {
@@ -98,14 +98,22 @@ export class AnnouncementsService {
       : profilesTargeted
         ? await this.prisma.profile.findMany({
             where: this.resolveAudienceWhere(profileTargeting),
-            select: { Member: { select: { email: true, firstName: true } } },
+            select: { Member: { select: { email: true, firstName: true, status: true } } },
           })
         : [];
 
     const recipients: EmailRecipient[] = [];
+    // Every member address seen, active or not. Suppressing a non-active member
+    // has to remove them from the send, not hand them to the first-timer list
+    // below — otherwise marking someone OPTED_OUT (or DECEASED) just re-routes
+    // the same email through a different door.
+    const memberEmails = new Set<string>();
     for (const p of profileRows) {
-      if (!p.Member?.email) continue;
-      recipients.push({ email: p.Member.email, firstName: p.Member.firstName ?? null, kind: 'member' });
+      const email = p.Member?.email?.trim();
+      if (!email) continue;
+      memberEmails.add(email.toLowerCase());
+      if (p.Member!.status !== 'ACTIVE') continue;
+      recipients.push({ email, firstName: p.Member!.firstName ?? null, kind: 'member' });
     }
 
     if (visitorsTargeted) {
@@ -113,8 +121,9 @@ export class AnnouncementsService {
         where: { tenantId: this.tenantId, convertedAt: null, email: { not: null } },
         select: { email: true, firstName: true },
       });
-      // A first-timer who also has a member account must not get two copies.
-      const seen = new Set(recipients.map((r) => r.email.toLowerCase()));
+      // A first-timer who also has a member account must not get two copies —
+      // and must get none at all when that account is non-active.
+      const seen = memberEmails;
       for (const visitor of visitors) {
         const email = visitor.email?.trim();
         if (!email || seen.has(email.toLowerCase())) continue;
@@ -138,7 +147,7 @@ export class AnnouncementsService {
   ): Promise<number> {
     const allProfiles = await this.prisma.profile.findMany({
       where: { tenantId: this.tenantId },
-      select: { id: true, Member: { select: { email: true, firstName: true } } },
+      select: { id: true, Member: { select: { email: true, firstName: true, status: true } } },
     });
 
     const created = await this.inbox.createMany(

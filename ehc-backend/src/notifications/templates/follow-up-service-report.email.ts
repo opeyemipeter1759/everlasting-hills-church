@@ -45,5 +45,6 @@ export function buildFollowUpServiceReportEmail(args: Args): SendEmailPayload {
     text,
     html: renderEmailLayout({ heading: `${escapeHtml(unitName)} — Follow-Up report`, bodyHtml, cta: { label: 'Open the Follow-Up Pipeline', href: url } }),
     tag: 'follow-up-service-report',
+    memberOnly: true,
   };
 }

@@ -39,5 +39,5 @@ export function buildAnniversaryEmail(args: Args): SendEmailPayload {
     `,
   });
 
-  return { to: email, subject, text, html, tag: 'anniversary' };
+  return { to: email, subject, text, html, tag: 'anniversary', memberOnly: true };
 }

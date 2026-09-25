@@ -22,6 +22,8 @@ export type PersonRole =
   | "MEMBER"
   | "VISITOR";
 
+export type MemberStatus = "ACTIVE" | "INACTIVE";
+
 export interface PersonUnit {
   id: string;
   name: string;
@@ -47,7 +49,7 @@ export interface PersonRow {
   gender: string | null;
   photoUrl: string | null;
   role: PersonRole;
-  status: string;
+  status: MemberStatus;
   tags: string[];
   dateOfBirth: string | null;
   address: string | null;
@@ -198,6 +200,18 @@ export function useUpdateMember() {
     mutationFn: ({ id, data }: { id: string; data: Partial<PersonRow> & { dateOfBirth?: string | null } }) =>
       api.patch(`/members/${id}`, data),
     onSuccess: invalidate,
+  });
+}
+
+export function useUpdateMemberStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: MemberStatus }) =>
+      api.patch<{ id: string; status: MemberStatus }>(`/members/${id}/status`, { status }),
+    onSuccess: (_result, variables) => {
+      qc.invalidateQueries({ queryKey: PEOPLE_KEY });
+      qc.invalidateQueries({ queryKey: ["member", variables.id] });
+    },
   });
 }
 

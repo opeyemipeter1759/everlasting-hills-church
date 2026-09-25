@@ -54,5 +54,6 @@ export function buildUnitTaskAssignedEmail({
     text,
     html: renderEmailLayout({ heading: 'You have a new task', bodyHtml, cta: { label: 'Open my unit', href: url } }),
     tag: 'unit-task-assigned',
+    memberOnly: true,
   };
 }

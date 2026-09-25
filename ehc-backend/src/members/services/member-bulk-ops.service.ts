@@ -41,12 +41,12 @@ export class MemberBulkOpsService {
 
     if (input.op === 'status') {
       const status = (input.value ?? '').toUpperCase();
-      if (!['ACTIVE', 'INACTIVE', 'TRANSFERRED', 'DECEASED'].includes(status)) {
+      if (status !== MemberStatus.ACTIVE && status !== MemberStatus.INACTIVE) {
         throw new BadRequestException('Invalid status');
       }
       const res = await this.prisma.member.updateMany({
         where: { id: { in: ids }, tenantId: this.tenantId },
-        data: { status: status as MemberStatus },
+        data: { status, deactivationRequestedAt: null },
       });
       return { updated: res.count };
     }

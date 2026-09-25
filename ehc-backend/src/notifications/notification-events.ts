@@ -41,4 +41,6 @@ export interface SendEmailPayload {
   attachments?: { filename: string; url: string }[];
   /** Tag for logging — e.g. "first-timer-admin", "prayer-request-visitor". */
   tag: string;
+  /** Final delivery must confirm the recipient still has ACTIVE membership. */
+  memberOnly?: boolean;
 }

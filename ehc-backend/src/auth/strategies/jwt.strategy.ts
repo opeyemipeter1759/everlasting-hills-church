@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../types/auth-user';
 import { EffectiveRolesService } from '../effective-roles.service';
+import { assertActiveMemberAccount } from '../member-account-status';
 
 interface SupabaseJwtPayload {
   sub: string;
@@ -72,9 +73,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       select: {
         id: true,
         tenantId: true,
-        Member: { select: { id: true } },
+        Member: { select: { id: true, status: true } },
       },
     });
+
+    // Check live status on every protected request so existing sessions lose
+    // access as soon as the member is marked non-active.
+    assertActiveMemberAccount(profile?.Member?.status);
 
     // Roles are resolved per request from grants + active assignments (never from
     // the JWT), so revocations take effect immediately on the next request.

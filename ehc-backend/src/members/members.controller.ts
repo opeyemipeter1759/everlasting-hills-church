@@ -30,6 +30,7 @@ import type { DirectoryQuery } from './members.types';
 import { SetTagsDto } from './dto/set-tags.dto';
 import { UpdateMemberDto } from './dto/update-member.dto';
 import { BulkMemberOpDto } from './dto/bulk-member-op.dto';
+import { UpdateMemberStatusDto } from './dto/update-member-status.dto';
 import { MemberBulkOpsService } from './services/member-bulk-ops.service';
 import { MemberSearchService } from './services/member-search.service';
 import { MemberDirectoryService } from './services/member-directory.service';
@@ -135,10 +136,11 @@ export class MembersController {
   }
 
   @Patch(':id/status')
+  @Roles(Role.ADMIN_HEAD)
   @ApiOperation({ summary: 'Update member status' })
-  @ApiBody({ schema: { example: { status: 'ACTIVE' } } })
-  async updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.crud.updateMemberStatus(id, status);
+  @ApiBody({ type: UpdateMemberStatusDto })
+  async updateStatus(@Param('id') id: string, @Body() body: UpdateMemberStatusDto) {
+    return this.crud.updateMemberStatus(id, body.status);
   }
 
   @Delete(':id')

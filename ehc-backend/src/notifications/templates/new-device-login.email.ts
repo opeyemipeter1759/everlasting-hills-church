@@ -59,5 +59,5 @@ export function buildNewDeviceLoginEmail({ email, firstName, device, ip, when, a
     cta: { label: 'Secure my account', href: forgotUrl },
   });
 
-  return { to: email, subject, text, html, tag: 'new-device-login' };
+  return { to: email, subject, text, html, tag: 'new-device-login', memberOnly: true };
 }
