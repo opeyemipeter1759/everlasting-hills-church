@@ -25,6 +25,22 @@ describe("userMessageForError", () => {
     );
   });
 
+  // "Try again shortly" is wrong for a schema mismatch: no amount of retrying
+  // brings the database level with the code.
+  it("says a schema mismatch needs a migration rather than another attempt", () => {
+    const message = userMessageForError({ status: 500, code: "PRISMA_P2022", message: "Database error" });
+
+    expect(message).toMatch(/database has not caught up/i);
+    expect(message).toMatch(/migration/i);
+    expect(message).not.toMatch(/try again shortly/i);
+  });
+
+  it("still gives the generic message for an ordinary server failure", () => {
+    expect(userMessageForError({ status: 500, message: "Database error" })).toMatch(
+      /something went wrong on our side/i,
+    );
+  });
+
   it("explains authentication, permission and connection failures", () => {
     expect(userMessageForError({ status: 401, message: "Unauthorized" })).toMatch(/sign in again/i);
     expect(userMessageForError({ status: 403, message: "Forbidden" })).toMatch(/permission/i);

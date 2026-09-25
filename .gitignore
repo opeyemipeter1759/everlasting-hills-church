@@ -1,0 +1,5 @@
+# Scratch output from local visual checking: a headless Chrome profile
+# (caches, crash dumps, ~70MB) and the mock server that feeds it. Neither is
+# source, and the profile alone is over 1,500 files.
+.visual-check/
+.visual-event-server.cjs

@@ -37,6 +37,14 @@ export function userMessageForError(
   if (status === 408) return "The request took too long. Check your connection and try again.";
   if (status === 413) return "That file is too large. Choose a smaller file and try again.";
   if (status === 429) return "Too many attempts were made. Please wait a moment and try again.";
+  // A schema mismatch is not a transient glitch and retrying will never clear
+  // it: the app has been deployed ahead of its database. Saying so points
+  // whoever sees it at the one action that fixes it, instead of leaving an
+  // admin refreshing a screen that cannot recover on its own. No column or
+  // query detail is exposed — only that the two are out of step.
+  if (code === "PRISMA_P2022" || code === "PRISMA_P2021") {
+    return "This feature was updated but the database has not caught up yet. The pending database migration needs to be run — retrying will not clear it.";
+  }
   if (status !== undefined && status >= 500) {
     return "Something went wrong on our side. Please try again shortly.";
   }
