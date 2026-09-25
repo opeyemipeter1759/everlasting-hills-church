@@ -8,8 +8,25 @@ export default function EventSectionsRenderer({ event }: { event: EventDetail })
   return <>{event.Sections.map((section, index) => <EventSectionView key={section.id} section={section} event={event} index={index} />)}</>;
 }
 
+function hasContent(section: EventSection): boolean {
+  switch (section.type) {
+    case "PRAYER_FOCUS":
+      return section.content.focuses.length > 0;
+    case "EXPECTATIONS":
+      return section.content.items.length > 0;
+    case "FAQ":
+      return section.content.items.length > 0;
+    case "RESPONSE":
+      return section.content.actions.length > 0;
+    case "RICH_TEXT":
+      return Boolean(section.content.body.trim());
+    default:
+      return true;
+  }
+}
+
 function EventSectionView({ section, event, index }: { section: EventSection; event: EventDetail; index: number }) {
-  if (!section.isVisible) return null;
+  if (!section.isVisible || !hasContent(section)) return null;
 
   if (section.type === "TESTIMONY" || section.type === "CTA") {
     const url = section.content.url || (section.type === "TESTIMONY" ? event.testimonyUrl : event.primaryCtaUrl || event.liveUrl);
@@ -34,8 +51,55 @@ function EventSectionView({ section, event, index }: { section: EventSection; ev
         {section.type === "EXPECTATIONS" && <ExpectationsSection section={section} />}
         {section.type === "PRAYER_FOCUS" && <PrayerSection section={section} />}
         {section.type === "FAQ" && <div className="mx-auto mt-8 max-w-3xl"><EventAccordion items={section.content.items.map((item) => ({ title: item.question, body: item.answer }))} /></div>}
+        {section.type === "RESPONSE" && <ResponseSection section={section} event={event} />}
       </div>
     </section>
+  );
+}
+
+/**
+ * Two or more ways to respond, side by side. Each card carries its own note so
+ * somebody reads what they are agreeing to before they open the form rather
+ * than only once they are inside it.
+ */
+function ResponseSection({ section, event }: { section: Extract<EventSection, { type: "RESPONSE" }>; event: EventDetail }) {
+  return (
+    <div className="mt-8">
+      {section.content.introduction && (
+        <p className="mx-auto max-w-2xl text-center text-base leading-8 text-[#555]">{section.content.introduction}</p>
+      )}
+      <div className="mt-9 grid gap-4 sm:grid-cols-2">
+        {section.content.actions.map((action, actionIndex) => {
+          const url = action.url || (actionIndex === 0 ? event.testimonyUrl : null);
+          return (
+            <article
+              key={`${action.heading}-${actionIndex}`}
+              className="flex flex-col rounded-2xl border border-[#E7CDD3] bg-white p-5 xs:p-6"
+            >
+              <h3 className="text-xl font-black tracking-[-0.02em] text-[#111]">{action.heading}</h3>
+              {action.body && <p className="mt-3 flex-1 text-sm leading-7 text-[#555]">{action.body}</p>}
+              {action.note && <p className="mt-3 text-xs leading-6 text-[#8a7e80]">{action.note}</p>}
+              {url ? (
+                <a
+                  href={url}
+                  target={url.startsWith("http") ? "_blank" : undefined}
+                  rel={url.startsWith("http") ? "noopener noreferrer" : undefined}
+                  className="mt-5 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#87102C] px-6 text-sm font-black uppercase tracking-[0.06em] text-white transition hover:bg-[#6E0C24] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#87102C]/30"
+                >
+                  {action.buttonLabel}
+                  <ArrowUpRight size={15} aria-hidden="true" />
+                </a>
+              ) : (
+                // No destination yet — say so rather than render a dead button.
+                <p className="mt-5 text-xs font-semibold uppercase tracking-[0.12em] text-[#b8a8ac]">
+                  Link coming soon
+                </p>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

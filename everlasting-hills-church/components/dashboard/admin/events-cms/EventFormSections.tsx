@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { EventSection, EventSectionType } from "@/types";
 import Field from "./Field";
 import { inputCls } from "./helpers";
+import ResponseSectionEditor, { EMPTY_RESPONSE_ACTION } from "./ResponseSectionEditor";
 import type { EventFormData, SetField } from "./useEventForm";
 
 const sectionOptions: { value: EventSectionType; label: string }[] = [
@@ -13,6 +14,7 @@ const sectionOptions: { value: EventSectionType; label: string }[] = [
   { value: "FAQ", label: "Frequently asked questions" },
   { value: "TESTIMONY", label: "Testimony call to action" },
   { value: "CTA", label: "Call to action" },
+  { value: "RESPONSE", label: "Ways to respond" },
 ];
 
 function base<T extends EventSectionType>(type: T) {
@@ -37,6 +39,7 @@ function newSection(type: EventSectionType): EventSection {
     case "FAQ": return { ...base(type), content: { items: [{ question: "", answer: "" }] } };
     case "TESTIMONY": return { ...base(type), content: { body: "", buttonLabel: "Share your testimony", url: "" } };
     case "CTA": return { ...base(type), content: { body: "", buttonLabel: "Learn more", url: "" } };
+    case "RESPONSE": return { ...base(type), content: { introduction: "", actions: [{ ...EMPTY_RESPONSE_ACTION }] } };
   }
 }
 
@@ -114,6 +117,8 @@ function SectionEditor({ section, index, update }: { section: EventSection; inde
       return <div className="space-y-4">{section.content.focuses.map((focus, focusIndex) => <div key={focusIndex} className="space-y-3 rounded-lg bg-gray-50 p-3 dark:bg-white/[0.03]"><div className="grid gap-3 sm:grid-cols-2"><input aria-label={`Prayer focus ${focusIndex + 1} title`} value={focus.title} onChange={(e) => { const focuses = section.content.focuses.map((old, i) => i === focusIndex ? { ...old, title: e.target.value } : old); update({ ...section, content: { focuses } }); }} placeholder="Spiritual Restoration" className={inputCls} /><input aria-label={`Prayer focus ${focusIndex + 1} day or date`} value={focus.dayDate ?? ""} onChange={(e) => { const focuses = section.content.focuses.map((old, i) => i === focusIndex ? { ...old, dayDate: e.target.value } : old); update({ ...section, content: { focuses } }); }} placeholder="Optional day / date" className={inputCls} /></div><textarea aria-label={`Prayer focus ${focusIndex + 1} introduction`} rows={2} value={focus.introduction ?? ""} onChange={(e) => { const focuses = section.content.focuses.map((old, i) => i === focusIndex ? { ...old, introduction: e.target.value } : old); update({ ...section, content: { focuses } }); }} placeholder="Introduction" className={`${inputCls} resize-y`} /><StringListEditor label="Scriptures" values={focus.scriptures} onChange={(scriptures) => { const focuses = section.content.focuses.map((old, i) => i === focusIndex ? { ...old, scriptures } : old); update({ ...section, content: { focuses } }); }} placeholder="Romans 12:11" /><StringListEditor label="Prayer points" values={focus.prayerPoints} onChange={(prayerPoints) => { const focuses = section.content.focuses.map((old, i) => i === focusIndex ? { ...old, prayerPoints } : old); update({ ...section, content: { focuses } }); }} placeholder="Pray for renewed hunger for God" /><textarea aria-label={`Prayer focus ${focusIndex + 1} declaration`} rows={2} value={focus.declaration ?? ""} onChange={(e) => { const focuses = section.content.focuses.map((old, i) => i === focusIndex ? { ...old, declaration: e.target.value } : old); update({ ...section, content: { focuses } }); }} placeholder="Optional declaration" className={`${inputCls} resize-y`} /><RemoveButton label="Remove prayer focus" onClick={() => update({ ...section, content: { focuses: section.content.focuses.filter((_, i) => i !== focusIndex) } })} /></div>)}<AddButton label="Add prayer focus" onClick={() => update({ ...section, content: { focuses: [...section.content.focuses, { title: "", introduction: "", scriptures: [], prayerPoints: [], declaration: "", dayDate: "" }] } })} /></div>;
     case "TESTIMONY":
       return <div className="space-y-3"><Field label="Description" htmlFor={`section-cta-body-${index}`}><textarea id={`section-cta-body-${index}`} rows={4} value={section.content.body} onChange={(e) => update({ ...section, content: { ...section.content, body: e.target.value } })} className={`${inputCls} resize-y`} /></Field><div className="grid gap-3 sm:grid-cols-2"><Field label="Button label" htmlFor={`section-cta-label-${index}`}><input id={`section-cta-label-${index}`} required value={section.content.buttonLabel} onChange={(e) => update({ ...section, content: { ...section.content, buttonLabel: e.target.value } })} className={inputCls} /></Field><Field label="Destination URL" htmlFor={`section-cta-url-${index}`}><input id={`section-cta-url-${index}`} value={section.content.url ?? ""} onChange={(e) => update({ ...section, content: { ...section.content, url: e.target.value } })} placeholder="Add when available" className={inputCls} /></Field></div></div>;
+    case "RESPONSE":
+      return <ResponseSectionEditor section={section} index={index} update={update} />;
     case "CTA":
       return <div className="space-y-3"><Field label="Description" htmlFor={`section-cta-body-${index}`}><textarea id={`section-cta-body-${index}`} rows={4} value={section.content.body ?? ""} onChange={(e) => update({ ...section, content: { ...section.content, body: e.target.value } })} className={`${inputCls} resize-y`} /></Field><div className="grid gap-3 sm:grid-cols-2"><Field label="Button label" htmlFor={`section-cta-label-${index}`}><input id={`section-cta-label-${index}`} required value={section.content.buttonLabel} onChange={(e) => update({ ...section, content: { ...section.content, buttonLabel: e.target.value } })} className={inputCls} /></Field><Field label="Destination URL" htmlFor={`section-cta-url-${index}`}><input id={`section-cta-url-${index}`} value={section.content.url ?? ""} onChange={(e) => update({ ...section, content: { ...section.content, url: e.target.value } })} placeholder="Add when available" className={inputCls} /></Field></div></div>;
   }

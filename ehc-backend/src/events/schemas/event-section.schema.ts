@@ -69,6 +69,27 @@ export const eventSectionInputSchema = z.discriminatedUnion('type', [
     }),
   }),
   z.object({
+    type: z.literal('RESPONSE'),
+    content: z.object({
+      introduction: optionalText(600),
+      // Each card is a distinct way to respond. Consent lines are shown on the
+      // card so somebody knows what they are agreeing to before they open the
+      // form, not only once they are inside it.
+      actions: z
+        .array(
+          z.object({
+            heading: text(120),
+            body: optionalText(600),
+            buttonLabel: text(60),
+            url: optionalLink,
+            note: optionalText(300),
+          }),
+        )
+        .min(1)
+        .max(4),
+    }),
+  }),
+  z.object({
     type: z.literal('CTA'),
     content: z.object({
       body: optionalText(2000),

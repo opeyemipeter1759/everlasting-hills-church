@@ -6,6 +6,12 @@ import EventShareButton from "./EventShareButton";
 
 export default function EventHero({ event }: { event: EventDetail }) {
   const poster = event.coverImageUrl || event.flyerImageUrl;
+  // Most events are given one image. Rather than leaving the banner bare when
+  // no separate hero was uploaded, the poster stands in — heavily blurred and
+  // darkened, so it reads as atmosphere behind the headline rather than as a
+  // cropped poster with its text sliced off.
+  const banner = event.heroImageUrl ?? poster;
+  const bannerIsPoster = !event.heroImageUrl && Boolean(poster);
   const primaryUrl = event.primaryCtaUrl || event.liveUrl || (event.registrationRequired ? event.registrationUrl : null);
   const primaryLabel = event.primaryCtaLabel || (event.liveUrl ? "Join Live" : event.registrationRequired ? "Register" : null);
   const status = getEventStatus(event.startAt, event.endAt, event.timezone);
@@ -14,9 +20,19 @@ export default function EventHero({ event }: { event: EventDetail }) {
 
   return (
     <section className="relative overflow-hidden bg-[#10080b] text-white">
-      {event.heroImageUrl && (
-        <div className="absolute inset-0 opacity-35" aria-hidden="true">
-          <Image src={event.heroImageUrl} alt="" fill priority sizes="100vw" className="object-cover" />
+      {banner && (
+        <div
+          className={`absolute inset-0 ${bannerIsPoster ? "opacity-30" : "opacity-35"}`}
+          aria-hidden="true"
+        >
+          <Image
+            src={banner}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className={`object-cover ${bannerIsPoster ? "scale-110 blur-2xl" : ""}`}
+          />
         </div>
       )}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(135,16,44,0.38),transparent_42%),linear-gradient(110deg,rgba(16,8,11,0.98),rgba(16,8,11,0.76))]" aria-hidden="true" />

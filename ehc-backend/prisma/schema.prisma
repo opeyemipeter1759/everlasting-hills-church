@@ -1710,6 +1710,12 @@ model Testimonial {
   // Null = not asked (admin-authored testimonials, or submissions from
   // before this field existed).
   sharePhysically  Boolean?
+  /// Consent to read this testimony out during a live gathering, and consent
+  /// to publish it on the church's platforms. Two separate permissions
+  /// because somebody may well give one and withhold the other. Null = not
+  /// asked, which is not the same as refused.
+  shareLive        Boolean?
+  shareOnline      Boolean?
   /// Set only when a signed-in member submits (optional auth on the public form)
   /// — same convention as PrayerRequest/Question.memberId. Kept even when
   /// isAnonymous, so admins can always see who a signed-in submitter really is.
@@ -2139,6 +2145,9 @@ enum EventSectionType {
   FAQ
   TESTIMONY
   CTA
+  /// Two or more ways to respond, side by side — a testimony and a salvation
+  /// form, say. TESTIMONY remains for the single-action case.
+  RESPONSE
 }
 
 enum SiteSection {

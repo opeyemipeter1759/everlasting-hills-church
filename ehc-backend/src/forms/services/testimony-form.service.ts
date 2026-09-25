@@ -50,6 +50,8 @@ export class TestimonyFormService {
           content,
           isAnonymous: data.is_anonymous ?? false,
           sharePhysically: data.share_physically ?? null,
+          shareLive: data.share_live ?? null,
+          shareOnline: data.share_online ?? null,
           memberId,
           published: false,
           order: 0,

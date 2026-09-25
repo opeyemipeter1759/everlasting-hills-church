@@ -89,6 +89,51 @@ describe("EventSectionsRenderer", () => {
     expect(link).toHaveAttribute("target", "_blank");
   });
 
+  // Furnace parks its prayer focus empty until the church supplies the
+  // scriptures and points. A heading over nothing looks broken.
+  it("renders nothing for a visible section with no content in it", () => {
+    const sections = [
+      section({ type: "PRAYER_FOCUS", title: "Prayer Focus", content: { focuses: [] } }),
+    ] as EventSection[];
+
+    render(<EventSectionsRenderer event={event({ Sections: sections })} />);
+
+    expect(screen.queryByText("Prayer Focus")).toBeNull();
+  });
+
+  it("shows each way to respond side by side", () => {
+    const sections = [
+      section({
+        type: "RESPONSE",
+        title: "Respond",
+        content: {
+          actions: [
+            { heading: "Have a Testimony?", buttonLabel: "Share", url: "/testimony", note: "You choose what may be shared." },
+            { heading: "Giving Your Life to Christ?", buttonLabel: "Tell us", url: "/first-timer" },
+          ],
+        },
+      }),
+    ] as EventSection[];
+
+    render(<EventSectionsRenderer event={event({ Sections: sections })} />);
+
+    expect(screen.getByRole("link", { name: /share/i })).toHaveAttribute("href", "/testimony");
+    expect(screen.getByRole("link", { name: /tell us/i })).toHaveAttribute("href", "/first-timer");
+    // The consent line belongs on the card, before the form is opened.
+    expect(screen.getByText(/you choose what may be shared/i)).toBeInTheDocument();
+  });
+
+  it("says a response link is coming rather than rendering a dead button", () => {
+    const sections = [
+      section({ type: "RESPONSE", title: "Respond", content: { actions: [{ heading: "Have a Testimony?", buttonLabel: "Share", url: "" }] } }),
+    ] as EventSection[];
+
+    render(<EventSectionsRenderer event={event({ Sections: sections })} />);
+
+    expect(screen.queryByRole("link", { name: /share/i })).toBeNull();
+    expect(screen.getByText(/link coming soon/i)).toBeInTheDocument();
+  });
+
   it("keeps an internal destination in the same tab", () => {
     const sections = [
       section({ type: "TESTIMONY", title: "Have a Testimony?", content: { body: "", buttonLabel: "Share", url: "/testimony" } }),

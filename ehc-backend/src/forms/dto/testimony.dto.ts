@@ -42,4 +42,14 @@ export class TestimonyDto {
   @IsOptional()
   @IsBoolean()
   share_physically?: boolean;
+
+  @ApiProperty({ example: true, required: false, description: 'Permission to share this testimony live during a gathering' })
+  @IsOptional()
+  @IsBoolean()
+  share_live?: boolean;
+
+  @ApiProperty({ example: true, required: false, description: "Permission to share this testimony on the church's platforms" })
+  @IsOptional()
+  @IsBoolean()
+  share_online?: boolean;
 }

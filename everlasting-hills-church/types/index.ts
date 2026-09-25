@@ -174,7 +174,8 @@ export type EventSectionType =
   | "PRAYER_FOCUS"
   | "FAQ"
   | "TESTIMONY"
-  | "CTA";
+  | "CTA"
+  | "RESPONSE";
 
 export interface EventSchedule {
   id: string;
@@ -219,7 +220,11 @@ export type EventSection =
     }>
   | EventSectionBase<"FAQ", { items: { question: string; answer: string }[] }>
   | EventSectionBase<"TESTIMONY", { body: string; buttonLabel: string; url?: string }>
-  | EventSectionBase<"CTA", { body?: string; buttonLabel: string; url?: string }>;
+  | EventSectionBase<"CTA", { body?: string; buttonLabel: string; url?: string }>
+  | EventSectionBase<"RESPONSE", {
+      introduction?: string;
+      actions: { heading: string; body?: string; buttonLabel: string; url?: string; note?: string }[];
+    }>;
 
 /** Slim shape returned by GET /events (public index). */
 export interface EventSummary {

@@ -10,6 +10,10 @@ type FormValues = {
   content: string;
   is_anonymous: "true" | "false";
   share_physically: string;
+  // Two separate permissions: somebody may be glad to have their testimony
+  // read out live and still not want it on the church's platforms.
+  share_live?: boolean;
+  share_online?: boolean;
 };
 
 // same RadioCard pattern you already use elsewhere
@@ -79,6 +83,8 @@ export default function TestimonyForm() {
         testimony: data.content,
         is_anonymous: anonymous,
         share_physically: data.share_physically === "Yes",
+        share_live: Boolean(data.share_live),
+        share_online: Boolean(data.share_online),
         ...(!anonymous && {
           name: data.name?.trim() || undefined,
           phone: data.phone_number?.trim() || undefined,
@@ -245,6 +251,36 @@ export default function TestimonyForm() {
               {errors.share_physically.message}
             </p>
           )}
+        </fieldset>
+
+        {/* Permissions are opt-in and independent — neither is required, and
+            leaving both unticked is a valid answer meaning "just tell them". */}
+        <fieldset className="space-y-3">
+          <legend className="text-sm font-semibold">Permission to share</legend>
+          <p className="text-xs text-gray-500">
+            Optional. Your testimony reaches the pastoral team either way.
+          </p>
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border-2 border-gray-200 bg-white p-3.5 transition-colors has-[:checked]:border-church-maroon has-[:checked]:bg-[#FFF4F6]">
+            <input
+              type="checkbox"
+              {...register("share_live")}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-church-maroon"
+            />
+            <span className="text-sm leading-snug text-gray-800">
+              I give permission for my testimony to be shared live during a gathering.
+            </span>
+          </label>
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border-2 border-gray-200 bg-white p-3.5 transition-colors has-[:checked]:border-church-maroon has-[:checked]:bg-[#FFF4F6]">
+            <input
+              type="checkbox"
+              {...register("share_online")}
+              className="mt-0.5 h-4 w-4 flex-shrink-0 accent-church-maroon"
+            />
+            <span className="text-sm leading-snug text-gray-800">
+              I give permission for my testimony to be shared on the church&apos;s social media
+              platforms and website.
+            </span>
+          </label>
         </fieldset>
 
         {/* ERROR */}

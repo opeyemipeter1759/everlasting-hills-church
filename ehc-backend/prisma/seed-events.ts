@@ -8,6 +8,10 @@ import 'dotenv/config';
 import { EventLocationType, EventSectionType, EventStatus, PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
+/** The church's own channel — where the watches are streamed. An admin can
+ * point Join Live somewhere else at any time from Event Management. */
+const CHURCH_YOUTUBE = 'https://youtube.com/@everlastinghillschurch';
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -47,7 +51,7 @@ async function main() {
     description: '30 Days of sustained Prayer, Word and Spiritual Intensity, with Fasting.',
     startAt: new Date('2026-10-02T00:00:00+01:00'), endAt: new Date('2026-10-31T23:59:59+01:00'),
     timezone: 'Africa/Lagos', locationType: EventLocationType.ONLINE, venueName: 'Online', venueAddress: null,
-    coverImageUrl: poster, flyerImageUrl: poster, liveUrl: null, testimonyUrl: '/testimony',
+    coverImageUrl: poster, flyerImageUrl: poster, liveUrl: CHURCH_YOUTUBE, testimonyUrl: '/testimony',
     primaryCtaLabel: 'Join Live', primaryCtaUrl: null, secondaryCtaLabel: null, secondaryCtaUrl: null,
     seoTitle: 'Furnace 2026 — Dominion | Everlasting Hills Church',
     seoDescription: 'Join Everlasting Hills Church for Furnace 2026: 30 days of sustained prayer, Word and spiritual intensity from October 2–31, meeting daily at 6 AM and 8 PM WAT.',
@@ -86,8 +90,11 @@ function furnaceSections(tenantId: string, eventId: string, updatedAt: Date) {
       { title: 'Direction & Divine Leading', description: 'We are trusting God for clarity, wisdom, instruction, and divine direction concerning lives, families, callings, careers, ministries, and decisions.' },
     ] }),
     row(EventSectionType.SCHEDULE, 2, 'Daily Rhythm', 'Every day · October 2–31', { introduction: 'Join us twice daily throughout Furnace.', tags: ['Prayer', 'Word', 'Spiritual Intensity', 'Fasting'] }),
-    row(EventSectionType.PRAYER_FOCUS, 3, 'Prayer Focus', 'Pray with understanding', { focuses: [] }, false),
-    row(EventSectionType.TESTIMONY, 4, 'Have a Testimony?', 'Tell of His works', { body: 'Share what God has done during Furnace — healing, miracles, answered prayer, restoration, direction, encounters, and every other work of God.', buttonLabel: 'Share Your Testimony', url: '/testimony' }),
+    row(EventSectionType.PRAYER_FOCUS, 3, 'Prayer Focus', 'Pray with understanding', { focuses: [] }),
+    row(EventSectionType.RESPONSE, 4, 'Respond', 'However God is meeting you', { introduction: 'Two ways to respond during Furnace.', actions: [
+      { heading: 'Have a Testimony?', body: 'Share what God has done during Furnace — healing, miracles, answered prayer, restoration, direction, encounters, and every other work of God.', buttonLabel: 'Share Your Testimony', url: '/testimony', note: 'You choose whether your testimony may be shared live during the watches, and whether it may be shared on the church's platforms.' },
+      { heading: 'Giving Your Life to Christ?', body: 'Whether you are coming to Christ for the first time or returning to Him, tell us — someone from the church will reach out to you personally.', buttonLabel: 'I Gave My Life to Christ', url: '/first-timer', note: 'For first-time decisions and rededications alike.' },
+    ] }),
     row(EventSectionType.FAQ, 5, 'Frequently Asked Questions', 'Before you join', { items: [
       { question: 'What is Furnace?', answer: 'Furnace is 30 days of sustained prayer, the Word, spiritual intensity and fasting with Everlasting Hills Church.' },
       { question: 'When is Furnace 2026?', answer: 'Furnace 2026 runs from October 2 through October 31, 2026.' },
@@ -97,7 +104,7 @@ function furnaceSections(tenantId: string, eventId: string, updatedAt: Date) {
       { question: 'Is Furnace online?', answer: 'Yes. Furnace 2026 is configured as an online event.' },
       { question: 'Can I invite someone?', answer: 'Yes. Use the Share Event button to send this page to family and friends.' },
     ] }),
-    row(EventSectionType.CTA, 6, 'Join Us in the Furnace', 'October 2–31 · 6 AM & 8 PM WAT', { body: 'Thirty days of sustained prayer, the Word, spiritual intensity and fasting.', buttonLabel: 'Join Live', url: '' }, false),
+    row(EventSectionType.CTA, 6, 'Join Us in the Furnace', 'October 2–31 · 6 AM & 8 PM WAT', { body: 'Thirty days of sustained prayer, the Word, spiritual intensity and fasting.', buttonLabel: 'Join Live', url: CHURCH_YOUTUBE }),
   ];
 }
 
