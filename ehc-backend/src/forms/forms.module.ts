@@ -13,6 +13,7 @@ import { TestimonyFormService } from './services/testimony-form.service';
 import { ServeTeamFormService } from './services/serve-team-form.service';
 import { ContactFormService } from './services/contact-form.service';
 import { HomeCellFormService } from './services/home-cell-form.service';
+import { SalvationFormService } from './services/salvation-form.service';
 import { PledgeService } from './services/pledge.service';
 import { PledgesController } from './pledges.controller';
 
@@ -29,6 +30,7 @@ import { PledgesController } from './pledges.controller';
     ServeTeamFormService,
     ContactFormService,
     HomeCellFormService,
+    SalvationFormService,
     PledgeService,
   ],
 })

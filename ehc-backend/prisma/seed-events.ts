@@ -81,19 +81,19 @@ function furnaceSections(tenantId: string, eventId: string, updatedAt: Date) {
     id: randomUUID(), tenantId, eventId, type, title, subtitle, content, sortOrder, isVisible, updatedAt,
   });
   return [
-    row(EventSectionType.RICH_TEXT, 0, 'Thirty Days in the Furnace', 'Furnace 2026', { body: 'Furnace is a sustained season of prayer, the Word, spiritual intensity and fasting. For thirty days, we gather twice daily to seek God, grow in spiritual fervency and make room for His transforming work.' }),
-    row(EventSectionType.EXPECTATIONS, 1, 'Our Expectations', 'What we are believing for', { items: [
+    row(EventSectionType.RICH_TEXT, 1, 'Thirty Days in the Furnace', 'Furnace 2026', { body: 'Furnace is a sustained season of prayer, the Word, spiritual intensity and fasting. For thirty days, we gather twice daily to seek God, grow in spiritual fervency and make room for His transforming work.' }),
+    row(EventSectionType.EXPECTATIONS, 2, 'Our Expectations', 'What we are believing for', { items: [
       { title: 'Spiritual Restoration & Fervency', description: 'A season of renewed hunger for God, restored spiritual strength, and fresh fervency in prayer, the Word, and fellowship with God.' },
       { title: "Continuous Expressions of God's Power", description: 'We are believing for increasing and continuous expressions of the power of God at work in and through the believer.' },
       { title: 'Revelations & Encounters', description: 'We are expecting illumination through the Word, deeper revelation of Christ, and genuine encounters with God that transform lives.' },
       { title: 'Miracles & Healing', description: 'We are believing God for miracles, healing, restoration, supernatural intervention, and testimonies throughout Furnace.' },
       { title: 'Direction & Divine Leading', description: 'We are trusting God for clarity, wisdom, instruction, and divine direction concerning lives, families, callings, careers, ministries, and decisions.' },
     ] }),
-    row(EventSectionType.SCHEDULE, 2, 'Daily Rhythm', 'Every day · October 2–31', { introduction: 'Join us twice daily throughout Furnace.', tags: ['Prayer', 'Word', 'Spiritual Intensity', 'Fasting'] }),
-    row(EventSectionType.PRAYER_FOCUS, 3, 'Prayer Focus', 'Pray with understanding', { focuses: [] }),
-    row(EventSectionType.RESPONSE, 4, 'Respond', 'However God is meeting you', { introduction: 'Two ways to respond during Furnace.', actions: [
+    row(EventSectionType.SCHEDULE, 3, 'Daily Rhythm', 'Every day · October 2–31', { introduction: 'Join us twice daily throughout Furnace.', tags: ['Prayer', 'Word', 'Spiritual Intensity', 'Fasting'] }),
+    row(EventSectionType.PRAYER_FOCUS, 4, 'Prayer Focus', 'Pray with understanding', { focuses: [] }),
+    row(EventSectionType.RESPONSE, 0, 'Respond', 'However God is meeting you', { introduction: 'Two ways to respond during Furnace.', actions: [
       { heading: 'Have a Testimony?', body: 'Share what God has done during Furnace — healing, miracles, answered prayer, restoration, direction, encounters, and every other work of God.', buttonLabel: 'Share Your Testimony', url: '/testimony', note: 'You choose whether your testimony may be shared live during the watches, and whether it may be shared on the church’s platforms.' },
-      { heading: 'Giving Your Life to Christ?', body: 'Whether you are coming to Christ for the first time or returning to Him, tell us — someone from the church will reach out to you personally.', buttonLabel: 'I Gave My Life to Christ', url: '/first-timer', note: 'For first-time decisions and rededications alike.' },
+      { heading: 'Giving Your Life to Christ?', body: 'Whether you are coming to Christ for the first time or returning to Him, tell us — someone from the church will reach out to you personally.', buttonLabel: 'I Gave My Life to Christ', url: '/salvation?event=furnace-2026', note: 'For first-time decisions and rededications alike.' },
     ] }),
     row(EventSectionType.FAQ, 5, 'Frequently Asked Questions', 'Before you join', { items: [
       { question: 'What is Furnace?', answer: 'Furnace is 30 days of sustained prayer, the Word, spiritual intensity and fasting with Everlasting Hills Church.' },

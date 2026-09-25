@@ -142,16 +142,20 @@ export default function EventHero({ event }: { event: EventDetail }) {
         </div>
 
         {poster && (
-          // The artwork is the one thing that must never be cropped: contained,
-          // on a hairline, with no shadow competing with the image itself.
-          <div className="relative mx-auto aspect-[4/5] w-full min-w-0 max-w-[420px] overflow-hidden rounded-sm border border-white/15 bg-white/[0.03]">
+          // The frame takes the artwork's own shape rather than imposing one.
+          // A fixed portrait box left a landscape flyer floating in empty bands
+          // above and below it; width/height 0 with h-auto lets the intrinsic
+          // ratio decide, so wide art sits wide and tall art sits tall. The
+          // blurred copy behind the headline is what fills the rest.
+          <div className="mx-auto w-full min-w-0 max-w-[460px] overflow-hidden rounded-sm border border-white/15 bg-white/[0.03]">
             <Image
               src={poster}
               alt={`${event.title}${event.theme ? ` — ${event.theme}` : ""} poster`}
-              fill
+              width={0}
+              height={0}
               priority
-              sizes="(max-width: 1024px) 90vw, 420px"
-              className="object-contain"
+              sizes="(max-width: 1024px) 90vw, 460px"
+              className="h-auto w-full"
             />
           </div>
         )}

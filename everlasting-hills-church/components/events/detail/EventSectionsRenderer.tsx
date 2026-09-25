@@ -42,6 +42,17 @@ function EventSectionView({ section, event, index }: { section: EventSection; ev
     );
   }
 
+  if (section.type === "RESPONSE") {
+    return (
+      <section className="border-y border-[#E7CDD3] bg-[#FFE8ED] px-4 py-20 xs:px-5 sm:px-8 md:py-24">
+        <div className="mx-auto max-w-5xl">
+          <SectionHeading section={section} />
+          <ResponseSection section={section} event={event} />
+        </div>
+      </section>
+    );
+  }
+
   const background = index % 2 === 0 ? "bg-white" : "bg-[#FFF8F9]";
   return (
     <section className={`${background} px-4 py-20 xs:px-5 sm:px-8 md:py-28`}>
@@ -52,7 +63,6 @@ function EventSectionView({ section, event, index }: { section: EventSection; ev
         {section.type === "EXPECTATIONS" && <ExpectationsSection section={section} />}
         {section.type === "PRAYER_FOCUS" && <PrayerSection section={section} />}
         {section.type === "FAQ" && <div className="mx-auto mt-8 max-w-3xl"><EventAccordion items={section.content.items.map((item) => ({ title: item.question, body: item.answer }))} /></div>}
-        {section.type === "RESPONSE" && <ResponseSection section={section} event={event} />}
       </div>
     </section>
   );

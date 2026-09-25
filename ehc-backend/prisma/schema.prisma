@@ -219,6 +219,7 @@ model Member {
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
   @@index([tenantId, email])
+  SalvationDecision             SalvationDecision[]
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).
@@ -510,6 +511,51 @@ model PaystackWebhookLog {
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+/// Somebody telling the church they have given their life to Christ, or come
+/// back to Him. Deliberately its own table rather than a flag on Visitor: a
+/// decision is an event in time that the pastoral team responds to, and the
+/// person making one may already be a member, a first timer, or nobody the
+/// church has ever met.
+model SalvationDecision {
+  id                  String                @id
+  tenantId            String
+  firstName           String
+  lastName            String
+  email               String?
+  phone               String?
+  decision            SalvationDecisionType
+  /// Free text rather than a picker: people write "Ibadan, Oyo" or "London, UK"
+  /// and forcing a country list would turn a moment of response into a form.
+  location            String?
+  /// Blank for somebody with no church — which is exactly who this reaches.
+  churchName          String?
+  interestedInBaptism Boolean?
+  message             String?
+  /// The event page this came from, when it came from one.
+  eventId             String?
+  /// Set when a signed-in member submits — same convention as PrayerRequest.
+  memberId            String?
+  /// Pastoral follow-up state. Null until somebody picks it up.
+  contactedAt         DateTime?
+  contactedById       String?
+  note                String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now()) @updatedAt
+  Tenant              Tenant                @relation(fields: [tenantId], references: [id])
+  Member              Member?               @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  Event               Event?                @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  ContactedBy         Profile?              @relation("SalvationContactedBy", fields: [contactedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, contactedAt])
+  @@index([eventId])
+}
+
+enum SalvationDecisionType {
+  FIRST_TIME
+  REDEDICATION
+}
+
 model PrayerRequest {
   id          String              @id
   tenantId    String
@@ -600,6 +646,7 @@ model Profile {
   UnitLeadAssigned              UnitLeadAssignment[]       @relation("UnitLeadAssignedBy")
   HeadUsherOf                   HeadUsherAssignment[]      @relation("HeadUsherUser")
   HeadUsherAssigned             HeadUsherAssignment[]      @relation("HeadUsherAssignedBy")
+  SalvationContacted            SalvationDecision[]        @relation("SalvationContactedBy")
   FollowUpAdded                 FollowUpEntry[]            @relation("FollowUpAddedBy")
   FollowUpSentToPastor          FollowUpEntry[]            @relation("FollowUpSentToPastorBy")
   ServiceFollowUpReportCompiled ServiceFollowUpReport[]    @relation("ServiceFollowUpReportCompiledBy")
@@ -1036,6 +1083,7 @@ model Tenant {
   followUpNotes            FollowUpNote[]
   followUpNoteReactions    FollowUpNoteReaction[]
   sermonDigests            SermonDigest[]
+  SalvationDecision             SalvationDecision[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1133,6 +1181,7 @@ model Event {
   Rsvps                EventRsvp[]
   Schedules            EventSchedule[]
   Announcement         Announcement?
+  SalvationDecisions   SalvationDecision[]
   Sections             EventSection[]
 
   @@unique([tenantId, slug])

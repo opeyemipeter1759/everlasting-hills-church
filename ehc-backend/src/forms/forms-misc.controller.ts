@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
@@ -9,6 +9,11 @@ import { ContactDto } from './dto/contact.dto';
 import { HomeCellDto } from './dto/home-cell.dto';
 import { ServeTeamDto } from './dto/serve-team.dto';
 import { TestimonyDto } from './dto/testimony.dto';
+import { SalvationDecisionDto } from './dto/salvation.dto';
+import { SalvationContactDto } from './dto/salvation-contact.dto';
+import { SalvationFormService } from './services/salvation-form.service';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 import { TestimonyFormService } from './services/testimony-form.service';
 import { ServeTeamFormService } from './services/serve-team-form.service';
 import { ContactFormService } from './services/contact-form.service';
@@ -23,7 +28,50 @@ export class FormsMiscController {
     private readonly serveTeamSvc: ServeTeamFormService,
     private readonly contactSvc: ContactFormService,
     private readonly homeCellSvc: HomeCellFormService,
+    private readonly salvationSvc: SalvationFormService,
   ) {}
+
+  @Public()
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('salvation')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Record a decision for Christ',
+    description:
+      'A first-time decision or a rededication, from the public site. Only the name and the ' +
+      'decision are required — somebody responding in the moment should not be turned away by ' +
+      'a form. Links to the event it came from when an event slug is given, and to the member ' +
+      'when the submitter is signed in.',
+  })
+  @ApiCreatedResponse({ description: 'Decision recorded' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  async salvation(@Body() body: SalvationDecisionDto, @CurrentUser() user?: AuthUser) {
+    return this.salvationSvc.submit(body, user?.memberId ?? null);
+  }
+
+  @Roles(Role.PASTOR)
+  @Get('salvation')
+  @ApiOperation({
+    summary: 'List decisions for Christ (PASTOR+)',
+    description: 'Every field of every submission, newest first, for pastoral follow-up.',
+  })
+  async listSalvation(@Query('contacted') contacted?: string) {
+    return this.salvationSvc.list({
+      contacted: contacted === undefined ? undefined : contacted === 'true',
+    });
+  }
+
+  @Roles(Role.PASTOR)
+  @Patch('salvation/:id/contacted')
+  @ApiOperation({ summary: 'Mark a decision as followed up, and keep a note (PASTOR+)' })
+  async setSalvationContacted(
+    @Param('id') id: string,
+    @Body() body: SalvationContactDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.salvationSvc.setContacted(id, body.contacted, user.profileId ?? null, body.note);
+  }
 
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
