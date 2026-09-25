@@ -108,9 +108,9 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
     apiClient.get<unknown[]>("/follow-up?stage=UNASSIGNED"),
     apiClient.get<{
       totalPrayers: number;
-      pendingPrayers: number;
-      pendingQuestions: number;
-      draftTestimonials: number;
+      pendingPrayers?: number;
+      pendingQuestions?: number;
+      draftTestimonials?: number;
     }>("/admin/analytics"),
     apiClient.get<unknown[]>("/members/follow-ups"),
     apiClient.get<AtRiskResponse>("/members/at-risk"),
@@ -168,9 +168,13 @@ async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
     pastoralCare: {
       // Pending, not every request ever submitted — this sits beside two
       // outstanding-work counts, and a lifetime total can never reach zero.
-      prayerRequests: adminAnalytics.data.pendingPrayers,
-      questions: adminAnalytics.data.pendingQuestions,
-      testimonies: adminAnalytics.data.draftTestimonials,
+      // ?? 0 because the frontend deploys ahead of the API: until the build
+      // carrying these counts is live they arrive undefined, and undefined
+      // sums to NaN, which rendered the card as an empty box rather than as
+      // an all-clear.
+      prayerRequests: adminAnalytics.data.pendingPrayers ?? 0,
+      questions: adminAnalytics.data.pendingQuestions ?? 0,
+      testimonies: adminAnalytics.data.draftTestimonials ?? 0,
       openFollowUps: openFollowUpTasks.data.length,
       atRiskMembers: seenAtRisk.size,
       atRisk: atRiskPeople,
