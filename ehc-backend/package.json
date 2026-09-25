@@ -18,6 +18,7 @@
     "lint:fix": "npm run lint -- --fix",
     "openapi:generate": "ts-node --transpile-only scripts/generate-openapi.ts",
     "migration:check-baseline": "ts-node --transpile-only scripts/check-production-baseline.ts",
+    "seed:events": "ts-node --transpile-only prisma/seed-events.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
