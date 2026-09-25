@@ -4,6 +4,15 @@ import type { EventDetail } from "@/types";
 import { formatEventDateRange, getEventStatus } from "./event-format";
 import EventShareButton from "./EventShareButton";
 
+/**
+ * Event hero — the dark half of the page's tonal inversion.
+ *
+ * Built to the editorial-dossier rules the rest of the event page follows:
+ * depth comes from 1px hairlines and tonal shift, never shadows; one flat
+ * scrim rather than stacked gradients; the headline carries the page at
+ * display scale with tight tracking; and exactly one filled pill, so the
+ * primary action is unmistakable among the outlined ones beside it.
+ */
 export default function EventHero({ event }: { event: EventDetail }) {
   const poster = event.coverImageUrl || event.flyerImageUrl;
   // Most events are given one image. Rather than leaving the banner bare when
@@ -19,14 +28,12 @@ export default function EventHero({ event }: { event: EventDetail }) {
   const dateLabel = formatEventDateRange(event.startAt, event.endAt, event.timezone);
   // An older API payload carries no schedules at all.
   const schedules = event.Schedules ?? [];
+  const calendarHref = `${(process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "")}/calendar/event/${encodeURIComponent(event.slug)}.ics`;
 
   return (
     <section className="relative overflow-hidden bg-[#10080b] text-white">
       {banner && (
-        <div
-          className={`absolute inset-0 ${bannerIsPoster ? "opacity-30" : "opacity-35"}`}
-          aria-hidden="true"
-        >
+        <div className="absolute inset-0 opacity-30" aria-hidden="true">
           <Image
             src={banner}
             alt=""
@@ -37,35 +44,115 @@ export default function EventHero({ event }: { event: EventDetail }) {
           />
         </div>
       )}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(135,16,44,0.38),transparent_42%),linear-gradient(110deg,rgba(16,8,11,0.98),rgba(16,8,11,0.76))]" aria-hidden="true" />
+      {/* One flat scrim. Stacked gradients read as glow; this system is printed. */}
+      <div className="absolute inset-0 bg-[#10080b]/80" aria-hidden="true" />
 
-      <div className="relative mx-auto grid min-h-[680px] max-w-7xl items-center gap-10 px-4 pb-20 pt-32 xs:px-5 sm:px-8 lg:grid-cols-[1.08fr_0.72fr] lg:gap-16 lg:py-36">
+      <div className="relative mx-auto grid max-w-[1200px] items-center gap-12 px-4 pb-20 pt-32 xs:px-5 sm:px-8 lg:grid-cols-[1.1fr_0.7fr] lg:gap-16 lg:pb-28 lg:pt-36">
         <div className="min-w-0">
-          <div className="mb-7 flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#E7CDD3]">
-            <span>Everlasting Hills Church</span><span aria-hidden="true">·</span><span>{status}</span>
+          {/* Classification rail, in the uppercase tracked register used for
+              every section label further down the page. */}
+          <div className="mb-8 flex flex-wrap items-center gap-x-3 gap-y-2">
+            <span className="inline-flex items-center rounded-sm border border-white/25 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#FFE8ED] xs:tracking-[0.22em]">
+              {status}
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45 xs:tracking-[0.22em]">
+              Everlasting Hills Church
+            </span>
           </div>
-          <h1 className="max-w-4xl text-balance text-5xl font-black leading-[0.94] tracking-[-0.045em] sm:text-7xl lg:text-8xl">{event.title}</h1>
-          {(event.theme || event.tagline) && <p className="mt-5 max-w-2xl text-xl font-medium leading-snug text-[#FFE8ED] sm:text-2xl">{event.theme || event.tagline}</p>}
-          {event.shortDescription && <p className="mt-6 max-w-2xl break-words text-base leading-7 text-white/66 sm:text-lg">{event.shortDescription}</p>}
 
-          <dl className="mt-8 flex flex-col gap-3 text-sm text-white/80 sm:flex-row sm:flex-wrap sm:gap-5">
-            <div className="flex items-center gap-2"><CalendarDays size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Dates</dt><dd>{dateLabel}</dd></div>
-            {schedules.length > 0 && <div className="flex items-center gap-2"><Radio size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Meeting times</dt><dd>{schedules.map((item) => formatClock(item.startTime)).join(" & ")} · {timeZoneLabel(event.timezone)}</dd></div>}
-            {venue && <div className="flex items-center gap-2"><MapPin size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Location</dt><dd>{venue}</dd></div>}
+          <h1 className="max-w-4xl text-balance text-[44px] font-black leading-[0.95] tracking-[-0.04em] xs:text-6xl sm:text-7xl lg:text-[86px]">
+            {event.title}
+          </h1>
+
+          {(event.theme || event.tagline) && (
+            <p className="mt-6 max-w-2xl text-balance text-xl font-medium leading-[1.25] tracking-[-0.02em] text-[#FFE8ED] sm:text-3xl">
+              {event.theme || event.tagline}
+            </p>
+          )}
+
+          {event.shortDescription && (
+            <p className="mt-6 max-w-xl break-words text-base leading-[1.6] text-white/60 sm:text-[17px]">
+              {event.shortDescription}
+            </p>
+          )}
+
+          {/* Facts sit on a hairline rail rather than floating — borders do the
+              separating work that shadows would elsewhere. */}
+          <dl className="mt-10 flex flex-col gap-4 border-t border-white/12 pt-8 text-sm text-white/75 sm:flex-row sm:flex-wrap sm:gap-x-10">
+            <div className="flex items-center gap-2.5">
+              <CalendarDays size={15} className="shrink-0 text-[#E7CDD3]" aria-hidden="true" />
+              <dt className="sr-only">Dates</dt>
+              <dd>{dateLabel}</dd>
+            </div>
+            {schedules.length > 0 && (
+              <div className="flex items-center gap-2.5">
+                <Radio size={15} className="shrink-0 text-[#E7CDD3]" aria-hidden="true" />
+                <dt className="sr-only">Meeting times</dt>
+                <dd>
+                  {schedules.map((item) => formatClock(item.startTime)).join(" & ")} ·{" "}
+                  {timeZoneLabel(event.timezone)}
+                </dd>
+              </div>
+            )}
+            {venue && (
+              <div className="flex items-center gap-2.5">
+                <MapPin size={15} className="shrink-0 text-[#E7CDD3]" aria-hidden="true" />
+                <dt className="sr-only">Location</dt>
+                <dd>{venue}</dd>
+              </div>
+            )}
           </dl>
 
-          <div className="mt-9 flex flex-wrap gap-3">
-            {primaryUrl && primaryLabel && <a href={primaryUrl} target={primaryUrl.startsWith("http") ? "_blank" : undefined} rel={primaryUrl.startsWith("http") ? "noopener noreferrer" : undefined} className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.08em] text-[#6E0C24] transition hover:bg-[#FFE8ED] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40">{primaryLabel}</a>}
-            {event.registrationRequired && event.rsvpEnabled && !primaryUrl && <a href="#rsvp" className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-sm font-black uppercase tracking-[0.08em] text-[#6E0C24]">Register</a>}
+          <div className="mt-10 flex flex-wrap gap-3">
+            {primaryUrl && primaryLabel && (
+              <a
+                href={primaryUrl}
+                target={primaryUrl.startsWith("http") ? "_blank" : undefined}
+                rel={primaryUrl.startsWith("http") ? "noopener noreferrer" : undefined}
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-8 text-sm font-bold uppercase tracking-[0.08em] text-[#10080b] transition-colors hover:bg-[#FFE8ED] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#10080b]"
+              >
+                {primaryLabel}
+              </a>
+            )}
+            {event.registrationRequired && event.rsvpEnabled && !primaryUrl && (
+              <a
+                href="#rsvp"
+                className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-8 text-sm font-bold uppercase tracking-[0.08em] text-[#10080b] transition-colors hover:bg-[#FFE8ED]"
+              >
+                Register
+              </a>
+            )}
             <EventShareButton event={event} />
-            {event.secondaryCtaUrl && event.secondaryCtaLabel && <a href={event.secondaryCtaUrl} className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/25 px-6 text-sm font-bold text-white hover:bg-white/10">{event.secondaryCtaLabel}</a>}
-            <a href={`${(process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "")}/calendar/event/${encodeURIComponent(event.slug)}.ics`} download className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 px-5 text-sm font-semibold text-white/80 hover:bg-white/10"><CalendarPlus size={15} /> Add to calendar</a>
+            {event.secondaryCtaUrl && event.secondaryCtaLabel && (
+              <a
+                href={event.secondaryCtaUrl}
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/30 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                {event.secondaryCtaLabel}
+              </a>
+            )}
+            <a
+              href={calendarHref}
+              download
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/20 px-6 text-sm font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <CalendarPlus size={15} aria-hidden="true" /> Add to calendar
+            </a>
           </div>
         </div>
 
         {poster && (
-          <div className="relative mx-auto aspect-[4/5] w-full min-w-0 max-w-[430px] overflow-hidden rounded-sm bg-black/30 shadow-[0_30px_100px_rgba(0,0,0,0.45)] ring-1 ring-white/10">
-            <Image src={poster} alt={`${event.title}${event.theme ? ` — ${event.theme}` : ""} poster`} fill priority sizes="(max-width: 1024px) 90vw, 430px" className="object-contain" />
+          // The artwork is the one thing that must never be cropped: contained,
+          // on a hairline, with no shadow competing with the image itself.
+          <div className="relative mx-auto aspect-[4/5] w-full min-w-0 max-w-[420px] overflow-hidden rounded-sm border border-white/15 bg-white/[0.03]">
+            <Image
+              src={poster}
+              alt={`${event.title}${event.theme ? ` — ${event.theme}` : ""} poster`}
+              fill
+              priority
+              sizes="(max-width: 1024px) 90vw, 420px"
+              className="object-contain"
+            />
           </div>
         )}
       </div>

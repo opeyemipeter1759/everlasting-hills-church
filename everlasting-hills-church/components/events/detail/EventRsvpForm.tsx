@@ -59,7 +59,7 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
           It&apos;s free. RSVPing helps us prepare a seat for you.
         </p>
 
-        <div className="mt-12 rounded-3xl bg-white border border-[#E7CDD3]/60 shadow-[0_24px_80px_-30px_rgba(135,16,44,0.2)] p-4 xs:p-6 sm:p-10">
+        <div className="mt-12 rounded-sm border border-[#E7CDD3] bg-white p-5 xs:p-8 sm:p-10">
           {success ? (
             <motion.div
               initial={{ scale: 0.94, opacity: 0 }}
@@ -133,7 +133,7 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
               {error && (
                 <p
                   role="alert"
-                  className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3"
+                  className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-sm px-4 py-3"
                 >
                   {error}
                 </p>
@@ -142,7 +142,7 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-4 rounded-full bg-[#87102C] text-white text-sm font-bold tracking-wide hover:bg-[#6E0C24] hover:shadow-lg hover:shadow-[#87102C]/25 hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2.5"
+                className="w-full min-h-12 py-4 rounded-full bg-[#87102C] text-white text-sm font-bold uppercase tracking-[0.08em] transition-colors hover:bg-[#6E0C24] disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40"
               >
                 {submitting ? (
                   <>
@@ -170,7 +170,7 @@ export default function EventRsvpForm({ slug, eventTitle, dateLabel }: Props) {
 }
 
 const inputClass =
-  "w-full px-4 py-3.5 rounded-xl border border-[#E7CDD3] bg-[#FFF4F6]/40 text-[#111] text-sm placeholder:text-[#aaa] focus:outline-none focus:border-[#87102C] focus:bg-white focus-visible:ring-4 focus-visible:ring-[#87102C]/15 transition-all";
+  "w-full px-4 py-3.5 rounded-sm border border-[#E7CDD3] bg-[#FFF8F9] text-[#111] text-sm placeholder:text-[#aaa] focus:outline-none focus:border-[#87102C] focus:bg-white focus-visible:ring-2 focus-visible:ring-[#87102C]/25 transition-colors";
 
 function Field({
   label,

@@ -2,6 +2,13 @@ import { CalendarDays, Clock, ExternalLink, MapPin, Mic, UserRound, type LucideI
 import type { EventDetail } from "@/types";
 import { formatEventDateRange, formatEventTimeRange } from "./event-format";
 
+/**
+ * The facts, as a hairline-ruled table rather than a grid of floating cards.
+ *
+ * Borders and background tone do the separating, so nothing is elevated: the
+ * cells share edges the way a printed schedule does, which keeps the eye on
+ * the values instead of on five identical containers.
+ */
 export default function EventDetailsBento({ event }: { event: EventDetail }) {
   const chips: { icon: LucideIcon; label: string; value: string | null }[] = [
     { icon: CalendarDays, label: "Date",           value: formatEventDateRange(event.startAt, event.endAt, event.timezone) || null },
@@ -16,34 +23,31 @@ export default function EventDetailsBento({ event }: { event: EventDetail }) {
   if (visible.length === 0 && !event.description && !event.mapsLink) return null;
 
   return (
-    <section id="details" className="py-20 md:py-28 bg-white">
-      <div className="max-w-4xl mx-auto px-4 xs:px-5 sm:px-8">
+    <section id="details" className="bg-[#FFF8F9] px-4 py-20 xs:px-5 sm:px-8 md:py-28">
+      <div className="mx-auto max-w-4xl">
+        <header className="text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#87102C] xs:tracking-[0.22em]">
+            The Details
+          </p>
+          <h2 className="mt-4 text-balance text-3xl font-black tracking-[-0.03em] text-[#111] sm:text-5xl">
+            Everything you need to know
+          </h2>
+        </header>
 
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] xs:tracking-[0.28em] text-[#87102C] text-center mb-2">
-          The Details
-        </p>
-        <h2 className="text-2xl sm:text-3xl font-bold text-[#111] text-center tracking-tight mb-12">
-          Everything you need to know
-        </h2>
-
-        {/* Info chips */}
         {visible.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">
+          // One shared 1px grid: the gap-px over a border-coloured background
+          // draws every rule at hairline weight without stacking borders.
+          <div className="mt-12 grid grid-cols-1 gap-px overflow-hidden rounded-sm border border-[#E7CDD3] bg-[#E7CDD3] sm:grid-cols-2">
             {visible.map((c) => {
               const Icon = c.icon;
               return (
-                <div
-                  key={c.label}
-                  className="flex items-start gap-4 rounded-2xl border border-[#E7CDD3]/60 bg-[#FFF4F6]/60 px-5 py-4"
-                >
-                  <span className="flex-shrink-0 flex w-10 h-10 rounded-xl bg-[#FFE8ED] items-center justify-center mt-0.5">
-                    <Icon size={16} className="text-[#87102C]" />
-                  </span>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.09em] xs:tracking-[0.18em] font-bold text-[#aaa] mb-0.5">
+                <div key={c.label} className="flex items-start gap-4 bg-white px-5 py-6 sm:px-6">
+                  <Icon size={16} className="mt-0.5 shrink-0 text-[#87102C]" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a7e80] xs:tracking-[0.18em]">
                       {c.label}
                     </p>
-                    <p className="text-[#111] font-semibold text-sm leading-snug">{c.value}</p>
+                    <p className="mt-1.5 text-[15px] font-semibold leading-[1.5] text-[#111]">{c.value}</p>
                   </div>
                 </div>
               );
@@ -51,25 +55,23 @@ export default function EventDetailsBento({ event }: { event: EventDetail }) {
           </div>
         )}
 
-        {/* Description */}
         {event.description && (
-          <p className="text-[#555] text-base leading-relaxed whitespace-pre-line text-center max-w-2xl mx-auto mb-10">
+          <p className="mx-auto mt-12 max-w-2xl whitespace-pre-line text-center text-[17px] leading-[1.7] text-[#555]">
             {event.description}
           </p>
         )}
 
-        {/* Directions */}
         {event.mapsLink && (
-          <div className="text-center">
+          <div className="mt-10 text-center">
             <a
               href={event.mapsLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-[#E7CDD3] text-[#87102C] text-sm font-semibold hover:bg-[#FFF4F6] transition-colors"
+              className="inline-flex min-h-12 items-center gap-2 rounded-full border border-[#181011] px-7 text-sm font-semibold text-[#181011] transition-colors hover:bg-[#FFF4F6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/40"
             >
-              <MapPin size={14} />
+              <MapPin size={14} aria-hidden="true" />
               Get directions
-              <ExternalLink size={12} className="opacity-50" />
+              <ExternalLink size={12} className="opacity-50" aria-hidden="true" />
             </a>
           </div>
         )}
