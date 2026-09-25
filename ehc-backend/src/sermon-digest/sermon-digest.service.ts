@@ -306,6 +306,20 @@ function lagosDayNumber(date: Date): number {
 }
 
 /**
+ * Cache-Control for the digest reads: a few minutes at most, and never past
+ * the coming midnight in Lagos, when the day's confession changes — so the new
+ * one shows straight away instead of after a cache runs out. (Lagos is
+ * UTC+1 all year, no daylight saving.)
+ */
+export function dailyCacheControl(now = new Date()): string {
+  const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(now);
+  const nextMidnight = Date.parse(`${ymd}T00:00:00+01:00`) + 86_400_000;
+  const untilMidnight = Math.max(1, Math.floor((nextMidnight - now.getTime()) / 1000));
+  const cap = (seconds: number) => Math.min(seconds, untilMidnight);
+  return `public, max-age=${cap(60)}, s-maxage=${cap(300)}, stale-while-revalidate=${cap(60)}`;
+}
+
+/**
  * Which confession shows today. The service day gets the sermon's own
  * confession; each day after gets the next of the daily ones, going round
  * again if the next service is late. `day` is 0 on the service day.

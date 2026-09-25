@@ -61,7 +61,9 @@ async function getDigest<T>(url: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-const QUERY = { staleTime: 5 * 60_000, refetchOnWindowFocus: false, retry: 1 } as const;
+// Short, so a page left open across Lagos midnight shows the new day's
+// confession within a minute of coming back to it.
+const QUERY = { staleTime: 60_000, refetchOnWindowFocus: true, retry: 1 } as const;
 
 export function useLatestSummary() {
   return useQuery({ queryKey: ["sermon-digest", "latest"], queryFn: () => getDigest<LatestSummary>("/api/latest-summary"), ...QUERY });

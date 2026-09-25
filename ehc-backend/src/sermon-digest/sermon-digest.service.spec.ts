@@ -1,4 +1,4 @@
-import { SermonDigestService, confessionForDay } from './sermon-digest.service';
+import { SermonDigestService, confessionForDay, dailyCacheControl } from './sermon-digest.service';
 import { GeminiBusyError } from '../ai/gemini-client';
 import type { ServiceVideo } from './youtube-services';
 
@@ -186,5 +186,17 @@ describe('confessionForDay', () => {
 
   it('keeps the sermon’s own confession before the daily ones are written', () => {
     expect(confessionForDay(original, null, service, new Date('2026-09-22T12:00:00Z')).lines).toEqual(original);
+  });
+});
+
+describe('dailyCacheControl', () => {
+  it('caches for a few minutes in the middle of the day', () => {
+    expect(dailyCacheControl(new Date('2026-09-25T11:00:00Z'))).toBe('public, max-age=60, s-maxage=300, stale-while-revalidate=60');
+  });
+
+  it('never caches past Lagos midnight, when the confession changes', () => {
+    // 22:58:30 UTC is 23:58:30 in Lagos: 90 seconds to midnight.
+    expect(dailyCacheControl(new Date('2026-09-25T22:58:30Z'))).toBe('public, max-age=60, s-maxage=90, stale-while-revalidate=60');
+    expect(dailyCacheControl(new Date('2026-09-25T22:59:50Z'))).toBe('public, max-age=10, s-maxage=10, stale-while-revalidate=10');
   });
 });

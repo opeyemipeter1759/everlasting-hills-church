@@ -1,10 +1,8 @@
-import { Controller, Get, Header } from '@nestjs/common';
+import { Controller, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../auth/decorators/public.decorator';
-import { SermonDigestService } from './sermon-digest.service';
-
-/** Cached at the edge: a new sermon arrives at most every few hours. */
-const CACHE = 'public, max-age=60, s-maxage=600, stale-while-revalidate=3600';
+import { SermonDigestService, dailyCacheControl } from './sermon-digest.service';
 
 /**
  * Public reads of the sermon digest. Both answer 200 with `ready: false`
@@ -18,18 +16,19 @@ export class SermonDigestController {
 
   @Public()
   @Get('latest')
-  @Header('Cache-Control', CACHE)
   @ApiOperation({ summary: 'Summary of the latest sermon from the church YouTube channel' })
-  async latest() {
+  async latest(@Res({ passthrough: true }) res: Response) {
+    res.setHeader('Cache-Control', dailyCacheControl());
     const latest = await this.digest.latest();
     return latest ? { ready: true as const, ...latest } : { ready: false as const };
   }
 
   @Public()
   @Get('word-of-the-day')
-  @Header('Cache-Control', CACHE)
   @ApiOperation({ summary: 'Word of the Day from the latest sermon' })
-  async wordOfTheDay() {
+  async wordOfTheDay(@Res({ passthrough: true }) res: Response) {
+    // Cached only until Lagos midnight, when today's confession changes.
+    res.setHeader('Cache-Control', dailyCacheControl());
     const latest = await this.digest.latest();
     if (!latest) return { ready: false as const };
     const { wordOfTheDay, sermonTitle, preacher, serviceDay, serviceDate, watchUrl, videoId, confessionDay } = latest;
