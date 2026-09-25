@@ -1,3 +1,4 @@
+import { PrayerRequestStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
 export function getLast6Months() {
@@ -42,6 +43,7 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     totalMembers,
     totalVisitors,
     totalPrayers,
+    pendingPrayers,
     recentMembers,
     visitors,
     prayers,
@@ -61,6 +63,10 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     prisma.member.count({ where: { tenantId } }),
     prisma.visitor.count({ where: { tenantId } }),
     prisma.prayerRequest.count({ where: { tenantId } }),
+    // Still waiting to be prayed over. totalPrayers is every request ever
+    // submitted, which only ever grows — useful as an analytics total, useless
+    // as a "what needs attention today" figure.
+    prisma.prayerRequest.count({ where: { tenantId, status: PrayerRequestStatus.PENDING } }),
     prisma.member.findMany({ where: { tenantId, joinedAt: { gte: sixMonthsAgo } }, select: { joinedAt: true } }),
     prisma.visitor.findMany({ where: { tenantId }, select: { membershipInterest: true, howDidYouLearn: true, attendanceType: true } }),
     prisma.prayerRequest.findMany({ where: { tenantId, submittedAt: { gte: sixMonthsAgo } }, select: { submittedAt: true } }),
@@ -129,6 +135,7 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     totalMembers,
     totalVisitors,
     totalPrayers,
+    pendingPrayers,
     totalGivingNaira,
     avgAttendance,
     memberGrowth,
