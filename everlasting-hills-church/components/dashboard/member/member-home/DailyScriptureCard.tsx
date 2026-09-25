@@ -1,15 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BookOpen, Check, Copy, Download, Languages, Loader2, Share2 } from "lucide-react";
+import { useState } from "react";
+import { BookOpen, Languages, Loader2 } from "lucide-react";
 import { useDailyScripture, useScriptureVersions } from "@/lib/api/daily-scripture";
 import { Select } from "@/components/ui/select";
-import { HILLS_CONFESSION } from "@/lib/hills-confession";
-import {
-  createScriptureImage,
-  saveScriptureImage,
-  scriptureCaption,
-} from "@/lib/scripture-share";
+import HillsConfession from "@/components/sermon-digest/HillsConfession";
+import DailySharePanel from "./DailySharePanel";
 
 export default function DailyScriptureCard() {
   const [translationCode, setTranslationCode] = useState("");
@@ -17,89 +13,11 @@ export default function DailyScriptureCard() {
   const { data, isLoading, isError, isFetching, refetch } = useDailyScripture(
     translationCode || undefined,
   );
-  const [image, setImage] = useState<{
-    key: string;
-    file: File;
-    url: string;
-  } | null>(null);
-  const [imageError, setImageError] = useState(false);
-  const [sharing, setSharing] = useState(false);
-  const [message, setMessage] = useState("");
-  const [copied, setCopied] = useState(false);
-  const imageKey = data
-    ? `${data.date}|${data.reference}|${data.translationCode}|${data.text}`
-    : "";
   // placeholderData keeps the old wording visible while another translation
   // loads. Never let that old image be shared under the newly selected label.
   const translationChanging = Boolean(
     translationCode && data && data.translationCode !== translationCode,
   );
-  const readyImage = !translationChanging && image?.key === imageKey ? image : null;
-
-  useEffect(() => {
-    if (!data) return;
-    let cancelled = false;
-    let url: string | undefined;
-    setImageError(false);
-    setMessage("");
-    setCopied(false);
-    createScriptureImage(data)
-      .then((file) => {
-        if (cancelled) return;
-        url = URL.createObjectURL(file);
-        setImage({ key: imageKey, file, url });
-      })
-      .catch(() => {
-        if (!cancelled) setImageError(true);
-      });
-    return () => {
-      cancelled = true;
-      if (url) URL.revokeObjectURL(url);
-    };
-  }, [data, imageKey]);
-
-  async function share() {
-    if (!readyImage || sharing) return;
-    setMessage("");
-    const files = [readyImage.file];
-    setSharing(true);
-    try {
-      if (!navigator.share || !navigator.canShare?.({ files })) {
-        saveScriptureImage(readyImage.file);
-        setMessage(
-          "Image saved. Open WhatsApp → Updates → My status and choose the image.",
-        );
-        return;
-      }
-      await navigator.share({
-        files,
-        title: "Today’s scripture · Everlasting Hills Church",
-      });
-    } catch (error) {
-      if ((error as Error).name !== "AbortError") {
-        setMessage(
-          "Sharing couldn’t open. Save the image below and add it to your WhatsApp status.",
-        );
-      }
-    } finally {
-      setSharing(false);
-    }
-  }
-
-  async function copyText() {
-    if (!data) return;
-    try {
-      await navigator.clipboard.writeText(scriptureCaption(data));
-      setCopied(true);
-      setMessage(
-        "Scripture and church website copied. Paste them into your WhatsApp status.",
-      );
-    } catch {
-      setMessage(
-        "Copying is unavailable. You can select and copy the scripture text above.",
-      );
-    }
-  }
 
   if (isLoading) {
     return (
@@ -163,154 +81,45 @@ export default function DailyScriptureCard() {
           </span>
         </p>
 
-        {/* Said out loud after the reading, so it is set to be spoken: one
-            line per breath, and loud enough on the page to be read across a
-            room. */}
-        <div
-          role="group"
-          aria-labelledby="hills-confession-title"
-          className="mt-6 border-t border-[#f5d49a]/30 pt-5"
-        >
-          <p
-            id="hills-confession-title"
-            className="text-[11px] font-black uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#f5d49a]"
-          >
-            The Hills Confession
-            <span className="font-semibold normal-case tracking-normal text-white/60">
-              {" "}· say it out loud
-            </span>
-          </p>
-          <p className="mt-3 max-w-3xl font-display text-lg font-bold leading-snug tracking-tight text-white sm:text-2xl">
-            {HILLS_CONFESSION.map((line, index) => (
-              <span key={line} className="block">
-                {index === HILLS_CONFESSION.length - 1 ? (
-                  <span className="text-[#f5d49a]">{line}</span>
-                ) : (
-                  line
-                )}
-              </span>
-            ))}
-          </p>
-        </div>
+        <HillsConfession date={data.date} />
       </div>
 
-      <div className="p-4 sm:p-5">
-        <label className="mb-4 block rounded-xl border border-[#E7CDD3] bg-[#FFF8F9] p-3 dark:border-white/10 dark:bg-white/[0.04]">
-          <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-[#87102C] dark:text-rose-300">
-            <Languages size={15} aria-hidden="true" />
-            Bible version for this status
-          </span>
-          <span className="mt-1 block text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-            The scripture stays the same; the wording, image and copied text use the version you choose.
-          </span>
-          <span className="relative mt-2 block">
-            <Select
-              aria-label="Bible version for this status"
-              value={translationCode || data.translationCode}
-              onChange={(code) => {
-                setMessage("");
-                setCopied(false);
-                setTranslationCode(code);
-              }}
-              disabled={!translations?.length}
-              className="min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-[#87102C] dark:border-white/15 dark:bg-[#171719] dark:text-white"
-              options={[
-                ...(translations?.some((t) => t.code === data.translationCode)
-                  ? []
-                  : [{ value: data.translationCode, label: data.translationName }]),
-                ...(translations ?? []).map((t) => ({ value: t.code, label: `${t.code} — ${t.name}` })),
-              ]}
-            />
-            <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-              {translationChanging || isFetching ? <Loader2 size={15} className="animate-spin" /> : "⌄"}
+      <DailySharePanel
+        scripture={data}
+        translationChanging={translationChanging}
+        versionPicker={
+          <label className="block">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-gray-300">
+              <Languages size={14} aria-hidden="true" />
+              Bible version
+              <span className="hidden font-normal text-gray-400 sm:inline">· the image and copied text use it</span>
             </span>
-          </span>
-          {translationChanging && (
-            <span role="status" className="mt-2 block text-xs font-medium text-[#87102C] dark:text-rose-300">
-              Loading {translationCode} wording…
+            <span className="relative mt-1.5 block">
+              <Select
+                aria-label="Bible version for this status"
+                value={translationCode || data.translationCode}
+                onChange={setTranslationCode}
+                disabled={!translations?.length}
+                className="min-h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-[#87102C] dark:border-white/15 dark:bg-[#171719] dark:text-white"
+                options={[
+                  ...(translations?.some((t) => t.code === data.translationCode)
+                    ? []
+                    : [{ value: data.translationCode, label: data.translationName }]),
+                  ...(translations ?? []).map((t) => ({ value: t.code, label: `${t.code} — ${t.name}` })),
+                ]}
+              />
+              <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                {translationChanging || isFetching ? <Loader2 size={15} className="animate-spin" /> : "⌄"}
+              </span>
             </span>
-          )}
-        </label>
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          Encourage someone today. Share a scripture image with our church’s
-          name and website.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={share}
-            disabled={!readyImage || sharing}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-3 text-sm font-semibold text-white disabled:opacity-50 sm:w-auto"
-          >
-            {(!readyImage && !imageError) || sharing ? (
-              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Share2 size={16} aria-hidden="true" />
+            {translationChanging && (
+              <span role="status" className="mt-1.5 block text-xs font-medium text-[#87102C] dark:text-rose-300">
+                Loading {translationCode} wording…
+              </span>
             )}
-            {sharing ? "Opening sharing…" : "Share to WhatsApp Status"}
-          </button>
-          <button
-            type="button"
-            disabled={!readyImage}
-            onClick={() => {
-              if (readyImage) {
-                saveScriptureImage(readyImage.file);
-                setMessage(
-                  "Image saved. Add it to WhatsApp → Updates → My status.",
-                );
-              }
-            }}
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 dark:border-white/15 dark:text-gray-200 sm:flex-none"
-          >
-            <Download size={16} aria-hidden="true" />
-            Save image
-          </button>
-          <button
-            type="button"
-            onClick={copyText}
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 dark:border-white/15 dark:text-gray-200 sm:flex-none"
-          >
-            {copied ? (
-              <Check size={16} aria-hidden="true" />
-            ) : (
-              <Copy size={16} aria-hidden="true" />
-            )}
-            {copied ? "Copied" : "Copy text"}
-          </button>
-        </div>
-        <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-          Choose WhatsApp, then My status. If sharing isn’t available on your
-          phone, save the image and upload it in WhatsApp.
-        </p>
-        {imageError && (
-          <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">
-            The status image couldn’t be prepared. You can still copy and share
-            the scripture text.
-          </p>
-        )}
-        {message && (
-          <p
-            role="status"
-            className="mt-3 text-sm text-[#87102C] dark:text-rose-300"
-          >
-            {message}
-          </p>
-        )}
-        {readyImage && (
-          <details className="mt-3">
-            <summary className="min-h-11 cursor-pointer py-3 text-sm font-medium text-[#87102C] dark:text-rose-300">
-              Preview status image
-            </summary>
-            <img
-              src={readyImage.url}
-              alt={`WhatsApp status image: ${data.reference}, with Everlasting Hills Church’s name and website`}
-              width={1080}
-              height={1920}
-              className="mx-auto mt-2 h-auto w-full max-w-[280px] rounded-xl"
-            />
-          </details>
-        )}
-      </div>
+          </label>
+        }
+      />
     </section>
   );
 }

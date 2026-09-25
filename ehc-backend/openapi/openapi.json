@@ -16414,7 +16414,7 @@
             }
           },
           {
-            "description": "A service id: only the members who missed that service.",
+            "description": "A service id, or \"latest\" for the most recent service with attendance taken: only the members who missed it.",
             "in": "query",
             "name": "absentFrom",
             "required": false,
@@ -24965,6 +24965,90 @@
         "summary": "Service comparison — JSON or Excel download (ADMIN+)",
         "tags": [
           "reports"
+        ]
+      }
+    },
+    "/sermon-digest/latest": {
+      "get": {
+        "operationId": "SermonDigestController_latest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Summary of the latest sermon from the church YouTube channel",
+        "tags": [
+          "sermon-digest"
+        ]
+      }
+    },
+    "/sermon-digest/word-of-the-day": {
+      "get": {
+        "operationId": "SermonDigestController_wordOfTheDay",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Word of the Day from the latest sermon",
+        "tags": [
+          "sermon-digest"
         ]
       }
     },

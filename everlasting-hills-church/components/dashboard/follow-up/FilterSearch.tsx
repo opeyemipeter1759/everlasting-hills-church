@@ -6,7 +6,7 @@ import { PILL } from "./filter-bits";
 /** Find somebody by name, without leaving the list you are on. */
 export function FilterSearch({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
-    <div className="relative min-w-[13rem] flex-1">
+    <div className="relative w-full min-w-0 flex-1 sm:w-auto sm:min-w-[13rem]">
       <Search
         size={15}
         aria-hidden="true"

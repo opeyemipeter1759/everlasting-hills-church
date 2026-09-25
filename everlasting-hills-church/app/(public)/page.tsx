@@ -17,6 +17,7 @@ import Carousel from "@/components/home/Carousel";
 import { FadeIn } from "@/components/ui/motion/FadeIn";
 import PledgeProjectSection from "@/components/home/PledgeProjectSection";
 import PublicDailyScriptureSection from "@/components/home/PublicDailyScriptureSection";
+import WordOfTheDaySection from "@/components/home/WordOfTheDaySection";
 
 export const metadata = {
   title: "Everlasting Hills Church — Ibadan",
@@ -40,7 +41,8 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen flex overflow-x-hidden flex-col bg-church-dark">
       <HeroSection content={settings.HERO} />
-      <PublicDailyScriptureSection />
+      {/* <PublicDailyScriptureSection />
+      <WordOfTheDaySection /> */}
       <AboutSection content={settings.ABOUT} />
       <CultureSection content={settings.CULTURE} />
       <ScriptureSection content={settings.SCRIPTURE} />

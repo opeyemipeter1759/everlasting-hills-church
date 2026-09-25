@@ -1,26 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../../prisma/prisma.service';
-import type { Env } from '../../config/env.validation';
+import { GeminiClient, parseGeminiJson } from '../../ai/gemini-client';
 
 interface TriageResult {
   category: string;
   urgency: 'routine' | 'needs-attention' | 'urgent';
   routeTo: string;
   summary: string;
-}
-
-/** Strips a markdown code fence Gemini sometimes wraps JSON in, same as the
- * frontend's lib/ai/gemini.ts parseJSON — kept independent rather than shared
- * since this service has no other reason to depend on the Next.js app. */
-function parseJSON<T>(text: string): T {
-  const cleaned = text
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/```\s*$/i, '')
-    .trim();
-  return JSON.parse(cleaned) as T;
 }
 
 /**
@@ -32,28 +18,19 @@ function parseJSON<T>(text: string): T {
 @Injectable()
 export class PrayerTriageService {
   private readonly logger = new Logger(PrayerTriageService.name);
-  private readonly genAI: GoogleGenerativeAI | null;
 
   constructor(
     private readonly prisma: PrismaService,
-    config: ConfigService<Env, true>,
-  ) {
-    const apiKey = config.get('GEMINI_API_KEY', { infer: true });
-    this.genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
-  }
+    private readonly gemini: GeminiClient,
+  ) {}
 
   /** Triages `request` and saves the result onto PrayerRequest `id`. Swallows
    * every failure (missing key, Gemini error, malformed JSON) — triage is
    * best-effort and must never surface as an error to the submitter. */
   async triageAndSave(id: string, request: string, isAnonymous: boolean): Promise<void> {
-    if (!this.genAI) return;
+    if (!this.gemini.enabled) return;
 
     try {
-      const model = this.genAI.getGenerativeModel({
-        model: 'gemini-3.6-flash',
-        generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
-      });
-
       const prompt = `
 You are the pastoral care assistant for Everlasting Hills Church (EHC), Ibadan, Nigeria.
 Triage the following prayer request. The submission is ${isAnonymous ? 'anonymous' : 'named'}.
@@ -73,8 +50,8 @@ Return a JSON object with exactly these keys:
 Respond with only valid JSON, no markdown, no explanation.
 `.trim();
 
-      const result = await model.generateContent(prompt);
-      const data = parseJSON<TriageResult>(result.response.text());
+      const { text } = await this.gemini.generate({ input: prompt });
+      const data = parseGeminiJson<TriageResult>(text);
 
       await this.prisma.prayerRequest.update({
         where: { id },

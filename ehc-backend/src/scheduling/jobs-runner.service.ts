@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { SchedulingService } from './scheduling.service';
 import { PushTriggersService } from '../push/services/push-triggers.service';
 import { GoogleCalendarSyncService } from '../calendar/services/google-calendar-sync.service';
+import { SermonDigestService } from '../sermon-digest/sermon-digest.service';
 
 /** Names match the @Cron({ name }) options so logs and Cloud Scheduler agree. */
 export const JOB_NAMES = [
@@ -15,6 +16,7 @@ export const JOB_NAMES = [
   'push-service-reminder',
   'push-serving-reminder',
   'push-prayer-meeting',
+  'sermon-digest',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -41,6 +43,7 @@ export class JobsRunnerService {
     private readonly scheduling: SchedulingService,
     private readonly pushTriggers: PushTriggersService,
     private readonly calendarSync: GoogleCalendarSyncService,
+    private readonly sermonDigest: SermonDigestService,
   ) {}
 
   isJob(name: string): name is JobName {
@@ -88,6 +91,8 @@ export class JobsRunnerService {
         return this.pushTriggers.servingReminders();
       case 'push-prayer-meeting':
         return this.pushTriggers.prayerMeetingReminders();
+      case 'sermon-digest':
+        return this.sermonDigest.run().then(() => undefined);
     }
   }
 }

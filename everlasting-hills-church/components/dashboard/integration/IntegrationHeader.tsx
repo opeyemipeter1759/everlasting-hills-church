@@ -4,6 +4,7 @@ import { CalendarDays, HeartHandshake } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMe } from "@/lib/api";
 import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
+import type { MasterListPage } from "@/lib/api/follow-up-pipeline";
 import { RefreshButton } from "@/components/dashboard/follow-up/header-parts";
 import { IntegrationStats } from "./IntegrationStats";
 
@@ -15,7 +16,7 @@ function greeting(): string {
 }
 
 /** Who this team is and what is waiting for them today. */
-export function IntegrationHeader() {
+export function IntegrationHeader({ absence }: { absence?: MasterListPage["meta"] }) {
   const { data: me } = useMe();
   const queryClient = useQueryClient();
   const { data: counts, isLoading, isFetching } = useFollowUpCounts();
@@ -62,7 +63,7 @@ export function IntegrationHeader() {
         </div>
       </header>
 
-      <IntegrationStats />
+      <IntegrationStats absence={absence} />
     </section>
   );
 }

@@ -11,22 +11,31 @@ import type { Env } from '../../config/env.validation';
 
 export interface AbsenteeMailResult {
   /** Why nothing was sent, when nothing was. */
-  skipped?: 'NOT_A_SERVICE_DAY' | 'WINDOW_STILL_OPEN' | 'NO_SERVICE_ROW' | 'ALREADY_SENT' | 'NOBODY_CHECKED_IN' | 'SPECIAL_SERVICE';
+  skipped?: 'NO_SERVICE_DUE' | 'WINDOW_STILL_OPEN' | 'ALREADY_SENT' | 'NOBODY_CHECKED_IN';
   serviceId?: string;
   absent: number;
   emailed: number;
 }
 
 /**
+ * How far back a service can still be mailed. Long enough that a late close
+ * (e.g. Wednesday held open to 23:59) or a missed run is caught the next day;
+ * short enough that a service from last week is never mailed out of the blue.
+ */
+const CATCH_UP_MS = 48 * 60 * 60 * 1000;
+
+/**
  * Once a service's attendance window has closed, emails every active member
  * who was marked absent a short "we missed you" note.
  *
- * Runs as a scheduled job (attendance-absentee-emails) every half hour on
- * service days rather than at a fixed close time, and works out for itself
- * whether the window has closed — so it adapts if ATTENDANCE_*_CLOSE changes,
- * and a late or retried run still does the right thing. Each service is
- * mailed at most once: the job claims it by stamping absenteeMailSentAt in
- * the same transaction that reads the marker, before any email is built.
+ * Runs as a scheduled job (attendance-absentee-emails) every half hour, every
+ * day, and works out for itself which service is due: the most recent Sunday
+ * or Wednesday service from the last 48 hours whose window has closed and
+ * that hasn't been mailed yet. It deliberately does not look only at *today*:
+ * that version skipped a Wednesday held open to 23:59 — the last run of the
+ * day was 23:30, and by the next run it was Thursday and the service was
+ * forgotten. Each service is mailed at most once: the job claims it by
+ * stamping absenteeMailSentAt with a guarded update before any email is built.
  *
  * Mirrors SessionsService's guard: if nobody checked in, attendance simply
  * wasn't taken that day, and mailing the whole church "we missed you" would
@@ -48,45 +57,63 @@ export class AttendanceAbsenteeMailService {
     this.appUrl = (config.get('FRONTEND_URL', { infer: true }) ?? 'https://www.everlastinghills.church').replace(/\/$/, '');
   }
 
-  private parseHHMM(hhmm: string): number {
-    const [h, m] = hhmm.split(':').map(Number);
-    return h * 60 + m;
-  }
-
-  /** Today's close time (minutes after midnight WAT), or null when today is not a service day. */
-  private closeMinutesFor(dayOfWeek: number): number | null {
-    if (dayOfWeek === 0) return this.parseHHMM(this.config.get('ATTENDANCE_SUNDAY_CLOSE', { infer: true }));
-    if (dayOfWeek === 3) return this.parseHHMM(this.config.get('ATTENDANCE_WEDNESDAY_CLOSE', { infer: true }));
-    return null;
-  }
-
   async run(): Promise<AbsenteeMailResult> {
-    const now = resolveNow(this.config.get('ATTENDANCE_TEST_NOW', { infer: true }));
-    const wat = new Date(now.getTime() + WAT_OFFSET_MS);
-    const closeMin = this.closeMinutesFor(wat.getUTCDay());
-    if (closeMin === null) return { skipped: 'NOT_A_SERVICE_DAY', absent: 0, emailed: 0 };
-
     // FORCE_OPEN is a testing switch that holds the window open indefinitely —
     // never treat that as "closed".
-    const minutesNow = wat.getUTCHours() * 60 + wat.getUTCMinutes();
-    if (this.config.get('ATTENDANCE_FORCE_OPEN', { infer: true }) === true || minutesNow < closeMin) {
+    if (this.config.get('ATTENDANCE_FORCE_OPEN', { infer: true }) === true) {
       return { skipped: 'WINDOW_STILL_OPEN', absent: 0, emailed: 0 };
     }
 
-    const { startUtc, endUtc } = getDayBounds(now);
-    const service = await this.prisma.service.findFirst({
-      where: { tenantId: this.tenantId, scheduledAt: { gte: startUtc, lt: endUtc } },
-      select: { id: true, name: true, serviceType: true, absenteeMailSentAt: true },
+    const now = resolveNow(this.config.get('ATTENDANCE_TEST_NOW', { infer: true }));
+    const candidates = await this.prisma.service.findMany({
+      where: {
+        tenantId: this.tenantId,
+        serviceType: { in: [ServiceType.SUNDAY, ServiceType.WEDNESDAY] },
+        absenteeMailSentAt: null,
+        scheduledAt: { gte: new Date(now.getTime() - CATCH_UP_MS), lte: now },
+      },
+      orderBy: { scheduledAt: 'desc' },
+      select: { id: true, name: true, serviceType: true, scheduledAt: true },
     });
-    if (!service) return { skipped: 'NO_SERVICE_ROW', absent: 0, emailed: 0 };
-    if (service.absenteeMailSentAt) return { skipped: 'ALREADY_SENT', serviceId: service.id, absent: 0, emailed: 0 };
-    if (service.serviceType === ServiceType.SPECIAL) return { skipped: 'SPECIAL_SERVICE', serviceId: service.id, absent: 0, emailed: 0 };
+    if (candidates.length === 0) return { skipped: 'NO_SERVICE_DUE', absent: 0, emailed: 0 };
 
-    const presentCount = await this.prisma.attendanceRecord.count({
-      where: { serviceId: service.id, tenantId: this.tenantId, present: true },
-    });
-    if (presentCount === 0) return { skipped: 'NOBODY_CHECKED_IN', serviceId: service.id, absent: 0, emailed: 0 };
+    // Newest first; a service still open blocks nothing older behind it.
+    let stillOpen = false;
+    let noCheckIns: string | undefined;
+    for (const service of candidates) {
+      if (now.getTime() < this.closesAt(service.scheduledAt)) {
+        stillOpen = true;
+        continue;
+      }
+      const presentCount = await this.prisma.attendanceRecord.count({
+        where: { serviceId: service.id, tenantId: this.tenantId, present: true },
+      });
+      if (presentCount === 0) {
+        // Attendance wasn't taken — mailing the whole church would be wrong.
+        noCheckIns ??= service.id;
+        continue;
+      }
+      return this.mailAbsentees(service);
+    }
 
+    return stillOpen
+      ? { skipped: 'WINDOW_STILL_OPEN', absent: 0, emailed: 0 }
+      : { skipped: 'NOBODY_CHECKED_IN', serviceId: noCheckIns, absent: 0, emailed: 0 };
+  }
+
+  /** When a service's check-in window closes: its day in WAT plus that weekday's close time. */
+  private closesAt(scheduledAt: Date): number {
+    const day = new Date(scheduledAt.getTime() + WAT_OFFSET_MS).getUTCDay();
+    const closeMin = day === 0 ? this.closeMinutes('ATTENDANCE_SUNDAY_CLOSE') : this.closeMinutes('ATTENDANCE_WEDNESDAY_CLOSE');
+    return getDayBounds(scheduledAt).startUtc.getTime() + closeMin * 60_000;
+  }
+
+  private closeMinutes(key: 'ATTENDANCE_SUNDAY_CLOSE' | 'ATTENDANCE_WEDNESDAY_CLOSE'): number {
+    const [h, m] = this.config.get(key, { infer: true }).split(':').map(Number);
+    return h * 60 + m;
+  }
+
+  private async mailAbsentees(service: { id: string; name: string; serviceType: ServiceType }): Promise<AbsenteeMailResult> {
     // Make sure the absent records exist (idempotent upserts) — the 90-second
     // auto-close poller normally has, but this job must not depend on it.
     await this.absence.markMissingAsAbsent(service.id);

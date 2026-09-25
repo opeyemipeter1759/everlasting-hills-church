@@ -125,7 +125,7 @@ export class FollowUpController {
     enum: ['FOLLOW_UP', 'INTEGRATION', 'ALL'],
     description: "FOLLOW_UP leaves out anyone integrated; INTEGRATION shows only those and anyone who has gone away.",
   })
-  @ApiQuery({ name: 'absentFrom', required: false, description: 'A service id: only the members who missed that service.' })
+  @ApiQuery({ name: 'absentFrom', required: false, description: 'A service id, or "latest" for the most recent service with attendance taken: only the members who missed it.' })
   async masterList(
     @CurrentUser() actor: AuthUser,
     @Query('search') search?: string,

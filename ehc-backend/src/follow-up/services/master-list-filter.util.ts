@@ -18,6 +18,9 @@ export function inScope(status: string, scope: MasterListScope = 'ALL'): boolean
   return true;
 }
 
+/** `absentFrom` value meaning the most recent service that counts for absences. */
+export const LATEST_SERVICE = 'latest';
+
 export interface MasterListFilters {
   search?: string;
   /** One of the Master List statuses. */
@@ -30,7 +33,7 @@ export interface MasterListFilters {
   assigneeId?: string;
   /** Whose list this is: Follow Up's, the Integration Team's, or both. */
   scope?: MasterListScope;
-  /** A service id: only the members who missed that service. */
+  /** A service id, or "latest": only the members who missed that service. */
   absentFrom?: string;
   take: number;
   skip: number;

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { HeartHandshake, UserCheck, UserMinus } from "lucide-react";
-import { FollowUpTabs } from "@/components/dashboard/follow-up/FollowUpTabs";
+import { FollowUpTabs, TABS_BOTTOM_SPACE } from "@/components/dashboard/follow-up/FollowUpTabs";
 import MasterList from "@/components/dashboard/follow-up/MasterList";
 import AssignedToMe from "@/components/dashboard/follow-up/AssignedToMe";
 import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
+import type { MasterListPage } from "@/lib/api/follow-up-pipeline";
 import { IntegrationHeader } from "./IntegrationHeader";
 
 type IntegrationTab = "members" | "away" | "mine";
@@ -33,6 +34,14 @@ const NOTE: Record<IntegrationTab, string> = {
 export default function IntegrationBoard() {
   const [active, setActive] = useState<IntegrationTab>("members");
   const { data: counts, isLoading } = useFollowUpCounts();
+  // The Absent card counts whatever the open list is showing, so it moves
+  // with the tab and the filters.
+  const [listMeta, setListMeta] = useState<MasterListPage["meta"] | undefined>();
+  const onMeta = useCallback((meta: MasterListPage["meta"] | undefined) => setListMeta(meta), []);
+  const changeTab = (tab: IntegrationTab) => {
+    setListMeta(undefined);
+    setActive(tab);
+  };
 
   const tabCounts = isLoading
     ? {}
@@ -43,25 +52,26 @@ export default function IntegrationBoard() {
       };
 
   return (
-    <div className="space-y-4 md:px-5">
-      <IntegrationHeader />
+    <div className={`space-y-4 md:px-5 ${TABS_BOTTOM_SPACE}`}>
+      <IntegrationHeader absence={listMeta} />
       <FollowUpTabs
         tabs={TABS}
         active={active}
         counts={tabCounts}
         label="Integration Team views"
-        onChange={setActive}
+        onChange={changeTab}
       />
 
       <p className="text-sm text-gray-500 dark:text-white/45">{NOTE[active]}</p>
 
       <section role="tabpanel" aria-label={TABS.find((tab) => tab.id === active)?.label}>
         {active === "mine" ? (
-          <AssignedToMe scope="INTEGRATION" />
+          <AssignedToMe scope="INTEGRATION" onMeta={onMeta} />
         ) : (
           <MasterList
             key={active}
             fixed={{ scope: "INTEGRATION", status: active === "away" ? "AWAY" : "INTEGRATED" }}
+            onMeta={onMeta}
           />
         )}
       </section>

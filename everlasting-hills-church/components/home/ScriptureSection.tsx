@@ -67,7 +67,12 @@ export default function ScriptureSection({ content }: { content?: ScriptureConte
         </svg>
       </div>
 
-      <style>{`
+      {/* Raw CSS, not a text child: React escapes the quotes in `content: ''` when
+          rendering on the server, which inside <style> reaches the browser as
+          broken CSS and fails hydration for the whole page. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .pillar-card {
           position: relative;
           border-radius: 16px;
@@ -230,7 +235,9 @@ export default function ScriptureSection({ content }: { content?: ScriptureConte
           background: rgba(255, 200, 110, 0.85);
           transform: scale(1.4);
         }
-      `}</style>
+      `,
+        }}
+      />
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 xs:px-5 sm:px-8">
         {/* Header */}

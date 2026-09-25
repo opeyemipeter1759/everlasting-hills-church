@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { FollowUpModule } from '../follow-up/follow-up.module';
 import { CalendarModule } from '../calendar/calendar.module';
 import { AttendanceModule } from '../attendance/attendance.module';
+import { SermonDigestModule } from '../sermon-digest/sermon-digest.module';
 import { SchedulingService } from './scheduling.service';
 import { CronGateService } from './cron-gate.service';
 import { JobsRunnerService } from './jobs-runner.service';
@@ -17,7 +18,7 @@ import { JobsController } from './jobs.controller';
  * MailDispatcher and PrismaService are resolved from their global modules.
  */
 @Module({
-  imports: [ScheduleModule.forRoot(), FollowUpModule, CalendarModule, AttendanceModule],
+  imports: [ScheduleModule.forRoot(), FollowUpModule, CalendarModule, AttendanceModule, SermonDigestModule],
   controllers: [JobsController],
   providers: [SchedulingService, CronGateService, JobsRunnerService],
 })

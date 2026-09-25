@@ -6,7 +6,7 @@ import type { MasterListQuery } from "@/lib/api/follow-up-pipeline";
 import { DATE_OPTIONS, PILL, rangeFor, type DatePreset } from "./filter-bits";
 
 // PILL already sets px-3; swapping it keeps the native date text from wrapping.
-const DATE_FIELD = `${PILL.replace("px-3", "px-2.5")} w-[9.5rem] [color-scheme:light] dark:[color-scheme:dark]`;
+const DATE_FIELD = `${PILL.replace("px-3", "px-2.5")} min-w-0 flex-1 sm:w-[9.5rem] sm:flex-none [color-scheme:light] dark:[color-scheme:dark]`;
 
 /**
  * When someone came. Most of the time a preset is what is wanted, so exact
@@ -32,14 +32,14 @@ export function MasterListDates({
           onPreset(next as DatePreset);
           onChange(rangeFor(next as DatePreset));
         }}
-        className={`${PILL} w-[11.5rem]`}
+        className={`${PILL} w-full sm:w-[11.5rem]`}
         icon={<CalendarRange size={15} aria-hidden="true" />}
         prefixLabel="When:"
         options={DATE_OPTIONS}
       />
 
       {preset === "custom" && (
-        <div className="flex items-center gap-1.5">
+        <div className="flex w-full items-center gap-1.5 sm:w-auto">
           <input
             type="date"
             aria-label="From"

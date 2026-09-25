@@ -1,8 +1,9 @@
 "use client";
 
-import { HeartHandshake, UserCheck, UserMinus, Users2 } from "lucide-react";
+import { CalendarX, HeartHandshake, UserCheck, UserMinus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
+import { useFollowUpServices, type MasterListPage } from "@/lib/api/follow-up-pipeline";
 
 function Card({
   icon: Icon,
@@ -38,9 +39,15 @@ function Card({
   );
 }
 
-/** What the Integration Team watches: who has settled, and who has slipped away. */
-export function IntegrationStats() {
+/**
+ * What the Integration Team watches: who has settled, who has slipped away,
+ * and who missed a service. The Absent card follows the open tab and filters
+ * (`absence` is the list's own totals), so it always agrees with the rows below.
+ */
+export function IntegrationStats({ absence }: { absence?: MasterListPage["meta"] }) {
   const { data: counts, isLoading } = useFollowUpCounts();
+  const { data: services = [] } = useFollowUpServices();
+  const serviceName = services.find((s) => s.id === absence?.absenceServiceId)?.name;
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -69,12 +76,12 @@ export function IntegrationStats() {
         note="Yours to reach — everyone sees their own"
       />
       <Card
-        loading={isLoading}
-        icon={Users2}
-        tone="bg-violet-500"
-        value={counts?.total ?? 0}
-        label="Church members"
-        note="Everyone on the roll, signed in or not"
+        loading={!absence}
+        icon={CalendarX}
+        tone="bg-rose-500"
+        value={absence?.absent ?? 0}
+        label="Absent"
+        note={serviceName ? `Missed ${serviceName}` : "Missed the service shown in the filter"}
       />
     </div>
   );

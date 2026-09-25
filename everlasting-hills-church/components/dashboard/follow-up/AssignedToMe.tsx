@@ -3,14 +3,20 @@
 import { UserRoundCheck } from "lucide-react";
 import { useMe } from "@/lib/api";
 import MasterList from "./MasterList";
-import type { MasterListQuery } from "@/lib/api/follow-up-pipeline";
+import type { MasterListPage, MasterListQuery } from "@/lib/api/follow-up-pipeline";
 
 /**
  * The people you are responsible for reaching — the same table as the Master
  * list, pinned to you, so opening someone gives the identical details and
  * conversation rather than a second, thinner view of the same person.
  */
-export default function AssignedToMe({ scope = "FOLLOW_UP" }: { scope?: MasterListQuery["scope"] }) {
+export default function AssignedToMe({
+  scope = "FOLLOW_UP",
+  onMeta,
+}: {
+  scope?: MasterListQuery["scope"];
+  onMeta?: (meta: MasterListPage["meta"] | undefined) => void;
+}) {
   const { data: me } = useMe();
   const memberId = me?.member?.id ?? "";
 
@@ -32,7 +38,7 @@ export default function AssignedToMe({ scope = "FOLLOW_UP" }: { scope?: MasterLi
         Everyone currently assigned to you. Open anyone to log a call or hand them on.
       </p>
 
-      <MasterList fixed={{ assigneeId: memberId, scope }} showFilters={false} />
+      <MasterList fixed={{ assigneeId: memberId, scope }} showFilters={false} onMeta={onMeta} />
     </div>
   );
 }

@@ -21,7 +21,13 @@ import {
   type BackendSession,
 } from "@/lib/auth/server-session";
 import { verifySupabaseJwt } from "@/lib/auth/verify-jwt";
-import { getBackendBaseUrl } from "@/lib/api/backend-url";
+import {
+  LOOKUP_TIMEOUT_MS,
+  REFRESH_TIMEOUT_MS,
+  backendDeadline,
+  fetchBackendWithin,
+  isBackendTimeout,
+} from "@/lib/auth/backend-deadline";
 import { resolveTrustedRoutingRole } from "@/lib/auth/routing-role";
 import { NAV_ITEMS_FLAT, type UserRole as ConfigUserRole } from "@/config/config";
 import { isAudioProductionUnitName } from "@/lib/audio-production";
@@ -46,13 +52,13 @@ function isAudioProductionSermonPath(pathname: string): boolean {
   return AUDIO_PRODUCTION_SERMON_PATHS.some((re) => re.test(pathname));
 }
 
-async function unitListIncludesAudioProduction(path: string, accessToken: string): Promise<boolean> {
+async function unitListIncludesAudioProduction(path: string, accessToken: string, deadline: number): Promise<boolean> {
   try {
-    const response = await fetch(`${getBackendBaseUrl()}${path}`, {
-      method: "GET",
-      headers: { authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-    });
+    const response = await fetchBackendWithin(
+      path,
+      { method: "GET", headers: { authorization: `Bearer ${accessToken}` } },
+      { deadline, maxMs: LOOKUP_TIMEOUT_MS },
+    );
     if (!response.ok) return false;
     const payload = unwrapBackendPayload(await response.json());
     if (!Array.isArray(payload)) return false;
@@ -68,22 +74,22 @@ async function unitListIncludesAudioProduction(path: string, accessToken: string
 // assists (it's the plain-member list), so the unit's own lead must be
 // checked separately via "/units/mine" — otherwise Audio Production's leader
 // would be the one person this carve-out locks out.
-async function isAudioProductionMember(accessToken: string): Promise<boolean> {
-  if (await unitListIncludesAudioProduction("/units/mine", accessToken)) return true;
-  return unitListIncludesAudioProduction("/units/my-memberships", accessToken);
+async function isAudioProductionMember(accessToken: string, deadline: number): Promise<boolean> {
+  if (await unitListIncludesAudioProduction("/units/mine", accessToken, deadline)) return true;
+  return unitListIncludesAudioProduction("/units/my-memberships", accessToken, deadline);
 }
 
 // Admin-configured overrides from the Role Access Permissions screen. When an
 // item has no saved override this returns a map simply lacking that key, so
 // callers can tell "no override" (fall through to default hierarchy) apart
 // from "override explicitly set" (authoritative, replaces the default).
-async function fetchNavPermissionsMap(accessToken: string): Promise<NavPermissionsMap | null> {
+async function fetchNavPermissionsMap(accessToken: string, deadline: number): Promise<NavPermissionsMap | null> {
   try {
-    const response = await fetch(`${getBackendBaseUrl()}/nav-permissions`, {
-      method: "GET",
-      headers: { authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-    });
+    const response = await fetchBackendWithin(
+      "/nav-permissions",
+      { method: "GET", headers: { authorization: `Bearer ${accessToken}` } },
+      { deadline, maxMs: LOOKUP_TIMEOUT_MS },
+    );
     if (!response.ok) return null;
     const payload = unwrapBackendPayload(await response.json());
     if (!Array.isArray(payload)) return null;
@@ -98,18 +104,27 @@ async function fetchNavPermissionsMap(accessToken: string): Promise<NavPermissio
   }
 }
 
-async function refreshSessionRaw(refreshToken: string): Promise<BackendSession | null> {
+/**
+ * "timeout" is not "refresh failed": the API was too slow (usually waking from
+ * zero), the session may be perfectly good, and it must not be thrown away.
+ */
+type RefreshResult = BackendSession | null | "timeout";
+
+async function refreshSessionRaw(refreshToken: string, deadline: number): Promise<RefreshResult> {
   try {
-    const response = await fetch(`${getBackendBaseUrl()}/auth/refresh`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-      cache: "no-store",
-    });
+    const response = await fetchBackendWithin(
+      "/auth/refresh",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      },
+      { deadline, maxMs: REFRESH_TIMEOUT_MS },
+    );
     if (!response.ok) return null;
     return getBackendSession(await response.json());
-  } catch {
-    return null;
+  } catch (error) {
+    return isBackendTimeout(error) ? "timeout" : null;
   }
 }
 
@@ -119,12 +134,12 @@ async function refreshSessionRaw(refreshToken: string): Promise<BackendSession |
 // the same stale-looking refresh token; without de-duping, all but the first
 // would get rejected by Supabase and read as "refresh failed", clearing a
 // session that had just been renewed a moment earlier by its sibling.
-const inFlightRefreshes = new Map<string, Promise<BackendSession | null>>();
+const inFlightRefreshes = new Map<string, Promise<RefreshResult>>();
 
-async function refreshSession(refreshToken: string): Promise<BackendSession | null> {
+async function refreshSession(refreshToken: string, deadline: number): Promise<RefreshResult> {
   const existing = inFlightRefreshes.get(refreshToken);
   if (existing) return existing;
-  const attempt = refreshSessionRaw(refreshToken).finally(() => {
+  const attempt = refreshSessionRaw(refreshToken, deadline).finally(() => {
     inFlightRefreshes.delete(refreshToken);
   });
   inFlightRefreshes.set(refreshToken, attempt);
@@ -136,13 +151,13 @@ interface BackendRoleSnapshot {
   effectiveRoles: string[];
 }
 
-async function getLiveBackendRoles(accessToken: string): Promise<BackendRoleSnapshot | null> {
+async function getLiveBackendRoles(accessToken: string, deadline: number): Promise<BackendRoleSnapshot | null> {
   try {
-    const response = await fetch(`${getBackendBaseUrl()}/auth/me`, {
-      method: "GET",
-      headers: { authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-    });
+    const response = await fetchBackendWithin(
+      "/auth/me",
+      { method: "GET", headers: { authorization: `Bearer ${accessToken}` } },
+      { deadline, maxMs: LOOKUP_TIMEOUT_MS },
+    );
     if (!response.ok) return null;
     const payload = unwrapBackendPayload(await response.json());
     if (!payload || typeof payload !== "object") return null;
@@ -163,13 +178,13 @@ async function getLiveBackendRoles(accessToken: string): Promise<BackendRoleSnap
 // never the full grants table, so this stays cheap and reveals nothing about
 // other people's exceptions. Only ever widens access, so it's safe to call
 // only when the role-based checks above have already failed.
-async function fetchMyGrantedHrefs(accessToken: string): Promise<Set<string> | null> {
+async function fetchMyGrantedHrefs(accessToken: string, deadline: number): Promise<Set<string> | null> {
   try {
-    const response = await fetch(`${getBackendBaseUrl()}/nav-permissions/my-grants`, {
-      method: "GET",
-      headers: { authorization: `Bearer ${accessToken}` },
-      cache: "no-store",
-    });
+    const response = await fetchBackendWithin(
+      "/nav-permissions/my-grants",
+      { method: "GET", headers: { authorization: `Bearer ${accessToken}` } },
+      { deadline, maxMs: LOOKUP_TIMEOUT_MS },
+    );
     if (!response.ok) return null;
     const payload = unwrapBackendPayload(await response.json());
     if (!payload || typeof payload !== "object") return null;
@@ -209,6 +224,12 @@ function withSessionCookies(response: NextResponse, session: BackendSession | nu
 // session that lapsed during the consent round trip shouldn't strand the
 // user on a login redirect instead of completing the connection. Scoped to
 // exactly this path + query shape so a normal calendar visit is unaffected.
+/** A same-site path to return to after login; another site ("//evil.com") or a login page is ignored. */
+export function safeNextPath(next: string | null): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return null;
+  return AUTH_PAGES.has(next.split("?")[0]) ? null : next;
+}
+
 function isGoogleCalendarCallback(pathname: string, searchParams: URLSearchParams): boolean {
   return pathname === "/dashboard/calendar" && searchParams.has("code") && searchParams.has("state");
 }
@@ -223,14 +244,21 @@ export async function middleware(request: NextRequest) {
     clearSessionCookies(response);
     return response;
   }
+  // Every API call below shares this, so the middleware always answers before
+  // Vercel's 25-second limit even when the API is slow to wake.
+  const deadline = backendDeadline();
   let accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value ?? null;
   const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value ?? null;
   let claims = accessToken ? await verifySupabaseJwt(accessToken) : null;
   let refreshedSession: BackendSession | null = null;
   let liveRolesPromise: Promise<BackendRoleSnapshot | null> | null = null;
 
+  let refreshTimedOut = false;
+
   if (!claims && refreshToken) {
-    refreshedSession = await refreshSession(refreshToken);
+    const refreshed = await refreshSession(refreshToken, deadline);
+    refreshTimedOut = refreshed === "timeout";
+    refreshedSession = refreshed === "timeout" ? null : refreshed;
     if (refreshedSession) {
       accessToken = refreshedSession.access_token;
       claims = await verifySupabaseJwt(accessToken);
@@ -240,7 +268,7 @@ export async function middleware(request: NextRequest) {
   const isAuthenticated = Boolean(claims);
   const loadLiveRoles = () => {
     if (!claims || !accessToken) return Promise.resolve(null);
-    liveRolesPromise ??= getLiveBackendRoles(accessToken);
+    liveRolesPromise ??= getLiveBackendRoles(accessToken, deadline);
     return liveRolesPromise;
   };
   // ROLE_COOKIE is display-only. Nest resolves live grants/assignments and is
@@ -260,15 +288,14 @@ export async function middleware(request: NextRequest) {
 
   if (AUTH_PAGES.has(pathname)) {
     if (isAuthenticated) {
-      return withSessionCookies(
-        NextResponse.redirect(
-          new URL(normalizeRole(effectiveRole) ? getLandingPage(effectiveRole) : ROLELESS_LANDING, request.url),
-        ),
-        refreshedSession,
-      );
+      // Back to the page that sent them here (see the timeout case below), else home.
+      const next = safeNextPath(searchParams.get("next"));
+      const landing = normalizeRole(effectiveRole) ? getLandingPage(effectiveRole) : ROLELESS_LANDING;
+      return withSessionCookies(NextResponse.redirect(new URL(next ?? landing, request.url)), refreshedSession);
     }
     const response = NextResponse.next();
-    if (accessToken || refreshToken) clearSessionCookies(response);
+    // A slow API says nothing about the session: keep it for the next try.
+    if ((accessToken || refreshToken) && !refreshTimedOut) clearSessionCookies(response);
     return response;
   }
 
@@ -279,7 +306,9 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     const response = NextResponse.redirect(loginUrl);
-    clearSessionCookies(response);
+    // When the API was only slow, the session stays: by the time /login loads
+    // the API is awake, the refresh succeeds there, and "next" brings them back.
+    if (!refreshTimedOut) clearSessionCookies(response);
     return response;
   }
 
@@ -310,7 +339,7 @@ export async function middleware(request: NextRequest) {
   if (accessToken) {
     const matchedItem = matchNavItemForPath(pathname, NAV_ITEMS_FLAT);
     if (matchedItem) {
-      const overrides = await fetchNavPermissionsMap(accessToken);
+      const overrides = await fetchNavPermissionsMap(accessToken, deadline);
       if (overrides?.has(matchedItem.href)) {
         const liveRoles = await loadLiveRoles();
         const candidateRoles = new Set<ConfigUserRole>();
@@ -332,7 +361,7 @@ export async function middleware(request: NextRequest) {
   // for Sermons (typically PASTOR-only) used to silently overwrite this and
   // lock the whole team out. Like a named grant, it only ever widens access.
   if (!roleAllowed && accessToken && isAudioProductionSermonPath(pathname)) {
-    roleAllowed = await isAudioProductionMember(accessToken);
+    roleAllowed = await isAudioProductionMember(accessToken, deadline);
   }
 
   // Named exceptions: only consulted once every role-based path above has
@@ -340,7 +369,7 @@ export async function middleware(request: NextRequest) {
   if (!roleAllowed && accessToken) {
     const matchedItem = matchNavItemForPath(pathname, NAV_ITEMS_FLAT);
     if (matchedItem) {
-      const grantedHrefs = await fetchMyGrantedHrefs(accessToken);
+      const grantedHrefs = await fetchMyGrantedHrefs(accessToken, deadline);
       if (grantedHrefs?.has(matchedItem.href)) roleAllowed = true;
     }
   }

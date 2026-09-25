@@ -4,6 +4,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronDown, Play, Sparkles } from "lucide-react";
 import { HERO_FALLBACK, type HeroContent } from "@/lib/site-settings";
+import HeroWordNotes from "./HeroWordNotes";
 
 export default function HeroSection({ content }: { content?: HeroContent }) {
   const c = content ?? HERO_FALLBACK;
@@ -117,12 +118,18 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
             </span>
           </h1>
 
-          <p
-            style={{ animationDelay: "620ms" }}
-            className="opacity-0 animate-fade-up text-white/60 text-base xs:text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed font-sans font-medium"
-          >
-            {c.subtext}
-          </p>
+          {/* Today's scripture and the Word of the Day sit either side of the
+              intro as handwritten notes on wide screens, under it on smaller ones. */}
+          <div className="relative max-w-2xl mx-auto">
+            <p
+              style={{ animationDelay: "620ms" }}
+              className="opacity-0 animate-fade-up text-white/60 text-base xs:text-lg sm:text-xl leading-relaxed font-sans font-medium"
+            >
+              {c.subtext}
+            </p>
+            <HeroWordNotes placement="sides" />
+          </div>
+          <HeroWordNotes placement="inline" />
         </div>
 
         {/* Animated photo marquee */}
