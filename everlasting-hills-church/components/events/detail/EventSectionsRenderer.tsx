@@ -4,8 +4,9 @@ import EventAccordion, { type EventAccordionItem } from "./EventAccordion";
 import { formatEventDateRange } from "./event-format";
 
 export default function EventSectionsRenderer({ event }: { event: EventDetail }) {
-  if (!event.Sections.length) return null;
-  return <>{event.Sections.map((section, index) => <EventSectionView key={section.id} section={section} event={event} index={index} />)}</>;
+  const sections = event.Sections ?? [];
+  if (!sections.length) return null;
+  return <>{sections.map((section, index) => <EventSectionView key={section.id} section={section} event={event} index={index} />)}</>;
 }
 
 function hasContent(section: EventSection): boolean {
@@ -109,7 +110,7 @@ function SectionHeading({ section, dark = false }: { section: EventSection; dark
 }
 
 function ScheduleSection({ section, event }: { section: Extract<EventSection, { type: "SCHEDULE" }>; event: EventDetail }) {
-  if (!event.Schedules.length) return null;
+  if (!event.Schedules?.length) return null;
   return <div className="mt-10"><p className="mx-auto max-w-2xl text-center text-base leading-7 text-[#666]">{section.content.introduction}</p><p className="mt-4 text-center text-xs font-black uppercase tracking-[0.18em] text-[#87102C]">Every day · {formatEventDateRange(event.startAt, event.endAt, event.timezone)}</p><div className="mx-auto mt-8 grid max-w-3xl gap-px overflow-hidden rounded-2xl border border-[#E7CDD3] bg-[#E7CDD3] sm:grid-cols-2">{event.Schedules.map((schedule) => <div key={schedule.id} className="bg-white p-6 sm:p-8"><p className="text-3xl font-black tracking-tight text-[#87102C]">{formatClock(schedule.startTime)}</p><h3 className="mt-2 text-lg font-bold text-[#111]">{schedule.title}</h3>{schedule.description && <p className="mt-2 text-sm leading-6 text-[#666]">{schedule.description}</p>}</div>)}</div>{section.content.tags.length > 0 && <ul className="mt-7 flex flex-wrap justify-center gap-2">{section.content.tags.map((tag) => <li key={tag} className="rounded-full border border-[#E7CDD3] bg-white px-4 py-2 text-xs font-bold text-[#6E0C24]">{tag}</li>)}</ul>}</div>;
 }
 

@@ -8,7 +8,7 @@ import { formatEventDateRange } from "./event-format";
 
 export default function EventShareButton({ event }: { event: EventDetail }) {
   const [copied, setCopied] = useState(false);
-  const schedule = event.Schedules.map((item) => formatClock(item.startTime)).join(" & ");
+  const schedule = (event.Schedules ?? []).map((item) => formatClock(item.startTime)).join(" & ");
   const title = `${event.title}${event.theme ? ` — ${event.theme}` : ""}`;
   const text = [title, "Everlasting Hills Church", formatEventDateRange(event.startAt, event.endAt, event.timezone), schedule ? `${schedule}${event.timezone === "Africa/Lagos" ? " WAT" : ""}` : ""].filter(Boolean).join("\n");
 

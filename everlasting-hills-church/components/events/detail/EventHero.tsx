@@ -17,6 +17,8 @@ export default function EventHero({ event }: { event: EventDetail }) {
   const status = getEventStatus(event.startAt, event.endAt, event.timezone);
   const venue = [event.venueName, event.venueAddress].filter(Boolean).join(" · ");
   const dateLabel = formatEventDateRange(event.startAt, event.endAt, event.timezone);
+  // An older API payload carries no schedules at all.
+  const schedules = event.Schedules ?? [];
 
   return (
     <section className="relative overflow-hidden bg-[#10080b] text-white">
@@ -48,7 +50,7 @@ export default function EventHero({ event }: { event: EventDetail }) {
 
           <dl className="mt-8 flex flex-col gap-3 text-sm text-white/80 sm:flex-row sm:flex-wrap sm:gap-5">
             <div className="flex items-center gap-2"><CalendarDays size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Dates</dt><dd>{dateLabel}</dd></div>
-            {event.Schedules.length > 0 && <div className="flex items-center gap-2"><Radio size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Meeting times</dt><dd>{event.Schedules.map((item) => formatClock(item.startTime)).join(" & ")} · {timeZoneLabel(event.timezone)}</dd></div>}
+            {schedules.length > 0 && <div className="flex items-center gap-2"><Radio size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Meeting times</dt><dd>{schedules.map((item) => formatClock(item.startTime)).join(" & ")} · {timeZoneLabel(event.timezone)}</dd></div>}
             {venue && <div className="flex items-center gap-2"><MapPin size={16} className="text-[#E7CDD3]" /><dt className="sr-only">Location</dt><dd>{venue}</dd></div>}
           </dl>
 

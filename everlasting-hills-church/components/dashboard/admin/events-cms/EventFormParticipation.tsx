@@ -35,11 +35,11 @@ export default function EventFormParticipation({ data, set }: { data: EventFormD
       <details className="rounded-xl border border-gray-200 p-4 dark:border-white/10">
         <summary className="cursor-pointer text-xs font-bold text-gray-600 dark:text-gray-300">Host and contact details</summary>
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Host" htmlFor="event-host"><input id="event-host" value={data.hostName} onChange={(e) => set("hostName", e.target.value)} className={inputCls} /></Field>
-          <Field label="Guest minister" htmlFor="event-guest"><input id="event-guest" value={data.guestMinister} onChange={(e) => set("guestMinister", e.target.value)} className={inputCls} /></Field>
-          <Field label="Contact phone" htmlFor="event-phone"><input id="event-phone" value={data.contactPhone} onChange={(e) => set("contactPhone", e.target.value)} className={inputCls} /></Field>
-          <Field label="Contact email" htmlFor="event-email"><input id="event-email" type="email" value={data.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} className={inputCls} /></Field>
-          <Field label="WhatsApp link" htmlFor="event-whatsapp"><input id="event-whatsapp" value={data.contactWhatsapp} onChange={(e) => set("contactWhatsapp", e.target.value)} className={inputCls} /></Field>
+          <Field label="Host" htmlFor="event-host"><input id="event-host" value={data.hostName} onChange={(e) => set("hostName", e.target.value)} placeholder="Pastor Bowale Okunola" className={inputCls} /></Field>
+          <Field label="Guest minister" htmlFor="event-guest"><input id="event-guest" value={data.guestMinister} onChange={(e) => set("guestMinister", e.target.value)} placeholder="Leave blank, or TBA — to be announced" className={inputCls} /></Field>
+          <Field label="Contact phone" htmlFor="event-phone"><input id="event-phone" value={data.contactPhone} onChange={(e) => set("contactPhone", e.target.value)} placeholder="+234 706 872 7719" className={inputCls} /></Field>
+          <Field label="Contact email" htmlFor="event-email"><input id="event-email" type="email" value={data.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} placeholder="events@everlastinghills.org" className={inputCls} /></Field>
+          <Field label="WhatsApp link" htmlFor="event-whatsapp"><input id="event-whatsapp" value={data.contactWhatsapp} onChange={(e) => set("contactWhatsapp", e.target.value)} placeholder="https://wa.me/2347068727719" className={inputCls} /></Field>
         </div>
       </details>
     </div>
