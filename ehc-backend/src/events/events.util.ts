@@ -12,6 +12,9 @@ export const EVENT_SUMMARY_SELECT = {
   flyerImageUrl: true,
   featured: true,
   customPath: true,
+  // The events list renders a Register button per card, and without this it
+  // had no way to know the event was never taking RSVPs.
+  rsvpEnabled: true,
 } satisfies Prisma.EventSelect;
 
 /** Fields the calendar grid needs — chips render a title, a time and a status dot. */

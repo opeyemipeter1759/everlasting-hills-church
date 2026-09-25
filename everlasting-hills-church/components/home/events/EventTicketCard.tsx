@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, CalendarCheck, MapPin, Share2, Check, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CalendarDays, CalendarCheck, MapPin, Share2, Check, UserPlus } from "lucide-react";
 import type { EventSummary } from "@/types";
 import {
   formatEventDateRange,
@@ -52,6 +53,11 @@ export default function EventTicketCard({
     return () => clearInterval(id);
   }, [event.startAt]);
 
+  // Explicitly false, not merely falsy: the field only reaches the summary
+  // payload once the API carrying it is deployed, and until then treating a
+  // missing value as "no RSVPs" would hide Register on every event.
+  const takingRsvps = event.rsvpEnabled !== false;
+
   const { copied, handleShareLink, handleWhatsApp } = useEventShare(event, href, dateLabel);
   const { registering, registered, handleRegisterClick } = useEventRegistration(
     event,
@@ -96,11 +102,23 @@ export default function EventTicketCard({
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <RegisterButton
-            onClick={handleRegisterClick}
-            registering={registering}
-            registered={registered}
-          />
+          {/* An event created without RSVPs has nothing to register for, so
+              the card offers its page instead of a dead Register button. */}
+          {takingRsvps ? (
+            <RegisterButton
+              onClick={handleRegisterClick}
+              registering={registering}
+              registered={registered}
+            />
+          ) : (
+            <Link
+              href={href}
+              className="inline-flex min-w-[7rem] flex-1 items-center justify-center gap-2 rounded-lg border border-[#E7CDD3] px-2 py-2.5 text-xs font-bold text-[#87102C] transition-colors hover:bg-[#FFF4F6]"
+            >
+              See details
+              <ArrowRight size={13} aria-hidden="true" />
+            </Link>
+          )}
           {registered && (
             <IconButton onClick={() => setInviteOpen(true)} title="Invite a friend" className="text-[#87102C]">
               <UserPlus size={14} />
@@ -112,6 +130,17 @@ export default function EventTicketCard({
           <IconButton onClick={handleWhatsApp} title="Share on WhatsApp" className="text-[#25D366]">
             <WhatsAppIcon />
           </IconButton>
+          {/* When Register takes the primary slot, the event's own page still
+              needs a way in — the flier and title are not links. */}
+          {takingRsvps && (
+            <Link
+              href={href}
+              className="inline-flex h-9 flex-shrink-0 items-center gap-1 rounded-lg border border-[#E7CDD3] px-2.5 text-xs font-bold text-[#87102C] transition-colors hover:bg-[#FFF4F6]"
+            >
+              Details
+              <ArrowRight size={12} aria-hidden="true" />
+            </Link>
+          )}
         </div>
       </div>
 

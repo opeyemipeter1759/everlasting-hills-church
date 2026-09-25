@@ -179,6 +179,9 @@ export interface EventSummary {
   flyerImageUrl: string | null;
   featured: boolean;
   customPath: string | null;
+  /** Whether this event is taking RSVPs at all. Cards must not offer to
+   * register somebody for an event that was never accepting them. */
+  rsvpEnabled: boolean;
 }
 
 /** Full event returned by GET /events/:slug and the admin endpoints. */
