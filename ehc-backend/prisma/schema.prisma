@@ -2723,6 +2723,8 @@ model SermonDigest {
   keyPoints          Json?
   /// { word, meaning, verse: { reference, text }, reflection, preacherQuote, confession[] }
   wordOfTheDay       Json?
+  /// string[][] — a fresh confession for each day after the service, same sermon
+  dailyConfessions   Json?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   Tenant             Tenant   @relation(fields: [tenantId], references: [id])

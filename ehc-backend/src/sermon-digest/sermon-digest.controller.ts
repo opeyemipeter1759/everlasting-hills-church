@@ -32,7 +32,8 @@ export class SermonDigestController {
   async wordOfTheDay() {
     const latest = await this.digest.latest();
     if (!latest) return { ready: false as const };
-    const { wordOfTheDay, sermonTitle, preacher, serviceDay, serviceDate, watchUrl, videoId } = latest;
-    return { ready: true as const, ...wordOfTheDay, sermonTitle, preacher, serviceDay, serviceDate, watchUrl, videoId };
+    const { wordOfTheDay, sermonTitle, preacher, serviceDay, serviceDate, watchUrl, videoId, confessionDay } = latest;
+    // wordOfTheDay.confession is today's: it changes daily until the next service.
+    return { ready: true as const, ...wordOfTheDay, sermonTitle, preacher, serviceDay, serviceDate, watchUrl, videoId, confessionDay };
   }
 }

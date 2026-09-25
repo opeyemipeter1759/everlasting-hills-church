@@ -5,8 +5,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { GeminiBusyError, GeminiClient, GeminiContent, parseGeminiJson } from '../ai/gemini-client';
 import { ServiceVideo, YouTubeServices } from './youtube-services';
 import {
+  DAILY_CONFESSIONS_SCHEMA,
   DIGEST_SCHEMA,
   DigestAnswer,
+  dailyConfessionsAnswer,
+  dailyConfessionsPrompt,
   LOCATE_SCHEMA,
   LocateAnswer,
   WordOfTheDay,
@@ -55,6 +58,8 @@ export interface SermonDigestView {
   wordOfTheDay: WordOfTheDay;
   /** Opens the video where the sermon begins. */
   watchUrl: string;
+  /** 1 on the service day, 2 the day after, …: which daily confession is showing. */
+  confessionDay: number;
   sermonStartSeconds: number;
   sermonEndSeconds: number;
   generatedAt: string;
@@ -121,6 +126,7 @@ export class SermonDigestService {
         this.logger.log(`sermon-digest: ${video.id} "${video.title}" → ${outcome}${detail ? ` (${detail})` : ''}`);
         if (outcome === 'ready' || outcome === 'busy') break;
       }
+      await this.ensureDailyConfessions();
       return { processed };
     } finally {
       this.running = false;
@@ -176,6 +182,10 @@ export class SermonDigestService {
       );
       model = digested.model;
       const d = digested.answer;
+      const dailyConfessions = await this.writeDailyConfessions(d).catch((err: unknown) => {
+        this.logger.warn(`sermon-digest: daily confessions for ${video.id} not written yet (${(err as Error).message}) — next run`);
+        return undefined;
+      });
 
       await this.save(video, {
         status: 'READY',
@@ -189,6 +199,7 @@ export class SermonDigestService {
         summary: d.summary,
         keyPoints: d.keyPoints,
         wordOfTheDay: d.wordOfTheDay,
+        ...(dailyConfessions && { dailyConfessions }),
         attempts: (previous?.attempts ?? 0) + 1,
       });
       return { outcome: 'ready', detail: `${d.wordOfTheDay.word} — ${d.sermonTitle}` };
@@ -200,6 +211,48 @@ export class SermonDigestService {
       await this.save(video, { status: 'FAILED', reason: detail.slice(0, 1000), model, attempts: (previous?.attempts ?? 0) + 1 });
       return { outcome: 'failed', detail };
     }
+  }
+
+  /**
+   * The newest sermon's daily confessions, written if they're missing — for a
+   * sermon summarised before this existed, or whose step 3 met a busy Gemini.
+   * Never fails the run.
+   */
+  private async ensureDailyConfessions(): Promise<void> {
+    let videoId = 'the newest sermon';
+    try {
+      const row = await this.prisma.sermonDigest.findFirst({
+        where: { tenantId: this.tenantId, status: 'READY' },
+        orderBy: { publishedAt: 'desc' },
+      });
+      if (!row || row.dailyConfessions) return;
+      videoId = row.videoId;
+      const dailyConfessions = await this.writeDailyConfessions({
+        sermonTitle: row.sermonTitle ?? row.videoTitle,
+        summary: row.summary ?? '',
+        keyPoints: (row.keyPoints as string[] | null) ?? [],
+        bibleReferences: (row.bibleReferences as string[] | null) ?? [],
+        wordOfTheDay: row.wordOfTheDay as unknown as WordOfTheDay,
+      });
+      await this.prisma.sermonDigest.update({ where: { id: row.id }, data: { dailyConfessions } });
+      this.logger.log(`sermon-digest: ${dailyConfessions.length} daily confessions written for ${row.videoId}`);
+    } catch (err) {
+      this.logger.warn(`sermon-digest: daily confessions for ${videoId} not written yet (${(err as Error).message}) — next run`);
+    }
+  }
+
+  /** Step 3: text only, from what step 2 drew out of the sermon. */
+  private async writeDailyConfessions(
+    d: Pick<DigestAnswer, 'sermonTitle' | 'summary' | 'keyPoints' | 'bibleReferences' | 'wordOfTheDay'>,
+  ): Promise<string[][]> {
+    const { text } = await this.gemini.generate({
+      input: dailyConfessionsPrompt(d),
+      schema: DAILY_CONFESSIONS_SCHEMA,
+      models: VIDEO_MODELS,
+      maxOutputTokens: 8192,
+      waitBudgetMs: 30_000,
+    });
+    return dailyConfessionsAnswer.parse(parseGeminiJson(text)).confessions;
   }
 
   private async ask<T>(input: GeminiContent[], schema: Record<string, unknown>, validate: (v: unknown) => T, thinkingLevel?: 'low') {
@@ -220,11 +273,12 @@ export class SermonDigestService {
     return { outcome: 'rejected', detail: reason };
   }
 
-  private async save(video: ServiceVideo, data: Partial<Omit<SermonDigest, 'bibleReferences' | 'keyPoints' | 'wordOfTheDay'>> & {
+  private async save(video: ServiceVideo, data: Partial<Omit<SermonDigest, 'bibleReferences' | 'keyPoints' | 'wordOfTheDay' | 'dailyConfessions'>> & {
     status: string;
     bibleReferences?: string[];
     keyPoints?: string[];
     wordOfTheDay?: WordOfTheDay;
+    dailyConfessions?: string[][];
   }) {
     const fields = {
       videoTitle: video.title,
@@ -245,8 +299,33 @@ export class SermonDigestService {
   }
 }
 
-function toView(row: SermonDigest): SermonDigestView {
+/** The calendar date in Lagos, as a number of days, so "a day" turns at Lagos midnight. */
+function lagosDayNumber(date: Date): number {
+  const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Lagos' }).format(date);
+  return Math.floor(Date.parse(`${ymd}T00:00:00Z`) / 86_400_000);
+}
+
+/**
+ * Which confession shows today. The service day gets the sermon's own
+ * confession; each day after gets the next of the daily ones, going round
+ * again if the next service is late. `day` is 0 on the service day.
+ */
+export function confessionForDay(
+  original: string[],
+  daily: string[][] | null,
+  serviceDate: Date,
+  now: Date,
+): { lines: string[]; day: number } {
+  const pool = [original, ...(daily ?? [])].filter((lines) => lines.length > 0);
+  const day = Math.max(0, lagosDayNumber(now) - lagosDayNumber(serviceDate));
+  if (pool.length === 0) return { lines: [], day };
+  return { lines: pool[day % pool.length], day };
+}
+
+function toView(row: SermonDigest, now = new Date()): SermonDigestView {
   const start = row.sermonStartSeconds ?? 0;
+  const word = row.wordOfTheDay as unknown as WordOfTheDay;
+  const today = confessionForDay(word.confession, row.dailyConfessions as string[][] | null, row.publishedAt, now);
   return {
     videoId: row.videoId,
     videoTitle: row.videoTitle,
@@ -257,7 +336,9 @@ function toView(row: SermonDigest): SermonDigestView {
     bibleReferences: (row.bibleReferences as string[] | null) ?? [],
     summary: row.summary ?? '',
     keyPoints: (row.keyPoints as string[] | null) ?? [],
-    wordOfTheDay: row.wordOfTheDay as unknown as WordOfTheDay,
+    // Everything reads today's confession from here, so the site changes daily.
+    wordOfTheDay: { ...word, confession: today.lines },
+    confessionDay: today.day + 1,
     watchUrl: `https://www.youtube.com/watch?v=${row.videoId}&t=${start}s`,
     sermonStartSeconds: start,
     sermonEndSeconds: row.sermonEndSeconds ?? 0,

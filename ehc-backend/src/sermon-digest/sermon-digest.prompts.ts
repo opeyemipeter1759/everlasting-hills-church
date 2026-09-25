@@ -124,3 +124,51 @@ export const digestAnswer = z.object({
 });
 export type DigestAnswer = z.infer<typeof digestAnswer>;
 export type WordOfTheDay = DigestAnswer['wordOfTheDay'];
+
+// ─── Step 3: a confession for each day until the next service ──────────────
+
+/** Fresh confessions written per sermon, one for each day after the service. */
+export const DAILY_CONFESSION_DAYS = 6;
+
+/**
+ * Text only — no video. Works from what step 2 already drew out of the sermon,
+ * so each day's confession is new wording on the same teaching, never new
+ * teaching.
+ */
+export function dailyConfessionsPrompt(d: Pick<DigestAnswer, 'sermonTitle' | 'summary' | 'keyPoints' | 'bibleReferences' | 'wordOfTheDay'>): string {
+  return `
+These are notes from a sermon preached at ${CHURCH}.
+
+Title: ${d.sermonTitle}
+Summary: ${d.summary}
+Key points:
+${d.keyPoints.map((p) => `- ${p}`).join('\n')}
+Bible passages read: ${d.bibleReferences.join('; ') || 'none listed'}
+Word of the Day: ${d.wordOfTheDay.word} — ${d.wordOfTheDay.meaning}
+Verse: ${d.wordOfTheDay.verse.reference}${d.wordOfTheDay.verse.text ? ` — "${d.wordOfTheDay.verse.text}"` : ''}
+Today's confession (already used): ${d.wordOfTheDay.confession.join(' ')}
+
+Members say a short confession out loud every day until the next service. Write ${DAILY_CONFESSION_DAYS} NEW confessions, one for each of the next ${DAILY_CONFESSION_DAYS} days, so the words change each day while the message stays this sermon's.
+
+Answer with "confessions": an array of ${DAILY_CONFESSION_DAYS} confessions. Each confession is an array of 2 to 4 short first-person declarations ("I am…", "I will…", "I declare…") a member can say out loud.
+
+Rules:
+- Build every line only from the notes above: its key points, the Word of the Day, and the passages listed. Let each day lean on a different key point or passage.
+- Do not repeat today's confession or another day's line word for word.
+- Never add teaching, promises, or Bible references that are not in the notes.
+- Plain, warm, confident English; no quotation marks; each line under 20 words.
+`.trim();
+}
+
+export const DAILY_CONFESSIONS_SCHEMA = {
+  type: 'object',
+  properties: { confessions: { type: 'array', items: { type: 'array', items: str } } },
+  required: ['confessions'],
+};
+
+export const dailyConfessionsAnswer = z.object({
+  confessions: z
+    .array(z.array(text).min(2).transform((lines) => lines.slice(0, 4)))
+    .min(1)
+    .transform((days) => days.slice(0, DAILY_CONFESSION_DAYS)),
+});
