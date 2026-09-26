@@ -149,7 +149,7 @@ export class FollowUpController {
       absentFrom,
       take: take ? parseInt(take, 10) : 50,
       skip: skip ? parseInt(skip, 10) : 0,
-    });
+    }, actor.profileId ?? null);
   }
 
   @Get('workload')

@@ -440,6 +440,8 @@ export interface MasterListRow {
    * account, and for members no service has counted for yet.
    */
   absence?: { missed: number; total: number; missedLatest: boolean } | null;
+  /** Their activity thread: messages logged so far, and how many are new to you. */
+  activity?: { total: number; unread: number };
 }
 
 export interface MasterListPage {

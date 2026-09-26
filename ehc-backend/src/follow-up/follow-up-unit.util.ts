@@ -31,3 +31,21 @@ export async function findFollowUpUnit(
   });
   return candidates.find((unit) => isFollowUpUnitName(unit.name)) ?? null;
 }
+
+/** Whether a unit is the Integration unit — typed names vary as with Follow Up. */
+export function isIntegrationUnitName(name: string): boolean {
+  return name.toLowerCase().replace(/[^a-z]/g, '').includes('integration');
+}
+
+/** The church's Integration unit, or null if there isn't one. */
+export async function findIntegrationUnit(
+  prisma: PrismaService,
+  tenantId: string,
+): Promise<{ id: string; name: string; departmentId: string | null } | null> {
+  const candidates = await prisma.unit.findMany({
+    where: { tenantId, name: { contains: 'integration', mode: 'insensitive' } },
+    select: { id: true, name: true, departmentId: true },
+    orderBy: { name: 'asc' },
+  });
+  return candidates.find((unit) => isIntegrationUnitName(unit.name)) ?? null;
+}

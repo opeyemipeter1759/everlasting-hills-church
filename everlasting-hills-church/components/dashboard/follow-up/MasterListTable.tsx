@@ -62,6 +62,7 @@ export function MasterListTable({
             <Th>Name</Th>
             <Th className="hidden sm:table-cell">Assigned to</Th>
             <Th>Status</Th>
+            <Th>Activity</Th>
             {showAbsence && <Th>Attendance</Th>}
             {!showAbsence && <Th className="text-right">Edit</Th>}
           </tr>

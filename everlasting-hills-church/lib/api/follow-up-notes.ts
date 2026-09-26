@@ -1,6 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 import type { FollowUpNote } from "./follow-up-pipeline";
 import { isPending } from "./follow-up-notes.util";
@@ -23,13 +24,26 @@ const POLL_MS = 60_000;
  * is React Query's default and exactly what we want on a phone.
  */
 export function useFollowUpNotes(subject: { kind: string; id: string } | null) {
-  return useQuery({
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: notesKey(subject?.kind ?? "", subject?.id ?? ""),
     queryFn: () => api.get<FollowUpNote[]>(`/follow-up/notes/${subject?.kind}/${subject?.id}`),
     enabled: !!subject,
     refetchInterval: (query) => (query.state.data?.some(isPending) ? false : POLL_MS),
     refetchOnWindowFocus: true,
   });
+
+  // Reading the thread marks it read on the server, so the Master List's
+  // unread badge for this person is now out of date: fetch it again. Keyed on
+  // the message count, not every poll, so an open thread doesn't reload the
+  // list each minute when nothing has changed.
+  const count = query.data?.length;
+  useEffect(() => {
+    if (count === undefined) return;
+    void qc.invalidateQueries({ queryKey: ["follow-up", "master-list"] });
+  }, [qc, subject?.kind, subject?.id, count]);
+
+  return query;
 }
 
 export { useFollowUpNoteActions } from "./follow-up-note-actions";

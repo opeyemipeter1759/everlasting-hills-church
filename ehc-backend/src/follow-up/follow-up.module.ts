@@ -16,6 +16,8 @@ import { FollowUpStatusBulkService } from './services/follow-up-status-bulk.serv
 import { FollowUpCountsService } from './services/follow-up-counts.service';
 import { FollowUpRollService } from './services/follow-up-roll.service';
 import { FollowUpNotesService } from './services/follow-up-notes.service';
+import { FollowUpNoteActivityService } from './services/follow-up-note-activity.service';
+import { FollowUpNoteAlertsService } from './services/follow-up-note-alerts.service';
 import { FollowUpWorkloadService } from './services/follow-up-workload.service';
 import { FollowUpAuditService } from './services/follow-up-audit.service';
 import { FollowUpEntryMapperService } from './services/follow-up-entry-mapper.service';
@@ -56,6 +58,8 @@ import { FollowUpRemindersService } from './services/follow-up-reminders.service
     FollowUpCountsService,
     FollowUpRollService,
     FollowUpNotesService,
+    FollowUpNoteActivityService,
+    FollowUpNoteAlertsService,
     FollowUpWorkloadService,
     FollowUpAuditService,
     FollowUpEntryMapperService,

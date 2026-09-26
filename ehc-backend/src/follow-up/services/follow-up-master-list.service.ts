@@ -6,6 +6,8 @@ import type { Env } from '../../config/env.validation';
 import { getDayBounds } from '../../attendance/attendance.types';
 import { FollowUpRollService, type RollRow } from './follow-up-roll.service';
 import { summariseAbsence, type AbsenceSummary, type CountedService } from './absence.util';
+import { FollowUpNoteActivityService } from './follow-up-note-activity.service';
+import { threadKey } from './note-activity.util';
 import {
   LATEST_SERVICE,
   matchesFilters,
@@ -30,12 +32,14 @@ export class FollowUpMasterListService {
   constructor(
     private readonly roll: FollowUpRollService,
     private readonly prisma: PrismaService,
+    private readonly activity: FollowUpNoteActivityService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  async list(opts: MasterListFilters) {
+  /** `viewerProfileId` decides what counts as unread on each row's activity. */
+  async list(opts: MasterListFilters, viewerProfileId: string | null = null) {
     const [everyone, services] = await Promise.all([this.roll.everyone(opts.search ?? ''), this.countedServices()]);
 
     // "latest" is the most recent service that counts, so the Integration
@@ -60,8 +64,16 @@ export class FollowUpMasterListService {
       attendance !== undefined ? attendance : absenceServiceId ? await this.serviceAttendance(absenceServiceId) : null;
     const absent = reference ? matching.filter((row) => missedService(row, reference)).length : 0;
 
+    const [withAbsences, activity] = await Promise.all([
+      this.withAbsences(page, services),
+      this.activity.forRows(page, viewerProfileId),
+    ]);
     return {
-      data: await this.withAbsences(page, services),
+      // Messages logged so far, and how many the viewer hasn't seen yet.
+      data: withAbsences.map((row) => ({
+        ...row,
+        activity: activity.get(threadKey(row.kind, row.id)) ?? { total: 0, unread: 0 },
+      })),
       meta: { total: matching.length, take: opts.take, skip: opts.skip, absent, absenceServiceId },
     };
   }

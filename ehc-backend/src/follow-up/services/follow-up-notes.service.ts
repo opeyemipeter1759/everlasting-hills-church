@@ -6,6 +6,8 @@ import type { AuthUser } from '../../auth/types/auth-user';
 import { FollowUpStatusService } from './follow-up-status.service';
 import type { MapContext, MappedNote } from './note-mapper.util';
 import { assembleThread, createNote, profileIdsIn, toggleReaction } from './note-thread.util';
+import { FollowUpNoteActivityService } from './follow-up-note-activity.service';
+import { FollowUpNoteAlertsService } from './follow-up-note-alerts.service';
 
 export type FollowUpNote = MappedNote;
 
@@ -23,12 +25,17 @@ export class FollowUpNotesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly status: FollowUpStatusService,
+    private readonly activity: FollowUpNoteActivityService,
+    private readonly alerts: FollowUpNoteAlertsService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
   async list(actor: AuthUser, subjectKind: string, subjectId: string): Promise<FollowUpNote[]> {
+    // Whoever is looking at the thread has now seen all of it: nothing on it
+    // is unread for them on the Master List any more.
+    if (actor.profileId) await this.activity.markRead(actor.profileId, subjectKind, subjectId);
     const rows = await this.prisma.followUpNote.findMany({
       where: { tenantId: this.tenantId, subjectKind, subjectId },
       orderBy: { createdAt: 'asc' },
@@ -59,6 +66,9 @@ export class FollowUpNotesService {
       body,
       parentId,
     });
+    // Tell the assignee and everyone else in the conversation. In the
+    // background: posting shouldn't wait on email.
+    void this.alerts.onNewMessage(actor.profileId, subjectKind, subjectId, body);
     return this.list(actor, subjectKind, subjectId);
   }
 

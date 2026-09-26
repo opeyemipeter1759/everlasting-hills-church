@@ -1082,6 +1082,7 @@ model Tenant {
   NavPermissionGrant       NavPermissionGrant[]
   followUpNotes            FollowUpNote[]
   followUpNoteReactions    FollowUpNoteReaction[]
+  followUpNoteReads        FollowUpNoteRead[]
   sermonDigests            SermonDigest[]
   SalvationDecision             SalvationDecision[]
 }
@@ -2835,6 +2836,22 @@ model FollowUpNoteReaction {
 
   @@unique([noteId, profileId, emoji])
   @@index([noteId])
+}
+
+/// When one team member last opened one person's activity thread: whatever
+/// others posted after this is unread for them. Written when they open it.
+model FollowUpNoteRead {
+  id          String   @id
+  tenantId    String
+  profileId   String
+  /// 'MEMBER' or 'VISITOR', as on FollowUpNote.
+  subjectKind String
+  subjectId   String
+  lastReadAt  DateTime
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([profileId, subjectKind, subjectId])
+  @@index([tenantId, profileId])
 }
 
 /// One row per YouTube video the sermon digest has looked at with Gemini, so

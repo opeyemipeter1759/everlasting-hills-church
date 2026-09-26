@@ -2,6 +2,7 @@
 
 import type { MasterListRow } from "@/lib/api/follow-up-pipeline";
 import { AbsenceBadge } from "./AbsenceBadge";
+import { ActivityBadge } from "./ActivityBadge";
 import { MasterStatusBadge } from "./MasterStatusBadge";
 import { RowAvatar } from "./table-bits";
 import { RowCheckbox } from "./RowCheckbox";
@@ -26,7 +27,7 @@ interface RowsProps {
 export function MasterListRows({ rows, isLoading, canEdit, onEdit, onOpen, selection, showAbsence = false }: RowsProps) {
   // The Integration list trades the Edit column (first-timers only, and it
   // holds none) for Attendance.
-  const cols = 4 + (selection ? 1 : 0);
+  const cols = 5 + (selection ? 1 : 0);
   if (isLoading) return <TableSkeletonRows cols={cols} />;
   if (rows.length === 0) {
     return <TableEmptyRow cols={cols} title="Nobody here" body="No one matches that name." />;
@@ -84,6 +85,10 @@ export function MasterListRows({ rows, isLoading, canEdit, onEdit, onOpen, selec
 
           <td className="px-4 py-3">
             <MasterStatusBadge status={row.status} />
+          </td>
+
+          <td className="px-4 py-3">
+            <ActivityBadge activity={row.activity} />
           </td>
 
           {showAbsence && (

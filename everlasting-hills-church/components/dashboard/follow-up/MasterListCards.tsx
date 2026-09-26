@@ -2,6 +2,7 @@
 
 import type { MasterListRow } from "@/lib/api/follow-up-pipeline";
 import { AbsenceBadge } from "./AbsenceBadge";
+import { ActivityBadge } from "./ActivityBadge";
 import { MasterStatusBadge } from "./MasterStatusBadge";
 import { RowAvatar } from "./table-bits";
 import { RowCheckbox } from "./RowCheckbox";
@@ -93,6 +94,7 @@ export function MasterListCards({
                 <span className="mt-1.5 flex flex-wrap items-center gap-1.5">
                   <MasterStatusBadge status={row.status} />
                   {showAbsence && <AbsenceBadge absence={row.absence} />}
+                  <ActivityBadge activity={row.activity} />
                 </span>
               </span>
             </button>
