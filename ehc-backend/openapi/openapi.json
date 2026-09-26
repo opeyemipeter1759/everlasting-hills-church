@@ -299,7 +299,7 @@
             "type": "string"
           },
           "value": {
-            "description": "For op=status: ACTIVE|INACTIVE|TRANSFERRED|DECEASED. For tags: the tag string.",
+            "description": "For op=status: ACTIVE|INACTIVE. For tags: the tag string.",
             "type": "string"
           }
         },
@@ -503,7 +503,8 @@
             "description": "PUBLISHED fans out immediately; DRAFT saves without notifying anyone yet.",
             "enum": [
               "DRAFT",
-              "PUBLISHED"
+              "PUBLISHED",
+              "ARCHIVED"
             ],
             "type": "string"
           },
@@ -687,7 +688,8 @@
             "description": "PUBLISHED is visible to members immediately; DRAFT stages it first.",
             "enum": [
               "DRAFT",
-              "PUBLISHED"
+              "PUBLISHED",
+              "ARCHIVED"
             ],
             "type": "string"
           },
@@ -768,6 +770,10 @@
           "contactWhatsapp": {
             "type": "string"
           },
+          "coverImageUrl": {
+            "description": "Portrait/square event poster.",
+            "type": "string"
+          },
           "customPath": {
             "description": "Bespoke public route override, e.g. /events/heaven-on-earth.",
             "type": "string"
@@ -788,7 +794,22 @@
           "guestMinister": {
             "type": "string"
           },
+          "heroImageUrl": {
+            "description": "Wide hero art, rendered with object-cover.",
+            "type": "string"
+          },
           "hostName": {
+            "type": "string"
+          },
+          "liveUrl": {
+            "type": "string"
+          },
+          "locationType": {
+            "enum": [
+              "PHYSICAL",
+              "ONLINE",
+              "HYBRID"
+            ],
             "type": "string"
           },
           "mapsLink": {
@@ -798,12 +819,37 @@
             "description": "Lower numbers appear first.",
             "type": "number"
           },
+          "registrationRequired": {
+            "default": true,
+            "type": "boolean"
+          },
+          "registrationUrl": {
+            "type": "string"
+          },
           "rsvpEnabled": {
             "default": true,
             "type": "boolean"
           },
+          "schedules": {
+            "items": {
+              "$ref": "#/components/schemas/EventScheduleInputDto"
+            },
+            "type": "array"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/EventSectionInputDto"
+            },
+            "type": "array"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
           "slug": {
             "description": "Auto-derived from title if omitted.",
+            "type": "string"
+          },
+          "socialImageUrl": {
             "type": "string"
           },
           "startAt": {
@@ -813,11 +859,22 @@
           "status": {
             "enum": [
               "DRAFT",
-              "PUBLISHED"
+              "PUBLISHED",
+              "ARCHIVED"
             ],
             "type": "string"
           },
           "tagline": {
+            "type": "string"
+          },
+          "testimonyUrl": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "timezone": {
+            "default": "Africa/Lagos",
             "type": "string"
           },
           "title": {
@@ -1461,6 +1518,14 @@
           "name",
           "url"
         ],
+        "type": "object"
+      },
+      "EventScheduleInputDto": {
+        "properties": {},
+        "type": "object"
+      },
+      "EventSectionInputDto": {
+        "properties": {},
         "type": "object"
       },
       "FirstTimerDto": {
@@ -2248,6 +2313,78 @@
         ],
         "type": "object"
       },
+      "SalvationContactDto": {
+        "properties": {
+          "contacted": {
+            "example": true,
+            "type": "boolean"
+          },
+          "note": {
+            "example": "Called Tuesday, joining the 6am watch.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "contacted"
+        ],
+        "type": "object"
+      },
+      "SalvationDecisionDto": {
+        "properties": {
+          "church_name": {
+            "description": "Blank when they have no church yet",
+            "example": "Everlasting Hills Church",
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "FIRST_TIME",
+              "REDEDICATION"
+            ],
+            "example": "FIRST_TIME",
+            "type": "string"
+          },
+          "email": {
+            "example": "grace@example.com",
+            "type": "string"
+          },
+          "event_slug": {
+            "description": "Slug of the event this came from",
+            "example": "furnace-2026",
+            "type": "string"
+          },
+          "first_name": {
+            "example": "Grace",
+            "type": "string"
+          },
+          "interested_in_baptism": {
+            "example": true,
+            "type": "boolean"
+          },
+          "last_name": {
+            "example": "Okafor",
+            "type": "string"
+          },
+          "location": {
+            "example": "Ibadan, Oyo State, Nigeria",
+            "type": "string"
+          },
+          "message": {
+            "example": "I came back to the Lord during Furnace.",
+            "type": "string"
+          },
+          "phone": {
+            "example": "+234 801 234 5678",
+            "type": "string"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "decision"
+        ],
+        "type": "object"
+      },
       "SendDirectMessageDto": {
         "properties": {
           "content": {
@@ -2631,6 +2768,16 @@
             "example": "+1 (555) 987-6543",
             "type": "string"
           },
+          "share_live": {
+            "description": "Permission to share this testimony live during a gathering",
+            "example": true,
+            "type": "boolean"
+          },
+          "share_online": {
+            "description": "Permission to share this testimony on the church's platforms",
+            "example": true,
+            "type": "boolean"
+          },
           "share_physically": {
             "description": "Submitter is willing to share this testimony physically/in-person at a service",
             "example": true,
@@ -2800,7 +2947,8 @@
             "description": "Publish or unpublish (DRAFT hides it from members)",
             "enum": [
               "DRAFT",
-              "PUBLISHED"
+              "PUBLISHED",
+              "ARCHIVED"
             ],
             "type": "string"
           },
@@ -2882,6 +3030,10 @@
           "contactWhatsapp": {
             "type": "string"
           },
+          "coverImageUrl": {
+            "description": "Portrait/square event poster.",
+            "type": "string"
+          },
           "customPath": {
             "description": "Bespoke public route override, e.g. /events/heaven-on-earth.",
             "type": "string"
@@ -2902,7 +3054,22 @@
           "guestMinister": {
             "type": "string"
           },
+          "heroImageUrl": {
+            "description": "Wide hero art, rendered with object-cover.",
+            "type": "string"
+          },
           "hostName": {
+            "type": "string"
+          },
+          "liveUrl": {
+            "type": "string"
+          },
+          "locationType": {
+            "enum": [
+              "PHYSICAL",
+              "ONLINE",
+              "HYBRID"
+            ],
             "type": "string"
           },
           "mapsLink": {
@@ -2912,12 +3079,37 @@
             "description": "Lower numbers appear first.",
             "type": "number"
           },
+          "registrationRequired": {
+            "default": true,
+            "type": "boolean"
+          },
+          "registrationUrl": {
+            "type": "string"
+          },
           "rsvpEnabled": {
             "default": true,
             "type": "boolean"
           },
+          "schedules": {
+            "items": {
+              "$ref": "#/components/schemas/EventScheduleInputDto"
+            },
+            "type": "array"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/EventSectionInputDto"
+            },
+            "type": "array"
+          },
+          "shortDescription": {
+            "type": "string"
+          },
           "slug": {
             "description": "Auto-derived from title if omitted.",
+            "type": "string"
+          },
+          "socialImageUrl": {
             "type": "string"
           },
           "startAt": {
@@ -2927,11 +3119,22 @@
           "status": {
             "enum": [
               "DRAFT",
-              "PUBLISHED"
+              "PUBLISHED",
+              "ARCHIVED"
             ],
             "type": "string"
           },
           "tagline": {
+            "type": "string"
+          },
+          "testimonyUrl": {
+            "type": "string"
+          },
+          "theme": {
+            "type": "string"
+          },
+          "timezone": {
+            "default": "Africa/Lagos",
             "type": "string"
           },
           "title": {
@@ -3036,6 +3239,21 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "UpdateMemberStatusDto": {
+        "properties": {
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
         "type": "object"
       },
       "UpdateMyProfileDto": {
@@ -3691,7 +3909,10 @@
                     "data": {
                       "example": {
                         "avgAttendance": 80,
+                        "draftTestimonials": 4,
                         "newMembersThisMonth": 5,
+                        "pendingPrayers": 3,
+                        "pendingQuestions": 2,
                         "totalGivingNaira": 250000,
                         "totalMembers": 123,
                         "totalPrayers": 10,
@@ -18350,6 +18571,180 @@
         ]
       }
     },
+    "/forms/salvation": {
+      "get": {
+        "description": "Every field of every submission, newest first, for pastoral follow-up.",
+        "operationId": "FormsMiscController_listSalvation",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "contacted",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "List decisions for Christ (PASTOR+)",
+        "tags": [
+          "forms"
+        ]
+      },
+      "post": {
+        "description": "A first-time decision or a rededication, from the public site. Only the name and the decision are required — somebody responding in the moment should not be turned away by a form. Links to the event it came from when an event slug is given, and to the member when the submitter is signed in.",
+        "operationId": "FormsMiscController_salvation",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalvationDecisionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Decision recorded"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Record a decision for Christ",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/forms/salvation/{id}/contacted": {
+      "patch": {
+        "operationId": "FormsMiscController_setSalvationContacted",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SalvationContactDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Mark a decision as followed up, and keep a note (PASTOR+)",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
     "/forms/serve-team": {
       "post": {
         "description": "Record interest in joining a service unit and notify the team by email.",
@@ -21232,9 +21627,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "example": {
-                  "status": "ACTIVE"
-                }
+                "$ref": "#/components/schemas/UpdateMemberStatusDto"
               }
             }
           },

@@ -3825,6 +3825,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/forms/salvation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List decisions for Christ (PASTOR+)
+         * @description Every field of every submission, newest first, for pastoral follow-up.
+         */
+        get: operations["FormsMiscController_listSalvation"];
+        put?: never;
+        /**
+         * Record a decision for Christ
+         * @description A first-time decision or a rededication, from the public site. Only the name and the decision are required — somebody responding in the moment should not be turned away by a form. Links to the event it came from when an event slug is given, and to the member when the submitter is signed in.
+         */
+        post: operations["FormsMiscController_salvation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/salvation/{id}/contacted": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark a decision as followed up, and keep a note (PASTOR+) */
+        patch: operations["FormsMiscController_setSalvationContacted"];
+        trace?: never;
+    };
     "/forms/serve-team": {
         parameters: {
             query?: never;
@@ -7351,7 +7392,7 @@ export interface components {
             ids: string[];
             /** @enum {string} */
             op: "status" | "addTag" | "removeTag";
-            /** @description For op=status: ACTIVE|INACTIVE|TRANSFERRED|DECEASED. For tags: the tag string. */
+            /** @description For op=status: ACTIVE|INACTIVE. For tags: the tag string. */
             value: string;
         };
         BulkReassignDto: {
@@ -7435,7 +7476,7 @@ export interface components {
              * @default PUBLISHED
              * @enum {string}
              */
-            status: "DRAFT" | "PUBLISHED";
+            status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
             /**
              * @description Send to members of these genders. Combined (union) with targetRoles/targetProfileIds.
              * @example [
@@ -7511,7 +7552,7 @@ export interface components {
              * @default PUBLISHED
              * @enum {string}
              */
-            status: "DRAFT" | "PUBLISHED";
+            status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
             /** @example Mere Christianity */
             title: string;
         };
@@ -7544,6 +7585,8 @@ export interface components {
             contactEmail?: string;
             contactPhone?: string;
             contactWhatsapp?: string;
+            /** @description Portrait/square event poster. */
+            coverImageUrl?: string;
             /** @description Bespoke public route override, e.g. /events/heaven-on-earth. */
             customPath?: string;
             description?: string;
@@ -7552,19 +7595,35 @@ export interface components {
             featured?: boolean;
             flyerImageUrl?: string;
             guestMinister?: string;
+            /** @description Wide hero art, rendered with object-cover. */
+            heroImageUrl?: string;
             hostName?: string;
+            liveUrl?: string;
+            /** @enum {string} */
+            locationType?: "PHYSICAL" | "ONLINE" | "HYBRID";
             mapsLink?: string;
             /** @description Lower numbers appear first. */
             order?: number;
             /** @default true */
+            registrationRequired: boolean;
+            registrationUrl?: string;
+            /** @default true */
             rsvpEnabled: boolean;
+            schedules?: components["schemas"]["EventScheduleInputDto"][];
+            sections?: components["schemas"]["EventSectionInputDto"][];
+            shortDescription?: string;
             /** @description Auto-derived from title if omitted. */
             slug?: string;
+            socialImageUrl?: string;
             /** @example 2026-08-15T17:00:00+01:00 */
             startAt: string;
             /** @enum {string} */
-            status?: "DRAFT" | "PUBLISHED";
+            status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
             tagline?: string;
+            testimonyUrl?: string;
+            theme?: string;
+            /** @default Africa/Lagos */
+            timezone: string;
             /** @example Heaven on Earth */
             title: string;
             venueAddress?: string;
@@ -7847,6 +7906,8 @@ export interface components {
             /** @description Public URL of the uploaded file (from /uploads/image or /uploads/document) */
             url: string;
         };
+        EventScheduleInputDto: Record<string, never>;
+        EventSectionInputDto: Record<string, never>;
         FirstTimerDto: {
             /** @example Dignissimos et eos u */
             address?: string;
@@ -8197,6 +8258,43 @@ export interface components {
             /** @enum {string} */
             status: "ACKNOWLEDGED" | "NEEDS_REVISION";
         };
+        SalvationContactDto: {
+            /** @example true */
+            contacted: boolean;
+            /** @example Called Tuesday, joining the 6am watch. */
+            note?: string;
+        };
+        SalvationDecisionDto: {
+            /**
+             * @description Blank when they have no church yet
+             * @example Everlasting Hills Church
+             */
+            church_name?: string;
+            /**
+             * @example FIRST_TIME
+             * @enum {string}
+             */
+            decision: "FIRST_TIME" | "REDEDICATION";
+            /** @example grace@example.com */
+            email?: string;
+            /**
+             * @description Slug of the event this came from
+             * @example furnace-2026
+             */
+            event_slug?: string;
+            /** @example Grace */
+            first_name: string;
+            /** @example true */
+            interested_in_baptism?: boolean;
+            /** @example Okafor */
+            last_name: string;
+            /** @example Ibadan, Oyo State, Nigeria */
+            location?: string;
+            /** @example I came back to the Lord during Furnace. */
+            message?: string;
+            /** @example +234 801 234 5678 */
+            phone?: string;
+        };
         SendDirectMessageDto: {
             /** @example What did you mean by "living sacrifice"? */
             content: string;
@@ -8384,6 +8482,16 @@ export interface components {
             /** @example +1 (555) 987-6543 */
             phone?: string;
             /**
+             * @description Permission to share this testimony live during a gathering
+             * @example true
+             */
+            share_live?: boolean;
+            /**
+             * @description Permission to share this testimony on the church's platforms
+             * @example true
+             */
+            share_online?: boolean;
+            /**
              * @description Submitter is willing to share this testimony physically/in-person at a service
              * @example true
              */
@@ -8461,7 +8569,7 @@ export interface components {
              * @description Publish or unpublish (DRAFT hides it from members)
              * @enum {string}
              */
-            status?: "DRAFT" | "PUBLISHED";
+            status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
             /** @example Mere Christianity */
             title?: string;
         };
@@ -8497,6 +8605,8 @@ export interface components {
             contactEmail?: string;
             contactPhone?: string;
             contactWhatsapp?: string;
+            /** @description Portrait/square event poster. */
+            coverImageUrl?: string;
             /** @description Bespoke public route override, e.g. /events/heaven-on-earth. */
             customPath?: string;
             description?: string;
@@ -8505,19 +8615,35 @@ export interface components {
             featured?: boolean;
             flyerImageUrl?: string;
             guestMinister?: string;
+            /** @description Wide hero art, rendered with object-cover. */
+            heroImageUrl?: string;
             hostName?: string;
+            liveUrl?: string;
+            /** @enum {string} */
+            locationType?: "PHYSICAL" | "ONLINE" | "HYBRID";
             mapsLink?: string;
             /** @description Lower numbers appear first. */
             order?: number;
             /** @default true */
+            registrationRequired: boolean;
+            registrationUrl?: string;
+            /** @default true */
             rsvpEnabled: boolean;
+            schedules?: components["schemas"]["EventScheduleInputDto"][];
+            sections?: components["schemas"]["EventSectionInputDto"][];
+            shortDescription?: string;
             /** @description Auto-derived from title if omitted. */
             slug?: string;
+            socialImageUrl?: string;
             /** @example 2026-08-15T17:00:00+01:00 */
             startAt?: string;
             /** @enum {string} */
-            status?: "DRAFT" | "PUBLISHED";
+            status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
             tagline?: string;
+            testimonyUrl?: string;
+            theme?: string;
+            /** @default Africa/Lagos */
+            timezone: string;
             /** @example Heaven on Earth */
             title?: string;
             venueAddress?: string;
@@ -8557,6 +8683,10 @@ export interface components {
             lastName?: string;
             /** @example +234 801 234 5678 */
             phone?: string;
+        };
+        UpdateMemberStatusDto: {
+            /** @enum {string} */
+            status: "ACTIVE" | "INACTIVE";
         };
         UpdateMyProfileDto: {
             /** @example Husband, dad, and member at EHC. */
@@ -8859,7 +8989,10 @@ export interface operations {
                         /**
                          * @example {
                          *       "avgAttendance": 80,
+                         *       "draftTestimonials": 4,
                          *       "newMembersThisMonth": 5,
+                         *       "pendingPrayers": 3,
+                         *       "pendingQuestions": 2,
                          *       "totalGivingNaira": 250000,
                          *       "totalMembers": 123,
                          *       "totalPrayers": 10,
@@ -17663,6 +17796,121 @@ export interface operations {
             };
         };
     };
+    FormsMiscController_listSalvation: {
+        parameters: {
+            query: {
+                contacted: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsMiscController_salvation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalvationDecisionDto"];
+            };
+        };
+        responses: {
+            /** @description Decision recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsMiscController_setSalvationContacted: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalvationContactDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FormsMiscController_serveTeam: {
         parameters: {
             query?: never;
@@ -19434,7 +19682,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": unknown;
+                "application/json": components["schemas"]["UpdateMemberStatusDto"];
             };
         };
         responses: {
