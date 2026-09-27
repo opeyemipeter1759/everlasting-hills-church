@@ -6,9 +6,9 @@ import { Home, ListChecks, Map, MessageSquareQuote, Trophy, Users } from "lucide
 import type { LucideIcon } from "lucide-react";
 import { ShieldAlert } from "lucide-react";
 import { useEvangelismMe, useEvangelismSummary } from "@/lib/api/evangelism";
-import { FollowUpTabs, TABS_BOTTOM_SPACE } from "@/components/dashboard/follow-up/FollowUpTabs";
 import { BoardSkeleton } from "@/components/dashboard/follow-up/BoardSkeleton";
 import { EvangelismHeader } from "./EvangelismHeader";
+import { EvangelismTabs } from "./EvangelismTabs";
 import { OverviewTab } from "./OverviewTab";
 import { ContactsTab } from "./ContactsTab";
 import { TasksTab } from "./TasksTab";
@@ -91,12 +91,12 @@ export default function EvangelismBoard() {
     : {};
 
   return (
-    <div className={`space-y-4 md:px-5 ${TABS_BOTTOM_SPACE}`}>
-      <EvangelismHeader canLead={canLead} summary={summary} />
-      <FollowUpTabs tabs={TABS} active={active} counts={counts} label="Evangelism views" onChange={changeTab} />
+    <div className="mx-auto max-w-[1200px] space-y-5 pb-12 md:px-2">
+      <EvangelismHeader summary={summary} />
+      <EvangelismTabs tabs={TABS} active={active} counts={counts} onChange={changeTab} />
 
-      <section role="tabpanel" aria-label={TABS.find((t) => t.id === active)?.label}>
-        {active === "home" && <OverviewTab canLead={canLead} onOpenContact={openContact} onGoTo={changeTab} />}
+      <section role="tabpanel" aria-label={TABS.find((t) => t.id === active)?.label} className="pt-1">
+        {active === "home" && <OverviewTab canLead={canLead} summary={summary} onOpenContact={openContact} onGoTo={changeTab} />}
         {active === "contacts" && <ContactsTab canLead={canLead} onOpenContact={openContact} />}
         {active === "tasks" && <TasksTab canLead={canLead} focusTaskId={params?.get("task") ?? null} onOpenContact={openContact} />}
         {active === "outreaches" && <OutreachesTab canLead={canLead} onOpenContact={openContact} />}

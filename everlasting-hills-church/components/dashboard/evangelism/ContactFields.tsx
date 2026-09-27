@@ -3,6 +3,7 @@
 import { Combobox } from "@/components/ui/form/Combobox";
 import { Select } from "@/components/ui/select";
 import type { NextAction } from "@/lib/api/evangelism";
+import { selectClass } from "./bits";
 import { NEXT_ACTION_LABEL, SAVED_QUESTION, inputClass, labelClass, todayLagos } from "./labels";
 import { OTHER_WORKER, type ContactFormErrors, type ContactFormState } from "./contact-form";
 
@@ -135,6 +136,7 @@ export function ContactFields({
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Outreach">
           <Select
+            className={selectClass}
             aria-label="Outreach"
             value={value.outreachId}
             onChange={(v) => set("outreachId", v)}
@@ -154,6 +156,7 @@ export function ContactFields({
 
       <Field label="Next action needed">
         <Select
+          className={selectClass}
           aria-label="Next action needed"
           value={value.nextAction}
           onChange={(v) => set("nextAction", v as NextAction | "")}

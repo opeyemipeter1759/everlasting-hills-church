@@ -2,18 +2,18 @@
 
 import { useState } from "react";
 import {
-  ArrowRight,
-  CalendarPlus,
-  Edit3,
+  CalendarDays,
   Flag,
   GraduationCap,
   ListChecks,
   MapPin,
   MessageCircle,
+  Pencil,
   Phone,
   Plus,
   Trash2,
   UserRound,
+  ArrowRight,
 } from "lucide-react";
 import Drawer from "@/components/ui/overlay/Drawer";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -29,7 +29,7 @@ import {
 import { ContactDialog } from "./ContactDialog";
 import { LogActionForm } from "./LogActionForm";
 import { TaskDialog } from "./TaskDialog";
-import { ErrorNote, FlagBadge, Loading, SavedBadge, StatusBadge, WindowProgress, secondaryButton } from "./bits";
+import { ErrorNote, FlagBadge, Initials, Loading, SavedBadge, StatusBadge, WindowProgress, cardClass, secondaryButton } from "./bits";
 import {
   ACTION_LABEL,
   NEXT_ACTION_LABEL,
@@ -51,7 +51,7 @@ export function ContactDrawer({ contactId, canLead, onClose }: { contactId: stri
       {q.isLoading ? (
         <Loading />
       ) : q.isError || !q.data ? (
-        <div className="p-6 pt-14">
+        <div className="p-6 pt-16">
           <ErrorNote>{errorText(q.error, "Couldn't load this contact.")}</ErrorNote>
         </div>
       ) : (
@@ -80,101 +80,121 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
   }
 
   return (
-    <div className="pb-10">
-      <header className="border-b border-gray-100 px-5 pb-5 pt-14 dark:border-white/10 sm:px-6">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <SavedBadge status={c.savedStatus} />
-          <StatusBadge status={c.status} />
-          {c.window.flag && <FlagBadge flag={c.window.flag} />}
+    <div className="pb-12">
+      <header className="px-5 pb-5 pt-14 sm:px-7">
+        <div className="flex items-start gap-4">
+          <Initials name={c.name} size={56} />
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl font-bold leading-tight text-gray-900 dark:text-white sm:text-2xl">{c.name}</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-white/50">{displayPhone(c.phone)}</p>
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <SavedBadge status={c.savedStatus} />
+              <StatusBadge status={c.status} />
+              {c.window.flag && <FlagBadge flag={c.window.flag} />}
+            </div>
+          </div>
         </div>
-        <h2 className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{c.name}</h2>
-        <div className="mt-3 max-w-xs">
-          <WindowProgress window={c.window} reviewOutcome={c.reviewOutcome} />
-        </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <a href={`tel:${c.phone}`} className={secondaryButton}>
-            <Phone size={15} aria-hidden="true" /> Call
+
+        <div className="mt-5 flex gap-2.5">
+          <a href={`tel:${c.phone}`} className={`${secondaryButton} min-w-0 flex-1 px-3`}>
+            <Phone size={16} aria-hidden="true" /> Call
           </a>
-          <a href={whatsappLink(c.phone)} target="_blank" rel="noreferrer" className={secondaryButton}>
-            <MessageCircle size={15} aria-hidden="true" /> WhatsApp
+          <a href={whatsappLink(c.phone)} target="_blank" rel="noreferrer" className={`${secondaryButton} min-w-0 flex-1 px-3`}>
+            <MessageCircle size={16} aria-hidden="true" /> WhatsApp
           </a>
           {canLead && (
             <>
-              <button type="button" onClick={() => setEditing(true)} className={secondaryButton}>
-                <Edit3 size={15} aria-hidden="true" /> Edit
+              <button type="button" onClick={() => setEditing(true)} aria-label="Edit contact" title="Edit" className={`${secondaryButton} w-10 px-0`}>
+                <Pencil size={16} className="shrink-0" />
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className={`${secondaryButton} text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10`}
+                aria-label="Delete contact"
+                title="Delete"
+                className={`${secondaryButton} w-10 px-0 text-rose-600 hover:border-rose-200 hover:bg-rose-50 dark:text-rose-400`}
               >
-                <Trash2 size={15} aria-hidden="true" /> Delete
+                <Trash2 size={16} className="shrink-0" />
               </button>
             </>
           )}
         </div>
+
+        <div className="mt-5 rounded-2xl bg-gray-50 p-4 dark:bg-white/[0.04]">
+          <div className="mb-2 flex items-center justify-between text-xs">
+            <span className="font-medium text-gray-600 dark:text-white/60">30-day follow-up</span>
+            {c.window.open && c.window.nextDueAt && c.window.flag !== "REVIEW" && (
+              <span className="text-gray-500 dark:text-white/45">Next due {fmtDate(c.window.nextDueAt)}</span>
+            )}
+          </div>
+          <WindowProgress window={c.window} reviewOutcome={c.reviewOutcome} />
+        </div>
       </header>
 
-      <div className="space-y-6 px-5 pt-5 sm:px-6">
+      <div className="space-y-8 border-t border-gray-100 px-5 pt-6 dark:border-white/[0.06] sm:px-7">
         {canLead && needsReview && <ReviewPanel contact={c} />}
 
         <Section title="Details">
-          <dl className="grid gap-x-4 gap-y-3 text-sm sm:grid-cols-2">
-            <Fact icon={Phone} label="Phone" value={displayPhone(c.phone)} />
+          <dl className={`${cardClass} grid gap-x-6 gap-y-4 p-4 sm:grid-cols-2 sm:p-5`}>
             <Fact icon={MapPin} label="Address" value={c.address} />
-            <Fact icon={UserRound} label="Preached to by" value={c.worker.name} />
             <Fact icon={Flag} label="Outreach" value={c.outreach?.name ?? "Personal evangelism"} />
-            <Fact icon={CalendarPlus} label="Date of contact" value={fmtDate(c.contactDate)} />
+            <Fact icon={CalendarDays} label="Date of contact" value={fmtDate(c.contactDate)} />
             <Fact icon={ArrowRight} label="Next action" value={c.nextAction ? NEXT_ACTION_LABEL[c.nextAction] : "—"} />
-            {c.isStudent && (
+            <Fact icon={UserRound} label="Preached to by" value={c.worker.name} />
+            {c.isStudent ? (
               <Fact icon={GraduationCap} label="Student" value={[c.school, c.level].filter(Boolean).join(" · ") || "Yes"} />
+            ) : (
+              <Fact icon={GraduationCap} label="Student" value="No" />
             )}
             {c.status === "CALL_BACK" && c.callBackAt && <Fact icon={Phone} label="Call back on" value={fmtDate(c.callBackAt)} />}
           </dl>
           {c.discussion && (
-            <div className="mt-4 rounded-2xl bg-gray-50 p-4 text-sm text-gray-700 dark:bg-white/[0.04] dark:text-white/80">
-              <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-gray-400">Discussion</p>
-              <p className="whitespace-pre-wrap break-words">{c.discussion}</p>
+            <div className="mt-3 rounded-2xl border border-gray-100 p-4 dark:border-white/[0.06]">
+              <p className="text-xs font-medium text-gray-500 dark:text-white/45">What was discussed</p>
+              <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800 dark:text-white/85">{c.discussion}</p>
             </div>
           )}
-          <p className="mt-3 text-[11px] text-gray-400 dark:text-white/40">
+          <p className="mt-3 text-xs leading-relaxed text-gray-400 dark:text-white/40">
             {c.consent ? "Agreed to be contacted by the church." : "Did not confirm they agree to be contacted — go gently."} Recorded{" "}
             {c.source === "FORM" ? "on the outreach form" : `by ${c.createdBy ?? "the team"}`}
-            {c.updatedBy ? ` · last updated by ${c.updatedBy}, ${fmtDateTime(c.updatedAt)}` : ""}.
+            {c.updatedBy ? `; last updated by ${c.updatedBy}, ${fmtDateTime(c.updatedAt)}` : ""}.
           </p>
         </Section>
 
         {c.window.open && (
           <Section title="Log a follow-up">
-            <LogActionForm contactId={c.id} status={c.status} />
+            <div className={`${cardClass} p-4 sm:p-5`}>
+              <LogActionForm contactId={c.id} status={c.status} />
+            </div>
           </Section>
         )}
 
         <Section
           title="Tasks"
+          count={c.tasks.length}
           action={
             canLead ? (
-              <button type="button" onClick={() => setAssigning(true)} className="inline-flex items-center gap-1 text-xs font-bold text-[#87102C] dark:text-[#FFB3C1]">
-                <Plus size={13} aria-hidden="true" /> Assign a task
+              <button type="button" onClick={() => setAssigning(true)} className="inline-flex items-center gap-1 text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
+                <Plus size={15} aria-hidden="true" /> Assign a task
               </button>
             ) : null
           }
         >
           {c.tasks.length === 0 ? (
-            <p className="text-sm text-gray-400 dark:text-white/40">No tasks for this contact.</p>
+            <p className="text-sm text-gray-500 dark:text-white/45">No tasks for this contact.</p>
           ) : (
-            <ul className="space-y-2">
+            <ul className={`${cardClass} divide-y divide-gray-100 dark:divide-white/[0.06]`}>
               {c.tasks.map((t) => (
-                <li key={t.id} className="flex items-start gap-3 rounded-xl border border-gray-100 p-3 dark:border-white/10">
-                  <ListChecks size={16} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
+                <li key={t.id} className="flex items-center gap-3 px-4 py-3">
+                  <ListChecks size={16} className="shrink-0 text-gray-400" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-semibold ${t.status === "DONE" ? "text-gray-400 line-through" : "text-gray-900 dark:text-white"}`}>{t.title}</p>
-                    <p className="text-[11px] text-gray-400">
+                    <p className={`truncate text-sm font-medium ${t.status === "DONE" ? "text-gray-400 line-through" : "text-gray-900 dark:text-white"}`}>{t.title}</p>
+                    <p className="truncate text-xs text-gray-500 dark:text-white/45">
                       {TASK_TYPE_LABEL[t.type]} · {t.assignees.map((a) => a.name).join(", ")}
                       {t.dueAt ? ` · due ${fmtDate(t.dueAt)}` : ""}
                     </p>
                   </div>
-                  <span className={`shrink-0 text-[11px] font-bold ${t.overdue ? "text-rose-600" : "text-gray-500 dark:text-white/50"}`}>
+                  <span className={`shrink-0 text-xs font-medium ${t.overdue ? "text-rose-600" : "text-gray-500 dark:text-white/50"}`}>
                     {t.overdue ? "Overdue" : TASK_STATUS_LABEL[t.status]}
                   </span>
                 </li>
@@ -183,17 +203,17 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
           )}
         </Section>
 
-        <Section title="Follow-up history">
+        <Section title="History" count={c.activities.length}>
           <History items={c.activities} />
         </Section>
 
         {c.testimonies.length > 0 && (
-          <Section title="Testimonies">
-            <ul className="space-y-1.5 text-sm">
+          <Section title="Testimonies" count={c.testimonies.length}>
+            <ul className={`${cardClass} divide-y divide-gray-100 dark:divide-white/[0.06]`}>
               {c.testimonies.map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-gray-800 dark:text-white/90">{t.title}</span>
-                  <span className="text-[11px] text-gray-400">{t.approved ? "Approved to share" : fmtDate(t.date)}</span>
+                <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                  <span className="font-medium text-gray-900 dark:text-white/90">{t.title}</span>
+                  <span className="shrink-0 text-xs text-gray-500">{t.approved ? "Approved to share" : fmtDate(t.date)}</span>
                 </li>
               ))}
             </ul>
@@ -228,53 +248,57 @@ function ReviewPanel({ contact: c }: { contact: ContactDetail }) {
       showToast.error(errorText(err, "Couldn't save"));
     }
   }
+  const option =
+    "inline-flex h-10 items-center justify-center rounded-xl border border-violet-200 bg-white px-3 text-sm font-semibold text-violet-800 transition-colors hover:bg-violet-100 disabled:opacity-50 dark:border-violet-500/30 dark:bg-transparent dark:text-violet-200";
   return (
-    <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-500/30 dark:bg-violet-500/10">
-      <p className="text-sm font-bold text-violet-900 dark:text-violet-200">The 30 days are up — what next for {c.name}?</p>
-      <p className="mt-0.5 text-xs text-violet-700/80 dark:text-violet-200/70">Currently: {STATUS_LABEL[c.status]}.</p>
+    <div className="rounded-2xl border border-violet-200 bg-violet-50/70 p-4 dark:border-violet-500/30 dark:bg-violet-500/10 sm:p-5">
+      <p className="text-sm font-semibold text-violet-900 dark:text-violet-100">The 30 days are up — what next?</p>
+      <p className="mt-0.5 text-sm text-violet-800/70 dark:text-violet-200/70">Where they are now: {STATUS_LABEL[c.status]}.</p>
       <input
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        placeholder="Note (optional)"
+        placeholder="Add a note (optional)"
         aria-label="Review note"
-        className="mt-3 w-full rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm dark:border-violet-500/30 dark:bg-white/5 dark:text-white"
+        className="mt-3 h-10 w-full rounded-xl border border-violet-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-300 dark:border-violet-500/30 dark:bg-white/5 dark:text-white"
       />
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button type="button" disabled={review.isPending} onClick={() => decide("HANDED_OVER")} className="min-h-9 rounded-xl bg-violet-700 px-3 text-xs font-bold text-white hover:bg-violet-800 disabled:opacity-50">
-          Mark handed over to Follow-Up
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <button type="button" disabled={review.isPending} onClick={() => decide("HANDED_OVER")} className="inline-flex h-10 items-center justify-center rounded-xl bg-violet-700 px-3 text-sm font-semibold text-white hover:bg-violet-800 disabled:opacity-50">
+          Handed over
         </button>
-        <button type="button" disabled={review.isPending} onClick={() => decide("EXTENDED")} className="min-h-9 rounded-xl border border-violet-300 bg-white px-3 text-xs font-bold text-violet-800 hover:bg-violet-100 disabled:opacity-50 dark:bg-transparent dark:text-violet-200">
+        <button type="button" disabled={review.isPending} onClick={() => decide("EXTENDED")} className={option}>
           Extend 30 days
         </button>
-        <button type="button" disabled={review.isPending} onClick={() => decide("CLOSED")} className="min-h-9 rounded-xl border border-violet-300 bg-white px-3 text-xs font-bold text-violet-800 hover:bg-violet-100 disabled:opacity-50 dark:bg-transparent dark:text-violet-200">
+        <button type="button" disabled={review.isPending} onClick={() => decide("CLOSED")} className={option}>
           Close
         </button>
       </div>
+      <p className="mt-2 text-xs text-violet-800/60 dark:text-violet-200/50">&ldquo;Handed over&rdquo; records that the Follow-Up team has taken them on.</p>
     </div>
   );
 }
 
 function History({ items }: { items: ContactActivity[] }) {
-  if (items.length === 0) return <p className="text-sm text-gray-400">Nothing logged yet.</p>;
+  if (items.length === 0) return <p className="text-sm text-gray-500">Nothing logged yet.</p>;
   return (
-    <ol className="relative space-y-4 border-l border-gray-200 pl-5 dark:border-white/10">
+    <ol className="relative ml-3 space-y-5 border-l border-gray-200 pl-6 dark:border-white/10">
       {items.map((a) => (
         <li key={a.id} className="relative">
-          <span className="absolute -left-[26px] top-1 h-2.5 w-2.5 rounded-full bg-[#87102C] ring-4 ring-white dark:bg-[#FFB3C1] dark:ring-[#161618]" />
-          <p className="text-sm font-semibold text-gray-900 dark:text-white">
-            {headline(a)}
-            {a.outcome && <span className="font-normal text-gray-600 dark:text-white/70"> — {a.outcome}</span>}
-          </p>
+          <span className="absolute -left-[31px] top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white ring-2 ring-[#87102C] dark:bg-[#161618] dark:ring-[#FFB3C1]" />
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              {headline(a)}
+              {a.outcome && <span className="font-normal text-gray-600 dark:text-white/65"> · {a.outcome}</span>}
+            </p>
+            <time className="text-xs text-gray-400 dark:text-white/40">{fmtDateTime(a.happenedAt)}</time>
+          </div>
           {a.statusTo && (
-            <p className="text-xs text-gray-500 dark:text-white/50">
-              {a.statusFrom ? `${STATUS_LABEL[a.statusFrom]} → ` : ""}
-              {STATUS_LABEL[a.statusTo]}
+            <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">
+              {a.statusFrom ? `${STATUS_LABEL[a.statusFrom]} → ` : "Now: "}
+              <span className="font-medium text-gray-700 dark:text-white/75">{STATUS_LABEL[a.statusTo]}</span>
             </p>
           )}
-          {a.note && <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-white/75">{a.note}</p>}
-          <p className="mt-0.5 text-[11px] text-gray-400 dark:text-white/40">
-            {a.actor.name} · {fmtDateTime(a.happenedAt)}
-          </p>
+          {a.note && <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-700 dark:text-white/75">{a.note}</p>}
+          <p className="mt-1 text-xs text-gray-400 dark:text-white/40">by {a.actor.name}</p>
         </li>
       ))}
     </ol>
@@ -296,11 +320,16 @@ function headline(a: ContactActivity): string {
   }
 }
 
-function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Section({ title, count, action, children }: { title: string; count?: number; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section>
       <div className="mb-3 flex items-center justify-between gap-2">
-        <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-white/40">{title}</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
+          {title}
+          {typeof count === "number" && count > 0 && (
+            <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:bg-white/10 dark:text-white/60">{count}</span>
+          )}
+        </h3>
         {action}
       </div>
       {children}
@@ -310,11 +339,11 @@ function Section({ title, action, children }: { title: string; action?: React.Re
 
 function Fact({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
   return (
-    <div className="flex items-start gap-2.5">
-      <Icon size={15} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
+    <div className="flex items-start gap-3">
+      <Icon size={16} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
       <div className="min-w-0">
-        <dt className="text-[11px] font-semibold text-gray-400 dark:text-white/40">{label}</dt>
-        <dd className="break-words text-gray-800 dark:text-white/85">{value}</dd>
+        <dt className="text-xs text-gray-500 dark:text-white/45">{label}</dt>
+        <dd className="mt-0.5 break-words text-sm font-medium text-gray-900 dark:text-white/90">{value}</dd>
       </div>
     </div>
   );

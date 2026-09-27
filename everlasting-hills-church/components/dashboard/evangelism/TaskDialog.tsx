@@ -13,7 +13,7 @@ import {
   type TaskPriority,
   type TaskType,
 } from "@/lib/api/evangelism";
-import { primaryButton, secondaryButton } from "./bits";
+import { primaryButton, secondaryButton, selectClass } from "./bits";
 import { TASK_PRIORITY_LABEL, TASK_TYPE_LABEL, errorText, inputClass, labelClass } from "./labels";
 
 /** A leader creates (or edits) a task and gives it to one or more people on the team. */
@@ -108,6 +108,7 @@ export function TaskDialog({
           <div>
             <span className={labelClass}>Type</span>
             <Select
+              className={selectClass}
               aria-label="Type"
               value={type}
               onChange={(v) => setType(v as TaskType)}
@@ -117,6 +118,7 @@ export function TaskDialog({
           <div>
             <span className={labelClass}>Priority</span>
             <Select
+              className={selectClass}
               aria-label="Priority"
               value={priority}
               onChange={(v) => setPriority(v as TaskPriority)}

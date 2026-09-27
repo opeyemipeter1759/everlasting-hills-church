@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Plus, Search, Users, X } from "lucide-react";
+import { Download, Plus, Search, SlidersHorizontal, Users, X } from "lucide-react";
 import { Select } from "@/components/ui/select";
 import { Pagination } from "@/components/ui/navigation/Pagination";
 import { showToast } from "@/components/ui/toast/toast";
@@ -20,7 +20,7 @@ import {
 } from "@/lib/api/evangelism";
 import { ContactList } from "./ContactList";
 import { ContactDialog } from "./ContactDialog";
-import { EmptyState, ErrorNote, Loading, primaryButton, secondaryButton } from "./bits";
+import { EmptyState, ErrorNote, Loading, cardClass, primaryButton, secondaryButton, selectClass } from "./bits";
 import {
   FLAG_LABEL,
   NEXT_ACTION_LABEL,
@@ -56,6 +56,7 @@ export function ContactsTab({ onOpenContact }: { canLead: boolean; onOpenContact
   const [page, setPage] = useState(1);
   const [adding, setAdding] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Type, pause, then search — not a request per keystroke.
   useEffect(() => {
@@ -73,6 +74,7 @@ export function ContactsTab({ onOpenContact }: { canLead: boolean; onOpenContact
   const contacts = useEvangelismContacts(query);
   const set = <K extends keyof ContactFilters>(key: K, value: ContactFilters[K]) => setFilters((f) => ({ ...f, [key]: value }));
   const hasFilters = Object.values(filters).some(Boolean) || !!student;
+  const activeFilters = Object.entries(filters).filter(([k, v]) => k !== "search" && !!v).length + (student ? 1 : 0);
 
   function clear() {
     setFilters(EMPTY);
@@ -101,122 +103,174 @@ export function ContactsTab({ onOpenContact }: { canLead: boolean; onOpenContact
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[200px] flex-1">
-          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+      <div className="flex items-center gap-2">
+        <div className="relative min-w-0 flex-1">
+          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search name, phone, address or worker…"
+            placeholder="Search contacts"
             aria-label="Search contacts"
-            className={`${inputClass} pl-9`}
+            className={`${inputClass} h-10 py-0 pl-10`}
           />
         </div>
-        <button type="button" onClick={exportCsv} disabled={exporting} className={secondaryButton}>
-          <Download size={15} aria-hidden="true" /> {exporting ? "Exporting…" : "Export"}
+        <button
+          type="button"
+          onClick={() => setShowFilters((v) => !v)}
+          aria-expanded={showFilters}
+          aria-label="Filters"
+          className={`${secondaryButton} px-3 md:hidden`}
+        >
+          <SlidersHorizontal size={16} aria-hidden="true" />
+          {activeFilters > 0 && <span className="rounded-full bg-[#87102C] px-1.5 text-[11px] font-semibold text-white">{activeFilters}</span>}
         </button>
-        <button type="button" onClick={() => setAdding(true)} className={primaryButton}>
-          <Plus size={15} aria-hidden="true" /> Add contact
+        <button type="button" onClick={exportCsv} disabled={exporting} aria-label="Export" title="Export to Excel (CSV)" className={`${secondaryButton} px-3 sm:px-4`}>
+          <Download size={16} aria-hidden="true" />
+          <span className="hidden sm:inline">{exporting ? "Exporting…" : "Export"}</span>
+        </button>
+        <button type="button" onClick={() => setAdding(true)} aria-label="Add contact" className={`${primaryButton} px-3 sm:px-4`}>
+          <Plus size={16} aria-hidden="true" />
+          <span className="hidden sm:inline">Add contact</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className={`${showFilters ? "grid" : "hidden"} grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid lg:grid-cols-4`}>
         <Select
           aria-label="Worker"
+          prefixLabel="Worker:"
+          className={selectClass}
           value={filters.workerMemberId ?? ""}
           onChange={(v) => set("workerMemberId", v)}
-          options={[{ value: "", label: "All workers" }, ...(team.data ?? []).map((m) => ({ value: m.id, label: m.name }))]}
+          options={[{ value: "", label: "All" }, ...(team.data ?? []).map((m) => ({ value: m.id, label: m.name }))]}
         />
         <Select
           aria-label="Outreach"
+          prefixLabel="Outreach:"
+          className={selectClass}
           value={filters.outreachId ?? ""}
           onChange={(v) => set("outreachId", v)}
           options={[
-            { value: "", label: "All outreaches" },
+            { value: "", label: "All" },
             { value: "none", label: "Personal evangelism" },
             ...(outreaches.data?.outreaches ?? []).map((o) => ({ value: o.id, label: o.name })),
           ]}
         />
         <Select
           aria-label="Saved"
+          prefixLabel="Saved:"
+          className={selectClass}
           value={filters.savedStatus ?? ""}
           onChange={(v) => set("savedStatus", v as SavedStatus | "")}
-          options={[{ value: "", label: "Saved: any" }, ...(Object.keys(SAVED_LABEL) as SavedStatus[]).map((k) => ({ value: k, label: SAVED_LABEL[k] }))]}
+          options={[{ value: "", label: "Any" }, ...(Object.keys(SAVED_LABEL) as SavedStatus[]).map((k) => ({ value: k, label: SAVED_LABEL[k] }))]}
         />
         <Select
           aria-label="Student"
+          prefixLabel="Student:"
+          className={selectClass}
           value={student}
           onChange={(v) => setStudent(v as "" | "yes" | "no")}
           options={[
-            { value: "", label: "Students: any" },
+            { value: "", label: "Any" },
             { value: "yes", label: "Students" },
             { value: "no", label: "Not students" },
           ]}
         />
         <Select
           aria-label="Status"
+          prefixLabel="Status:"
+          className={selectClass}
           value={filters.status ?? ""}
           onChange={(v) => set("status", v as ContactStatus | "")}
-          options={[{ value: "", label: "Any status" }, ...STATUS_ORDER.map((k) => ({ value: k, label: STATUS_LABEL[k] }))]}
+          options={[{ value: "", label: "Any" }, ...STATUS_ORDER.map((k) => ({ value: k, label: STATUS_LABEL[k] }))]}
         />
         <Select
           aria-label="Follow-up"
+          prefixLabel="Follow-up:"
+          className={selectClass}
           value={filters.flag ?? ""}
           onChange={(v) => set("flag", v as FollowUpFlag | "")}
-          options={[{ value: "", label: "Any follow-up" }, ...(Object.keys(FLAG_LABEL) as FollowUpFlag[]).map((k) => ({ value: k, label: FLAG_LABEL[k] }))]}
+          options={[{ value: "", label: "Any" }, ...(Object.keys(FLAG_LABEL) as FollowUpFlag[]).map((k) => ({ value: k, label: FLAG_LABEL[k] }))]}
         />
+        <DateField label="From" value={filters.from ?? ""} onChange={(v) => set("from", v)} />
+        <DateField label="To" value={filters.to ?? ""} onChange={(v) => set("to", v)} />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <label className="flex items-center gap-1.5 text-gray-500 dark:text-white/50">
-          From
-          <input type="date" value={filters.from ?? ""} onChange={(e) => set("from", e.target.value)} className={`${inputClass} w-auto py-1.5`} />
-        </label>
-        <label className="flex items-center gap-1.5 text-gray-500 dark:text-white/50">
-          to
-          <input type="date" value={filters.to ?? ""} onChange={(e) => set("to", e.target.value)} className={`${inputClass} w-auto py-1.5`} />
-        </label>
-        {hasFilters && (
-          <button type="button" onClick={clear} className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 font-semibold text-gray-400 hover:text-gray-700 dark:hover:text-white">
-            <X size={13} aria-hidden="true" /> Clear filters
-          </button>
-        )}
-        <span className="ml-auto text-gray-400 dark:text-white/40">{contacts.data ? `${total} contact${total === 1 ? "" : "s"}` : ""}</span>
-      </div>
-
-      {contacts.isLoading ? (
-        <Loading />
-      ) : contacts.isError ? (
-        <ErrorNote>{errorText(contacts.error, "Couldn't load contacts.")}</ErrorNote>
-      ) : total === 0 ? (
-        hasFilters ? (
-          <EmptyState icon={Search} title="No contacts match" action={<button type="button" onClick={clear} className={secondaryButton}>Clear filters</button>} />
-        ) : (
-          <EmptyState
-            icon={Users}
-            title="No contacts yet"
-            body="Share the outreach form with the team, or add someone here."
-            action={<button type="button" onClick={() => setAdding(true)} className={primaryButton}><Plus size={15} aria-hidden="true" /> Add contact</button>}
-          />
-        )
-      ) : (
-        <>
-          <ContactList rows={contacts.data?.data ?? []} onOpen={onOpenContact} />
-          {pageCount > 1 && (
-            <div className="flex justify-center">
-              <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
-            </div>
+      <section className={`${cardClass} overflow-hidden`}>
+        <div className="flex h-12 items-center justify-between gap-3 border-b border-gray-100 px-5 text-sm dark:border-white/[0.06]">
+          <p className="text-gray-500 dark:text-white/50">
+            {contacts.data ? (
+              <>
+                <span className="font-semibold text-gray-900 dark:text-white">{total}</span> {total === 1 ? "contact" : "contacts"}
+                {hasFilters ? " match" : ""}
+              </>
+            ) : null}
+          </p>
+          {hasFilters && (
+            <button type="button" onClick={clear} className="inline-flex items-center gap-1 font-semibold text-gray-500 hover:text-gray-900 dark:text-white/50 dark:hover:text-white">
+              <X size={14} aria-hidden="true" /> Clear filters
+            </button>
           )}
-        </>
-      )}
+        </div>
 
-      <ContactDialog
-        open={adding}
-        onClose={() => setAdding(false)}
-        defaultWorkerId={me.data?.memberId}
-        onCreated={onOpenContact}
-      />
+        {contacts.isLoading ? (
+          <Loading />
+        ) : contacts.isError ? (
+          <div className="p-5">
+            <ErrorNote>{errorText(contacts.error, "Couldn't load contacts.")}</ErrorNote>
+          </div>
+        ) : total === 0 ? (
+          hasFilters ? (
+            <EmptyState
+              icon={Search}
+              title="No contacts match these filters"
+              action={
+                <button type="button" onClick={clear} className={secondaryButton}>
+                  Clear filters
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={Users}
+              title="No contacts yet"
+              body="Share the outreach form with the team, or add someone yourself."
+              action={
+                <button type="button" onClick={() => setAdding(true)} className={primaryButton}>
+                  <Plus size={16} aria-hidden="true" /> Add contact
+                </button>
+              }
+            />
+          )
+        ) : (
+          <ContactList rows={contacts.data?.data ?? []} onOpen={onOpenContact} bare />
+        )}
+
+        {pageCount > 1 && (
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 text-xs text-gray-500 dark:border-white/[0.06] dark:text-white/45 sm:flex-row">
+            <span>
+              Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
+            </span>
+            <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+          </div>
+        )}
+      </section>
+
+      <ContactDialog open={adding} onClose={() => setAdding(false)} defaultWorkerId={me.data?.memberId} onCreated={onOpenContact} />
     </div>
+  );
+}
+
+function DateField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  return (
+    <label className="flex h-10 items-center gap-2 rounded-xl border border-gray-200 bg-white pl-3 pr-2 text-sm hover:border-gray-300 dark:border-white/10 dark:bg-white/[0.04]">
+      <span className="shrink-0 text-gray-500 dark:text-white/45">{label}:</span>
+      <input
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="min-w-0 flex-1 bg-transparent text-sm font-medium text-gray-700 focus:outline-none dark:text-white/80 dark:[color-scheme:dark]"
+      />
+    </label>
   );
 }
 
