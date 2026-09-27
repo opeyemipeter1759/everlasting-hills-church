@@ -48,7 +48,7 @@ export default function IntegrationBoard() {
     : {
         members: counts?.byStatus.INTEGRATED ?? 0,
         away: counts?.byStatus.AWAY ?? 0,
-        mine: counts?.assignedToMe ?? 0,
+        mine: counts?.integrationAssignedToMe ?? 0,
       };
 
   return (

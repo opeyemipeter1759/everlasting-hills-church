@@ -74,7 +74,7 @@ export default function MasterList({
         <MasterListFilters
           value={query}
           scope={fixed?.scope}
-          statusLocked={!!fixed?.status}
+          statusLocked={!!fixed?.status || fixed?.scope === "OPTED_OUT"}
           latestServiceId={meta?.absenceServiceId ?? null}
           onChange={(next) => {
             setQuery(next);

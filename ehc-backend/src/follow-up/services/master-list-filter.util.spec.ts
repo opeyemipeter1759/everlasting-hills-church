@@ -21,11 +21,19 @@ function row(over: Partial<MasterListRow>): MasterListRow {
 const page = { take: 25, skip: 0 };
 
 describe('list scopes', () => {
-  it("drops anyone integrated from Follow Up's list — that work is done", () => {
+  it("drops anyone integrated or opted out from Follow Up's list", () => {
     expect(inScope('FIRST_TIMER', 'FOLLOW_UP')).toBe(true);
     expect(inScope('AWAY', 'FOLLOW_UP')).toBe(true);
-    expect(inScope('OPTED_OUT', 'FOLLOW_UP')).toBe(true);
+    expect(inScope('OPTED_OUT', 'FOLLOW_UP')).toBe(false);
     expect(inScope('INTEGRATED', 'FOLLOW_UP')).toBe(false);
+  });
+
+  it('keeps the opted out on a list of their own, and nobody else', () => {
+    expect(inScope('OPTED_OUT', 'OPTED_OUT')).toBe(true);
+    for (const status of ['FIRST_TIMER', 'SECOND_TIMER', 'THIRD_TIMER', 'INTEGRATED', 'AWAY']) {
+      expect(inScope(status, 'OPTED_OUT')).toBe(false);
+    }
+    expect(inScope('OPTED_OUT', 'INTEGRATION')).toBe(false);
   });
 
   it('gives the Integration Team the integrated and the ones who stopped coming', () => {

@@ -19,7 +19,7 @@ export default function FollowUpBoard() {
   // as "none", which is a different thing from "not known yet".
   const counts = summary.isLoading
     ? {}
-    : { master: summary.total, mine: summary.assignedToMe };
+    : { master: summary.total, mine: summary.assignedToMe, optedOut: summary.optedOut };
   useEffect(() => {
     if (tabs.length > 0 && !tabs.some((tab) => tab.id === active)) setActive(tabs[0].id);
   }, [tabs, active]);
@@ -36,6 +36,10 @@ export default function FollowUpBoard() {
       ) : active === "mine" ? (
         <section role="tabpanel" aria-label="Assigned to me">
           <AssignedToMe />
+        </section>
+      ) : active === "optedOut" ? (
+        <section role="tabpanel" aria-label="Opted out">
+          <MasterList fixed={{ scope: "OPTED_OUT" }} />
         </section>
       ) : (
         <section role="tabpanel" aria-label="Report">

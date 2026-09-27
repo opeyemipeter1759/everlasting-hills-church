@@ -10,10 +10,13 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * longer the job. The Integration Team picks them up from there and watches
  * for the ones who stop coming. ALL is for anywhere both are wanted at once.
  */
-export type MasterListScope = 'FOLLOW_UP' | 'INTEGRATION' | 'ALL';
+export type MasterListScope = 'FOLLOW_UP' | 'INTEGRATION' | 'OPTED_OUT' | 'ALL';
 
 export function inScope(status: string, scope: MasterListScope = 'ALL'): boolean {
-  if (scope === 'FOLLOW_UP') return status !== 'INTEGRATED';
+  // Someone who has opted out has asked not to be followed up: they leave the
+  // working lists and wait on the Opted out tab, in case they come back.
+  if (scope === 'OPTED_OUT') return status === 'OPTED_OUT';
+  if (scope === 'FOLLOW_UP') return status !== 'INTEGRATED' && status !== 'OPTED_OUT';
   if (scope === 'INTEGRATION') return status === 'INTEGRATED' || status === 'AWAY';
   return true;
 }

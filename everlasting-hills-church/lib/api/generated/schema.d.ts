@@ -16613,8 +16613,8 @@ export interface operations {
                 absentFrom?: string;
                 take: string;
                 skip: string;
-                /** @description FOLLOW_UP leaves out anyone integrated; INTEGRATION shows only those and anyone who has gone away. */
-                scope?: "FOLLOW_UP" | "INTEGRATION" | "ALL";
+                /** @description FOLLOW_UP leaves out anyone integrated or opted out; INTEGRATION shows only the integrated and anyone who has gone away; OPTED_OUT only those who have opted out. */
+                scope?: "FOLLOW_UP" | "INTEGRATION" | "OPTED_OUT" | "ALL";
             };
             header?: never;
             path?: never;

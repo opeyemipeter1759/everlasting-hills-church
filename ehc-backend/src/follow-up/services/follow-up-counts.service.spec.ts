@@ -65,4 +65,22 @@ describe('FollowUpCountsService', () => {
 
     expect(counts.assignedToMe).toBe(0);
   });
+
+  it("counts each board's Assigned to me the way its tab lists it", async () => {
+    const me = { id: 'me', name: 'Me' };
+    const service = makeService([
+      row({ id: '1', status: 'FIRST_TIMER', assignedTo: me }),
+      row({ id: '2', status: 'OPTED_OUT', assignedTo: me }), // on the Opted out tab now
+      row({ id: '3', status: 'INTEGRATED', assignedTo: me }), // Follow Up's work is done
+      row({ id: '4', status: 'INTEGRATED', integrationAssignedTo: me }),
+      row({ id: '5', status: 'AWAY', integrationAssignedTo: me }),
+      row({ id: '6', status: 'OPTED_OUT', integrationAssignedTo: me }),
+    ]);
+
+    const counts = await service.summary(viewer);
+
+    expect(counts.assignedToMe).toBe(1);
+    expect(counts.integrationAssignedToMe).toBe(2);
+    expect(counts.byStatus.OPTED_OUT).toBe(2);
+  });
 });

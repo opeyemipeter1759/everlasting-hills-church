@@ -16668,7 +16668,7 @@
             }
           },
           {
-            "description": "FOLLOW_UP leaves out anyone integrated; INTEGRATION shows only those and anyone who has gone away.",
+            "description": "FOLLOW_UP leaves out anyone integrated or opted out; INTEGRATION shows only the integrated and anyone who has gone away; OPTED_OUT only those who have opted out.",
             "in": "query",
             "name": "scope",
             "required": false,
@@ -16676,6 +16676,7 @@
               "enum": [
                 "FOLLOW_UP",
                 "INTEGRATION",
+                "OPTED_OUT",
                 "ALL"
               ],
               "type": "string"

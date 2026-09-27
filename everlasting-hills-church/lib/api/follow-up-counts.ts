@@ -8,6 +8,8 @@ export interface FollowUpCounts {
   total: number;
   byStatus: Record<MasterListStatus, number>;
   assignedToMe: number;
+  /** The Integration Team's own caseload for whoever is asking. */
+  integrationAssignedToMe: number;
   unassigned: number;
 }
 

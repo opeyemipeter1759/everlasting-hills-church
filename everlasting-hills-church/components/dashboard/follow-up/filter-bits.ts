@@ -23,13 +23,18 @@ export const STATUS_OPTIONS: { value: MasterListStatus; label: string; swatch: s
   { value: "OPTED_OUT", label: "Opted out", swatch: STATUS_DOT.OPTED_OUT },
 ];
 
-/** What is worth filtering by on each board — the rest can never match. */
-export function statusOptionsFor(scope?: "FOLLOW_UP" | "INTEGRATION" | "ALL") {
-  if (scope === "FOLLOW_UP") return STATUS_OPTIONS.filter((option) => option.value !== "INTEGRATED");
+/**
+ * What is worth filtering by on each board — the rest can never match. Opted
+ * out is never a filter: those people have a tab of their own.
+ */
+export function statusOptionsFor(scope?: "FOLLOW_UP" | "INTEGRATION" | "OPTED_OUT" | "ALL") {
+  const filterable = STATUS_OPTIONS.filter((option) => option.value !== "OPTED_OUT");
+  if (scope === "OPTED_OUT") return [];
+  if (scope === "FOLLOW_UP") return filterable.filter((option) => option.value !== "INTEGRATED");
   if (scope === "INTEGRATION") {
-    return STATUS_OPTIONS.filter((option) => option.value === "INTEGRATED" || option.value === "AWAY");
+    return filterable.filter((option) => option.value === "INTEGRATED" || option.value === "AWAY");
   }
-  return STATUS_OPTIONS;
+  return filterable;
 }
 
 export type DatePreset = "" | "7d" | "30d" | "90d" | "year" | "custom";

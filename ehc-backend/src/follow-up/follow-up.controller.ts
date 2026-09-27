@@ -122,8 +122,9 @@ export class FollowUpController {
   @ApiQuery({
     name: 'scope',
     required: false,
-    enum: ['FOLLOW_UP', 'INTEGRATION', 'ALL'],
-    description: "FOLLOW_UP leaves out anyone integrated; INTEGRATION shows only those and anyone who has gone away.",
+    enum: ['FOLLOW_UP', 'INTEGRATION', 'OPTED_OUT', 'ALL'],
+    description:
+      "FOLLOW_UP leaves out anyone integrated or opted out; INTEGRATION shows only the integrated and anyone who has gone away; OPTED_OUT only those who have opted out.",
   })
   @ApiQuery({ name: 'absentFrom', required: false, description: 'A service id, or "latest" for the most recent service with attendance taken: only the members who missed it.' })
   async masterList(

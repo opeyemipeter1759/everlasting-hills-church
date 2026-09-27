@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { FollowUpRollService } from './follow-up-roll.service';
 import type { MasterListStatus } from './master-list.util';
+import { inScope } from './master-list-filter.util';
 
 export type StatusCounts = Record<MasterListStatus, number>;
 
@@ -9,8 +10,13 @@ export interface FollowUpCounts {
   /** Everyone on the roll the team is responsible for. */
   total: number;
   byStatus: StatusCounts;
-  /** On the caseload of whoever is asking — so this figure differs per person. */
+  /**
+   * On the caseload of whoever is asking, as the Follow Up board's Assigned to
+   * me tab lists it — so without anyone integrated or opted out.
+   */
   assignedToMe: number;
+  /** The Integration Team's own caseload for whoever is asking — their Assigned to me. */
+  integrationAssignedToMe: number;
   /** Nobody is carrying these yet. */
   unassigned: number;
 }
@@ -38,14 +44,18 @@ export class FollowUpCountsService {
     const everyone = await this.roll.everyone();
     const byStatus = { ...EMPTY };
     let assignedToMe = 0;
+    let integrationAssignedToMe = 0;
     let unassigned = 0;
 
     for (const row of everyone) {
       byStatus[row.status] += 1;
+      if (actor.memberId && row.integrationAssignedTo?.id === actor.memberId && inScope(row.status, 'INTEGRATION')) {
+        integrationAssignedToMe += 1;
+      }
       if (!row.assignedTo) unassigned += 1;
-      else if (actor.memberId && row.assignedTo.id === actor.memberId) assignedToMe += 1;
+      else if (actor.memberId && row.assignedTo.id === actor.memberId && inScope(row.status, 'FOLLOW_UP')) assignedToMe += 1;
     }
 
-    return { total: everyone.length, byStatus, assignedToMe, unassigned };
+    return { total: everyone.length, byStatus, assignedToMe, integrationAssignedToMe, unassigned };
   }
 }

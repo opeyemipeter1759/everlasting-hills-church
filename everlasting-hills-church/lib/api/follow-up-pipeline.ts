@@ -485,7 +485,7 @@ export interface MasterListQuery {
    * finished; the Integration Team takes those people and the ones who have
    * since stopped coming.
    */
-  scope?: "FOLLOW_UP" | "INTEGRATION" | "ALL";
+  scope?: "FOLLOW_UP" | "INTEGRATION" | "OPTED_OUT" | "ALL";
   /** A service id, or LATEST_SERVICE: only the members who missed that service. */
   absentFrom?: string;
   take?: number;

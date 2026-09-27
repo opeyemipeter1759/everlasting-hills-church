@@ -71,7 +71,7 @@ export function IntegrationStats({ absence }: { absence?: MasterListPage["meta"]
         loading={isLoading}
         icon={UserCheck}
         tone="bg-[#87102C]"
-        value={counts?.assignedToMe ?? 0}
+        value={counts?.integrationAssignedToMe ?? 0}
         label="Assigned to you"
         note="Yours to reach — everyone sees their own"
       />
