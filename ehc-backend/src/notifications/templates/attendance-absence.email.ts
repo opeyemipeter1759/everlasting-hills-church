@@ -1,6 +1,5 @@
 import type { SendEmailPayload } from '../notification-events';
-import { escapeHtml, greetingHtml, greetingName, greetingText, renderEmailLayout } from './layout';
-import { CHURCH_INFO } from '../church-info';
+import { escapeHtml, greetingName, renderEmailLayout } from './layout';
 
 interface Args {
   email: string;
@@ -12,57 +11,62 @@ interface Args {
 }
 
 /**
+ * Where to catch up on a service: the church channel's Live tab, where every
+ * streamed service is listed newest first — so this still lands on the right
+ * one when the recording is only a few hours old.
+ */
+export const CATCH_UP_URL = 'https://www.youtube.com/@everlastinghillschurch/streams';
+
+const link = (href: string, label: string) =>
+  `<a href="${escapeHtml(href)}" style="color:#87102C;font-weight:700;text-decoration:underline">${escapeHtml(label)}</a>`;
+
+/**
  * "We missed you" — sent to every active member who was marked absent once a
- * service's attendance window has closed. Pastoral in tone: no guilt, no
- * streak counters, one warm line and an open door. The point is to make
- * someone feel noticed, not tracked.
+ * service's attendance window has closed. Written by, and signed from, Pastor
+ * Opeyemi Peter: no guilt and no counting, just someone noticing, an open door,
+ * a place to send a prayer request, and the service to catch up on.
  */
 export function buildAttendanceAbsenceEmail({ email, firstName, serviceLabel, appUrl }: Args): SendEmailPayload {
   const base = appUrl.replace(/\/$/, '');
+  const prayerUrl = `${base}/prayer-request`;
   const name = greetingName(firstName);
-  const subject = name ? `We missed you at ${serviceLabel}, ${name}` : `We missed you at ${serviceLabel}`;
+  const dear = name ? `Dear ${name},` : 'Dear friend,';
+  const subject = name ? `We missed you in church today, ${name}` : 'We missed you in church today';
 
   const text = [
-    greetingText(firstName),
+    dear,
     '',
-    `We noticed you weren't with us at ${serviceLabel} today, and we simply wanted you to know you were missed.`,
+    "I wanted to reach out and check in on you. I noticed you were not with us in church today, and I wanted to make sure you're okay.",
     '',
-    "We hope all is well with you. If anything is going on — something to pray about, or something we can help with — just reply to this email; it comes straight to the church.",
+    "As I've mentioned many times, church is family, and you're part of this family. So, beyond seeing you in church, I want you to know that I care about you and what is happening in your life. You don't have to walk through anything alone. If you ever need someone to talk to, my door is always open. And if there's anything you'd like us to pray with you about, you can send in your prayer request here:",
+    prayerUrl,
     '',
-    'When you are ready, we would love to see you again:',
-    ...CHURCH_INFO.services.map((s) => `  • ${s.name}: ${s.time.trim()}`),
-    `  ${CHURCH_INFO.address}`,
+    `Today's service was a blessing, and I don't want you to miss what was shared. You can catch up on the service here:`,
+    CATCH_UP_URL,
     '',
-    'You are part of this family, and there is always a seat with your name on it.',
+    'Endeavor to be at our next service.',
     '',
-    '— Everlasting Hills Church · Ibadan',
+    'With love,',
+    '',
+    'Pastor Opeyemi Peter',
+    'Everlasting Hills Church',
   ].join('\n');
 
-  const serviceRows = CHURCH_INFO.services
-    .map(
-      (s) =>
-        `<tr><td style="padding:6px 0;font-weight:700;color:#111;font-size:11pt">${escapeHtml(s.name)}</td><td style="padding:6px 0;color:#4B5563;text-align:right;font-size:11pt">${escapeHtml(s.time.trim())}</td></tr>`,
-    )
-    .join('');
-
   const bodyHtml = `
-    ${greetingHtml(firstName)}
-    <p style="margin:0 0 16px">We noticed you weren't with us at <strong>${escapeHtml(serviceLabel)}</strong> today, and we simply wanted you to know you were missed.</p>
-    <p style="margin:0 0 20px">We hope all is well with you. If anything is going on — something to pray about, or something we can help with — just reply to this email; it comes straight to the church.</p>
-
-    <div style="background:#FFF4F6;border:1px solid #E7CDD3;border-radius:12px;padding:18px 20px;margin:0 0 22px">
-      <p style="margin:0 0 10px;font-size:11px;text-transform:uppercase;letter-spacing:2px;font-weight:800;color:#87102C">See you soon</p>
-      <table style="width:100%;border-collapse:collapse">${serviceRows}</table>
-      <p style="margin:12px 0 0;font-size:13px;color:#4B5563">📍 ${escapeHtml(CHURCH_INFO.address)}</p>
-    </div>
-
-    <p style="margin:0">You are part of this family, and there is always a seat with your name on it.</p>
+    <p style="margin:0 0 16px;font-weight:700">${escapeHtml(dear)}</p>
+    <p style="margin:0 0 16px">I wanted to reach out and check in on you. I noticed you were not with us in church today, and I wanted to make sure you&rsquo;re okay.</p>
+    <p style="margin:0 0 16px">As I&rsquo;ve mentioned many times, church is family, and you&rsquo;re part of this family. So, beyond seeing you in church, I want you to know that I care about you and what is happening in your life. You don&rsquo;t have to walk through anything alone. If you ever need someone to talk to, my door is always open. And if there&rsquo;s anything you&rsquo;d like us to pray with you about, you can ${link(prayerUrl, 'send in your prayer request here')}.</p>
+    <p style="margin:0 0 16px">Today&rsquo;s service was a blessing, and I don&rsquo;t want you to miss what was shared. You can ${link(CATCH_UP_URL, 'catch up on the service here')}.</p>
+    <p style="margin:0 0 20px">Endeavor to be at our next service.</p>
+    <p style="margin:0">With love,</p>
+    <p style="margin:12px 0 0;font-weight:700">Pastor Opeyemi Peter</p>
+    <p style="margin:0;color:#4B5563">Everlasting Hills Church</p>
   `;
 
   const html = renderEmailLayout({
     heading: `We missed you${name ? `, ${escapeHtml(name)}` : ''}.`,
     bodyHtml,
-    cta: { label: 'Share a prayer request', href: `${base}/prayer-request` },
+    cta: { label: `Catch up on ${serviceLabel}`, href: CATCH_UP_URL },
   });
 
   return { to: email, subject, text, html, tag: 'attendance-absence', memberOnly: true };

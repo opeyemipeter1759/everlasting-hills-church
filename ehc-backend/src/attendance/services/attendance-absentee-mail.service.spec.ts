@@ -1,5 +1,5 @@
 import { AttendanceAbsenteeMailService } from './attendance-absentee-mail.service';
-import { buildAttendanceAbsenceEmail } from '../../notifications/templates/attendance-absence.email';
+import { buildAttendanceAbsenceEmail, CATCH_UP_URL } from '../../notifications/templates/attendance-absence.email';
 
 /**
  * Sunday 2026-09-13. Lagos is UTC+1, so 13:00 WAT (the default Sunday close)
@@ -96,7 +96,7 @@ describe('AttendanceAbsenteeMailService', () => {
     // Thursday morning: now closed, so it is mailed rather than forgotten.
     const { svc, dispatch } = makeService({ ...opts, now: THURSDAY_MORNING });
     expect(await svc.run()).toEqual({ serviceId: 'w1', absent: 1, emailed: 1 });
-    expect(dispatch.mock.calls[0][0].subject).toBe('We missed you at Midweek Service, Daphne');
+    expect(dispatch.mock.calls[0][0].subject).toBe('We missed you in church today, Daphne');
   });
 
   it('never mails the whole church when attendance was not taken', async () => {
@@ -121,8 +121,8 @@ describe('AttendanceAbsenteeMailService', () => {
     expect(dispatch).toHaveBeenCalledTimes(2);
     const first = dispatch.mock.calls[0][0];
     expect(first.to).toBe('daphne@x.test');
-    expect(first.subject).toBe('We missed you at Sunday Service, Daphne');
-    expect(first.html).toContain('Hello Daphne,');
+    expect(first.subject).toBe('We missed you in church today, Daphne');
+    expect(first.html).toContain('Dear Daphne,');
     expect(first.tag).toBe('attendance-absence');
     // Only ACTIVE members with an email are asked for.
     expect(prisma.attendanceRecord.findMany).toHaveBeenCalledWith(
@@ -149,17 +149,28 @@ describe('AttendanceAbsenteeMailService', () => {
 });
 
 describe('buildAttendanceAbsenceEmail', () => {
-  it('reads warmly and points at the prayer-request page', () => {
+  it("is Pastor Opeyemi's own letter, to them by name", () => {
     const mail = buildAttendanceAbsenceEmail({ email: 'd@x.test', firstName: 'daphne', serviceLabel: 'Midweek Service', appUrl: 'https://x.test/' });
-    expect(mail.subject).toBe('We missed you at Midweek Service, Daphne');
-    expect(mail.text.startsWith('Hello Daphne,')).toBe(true);
-    expect(mail.html).toContain('https://x.test/prayer-request');
+    expect(mail.subject).toBe('We missed you in church today, Daphne');
+    expect(mail.text.startsWith('Dear Daphne,\n\nI wanted to reach out and check in on you.')).toBe(true);
+    expect(mail.text).toContain("church is family, and you're part of this family");
+    expect(mail.text).toContain('Endeavor to be at our next service.');
+    expect(mail.text.endsWith('With love,\n\nPastor Opeyemi Peter\nEverlasting Hills Church')).toBe(true);
     expect(mail.html).not.toMatch(/streak|strike|warning/i);
+  });
+
+  it('links the prayer request page and the service to catch up on', () => {
+    const mail = buildAttendanceAbsenceEmail({ email: 'd@x.test', firstName: 'daphne', serviceLabel: 'Sunday Service', appUrl: 'https://x.test/' });
+    expect(mail.text).toContain('pray with you about, you can send in your prayer request here:\nhttps://x.test/prayer-request');
+    expect(mail.text).toContain(`catch up on the service here:\n${CATCH_UP_URL}`);
+    expect(mail.html).toContain('href="https://x.test/prayer-request"');
+    expect(mail.html).toContain(`href="${CATCH_UP_URL}"`);
+    expect(mail.html).toContain('Catch up on Sunday Service');
   });
 
   it('copes with a missing first name', () => {
     const mail = buildAttendanceAbsenceEmail({ email: 'd@x.test', firstName: null, serviceLabel: 'Sunday Service', appUrl: 'https://x.test' });
-    expect(mail.subject).toBe('We missed you at Sunday Service');
-    expect(mail.text.startsWith('Hello,')).toBe(true);
+    expect(mail.subject).toBe('We missed you in church today');
+    expect(mail.text.startsWith('Dear friend,')).toBe(true);
   });
 });
