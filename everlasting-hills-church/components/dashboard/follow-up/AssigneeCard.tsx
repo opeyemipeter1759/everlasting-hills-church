@@ -12,14 +12,20 @@ export function AssigneeCard({
   assignedTo,
   entryId,
   canReassign,
+  board = "FOLLOW_UP",
+  unitId,
 }: {
   assignedTo: { id: string; name: string } | null;
   /** The follow-up entry to move. Without one there is nothing to reassign yet. */
   entryId: string | null;
   canReassign: boolean;
+  /** Whose assignment this card changes: each team keeps its own. */
+  board?: "FOLLOW_UP" | "INTEGRATION";
+  /** The roster to pick from; the caller's own unit when not given. */
+  unitId?: string;
 }) {
   const [picking, setPicking] = useState(false);
-  const { data: team = [], isLoading } = useFollowUpTeam();
+  const { data: team = [], isLoading } = useFollowUpTeam(unitId);
   const assign = useAssignFollowUp();
 
   return (
@@ -51,7 +57,15 @@ export function AssigneeCard({
             assignedToId={assignedTo?.id ?? null}
             busy={assign.isPending}
             onPick={(memberId) =>
-              assign.mutate({ id: entryId, assigneeId: memberId }, { onSuccess: () => setPicking(false) })
+              assign.mutate(
+                {
+                  id: entryId,
+                  assigneeId: memberId,
+                  team: board,
+                  assigneeName: team.find((m) => m.id === memberId)?.name,
+                },
+                { onSuccess: () => setPicking(false) },
+              )
             }
           />
         </div>

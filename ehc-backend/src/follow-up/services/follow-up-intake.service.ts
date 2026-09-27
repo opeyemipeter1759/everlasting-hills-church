@@ -17,7 +17,7 @@ import { FollowUpAutoAssignService } from './follow-up-auto-assign.service';
 import { FollowUpNotifyService } from './follow-up-notify.service';
 import { FollowUpUnitLeaderLookupService } from './follow-up-unit-leader-lookup.service';
 import { FollowUpAssignableService } from './follow-up-assignable.service';
-import { findFollowUpUnit } from '../follow-up-unit.util';
+import { findFollowUpUnit, findIntegrationUnit } from '../follow-up-unit.util';
 
 function personName(p: { firstName: string; lastName: string }): string {
   return `${p.firstName} ${p.lastName}`.trim();
@@ -154,6 +154,8 @@ export class FollowUpIntakeService {
       throw new BadRequestException('A Super Admin cannot be assigned follow-up work');
     }
 
+    if (dto.team === 'INTEGRATION') return this.assignIntegration(actor, entry, dto.assigneeId);
+
     // The assignee's own unit — not the entry's current unit — decides both who's
     // allowed to make this assignment and where the entry ends up. This is what
     // lets a leader claim someone from the shared "Follow-Up" pool into their team.
@@ -193,6 +195,42 @@ export class FollowUpIntakeService {
 
     const mapped = this.mapper.mapEntry(updated, actor);
     await this.notify.notifyAssigned(dto.assigneeId, mapped.person.name, id);
+    return mapped;
+  }
+
+  /**
+   * The Integration Team's own assignment: sets only integrationAssigneeId, so
+   * Follow Up's assignee, the entry's unit and its stage are left exactly as
+   * they were. The assignee must be on the Integration Team, and only its lead
+   * (or their head of department, or church-wide staff) may assign.
+   */
+  private async assignIntegration(actor: AuthUser, entry: { id: string; integrationAssigneeId: string | null }, assigneeId: string) {
+    const integrationUnit = await findIntegrationUnit(this.prisma, this.tenantId);
+    if (!integrationUnit) throw new BadRequestException('There is no Integration Team unit to assign from');
+    if (!(await this.auth.canLeadUnit(actor, integrationUnit.id))) {
+      throw new ForbiddenException('Only the Integration Team lead can assign integration follow-up');
+    }
+    const onTeam = await this.prisma.unitMember.findFirst({
+      where: { tenantId: this.tenantId, unitId: integrationUnit.id, memberId: assigneeId },
+      select: { id: true },
+    });
+    if (!onTeam) throw new BadRequestException('The assignee must be on the Integration Team');
+
+    const updated = await this.prisma.followUpEntry.update({
+      where: { id: entry.id },
+      data: { integrationAssigneeId: assigneeId },
+      include: ENTRY_INCLUDE,
+    });
+    await this.audit.write({
+      action: 'ASSIGN_INTEGRATION',
+      entity: 'FollowUpEntry',
+      entityId: entry.id,
+      actorId: actor.userId,
+      before: { integrationAssigneeId: entry.integrationAssigneeId },
+      after: { integrationAssigneeId: assigneeId },
+    });
+    const mapped = this.mapper.mapEntry(updated, actor);
+    await this.notify.notifyAssigned(assigneeId, mapped.person.name, entry.id);
     return mapped;
   }
 
@@ -263,6 +301,31 @@ export class FollowUpIntakeService {
     }
     if (await this.assignable.isSuperAdmin(dto.toAssigneeId)) {
       throw new BadRequestException('A Super Admin cannot be assigned follow-up work');
+    }
+
+    // Within the Integration Team, it is their own assignments that move —
+    // wherever the entries sit, and never Follow Up's.
+    const integrationUnit = await findIntegrationUnit(this.prisma, this.tenantId);
+    if (integrationUnit && dto.unitId === integrationUnit.id) {
+      const moved = await this.prisma.followUpEntry.updateMany({
+        where: {
+          tenantId: this.tenantId,
+          integrationAssigneeId: dto.fromAssigneeId,
+          OR: [{ Member: null }, { Member: { status: { not: MemberStatus.OPTED_OUT } } }],
+        },
+        data: { integrationAssigneeId: dto.toAssigneeId },
+      });
+      await this.audit.write({
+        action: 'BULK_REASSIGN_INTEGRATION',
+        entity: 'FollowUpEntry',
+        actorId: actor.userId,
+        before: { integrationAssigneeId: dto.fromAssigneeId },
+        after: { integrationAssigneeId: dto.toAssigneeId, count: moved.count },
+      });
+      if (moved.count > 0) {
+        await this.notify.notifyAssigned(dto.toAssigneeId, `${moved.count} integration follow-up${moved.count === 1 ? '' : 's'}`);
+      }
+      return { reassigned: moved.count };
     }
 
     const result = await this.prisma.followUpEntry.updateMany({

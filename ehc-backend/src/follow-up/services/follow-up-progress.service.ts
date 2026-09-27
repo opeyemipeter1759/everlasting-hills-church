@@ -12,6 +12,8 @@ import { FollowUpAuthService } from './follow-up-auth.service';
 import { FollowUpEntryMapperService } from './follow-up-entry-mapper.service';
 import { FollowUpAuditService } from './follow-up-audit.service';
 import { AttendanceOverrideService } from '../../attendance/services/attendance-override.service';
+import { FollowUpNoteAlertsService } from './follow-up-note-alerts.service';
+import { contactLogBody, mirrorLogToThread } from './contact-log-note.util';
 
 /** Logging contact attempts and final outcomes on a Master List entry. */
 @Injectable()
@@ -24,6 +26,7 @@ export class FollowUpProgressService {
     private readonly mapper: FollowUpEntryMapperService,
     private readonly audit: FollowUpAuditService,
     private readonly attendanceOverride: AttendanceOverrideService,
+    private readonly alerts: FollowUpNoteAlertsService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -73,9 +76,10 @@ export class FollowUpProgressService {
       throw new BadRequestException('method and outcome are required for a contact log');
     }
 
-    await this.prisma.followUpContactLog.create({
+    const logId = randomUUID();
+    const log = await this.prisma.followUpContactLog.create({
       data: {
-        id: randomUUID(),
+        id: logId,
         tenantId: this.tenantId,
         entryId: id,
         byId: actor.memberId,
@@ -91,6 +95,21 @@ export class FollowUpProgressService {
         isPrivate: dto.isPrivate ?? false,
       },
     });
+
+    // Everything done for someone lives in one conversation: put this on
+    // their activity thread too, and tell the people following them. A log
+    // marked private stays private — only its author and the unit lead see it.
+    if (!log.isPrivate && actor.profileId) {
+      const body = contactLogBody(log);
+      const thread = await mirrorLogToThread(this.prisma, {
+        tenantId: this.tenantId,
+        logId,
+        entry,
+        authorProfileId: actor.profileId,
+        body,
+      });
+      if (thread) void this.alerts.onNewMessage(actor.profileId, thread.subjectKind, thread.subjectId, body);
+    }
 
     // A quick update is a note for whoever picks this up next — it shouldn't
     // pretend to be a real contact attempt, so it doesn't advance the stage or

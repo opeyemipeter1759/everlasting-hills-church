@@ -97,7 +97,11 @@ export default function MasterList({
         showAbsence={showAbsence}
       />
 
-      <PersonDrawer person={selected} onClose={() => setSelected(null)} />
+      <PersonDrawer
+        person={selected}
+        onClose={() => setSelected(null)}
+        board={fixed?.scope === "INTEGRATION" ? "INTEGRATION" : "FOLLOW_UP"}
+      />
 
       <EditVisitorModal visitor={editing.visitor} onClose={editing.close} onUpdated={editing.saved} />
 

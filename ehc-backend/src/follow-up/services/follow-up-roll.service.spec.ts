@@ -11,6 +11,7 @@ function row(over: Partial<MasterListRow>): MasterListRow {
     name: 'Grace',
     photoUrl: null,
     assignedTo: null,
+    integrationAssignedTo: null,
     status: 'AWAY',
     hasAccount: true,
     attended: 6,

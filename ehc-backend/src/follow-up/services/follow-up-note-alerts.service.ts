@@ -53,10 +53,12 @@ export class FollowUpNoteAlertsService {
     const person = await this.people.get(subjectKind, subjectId);
 
     // Who to tell: the assignee, plus everyone who has posted on this thread.
-    const [assignee, posters, author] = await Promise.all([
-      person.assignedTo
-        ? this.prisma.member.findUnique({ where: { id: person.assignedTo.id }, select: { profileId: true } })
-        : null,
+    // Both teams' assignees: Follow Up's and, once integrated, the Integration Team's.
+    const assigneeIds = [person.assignedTo?.id, person.integrationAssignedTo?.id].filter((id): id is string => !!id);
+    const [assignees, posters, author] = await Promise.all([
+      assigneeIds.length
+        ? this.prisma.member.findMany({ where: { id: { in: assigneeIds } }, select: { profileId: true } })
+        : [],
       this.prisma.followUpNote.findMany({
         where: { tenantId: this.tenantId, subjectKind, subjectId },
         select: { authorId: true },
@@ -66,7 +68,7 @@ export class FollowUpNoteAlertsService {
     ]);
     const reasons = new Map<string, 'assignee' | 'participant'>();
     for (const p of posters) reasons.set(p.authorId, 'participant');
-    if (assignee?.profileId) reasons.set(assignee.profileId, 'assignee');
+    for (const a of assignees) if (a.profileId) reasons.set(a.profileId, 'assignee');
     reasons.delete(authorProfileId);
     if (reasons.size === 0) return;
 

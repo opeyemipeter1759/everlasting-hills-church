@@ -87,6 +87,14 @@
           "assigneeId": {
             "description": "Member id of the team member to assign",
             "type": "string"
+          },
+          "team": {
+            "description": "Whose assignment this is. INTEGRATION sets the Integration Team's own assignee and leaves Follow Up's alone. Default FOLLOW_UP.",
+            "enum": [
+              "FOLLOW_UP",
+              "INTEGRATION"
+            ],
+            "type": "string"
           }
         },
         "required": [

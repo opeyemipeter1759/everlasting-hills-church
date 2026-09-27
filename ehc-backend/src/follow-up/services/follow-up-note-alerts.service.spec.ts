@@ -9,21 +9,31 @@ const MEMBERS: Record<string, { profileId: string; firstName: string; lastName: 
   assignee: { profileId: 'assignee', firstName: 'Bola', lastName: 'Ade', email: 'bola@x.org' },
   chatter: { profileId: 'chatter', firstName: 'Chidi', lastName: 'Eze', email: 'chidi@x.org' },
   quiet: { profileId: 'quiet', firstName: 'Dayo', lastName: 'Ola', email: null },
+  integrator: { profileId: 'integrator', firstName: 'Efe', lastName: 'Uko', email: 'efe@x.org' },
 };
+
+/** Member.id → profileId, for looking up assignees. */
+const MEMBER_PROFILE: Record<string, string> = { 'assignee-member': 'assignee', 'integration-member': 'integrator' };
 
 function setup({
   status = 'FIRST_TIMER',
   assigneeProfileId = 'assignee' as string | null,
   posters = ['author', 'chatter'],
   waiting = [] as string[],
+  integrationAssignee = false,
 } = {}) {
   const createMany = jest.fn().mockResolvedValue(1);
   const emit = jest.fn();
   const prisma = {
     member: {
-      findUnique: jest.fn().mockResolvedValue(assigneeProfileId ? { profileId: assigneeProfileId } : null),
       findFirst: jest.fn(({ where }) => Promise.resolve(MEMBERS[where.profileId] ?? null)),
-      findMany: jest.fn(({ where }) => Promise.resolve(where.profileId.in.map((id: string) => MEMBERS[id]).filter(Boolean))),
+      findMany: jest.fn(({ where }) =>
+        Promise.resolve(
+          where.id
+            ? where.id.in.map((id: string) => ({ profileId: id === 'assignee-member' ? assigneeProfileId : MEMBER_PROFILE[id] }))
+            : where.profileId.in.map((id: string) => MEMBERS[id]).filter(Boolean),
+        ),
+      ),
     },
     followUpNote: { findMany: jest.fn().mockResolvedValue(posters.map((authorId) => ({ authorId }))) },
     notification: { findMany: jest.fn().mockResolvedValue(waiting.map((profileId) => ({ profileId }))) },
@@ -38,6 +48,7 @@ function setup({
       name: 'Tunde Bello',
       status,
       assignedTo: assigneeProfileId ? { id: 'assignee-member', name: 'Bola Ade' } : null,
+      integrationAssignedTo: integrationAssignee ? { id: 'integration-member', name: 'Efe Uko' } : null,
     }),
   };
   const config = { get: (k: string) => (k === 'FRONTEND_URL' ? 'https://church.test' : 'tenant') };
@@ -55,6 +66,14 @@ describe('FollowUpNoteAlertsService.onNewMessage', () => {
     expect(alertedIds()).toEqual(['assignee', 'chatter']);
     expect(emailsTo()).toEqual(['bola@x.org', 'chidi@x.org']);
     expect(emit.mock.calls[0][0]).toBe(NotificationEvents.SendEmail);
+  });
+
+  it("tells the Integration Team's assignee too, once someone has one", async () => {
+    const { svc, alertedIds, emit } = setup({ status: 'INTEGRATED', integrationAssignee: true });
+    await svc.onNewMessage('author', 'MEMBER', 'm1', 'She came back on Sunday');
+    expect(alertedIds()).toEqual(['assignee', 'chatter', 'integrator']);
+    const efe = emit.mock.calls.find(([, p]) => p.to === 'efe@x.org');
+    expect(efe?.[1].text).toContain("You're assigned to Tunde Bello");
   });
 
   it('says why each person is hearing about it', async () => {

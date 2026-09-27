@@ -9,6 +9,8 @@ export interface FollowUpPerson {
   status: MasterListStatus;
   hasAccount: boolean;
   assignedTo: { id: string; name: string } | null;
+  /** The Integration Team's own assignee — separate from Follow Up's assignedTo. */
+  integrationAssignedTo: { id: string; name: string } | null;
   /** The follow-up entry to reassign, when one exists. */
   entryId: string | null;
   phone: string | null;

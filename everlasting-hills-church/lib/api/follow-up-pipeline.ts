@@ -202,11 +202,21 @@ export function useAddFollowUpEntry() {
 export function useAssignFollowUp() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, assigneeId }: { id: string; assigneeId: string }) =>
-      api.patch<FollowUpEntry>(`/follow-up/${id}/assign`, { assigneeId }),
-    onSuccess: (entry) => {
+    mutationFn: ({
+      id,
+      assigneeId,
+      team = "FOLLOW_UP",
+    }: {
+      id: string;
+      assigneeId: string;
+      /** Whose assignment: the Integration Team's is separate from Follow Up's. */
+      team?: "FOLLOW_UP" | "INTEGRATION";
+      /** For the confirmation; the entry returned carries Follow Up's assignee. */
+      assigneeName?: string;
+    }) => api.patch<FollowUpEntry>(`/follow-up/${id}/assign`, { assigneeId, ...(team === "INTEGRATION" ? { team } : {}) }),
+    onSuccess: (entry, vars) => {
       qc.invalidateQueries({ queryKey: ["follow-up"] });
-      showToast.success(`Assigned to ${entry.assignee?.name ?? "team member"}`);
+      showToast.success(`Assigned to ${vars.assigneeName ?? entry.assignee?.name ?? "team member"}`);
     },
     onError: (err) => showToast.error(errorMessage(err, "Couldn't assign")),
   });
@@ -440,6 +450,8 @@ export interface MasterListRow {
    * account, and for members no service has counted for yet.
    */
   absence?: { missed: number; total: number; missedLatest: boolean } | null;
+  /** The Integration Team's own assignee — separate from Follow Up's. */
+  integrationAssignedTo?: { id: string; name: string } | null;
   /** Their activity thread: messages logged so far, and how many are new to you. */
   activity?: { total: number; unread: number };
 }

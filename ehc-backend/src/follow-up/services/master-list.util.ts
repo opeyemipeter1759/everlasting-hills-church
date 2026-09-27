@@ -16,6 +16,8 @@ export interface MasterListRow {
   name: string;
   photoUrl: string | null;
   assignedTo: { id: string; name: string } | null;
+  /** The Integration Team's own assignee — separate from Follow Up's assignedTo. */
+  integrationAssignedTo: { id: string; name: string } | null;
   status: MasterListStatus;
   /** False for a first-timer nobody has created an account for yet. */
   hasAccount: boolean;

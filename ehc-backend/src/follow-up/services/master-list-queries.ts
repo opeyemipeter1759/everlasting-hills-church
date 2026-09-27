@@ -22,7 +22,11 @@ export async function fetchVisitorRows(
       FollowUpEntry: {
         orderBy: { createdAt: 'desc' },
         take: 1,
-        select: { createdAt: true, Assignee: { select: { id: true, firstName: true, lastName: true } } },
+        select: {
+          createdAt: true,
+          Assignee: { select: { id: true, firstName: true, lastName: true } },
+          IntegrationAssignee: { select: { id: true, firstName: true, lastName: true } },
+        },
       },
     },
   });
@@ -36,6 +40,9 @@ export async function fetchVisitorRows(
       name: personName(v),
       photoUrl: null,
       assignedTo: assignee ? { id: assignee.id, name: personName(assignee) } : null,
+      integrationAssignedTo: entry?.IntegrationAssignee
+        ? { id: entry.IntegrationAssignee.id, name: personName(entry.IntegrationAssignee) }
+        : null,
       status: 'FIRST_TIMER' as const,
       hasAccount: false,
       attended: 0,
@@ -72,6 +79,7 @@ export async function fetchMemberRows(
           sourceType: true,
           outcome: true,
           Assignee: { select: { id: true, firstName: true, lastName: true } },
+          IntegrationAssignee: { select: { id: true, firstName: true, lastName: true } },
         },
       },
     },
@@ -86,6 +94,9 @@ export async function fetchMemberRows(
       name: personName(m),
       photoUrl: m.photoUrl,
       assignedTo: entry?.Assignee ? { id: entry.Assignee.id, name: personName(entry.Assignee) } : null,
+      integrationAssignedTo: entry?.IntegrationAssignee
+        ? { id: entry.IntegrationAssignee.id, name: personName(entry.IntegrationAssignee) }
+        : null,
       status: memberStatusFor(m.status, attended, entry?.sourceType ?? null, entry?.outcome ?? null),
       hasAccount: true,
       attended,

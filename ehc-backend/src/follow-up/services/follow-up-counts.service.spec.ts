@@ -9,6 +9,7 @@ function row(over: Partial<RollRow>): RollRow {
     name: 'Someone',
     photoUrl: null,
     assignedTo: null,
+    integrationAssignedTo: null,
     status: 'FIRST_TIMER',
     statusAwaitingApproval: null,
     hasAccount: true,

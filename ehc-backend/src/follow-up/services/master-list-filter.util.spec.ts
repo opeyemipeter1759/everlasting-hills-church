@@ -8,6 +8,7 @@ function row(over: Partial<MasterListRow>): MasterListRow {
     name: 'Someone',
     photoUrl: null,
     assignedTo: null,
+    integrationAssignedTo: null,
     status: 'FIRST_TIMER',
     hasAccount: true,
     attended: 0,

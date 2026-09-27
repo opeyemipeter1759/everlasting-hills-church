@@ -203,6 +203,7 @@ model Member {
   CareAsLeader                  CareAssignment[]           @relation("CareLeader")
   FollowUpAsSubject             FollowUpEntry[]            @relation("FollowUpSubjectMember")
   FollowUpAsAssignee            FollowUpEntry[]            @relation("FollowUpAssignee")
+  FollowUpIntegrationAssigned   FollowUpEntry[]            @relation("FollowUpIntegrationAssignee")
   FollowUpLogs                  FollowUpContactLog[]       @relation("FollowUpLoggedBy")
   FollowUpSuggestedAsConnection FollowUpConnection[]       @relation("FollowUpConnectionSuggested")
   FollowUpConnectionsIntroduced FollowUpConnection[]       @relation("FollowUpConnectionIntroducedBy")
@@ -215,11 +216,11 @@ model Member {
   UnitMessageSent               UnitMessage[]              @relation("UnitMessageSender")
   UnitMessageReceived           UnitMessage[]              @relation("UnitMessageRecipient")
   ServiceAssignment             ServiceAssignment[]
+  SalvationDecision             SalvationDecision[]
 
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
   @@index([tenantId, email])
-  SalvationDecision             SalvationDecision[]
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).
@@ -312,38 +313,43 @@ enum FollowUpReportSentVia {
 /// (Member) tracked from first contact to confirmed follow-up. See
 /// prisma/manual/2026-07-follow-up.sql for the hand-applied migration.
 model FollowUpEntry {
-  id               String               @id
-  tenantId         String
-  unitId           String
-  sourceType       FollowUpSourceType
-  memberId         String? // subject, when sourceType = ABSENTEE
-  visitorId        String? // subject, when sourceType = FIRST_TIMER
-  addedById        String // Profile.id of the usher/leader who added them
-  assigneeId       String? // Member.id of the team member currently assigned
-  stage            FollowUpStage        @default(UNASSIGNED)
-  goalContacts     Int                  @default(3)
-  contactCount     Int                  @default(0)
-  lastContactAt    DateTime?
-  outcome          FollowUpOutcome?
-  reviewNote       String?
+  id                    String               @id
+  tenantId              String
+  unitId                String
+  sourceType            FollowUpSourceType
+  memberId              String? // subject, when sourceType = ABSENTEE
+  visitorId             String? // subject, when sourceType = FIRST_TIMER
+  addedById             String // Profile.id of the usher/leader who added them
+  assigneeId            String? // Member.id of the team member currently assigned
+  stage                 FollowUpStage        @default(UNASSIGNED)
+  goalContacts          Int                  @default(3)
+  contactCount          Int                  @default(0)
+  lastContactAt         DateTime?
+  outcome               FollowUpOutcome?
+  reviewNote            String?
   /// Who sent this entry's details up to the Pastor, and when — a leader's
   /// deliberate choice, not an automatic escalation rule. Null until sent.
-  sentToPastorById String?
-  sentToPastorAt   DateTime?
+  sentToPastorById      String?
+  sentToPastorAt        DateTime?
   /// "Call back later" — hides the entry from the default/Today views until
   /// this passes, without it being contacted or closed.
-  snoozedUntil     DateTime?
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @default(now()) @updatedAt
-  Tenant           Tenant               @relation(fields: [tenantId], references: [id])
-  Unit             Unit                 @relation(fields: [unitId], references: [id])
-  Member           Member?              @relation("FollowUpSubjectMember", fields: [memberId], references: [id])
-  Visitor          Visitor?             @relation(fields: [visitorId], references: [id])
-  Assignee         Member?              @relation("FollowUpAssignee", fields: [assigneeId], references: [id])
-  AddedBy          Profile              @relation("FollowUpAddedBy", fields: [addedById], references: [id])
-  SentToPastorBy   Profile?             @relation("FollowUpSentToPastorBy", fields: [sentToPastorById], references: [id])
-  Logs             FollowUpContactLog[]
-  Connections      FollowUpConnection[]
+  snoozedUntil          DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @default(now()) @updatedAt
+  Tenant                Tenant               @relation(fields: [tenantId], references: [id])
+  Unit                  Unit                 @relation(fields: [unitId], references: [id])
+  Member                Member?              @relation("FollowUpSubjectMember", fields: [memberId], references: [id])
+  Visitor               Visitor?             @relation(fields: [visitorId], references: [id])
+  Assignee              Member?              @relation("FollowUpAssignee", fields: [assigneeId], references: [id])
+  /// The Integration Team member looking after them once they're integrated —
+  /// a separate slot from assigneeId (Follow Up's), so neither team's
+  /// assignment ever overwrites the other's.
+  integrationAssigneeId String?
+  IntegrationAssignee   Member?              @relation("FollowUpIntegrationAssignee", fields: [integrationAssigneeId], references: [id])
+  AddedBy               Profile              @relation("FollowUpAddedBy", fields: [addedById], references: [id])
+  SentToPastorBy        Profile?             @relation("FollowUpSentToPastorBy", fields: [sentToPastorById], references: [id])
+  Logs                  FollowUpContactLog[]
+  Connections           FollowUpConnection[]
 
   // One entry per person, full stop — not one per team. A person can only
   // ever be worked by a single assignee at a time; letting them carry a
@@ -361,6 +367,7 @@ model FollowUpEntry {
   @@index([tenantId, unitId])
   @@index([tenantId, stage])
   @@index([assigneeId])
+  @@index([integrationAssigneeId])
 }
 
 /// One entry on a FollowUpEntry's unified activity timeline. A formal contact
@@ -1084,7 +1091,7 @@ model Tenant {
   followUpNoteReactions    FollowUpNoteReaction[]
   followUpNoteReads        FollowUpNoteRead[]
   sermonDigests            SermonDigest[]
-  SalvationDecision             SalvationDecision[]
+  SalvationDecision        SalvationDecision[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1135,7 +1142,7 @@ model InventoryHistory {
 }
 
 model Event {
-  id                   String            @id
+  id                   String              @id
   tenantId             String
   slug                 String
   title                String
@@ -1145,8 +1152,8 @@ model Event {
   description          String?
   startAt              DateTime
   endAt                DateTime?
-  timezone             String            @default("Africa/Lagos")
-  locationType         EventLocationType @default(PHYSICAL)
+  timezone             String              @default("Africa/Lagos")
+  locationType         EventLocationType   @default(PHYSICAL)
   venueName            String?
   venueAddress         String?
   mapsLink             String?
@@ -1168,17 +1175,17 @@ model Event {
   contactPhone         String?
   contactEmail         String?
   contactWhatsapp      String?
-  status               EventStatus       @default(DRAFT)
-  featured             Boolean           @default(false)
-  rsvpEnabled          Boolean           @default(true)
-  registrationRequired Boolean           @default(true)
+  status               EventStatus         @default(DRAFT)
+  featured             Boolean             @default(false)
+  rsvpEnabled          Boolean             @default(true)
+  registrationRequired Boolean             @default(true)
   capacity             Int?
   customPath           String?
-  order                Int               @default(0)
+  order                Int                 @default(0)
   publishedAt          DateTime?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @default(now())
-  Tenant               Tenant            @relation(fields: [tenantId], references: [id])
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @default(now())
+  Tenant               Tenant              @relation(fields: [tenantId], references: [id])
   Rsvps                EventRsvp[]
   Schedules            EventSchedule[]
   Announcement         Announcement?

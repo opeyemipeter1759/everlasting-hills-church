@@ -9,6 +9,7 @@ import { ENTRY_INCLUDE } from '../follow-up.types';
 import { FollowUpAuthService } from './follow-up-auth.service';
 import { FollowUpEntryMapperService } from './follow-up-entry-mapper.service';
 import { FollowUpConnectionMatchService } from './follow-up-connection-match.service';
+import { contactLogBody, mirrorLogToThread } from './contact-log-note.util';
 
 /** Suggested-friend workflow: refresh suggestions on read, let a worker/leader
  * introduce one (writes to the same unified timeline), then record the outcome. */
@@ -49,6 +50,7 @@ export class FollowUpConnectionsService {
       throw new BadRequestException('This connection has already been acted on');
     }
 
+    const logId = randomUUID();
     await this.prisma.$transaction([
       this.prisma.followUpConnection.update({
         where: { id: connectionId },
@@ -56,7 +58,7 @@ export class FollowUpConnectionsService {
       }),
       this.prisma.followUpContactLog.create({
         data: {
-          id: randomUUID(),
+          id: logId,
           tenantId: this.tenantId,
           entryId,
           byId: actor.memberId,
@@ -65,6 +67,18 @@ export class FollowUpConnectionsService {
         },
       }),
     ]);
+
+    // The introduction shows on the person's activity thread as well.
+    if (actor.profileId) {
+      const note = `Introduced to ${connection.SuggestedMember.firstName} ${connection.SuggestedMember.lastName}`.trim();
+      await mirrorLogToThread(this.prisma, {
+        tenantId: this.tenantId,
+        logId,
+        entry,
+        authorProfileId: actor.profileId,
+        body: contactLogBody({ kind: FollowUpLogKind.CONNECTION, method: null, outcome: null, note, isPastoralContact: false }),
+      });
+    }
 
     const updated = await this.loadEntry(entryId);
     return this.mapper.mapEntry(updated, actor);

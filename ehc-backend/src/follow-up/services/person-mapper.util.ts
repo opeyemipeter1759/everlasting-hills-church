@@ -5,7 +5,10 @@ import type { FollowUpPerson } from './follow-up-person.types';
 const latestAssignee = {
   orderBy: { createdAt: 'desc' },
   take: 1,
-  include: { Assignee: { select: { id: true, firstName: true, lastName: true } } },
+  include: {
+    Assignee: { select: { id: true, firstName: true, lastName: true } },
+    IntegrationAssignee: { select: { id: true, firstName: true, lastName: true } },
+  },
 } as const;
 
 export const visitorInclude = Prisma.validator<Prisma.VisitorInclude>()({
@@ -32,6 +35,9 @@ export function toVisitorPerson(v: VisitorRow): FollowUpPerson {
     status: 'FIRST_TIMER',
     hasAccount: false,
     assignedTo: assignee ? { id: assignee.id, name: personName(assignee) } : null,
+    integrationAssignedTo: entry?.IntegrationAssignee
+      ? { id: entry.IntegrationAssignee.id, name: personName(entry.IntegrationAssignee) }
+      : null,
     entryId: entry?.id ?? null,
     phone: v.phone,
     email: v.email,
@@ -61,6 +67,9 @@ export function toMemberPerson(m: MemberRow): FollowUpPerson {
     status: memberStatusFor(m.status, attended, entry?.sourceType ?? null, entry?.outcome ?? null),
     hasAccount: true,
     assignedTo: entry?.Assignee ? { id: entry.Assignee.id, name: personName(entry.Assignee) } : null,
+    integrationAssignedTo: entry?.IntegrationAssignee
+      ? { id: entry.IntegrationAssignee.id, name: personName(entry.IntegrationAssignee) }
+      : null,
     entryId: entry?.id ?? null,
     phone: m.phone,
     email: m.email,

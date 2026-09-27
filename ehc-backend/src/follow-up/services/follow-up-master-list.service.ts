@@ -40,7 +40,12 @@ export class FollowUpMasterListService {
 
   /** `viewerProfileId` decides what counts as unread on each row's activity. */
   async list(opts: MasterListFilters, viewerProfileId: string | null = null) {
-    const [everyone, services] = await Promise.all([this.roll.everyone(opts.search ?? ''), this.countedServices()]);
+    const [roll, services] = await Promise.all([this.roll.everyone(opts.search ?? ''), this.countedServices()]);
+    // Follow Up and the Integration Team each assign their own people: on the
+    // Integration list, "assigned to" (the column, the filter, and Assigned to
+    // me) means the Integration Team's assignee, never Follow Up's.
+    const everyone =
+      opts.scope === 'INTEGRATION' ? roll.map((row) => ({ ...row, assignedTo: row.integrationAssignedTo })) : roll;
 
     // "latest" is the most recent service that counts, so the Integration
     // Team's list can open on it without first looking up which one that is.

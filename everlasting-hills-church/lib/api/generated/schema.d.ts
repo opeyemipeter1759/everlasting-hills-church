@@ -7297,6 +7297,11 @@ export interface components {
         AssignFollowUpDto: {
             /** @description Member id of the team member to assign */
             assigneeId: string;
+            /**
+             * @description Whose assignment this is. INTEGRATION sets the Integration Team's own assignee and leaves Follow Up's alone. Default FOLLOW_UP.
+             * @enum {string}
+             */
+            team?: "FOLLOW_UP" | "INTEGRATION";
         };
         AssignUnitMemberDto: {
             /**

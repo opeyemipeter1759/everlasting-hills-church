@@ -9,17 +9,29 @@ import { ActivityThread } from "./ActivityThread";
 import { StatusPicker } from "./StatusPicker";
 import { AssigneeCard } from "./AssigneeCard";
 import { useFollowUpLeadership } from "./useFollowUpLeadership";
+import { useIntegrationTeam } from "./useIntegrationTeam";
 
 /**
  * One person, opened from the Master list: who they are, how to reach them,
  * and everything the church knows about them. Slides in from the right so the
  * list stays where it was.
  */
-export function PersonDrawer({ person, onClose }: { person: MasterListRow | null; onClose: () => void }) {
+export function PersonDrawer({
+  person,
+  onClose,
+  board = "FOLLOW_UP",
+}: {
+  person: MasterListRow | null;
+  onClose: () => void;
+  /** Which team's board opened it: each shows and changes its own assignee. */
+  board?: "FOLLOW_UP" | "INTEGRATION";
+}) {
   const { data, isLoading } = useFollowUpPerson(person ? { kind: person.kind, id: person.id } : null);
   // Handing someone's follow-up to another person is the Follow Up unit
   // lead's call (or its head of department's), not any unit lead's.
   const { canRunUnit } = useFollowUpLeadership();
+  const integration = useIntegrationTeam();
+  const onIntegration = board === "INTEGRATION";
 
   useEffect(() => {
     if (!person) return;
@@ -60,10 +72,16 @@ export function PersonDrawer({ person, onClose }: { person: MasterListRow | null
               />
             </div>
             <div className="pt-3">
+              {/* The row's assignedTo is already this board's; the full
+                  record carries both teams', so pick this board's from it. */}
               <AssigneeCard
-                assignedTo={shown?.assignedTo ?? person.assignedTo}
+                assignedTo={
+                  shown ? ((onIntegration ? shown.integrationAssignedTo : shown.assignedTo) ?? null) : person.assignedTo
+                }
                 entryId={shown?.entryId ?? null}
-                canReassign={canRunUnit}
+                canReassign={onIntegration ? integration.canAssign : canRunUnit}
+                board={board}
+                unitId={onIntegration ? (integration.unitId ?? undefined) : undefined}
               />
             </div>
           </div>
