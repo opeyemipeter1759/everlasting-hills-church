@@ -73,4 +73,16 @@ describe("PersonDrawer on each board", () => {
       expect.anything(),
     );
   });
+
+  it("offers no Assign for someone who has opted out: nobody carries them", async () => {
+    const pipeline = await import("@/lib/api/follow-up-pipeline");
+    const spy = vi.spyOn(pipeline, "useFollowUpPerson").mockReturnValue({
+      data: { id: "m1", kind: "MEMBER", name: "Tunde Bello", entryId: "e1", status: "OPTED_OUT", assignedTo: null, integrationAssignedTo: null },
+      isLoading: false,
+    } as never);
+    render(<PersonDrawer person={{ ...row, status: "OPTED_OUT" as never }} onClose={vi.fn()} board="INTEGRATION" />);
+    expect(screen.getByText("Nobody yet")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Assign|Reassign/ })).not.toBeInTheDocument();
+    spy.mockRestore();
+  });
 });

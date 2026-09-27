@@ -3,6 +3,7 @@ import { FollowUpIntakeService } from './follow-up-intake.service';
 import { FollowUpMasterListService } from './follow-up-master-list.service';
 import { FollowUpProgressService } from './follow-up-progress.service';
 import { contactLogBody, mirrorLogToThread } from './contact-log-note.util';
+import { FollowUpPersonService } from './follow-up-person.service';
 
 const config = { get: () => 'tenant' } as never;
 const actor = { userId: 'u1', memberId: 'lead', profileId: 'p-lead' } as never;
@@ -84,6 +85,18 @@ describe("Each board's Master List uses its own assignee", () => {
     expect(page.data.map((r) => [r.id, r.assignedTo?.id])).toEqual([['ada', 'int-worker']]);
   });
 
+  it('shows nobody carrying someone who has opted out, on either team', async () => {
+    const roll = {
+      everyone: jest.fn().mockResolvedValue([{ ...row('gone', 'fu-worker', 'int-worker'), status: 'OPTED_OUT' }]),
+    };
+    const prisma = { service: { findMany: jest.fn().mockResolvedValue([]) }, attendanceRecord: { findMany: jest.fn().mockResolvedValue([]) } };
+    const svc = new FollowUpMasterListService(roll as never, prisma as never, { forRows: jest.fn().mockResolvedValue(new Map()) } as never, config);
+    const page = await svc.list({ scope: 'OPTED_OUT', take: 50, skip: 0 });
+    expect(page.data[0]).toMatchObject({ assignedTo: null, integrationAssignedTo: null });
+    const mine = await svc.list({ scope: 'FOLLOW_UP', assigneeId: 'fu-worker', take: 50, skip: 0 });
+    expect(mine.data).toEqual([]);
+  });
+
   it("never lists Follow Up's assignments under the Integration Team's Assigned to me", async () => {
     const page = await list().list({ scope: 'INTEGRATION', assigneeId: 'fu-worker', take: 50, skip: 0 });
     expect(page.data).toEqual([]);
@@ -156,5 +169,38 @@ describe('Logging a contact', () => {
     await svc.logContact(actor, 'e1', { method: 'CALL', outcome: 'REACHED', note: 'Sensitive', isPrivate: true });
     expect(upsert).not.toHaveBeenCalled();
     expect(alerts.onNewMessage).not.toHaveBeenCalled();
+  });
+});
+
+describe('A person, as the drawer reads them', () => {
+  function person(agreed: string, moves: { toStatus: string; decidedAt: Date }[]) {
+    const prisma = {
+      member: {
+        findFirst: jest.fn().mockResolvedValue({
+          id: 'm1', firstName: 'Tunde', lastName: 'Bello', photoUrl: null, status: 'ACTIVE', phone: null, email: null,
+          gender: null, dateOfBirth: null, address: null, joinedAt: new Date('2026-01-01'),
+          _count: { AttendanceRecord: 3 },
+          FollowUpAsSubject: [{ id: 'e1', sourceType: 'FIRST_TIMER', outcome: null,
+            Assignee: { id: 'fu', firstName: 'Bola', lastName: 'Ade' }, IntegrationAssignee: { id: 'int', firstName: 'Efe', lastName: 'Uko' } }],
+        }),
+      },
+      followUpStatusChange: { findMany: jest.fn().mockResolvedValue(moves.map((m) => ({ ...m, requestedAt: m.decidedAt }))) },
+    };
+    const statuses = {
+      approvedFor: jest.fn().mockResolvedValue(new Map([['m1', { status: agreed }]])),
+      pendingFor: jest.fn().mockResolvedValue(new Map()),
+    };
+    return new FollowUpPersonService(prisma as never, statuses as never, config);
+  }
+
+  it('says when they were integrated or opted out, oldest first, for the thread to mark', async () => {
+    const p = await person('INTEGRATED', [{ toStatus: 'INTEGRATED', decidedAt: new Date('2026-09-20T10:00:00Z') }]).get('MEMBER', 'm1');
+    expect(p.milestones).toEqual([{ status: 'INTEGRATED', at: '2026-09-20T10:00:00.000Z' }]);
+    expect(p.assignedTo).toEqual({ id: 'fu', name: 'Bola Ade' });
+  });
+
+  it('shows nobody assigned once they have opted out', async () => {
+    const p = await person('OPTED_OUT', [{ toStatus: 'OPTED_OUT', decidedAt: new Date('2026-09-25T10:00:00Z') }]).get('MEMBER', 'm1');
+    expect(p).toMatchObject({ status: 'OPTED_OUT', assignedTo: null, integrationAssignedTo: null });
   });
 });

@@ -39,6 +39,8 @@ export function toVisitorPerson(v: VisitorRow): FollowUpPerson {
       ? { id: entry.IntegrationAssignee.id, name: personName(entry.IntegrationAssignee) }
       : null,
     entryId: entry?.id ?? null,
+    // Filled in by FollowUpPersonService, which reads the status history.
+    milestones: [],
     phone: v.phone,
     email: v.email,
     gender: v.gender,
@@ -71,6 +73,8 @@ export function toMemberPerson(m: MemberRow): FollowUpPerson {
       ? { id: entry.IntegrationAssignee.id, name: personName(entry.IntegrationAssignee) }
       : null,
     entryId: entry?.id ?? null,
+    // Filled in by FollowUpPersonService, which reads the status history.
+    milestones: [],
     phone: m.phone,
     email: m.email,
     gender: m.gender,

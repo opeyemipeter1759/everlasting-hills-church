@@ -1,6 +1,16 @@
 import { MemberStatus } from '@prisma/client';
 
 /** How someone reads on the Master List. */
+/**
+ * Someone who has opted out has asked not to be followed up, so nobody on
+ * either team is shown as carrying them — whatever the entry last said.
+ */
+export function unassignedIfOptedOut<T extends { status: string; assignedTo: unknown; integrationAssignedTo: unknown }>(
+  row: T,
+): T {
+  return row.status === 'OPTED_OUT' ? { ...row, assignedTo: null, integrationAssignedTo: null } : row;
+}
+
 export type MasterListStatus =
   | 'FIRST_TIMER'
   | 'SECOND_TIMER'

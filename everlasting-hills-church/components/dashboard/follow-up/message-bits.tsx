@@ -46,6 +46,35 @@ export function DayDivider({ label }: { label: string }) {
 }
 
 
+/**
+ * Where someone was moved on, in the thread: integrated (the Integration Team's
+ * conversation starts here) or opted out. Past activity stays above it.
+ */
+export function MilestoneDivider({ status, at }: { status: "INTEGRATED" | "OPTED_OUT"; at: string }) {
+  const when = new Date(at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  const integrated = status === "INTEGRATED";
+  return (
+    <li className="relative my-5 px-5" aria-label={`${integrated ? "Integrated" : "Opted out"} on ${when}`}>
+      <span
+        aria-hidden="true"
+        className={`absolute inset-x-5 top-1/2 h-0.5 ${integrated ? "bg-emerald-300 dark:bg-emerald-500/40" : "bg-gray-300 dark:bg-white/20"}`}
+      />
+      <span
+        className={`relative mx-auto block w-fit rounded-full px-3.5 py-1 text-center text-xs font-bold shadow-sm ${
+          integrated
+            ? "bg-emerald-600 text-white dark:bg-emerald-500"
+            : "bg-gray-600 text-white dark:bg-white/20"
+        }`}
+      >
+        {integrated ? "Integrated" : "Opted out"} · {when}
+        <span className="block text-[11px] font-medium opacity-85">
+          {integrated ? "A new conversation starts here — earlier activity is above" : "Earlier activity is above"}
+        </span>
+      </span>
+    </li>
+  );
+}
+
 /** The time shown in the gutter on a grouped message, only while hovered. */
 export function HoverTime({ iso }: { iso: string }) {
   return (

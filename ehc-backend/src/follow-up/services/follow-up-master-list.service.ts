@@ -8,6 +8,7 @@ import { FollowUpRollService, type RollRow } from './follow-up-roll.service';
 import { summariseAbsence, type AbsenceSummary, type CountedService } from './absence.util';
 import { FollowUpNoteActivityService } from './follow-up-note-activity.service';
 import { threadKey } from './note-activity.util';
+import { unassignedIfOptedOut } from './master-list.util';
 import {
   LATEST_SERVICE,
   matchesFilters,
@@ -44,8 +45,9 @@ export class FollowUpMasterListService {
     // Follow Up and the Integration Team each assign their own people: on the
     // Integration list, "assigned to" (the column, the filter, and Assigned to
     // me) means the Integration Team's assignee, never Follow Up's.
-    const everyone =
-      opts.scope === 'INTEGRATION' ? roll.map((row) => ({ ...row, assignedTo: row.integrationAssignedTo })) : roll;
+    const everyone = roll
+      .map(unassignedIfOptedOut)
+      .map((row) => (opts.scope === 'INTEGRATION' ? { ...row, assignedTo: row.integrationAssignedTo } : row));
 
     // "latest" is the most recent service that counts, so the Integration
     // Team's list can open on it without first looking up which one that is.

@@ -532,6 +532,8 @@ export function useFollowUpWorkload(enabled: boolean) {
 }
 
 export interface FollowUpPerson extends MasterListRow {
+  /** When they were integrated or opted out (as agreed by a leader), oldest first. */
+  milestones?: { status: "INTEGRATED" | "OPTED_OUT"; at: string }[];
   /** The follow-up entry to reassign, when one exists. */
   entryId: string | null;
   phone: string | null;

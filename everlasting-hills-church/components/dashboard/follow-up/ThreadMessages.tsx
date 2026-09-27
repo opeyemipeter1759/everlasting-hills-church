@@ -2,7 +2,7 @@
 
 import type { FollowUpNote } from "@/lib/api/follow-up-pipeline";
 import { ThreadMessage } from "./ThreadMessage";
-import { DayDivider } from "./message-bits";
+import { DayDivider, MilestoneDivider } from "./message-bits";
 import type { ThreadItem } from "./thread-utils";
 
 /** The messages themselves: a divider each day, then each message in order. */
@@ -26,6 +26,8 @@ export function ThreadMessages({
       {items.map((item) =>
         item.kind === "day" ? (
           <DayDivider key={item.key} label={item.label} />
+        ) : item.kind === "milestone" ? (
+          <MilestoneDivider key={item.key} status={item.status} at={item.at} />
         ) : (
           <ThreadMessage
             key={item.key}

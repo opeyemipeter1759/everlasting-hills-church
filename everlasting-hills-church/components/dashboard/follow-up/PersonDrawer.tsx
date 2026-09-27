@@ -79,7 +79,8 @@ export function PersonDrawer({
                   shown ? ((onIntegration ? shown.integrationAssignedTo : shown.assignedTo) ?? null) : person.assignedTo
                 }
                 entryId={shown?.entryId ?? null}
-                canReassign={onIntegration ? integration.canAssign : canRunUnit}
+                // Nobody carries someone who has opted out.
+                canReassign={(shown?.status ?? person.status) !== "OPTED_OUT" && (onIntegration ? integration.canAssign : canRunUnit)}
                 board={board}
                 unitId={onIntegration ? (integration.unitId ?? undefined) : undefined}
               />
@@ -91,7 +92,7 @@ export function PersonDrawer({
           </div>
 
           <div className="rounded-2xl border border-gray-200/80 bg-white px-4 pb-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <ActivityThread person={person} />
+            <ActivityThread person={person} milestones={shown?.milestones ?? []} />
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import type { Env } from '../../config/env.validation';
 import type { FollowUpPerson } from './follow-up-person.types';
 import { memberInclude, toMemberPerson, toVisitorPerson, visitorInclude } from './person-mapper.util';
 import { FollowUpStatusService } from './follow-up-status.service';
+import { unassignedIfOptedOut } from './master-list.util';
 
 export type { FollowUpPerson } from './follow-up-person.types';
 
@@ -28,15 +29,24 @@ export class FollowUpPersonService {
 
   async get(kind: string, id: string): Promise<FollowUpPerson> {
     const person = kind === 'VISITOR' ? await this.visitor(id) : await this.member(id);
-    const [agreed, waiting] = await Promise.all([
+    const [agreed, waiting, moves] = await Promise.all([
       this.status.approvedFor(kind, [id]),
       this.status.pendingFor(kind, [id]),
+      this.prisma.followUpStatusChange.findMany({
+        where: { tenantId: this.tenantId, subjectKind: kind, subjectId: id, state: 'APPROVED', toStatus: { in: ['INTEGRATED', 'OPTED_OUT'] } },
+        orderBy: { decidedAt: 'asc' },
+        select: { toStatus: true, decidedAt: true, requestedAt: true },
+      }),
     ]);
-    return {
+    return unassignedIfOptedOut({
       ...person,
       status: agreed.get(id)?.status ?? person.status,
       statusAwaitingApproval: waiting.get(id)?.status ?? null,
-    };
+      milestones: moves.map((m) => ({
+        status: m.toStatus as 'INTEGRATED' | 'OPTED_OUT',
+        at: (m.decidedAt ?? m.requestedAt).toISOString(),
+      })),
+    });
   }
 
   private async visitor(id: string): Promise<FollowUpPerson> {

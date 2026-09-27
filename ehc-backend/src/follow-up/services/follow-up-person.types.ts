@@ -29,6 +29,11 @@ export interface FollowUpPerson {
   attended: number;
   /** When they first came to the church's notice. */
   since: string;
+  /**
+   * When they were moved on — integrated, or opted out — as agreed by a
+   * leader, oldest first. The activity thread marks where each begins.
+   */
+  milestones: { status: 'INTEGRATED' | 'OPTED_OUT'; at: string }[];
   /** A status asked for but not yet approved by a leader. */
   statusAwaitingApproval?: MasterListStatus | null;
 }
