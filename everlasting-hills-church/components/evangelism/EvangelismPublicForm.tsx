@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Combobox } from "@/components/ui/form/Combobox";
 import { Select } from "@/components/ui/select";
 import { usePublicFormOptions, useSubmitPublicContact, type NextAction, type SavedStatus } from "@/lib/api/evangelism";
@@ -154,6 +154,9 @@ export default function EvangelismPublicForm() {
   const [honeypot, setHoneypot] = useState("");
   const [done, setDone] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  // Set the moment a send starts, before any re-render: a double tap, or a
+  // tap while the first send is still on its way, must not record them twice.
+  const sending = useRef(false);
 
   useEffect(() => setForm((f) => ({ ...f, ...remembered() })), []);
 
@@ -201,17 +204,21 @@ export default function EvangelismPublicForm() {
       if (first >= 0) setStep(first);
       return;
     }
+    if (sending.current) return;
+    sending.current = true;
     try {
       await submit.mutateAsync({ ...contactInput(form), ...(honeypot ? { website: honeypot } : {}) });
       remember(form);
       setDone(form.name.trim());
       window.scrollTo({ top: 0 });
     } catch (err) {
+      sending.current = false; // Let them try again.
       setFailure(errorText(err, "Couldn't send. Check your connection and try again — nothing you typed has been lost."));
     }
   }
 
   function another() {
+    sending.current = false;
     setForm(emptyContactForm({ workerId: form.workerId, workerOther: form.workerOther, outreachId: form.outreachId, contactDate: form.contactDate }));
     setErrors({});
     setDone(null);
@@ -543,8 +550,12 @@ export default function EvangelismPublicForm() {
               ← Back
             </button>
           )}
+          {/* Keyed so Continue and Submit are different elements: if React reused
+              one <button> it would flip it to type="submit" mid-tap on the last
+              Continue, and the browser would send the form before step 4. */}
           {step < STEPS.length - 1 ? (
             <button
+              key="continue"
               type="button"
               onClick={next}
               className="flex-1 rounded-xl bg-gradient-to-r from-church-maroon to-burgundy-light py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-burgundy-dark hover:to-church-maroon hover:shadow-xl active:scale-95"
@@ -553,6 +564,7 @@ export default function EvangelismPublicForm() {
             </button>
           ) : (
             <button
+              key="submit"
               type="submit"
               disabled={submit.isPending}
               className="flex-1 rounded-xl bg-gradient-to-r from-church-maroon to-burgundy-light py-3.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-burgundy-dark hover:to-church-maroon hover:shadow-xl active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100"

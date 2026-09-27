@@ -77,6 +77,24 @@ describe("the public evangelism form", () => {
     expect(screen.getByLabelText(/School name/)).toBeInTheDocument();
   });
 
+  it("sends it once: reaching the last step doesn't send it, and a double tap doesn't send it twice", async () => {
+    let resolve: (v: unknown) => void = () => {};
+    mutateAsync.mockImplementation(() => new Promise((r) => (resolve = r)));
+    render(<EvangelismPublicForm />);
+    throughToTheEnd();
+    expect(screen.getByText("Step 4 of 4 — Follow-up")).toBeInTheDocument();
+    expect(mutateAsync).not.toHaveBeenCalled();
+
+    const submitButton = screen.getByRole("button", { name: /Submit/ });
+    fireEvent.click(submitButton);
+    fireEvent.click(submitButton);
+    fireEvent.submit(submitButton.closest("form")!);
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+    resolve({ ok: true });
+    expect(await screen.findByText("Recorded, thank you!")).toBeInTheDocument();
+    expect(mutateAsync).toHaveBeenCalledTimes(1);
+  });
+
   it("sends it, then goes straight to the next person with the same worker", async () => {
     render(<EvangelismPublicForm />);
     throughToTheEnd();
