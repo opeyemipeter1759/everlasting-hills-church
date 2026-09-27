@@ -1,8 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Clock, EyeOff, MessageSquare, RefreshCw, Search, ShieldCheck, Trash2, Users, X } from "lucide-react";
-import { useAdminTestimonials, useDeleteTestimonial, useTogglePublishTestimonial, type AdminTestimonial } from "@/lib/api/testimonials";
+import { CheckCircle2, Clock, EyeOff, Mail, MailOpen, MessageSquare, RefreshCw, Search, ShieldCheck, Trash2, Users, X } from "lucide-react";
+import {
+  useAdminTestimonials,
+  useDeleteTestimonial,
+  useMarkTestimonialRead,
+  useTogglePublishTestimonial,
+  type AdminTestimonial,
+} from "@/lib/api/testimonials";
 import { Avatar } from "@/components/dashboard/admin/departments/HeadPicker";
 import TestimoniesSkeleton from "@/components/ui/skeleton/TestimoniesSkeleton";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -21,6 +27,8 @@ function fmt(d: string) {
 function errorMessage(err: unknown, fallback: string): string {
   return (err as ApiError)?.message || fallback;
 }
+
+type ReadTab = "UNREAD" | "READ";
 
 type StatusFilter = "" | "PUBLISHED" | "DRAFT";
 
@@ -46,6 +54,7 @@ export default function TestimoniesAdminClient() {
   const deleteTestimonial = useDeleteTestimonial();
   const currentUser = useCurrentUser();
   const [confirmTarget, setConfirmTarget] = useState<AdminTestimonial | null>(null);
+  const [readTab, setReadTab] = useState<ReadTab>("UNREAD");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("");
   const [share, setShare] = useState<ShareFilter>("");
@@ -59,7 +68,12 @@ export default function TestimoniesAdminClient() {
   const from = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
   const to = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
 
+  const unreadCount = testimonials.filter((t) => !t.readAt).length;
+  const readCount = testimonials.length - unreadCount;
+
   const filtered = testimonials.filter((t) => {
+    if (readTab === "UNREAD" && t.readAt) return false;
+    if (readTab === "READ" && !t.readAt) return false;
     if (status === "PUBLISHED" && !t.published) return false;
     if (status === "DRAFT" && t.published) return false;
     if (share === "SHARED" && t.sharePhysically !== true) return false;
@@ -75,7 +89,7 @@ export default function TestimoniesAdminClient() {
   });
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  useEffect(() => setPage(1), [search, status, share, dateFrom, dateTo]);
+  useEffect(() => setPage(1), [readTab, search, status, share, dateFrom, dateTo]);
   // Clamp back if a filter shrinks the result set below the page we were sitting on.
   useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
   const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
@@ -128,6 +142,38 @@ export default function TestimoniesAdminClient() {
         >
           <RefreshCw size={12} className={q.isFetching ? "animate-spin" : ""} /> Refresh
         </button>
+      </div>
+
+      {/* Unread / Read — new testimonies land in Unread until an admin marks them read. */}
+      <div role="tablist" aria-label="Read status" className="flex gap-1 border-b border-gray-200 dark:border-white/10">
+        {(
+          [
+            { value: "UNREAD", label: "Unread", count: unreadCount, Icon: Mail },
+            { value: "READ", label: "Read", count: readCount, Icon: MailOpen },
+          ] as const
+        ).map(({ value, label, count, Icon }) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            aria-selected={readTab === value}
+            onClick={() => setReadTab(value)}
+            className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-bold transition-colors ${
+              readTab === value
+                ? "border-[#87102C] text-[#87102C] dark:border-[#e8768a] dark:text-[#e8768a]"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:text-white/50 dark:hover:text-white"
+            }`}
+          >
+            <Icon size={14} /> {label}
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${
+                readTab === value ? "bg-[#87102C] text-white" : "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/60"
+              }`}
+            >
+              {count}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* Filters */}
@@ -211,6 +257,22 @@ export default function TestimoniesAdminClient() {
           <p className="text-base font-semibold text-gray-700 dark:text-white/80">No testimonials yet.</p>
           <p className="mt-1 text-sm text-gray-400 dark:text-white/40">Submissions from the public testimony form will show up here as drafts.</p>
         </div>
+      ) : filtered.length === 0 && !hasFilters ? (
+        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-5 xs:p-8 sm:p-12 text-center">
+          {readTab === "UNREAD" ? (
+            <MailOpen size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
+          ) : (
+            <Mail size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
+          )}
+          <p className="text-base font-semibold text-gray-700 dark:text-white/80">
+            {readTab === "UNREAD" ? "You're all caught up." : "Nothing marked read yet."}
+          </p>
+          <p className="mt-1 text-sm text-gray-400 dark:text-white/40">
+            {readTab === "UNREAD"
+              ? "New testimonies will show up here until someone marks them read."
+              : "Use Mark as read on a testimony to move it here."}
+          </p>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-5 xs:p-8 sm:p-12 text-center">
           <Search size={24} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
@@ -270,6 +332,18 @@ export default function TestimoniesAdminClient() {
 
 function TestimonialCard({ t, canTogglePublish, onDelete }: { t: AdminTestimonial; canTogglePublish: boolean; onDelete: () => void }) {
   const togglePublish = useTogglePublishTestimonial();
+  const markRead = useMarkTestimonialRead();
+  const isRead = !!t.readAt;
+
+  function toggleRead() {
+    markRead.mutate(
+      { id: t.id, read: !isRead },
+      {
+        onSuccess: () => showToast.success(isRead ? "Moved back to Unread" : "Moved to Read"),
+        onError: (err) => showToast.error(errorMessage(err, "Couldn't update")),
+      },
+    );
+  }
 
   // A signed-in member is always linked (even when isAnonymous — see submitTestimony)
   // so admins can identify who really submitted, distinct from a public guest.
@@ -359,8 +433,25 @@ function TestimonialCard({ t, canTogglePublish, onDelete }: { t: AdminTestimonia
 
       <p className="whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-white/80">{t.content}</p>
 
-      {canTogglePublish && (
-        <div className="flex items-center justify-end border-t border-gray-100 dark:border-white/[0.06] pt-3">
+      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 dark:border-white/[0.06] pt-3">
+        {t.readAt && (
+          <p className="mr-auto text-[11px] text-gray-400 dark:text-white/40">
+            Read{t.readByName ? ` by ${t.readByName}` : ""} · {fmt(t.readAt)}
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={toggleRead}
+          disabled={markRead.isPending}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
+            isRead
+              ? "border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
+              : "bg-[#87102C] text-white hover:bg-[#6d0d24]"
+          }`}
+        >
+          {isRead ? <Mail size={13} /> : <MailOpen size={13} />} {isRead ? "Mark as unread" : "Mark as read"}
+        </button>
+        {canTogglePublish && (
           <button
             type="button"
             onClick={toggleStatus}
@@ -373,8 +464,8 @@ function TestimonialCard({ t, canTogglePublish, onDelete }: { t: AdminTestimonia
           >
             <CheckCircle2 size={13} /> {t.published ? "Move to draft" : "Publish"}
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

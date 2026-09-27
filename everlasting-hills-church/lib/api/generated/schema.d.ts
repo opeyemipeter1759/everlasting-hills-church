@@ -6405,6 +6405,23 @@ export interface paths {
         patch: operations["TestimonialsController_update"];
         trace?: never;
     };
+    "/testimonials/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark testimonial read or unread (ADMIN+) */
+        patch: operations["TestimonialsController_markRead"];
+        trace?: never;
+    };
     "/testimonials/published": {
         parameters: {
             query?: never;
@@ -8070,6 +8087,13 @@ export interface components {
         MarkPresentDto: {
             /** @description The service to mark this person present for */
             serviceId: string;
+        };
+        MarkTestimonialReadDto: {
+            /**
+             * @description true = mark read (Read tab), false = back to unread
+             * @example true
+             */
+            read: boolean;
         };
         MemberOverviewResponseDto: {
             attendance: components["schemas"]["AttendanceOverviewDto"];
@@ -23975,6 +23999,43 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["UpdateTestimonialDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    TestimonialsController_markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkTestimonialReadDto"];
             };
         };
         responses: {

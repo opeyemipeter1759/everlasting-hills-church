@@ -103,6 +103,27 @@ export class TestimonialsService {
     });
   }
 
+  /**
+   * Mark a testimony read (it moves to the dashboard's Read tab) or back to
+   * unread. Shared by every admin; records who marked it and when.
+   */
+  async markRead(id: string, read: boolean, profileId: string | null) {
+    await this.getById(id); // throws 404 if foreign
+    let readByName: string | null = null;
+    if (read && profileId) {
+      const who = await this.prisma.member.findFirst({
+        where: { profileId, tenantId: this.tenantId },
+        select: { firstName: true, lastName: true },
+      });
+      readByName = who ? `${who.firstName} ${who.lastName}`.trim() : null;
+    }
+    return this.prisma.testimonial.update({
+      where: { id },
+      data: { readAt: read ? new Date() : null, readByName },
+      select: { id: true, readAt: true, readByName: true },
+    });
+  }
+
   async delete(id: string) {
     const result = await this.prisma.testimonial.deleteMany({
       where: { id, tenantId: this.tenantId },

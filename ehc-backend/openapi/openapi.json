@@ -1871,6 +1871,19 @@
         ],
         "type": "object"
       },
+      "MarkTestimonialReadDto": {
+        "properties": {
+          "read": {
+            "description": "true = mark read (Read tab), false = back to unread",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "read"
+        ],
+        "type": "object"
+      },
       "MemberOverviewResponseDto": {
         "properties": {
           "attendance": {
@@ -28819,6 +28832,72 @@
           }
         ],
         "summary": "Update testimonial (PASTOR+)",
+        "tags": [
+          "testimonials"
+        ]
+      }
+    },
+    "/testimonials/{id}/read": {
+      "patch": {
+        "operationId": "TestimonialsController_markRead",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkTestimonialReadDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Mark testimonial read or unread (ADMIN+)",
         "tags": [
           "testimonials"
         ]

@@ -1780,6 +1780,10 @@ model Testimonial {
   published        Boolean   @default(false)
   publishedAt      DateTime?
   order            Int       @default(0)
+  /// When an admin marked it read on the dashboard (moves it to the Read tab),
+  /// and who — a name snapshot, shared by every admin. Null = unread.
+  readAt           DateTime?
+  readByName       String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @default(now())
   Tenant           Tenant    @relation(fields: [tenantId], references: [id])

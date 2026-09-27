@@ -83,3 +83,9 @@ export class UpdateTestimonialDto {
   @IsInt()
   order?: number;
 }
+
+export class MarkTestimonialReadDto {
+  @ApiProperty({ example: true, description: 'true = mark read (Read tab), false = back to unread' })
+  @IsBoolean()
+  read!: boolean;
+}

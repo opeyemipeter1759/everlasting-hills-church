@@ -32,6 +32,9 @@ export interface AdminTestimonial {
   published: boolean;
   publishedAt: string | null;
   order: number;
+  /** When an admin marked it read (it sits in the Read tab), and who. Null = unread. */
+  readAt: string | null;
+  readByName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -64,5 +67,29 @@ export function useTogglePublishTestimonial() {
     mutationFn: ({ id, published }: { id: string; published: boolean }) =>
       api.patch(`/testimonials/${id}`, { published }),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}
+
+/** Any admin can mark a testimony read (moves it to the Read tab) or back to
+ * unread. Applied optimistically so the card leaves the tab straight away. */
+export function useMarkTestimonialRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, read }: { id: string; read: boolean }) =>
+      api.patch(`/testimonials/${id}/read`, { read }),
+    onMutate: async ({ id, read }) => {
+      await qc.cancelQueries({ queryKey: KEY });
+      const previous = qc.getQueryData<AdminTestimonial[]>(KEY);
+      qc.setQueryData<AdminTestimonial[]>(KEY, (rows) =>
+        rows?.map((t) =>
+          t.id === id ? { ...t, readAt: read ? new Date().toISOString() : null, readByName: read ? t.readByName : null } : t,
+        ),
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(KEY, ctx.previous);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }

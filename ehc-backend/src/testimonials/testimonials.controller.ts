@@ -9,9 +9,11 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { CreateTestimonialDto, UpdateTestimonialDto } from './dto/testimonial.dto';
+import type { AuthUser } from '../auth/types/auth-user';
+import { CreateTestimonialDto, MarkTestimonialReadDto, UpdateTestimonialDto } from './dto/testimonial.dto';
 import { TestimonialsService } from './testimonials.service';
 
 @ApiTags('testimonials')
@@ -81,6 +83,15 @@ export class TestimonialsController {
   @ApiBody({ type: UpdateTestimonialDto })
   async update(@Param('id') id: string, @Body() body: UpdateTestimonialDto) {
     return this.testimonialsService.update(id, body);
+  }
+
+  @Roles(Role.ADMIN)
+  @Patch(':id/read')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Mark testimonial read or unread (ADMIN+)' })
+  @ApiBody({ type: MarkTestimonialReadDto })
+  async markRead(@Param('id') id: string, @Body() body: MarkTestimonialReadDto, @CurrentUser() user: AuthUser) {
+    return this.testimonialsService.markRead(id, body.read, user.profileId);
   }
 
   @Roles(Role.ADMIN)
