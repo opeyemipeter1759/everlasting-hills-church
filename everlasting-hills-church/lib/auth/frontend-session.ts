@@ -157,6 +157,8 @@ export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
   // here; which units a person can actually see comes from the API
   // (GET /departments/my-units), which is also what builds their sidebar.
   ["/dashboard/membership-assimilation", "MEMBER"],
+  // Growth & Outreach unit pages (Evangelism): same arrangement.
+  ["/dashboard/growth-outreach", "MEMBER"],
   ["/dashboard", "MEMBER"],
   ["/me", "MEMBER"],
   ["/admin", "SUPER_ADMIN"],

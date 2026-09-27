@@ -2783,6 +2783,322 @@ export interface paths {
         patch: operations["EmailsController_updateTemplate"];
         trace?: never;
     };
+    "/evangelism/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Contacts, filtered; each with its 30-day window state */
+        get: operations["EvangelismController_listContacts"];
+        put?: never;
+        /** Add a contact from the dashboard */
+        post: operations["EvangelismController_createContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A contact: details, follow-up history, tasks, testimonies */
+        get: operations["EvangelismController_getContact"];
+        put?: never;
+        post?: never;
+        /** Delete a contact (leaders) */
+        delete: operations["EvangelismController_deleteContact"];
+        options?: never;
+        head?: never;
+        /** Edit a contact (leaders) */
+        patch: operations["EvangelismController_updateContact"];
+        trace?: never;
+    };
+    "/evangelism/contacts/{id}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log a follow-up and/or change status */
+        post: operations["EvangelismController_logAction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/contacts/{id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End-of-window decision: hand over, extend or close (leaders) */
+        post: operations["EvangelismController_review"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/form": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record someone preached to, from the public evangelism form */
+        post: operations["EvangelismFormController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/form/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Workers and active outreaches for the public evangelism form */
+        get: operations["EvangelismFormController_options"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether I am on the Evangelism Team, and whether I lead it */
+        get: operations["EvangelismController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/outreaches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Outreaches with totals (also the comparison chart) */
+        get: operations["EvangelismController_listOutreaches"];
+        put?: never;
+        /** Create an outreach (leaders) */
+        post: operations["EvangelismController_createOutreach"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/outreaches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An outreach: totals, by worker, and its contacts */
+        get: operations["EvangelismController_getOutreach"];
+        put?: never;
+        post?: never;
+        /** Delete an outreach; its contacts become personal evangelism (leaders) */
+        delete: operations["EvangelismController_deleteOutreach"];
+        options?: never;
+        head?: never;
+        /** Edit an outreach (leaders) */
+        patch: operations["EvangelismController_updateOutreach"];
+        trace?: never;
+    };
+    "/evangelism/performance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Per-worker figures for the leaderboard */
+        get: operations["EvangelismController_performanceTable"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dashboard figures: reached, saved, follow-ups, visitations, invited/attended */
+        get: operations["EvangelismController_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My tasks, or every task (leaders) */
+        get: operations["EvangelismController_listTasks"];
+        put?: never;
+        /** Create and assign a task (leaders) */
+        post: operations["EvangelismController_createTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a task (leaders) */
+        delete: operations["EvangelismController_deleteTask"];
+        options?: never;
+        head?: never;
+        /** Update a task (leaders: anything; assignees: status) */
+        patch: operations["EvangelismController_updateTask"];
+        trace?: never;
+    };
+    "/evangelism/tasks/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a note to a task */
+        post: operations["EvangelismController_addTaskNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The Evangelism Team roster */
+        get: operations["EvangelismController_team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/testimonies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Testimonies from the field */
+        get: operations["EvangelismController_listTestimonies"];
+        put?: never;
+        /** Record a testimony */
+        post: operations["EvangelismController_createTestimony"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/testimonies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a testimony (leaders, or whoever recorded it) */
+        delete: operations["EvangelismController_deleteTestimony"];
+        options?: never;
+        head?: never;
+        /** Edit a testimony, or approve it to share (leaders) */
+        patch: operations["EvangelismController_updateTestimony"];
+        trace?: never;
+    };
+    "/evangelism/testimonies/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload a testimony photo; returns its URL */
+        post: operations["EvangelismController_uploadPhoto"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events": {
         parameters: {
             query?: never;
@@ -7928,6 +8244,77 @@ export interface components {
             /** @description Public URL of the uploaded file (from /uploads/image or /uploads/document) */
             url: string;
         };
+        EvangelismContactDto: {
+            /** @example 12 Adeola Street, Ikeja */
+            address: string;
+            /** @description The person agreed to be contacted by the church */
+            consent: boolean;
+            /**
+             * @description Defaults to today
+             * @example 2026-09-27
+             */
+            contactDate?: string;
+            /** @description What was discussed, their response, prayer requests, needs */
+            discussion?: string;
+            isStudent: boolean;
+            /** @example 300 Level */
+            level?: string;
+            /** @example Chinedu Okeke */
+            name: string;
+            /** @enum {string} */
+            nextAction?: "FOLLOW_UP_CALL" | "CALL_BACK" | "NEEDS_VISIT" | "INVITE";
+            /** @description Blank for personal evangelism */
+            outreachId?: string;
+            /**
+             * @description Nigerian mobile: 080…, +234…
+             * @example 0803 123 4567
+             */
+            phone: string;
+            /** @enum {string} */
+            savedStatus: "YES" | "NO" | "ALREADY";
+            /** @example University of Lagos */
+            school?: string;
+            /** @description Evangelism Team member who preached to them */
+            workerMemberId?: string;
+            /** @description "Other": a worker not on the team list */
+            workerName?: string;
+        };
+        EvangelismOutreachDto: {
+            /** @default true */
+            active: boolean;
+            /** @example 2026-09-27 */
+            date: string;
+            description?: string;
+            location?: string;
+            /** @example Street Outreach – Sept 2026 */
+            name: string;
+            /** @description Team members who went */
+            workerIds?: string[];
+        };
+        EvangelismTaskDto: {
+            assigneeIds: string[];
+            contactId?: string;
+            description?: string;
+            dueAt?: string;
+            /** @enum {string} */
+            priority?: "LOW" | "MEDIUM" | "HIGH";
+            title: string;
+            /** @enum {string} */
+            type: "CALL" | "VISIT" | "INVITE" | "PRAYER" | "OTHER";
+        };
+        EvangelismTaskNoteDto: {
+            body: string;
+        };
+        EvangelismTestimonyDto: {
+            body: string;
+            contactId?: string;
+            /** @description Defaults to today */
+            date?: string;
+            outreachId?: string;
+            photoUrl?: string;
+            title: string;
+            workerMemberId?: string;
+        };
         EventScheduleInputDto: Record<string, never>;
         EventSectionInputDto: Record<string, never>;
         FirstTimerDto: {
@@ -8062,6 +8449,22 @@ export interface components {
             outcome?: "REACHED" | "NO_ANSWER" | "VOICEMAIL" | "WRONG_NUMBER" | "SCHEDULED_VISIT";
             /** @description The service day this activity relates to */
             serviceId?: string;
+        };
+        LogEvangelismActionDto: {
+            /** @description Required when status is CALL_BACK */
+            callBackAt?: string;
+            /** @description When it happened; defaults to now */
+            happenedAt?: string;
+            /**
+             * @description Omit for a status change only
+             * @enum {string}
+             */
+            kind?: "CALL" | "VISIT" | "MESSAGE" | "NOTE";
+            note?: string;
+            /** @example Reached — will come on Sunday */
+            outcome?: string;
+            /** @enum {string} */
+            status?: "NEW" | "CALL_DONE" | "CALL_BACK" | "NEEDS_VISIT" | "VISITED" | "INVITED" | "ATTENDED" | "JOINED" | "NOT_INTERESTED";
         };
         LoginDto: {
             /** @example user@example.com */
@@ -8208,6 +8611,43 @@ export interface components {
             /** @example 120 */
             positionSec: number;
         };
+        PublicEvangelismContactDto: {
+            /** @example 12 Adeola Street, Ikeja */
+            address: string;
+            /** @description The person agreed to be contacted by the church */
+            consent: boolean;
+            /**
+             * @description Defaults to today
+             * @example 2026-09-27
+             */
+            contactDate?: string;
+            /** @description What was discussed, their response, prayer requests, needs */
+            discussion?: string;
+            isStudent: boolean;
+            /** @example 300 Level */
+            level?: string;
+            /** @example Chinedu Okeke */
+            name: string;
+            /** @enum {string} */
+            nextAction?: "FOLLOW_UP_CALL" | "CALL_BACK" | "NEEDS_VISIT" | "INVITE";
+            /** @description Blank for personal evangelism */
+            outreachId?: string;
+            /**
+             * @description Nigerian mobile: 080…, +234…
+             * @example 0803 123 4567
+             */
+            phone: string;
+            /** @enum {string} */
+            savedStatus: "YES" | "NO" | "ALREADY";
+            /** @example University of Lagos */
+            school?: string;
+            /** @description Leave empty */
+            website?: string;
+            /** @description Evangelism Team member who preached to them */
+            workerMemberId?: string;
+            /** @description "Other": a worker not on the team list */
+            workerName?: string;
+        };
         PublishAnnouncementDto: {
             /**
              * @description Whether to email members as part of this publish. Omit to keep whatever the announcement was saved with. Publishing an announcement that was unpublished emails everyone a second time unless this is false.
@@ -8280,6 +8720,13 @@ export interface components {
             note?: string;
             /** @description The revision the reviewer read */
             revision: number;
+        };
+        ReviewEvangelismContactDto: {
+            /** @default 30 */
+            extendDays: number;
+            note?: string;
+            /** @enum {string} */
+            outcome: "HANDED_OVER" | "EXTENDED" | "CLOSED";
         };
         ReviewUnitTaskReportDto: {
             /** @description Feedback for the author — expected when sending a report back */
@@ -8627,6 +9074,56 @@ export interface components {
             name?: string;
             /** @example Here is what happened this month at EHC */
             subject?: string;
+        };
+        UpdateEvangelismContactDto: {
+            address?: string;
+            consent?: boolean;
+            contactDate?: string;
+            discussion?: Record<string, never> | null;
+            isStudent?: boolean;
+            level?: Record<string, never> | null;
+            name?: string;
+            /** @enum {string|null} */
+            nextAction?: "FOLLOW_UP_CALL" | "CALL_BACK" | "NEEDS_VISIT" | "INVITE" | null;
+            outreachId?: Record<string, never> | null;
+            phone?: string;
+            /** @enum {string} */
+            savedStatus?: "YES" | "NO" | "ALREADY";
+            school?: Record<string, never> | null;
+            workerMemberId?: Record<string, never> | null;
+            workerName?: string;
+        };
+        UpdateEvangelismOutreachDto: {
+            active?: boolean;
+            date?: string;
+            description?: Record<string, never> | null;
+            location?: Record<string, never> | null;
+            name?: string;
+            workerIds?: string[];
+        };
+        UpdateEvangelismTaskDto: {
+            assigneeIds?: string[];
+            contactId?: Record<string, never> | null;
+            description?: Record<string, never> | null;
+            dueAt?: Record<string, never> | null;
+            /** @enum {string} */
+            priority?: "LOW" | "MEDIUM" | "HIGH";
+            /** @enum {string} */
+            status?: "PENDING" | "IN_PROGRESS" | "DONE";
+            title?: string;
+            /** @enum {string} */
+            type?: "CALL" | "VISIT" | "INVITE" | "PRAYER" | "OTHER";
+        };
+        UpdateEvangelismTestimonyDto: {
+            /** @description Approved to share (leaders only) */
+            approved?: boolean;
+            body?: string;
+            contactId?: Record<string, never> | null;
+            date?: string;
+            outreachId?: Record<string, never> | null;
+            photoUrl?: Record<string, never> | null;
+            title?: string;
+            workerMemberId?: Record<string, never> | null;
         };
         UpdateEventDto: {
             /** @description Max attendees across all RSVPs. */
@@ -15432,6 +15929,977 @@ export interface operations {
         };
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_listContacts: {
+        parameters: {
+            query?: {
+                search?: string;
+                workerMemberId?: string;
+                /** @description "none" for personal evangelism */
+                outreachId?: string;
+                savedStatus?: "YES" | "NO" | "ALREADY";
+                isStudent?: boolean;
+                status?: "NEW" | "CALL_DONE" | "CALL_BACK" | "NEEDS_VISIT" | "VISITED" | "INVITED" | "ATTENDED" | "JOINED" | "NOT_INTERESTED";
+                flag?: "DUE" | "OVERDUE" | "REVIEW";
+                /** @description Only my contacts still in their 30-day window */
+                mine?: boolean;
+                from?: string;
+                to?: string;
+                take?: number;
+                skip?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_createContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvangelismContactDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_getContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_deleteContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_updateContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEvangelismContactDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_logAction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogEvangelismActionDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewEvangelismContactDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismFormController_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicEvangelismContactDto"];
+            };
+        };
+        responses: {
+            /** @description Recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismFormController_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_listOutreaches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_createOutreach: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvangelismOutreachDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_getOutreach: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_deleteOutreach: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_updateOutreach: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEvangelismOutreachDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_performanceTable: {
+        parameters: {
+            query?: {
+                range?: "month" | "quarter" | "all";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_listTasks: {
+        parameters: {
+            query?: {
+                scope?: "mine" | "all";
+                status?: "PENDING" | "IN_PROGRESS" | "DONE";
+                contactId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_createTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvangelismTaskDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_deleteTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_updateTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEvangelismTaskDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_addTaskNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvangelismTaskNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_team: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_listTestimonies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_createTestimony: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvangelismTestimonyDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_deleteTestimony: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_updateTestimony: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateEvangelismTestimonyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_uploadPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

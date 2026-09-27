@@ -1528,6 +1528,207 @@
         ],
         "type": "object"
       },
+      "EvangelismContactDto": {
+        "properties": {
+          "address": {
+            "example": "12 Adeola Street, Ikeja",
+            "type": "string"
+          },
+          "consent": {
+            "description": "The person agreed to be contacted by the church",
+            "type": "boolean"
+          },
+          "contactDate": {
+            "description": "Defaults to today",
+            "example": "2026-09-27",
+            "type": "string"
+          },
+          "discussion": {
+            "description": "What was discussed, their response, prayer requests, needs",
+            "type": "string"
+          },
+          "isStudent": {
+            "type": "boolean"
+          },
+          "level": {
+            "example": "300 Level",
+            "type": "string"
+          },
+          "name": {
+            "example": "Chinedu Okeke",
+            "type": "string"
+          },
+          "nextAction": {
+            "enum": [
+              "FOLLOW_UP_CALL",
+              "CALL_BACK",
+              "NEEDS_VISIT",
+              "INVITE"
+            ],
+            "type": "string"
+          },
+          "outreachId": {
+            "description": "Blank for personal evangelism",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Nigerian mobile: 080…, +234…",
+            "example": "0803 123 4567",
+            "type": "string"
+          },
+          "savedStatus": {
+            "enum": [
+              "YES",
+              "NO",
+              "ALREADY"
+            ],
+            "type": "string"
+          },
+          "school": {
+            "example": "University of Lagos",
+            "type": "string"
+          },
+          "workerMemberId": {
+            "description": "Evangelism Team member who preached to them",
+            "type": "string"
+          },
+          "workerName": {
+            "description": "\"Other\": a worker not on the team list",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "address",
+          "savedStatus",
+          "isStudent",
+          "consent"
+        ],
+        "type": "object"
+      },
+      "EvangelismOutreachDto": {
+        "properties": {
+          "active": {
+            "default": true,
+            "type": "boolean"
+          },
+          "date": {
+            "example": "2026-09-27",
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "name": {
+            "example": "Street Outreach – Sept 2026",
+            "type": "string"
+          },
+          "workerIds": {
+            "description": "Team members who went",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "date"
+        ],
+        "type": "object"
+      },
+      "EvangelismTaskDto": {
+        "properties": {
+          "assigneeIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "contactId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "dueAt": {
+            "type": "string"
+          },
+          "priority": {
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "CALL",
+              "VISIT",
+              "INVITE",
+              "PRAYER",
+              "OTHER"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "assigneeIds"
+        ],
+        "type": "object"
+      },
+      "EvangelismTaskNoteDto": {
+        "properties": {
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "type": "object"
+      },
+      "EvangelismTestimonyDto": {
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "contactId": {
+            "type": "string"
+          },
+          "date": {
+            "description": "Defaults to today",
+            "type": "string"
+          },
+          "outreachId": {
+            "type": "string"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "workerMemberId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "type": "object"
+      },
       "EventScheduleInputDto": {
         "properties": {},
         "type": "object"
@@ -1805,6 +2006,50 @@
         "required": [
           "note"
         ],
+        "type": "object"
+      },
+      "LogEvangelismActionDto": {
+        "properties": {
+          "callBackAt": {
+            "description": "Required when status is CALL_BACK",
+            "type": "string"
+          },
+          "happenedAt": {
+            "description": "When it happened; defaults to now",
+            "type": "string"
+          },
+          "kind": {
+            "description": "Omit for a status change only",
+            "enum": [
+              "CALL",
+              "VISIT",
+              "MESSAGE",
+              "NOTE"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "outcome": {
+            "example": "Reached — will come on Sunday",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "NEW",
+              "CALL_DONE",
+              "CALL_BACK",
+              "NEEDS_VISIT",
+              "VISITED",
+              "INVITED",
+              "ATTENDED",
+              "JOINED",
+              "NOT_INTERESTED"
+            ],
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "LoginDto": {
@@ -2116,6 +2361,89 @@
         ],
         "type": "object"
       },
+      "PublicEvangelismContactDto": {
+        "properties": {
+          "address": {
+            "example": "12 Adeola Street, Ikeja",
+            "type": "string"
+          },
+          "consent": {
+            "description": "The person agreed to be contacted by the church",
+            "type": "boolean"
+          },
+          "contactDate": {
+            "description": "Defaults to today",
+            "example": "2026-09-27",
+            "type": "string"
+          },
+          "discussion": {
+            "description": "What was discussed, their response, prayer requests, needs",
+            "type": "string"
+          },
+          "isStudent": {
+            "type": "boolean"
+          },
+          "level": {
+            "example": "300 Level",
+            "type": "string"
+          },
+          "name": {
+            "example": "Chinedu Okeke",
+            "type": "string"
+          },
+          "nextAction": {
+            "enum": [
+              "FOLLOW_UP_CALL",
+              "CALL_BACK",
+              "NEEDS_VISIT",
+              "INVITE"
+            ],
+            "type": "string"
+          },
+          "outreachId": {
+            "description": "Blank for personal evangelism",
+            "type": "string"
+          },
+          "phone": {
+            "description": "Nigerian mobile: 080…, +234…",
+            "example": "0803 123 4567",
+            "type": "string"
+          },
+          "savedStatus": {
+            "enum": [
+              "YES",
+              "NO",
+              "ALREADY"
+            ],
+            "type": "string"
+          },
+          "school": {
+            "example": "University of Lagos",
+            "type": "string"
+          },
+          "website": {
+            "description": "Leave empty",
+            "type": "string"
+          },
+          "workerMemberId": {
+            "description": "Evangelism Team member who preached to them",
+            "type": "string"
+          },
+          "workerName": {
+            "description": "\"Other\": a worker not on the team list",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "phone",
+          "address",
+          "savedStatus",
+          "isStudent",
+          "consent"
+        ],
+        "type": "object"
+      },
       "PublishAnnouncementDto": {
         "properties": {
           "sendEmail": {
@@ -2312,6 +2640,29 @@
         },
         "required": [
           "revision"
+        ],
+        "type": "object"
+      },
+      "ReviewEvangelismContactDto": {
+        "properties": {
+          "extendDays": {
+            "default": 30,
+            "type": "number"
+          },
+          "note": {
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "HANDED_OVER",
+              "EXTENDED",
+              "CLOSED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome"
         ],
         "type": "object"
       },
@@ -3032,6 +3383,184 @@
           "subject": {
             "example": "Here is what happened this month at EHC",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateEvangelismContactDto": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "consent": {
+            "type": "boolean"
+          },
+          "contactDate": {
+            "type": "string"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "object"
+          },
+          "isStudent": {
+            "type": "boolean"
+          },
+          "level": {
+            "nullable": true,
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nextAction": {
+            "enum": [
+              "FOLLOW_UP_CALL",
+              "CALL_BACK",
+              "NEEDS_VISIT",
+              "INVITE"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "outreachId": {
+            "nullable": true,
+            "type": "object"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "savedStatus": {
+            "enum": [
+              "YES",
+              "NO",
+              "ALREADY"
+            ],
+            "type": "string"
+          },
+          "school": {
+            "nullable": true,
+            "type": "object"
+          },
+          "workerMemberId": {
+            "nullable": true,
+            "type": "object"
+          },
+          "workerName": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateEvangelismOutreachDto": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "date": {
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "object"
+          },
+          "location": {
+            "nullable": true,
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          },
+          "workerIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateEvangelismTaskDto": {
+        "properties": {
+          "assigneeIds": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "contactId": {
+            "nullable": true,
+            "type": "object"
+          },
+          "description": {
+            "nullable": true,
+            "type": "object"
+          },
+          "dueAt": {
+            "nullable": true,
+            "type": "object"
+          },
+          "priority": {
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "PENDING",
+              "IN_PROGRESS",
+              "DONE"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "CALL",
+              "VISIT",
+              "INVITE",
+              "PRAYER",
+              "OTHER"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateEvangelismTestimonyDto": {
+        "properties": {
+          "approved": {
+            "description": "Approved to share (leaders only)",
+            "type": "boolean"
+          },
+          "body": {
+            "type": "string"
+          },
+          "contactId": {
+            "nullable": true,
+            "type": "object"
+          },
+          "date": {
+            "type": "string"
+          },
+          "outreachId": {
+            "nullable": true,
+            "type": "object"
+          },
+          "photoUrl": {
+            "nullable": true,
+            "type": "object"
+          },
+          "title": {
+            "type": "string"
+          },
+          "workerMemberId": {
+            "nullable": true,
+            "type": "object"
           }
         },
         "type": "object"
@@ -14593,6 +15122,1717 @@
         "summary": "Edit a template",
         "tags": [
           "emails"
+        ]
+      }
+    },
+    "/evangelism/contacts": {
+      "get": {
+        "operationId": "EvangelismController_listContacts",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "workerMemberId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "\"none\" for personal evangelism",
+            "in": "query",
+            "name": "outreachId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "savedStatus",
+            "required": false,
+            "schema": {
+              "enum": [
+                "YES",
+                "NO",
+                "ALREADY"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "isStudent",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "NEW",
+                "CALL_DONE",
+                "CALL_BACK",
+                "NEEDS_VISIT",
+                "VISITED",
+                "INVITED",
+                "ATTENDED",
+                "JOINED",
+                "NOT_INTERESTED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "flag",
+            "required": false,
+            "schema": {
+              "enum": [
+                "DUE",
+                "OVERDUE",
+                "REVIEW"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only my contacts still in their 30-day window",
+            "in": "query",
+            "name": "mine",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "take",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Contacts, filtered; each with its 30-day window state",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "post": {
+        "operationId": "EvangelismController_createContact",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvangelismContactDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Add a contact from the dashboard",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/contacts/{id}": {
+      "delete": {
+        "operationId": "EvangelismController_deleteContact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a contact (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "get": {
+        "operationId": "EvangelismController_getContact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A contact: details, follow-up history, tasks, testimonies",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "patch": {
+        "operationId": "EvangelismController_updateContact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEvangelismContactDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit a contact (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/contacts/{id}/actions": {
+      "post": {
+        "operationId": "EvangelismController_logAction",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogEvangelismActionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Log a follow-up and/or change status",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/contacts/{id}/review": {
+      "post": {
+        "operationId": "EvangelismController_review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewEvangelismContactDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "End-of-window decision: hand over, extend or close (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/form": {
+      "post": {
+        "operationId": "EvangelismFormController_submit",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicEvangelismContactDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Recorded"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Record someone preached to, from the public evangelism form",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/form/options": {
+      "get": {
+        "operationId": "EvangelismFormController_options",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Workers and active outreaches for the public evangelism form",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/me": {
+      "get": {
+        "operationId": "EvangelismController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Whether I am on the Evangelism Team, and whether I lead it",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/outreaches": {
+      "get": {
+        "operationId": "EvangelismController_listOutreaches",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Outreaches with totals (also the comparison chart)",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "post": {
+        "operationId": "EvangelismController_createOutreach",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvangelismOutreachDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create an outreach (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/outreaches/{id}": {
+      "delete": {
+        "operationId": "EvangelismController_deleteOutreach",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete an outreach; its contacts become personal evangelism (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "get": {
+        "operationId": "EvangelismController_getOutreach",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "An outreach: totals, by worker, and its contacts",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "patch": {
+        "operationId": "EvangelismController_updateOutreach",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEvangelismOutreachDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit an outreach (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/performance": {
+      "get": {
+        "operationId": "EvangelismController_performanceTable",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "range",
+            "required": false,
+            "schema": {
+              "default": "month",
+              "enum": [
+                "month",
+                "quarter",
+                "all"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Per-worker figures for the leaderboard",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/summary": {
+      "get": {
+        "operationId": "EvangelismController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Dashboard figures: reached, saved, follow-ups, visitations, invited/attended",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/tasks": {
+      "get": {
+        "operationId": "EvangelismController_listTasks",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "mine",
+              "enum": [
+                "mine",
+                "all"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "PENDING",
+                "IN_PROGRESS",
+                "DONE"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "contactId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "My tasks, or every task (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "post": {
+        "operationId": "EvangelismController_createTask",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvangelismTaskDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Create and assign a task (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/tasks/{id}": {
+      "delete": {
+        "operationId": "EvangelismController_deleteTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a task (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "patch": {
+        "operationId": "EvangelismController_updateTask",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEvangelismTaskDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update a task (leaders: anything; assignees: status)",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/tasks/{id}/notes": {
+      "post": {
+        "operationId": "EvangelismController_addTaskNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvangelismTaskNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Add a note to a task",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/team": {
+      "get": {
+        "operationId": "EvangelismController_team",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The Evangelism Team roster",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/testimonies": {
+      "get": {
+        "operationId": "EvangelismController_listTestimonies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Testimonies from the field",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "post": {
+        "operationId": "EvangelismController_createTestimony",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvangelismTestimonyDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Record a testimony",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/testimonies/{id}": {
+      "delete": {
+        "operationId": "EvangelismController_deleteTestimony",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a testimony (leaders, or whoever recorded it)",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "patch": {
+        "operationId": "EvangelismController_updateTestimony",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEvangelismTestimonyDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit a testimony, or approve it to share (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/testimonies/photo": {
+      "post": {
+        "operationId": "EvangelismController_uploadPhoto",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Upload a testimony photo; returns its URL",
+        "tags": [
+          "evangelism"
         ]
       }
     },

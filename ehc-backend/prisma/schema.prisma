@@ -2902,3 +2902,187 @@ model SermonDigest {
   @@unique([tenantId, videoId])
   @@index([tenantId, status, publishedAt])
 }
+
+// ─── Evangelism (Growth & Outreach → Evangelism Team) ──────────────────────────
+// Status/kind columns are plain text, validated in the API (see
+// src/evangelism/evangelism.types.ts), so adding a value never needs a migration.
+// Member ids (workers, assignees, actors) are plain ids resolved by the service:
+// the unit roster changes, the history must not.
+
+/// An outreach the Evangelism Team goes out on ("Street Outreach – Sept 2026").
+model EvangelismOutreach {
+  id          String                     @id
+  tenantId    String
+  name        String
+  date        DateTime
+  location    String?
+  description String?
+  /// Offered on the public form while true.
+  active      Boolean                    @default(true)
+  createdById String?
+  updatedById String?
+  createdAt   DateTime                   @default(now())
+  updatedAt   DateTime                   @default(now())
+  Workers     EvangelismOutreachWorker[]
+  Contacts    EvangelismContact[]
+  Testimonies EvangelismTestimony[]
+
+  @@index([tenantId, date])
+}
+
+/// A team member who went on an outreach.
+model EvangelismOutreachWorker {
+  id         String             @id
+  outreachId String
+  memberId   String
+  Outreach   EvangelismOutreach @relation(fields: [outreachId], references: [id], onDelete: Cascade)
+
+  @@unique([outreachId, memberId])
+  @@index([memberId])
+}
+
+/// Someone the team preached to. Phone and address never leave the
+/// authenticated Evangelism endpoints.
+model EvangelismContact {
+  id             String                @id
+  tenantId       String
+  name           String
+  phone          String
+  address        String
+  /// YES | NO | ALREADY
+  savedStatus    String
+  isStudent      Boolean               @default(false)
+  school         String?
+  level          String?
+  discussion     String?
+  /// The worker who preached to them — responsible for follow-up by default.
+  workerMemberId String?
+  /// Their name as it was, or typed in under "Other".
+  workerName     String
+  outreachId     String?
+  contactDate    DateTime
+  /// FOLLOW_UP_CALL | CALL_BACK | NEEDS_VISIT | INVITE
+  nextAction     String?
+  consent        Boolean               @default(false)
+  /// See CONTACT_STATUSES.
+  status         String                @default("NEW")
+  callBackAt     DateTime?
+  lastActionAt   DateTime?
+  /// End of the follow-up window: contact date + 30 days, moved on by "extend".
+  windowEndsAt   DateTime
+  /// HANDED_OVER | EXTENDED | CLOSED — the leader's call at the end of the window.
+  reviewOutcome  String?
+  reviewedAt     DateTime?
+  closedAt       DateTime?
+  invitedAt      DateTime?
+  attendedAt     DateTime?
+  /// FORM (public link) | DASHBOARD
+  source         String                @default("FORM")
+  createdById    String?
+  updatedById    String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @default(now())
+  Outreach       EvangelismOutreach?   @relation(fields: [outreachId], references: [id], onDelete: SetNull)
+  Activities     EvangelismActivity[]
+  Tasks          EvangelismTask[]
+  Testimonies    EvangelismTestimony[]
+
+  @@index([tenantId, contactDate])
+  @@index([workerMemberId])
+  @@index([outreachId])
+}
+
+/// Everything done with a contact — calls, visits, notes, status moves, edits —
+/// and who did it. Doubles as the contact's audit trail.
+model EvangelismActivity {
+  id            String            @id
+  tenantId      String
+  contactId     String
+  /// CREATED | CALL | VISIT | MESSAGE | NOTE | STATUS | EDIT | REVIEW
+  kind          String
+  outcome       String?
+  note          String?
+  statusFrom    String?
+  statusTo      String?
+  happenedAt    DateTime
+  actorMemberId String?
+  actorName     String
+  createdAt     DateTime          @default(now())
+  Contact       EvangelismContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([contactId, happenedAt])
+  @@index([tenantId, actorMemberId])
+}
+
+model EvangelismTask {
+  id          String                   @id
+  tenantId    String
+  title       String
+  description String?
+  contactId   String?
+  /// CALL | VISIT | INVITE | PRAYER | OTHER
+  type        String
+  dueAt       DateTime?
+  /// LOW | MEDIUM | HIGH
+  priority    String                   @default("MEDIUM")
+  /// PENDING | IN_PROGRESS | DONE
+  status      String                   @default("PENDING")
+  completedAt DateTime?
+  createdById String?
+  updatedById String?
+  createdAt   DateTime                 @default(now())
+  updatedAt   DateTime                 @default(now())
+  Contact     EvangelismContact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  Assignees   EvangelismTaskAssignee[]
+  Notes       EvangelismTaskNote[]
+
+  @@index([tenantId, status])
+  @@index([contactId])
+}
+
+model EvangelismTaskAssignee {
+  id       String         @id
+  taskId   String
+  memberId String
+  Task     EvangelismTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([taskId, memberId])
+  @@index([memberId])
+}
+
+model EvangelismTaskNote {
+  id             String         @id
+  taskId         String
+  body           String
+  authorMemberId String?
+  authorName     String
+  createdAt      DateTime       @default(now())
+  Task           EvangelismTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model EvangelismTestimony {
+  id              String              @id
+  tenantId        String
+  title           String
+  body            String
+  date            DateTime
+  contactId       String?
+  outreachId      String?
+  workerMemberId  String?
+  workerName      String?
+  photoUrl        String?
+  /// "Approved to share" — a leader's say-so for church announcements.
+  approved        Boolean             @default(false)
+  approvedAt      DateTime?
+  approvedByName  String?
+  submittedById   String?
+  submittedByName String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @default(now())
+  Contact         EvangelismContact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  Outreach        EvangelismOutreach? @relation(fields: [outreachId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, date])
+}

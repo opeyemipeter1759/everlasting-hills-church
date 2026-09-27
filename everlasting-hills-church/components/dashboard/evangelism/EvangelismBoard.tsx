@@ -1,0 +1,110 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Home, ListChecks, Map, MessageSquareQuote, Trophy, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
+import { useEvangelismMe, useEvangelismSummary } from "@/lib/api/evangelism";
+import { FollowUpTabs, TABS_BOTTOM_SPACE } from "@/components/dashboard/follow-up/FollowUpTabs";
+import { BoardSkeleton } from "@/components/dashboard/follow-up/BoardSkeleton";
+import { EvangelismHeader } from "./EvangelismHeader";
+import { OverviewTab } from "./OverviewTab";
+import { ContactsTab } from "./ContactsTab";
+import { TasksTab } from "./TasksTab";
+import { OutreachesTab } from "./OutreachesTab";
+import { TestimoniesTab } from "./TestimoniesTab";
+import { TeamTab } from "./TeamTab";
+import { ContactDrawer } from "./ContactDrawer";
+
+export type EvangelismTab = "home" | "contacts" | "tasks" | "outreaches" | "testimonies" | "team";
+
+const TABS: { id: EvangelismTab; label: string; icon: LucideIcon }[] = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "contacts", label: "Contacts", icon: Users },
+  { id: "tasks", label: "Tasks", icon: ListChecks },
+  { id: "outreaches", label: "Outreaches", icon: Map },
+  { id: "testimonies", label: "Testimonies", icon: MessageSquareQuote },
+  { id: "team", label: "Team", icon: Trophy },
+];
+
+const isTab = (v: string | null): v is EvangelismTab => !!v && TABS.some((t) => t.id === v);
+
+/**
+ * The Evangelism Team's page. The tab and an open contact live in the URL
+ * (?tab=tasks, ?contact=…) so a task email or a shared link lands in the
+ * right place, and Back closes what you opened.
+ */
+export default function EvangelismBoard() {
+  const me = useEvangelismMe();
+  const summary = useEvangelismSummary();
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+
+  const tabParam = params?.get("tab") ?? null;
+  const [active, setActive] = useState<EvangelismTab>(isTab(tabParam) ? tabParam : "home");
+  const contactId = params?.get("contact") ?? null;
+
+  useEffect(() => {
+    if (isTab(tabParam)) setActive(tabParam);
+  }, [tabParam]);
+
+  const setParam = useCallback(
+    (key: string, value: string | null) => {
+      const next = new URLSearchParams(params?.toString() ?? "");
+      if (value) next.set(key, value);
+      else next.delete(key);
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : (pathname ?? ""), { scroll: false });
+    },
+    [params, pathname, router],
+  );
+
+  const changeTab = (tab: EvangelismTab) => {
+    setActive(tab);
+    const next = new URLSearchParams(params?.toString() ?? "");
+    next.set("tab", tab);
+    next.delete("task");
+    router.replace(`${pathname}?${next.toString()}`, { scroll: false });
+  };
+  const openContact = useCallback((id: string) => setParam("contact", id), [setParam]);
+  const closeContact = useCallback(() => setParam("contact", null), [setParam]);
+
+  if (me.isLoading) return <BoardSkeleton />;
+  if (me.isError || !me.data) {
+    return (
+      <div className="mx-auto max-w-md rounded-3xl border border-gray-200 bg-white p-8 text-center dark:border-white/10 dark:bg-[#161618]">
+        <ShieldAlert size={28} className="mx-auto text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
+        <h1 className="mt-3 text-lg font-bold text-gray-900 dark:text-white">Evangelism is for the Evangelism Team</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-white/50">
+          {(me.error as { message?: string } | null)?.message ?? "Ask the unit leader to add you to the team."}
+        </p>
+      </div>
+    );
+  }
+
+  const canLead = me.data.canLead;
+  const s = summary.data;
+  const counts: Partial<Record<EvangelismTab, number>> = s
+    ? { contacts: s.reached, tasks: s.mine.openTasks }
+    : {};
+
+  return (
+    <div className={`space-y-4 md:px-5 ${TABS_BOTTOM_SPACE}`}>
+      <EvangelismHeader canLead={canLead} summary={summary} />
+      <FollowUpTabs tabs={TABS} active={active} counts={counts} label="Evangelism views" onChange={changeTab} />
+
+      <section role="tabpanel" aria-label={TABS.find((t) => t.id === active)?.label}>
+        {active === "home" && <OverviewTab canLead={canLead} onOpenContact={openContact} onGoTo={changeTab} />}
+        {active === "contacts" && <ContactsTab canLead={canLead} onOpenContact={openContact} />}
+        {active === "tasks" && <TasksTab canLead={canLead} focusTaskId={params?.get("task") ?? null} onOpenContact={openContact} />}
+        {active === "outreaches" && <OutreachesTab canLead={canLead} onOpenContact={openContact} />}
+        {active === "testimonies" && <TestimoniesTab canLead={canLead} myMemberId={me.data.memberId} />}
+        {active === "team" && <TeamTab canLead={canLead} unitId={me.data.unitId} />}
+      </section>
+
+      <ContactDrawer contactId={contactId} canLead={canLead} onClose={closeContact} />
+    </div>
+  );
+}

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, Users2 } from 'lucide-react';
+import { ChevronRight, Megaphone, Users2 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useTheme } from '@/context/ThemeContext';
 import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
@@ -15,6 +15,7 @@ import { getInitials, truncateText } from '@/utils/stringUtils';
 import { SidebarSkeleton } from '@/components/ui/skeleton/SidebarSkeleton';
 import { isAudioProductionUnitName } from '@/lib/audio-production';
 import { isMembershipAssimilationDepartment, MEMBERSHIP_ASSIMILATION_BASE } from '@/lib/membership-assimilation';
+import { GROWTH_OUTREACH_BASE, isEvangelismUnit, isGrowthOutreachDepartment } from '@/lib/growth-outreach';
 
 type NavItem = {
   name: string;
@@ -164,33 +165,39 @@ const AppSidebar: React.FC = () => {
       })).filter((group) => group.items.length > 0)
     : [];
 
-  // Membership and Assimilation is led by its units rather than by fixed pages:
-  // one item per unit, named after the unit. The API decides who sees what — a
-  // member gets only their own units, the department's Admin Head gets all of
-  // them — so there is nothing to gate here beyond having any at all.
-  const assimilation = myDepartmentUnits.find((d) => isMembershipAssimilationDepartment(d.department.name));
-  const assimilationGroup =
-    assimilation && assimilation.units.length > 0
-      ? {
-          section: assimilation.department.name,
-          items: assimilation.units.map((unit) => ({
-            label: unit.name,
-            href: `${MEMBERSHIP_ASSIMILATION_BASE}/${unit.id}`,
-            icon: Users2,
-            minRole: 'MEMBER' as const,
-          })),
-        }
-      : null;
+  // Membership and Assimilation, and Growth & Outreach, are led by their units
+  // rather than by fixed pages: one item per unit, named after the unit. The
+  // API decides who sees what — a member gets only their own units, the
+  // department's Admin Head gets all of them — so there is nothing to gate here
+  // beyond having any at all.
+  const unitLedGroups = [
+    { match: isMembershipAssimilationDepartment, base: MEMBERSHIP_ASSIMILATION_BASE },
+    { match: isGrowthOutreachDepartment, base: GROWTH_OUTREACH_BASE },
+  ].flatMap(({ match, base }) => {
+    const department = myDepartmentUnits.find((d) => match(d.department.name));
+    if (!department || department.units.length === 0) return [];
+    return [
+      {
+        section: department.department.name,
+        items: department.units.map((unit) => ({
+          label: unit.name,
+          href: `${base}/${unit.id}`,
+          icon: isEvangelismUnit(unit.name) ? Megaphone : Users2,
+          minRole: 'MEMBER' as const,
+        })),
+      },
+    ];
+  });
 
   // Sits directly above the Member section, which is last — so it reads as the
   // work you do for the church, before your own member pages.
   const navGroups = (() => {
-    if (!assimilationGroup) return visibleGroups;
+    if (unitLedGroups.length === 0) return visibleGroups;
     const memberIndex = visibleGroups.findIndex((group) => group.section === 'Member');
-    if (memberIndex === -1) return [...visibleGroups, assimilationGroup];
+    if (memberIndex === -1) return [...visibleGroups, ...unitLedGroups];
     return [
       ...visibleGroups.slice(0, memberIndex),
-      assimilationGroup,
+      ...unitLedGroups,
       ...visibleGroups.slice(memberIndex),
     ];
   })();

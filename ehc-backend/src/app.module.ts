@@ -21,6 +21,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { FollowUpModule } from './follow-up/follow-up.module';
+import { EvangelismModule } from './evangelism/evangelism.module';
 import { CmsModule } from './cms/cms.module';
 import { VisitorsModule } from './visitors/visitors.module';
 import { UnitsModule } from './units/units.module';
@@ -132,6 +133,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     MembersModule,
     AssignmentsModule,
     FollowUpModule,
+    EvangelismModule,
     CmsModule,
     VisitorsModule,
     UnitsModule,
