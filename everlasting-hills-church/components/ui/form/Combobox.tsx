@@ -21,6 +21,8 @@ interface ComboboxProps {
   /** Called with the raw typed query, for callers that search server-side
    * (in addition to the built-in client-side filter over `options`). */
   onQueryChange?: (query: string) => void;
+  /** Replaces the closed control's box styling, to match a form's own inputs. */
+  triggerClassName?: string;
 }
 
 export function Combobox({
@@ -33,6 +35,7 @@ export function Combobox({
   disabled = false,
   emptyText = "No results found.",
   onQueryChange,
+  triggerClassName,
 }: ComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -126,7 +129,10 @@ export function Combobox({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={open ? listboxId : undefined}
-        className="w-full flex items-center justify-between gap-2 rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-sm px-3 py-2.5 outline-none focus:ring-2 focus:ring-[#87102C]/25 focus:border-[#87102C]/40 transition disabled:opacity-50 text-left"
+        className={`w-full flex items-center justify-between gap-2 text-left transition disabled:opacity-50 ${
+          triggerClassName ??
+          "rounded-lg border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-sm px-3 py-2.5 outline-none focus:ring-2 focus:ring-[#87102C]/25 focus:border-[#87102C]/40"
+        }`}
       >
         <span className={selected ? "text-gray-900 dark:text-white" : "text-gray-400"}>
           {loading ? "Loading…" : selected ? selected.label : placeholder}
