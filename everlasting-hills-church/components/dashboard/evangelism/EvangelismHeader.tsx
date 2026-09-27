@@ -17,8 +17,12 @@ function formUrl(): string {
  */
 export function EvangelismHeader({ summary }: { summary: UseQueryResult<EvangelismSummary> }) {
   return (
-    <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#87102C] via-[#8f1231] to-[#5E0A1E] px-5 py-5 text-white shadow-lg shadow-[#87102C]/15 sm:px-7 sm:py-6">
-      <div aria-hidden="true" className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+    // Not overflow-hidden: the outreach form menu drops out below the band.
+    // Only the glow is clipped, in its own layer.
+    <header className="relative z-30 rounded-2xl bg-gradient-to-br from-[#87102C] via-[#8f1231] to-[#5E0A1E] px-5 py-5 text-white shadow-lg shadow-[#87102C]/15 sm:px-7 sm:py-6">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+        <div className="absolute -right-16 -top-20 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
+      </div>
       <div className="relative flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3.5">
           <span className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15 ring-1 ring-inset ring-white/20 sm:flex">
@@ -93,7 +97,7 @@ function ShareFormMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-30 mt-2 w-72 overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 text-gray-800 shadow-xl dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white/85"
+          className="absolute right-0 z-30 mt-2 w-72 max-w-[calc(100vw-2.5rem)] overflow-hidden rounded-2xl border border-gray-200 bg-white p-1.5 text-gray-800 shadow-xl dark:border-white/10 dark:bg-[#1c1c1e] dark:text-white/85"
         >
           <p className="px-3 pb-2 pt-2 text-xs text-gray-500 dark:text-white/50">
             The public form the team fills in during outreach — no sign-in needed.
