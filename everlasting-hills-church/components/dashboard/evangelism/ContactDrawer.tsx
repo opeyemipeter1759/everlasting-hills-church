@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 import {
+  ArrowRight,
   CalendarDays,
   Flag,
   GraduationCap,
+  History,
+  LayoutList,
   ListChecks,
   MapPin,
   MessageCircle,
   Pencil,
-  Phone,
   Plus,
+  ShieldCheck,
   Trash2,
   UserRound,
-  ArrowRight,
 } from "lucide-react";
 import Drawer from "@/components/ui/overlay/Drawer";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
@@ -36,7 +38,7 @@ import { Select } from "@/components/ui/select";
 import { ContactDialog } from "./ContactDialog";
 import { LogActionForm } from "./LogActionForm";
 import { TaskDialog } from "./TaskDialog";
-import { ErrorNote, FlagBadge, Initials, Loading, SavedBadge, StatusBadge, WindowProgress, cardClass, secondaryButton, selectClass } from "./bits";
+import { ErrorNote, FlagBadge, Initials, Loading, SavedBadge, StatusBadge, cardClass, iconButton, secondaryButton, selectClass } from "./bits";
 import {
   ACTION_LABEL,
   NEXT_ACTION_LABEL,
@@ -47,7 +49,6 @@ import {
   errorText,
   fmtDate,
   fmtDateTime,
-  whatsappLink,
 } from "./labels";
 
 /** One contact's profile: who they are, where they are in follow-up, and everything done so far. */
@@ -68,12 +69,16 @@ export function ContactDrawer({ contactId, canLead, onClose }: { contactId: stri
   );
 }
 
+type ProfileTab = "overview" | "feedback" | "activity";
+
 function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; canLead: boolean; onClose: () => void }) {
+  const [tab, setTab] = useState<ProfileTab>("overview");
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const remove = useDeleteContact();
   const needsReview = c.window.flag === "REVIEW";
+  const follower = c.assignee ?? { id: c.worker.id, name: c.worker.name, photoUrl: c.worker.photoUrl };
 
   async function doDelete() {
     try {
@@ -86,161 +91,252 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
     }
   }
 
-  return (
-    <div className="pb-12">
-      <header className="px-5 pb-5 pt-14 sm:px-7">
-        <div className="flex items-start gap-4">
-          <Initials name={c.name} size={56} />
-          <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-bold leading-tight text-gray-900 dark:text-white sm:text-2xl">{c.name}</h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-white/50">{displayPhone(c.phone)}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              <SavedBadge status={c.savedStatus} />
-              <StatusBadge status={c.status} />
-              {c.window.flag && <FlagBadge flag={c.window.flag} />}
-            </div>
-          </div>
-        </div>
+  const tabs: { id: ProfileTab; label: string; icon: React.ElementType; count?: number }[] = [
+    { id: "overview", label: "Overview", icon: LayoutList },
+    { id: "feedback", label: "Feedback", icon: MessageCircle, count: c.feedback.total },
+    { id: "activity", label: "Activity", icon: History, count: c.activities.length + c.tasks.length },
+  ];
 
-        <div className="mt-5 flex gap-2.5">
-          <a href={`tel:${c.phone}`} className={`${secondaryButton} min-w-0 flex-1 px-3`}>
-            <Phone size={16} aria-hidden="true" /> Call
-          </a>
-          <a href={whatsappLink(c.phone)} target="_blank" rel="noreferrer" className={`${secondaryButton} min-w-0 flex-1 px-3`}>
-            <MessageCircle size={16} aria-hidden="true" /> WhatsApp
-          </a>
+  return (
+    <div className="flex min-h-full flex-col">
+      {/* Header: a soft wash of the church colour, the person, and where they stand. */}
+      <header className="bg-gradient-to-b from-[#FFF1F4] via-[#FFF8F9] to-white px-5 pb-5 pt-5 dark:from-[#87102C]/25 dark:via-[#87102C]/10 dark:to-transparent sm:px-7">
+        <div className="mr-10 flex h-8 items-center justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#87102C]/70 dark:text-[#FFB3C1]/70">Evangelism contact</p>
           {canLead && (
-            <>
-              <button type="button" onClick={() => setEditing(true)} aria-label="Edit contact" title="Edit" className={`${secondaryButton} w-10 px-0`}>
-                <Pencil size={16} className="shrink-0" />
+            <div className="flex items-center gap-0.5">
+              <button type="button" onClick={() => setEditing(true)} aria-label="Edit contact" title="Edit" className={iconButton}>
+                <Pencil size={16} />
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmDelete(true)}
                 aria-label="Delete contact"
                 title="Delete"
-                className={`${secondaryButton} w-10 px-0 text-rose-600 hover:border-rose-200 hover:bg-rose-50 dark:text-rose-400`}
+                className={`${iconButton} hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10`}
               >
-                <Trash2 size={16} className="shrink-0" />
+                <Trash2 size={16} />
               </button>
-            </>
+            </div>
           )}
         </div>
 
-        <div className="mt-5 rounded-2xl bg-gray-50 p-4 dark:bg-white/[0.04]">
-          <div className="mb-2 flex items-center justify-between text-xs">
-            <span className="font-medium text-gray-600 dark:text-white/60">30-day follow-up</span>
-            {c.window.open && c.window.nextDueAt && c.window.flag !== "REVIEW" && (
-              <span className="text-gray-500 dark:text-white/45">Next due {fmtDate(c.window.nextDueAt)}</span>
-            )}
+        <div className="mt-4 flex items-center gap-4">
+          <span className="rounded-full ring-4 ring-white dark:ring-[#161618]">
+            <Initials name={c.name} size={64} />
+          </span>
+          <div className="min-w-0">
+            <h2 className="truncate text-2xl font-bold tracking-tight text-gray-900 dark:text-white">{c.name}</h2>
+            <p className="mt-0.5 text-sm tabular-nums text-gray-500 dark:text-white/55">{displayPhone(c.phone)}</p>
           </div>
-          <WindowProgress window={c.window} reviewOutcome={c.reviewOutcome} />
         </div>
+        <div className="mt-4 flex flex-wrap items-center gap-1.5">
+          <SavedBadge status={c.savedStatus} />
+          <StatusBadge status={c.status} />
+          {c.window.flag && <FlagBadge flag={c.window.flag} />}
+          {c.isStudent && (
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white px-2.5 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-200 dark:bg-white/10 dark:text-white/70 dark:ring-white/10">
+              <GraduationCap size={12} aria-hidden="true" /> Student
+            </span>
+          )}
+        </div>
+
+        {/* Three facts at a glance. */}
+        <dl className="mt-5 grid grid-cols-3 divide-x divide-gray-100 rounded-2xl bg-white shadow-[0_1px_3px_rgba(16,24,40,0.06)] ring-1 ring-gray-200/70 dark:divide-white/[0.06] dark:bg-[#1c1c1e] dark:ring-white/10">
+          <div className="min-w-0 px-3.5 py-3">
+            <dt className="text-[11px] font-medium text-gray-500 dark:text-white/45">Follow-up</dt>
+            <dd className="mt-1">
+              {c.window.open ? (
+                <>
+                  <span className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
+                    Day {c.window.day}
+                    <span className="font-normal text-gray-400"> / {c.window.of}</span>
+                  </span>
+                  <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-gray-100 dark:bg-white/10">
+                    <span
+                      className={`block h-full rounded-full ${
+                        c.window.flag === "OVERDUE" ? "bg-rose-500" : c.window.flag === "DUE" ? "bg-amber-500" : c.window.flag === "REVIEW" ? "bg-violet-500" : "bg-[#87102C]"
+                      }`}
+                      style={{ width: `${Math.max(4, Math.round((c.window.day / c.window.of) * 100))}%` }}
+                    />
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm font-semibold text-gray-500 dark:text-white/50">Finished</span>
+              )}
+            </dd>
+          </div>
+          <div className="min-w-0 px-3.5 py-3">
+            <dt className="text-[11px] font-medium text-gray-500 dark:text-white/45">Following up</dt>
+            <dd className="mt-1 truncate text-sm font-semibold text-gray-900 dark:text-white" title={follower.name}>
+              {follower.name.split(" ")[0]}
+            </dd>
+          </div>
+          <div className="min-w-0 px-3.5 py-3">
+            <dt className="text-[11px] font-medium text-gray-500 dark:text-white/45">Feedback</dt>
+            <dd className="mt-1 text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
+              {c.feedback.total} {c.feedback.total === 1 ? "message" : "messages"}
+            </dd>
+          </div>
+        </dl>
       </header>
 
-      <div className="space-y-8 border-t border-gray-100 px-5 pt-6 dark:border-white/[0.06] sm:px-7">
-        {canLead && needsReview && <ReviewPanel contact={c} />}
+      {/* Tabs, pinned while the panel scrolls. */}
+      <div role="tablist" aria-label="Contact sections" className="sticky top-0 z-10 grid grid-cols-3 border-b sm:flex sm:gap-1 border-gray-200 bg-white px-4 dark:border-white/10 dark:bg-[#161618] sm:px-6">
+        {tabs.map((t) => {
+          const selected = t.id === tab;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              onClick={() => setTab(t.id)}
+              className={`relative flex h-12 items-center justify-center gap-2 px-1 text-sm font-medium transition-colors sm:justify-start sm:px-3 ${
+                selected ? "text-[#87102C] dark:text-[#FFB3C1]" : "text-gray-500 hover:text-gray-900 dark:text-white/50 dark:hover:text-white"
+              }`}
+            >
+              <t.icon size={16} aria-hidden="true" className={`hidden sm:block ${selected ? "" : "text-gray-400"}`} />
+              {t.label}
+              {typeof t.count === "number" && t.count > 0 && (
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${
+                    selected ? "bg-[#87102C] text-white dark:bg-[#FFB3C1] dark:text-[#5E0A1E]" : "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60"
+                  }`}
+                >
+                  {t.count}
+                </span>
+              )}
+              <span
+                aria-hidden="true"
+                className={`absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#87102C] dark:bg-[#FFB3C1] ${selected ? "opacity-100" : "opacity-0"}`}
+              />
+            </button>
+          );
+        })}
+      </div>
 
-        <FollowingUp contact={c} canLead={canLead} />
+      <div role="tabpanel" className="flex-1 space-y-6 bg-gray-50/60 px-5 py-6 dark:bg-transparent sm:px-7">
+        {tab === "overview" && (
+          <>
+            {canLead && needsReview && <ReviewPanel contact={c} />}
 
-        <Section title="Details">
-          <dl className={`${cardClass} grid gap-x-6 gap-y-4 p-4 sm:grid-cols-2 sm:p-5`}>
-            <Fact icon={MapPin} label="Address" value={c.address} />
-            <Fact icon={Flag} label="Outreach" value={c.outreach?.name ?? "Personal evangelism"} />
-            <Fact icon={CalendarDays} label="Date of contact" value={fmtDate(c.contactDate)} />
-            <Fact icon={ArrowRight} label="Next action" value={c.nextAction ? NEXT_ACTION_LABEL[c.nextAction] : "—"} />
-            <Fact icon={UserRound} label="Preached to by" value={c.worker.name} />
-            {c.isStudent ? (
-              <Fact icon={GraduationCap} label="Student" value={[c.school, c.level].filter(Boolean).join(" · ") || "Yes"} />
-            ) : (
-              <Fact icon={GraduationCap} label="Student" value="No" />
+            <FollowingUp contact={c} canLead={canLead} />
+
+            <Section title="Details">
+              <dl className={`${cardClass} divide-y divide-gray-100 dark:divide-white/[0.06]`}>
+                <Fact icon={MapPin} label="Address" value={c.address} />
+                <Fact icon={Flag} label="Outreach" value={c.outreach?.name ?? "Personal evangelism"} />
+                <Fact icon={CalendarDays} label="Date of contact" value={fmtDate(c.contactDate)} />
+                <Fact icon={UserRound} label="Preached to by" value={c.worker.name} />
+                <Fact icon={ArrowRight} label="Next action" value={c.nextAction ? NEXT_ACTION_LABEL[c.nextAction] : "—"} />
+                {c.isStudent && <Fact icon={GraduationCap} label="School" value={[c.school, c.level].filter(Boolean).join(" · ") || "—"} />}
+                {c.status === "CALL_BACK" && c.callBackAt && <Fact icon={CalendarDays} label="Call back on" value={fmtDate(c.callBackAt)} />}
+              </dl>
+            </Section>
+
+            {c.discussion && (
+              <Section title="What was discussed">
+                <blockquote className={`${cardClass} border-l-4 border-l-[#87102C] p-4 text-sm leading-relaxed text-gray-800 dark:border-l-[#FFB3C1] dark:text-white/85 sm:p-5`}>
+                  <p className="whitespace-pre-wrap break-words">{c.discussion}</p>
+                </blockquote>
+              </Section>
             )}
-            {c.status === "CALL_BACK" && c.callBackAt && <Fact icon={Phone} label="Call back on" value={fmtDate(c.callBackAt)} />}
-          </dl>
-          {c.discussion && (
-            <div className="mt-3 rounded-2xl border border-gray-100 p-4 dark:border-white/[0.06]">
-              <p className="text-xs font-medium text-gray-500 dark:text-white/45">What was discussed</p>
-              <p className="mt-1.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-800 dark:text-white/85">{c.discussion}</p>
-            </div>
-          )}
-          <p className="mt-3 text-xs leading-relaxed text-gray-400 dark:text-white/40">
-            {c.consent ? "Agreed to be contacted by the church." : "Did not confirm they agree to be contacted — go gently."} Recorded{" "}
-            {c.source === "FORM" ? "on the outreach form" : `by ${c.createdBy ?? "the team"}`}
-            {c.updatedBy ? `; last updated by ${c.updatedBy}, ${fmtDateTime(c.updatedAt)}` : ""}.
-          </p>
-        </Section>
 
-        <div className={`${cardClass} px-4 pb-2 sm:px-5`}>
-          <ActivityThread
-            person={{ kind: EVANGELISM_NOTE_KIND, id: c.id, name: c.name }}
-            title="Feedback"
-            notesBase={EVANGELISM_NOTES_BASE}
-            listKey={EVANGELISM_CONTACTS_KEY}
-          />
-        </div>
+            {c.window.open && (
+              <Section title="Log a follow-up">
+                <div className={`${cardClass} p-4 sm:p-5`}>
+                  <LogActionForm contactId={c.id} status={c.status} />
+                </div>
+              </Section>
+            )}
 
-        {c.window.open && (
-          <Section title="Log a follow-up">
-            <div className={`${cardClass} p-4 sm:p-5`}>
-              <LogActionForm contactId={c.id} status={c.status} />
-            </div>
-          </Section>
+            <p className="flex items-start gap-2 text-xs leading-relaxed text-gray-500 dark:text-white/40">
+              <ShieldCheck size={14} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
+              <span>
+                {c.consent ? "Agreed to be contacted by the church." : "Did not confirm they agree to be contacted — go gently."} Recorded{" "}
+                {c.source === "FORM" ? "on the outreach form" : `by ${c.createdBy ?? "the team"}`}
+                {c.updatedBy ? `; last updated by ${c.updatedBy}, ${fmtDateTime(c.updatedAt)}` : ""}.
+              </span>
+            </p>
+          </>
         )}
 
-        <Section
-          title="Tasks"
-          count={c.tasks.length}
-          action={
-            canLead ? (
-              <button type="button" onClick={() => setAssigning(true)} className="inline-flex items-center gap-1 text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
-                <Plus size={15} aria-hidden="true" /> Assign a task
-              </button>
-            ) : null
-          }
-        >
-          {c.tasks.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-white/45">No tasks for this contact.</p>
-          ) : (
-            <ul className={`${cardClass} divide-y divide-gray-100 dark:divide-white/[0.06]`}>
-              {c.tasks.map((t) => (
-                <li key={t.id} className="flex items-center gap-3 px-4 py-3">
-                  <ListChecks size={16} className="shrink-0 text-gray-400" aria-hidden="true" />
-                  <div className="min-w-0 flex-1">
-                    <p className={`truncate text-sm font-medium ${t.status === "DONE" ? "text-gray-400 line-through" : "text-gray-900 dark:text-white"}`}>{t.title}</p>
-                    <p className="truncate text-xs text-gray-500 dark:text-white/45">
-                      {TASK_TYPE_LABEL[t.type]} · {t.assignees.map((a) => a.name).join(", ")}
-                      {t.dueAt ? ` · due ${fmtDate(t.dueAt)}` : ""}
-                    </p>
-                  </div>
-                  <span className={`shrink-0 text-xs font-medium ${t.overdue ? "text-rose-600" : "text-gray-500 dark:text-white/50"}`}>
-                    {t.overdue ? "Overdue" : TASK_STATUS_LABEL[t.status]}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
+        {tab === "feedback" && (
+          <div className={`${cardClass} px-4 pb-2 sm:px-5`}>
+            <ActivityThread
+              person={{ kind: EVANGELISM_NOTE_KIND, id: c.id, name: c.name }}
+              title="Feedback"
+              notesBase={EVANGELISM_NOTES_BASE}
+              listKey={EVANGELISM_CONTACTS_KEY}
+            />
+          </div>
+        )}
 
-        <Section title="History" count={c.activities.length}>
-          <History items={c.activities} />
-        </Section>
+        {tab === "activity" && (
+          <>
+            <Section
+              title="Tasks"
+              count={c.tasks.length}
+              action={
+                canLead ? (
+                  <button
+                    type="button"
+                    onClick={() => setAssigning(true)}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]"
+                  >
+                    <Plus size={15} aria-hidden="true" /> Assign a task
+                  </button>
+                ) : null
+              }
+            >
+              {c.tasks.length === 0 ? (
+                <p className={`${cardClass} px-4 py-5 text-center text-sm text-gray-500 dark:text-white/45`}>No tasks for this contact.</p>
+              ) : (
+                <ul className={`${cardClass} divide-y divide-gray-100 dark:divide-white/[0.06]`}>
+                  {c.tasks.map((t) => (
+                    <li key={t.id} className="flex items-center gap-3 px-4 py-3">
+                      <ListChecks size={16} className="shrink-0 text-gray-400" aria-hidden="true" />
+                      <div className="min-w-0 flex-1">
+                        <p className={`truncate text-sm font-medium ${t.status === "DONE" ? "text-gray-400 line-through" : "text-gray-900 dark:text-white"}`}>{t.title}</p>
+                        <p className="truncate text-xs text-gray-500 dark:text-white/45">
+                          {TASK_TYPE_LABEL[t.type]} · {t.assignees.map((a) => a.name).join(", ")}
+                          {t.dueAt ? ` · due ${fmtDate(t.dueAt)}` : ""}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 text-xs font-medium ${t.overdue ? "text-rose-600" : "text-gray-500 dark:text-white/50"}`}>
+                        {t.overdue ? "Overdue" : TASK_STATUS_LABEL[t.status]}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
 
-        {c.testimonies.length > 0 && (
-          <Section title="Testimonies" count={c.testimonies.length}>
-            <ul className={`${cardClass} divide-y divide-gray-100 dark:divide-white/[0.06]`}>
-              {c.testimonies.map((t) => (
-                <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <span className="font-medium text-gray-900 dark:text-white/90">{t.title}</span>
-                  <span className="shrink-0 text-xs text-gray-500">{t.approved ? "Approved to share" : fmtDate(t.date)}</span>
-                </li>
-              ))}
-            </ul>
-          </Section>
+            <Section title="History" count={c.activities.length}>
+              <div className={`${cardClass} p-4 sm:p-5`}>
+                <HistoryList items={c.activities} />
+              </div>
+            </Section>
+
+            {c.testimonies.length > 0 && (
+              <Section title="Testimonies" count={c.testimonies.length}>
+                <ul className={`${cardClass} divide-y divide-gray-100 dark:divide-white/[0.06]`}>
+                  {c.testimonies.map((t) => (
+                    <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                      <span className="font-medium text-gray-900 dark:text-white/90">{t.title}</span>
+                      <span className="shrink-0 text-xs text-gray-500">{t.approved ? "Approved to share" : fmtDate(t.date)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            )}
+          </>
         )}
       </div>
 
       <ContactDialog open={editing} onClose={() => setEditing(false)} contact={c} />
-      <TaskDialog open={assigning} onClose={() => setAssigning(false)} contact={{ id: c.id, name: c.name }} defaultAssigneeId={c.worker.id} />
+      <TaskDialog open={assigning} onClose={() => setAssigning(false)} contact={{ id: c.id, name: c.name }} defaultAssigneeId={follower.id} />
       <ConfirmDialog
         open={confirmDelete}
         title={`Delete ${c.name}?`}
@@ -359,7 +455,7 @@ function ReviewPanel({ contact: c }: { contact: ContactDetail }) {
   );
 }
 
-function History({ items }: { items: ContactActivity[] }) {
+function HistoryList({ items }: { items: ContactActivity[] }) {
   if (items.length === 0) return <p className="text-sm text-gray-500">Nothing logged yet.</p>;
   return (
     <ol className="relative ml-3 space-y-5 border-l border-gray-200 pl-6 dark:border-white/10">
@@ -421,12 +517,12 @@ function Section({ title, count, action, children }: { title: string; count?: nu
 
 function Fact({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
   return (
-    <div className="flex items-start gap-3">
-      <Icon size={16} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
-      <div className="min-w-0">
-        <dt className="text-xs text-gray-500 dark:text-white/45">{label}</dt>
-        <dd className="mt-0.5 break-words text-sm font-medium text-gray-900 dark:text-white/90">{value}</dd>
-      </div>
+    <div className="grid gap-1 px-4 py-3 sm:grid-cols-[10rem_1fr] sm:items-start sm:gap-3 sm:px-5">
+      <dt className="flex items-center gap-2 text-xs text-gray-500 dark:text-white/45 sm:text-sm">
+        <Icon size={15} className="shrink-0 text-gray-400" aria-hidden="true" />
+        {label}
+      </dt>
+      <dd className="min-w-0 break-words text-sm font-medium text-gray-900 dark:text-white/90">{value}</dd>
     </div>
   );
 }
