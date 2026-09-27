@@ -2837,6 +2837,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/evangelism/contacts/{id}/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign someone on the team to follow this person up (leaders) */
+        post: operations["EvangelismController_assign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/evangelism/contacts/{id}/review": {
         parameters: {
             query?: never;
@@ -2899,6 +2916,59 @@ export interface paths {
         get: operations["EvangelismController_me"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/notes/{kind}/{contactId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The team's feedback on a contact, as a thread */
+        get: operations["EvangelismController_listNotes"];
+        put?: never;
+        /** Post feedback on a contact, or reply to a message */
+        post: operations["EvangelismController_addNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/notes/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a feedback message (yours, or any if you lead) */
+        delete: operations["EvangelismController_deleteNote"];
+        options?: never;
+        head?: never;
+        /** Edit your own feedback message */
+        patch: operations["EvangelismController_editNote"];
+        trace?: never;
+    };
+    "/evangelism/notes/{noteId}/reactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** React to a feedback message; the same emoji again takes it back */
+        post: operations["EvangelismController_reactNote"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7627,6 +7697,10 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        AssignEvangelismContactDto: {
+            /** @description Team member to follow them up; null hands it back to the worker who preached */
+            assigneeMemberId: Record<string, never> | null;
+        };
         AssignFollowUpDto: {
             /** @description Member id of the team member to assign */
             assigneeId: string;
@@ -8233,6 +8307,9 @@ export interface components {
             /** @example I want to start applying this by praying daily. */
             content: string;
         };
+        EditEvangelismNoteDto: {
+            body: string;
+        };
         EditFollowUpNoteDto: {
             body: string;
             /** @description The message this answers, when it is a reply. */
@@ -8278,6 +8355,11 @@ export interface components {
             workerMemberId?: string;
             /** @description "Other": a worker not on the team list */
             workerName?: string;
+        };
+        EvangelismNoteDto: {
+            body: string;
+            /** @description The message this answers, when it is a reply. */
+            parentId?: string;
         };
         EvangelismOutreachDto: {
             /** @default true */
@@ -8675,6 +8757,10 @@ export interface components {
             /** @example 08031234567 */
             phone: string;
             serviceId?: string;
+        };
+        ReactEvangelismNoteDto: {
+            /** @description A single emoji. */
+            emoji: string;
         };
         ReactionDto: {
             /**
@@ -15963,6 +16049,10 @@ export interface operations {
                 flag?: "DUE" | "OVERDUE" | "REVIEW";
                 /** @description Only my contacts still in their 30-day window */
                 mine?: boolean;
+                /** @description Contacts this person follows up (assigned, or preached to with nobody else assigned) */
+                assigneeMemberId?: string;
+                /** @description Only contacts with feedback I have not read */
+                unread?: boolean;
                 from?: string;
                 to?: string;
                 take?: number;
@@ -16171,6 +16261,43 @@ export interface operations {
             };
         };
     };
+    EvangelismController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignEvangelismContactDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     EvangelismController_review: {
         parameters: {
             query?: never;
@@ -16285,6 +16412,185 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_listNotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_addNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EvangelismNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_deleteNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_editNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditEvangelismNoteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_reactNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReactEvangelismNoteDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

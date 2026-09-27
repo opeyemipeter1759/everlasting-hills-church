@@ -82,6 +82,19 @@
         ],
         "type": "object"
       },
+      "AssignEvangelismContactDto": {
+        "properties": {
+          "assigneeMemberId": {
+            "description": "Team member to follow them up; null hands it back to the worker who preached",
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "assigneeMemberId"
+        ],
+        "type": "object"
+      },
       "AssignFollowUpDto": {
         "properties": {
           "assigneeId": {
@@ -1495,6 +1508,18 @@
         ],
         "type": "object"
       },
+      "EditEvangelismNoteDto": {
+        "properties": {
+          "body": {
+            "maxLength": 4000,
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "type": "object"
+      },
       "EditFollowUpNoteDto": {
         "properties": {
           "body": {
@@ -1604,6 +1629,22 @@
           "savedStatus",
           "isStudent",
           "consent"
+        ],
+        "type": "object"
+      },
+      "EvangelismNoteDto": {
+        "properties": {
+          "body": {
+            "maxLength": 4000,
+            "type": "string"
+          },
+          "parentId": {
+            "description": "The message this answers, when it is a reply.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
         ],
         "type": "object"
       },
@@ -2504,6 +2545,18 @@
           "firstName",
           "lastName",
           "phone"
+        ],
+        "type": "object"
+      },
+      "ReactEvangelismNoteDto": {
+        "properties": {
+          "emoji": {
+            "description": "A single emoji.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "emoji"
         ],
         "type": "object"
       },
@@ -15217,6 +15270,24 @@
             }
           },
           {
+            "description": "Contacts this person follows up (assigned, or preached to with nobody else assigned)",
+            "in": "query",
+            "name": "assigneeMemberId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only contacts with feedback I have not read",
+            "in": "query",
+            "name": "unread",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "in": "query",
             "name": "from",
             "required": false,
@@ -15589,6 +15660,72 @@
         ]
       }
     },
+    "/evangelism/contacts/{id}/assign": {
+      "post": {
+        "operationId": "EvangelismController_assign",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignEvangelismContactDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Assign someone on the team to follow this person up (leaders)",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
     "/evangelism/contacts/{id}/review": {
       "post": {
         "operationId": "EvangelismController_review",
@@ -15791,6 +15928,328 @@
           }
         ],
         "summary": "Whether I am on the Evangelism Team, and whether I lead it",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/notes/{kind}/{contactId}": {
+      "get": {
+        "operationId": "EvangelismController_listNotes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "contactId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The team's feedback on a contact, as a thread",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "post": {
+        "operationId": "EvangelismController_addNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "contactId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvangelismNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Post feedback on a contact, or reply to a message",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/notes/{noteId}": {
+      "delete": {
+        "operationId": "EvangelismController_deleteNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a feedback message (yours, or any if you lead)",
+        "tags": [
+          "evangelism"
+        ]
+      },
+      "patch": {
+        "operationId": "EvangelismController_editNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditEvangelismNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Edit your own feedback message",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/notes/{noteId}/reactions": {
+      "post": {
+        "operationId": "EvangelismController_reactNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReactEvangelismNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "React to a feedback message; the same emoji again takes it back",
         "tags": [
           "evangelism"
         ]

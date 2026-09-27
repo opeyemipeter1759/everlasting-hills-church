@@ -2944,51 +2944,54 @@ model EvangelismOutreachWorker {
 /// Someone the team preached to. Phone and address never leave the
 /// authenticated Evangelism endpoints.
 model EvangelismContact {
-  id             String                @id
-  tenantId       String
-  name           String
-  phone          String
-  address        String
+  id               String                @id
+  tenantId         String
+  name             String
+  phone            String
+  address          String
   /// YES | NO | ALREADY
-  savedStatus    String
-  isStudent      Boolean               @default(false)
-  school         String?
-  level          String?
-  discussion     String?
+  savedStatus      String
+  isStudent        Boolean               @default(false)
+  school           String?
+  level            String?
+  discussion       String?
   /// The worker who preached to them — responsible for follow-up by default.
-  workerMemberId String?
+  workerMemberId   String?
   /// Their name as it was, or typed in under "Other".
-  workerName     String
-  outreachId     String?
-  contactDate    DateTime
+  workerName       String
+  /// Who a leader has asked to follow them up. Null = the worker who preached.
+  assigneeMemberId String?
+  outreachId       String?
+  contactDate      DateTime
   /// FOLLOW_UP_CALL | CALL_BACK | NEEDS_VISIT | INVITE
-  nextAction     String?
-  consent        Boolean               @default(false)
+  nextAction       String?
+  consent          Boolean               @default(false)
   /// See CONTACT_STATUSES.
-  status         String                @default("NEW")
-  callBackAt     DateTime?
-  lastActionAt   DateTime?
+  status           String                @default("NEW")
+  callBackAt       DateTime?
+  lastActionAt     DateTime?
   /// End of the follow-up window: contact date + 30 days, moved on by "extend".
-  windowEndsAt   DateTime
+  windowEndsAt     DateTime
   /// HANDED_OVER | EXTENDED | CLOSED — the leader's call at the end of the window.
-  reviewOutcome  String?
-  reviewedAt     DateTime?
-  closedAt       DateTime?
-  invitedAt      DateTime?
-  attendedAt     DateTime?
+  reviewOutcome    String?
+  reviewedAt       DateTime?
+  closedAt         DateTime?
+  invitedAt        DateTime?
+  attendedAt       DateTime?
   /// FORM (public link) | DASHBOARD
-  source         String                @default("FORM")
-  createdById    String?
-  updatedById    String?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @default(now())
-  Outreach       EvangelismOutreach?   @relation(fields: [outreachId], references: [id], onDelete: SetNull)
-  Activities     EvangelismActivity[]
-  Tasks          EvangelismTask[]
-  Testimonies    EvangelismTestimony[]
+  source           String                @default("FORM")
+  createdById      String?
+  updatedById      String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @default(now())
+  Outreach         EvangelismOutreach?   @relation(fields: [outreachId], references: [id], onDelete: SetNull)
+  Activities       EvangelismActivity[]
+  Tasks            EvangelismTask[]
+  Testimonies      EvangelismTestimony[]
 
   @@index([tenantId, contactDate])
   @@index([workerMemberId])
+  @@index([assigneeMemberId])
   @@index([outreachId])
 }
 

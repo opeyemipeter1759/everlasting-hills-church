@@ -156,6 +156,8 @@ export class ListEvangelismContactsQuery {
   @ApiPropertyOptional({ enum: CONTACT_STATUSES }) @Transform(emptyToUndefined) @IsOptional() @IsIn(CONTACT_STATUSES) status?: string;
   @ApiPropertyOptional({ enum: FOLLOW_UP_FLAGS }) @Transform(emptyToUndefined) @IsOptional() @IsIn(FOLLOW_UP_FLAGS) flag?: string;
   @ApiPropertyOptional({ description: 'Only my contacts still in their 30-day window' }) @Transform(toBool) @IsOptional() @IsBoolean() mine?: boolean;
+  @ApiPropertyOptional({ description: 'Contacts this person follows up (assigned, or preached to with nobody else assigned)' }) @Transform(emptyToUndefined) @IsOptional() @IsString() assigneeMemberId?: string;
+  @ApiPropertyOptional({ description: 'Only contacts with feedback I have not read' }) @Transform(toBool) @IsOptional() @IsBoolean() unread?: boolean;
   @ApiPropertyOptional() @Transform(emptyToUndefined) @IsOptional() @IsDateString() from?: string;
   @ApiPropertyOptional() @Transform(emptyToUndefined) @IsOptional() @IsDateString() to?: string;
   @ApiPropertyOptional({ default: 50 }) @Type(() => Number) @IsOptional() @IsInt() @Min(1) @Max(5000) take?: number;
@@ -199,6 +201,42 @@ export class LogEvangelismActionDto {
   @IsOptional()
   @IsDateString()
   happenedAt?: string;
+}
+
+export class AssignEvangelismContactDto {
+  @ApiProperty({ nullable: true, description: 'Team member to follow them up; null hands it back to the worker who preached' })
+  @IsOptional()
+  @IsString()
+  assigneeMemberId!: string | null;
+}
+
+export class EvangelismNoteDto {
+  @ApiProperty({ maxLength: 4000 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(4000)
+  body!: string;
+
+  @ApiPropertyOptional({ description: 'The message this answers, when it is a reply.' })
+  @IsOptional()
+  @IsString()
+  parentId?: string;
+}
+
+export class EditEvangelismNoteDto {
+  @ApiProperty({ maxLength: 4000 })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(4000)
+  body!: string;
+}
+
+export class ReactEvangelismNoteDto {
+  @ApiProperty({ description: 'A single emoji.' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(8)
+  emoji!: string;
 }
 
 export class ReviewEvangelismContactDto {

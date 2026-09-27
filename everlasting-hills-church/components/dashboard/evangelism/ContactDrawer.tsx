@@ -19,17 +19,24 @@ import Drawer from "@/components/ui/overlay/Drawer";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import {
+  EVANGELISM_CONTACTS_KEY,
+  EVANGELISM_NOTES_BASE,
+  EVANGELISM_NOTE_KIND,
+  useAssignContact,
   useDeleteContact,
   useEvangelismContact,
+  useEvangelismTeam,
   useReviewContact,
   type ContactActivity,
   type ContactDetail,
   type ReviewOutcome,
 } from "@/lib/api/evangelism";
+import { ActivityThread } from "@/components/dashboard/follow-up/ActivityThread";
+import { Select } from "@/components/ui/select";
 import { ContactDialog } from "./ContactDialog";
 import { LogActionForm } from "./LogActionForm";
 import { TaskDialog } from "./TaskDialog";
-import { ErrorNote, FlagBadge, Initials, Loading, SavedBadge, StatusBadge, WindowProgress, cardClass, secondaryButton } from "./bits";
+import { ErrorNote, FlagBadge, Initials, Loading, SavedBadge, StatusBadge, WindowProgress, cardClass, secondaryButton, selectClass } from "./bits";
 import {
   ACTION_LABEL,
   NEXT_ACTION_LABEL,
@@ -134,6 +141,8 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
       <div className="space-y-8 border-t border-gray-100 px-5 pt-6 dark:border-white/[0.06] sm:px-7">
         {canLead && needsReview && <ReviewPanel contact={c} />}
 
+        <FollowingUp contact={c} canLead={canLead} />
+
         <Section title="Details">
           <dl className={`${cardClass} grid gap-x-6 gap-y-4 p-4 sm:grid-cols-2 sm:p-5`}>
             <Fact icon={MapPin} label="Address" value={c.address} />
@@ -160,6 +169,15 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
             {c.updatedBy ? `; last updated by ${c.updatedBy}, ${fmtDateTime(c.updatedAt)}` : ""}.
           </p>
         </Section>
+
+        <div className={`${cardClass} px-4 pb-2 sm:px-5`}>
+          <ActivityThread
+            person={{ kind: EVANGELISM_NOTE_KIND, id: c.id, name: c.name }}
+            title="Feedback"
+            notesBase={EVANGELISM_NOTES_BASE}
+            listKey={EVANGELISM_CONTACTS_KEY}
+          />
+        </div>
 
         {c.window.open && (
           <Section title="Log a follow-up">
@@ -234,6 +252,70 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
         onCancel={() => setConfirmDelete(false)}
       />
     </div>
+  );
+}
+
+/**
+ * Who is following this person up: the worker who preached, unless a leader
+ * has asked someone else. Leaders can assign anyone on the team, or hand it
+ * back to the worker.
+ */
+function FollowingUp({ contact: c, canLead }: { contact: ContactDetail; canLead: boolean }) {
+  const team = useEvangelismTeam(canLead);
+  const assign = useAssignContact();
+  const [picking, setPicking] = useState(false);
+  const person = c.assignee ?? { id: c.worker.id, name: c.worker.name, photoUrl: c.worker.photoUrl };
+
+  async function choose(value: string) {
+    const assigneeMemberId = value === "" ? null : value;
+    try {
+      await assign.mutateAsync({ id: c.id, assigneeMemberId });
+      showToast.success(assigneeMemberId ? "Assigned — they've been told" : `Handed back to ${c.worker.name}`);
+      setPicking(false);
+    } catch (err) {
+      showToast.error(errorText(err, "Couldn't assign"));
+    }
+  }
+
+  return (
+    <section className={`${cardClass} p-4 sm:p-5`}>
+      <div className="flex items-center gap-3">
+        <Initials name={person.name} size={40} />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-gray-500 dark:text-white/45">Following up</p>
+          <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{person.name}</p>
+          <p className="text-xs text-gray-500 dark:text-white/45">{c.assignee ? `Assigned · preached to by ${c.worker.name}` : "The worker who preached to them"}</p>
+        </div>
+        {canLead && !picking && (
+          <button type="button" onClick={() => setPicking(true)} className={`${secondaryButton} h-9 px-3`}>
+            {c.assignee ? "Reassign" : "Assign"}
+          </button>
+        )}
+      </div>
+      {canLead && picking && (
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <div className="min-w-0 flex-1">
+            <Select
+              aria-label="Assign to"
+              className={selectClass}
+              value={c.assignee?.id ?? ""}
+              disabled={assign.isPending}
+              onChange={choose}
+              placeholder={team.isLoading ? "Loading the team…" : "Choose someone"}
+              options={[
+                { value: "", label: `${c.worker.name} (preached to them)` },
+                ...(team.data ?? [])
+                  .filter((m) => m.id !== c.worker.id)
+                  .map((m) => ({ value: m.id, label: m.name })),
+              ]}
+            />
+          </div>
+          <button type="button" onClick={() => setPicking(false)} className={`${secondaryButton} h-10`}>
+            Cancel
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
 

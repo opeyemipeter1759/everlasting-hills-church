@@ -6,6 +6,7 @@ import { EvangelismController } from './evangelism.controller';
 import { EvangelismFormController } from './evangelism-form.controller';
 import { EvangelismAccessService } from './services/evangelism-access.service';
 import { EvangelismContactsService } from './services/evangelism-contacts.service';
+import { EvangelismNotesService } from './services/evangelism-notes.service';
 import { EvangelismOutreachesService } from './services/evangelism-outreaches.service';
 import { EvangelismPerformanceService } from './services/evangelism-performance.service';
 import { EvangelismTasksService } from './services/evangelism-tasks.service';
@@ -18,6 +19,7 @@ import { EvangelismTestimoniesService } from './services/evangelism-testimonies.
   providers: [
     EvangelismAccessService,
     EvangelismContactsService,
+    EvangelismNotesService,
     EvangelismOutreachesService,
     EvangelismPerformanceService,
     EvangelismTasksService,

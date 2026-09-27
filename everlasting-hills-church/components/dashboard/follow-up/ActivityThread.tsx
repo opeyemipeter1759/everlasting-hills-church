@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  useFollowUpNoteActions,
-  useFollowUpNotes,
-  type FollowUpNote,
-  type MasterListRow,
-} from "@/lib/api/follow-up-pipeline";
+import { useFollowUpNoteActions, useFollowUpNotes, type FollowUpNote } from "@/lib/api/follow-up-pipeline";
 import { ConfirmDeleteMessage } from "./ConfirmDeleteMessage";
 import { ThreadMessages } from "./ThreadMessages";
 import { ThreadSkeleton } from "./table-states";
@@ -22,14 +17,21 @@ import { buildThread } from "./thread-utils";
 export function ActivityThread({
   person,
   milestones = [],
+  title = "Activity",
+  notesBase,
+  listKey,
 }: {
-  person: MasterListRow;
+  person: { kind: string; id: string; name: string };
   /** When they were integrated or opted out, to mark in the thread. */
   milestones?: { status: "INTEGRATED" | "OPTED_OUT"; at: string }[];
+  /** Another board reusing the thread (Evangelism) names it and points it at its own notes. */
+  title?: string;
+  notesBase?: string;
+  listKey?: readonly unknown[];
 }) {
   const subject = { kind: person.kind, id: person.id };
-  const { data: notes = [], isLoading } = useFollowUpNotes(subject);
-  const { add, react, edit, remove } = useFollowUpNoteActions(subject);
+  const { data: notes = [], isLoading } = useFollowUpNotes(subject, { base: notesBase, listKey });
+  const { add, react, edit, remove } = useFollowUpNoteActions(subject, notesBase);
   const [deleting, setDeleting] = useState<FollowUpNote | null>(null);
   const [prefill, setPrefill] = useState<{ text: string; nonce: number } | undefined>();
   const endRef = useRef<HTMLDivElement>(null);
@@ -46,7 +48,7 @@ export function ActivityThread({
   return (
     <section className="flex flex-col pt-4">
       <div className="flex items-center gap-2 px-1">
-        <h3 className="text-sm font-semibold text-[#111] dark:text-white">Activity</h3>
+        <h3 className="text-sm font-semibold text-[#111] dark:text-white">{title}</h3>
         {notes.length > 0 && (
           <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500 dark:bg-white/10 dark:text-white/50">
             {notes.length}
@@ -59,7 +61,7 @@ export function ActivityThread({
           through, while the box to reply stays in view. Opens at the newest. */}
       <div
         tabIndex={0}
-        aria-label={`Activity with ${person.name}`}
+        aria-label={`${title} with ${person.name}`}
         className="-mx-4 mt-2 max-h-[60vh] min-h-[16rem] overflow-y-auto overscroll-contain border-y border-gray-100 py-2 [scrollbar-color:#d1d5db_transparent] [scrollbar-width:thin] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C]/30 dark:border-white/[0.06]"
       >
         {isLoading && <ThreadSkeleton />}

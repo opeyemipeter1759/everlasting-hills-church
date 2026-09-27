@@ -2,25 +2,23 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Home, ListChecks, Map, MessageSquareQuote, Trophy, Users } from "lucide-react";
+import { Home, ListChecks, Map, MessageSquareQuote, Trophy } from "lucide-react";
 import { ShieldAlert } from "lucide-react";
 import { useEvangelismMe, useEvangelismSummary } from "@/lib/api/evangelism";
 import { BoardSkeleton } from "@/components/dashboard/follow-up/BoardSkeleton";
 import { EvangelismHeader } from "./EvangelismHeader";
 import { EVANGELISM_TABS_BOTTOM_SPACE, EvangelismTabs, type EvangelismTabDef } from "./EvangelismTabs";
 import { OverviewTab } from "./OverviewTab";
-import { ContactsTab } from "./ContactsTab";
 import { TasksTab } from "./TasksTab";
 import { OutreachesTab } from "./OutreachesTab";
 import { TestimoniesTab } from "./TestimoniesTab";
 import { TeamTab } from "./TeamTab";
 import { ContactDrawer } from "./ContactDrawer";
 
-export type EvangelismTab = "home" | "contacts" | "tasks" | "outreaches" | "testimonies" | "team";
+export type EvangelismTab = "home" | "tasks" | "outreaches" | "testimonies" | "team";
 
 const TABS: EvangelismTabDef<EvangelismTab>[] = [
   { id: "home", label: "Home", icon: Home },
-  { id: "contacts", label: "Contacts", icon: Users },
   { id: "tasks", label: "Tasks", icon: ListChecks },
   { id: "outreaches", label: "Outreaches", shortLabel: "Outreach", icon: Map },
   { id: "testimonies", label: "Testimonies", shortLabel: "Stories", icon: MessageSquareQuote },
@@ -28,6 +26,8 @@ const TABS: EvangelismTabDef<EvangelismTab>[] = [
 ];
 
 const isTab = (v: string | null): v is EvangelismTab => !!v && TABS.some((t) => t.id === v);
+/** Home is now the list of everyone preached to, so old "?tab=contacts" links land there. */
+const tabFrom = (v: string | null): EvangelismTab | null => (v === "contacts" ? "home" : isTab(v) ? v : null);
 
 /**
  * The Evangelism Team's page. The tab and an open contact live in the URL
@@ -42,11 +42,12 @@ export default function EvangelismBoard() {
   const params = useSearchParams();
 
   const tabParam = params?.get("tab") ?? null;
-  const [active, setActive] = useState<EvangelismTab>(isTab(tabParam) ? tabParam : "home");
+  const [active, setActive] = useState<EvangelismTab>(tabFrom(tabParam) ?? "home");
   const contactId = params?.get("contact") ?? null;
 
   useEffect(() => {
-    if (isTab(tabParam)) setActive(tabParam);
+    const tab = tabFrom(tabParam);
+    if (tab) setActive(tab);
   }, [tabParam]);
 
   const setParam = useCallback(
@@ -86,7 +87,7 @@ export default function EvangelismBoard() {
   const canLead = me.data.canLead;
   const s = summary.data;
   const counts: Partial<Record<EvangelismTab, number>> = s
-    ? { contacts: s.reached, tasks: s.mine.openTasks }
+    ? { tasks: s.mine.openTasks }
     : {};
 
   return (
@@ -95,8 +96,7 @@ export default function EvangelismBoard() {
       <EvangelismTabs tabs={TABS} active={active} counts={counts} onChange={changeTab} />
 
       <section role="tabpanel" aria-label={TABS.find((t) => t.id === active)?.label} className="pt-1">
-        {active === "home" && <OverviewTab canLead={canLead} summary={summary} onOpenContact={openContact} onGoTo={changeTab} />}
-        {active === "contacts" && <ContactsTab canLead={canLead} onOpenContact={openContact} />}
+        {active === "home" && <OverviewTab canLead={canLead} summary={summary} onOpenContact={openContact} />}
         {active === "tasks" && <TasksTab canLead={canLead} focusTaskId={params?.get("task") ?? null} onOpenContact={openContact} />}
         {active === "outreaches" && <OutreachesTab canLead={canLead} onOpenContact={openContact} />}
         {active === "testimonies" && <TestimoniesTab canLead={canLead} myMemberId={me.data.memberId} />}

@@ -48,5 +48,7 @@ export interface EvangelismViewer {
   /** Unit lead/assistant, head of Growth & Outreach, or a church admin. */
   canLead: boolean;
   memberId: string | null;
+  /** For who has read which feedback thread. */
+  profileId: string | null;
   name: string;
 }

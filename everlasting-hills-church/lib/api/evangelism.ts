@@ -57,6 +57,8 @@ export interface ContactRow {
   school: string | null;
   level: string | null;
   worker: { id: string | null; name: string; photoUrl: string | null };
+  /** A leader's pick to follow them up; null means the worker does. */
+  assignee: { id: string; name: string; photoUrl: string | null } | null;
   outreach: { id: string; name: string } | null;
   contactDate: string;
   daysSinceContact: number;
@@ -73,6 +75,8 @@ export interface ContactRow {
   attendedAt: string | null;
   source: "FORM" | "DASHBOARD";
   activityCount: number;
+  /** The team's feedback thread: messages so far, and how many are new to you. */
+  feedback: { total: number; unread: number };
   window: WindowState;
 }
 
@@ -115,6 +119,8 @@ export interface ContactFilters {
   status?: ContactStatus | "";
   flag?: FollowUpFlag | "";
   mine?: boolean;
+  assigneeMemberId?: string;
+  unread?: boolean;
   from?: string;
   to?: string;
   take?: number;
@@ -422,6 +428,22 @@ export function useLogContactAction() {
     onSuccess: invalidate,
   });
 }
+
+/** Leaders: who follows this person up (null hands it back to the worker who preached). */
+export function useAssignContact() {
+  const invalidate = useInvalidateAll();
+  return useMutation({
+    mutationFn: ({ id, assigneeMemberId }: { id: string; assigneeMemberId: string | null }) =>
+      api.post<ContactDetail>(`/evangelism/contacts/${id}/assign`, { assigneeMemberId }),
+    onSuccess: invalidate,
+  });
+}
+
+/** Where Evangelism's feedback threads live — same shape as Follow Up's notes. */
+export const EVANGELISM_NOTES_BASE = "/evangelism/notes";
+export const EVANGELISM_NOTE_KIND = "EVANGELISM";
+/** Opening a thread marks it read: refresh the contact lists' unread badges. */
+export const EVANGELISM_CONTACTS_KEY = ["evangelism", "contacts"] as const;
 
 export function useReviewContact() {
   const invalidate = useInvalidateAll();

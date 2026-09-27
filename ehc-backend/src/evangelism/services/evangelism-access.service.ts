@@ -22,12 +22,15 @@ export function isEvangelismUnitName(name: string | null | undefined): boolean {
 @Injectable()
 export class EvangelismAccessService {
   private readonly tenantId: string;
+  /** The public site, for links in emails. */
+  readonly appUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    this.appUrl = (config.get('FRONTEND_URL', { infer: true }) ?? 'https://www.everlastinghills.church').replace(/\/$/, '');
   }
 
   async findUnit(): Promise<{ id: string; departmentId: string | null } | null> {
@@ -69,6 +72,7 @@ export class EvangelismAccessService {
       departmentId: unit.departmentId,
       canLead,
       memberId: actor.memberId ?? null,
+      profileId: actor.profileId ?? null,
       name: member ? `${member.firstName} ${member.lastName}`.trim() : actor.email,
     };
   }

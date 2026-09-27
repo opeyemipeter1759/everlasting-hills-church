@@ -19,6 +19,10 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { UploadsService } from '../uploads/uploads.service';
 import { hasValidFileSignature } from '../uploads/file-signature.util';
 import {
+  AssignEvangelismContactDto,
+  EditEvangelismNoteDto,
+  EvangelismNoteDto,
+  ReactEvangelismNoteDto,
   EvangelismContactDto,
   EvangelismOutreachDto,
   EvangelismPerformanceQuery,
@@ -35,7 +39,8 @@ import {
   UpdateEvangelismTestimonyDto,
 } from './dto/evangelism.dto';
 import { EvangelismAccessService } from './services/evangelism-access.service';
-import { EvangelismContactsService } from './services/evangelism-contacts.service';
+import { EVANGELISM_NOTE_KIND, EvangelismContactsService } from './services/evangelism-contacts.service';
+import { EvangelismNotesService } from './services/evangelism-notes.service';
 import { EvangelismOutreachesService } from './services/evangelism-outreaches.service';
 import { EvangelismPerformanceService } from './services/evangelism-performance.service';
 import { EvangelismTasksService } from './services/evangelism-tasks.service';
@@ -63,6 +68,7 @@ export class EvangelismController {
     private readonly testimonies: EvangelismTestimoniesService,
     private readonly performance: EvangelismPerformanceService,
     private readonly uploads: UploadsService,
+    private readonly notes: EvangelismNotesService,
   ) {}
 
   @Get('me')
@@ -133,6 +139,59 @@ export class EvangelismController {
   @ApiBody({ type: ReviewEvangelismContactDto })
   async review(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() body: ReviewEvangelismContactDto) {
     return this.contacts.review(await this.access.leader(user), id, body);
+  }
+
+  @Post('contacts/:id/assign')
+  @ApiOperation({ summary: 'Assign someone on the team to follow this person up (leaders)' })
+  @ApiBody({ type: AssignEvangelismContactDto })
+  async assign(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() body: AssignEvangelismContactDto) {
+    return this.contacts.assign(await this.access.leader(user), id, body.assigneeMemberId ?? null);
+  }
+
+  // ── Feedback (same shape and routes as Follow Up's notes) ─────────────────
+
+  @Get('notes/:kind/:contactId')
+  @ApiOperation({ summary: "The team's feedback on a contact, as a thread" })
+  async listNotes(@CurrentUser() user: AuthUser, @Param('kind') kind: string, @Param('contactId') contactId: string) {
+    this.checkKind(kind);
+    return this.notes.list(await this.access.viewer(user), contactId);
+  }
+
+  @Post('notes/:kind/:contactId')
+  @ApiOperation({ summary: 'Post feedback on a contact, or reply to a message' })
+  @ApiBody({ type: EvangelismNoteDto })
+  async addNote(
+    @CurrentUser() user: AuthUser,
+    @Param('kind') kind: string,
+    @Param('contactId') contactId: string,
+    @Body() body: EvangelismNoteDto,
+  ) {
+    this.checkKind(kind);
+    return this.notes.add(await this.access.viewer(user), contactId, body.body, body.parentId);
+  }
+
+  @Post('notes/:noteId/reactions')
+  @ApiOperation({ summary: 'React to a feedback message; the same emoji again takes it back' })
+  @ApiBody({ type: ReactEvangelismNoteDto })
+  async reactNote(@CurrentUser() user: AuthUser, @Param('noteId') noteId: string, @Body() body: ReactEvangelismNoteDto) {
+    return this.notes.react(await this.access.viewer(user), noteId, body.emoji);
+  }
+
+  @Patch('notes/:noteId')
+  @ApiOperation({ summary: 'Edit your own feedback message' })
+  @ApiBody({ type: EditEvangelismNoteDto })
+  async editNote(@CurrentUser() user: AuthUser, @Param('noteId') noteId: string, @Body() body: EditEvangelismNoteDto) {
+    return this.notes.edit(await this.access.viewer(user), noteId, body.body);
+  }
+
+  @Delete('notes/:noteId')
+  @ApiOperation({ summary: 'Delete a feedback message (yours, or any if you lead)' })
+  async deleteNote(@CurrentUser() user: AuthUser, @Param('noteId') noteId: string) {
+    return this.notes.remove(await this.access.viewer(user), noteId);
+  }
+
+  private checkKind(kind: string) {
+    if (kind !== EVANGELISM_NOTE_KIND) throw new BadRequestException('Unknown thread');
   }
 
   // ── Tasks ──────────────────────────────────────────────────────────────────

@@ -2,8 +2,12 @@
 
 import { ChevronRight, GraduationCap } from "lucide-react";
 import type { ContactRow } from "@/lib/api/evangelism";
+import { ActivityBadge } from "@/components/dashboard/follow-up/ActivityBadge";
 import { Initials, SavedBadge, StatusBadge, WindowProgress, cardClass } from "./bits";
 import { displayPhone } from "./labels";
+
+/** Who follows them up: a leader's pick, else the worker who preached. */
+const followerOf = (c: ContactRow) => c.assignee?.name ?? c.worker.name;
 
 function since(days: number): string {
   if (days === 0) return "today";
@@ -50,13 +54,16 @@ export function ContactList({
                   <SavedBadge status={c.savedStatus} />
                 </div>
                 <p className="mt-0.5 truncate text-xs text-gray-500 dark:text-white/50">
-                  {displayPhone(c.phone)} · {c.worker.name}
+                  {displayPhone(c.phone)} · {followerOf(c)}
                 </p>
                 <div className="mt-2.5 flex items-center justify-between gap-3">
                   <StatusBadge status={c.status} />
-                  <div className="w-28">
-                    <WindowProgress window={c.window} reviewOutcome={c.reviewOutcome} />
-                  </div>
+                  <span className="shrink-0">
+                    <ActivityBadge activity={c.feedback} />
+                  </span>
+                </div>
+                <div className="mt-3">
+                  <WindowProgress window={c.window} reviewOutcome={c.reviewOutcome} />
                 </div>
               </div>
             </button>
@@ -65,15 +72,16 @@ export function ContactList({
       </ul>
 
       <div className={`hidden overflow-x-auto ${listOnly ? "" : "md:block"} ${bare ? "" : `${cardClass}`}`}>
-        <table className="w-full min-w-[760px] text-left text-sm">
+        <table className="w-full min-w-[880px] text-left text-sm">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/70 text-xs font-medium text-gray-500 dark:border-white/[0.06] dark:bg-white/[0.02] dark:text-white/45">
               <th scope="col" className="py-3 pl-5 pr-3 font-medium">Person</th>
               <th scope="col" className="px-3 py-3 font-medium">Saved</th>
-              <th scope="col" className="px-3 py-3 font-medium">Preached by</th>
+              <th scope="col" className="px-3 py-3 font-medium">Following up</th>
               {showOutreach && <th scope="col" className="px-3 py-3 font-medium">Outreach</th>}
               <th scope="col" className="px-3 py-3 font-medium">Status</th>
-              <th scope="col" className="w-44 px-3 py-3 font-medium">30-day follow-up</th>
+              <th scope="col" className="w-36 px-3 py-3 font-medium">30-day follow-up</th>
+              <th scope="col" className="py-3 pl-3 pr-5 font-medium">Feedback</th>
               <th scope="col" className="w-10 py-3 pr-4" aria-label="Open" />
             </tr>
           </thead>
@@ -108,9 +116,14 @@ export function ContactList({
                 <td className="px-3 py-3">
                   <SavedBadge status={c.savedStatus} />
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 text-gray-700 dark:text-white/75">{c.worker.name}</td>
+                <td className="whitespace-nowrap px-3 py-3">
+                  <span className="block text-gray-700 dark:text-white/75">{followerOf(c)}</span>
+                  {c.assignee && c.assignee.id !== c.worker.id && (
+                    <span className="block text-xs text-gray-400 dark:text-white/40">preached by {c.worker.name}</span>
+                  )}
+                </td>
                 {showOutreach && (
-                  <td className="max-w-[12rem] px-3 py-3">
+                  <td className="max-w-[9.5rem] px-3 py-3">
                     <span className="block truncate text-gray-600 dark:text-white/60">{c.outreach?.name ?? "Personal"}</span>
                   </td>
                 )}
@@ -119,6 +132,9 @@ export function ContactList({
                 </td>
                 <td className="px-3 py-3">
                   <WindowProgress window={c.window} reviewOutcome={c.reviewOutcome} />
+                </td>
+                <td className="whitespace-nowrap py-3 pl-3 pr-5">
+                  <ActivityBadge activity={c.feedback} />
                 </td>
                 <td className="py-3 pr-4 text-right text-gray-300 transition-colors group-hover:text-gray-500">
                   <ChevronRight size={16} aria-hidden="true" className="ml-auto" />

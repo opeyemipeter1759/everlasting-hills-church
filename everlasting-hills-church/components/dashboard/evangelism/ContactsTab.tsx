@@ -38,6 +38,7 @@ const PAGE_SIZE = 25;
 const EMPTY: ContactFilters = {
   search: "",
   workerMemberId: "",
+  assigneeMemberId: "",
   outreachId: "",
   savedStatus: "",
   status: "",
@@ -52,6 +53,7 @@ export function ContactsTab({ onOpenContact }: { canLead: boolean; onOpenContact
   const outreaches = useOutreaches();
   const [filters, setFilters] = useState<ContactFilters>(EMPTY);
   const [student, setStudent] = useState<"" | "yes" | "no">("");
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [adding, setAdding] = useState(false);
@@ -63,29 +65,35 @@ export function ContactsTab({ onOpenContact }: { canLead: boolean; onOpenContact
     const t = window.setTimeout(() => setFilters((f) => ({ ...f, search })), 300);
     return () => window.clearTimeout(t);
   }, [search]);
-  useEffect(() => setPage(1), [filters, student]);
+  useEffect(() => setPage(1), [filters, student, unreadOnly]);
 
+  const extra: ContactFilters = {
+    ...(student ? { isStudent: student === "yes" } : {}),
+    ...(unreadOnly ? { unread: true } : {}),
+  };
   const query: ContactFilters = {
     ...filters,
-    ...(student ? { isStudent: student === "yes" } : {}),
+    ...extra,
     take: PAGE_SIZE,
     skip: (page - 1) * PAGE_SIZE,
   };
   const contacts = useEvangelismContacts(query);
   const set = <K extends keyof ContactFilters>(key: K, value: ContactFilters[K]) => setFilters((f) => ({ ...f, [key]: value }));
-  const hasFilters = Object.values(filters).some(Boolean) || !!student;
-  const activeFilters = Object.entries(filters).filter(([k, v]) => k !== "search" && !!v).length + (student ? 1 : 0);
+  const hasFilters = Object.values(filters).some(Boolean) || !!student || unreadOnly;
+  const activeFilters =
+    Object.entries(filters).filter(([k, v]) => k !== "search" && !!v).length + (student ? 1 : 0) + (unreadOnly ? 1 : 0);
 
   function clear() {
     setFilters(EMPTY);
     setSearch("");
     setStudent("");
+    setUnreadOnly(false);
   }
 
   async function exportCsv() {
     setExporting(true);
     try {
-      const { data } = await fetchAllContacts({ ...filters, ...(student ? { isStudent: student === "yes" } : {}) });
+      const { data } = await fetchAllContacts({ ...filters, ...extra });
       if (data.length === 0) {
         showToast.error("Nothing to export");
         return;
@@ -134,14 +142,22 @@ export function ContactsTab({ onOpenContact }: { canLead: boolean; onOpenContact
         </button>
       </div>
 
-      <div className={`${showFilters ? "grid" : "hidden"} grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid lg:grid-cols-4`}>
+      <div className={`${showFilters ? "grid" : "hidden"} grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid lg:grid-cols-5`}>
         <Select
-          aria-label="Worker"
-          prefixLabel="Worker:"
+          aria-label="Preached by"
+          prefixLabel="Preached by:"
           className={selectClass}
           value={filters.workerMemberId ?? ""}
           onChange={(v) => set("workerMemberId", v)}
-          options={[{ value: "", label: "All" }, ...(team.data ?? []).map((m) => ({ value: m.id, label: m.name }))]}
+          options={[{ value: "", label: "Anyone" }, ...(team.data ?? []).map((m) => ({ value: m.id, label: m.name }))]}
+        />
+        <Select
+          aria-label="Following up"
+          prefixLabel="Following up:"
+          className={selectClass}
+          value={filters.assigneeMemberId ?? ""}
+          onChange={(v) => set("assigneeMemberId", v)}
+          options={[{ value: "", label: "Anyone" }, ...(team.data ?? []).map((m) => ({ value: m.id, label: m.name }))]}
         />
         <Select
           aria-label="Outreach"
@@ -190,6 +206,17 @@ export function ContactsTab({ onOpenContact }: { canLead: boolean; onOpenContact
           value={filters.flag ?? ""}
           onChange={(v) => set("flag", v as FollowUpFlag | "")}
           options={[{ value: "", label: "Any" }, ...(Object.keys(FLAG_LABEL) as FollowUpFlag[]).map((k) => ({ value: k, label: FLAG_LABEL[k] }))]}
+        />
+        <Select
+          aria-label="Feedback"
+          prefixLabel="Feedback:"
+          className={selectClass}
+          value={unreadOnly ? "unread" : ""}
+          onChange={(v) => setUnreadOnly(v === "unread")}
+          options={[
+            { value: "", label: "Any" },
+            { value: "unread", label: "Unread by me" },
+          ]}
         />
         <DateField label="From" value={filters.from ?? ""} onChange={(v) => set("from", v)} />
         <DateField label="To" value={filters.to ?? ""} onChange={(v) => set("to", v)} />

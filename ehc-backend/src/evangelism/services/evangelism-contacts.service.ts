@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -14,6 +15,13 @@ import { normaliseNigerianPhone } from '../evangelism-phone.util';
 import { windowEnd, windowState } from '../evangelism-window.util';
 import { startOfLagosMonth } from '../evangelism-dates.util';
 import { EvangelismAccessService } from './evangelism-access.service';
+import { summariseActivity, threadKey } from '../../follow-up/services/note-activity.util';
+import { InboxService } from '../../inbox/inbox.service';
+import { NotificationEvents } from '../../notifications/notification-events';
+import { buildEvangelismAssignedEmail } from '../../notifications/templates/evangelism-assigned.email';
+
+/** The feedback thread's kind in the shared notes table (Follow Up uses MEMBER / VISITOR). */
+export const EVANGELISM_NOTE_KIND = 'EVANGELISM';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -28,6 +36,7 @@ const LIST_SELECT = {
   level: true,
   workerMemberId: true,
   workerName: true,
+  assigneeMemberId: true,
   outreachId: true,
   contactDate: true,
   nextAction: true,
@@ -83,6 +92,8 @@ export class EvangelismContactsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly access: EvangelismAccessService,
+    private readonly inbox: InboxService,
+    private readonly events: EventEmitter2,
   ) {}
 
   private get tenantId() {
@@ -208,7 +219,17 @@ export class EvangelismContactsService {
         ...(q.to ? { lte: new Date(`${q.to.slice(0, 10)}T23:59:59.999+01:00`) } : {}),
       };
     }
-    if (q.mine) where.workerMemberId = viewer.memberId ?? '__nobody__';
+    if (q.mine) {
+      const me = viewer.memberId ?? '__nobody__';
+      where.AND = [{ OR: [{ assigneeMemberId: me }, { assigneeMemberId: null, workerMemberId: me }] }];
+    }
+    if (q.assigneeMemberId) {
+      const who = q.assigneeMemberId;
+      where.AND = [
+        ...((where.AND as Prisma.EvangelismContactWhereInput[] | undefined) ?? []),
+        { OR: [{ assigneeMemberId: who }, { assigneeMemberId: null, workerMemberId: who }] },
+      ];
+    }
 
     const rows = await this.prisma.evangelismContact.findMany({
       where,
@@ -216,8 +237,9 @@ export class EvangelismContactsService {
       orderBy: { contactDate: 'desc' },
     });
     const now = new Date();
-    let mapped = await this.toRows(rows, now);
+    let mapped = await this.toRows(rows, now, viewer.profileId);
     if (q.flag) mapped = mapped.filter((r) => r.window.flag === q.flag);
+    if (q.unread) mapped = mapped.filter((r) => r.feedback.unread > 0);
     if (q.mine) mapped = mapped.filter((r) => r.window.open && new Date(r.windowEndsAt) > now);
 
     const skip = q.skip ?? 0;
@@ -225,10 +247,14 @@ export class EvangelismContactsService {
     return { data: mapped.slice(skip, skip + take), total: mapped.length };
   }
 
-  private async toRows(rows: ListRow[], now: Date) {
-    const names = await this.access.names(rows.map((r) => r.workerMemberId));
+  private async toRows(rows: ListRow[], now: Date, viewerProfileId: string | null = null) {
+    const [names, feedback] = await Promise.all([
+      this.access.names(rows.flatMap((r) => [r.workerMemberId, r.assigneeMemberId])),
+      this.feedbackCounts(rows.map((r) => r.id), viewerProfileId),
+    ]);
     return rows.map((r) => {
-      const { Outreach, _count, workerMemberId, workerName, ...rest } = r;
+      const { Outreach, _count, workerMemberId, workerName, assigneeMemberId, ...rest } = r;
+      const assignee = assigneeMemberId ? names.get(assigneeMemberId) : undefined;
       return {
         ...rest,
         contactDate: r.contactDate.toISOString(),
@@ -245,12 +271,35 @@ export class EvangelismContactsService {
           name: (workerMemberId && names.get(workerMemberId)?.name) || workerName,
           photoUrl: (workerMemberId && names.get(workerMemberId)?.photoUrl) || null,
         },
+        /** Who follows them up: a leader's pick, else the worker. */
+        assignee: assigneeMemberId
+          ? { id: assigneeMemberId, name: assignee?.name ?? 'Former member', photoUrl: assignee?.photoUrl ?? null }
+          : null,
         outreach: Outreach,
         activityCount: _count.Activities,
+        feedback: feedback.get(threadKey(EVANGELISM_NOTE_KIND, r.id)) ?? { total: 0, unread: 0 },
         daysSinceContact: Math.max(0, Math.floor((now.getTime() - r.contactDate.getTime()) / DAY)),
         window: windowState(r, now),
       };
     });
+  }
+
+  /** Feedback messages on each contact, and how many the viewer hasn't seen — as on Follow Up's list. */
+  private async feedbackCounts(ids: string[], viewerProfileId: string | null) {
+    if (ids.length === 0) return new Map<string, { total: number; unread: number }>();
+    const [notes, reads] = await Promise.all([
+      this.prisma.followUpNote.findMany({
+        where: { tenantId: this.tenantId, subjectKind: EVANGELISM_NOTE_KIND, subjectId: { in: ids } },
+        select: { subjectKind: true, subjectId: true, authorId: true, createdAt: true },
+      }),
+      viewerProfileId
+        ? this.prisma.followUpNoteRead.findMany({
+            where: { tenantId: this.tenantId, profileId: viewerProfileId, subjectKind: EVANGELISM_NOTE_KIND, subjectId: { in: ids } },
+            select: { subjectKind: true, subjectId: true, lastReadAt: true },
+          })
+        : Promise.resolve([]),
+    ]);
+    return summariseActivity(notes, reads, viewerProfileId);
   }
 
   async get(id: string) {
@@ -429,6 +478,84 @@ export class EvangelismContactsService {
     return this.get(id);
   }
 
+  /**
+   * A leader asks someone on the team to follow this person up (null hands it
+   * back to the worker who preached). They're told in the app and by email.
+   */
+  async assign(viewer: EvangelismViewer, id: string, assigneeMemberId: string | null) {
+    const current = await this.prisma.evangelismContact.findFirst({
+      where: { id, tenantId: this.tenantId },
+      select: { id: true, name: true, assigneeMemberId: true, workerName: true },
+    });
+    if (!current) throw new NotFoundException('Contact not found');
+    if ((current.assigneeMemberId ?? null) === assigneeMemberId) return this.get(id);
+
+    let assigneeName = current.workerName;
+    if (assigneeMemberId) {
+      const seat = await this.prisma.unitMember.findFirst({
+        where: { unitId: viewer.unitId, memberId: assigneeMemberId },
+        select: { Member: { select: { firstName: true, lastName: true } } },
+      });
+      if (!seat) throw new BadRequestException('Only people on the Evangelism Team can be assigned.');
+      assigneeName = `${seat.Member.firstName} ${seat.Member.lastName}`.trim();
+    }
+
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.evangelismContact.update({
+        where: { id },
+        data: { assigneeMemberId, updatedById: viewer.memberId, updatedAt: now },
+      }),
+      this.prisma.evangelismActivity.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          contactId: id,
+          kind: 'EDIT',
+          note: assigneeMemberId ? `Assigned to ${assigneeName}` : `Handed back to ${assigneeName}, who preached to them`,
+          happenedAt: now,
+          actorMemberId: viewer.memberId,
+          actorName: viewer.name,
+        },
+      }),
+    ]);
+    if (assigneeMemberId && assigneeMemberId !== viewer.memberId) {
+      await this.notifyAssigned(viewer, assigneeMemberId, current.id, current.name);
+    }
+    return this.get(id);
+  }
+
+  private async notifyAssigned(viewer: EvangelismViewer, memberId: string, contactId: string, contactName: string) {
+    const member = await this.prisma.member.findUnique({
+      where: { id: memberId },
+      select: { profileId: true, email: true, firstName: true },
+    });
+    if (!member) return;
+    const link = `/dashboard/growth-outreach/${viewer.unitId}?contact=${contactId}`;
+    await this.inbox.createMany([
+      {
+        tenantId: this.tenantId,
+        profileId: member.profileId,
+        title: `You've been asked to follow up ${contactName}`,
+        body: `From ${viewer.name} · Evangelism`,
+        type: 'evangelism-assigned',
+        link,
+      },
+    ]);
+    if (member.email) {
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildEvangelismAssignedEmail({
+          to: member.email,
+          firstName: member.firstName,
+          contactName,
+          assignedBy: viewer.name,
+          url: `${this.access.appUrl}${link}`,
+        }),
+      );
+    }
+  }
+
   /** The leader's call at the end of the window: hand over, extend, or close. */
   async review(viewer: EvangelismViewer, id: string, dto: ReviewEvangelismContactDto) {
     const current = await this.prisma.evangelismContact.findFirst({ where: { id, tenantId: this.tenantId } });
@@ -492,6 +619,7 @@ export class EvangelismContactsService {
           invitedAt: true,
           attendedAt: true,
           workerMemberId: true,
+          assigneeMemberId: true,
         },
       }),
       viewer.memberId
@@ -520,7 +648,7 @@ export class EvangelismContactsService {
       if (state.flag === 'DUE') due++;
       if (state.flag === 'OVERDUE') overdue++;
       if (c.status === 'NEEDS_VISIT') visitations++;
-      if (viewer.memberId && c.workerMemberId === viewer.memberId && state.flag !== 'REVIEW') {
+      if (viewer.memberId && (c.assigneeMemberId ?? c.workerMemberId) === viewer.memberId && state.flag !== 'REVIEW') {
         mineInWindow++;
         if (state.flag === 'OVERDUE') mineOverdue++;
       }

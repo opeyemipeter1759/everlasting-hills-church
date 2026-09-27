@@ -23,11 +23,15 @@ const POLL_MS = 60_000;
  * then put it back. It also stops while the tab is in the background, which
  * is React Query's default and exactly what we want on a phone.
  */
-export function useFollowUpNotes(subject: { kind: string; id: string } | null) {
+export function useFollowUpNotes(
+  subject: { kind: string; id: string } | null,
+  /** Where the thread lives, and which list's unread badges to refresh — Follow Up's unless another board reuses the thread. */
+  { base = "/follow-up/notes", listKey = ["follow-up", "master-list"] }: { base?: string; listKey?: readonly unknown[] } = {},
+) {
   const qc = useQueryClient();
   const query = useQuery({
     queryKey: notesKey(subject?.kind ?? "", subject?.id ?? ""),
-    queryFn: () => api.get<FollowUpNote[]>(`/follow-up/notes/${subject?.kind}/${subject?.id}`),
+    queryFn: () => api.get<FollowUpNote[]>(`${base}/${subject?.kind}/${subject?.id}`),
     enabled: !!subject,
     refetchInterval: (query) => (query.state.data?.some(isPending) ? false : POLL_MS),
     refetchOnWindowFocus: true,
@@ -40,8 +44,10 @@ export function useFollowUpNotes(subject: { kind: string; id: string } | null) {
   const count = query.data?.length;
   useEffect(() => {
     if (count === undefined) return;
-    void qc.invalidateQueries({ queryKey: ["follow-up", "master-list"] });
-  }, [qc, subject?.kind, subject?.id, count]);
+    void qc.invalidateQueries({ queryKey: listKey });
+    // listKey is a fresh array each render; its contents are what matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qc, subject?.kind, subject?.id, count, JSON.stringify(listKey)]);
 
   return query;
 }

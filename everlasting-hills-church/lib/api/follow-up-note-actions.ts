@@ -19,7 +19,7 @@ function notesKey(kind: string, id: string) {
  * Waiting on a round trip before showing your own message makes a chat feel
  * broken, so the change goes in first and is put back if the server refuses.
  */
-export function useFollowUpNoteActions(subject: { kind: string; id: string } | null) {
+export function useFollowUpNoteActions(subject: { kind: string; id: string } | null, base = "/follow-up/notes") {
   const queryClient = useQueryClient();
   const { data: me } = useMe();
   const key = notesKey(subject?.kind ?? "", subject?.id ?? "");
@@ -43,7 +43,7 @@ export function useFollowUpNoteActions(subject: { kind: string; id: string } | n
 
   const add = useMutation({
     mutationFn: ({ body, parentId }: { body: string; parentId?: string }) =>
-      api.post<FollowUpNote[]>(`/follow-up/notes/${subject?.kind}/${subject?.id}`, { body, parentId }),
+      api.post<FollowUpNote[]>(`${base}/${subject?.kind}/${subject?.id}`, { body, parentId }),
     onMutate: ({ body, parentId }) => {
       const mine = draftNote(body, me);
       return begin((notes) =>
@@ -58,7 +58,7 @@ export function useFollowUpNoteActions(subject: { kind: string; id: string } | n
 
   const react = useMutation({
     mutationFn: ({ id, emoji }: { id: string; emoji: string }) =>
-      api.post<FollowUpNote[]>(`/follow-up/notes/${id}/reactions`, { emoji }),
+      api.post<FollowUpNote[]>(`${base}/${id}/reactions`, { emoji }),
     onMutate: ({ id, emoji }) =>
       begin((notes) => replaceNote(notes, id, (note) => applyReaction(note, emoji, me))),
     onSuccess: settle,
@@ -67,7 +67,7 @@ export function useFollowUpNoteActions(subject: { kind: string; id: string } | n
 
   const edit = useMutation({
     mutationFn: ({ id, body }: { id: string; body: string }) =>
-      api.patch<FollowUpNote[]>(`/follow-up/notes/${id}`, { body }),
+      api.patch<FollowUpNote[]>(`${base}/${id}`, { body }),
     onMutate: ({ id, body }) =>
       begin((notes) => replaceNote(notes, id, (note) => ({ ...note, body, editedAt: new Date().toISOString() }))),
     onSuccess: settle,
@@ -75,7 +75,7 @@ export function useFollowUpNoteActions(subject: { kind: string; id: string } | n
   });
 
   const remove = useMutation({
-    mutationFn: (id: string) => api.delete<FollowUpNote[]>(`/follow-up/notes/${id}`),
+    mutationFn: (id: string) => api.delete<FollowUpNote[]>(`${base}/${id}`),
     onMutate: (id) => begin((notes) => withoutNote(notes, id)),
     onSuccess: settle,
     onError: (err, _vars, context) => undo(context, err, "Couldn't delete that message"),

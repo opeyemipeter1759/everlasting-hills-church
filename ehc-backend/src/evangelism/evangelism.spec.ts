@@ -3,6 +3,7 @@ import { Role } from '@prisma/client';
 import { EvangelismAccessService } from './services/evangelism-access.service';
 import { EvangelismContactsService } from './services/evangelism-contacts.service';
 import { EvangelismTasksService } from './services/evangelism-tasks.service';
+import { EvangelismNotesService } from './services/evangelism-notes.service';
 import { EvangelismFormController } from './evangelism-form.controller';
 import type { EvangelismViewer } from './evangelism.types';
 
@@ -68,9 +69,11 @@ function contactsService(existing: Record<string, unknown> | null = null) {
     member: { findFirst: jest.fn().mockResolvedValue(null) },
   };
   const access = { tenant: 'tenant', names: jest.fn().mockResolvedValue(new Map()) };
-  const svc = new EvangelismContactsService(prisma as never, access as never);
+  const inbox = { createMany: jest.fn() };
+  const events = { emit: jest.fn() };
+  const svc = new EvangelismContactsService(prisma as never, { ...access, appUrl: 'https://x.test' } as never, inbox as never, events as never);
   jest.spyOn(svc, 'get').mockResolvedValue({} as never);
-  return { svc, create, update, activity, prisma };
+  return { svc, create, update, activity, prisma, inbox, events };
 }
 
 const form = {
@@ -116,7 +119,7 @@ describe('Recording someone preached to', () => {
   });
 });
 
-const viewer: EvangelismViewer = { unitId: 'unit-ev', departmentId: 'dept-go', canLead: false, memberId: 'm1', name: 'Ada Obi' };
+const viewer: EvangelismViewer = { unitId: 'unit-ev', departmentId: 'dept-go', canLead: false, memberId: 'm1', profileId: 'p1', name: 'Ada Obi' };
 
 describe('Logging a follow-up', () => {
   const current = { id: 'c1', status: 'NEW', lastActionAt: null, invitedAt: null, attendedAt: null };
@@ -175,5 +178,82 @@ describe('Evangelism tasks', () => {
 
   it('only shows every task to leaders', async () => {
     await expect(tasks([]).svc.list(viewer, { scope: 'all' })).rejects.toBeInstanceOf(ForbiddenException);
+  });
+});
+
+describe('Assigning someone to follow a contact up', () => {
+  const leader: EvangelismViewer = { ...viewer, canLead: true, memberId: 'lead', name: 'Bola Ade' };
+
+  function withContact(seat: unknown = { Member: { firstName: 'Grace', lastName: 'Eze' } }) {
+    const t = contactsService({ id: 'c1', name: 'Chinedu', assigneeMemberId: null, workerName: 'Tunde' });
+    t.prisma.unitMember.findFirst.mockResolvedValue(seat);
+    (t.prisma.member as Record<string, jest.Mock>).findUnique = jest.fn().mockResolvedValue({ profileId: 'p-grace', email: 'g@x.test', firstName: 'Grace' });
+    return t;
+  }
+
+  it('records it on their history and tells the person, in the app and by email', async () => {
+    const { svc, update, activity, inbox, events } = withContact();
+    await svc.assign(leader, 'c1', 'm-grace');
+    expect(update.mock.calls[0][0].data).toMatchObject({ assigneeMemberId: 'm-grace' });
+    expect(activity.mock.calls[0][0].data).toMatchObject({ note: 'Assigned to Grace Eze', actorName: 'Bola Ade' });
+    expect(inbox.createMany.mock.calls[0][0][0]).toMatchObject({
+      profileId: 'p-grace',
+      title: "You've been asked to follow up Chinedu",
+      link: '/dashboard/growth-outreach/unit-ev?contact=c1',
+    });
+    expect(events.emit).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ to: 'g@x.test', subject: 'Please follow up Chinedu' }));
+  });
+
+  it('only to people on the Evangelism Team', async () => {
+    await expect(withContact(null).svc.assign(leader, 'c1', 'outsider')).rejects.toThrow('Evangelism Team');
+  });
+
+  it('can hand them back to the worker who preached', async () => {
+    const t = contactsService({ id: 'c1', name: 'Chinedu', assigneeMemberId: 'm-grace', workerName: 'Tunde' });
+    await t.svc.assign(leader, 'c1', null);
+    expect(t.update.mock.calls[0][0].data).toMatchObject({ assigneeMemberId: null });
+    expect(t.activity.mock.calls[0][0].data.note).toBe('Handed back to Tunde, who preached to them');
+    expect(t.inbox.createMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('Feedback on a contact', () => {
+  function notesService(note: Record<string, unknown> | null = { id: 'n1', subjectId: 'c1', authorId: 'p-other' }) {
+    const prisma = {
+      evangelismContact: { findFirst: jest.fn().mockResolvedValue({ id: 'c1', name: 'Chinedu', workerMemberId: 'm1', assigneeMemberId: null }) },
+      followUpNote: {
+        findMany: jest.fn().mockResolvedValue([]),
+        findFirst: jest.fn().mockResolvedValue(note),
+        create: jest.fn().mockResolvedValue({}),
+        update: jest.fn(),
+        delete: jest.fn(),
+      },
+      followUpNoteRead: { upsert: jest.fn() },
+      member: { findMany: jest.fn().mockResolvedValue([]), findUnique: jest.fn().mockResolvedValue(null) },
+      notification: { findMany: jest.fn().mockResolvedValue([]) },
+    };
+    const access = { tenant: 'tenant', appUrl: 'https://x.test' };
+    const svc = new EvangelismNotesService(prisma as never, access as never, { createMany: jest.fn() } as never, { emit: jest.fn() } as never);
+    return { svc, prisma };
+  }
+
+  it('keeps it in its own thread, apart from Follow Up', async () => {
+    const { svc, prisma } = notesService();
+    await svc.add(viewer, 'c1', 'Called him, he will come Sunday');
+    expect(prisma.followUpNote.create.mock.calls[0][0].data).toMatchObject({ subjectKind: 'EVANGELISM', subjectId: 'c1', authorId: 'p1' });
+    expect(prisma.followUpNote.findFirst).not.toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({ subjectKind: 'MEMBER' }) }));
+  });
+
+  it("won't let you edit someone else's message, or delete it unless you lead", async () => {
+    const { svc } = notesService();
+    await expect(svc.edit(viewer, 'n1', 'x')).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(svc.remove(viewer, 'n1')).rejects.toBeInstanceOf(ForbiddenException);
+    await expect(svc.remove({ ...viewer, canLead: true }, 'n1')).resolves.toEqual([]);
+  });
+
+  it("can't reach Follow Up's notes by id", async () => {
+    const { svc, prisma } = notesService(null);
+    await expect(svc.react(viewer, 'follow-up-note', '🙏')).rejects.toThrow('Message not found');
+    expect(prisma.followUpNote.findFirst.mock.calls[0][0].where).toMatchObject({ subjectKind: 'EVANGELISM' });
   });
 });
