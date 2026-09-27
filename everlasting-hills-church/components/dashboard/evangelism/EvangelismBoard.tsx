@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Home, ListChecks, Map, MessageSquareQuote, Trophy, Users } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { ShieldAlert } from "lucide-react";
 import { useEvangelismMe, useEvangelismSummary } from "@/lib/api/evangelism";
 import { BoardSkeleton } from "@/components/dashboard/follow-up/BoardSkeleton";
 import { EvangelismHeader } from "./EvangelismHeader";
-import { EvangelismTabs } from "./EvangelismTabs";
+import { EVANGELISM_TABS_BOTTOM_SPACE, EvangelismTabs, type EvangelismTabDef } from "./EvangelismTabs";
 import { OverviewTab } from "./OverviewTab";
 import { ContactsTab } from "./ContactsTab";
 import { TasksTab } from "./TasksTab";
@@ -19,12 +18,12 @@ import { ContactDrawer } from "./ContactDrawer";
 
 export type EvangelismTab = "home" | "contacts" | "tasks" | "outreaches" | "testimonies" | "team";
 
-const TABS: { id: EvangelismTab; label: string; icon: LucideIcon }[] = [
+const TABS: EvangelismTabDef<EvangelismTab>[] = [
   { id: "home", label: "Home", icon: Home },
   { id: "contacts", label: "Contacts", icon: Users },
   { id: "tasks", label: "Tasks", icon: ListChecks },
-  { id: "outreaches", label: "Outreaches", icon: Map },
-  { id: "testimonies", label: "Testimonies", icon: MessageSquareQuote },
+  { id: "outreaches", label: "Outreaches", shortLabel: "Outreach", icon: Map },
+  { id: "testimonies", label: "Testimonies", shortLabel: "Stories", icon: MessageSquareQuote },
   { id: "team", label: "Team", icon: Trophy },
 ];
 
@@ -91,7 +90,7 @@ export default function EvangelismBoard() {
     : {};
 
   return (
-    <div className="mx-auto max-w-[1200px] space-y-5 pb-12 md:px-2">
+    <div className={`mx-auto max-w-[1200px] space-y-5 md:px-2 ${EVANGELISM_TABS_BOTTOM_SPACE}`}>
       <EvangelismHeader summary={summary} />
       <EvangelismTabs tabs={TABS} active={active} counts={counts} onChange={changeTab} />
 
