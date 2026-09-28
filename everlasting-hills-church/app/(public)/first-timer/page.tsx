@@ -13,6 +13,7 @@ import {
   Step5Details,
   Step6Experience,
 } from "./_steps";
+import { firstStepWith, problemsFromError } from "./server-errors";
 
 const STEP_LABELS = [
   "Personal Info",
@@ -55,6 +56,7 @@ function FirstTimerPage() {
     setValue,
     trigger,
     control,
+    setError: setFieldError,
     formState: { errors },
   } = useForm<FormValues>({ mode: "onBlur" });
 
@@ -75,6 +77,7 @@ function FirstTimerPage() {
   const goNext = async () => {
     const valid = await trigger(STEP_FIELDS[currentStep]);
     if (!valid) return;
+    setError("");
     if (currentStep === INTEREST_STEP && membershipInterest === "No") {
       setCurrentStep(EXPERIENCE_STEP);
     } else {
@@ -111,8 +114,31 @@ function FirstTimerPage() {
       });
       setSubmitted(true);
     } catch (err) {
-      const msg = (err as { message?: string }).message;
-      setError(msg ?? "Something went wrong. Please try again.");
+      // An answer the server turned down (an email already registered, say):
+      // go straight back to its step and show the message under the field,
+      // rather than leaving them to click Back until they find it.
+      const problems = problemsFromError(err, STEP_FIELDS.flat());
+      const step = firstStepWith(problems, STEP_FIELDS);
+      for (const p of problems) setFieldError(p.field, { type: "server", message: p.message }, { shouldFocus: false });
+      if (step !== null) {
+        setCurrentStep(step);
+        setError("Please correct the highlighted answer, then continue.");
+        // Once that step is on screen, bring the answer into view and put the
+        // cursor in it (text fields share their name as id); otherwise the top.
+        const first = problems.find((p) => STEP_FIELDS[step].includes(p.field))?.field;
+        window.setTimeout(() => {
+          const el = first ? document.getElementById(first) : null;
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.focus({ preventScroll: true });
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        }, 50);
+      } else {
+        const msg = (err as { message?: string }).message;
+        setError(msg ?? "Something went wrong. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
