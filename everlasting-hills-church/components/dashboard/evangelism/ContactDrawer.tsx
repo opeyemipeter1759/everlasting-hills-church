@@ -28,27 +28,30 @@ import {
   useDeleteContact,
   useEvangelismContact,
   useEvangelismTeam,
+  useLogContactAction,
   useReviewContact,
   type ContactActivity,
   type ContactDetail,
+  type ContactStatus,
   type ReviewOutcome,
 } from "@/lib/api/evangelism";
 import { ActivityThread } from "@/components/dashboard/follow-up/ActivityThread";
 import { Select } from "@/components/ui/select";
 import { ContactDialog } from "./ContactDialog";
-import { LogActionForm } from "./LogActionForm";
 import { TaskDialog } from "./TaskDialog";
-import { ErrorNote, FlagBadge, Initials, Loading, SavedBadge, StatusBadge, cardClass, iconButton, secondaryButton, selectClass } from "./bits";
+import { ErrorNote, FlagBadge, Initials, Loading, SavedBadge, StatusBadge, cardClass, iconButton, primaryButton, secondaryButton, selectClass } from "./bits";
 import {
   ACTION_LABEL,
   NEXT_ACTION_LABEL,
   STATUS_LABEL,
+  STATUS_ORDER,
   TASK_STATUS_LABEL,
   TASK_TYPE_LABEL,
   displayPhone,
   errorText,
   fmtDate,
   fmtDateTime,
+  todayLagos,
 } from "./labels";
 
 /** One contact's profile: who they are, where they are in follow-up, and everything done so far. */
@@ -69,7 +72,7 @@ export function ContactDrawer({ contactId, canLead, onClose }: { contactId: stri
   );
 }
 
-type ProfileTab = "overview" | "feedback" | "activity";
+type ProfileTab = "overview" | "activity";
 
 function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; canLead: boolean; onClose: () => void }) {
   const [tab, setTab] = useState<ProfileTab>("overview");
@@ -93,7 +96,6 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
 
   const tabs: { id: ProfileTab; label: string; icon: React.ElementType; count?: number }[] = [
     { id: "overview", label: "Overview", icon: LayoutList },
-    { id: "feedback", label: "Feedback", icon: MessageCircle, count: c.feedback.total },
     { id: "activity", label: "Activity", icon: History, count: c.activities.length + c.tasks.length },
   ];
 
@@ -182,7 +184,7 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
       </header>
 
       {/* Tabs, pinned while the panel scrolls. */}
-      <div role="tablist" aria-label="Contact sections" className="sticky top-0 z-10 grid grid-cols-3 border-b sm:flex sm:gap-1 border-gray-200 bg-white px-4 dark:border-white/10 dark:bg-[#161618] sm:px-6">
+      <div role="tablist" aria-label="Contact sections" className="sticky top-0 z-10 grid grid-cols-2 border-b sm:flex sm:gap-1 border-gray-200 bg-white px-4 dark:border-white/10 dark:bg-[#161618] sm:px-6">
         {tabs.map((t) => {
           const selected = t.id === tab;
           return (
@@ -223,6 +225,8 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
 
             <FollowingUp contact={c} canLead={canLead} />
 
+            {c.window.open && <StatusControl contact={c} />}
+
             <Section title="Details">
               <dl className={`${cardClass} divide-y divide-gray-100 dark:divide-white/[0.06]`}>
                 <Fact icon={MapPin} label="Address" value={c.address} />
@@ -243,13 +247,15 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
               </Section>
             )}
 
-            {c.window.open && (
-              <Section title="Log a follow-up">
-                <div className={`${cardClass} p-4 sm:p-5`}>
-                  <LogActionForm contactId={c.id} status={c.status} />
-                </div>
-              </Section>
-            )}
+            {/* Feedback is how the team records each follow-up: a thread, as on Follow Up. */}
+            <div className={`${cardClass} px-4 pb-2 sm:px-5`}>
+              <ActivityThread
+                person={{ kind: EVANGELISM_NOTE_KIND, id: c.id, name: c.name }}
+                title="Feedback"
+                notesBase={EVANGELISM_NOTES_BASE}
+                listKey={EVANGELISM_CONTACTS_KEY}
+              />
+            </div>
 
             <p className="flex items-start gap-2 text-xs leading-relaxed text-gray-500 dark:text-white/40">
               <ShieldCheck size={14} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
@@ -260,17 +266,6 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
               </span>
             </p>
           </>
-        )}
-
-        {tab === "feedback" && (
-          <div className={`${cardClass} px-4 pb-2 sm:px-5`}>
-            <ActivityThread
-              person={{ kind: EVANGELISM_NOTE_KIND, id: c.id, name: c.name }}
-              title="Feedback"
-              notesBase={EVANGELISM_NOTES_BASE}
-              listKey={EVANGELISM_CONTACTS_KEY}
-            />
-          </div>
         )}
 
         {tab === "activity" && (
@@ -348,6 +343,85 @@ function Profile({ contact: c, canLead, onClose }: { contact: ContactDetail; can
         onCancel={() => setConfirmDelete(false)}
       />
     </div>
+  );
+}
+
+/**
+ * Where they are in follow-up (New → Invited → Attended…), changed in one
+ * step. It's what the 30-day tracking reads; the conversation itself goes in
+ * the feedback thread below.
+ */
+function StatusControl({ contact: c }: { contact: ContactDetail }) {
+  const log = useLogContactAction();
+  const [pending, setPending] = useState<ContactStatus | null>(null);
+  const [callBack, setCallBack] = useState("");
+
+  async function save(status: ContactStatus, callBackOn?: string) {
+    try {
+      await log.mutateAsync({
+        id: c.id,
+        status,
+        ...(callBackOn ? { callBackAt: new Date(`${callBackOn}T09:00:00+01:00`).toISOString() } : {}),
+      });
+      showToast.success(`Status: ${STATUS_LABEL[status]}`);
+      setPending(null);
+      setCallBack("");
+    } catch (err) {
+      showToast.error(errorText(err, "Couldn't update the status"));
+    }
+  }
+
+  function choose(value: string) {
+    const status = value as ContactStatus;
+    if (status === c.status) return;
+    // A call-back needs a date before it can be saved.
+    if (status === "CALL_BACK") setPending(status);
+    else void save(status);
+  }
+
+  return (
+    <section className={`${cardClass} p-4 sm:p-5`}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs text-gray-500 dark:text-white/45">Status</p>
+          <div className="mt-1">
+            <StatusBadge status={c.status} />
+          </div>
+        </div>
+        <div className="sm:w-64">
+          <Select
+            aria-label="Change status"
+            className={selectClass}
+            value={pending ?? c.status}
+            disabled={log.isPending}
+            onChange={choose}
+            options={STATUS_ORDER.map((k) => ({ value: k, label: STATUS_LABEL[k] }))}
+          />
+        </div>
+      </div>
+      {pending === "CALL_BACK" && (
+        <div className="mt-4 flex flex-col gap-2 border-t border-gray-100 pt-4 dark:border-white/[0.06] sm:flex-row sm:items-end">
+          <label className="min-w-0 flex-1">
+            <span className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-white/60">Call back on</span>
+            <input
+              type="date"
+              value={callBack}
+              min={todayLagos()}
+              onChange={(e) => setCallBack(e.target.value)}
+              className="h-10 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 dark:border-white/10 dark:bg-white/5 dark:text-white dark:[color-scheme:dark]"
+            />
+          </label>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setPending(null)} className={secondaryButton}>
+              Cancel
+            </button>
+            <button type="button" disabled={!callBack || log.isPending} onClick={() => save("CALL_BACK", callBack)} className={primaryButton}>
+              Save
+            </button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 
