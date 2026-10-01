@@ -46,12 +46,12 @@ describe('toServiceVideo', () => {
     expect(toServiceVideo(video({ upload: 'uploaded' }), false)).toMatchObject({ state: 'pending' });
   });
 
-  // 30 Sept 2026: the Wednesday stream had ended (end time, full length, public)
-  // but YouTube still said uploadStatus "uploaded" hours later, and the digest
-  // waited on it forever. A finished live stream is ready whatever that says.
-  it('takes a finished live stream even while YouTube still says "uploaded"', () => {
-    const wednesday = video({ live: true, upload: 'uploaded', duration: 'PT2H12M42S', publishedAt: '2026-09-30T17:15:29Z' });
-    expect(toServiceVideo(wednesday, false)).toMatchObject({ state: 'ready', serviceDay: 'SUNDAY' });
+  // 30 Sept 2026: the Wednesday stream had ended (end time, full length,
+  // public) but was still "uploaded", and Gemini answered 403 for it while it
+  // read the processed Sunday stream fine. So an ended stream still waits.
+  it('waits on an ended stream until YouTube has processed it — Gemini cannot read it before', () => {
+    expect(toServiceVideo(video({ live: true, upload: 'uploaded', duration: 'PT2H12M42S' }), false)).toMatchObject({ state: 'pending' });
+    expect(toServiceVideo(video({ live: true, upload: 'processed', duration: 'PT2H12M42S' }), false)).toMatchObject({ state: 'ready' });
   });
 
   it('never takes an upload YouTube failed or rejected', () => {

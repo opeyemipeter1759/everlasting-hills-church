@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { SermonDigest } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { GeminiBusyError, GeminiClient, GeminiContent, parseGeminiJson } from '../ai/gemini-client';
+import { GeminiBusyError, GeminiError, GeminiClient, GeminiContent, parseGeminiJson } from '../ai/gemini-client';
 import { ServiceVideo, YouTubeServices } from './youtube-services';
 import {
   DAILY_CONFESSIONS_SCHEMA,
@@ -207,6 +207,12 @@ export class SermonDigestService {
       // Google busy or rate-limited: nothing wrong with the video, so nothing is
       // recorded against it — the next run simply tries again.
       if (err instanceof GeminiBusyError) return { outcome: 'busy', detail: err.message };
+      // 403 on the video: Gemini can't read it yet (YouTube hasn't finished
+      // with it), not a fault in the video — so, like busy, no attempt is
+      // spent. Otherwise three runs in a row would retire the service for good.
+      if (err instanceof GeminiError && err.status === 403) {
+        return { outcome: 'busy', detail: `Gemini can't read the video yet (${err.message})` };
+      }
       const detail = err instanceof Error ? err.message : String(err);
       await this.save(video, { status: 'FAILED', reason: detail.slice(0, 1000), model, attempts: (previous?.attempts ?? 0) + 1 });
       return { outcome: 'failed', detail };

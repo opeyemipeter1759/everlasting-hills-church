@@ -1,5 +1,5 @@
 import { SermonDigestService, confessionForDay, dailyCacheControl } from './sermon-digest.service';
-import { GeminiBusyError } from '../ai/gemini-client';
+import { GeminiBusyError, GeminiError } from '../ai/gemini-client';
 import type { ServiceVideo } from './youtube-services';
 
 const service = (id: string, state: ServiceVideo['state'] = 'ready'): ServiceVideo => ({
@@ -62,6 +62,24 @@ describe('SermonDigestService.run', () => {
     // Step 3 is text only: no video goes to Gemini a third time.
     expect(typeof generate.mock.calls[2][0].input).toBe('string');
     expect(created(upsert, 0).dailyConfessions).toEqual(DAILY.confessions);
+  });
+
+  // 1 Oct 2026: Gemini answered 403 "The caller does not have permission" for a
+  // stream YouTube hadn't finished processing. Counting that as a failed try
+  // would have retired the Wednesday service after three runs.
+  it("spends no attempt when Gemini can't read the video yet (403)", async () => {
+    const { svc, generate, upsert } = setup([service('new')]);
+    generate.mockRejectedValueOnce(new GeminiError('The caller does not have permission', 'rejected', 403));
+    const result = await svc.run();
+    expect(result.processed).toEqual([expect.objectContaining({ videoId: 'new', outcome: 'busy' })]);
+    expect(upsert).not.toHaveBeenCalled();
+  });
+
+  it('still counts other refusals as a failed attempt', async () => {
+    const { svc, generate, upsert } = setup([service('new')]);
+    generate.mockRejectedValueOnce(new GeminiError('Invalid argument', 'rejected', 400));
+    await svc.run();
+    expect(created(upsert, 0)).toMatchObject({ status: 'FAILED', attempts: 1 });
   });
 
   it('still publishes the sermon when the daily confessions fail, and writes them on a later run', async () => {
