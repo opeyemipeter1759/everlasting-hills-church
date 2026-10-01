@@ -3222,6 +3222,21 @@
         ],
         "type": "object"
       },
+      "UnsubscribeDto": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "token"
+        ],
+        "type": "object"
+      },
       "UpdateAnnouncementDto": {
         "properties": {
           "body": {
@@ -14619,6 +14634,58 @@
         "summary": "Units the caller can open, grouped by department (MEMBER+)",
         "tags": [
           "departments"
+        ]
+      }
+    },
+    "/email/unsubscribe": {
+      "post": {
+        "operationId": "EmailUnsubscribeController_unsubscribe",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnsubscribeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Stop church bulk emails for an address (signed link from the email)",
+        "tags": [
+          "email"
         ]
       }
     },

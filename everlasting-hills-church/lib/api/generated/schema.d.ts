@@ -2677,6 +2677,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/email/unsubscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop church bulk emails for an address (signed link from the email) */
+        post: operations["EmailUnsubscribeController_unsubscribe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/emails/recipients/preview": {
         parameters: {
             query?: never;
@@ -9062,6 +9079,10 @@ export interface components {
             testimony: string;
             /** @example God answered my prayer */
             title?: string;
+        };
+        UnsubscribeDto: {
+            email: string;
+            token: string;
         };
         UpdateAnnouncementDto: {
             /** @example Join us this Sunday for a special time of worship. */
@@ -15674,6 +15695,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EmailUnsubscribeController_unsubscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnsubscribeDto"];
+            };
+        };
         responses: {
             200: {
                 headers: {

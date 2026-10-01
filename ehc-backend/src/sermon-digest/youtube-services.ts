@@ -100,6 +100,19 @@ export function toServiceVideo(item: YouTubeVideoItem, fromServicesPlaylist: boo
   return { ...base, state: 'ready' };
 }
 
+/** A finished live stream: a prayer meeting or a service. */
+export interface StreamVideo {
+  id: string;
+  title: string;
+  startedAt: Date;
+  durationSeconds: number;
+  /** Public and processed by YouTube — Gemini can read it (it 403s before). */
+  readable: boolean;
+}
+
+/** Shorter than this, a "stream" is a test or a clip, not a session. */
+const MIN_STREAM_SECONDS = 10 * 60;
+
 /** Reads the church channel's recent uploads (or its services playlist) from the YouTube Data API. */
 @Injectable()
 export class YouTubeServices {
@@ -136,6 +149,36 @@ export class YouTubeServices {
       .map((v) => toServiceVideo(v, Boolean(this.playlistId)))
       .filter((v): v is ServiceVideo => v !== null)
       // A hand-made playlist isn't in date order; the uploads list is, but sorting costs nothing.
+      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
+  }
+
+  /**
+   * Live streams of any day — prayer meetings as well as services — newest
+   * first, each saying whether Gemini can read it yet (public and processed).
+   */
+  async recentStreams(): Promise<StreamVideo[]> {
+    const playlist = await this.uploadsPlaylist();
+    const items = await this.get<{ items?: { contentDetails: { videoId: string } }[] }>('playlistItems', {
+      part: 'contentDetails',
+      playlistId: playlist,
+      maxResults: '25',
+    });
+    const ids = (items.items ?? []).map((i) => i.contentDetails.videoId);
+    if (ids.length === 0) return [];
+    const videos = await this.get<{ items?: YouTubeVideoItem[] }>('videos', {
+      part: 'snippet,contentDetails,status,liveStreamingDetails',
+      id: ids.join(','),
+    });
+    return (videos.items ?? [])
+      .filter((v) => v.liveStreamingDetails?.actualStartTime && v.liveStreamingDetails.actualEndTime)
+      .map((v) => ({
+        id: v.id,
+        title: v.snippet.title,
+        startedAt: new Date(v.liveStreamingDetails!.actualStartTime!),
+        durationSeconds: parseIsoDuration(v.contentDetails?.duration),
+        readable: v.status?.privacyStatus === 'public' && v.status?.uploadStatus === 'processed',
+      }))
+      .filter((v) => v.durationSeconds >= MIN_STREAM_SECONDS && !NOT_A_SERVICE_TITLE.test(v.title))
       .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
   }
 

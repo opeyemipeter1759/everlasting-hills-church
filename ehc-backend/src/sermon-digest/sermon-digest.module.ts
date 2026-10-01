@@ -9,6 +9,6 @@ import { YouTubeServices } from './youtube-services';
   imports: [AiModule],
   controllers: [SermonDigestController],
   providers: [SermonDigestService, YouTubeServices],
-  exports: [SermonDigestService],
+  exports: [SermonDigestService, YouTubeServices],
 })
 export class SermonDigestModule {}

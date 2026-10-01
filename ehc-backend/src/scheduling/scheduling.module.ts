@@ -6,6 +6,7 @@ import { AttendanceModule } from '../attendance/attendance.module';
 import { SermonDigestModule } from '../sermon-digest/sermon-digest.module';
 import { SchedulingService } from './scheduling.service';
 import { CronGateService } from './cron-gate.service';
+import { FastingEmailModule } from '../fasting-email/fasting-email.module';
 import { JobsRunnerService } from './jobs-runner.service';
 import { JobsController } from './jobs.controller';
 
@@ -18,7 +19,7 @@ import { JobsController } from './jobs.controller';
  * MailDispatcher and PrismaService are resolved from their global modules.
  */
 @Module({
-  imports: [ScheduleModule.forRoot(), FollowUpModule, CalendarModule, AttendanceModule, SermonDigestModule],
+  imports: [ScheduleModule.forRoot(), FollowUpModule, CalendarModule, AttendanceModule, SermonDigestModule, FastingEmailModule],
   controllers: [JobsController],
   providers: [SchedulingService, CronGateService, JobsRunnerService],
 })

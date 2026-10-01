@@ -92,6 +92,7 @@ export class NotificationsService {
       ...(payload.attachments?.length
         ? { attachments: payload.attachments.map((a) => ({ filename: a.filename, path: a.url })) }
         : {}),
+      ...(payload.headers ? { headers: payload.headers } : {}),
     });
     if (error) {
       throw new Error(

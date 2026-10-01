@@ -3092,3 +3092,59 @@ model EvangelismTestimony {
 
   @@index([tenantId, date])
 }
+
+// ─── Daily fasting email (Furnace '26 and later fasts) ─────────────────────────
+
+/// A short recap of one streamed session (morning/evening prayer, a service),
+/// written by Gemini once YouTube has processed the recording, for the next
+/// morning's fasting email.
+model FastingRecap {
+  id         String   @id
+  tenantId   String
+  videoId    String
+  videoTitle String
+  startedAt  DateTime
+  /// READY | FAILED
+  status     String
+  title      String?
+  summary    String?
+  /// string[]
+  keyPoints  Json?
+  reason     String?
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  @@unique([tenantId, videoId])
+  @@index([tenantId, startedAt])
+}
+
+/// One daily fasting email to one address on one day — so a re-run never
+/// sends twice and carries on where it stopped.
+model DailyEmailLog {
+  id        String   @id
+  tenantId  String
+  /// e.g. "fast:furnace-2026"
+  campaign  String
+  /// Lagos date, YYYY-MM-DD
+  day       String
+  email     String
+  /// SENT | FAILED
+  status    String
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, campaign, day, email])
+  @@index([tenantId, campaign, day])
+}
+
+/// Someone who asked to stop church bulk emails (the daily fasting email).
+model EmailUnsubscribe {
+  id        String   @id
+  tenantId  String
+  /// Lower-cased address.
+  email     String
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, email])
+}

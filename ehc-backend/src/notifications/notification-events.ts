@@ -39,6 +39,8 @@ export interface SendEmailPayload {
   /** Files to attach — Resend fetches each by URL at send time, so nothing is
    * buffered through the queue. */
   attachments?: { filename: string; url: string }[];
+  /** Extra headers, e.g. List-Unsubscribe on bulk mail. */
+  headers?: Record<string, string>;
   /** Tag for logging — e.g. "first-timer-admin", "prayer-request-visitor". */
   tag: string;
   /** Final delivery must confirm the recipient still has ACTIVE membership. */

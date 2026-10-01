@@ -3,6 +3,8 @@ import { SchedulingService } from './scheduling.service';
 import { PushTriggersService } from '../push/services/push-triggers.service';
 import { GoogleCalendarSyncService } from '../calendar/services/google-calendar-sync.service';
 import { SermonDigestService } from '../sermon-digest/sermon-digest.service';
+import { DailyFastEmailService } from '../fasting-email/daily-fast-email.service';
+import { FastingRecapsService } from '../fasting-email/fasting-recaps.service';
 
 /** Names match the @Cron({ name }) options so logs and Cloud Scheduler agree. */
 export const JOB_NAMES = [
@@ -17,6 +19,8 @@ export const JOB_NAMES = [
   'push-serving-reminder',
   'push-prayer-meeting',
   'sermon-digest',
+  'fasting-recaps',
+  'daily-fast-email',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -44,6 +48,8 @@ export class JobsRunnerService {
     private readonly pushTriggers: PushTriggersService,
     private readonly calendarSync: GoogleCalendarSyncService,
     private readonly sermonDigest: SermonDigestService,
+    private readonly fastingRecaps: FastingRecapsService,
+    private readonly dailyFastEmail: DailyFastEmailService,
   ) {}
 
   isJob(name: string): name is JobName {
@@ -93,6 +99,10 @@ export class JobsRunnerService {
         return this.pushTriggers.prayerMeetingReminders();
       case 'sermon-digest':
         return this.sermonDigest.run().then(() => undefined);
+      case 'fasting-recaps':
+        return this.fastingRecaps.run().then(() => undefined);
+      case 'daily-fast-email':
+        return this.dailyFastEmail.run().then(() => undefined);
     }
   }
 }
