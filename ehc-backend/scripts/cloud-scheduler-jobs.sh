@@ -24,7 +24,7 @@ curl -s -o /dev/null -w "%{http_code}\n" -H "X-Cron-Secret: $SECRET" "$BASE_URL/
 
 gcloud services enable cloudscheduler.googleapis.com --project "$PROJECT" >/dev/null
 
-# name|cron (in $TZ_NAME)|description
+# name|cron (in $TZ_NAME)|description[|job path, when it differs from name]
 JOBS=(
   "birthday-greetings|0 8 * * *|Birthday emails to members whose birthday is today"
   "anniversary-greetings|0 8 * * *|Wedding-anniversary emails"
@@ -36,15 +36,18 @@ JOBS=(
   "push-serving-reminder|0 * * * *|Push: serving-roster reminders"
   "push-prayer-meeting|*/5 * * * *|Push: prayer-meeting starting soon"
   "sermon-digest|15 */3 * * *|Sermon summary + Word of the Day from the newest YouTube service (Gemini)"
+  "fasting-recaps|45 */3 * * *|Recaps of each streamed session during a church fast, for the next morning's email (Gemini)"
+  "daily-fast-email|0 5 * * *|5am email to everyone during a church fast: the day, when to break it, yesterday's recap"
+  "daily-fast-email-retry|20 5 * * *|Finishes any daily fast email the 5am run ran out of time for (never sends twice)|daily-fast-email"
 )
 
 for spec in "${JOBS[@]}"; do
-  IFS='|' read -r name cron desc <<<"$spec"
+  IFS='|' read -r name cron desc path <<<"$spec"
   job="ehc-$name"
   common=(
     --location "$REGION" --project "$PROJECT"
     --schedule "$cron" --time-zone "$TZ_NAME"
-    --uri "$BASE_URL/jobs/$name" --http-method POST
+    --uri "$BASE_URL/jobs/${path:-$name}" --http-method POST
     --headers "X-Cron-Secret=$SECRET,Content-Type=application/json"
     --attempt-deadline 300s
     --max-retry-attempts 2 --min-backoff 30s --max-backoff 300s
