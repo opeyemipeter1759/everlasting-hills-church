@@ -175,7 +175,8 @@ export type EventSectionType =
   | "FAQ"
   | "TESTIMONY"
   | "CTA"
-  | "RESPONSE";
+  | "RESPONSE"
+  | "FASTING_SCHEDULE";
 
 export interface EventSchedule {
   id: string;
@@ -219,6 +220,27 @@ export type EventSection =
       }[];
     }>
   | EventSectionBase<"FAQ", { items: { question: string; answer: string }[] }>
+  | EventSectionBase<"FASTING_SCHEDULE", {
+      introduction?: string;
+      /** YYYY-MM-DD, the first and last day of the fast. */
+      startDate: string;
+      endDate: string;
+      /** When the one meal is taken on ordinary days, e.g. "3pm". */
+      mealTime: string;
+      dryFasts: { startDate: string; endDate: string; breakTime: string }[];
+      note?: string;
+      morningTime?: string;
+      eveningTime?: string;
+      /** Weekdays (0 = Sunday) with no morning / evening prayer session. */
+      noMorningDays: number[];
+      noEveningDays: number[];
+      /** Weekdays whose morning is the Sunday service. */
+      serviceDays: number[];
+      sessionsNote?: string;
+      guidelines: { title: string; body: string }[];
+      scriptureText?: string;
+      scriptureReference?: string;
+    }>
   | EventSectionBase<"TESTIMONY", { body: string; buttonLabel: string; url?: string }>
   | EventSectionBase<"CTA", { body?: string; buttonLabel: string; url?: string }>
   | EventSectionBase<"RESPONSE", {

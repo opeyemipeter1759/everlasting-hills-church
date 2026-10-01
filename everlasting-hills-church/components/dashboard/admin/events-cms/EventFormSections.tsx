@@ -4,6 +4,7 @@ import type { EventSection, EventSectionType } from "@/types";
 import Field from "./Field";
 import { inputCls } from "./helpers";
 import ResponseSectionEditor, { EMPTY_RESPONSE_ACTION } from "./ResponseSectionEditor";
+import FastingScheduleEditor, { EMPTY_FASTING_SCHEDULE } from "./FastingScheduleEditor";
 import type { EventFormData, SetField } from "./useEventForm";
 
 const sectionOptions: { value: EventSectionType; label: string }[] = [
@@ -15,6 +16,7 @@ const sectionOptions: { value: EventSectionType; label: string }[] = [
   { value: "TESTIMONY", label: "Testimony call to action" },
   { value: "CTA", label: "Call to action" },
   { value: "RESPONSE", label: "Ways to respond" },
+  { value: "FASTING_SCHEDULE", label: "Fasting schedule" },
 ];
 
 function base<T extends EventSectionType>(type: T) {
@@ -40,6 +42,7 @@ function newSection(type: EventSectionType): EventSection {
     case "TESTIMONY": return { ...base(type), content: { body: "", buttonLabel: "Share your testimony", url: "" } };
     case "CTA": return { ...base(type), content: { body: "", buttonLabel: "Learn more", url: "" } };
     case "RESPONSE": return { ...base(type), content: { introduction: "", actions: [{ ...EMPTY_RESPONSE_ACTION }] } };
+    case "FASTING_SCHEDULE": return { ...base(type), content: { ...EMPTY_FASTING_SCHEDULE } };
   }
 }
 
@@ -119,6 +122,8 @@ function SectionEditor({ section, index, update }: { section: EventSection; inde
       return <div className="space-y-3"><Field label="Description" htmlFor={`section-cta-body-${index}`}><textarea id={`section-cta-body-${index}`} rows={4} value={section.content.body} onChange={(e) => update({ ...section, content: { ...section.content, body: e.target.value } })} className={`${inputCls} resize-y`} /></Field><div className="grid gap-3 sm:grid-cols-2"><Field label="Button label" htmlFor={`section-cta-label-${index}`}><input id={`section-cta-label-${index}`} required value={section.content.buttonLabel} onChange={(e) => update({ ...section, content: { ...section.content, buttonLabel: e.target.value } })} className={inputCls} /></Field><Field label="Destination URL" htmlFor={`section-cta-url-${index}`}><input id={`section-cta-url-${index}`} value={section.content.url ?? ""} onChange={(e) => update({ ...section, content: { ...section.content, url: e.target.value } })} placeholder="Add when available" className={inputCls} /></Field></div></div>;
     case "RESPONSE":
       return <ResponseSectionEditor section={section} index={index} update={update} />;
+    case "FASTING_SCHEDULE":
+      return <FastingScheduleEditor section={section} index={index} update={update} />;
     case "CTA":
       return <div className="space-y-3"><Field label="Description" htmlFor={`section-cta-body-${index}`}><textarea id={`section-cta-body-${index}`} rows={4} value={section.content.body ?? ""} onChange={(e) => update({ ...section, content: { ...section.content, body: e.target.value } })} className={`${inputCls} resize-y`} /></Field><div className="grid gap-3 sm:grid-cols-2"><Field label="Button label" htmlFor={`section-cta-label-${index}`}><input id={`section-cta-label-${index}`} required value={section.content.buttonLabel} onChange={(e) => update({ ...section, content: { ...section.content, buttonLabel: e.target.value } })} className={inputCls} /></Field><Field label="Destination URL" htmlFor={`section-cta-url-${index}`}><input id={`section-cta-url-${index}`} value={section.content.url ?? ""} onChange={(e) => update({ ...section, content: { ...section.content, url: e.target.value } })} placeholder="Add when available" className={inputCls} /></Field></div></div>;
   }

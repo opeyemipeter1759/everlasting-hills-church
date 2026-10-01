@@ -2209,6 +2209,9 @@ enum EventSectionType {
   /// Two or more ways to respond, side by side — a testimony and a salvation
   /// form, say. TESTIMONY remains for the single-action case.
   RESPONSE
+  /// A fast laid out day by day (one-meal days, dry-fast weekends, prayer
+  /// sessions), worked out from a few rules rather than typed per day.
+  FASTING_SCHEDULE
 }
 
 enum SiteSection {

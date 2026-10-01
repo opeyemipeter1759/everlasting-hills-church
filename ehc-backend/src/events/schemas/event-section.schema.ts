@@ -28,7 +28,53 @@ const prayerFocus = z.object({
   prayerPoints: z.array(text(600)).max(20).default([]),
 });
 
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a YYYY-MM-DD date');
+const weekday = z.number().int().min(0).max(6); // 0 = Sunday
+
+/**
+ * A fast set out by its rules — dates, the one-meal time, the dry-fast
+ * stretches and when prayer meets — so the day-by-day calendar is worked out
+ * on the page rather than typed in for every day.
+ */
+const fastingSchedule = z
+  .object({
+    introduction: optionalText(1200),
+    startDate: isoDate,
+    endDate: isoDate,
+    /** When the one meal is taken on ordinary days, e.g. "3pm". */
+    mealTime: text(20),
+    dryFasts: z
+      .array(z.object({ startDate: isoDate, endDate: isoDate, breakTime: text(40) }))
+      .max(12)
+      .default([]),
+    /** Shown under the dry-fast weekends, e.g. why the last weekend isn't dry. */
+    note: optionalText(400),
+    morningTime: optionalText(20),
+    eveningTime: optionalText(20),
+    /** Weekdays with no morning / evening prayer session. */
+    noMorningDays: z.array(weekday).max(7).default([]),
+    noEveningDays: z.array(weekday).max(7).default([]),
+    /** Shown in place of the morning session on these days, e.g. "Sunday service" on Sundays. */
+    serviceDays: z.array(weekday).max(7).default([]),
+    sessionsNote: optionalText(300),
+    guidelines: z
+      .array(z.object({ title: text(80), body: text(600) }))
+      .max(8)
+      .default([]),
+    scriptureText: optionalText(600),
+    scriptureReference: optionalText(80),
+  })
+  .refine((c) => c.startDate <= c.endDate, { message: 'The fast must end on or after the day it starts', path: ['endDate'] })
+  .refine((c) => c.dryFasts.every((d) => d.startDate <= d.endDate && d.startDate >= c.startDate && d.endDate <= c.endDate), {
+    message: 'Each dry fast must fall within the fast and end on or after it starts',
+    path: ['dryFasts'],
+  });
+
 export const eventSectionInputSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('FASTING_SCHEDULE'),
+    content: fastingSchedule,
+  }),
   z.object({
     type: z.literal('RICH_TEXT'),
     content: z.object({ body: text(20_000) }),

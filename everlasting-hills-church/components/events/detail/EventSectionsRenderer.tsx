@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { EventDetail, EventSection } from "@/types";
 import EventAccordion, { type EventAccordionItem } from "./EventAccordion";
 import { formatEventDateRange } from "./event-format";
+import FastingScheduleSection from "./FastingScheduleSection";
 
 export default function EventSectionsRenderer({ event }: { event: EventDetail }) {
   const sections = event.Sections ?? [];
@@ -21,6 +22,8 @@ function hasContent(section: EventSection): boolean {
       return section.content.actions.length > 0;
     case "RICH_TEXT":
       return Boolean(section.content.body.trim());
+    case "FASTING_SCHEDULE":
+      return Boolean(section.content.startDate && section.content.endDate);
     default:
       return true;
   }
@@ -41,6 +44,8 @@ function EventSectionView({ section, event, index }: { section: EventSection; ev
       </section>
     );
   }
+
+  if (section.type === "FASTING_SCHEDULE") return <FastingScheduleSection section={section} />;
 
   if (section.type === "RESPONSE") {
     return (
