@@ -78,9 +78,19 @@ export function toServiceVideo(item: YouTubeVideoItem, fromServicesPlaylist: boo
   if (serviceDay === 'OTHER') return null;
   const base = { id: item.id, title, startedAt, durationSeconds, serviceDay };
 
-  // Live now, scheduled, or YouTube still processing the recording: not a
-  // failure, just not yet.
-  if (live === 'live' || live === 'upcoming' || (item.status?.uploadStatus && item.status.uploadStatus !== 'processed') || durationSeconds === 0) {
+  const upload = item.status?.uploadStatus;
+  // YouTube gave up on it, or took it down: never a service to summarise.
+  if (upload === 'failed' || upload === 'rejected' || upload === 'deleted') return null;
+
+  // A live stream that has ended — YouTube gives its end time and full length —
+  // is watchable now. YouTube often leaves a past stream's uploadStatus at
+  // "uploaded" for days, so for streams that status means nothing; waiting on
+  // it is what left the 30 Sept Wednesday service undigested.
+  const streamEnded = Boolean(item.liveStreamingDetails?.actualEndTime) && live !== 'live' && live !== 'upcoming';
+
+  // Live now, scheduled, or an ordinary upload YouTube is still processing:
+  // not a failure, just not yet.
+  if (live === 'live' || live === 'upcoming' || durationSeconds === 0 || (!streamEnded && upload && upload !== 'processed')) {
     return { ...base, state: 'pending' };
   }
   // Gemini can only watch public videos.

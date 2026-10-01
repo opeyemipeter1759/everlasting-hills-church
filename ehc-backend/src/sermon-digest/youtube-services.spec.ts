@@ -46,6 +46,20 @@ describe('toServiceVideo', () => {
     expect(toServiceVideo(video({ upload: 'uploaded' }), false)).toMatchObject({ state: 'pending' });
   });
 
+  // 30 Sept 2026: the Wednesday stream had ended (end time, full length, public)
+  // but YouTube still said uploadStatus "uploaded" hours later, and the digest
+  // waited on it forever. A finished live stream is ready whatever that says.
+  it('takes a finished live stream even while YouTube still says "uploaded"', () => {
+    const wednesday = video({ live: true, upload: 'uploaded', duration: 'PT2H12M42S', publishedAt: '2026-09-30T17:15:29Z' });
+    expect(toServiceVideo(wednesday, false)).toMatchObject({ state: 'ready', serviceDay: 'SUNDAY' });
+  });
+
+  it('never takes an upload YouTube failed or rejected', () => {
+    expect(toServiceVideo(video({ upload: 'failed' }), false)).toBeNull();
+    expect(toServiceVideo(video({ upload: 'rejected', live: true }), false)).toBeNull();
+    expect(toServiceVideo(video({ upload: 'deleted' }), false)).toBeNull();
+  });
+
   it('only takes Sunday and Wednesday services', () => {
     expect(toServiceVideo(video({ publishedAt: '2026-09-24T18:00:00Z' }), false)).toBeNull(); // Thursday home cell
     expect(toServiceVideo(video({ publishedAt: '2026-09-23T17:00:00Z' }), false)).toMatchObject({ serviceDay: 'WEDNESDAY' });
