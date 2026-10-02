@@ -2,6 +2,7 @@
 
 import { useId } from "react";
 import type { Passage } from "@/lib/api/reading-plan";
+import { useActiveVerseId } from "./read-aloud";
 
 type ChapterGroup = {
   book: string;
@@ -11,6 +12,8 @@ type ChapterGroup = {
 
 export function ChapterPassage({ verses }: { verses: Passage["verses"] }) {
   const passageId = useId();
+  // The verse being read aloud, so a listener can follow along.
+  const activeVerseId = useActiveVerseId();
   const chapters: ChapterGroup[] = [];
 
   // Group consecutive verses so partial chapters and the passage's reading
@@ -43,7 +46,16 @@ export function ChapterPassage({ verses }: { verses: Passage["verses"] }) {
             </h3>
             <div className="space-y-2 text-[15px] leading-relaxed text-gray-800 dark:text-white/80">
               {chapter.verses.map((verse) => (
-                <p key={verse.verseId}>
+                <p
+                  key={verse.verseId}
+                  data-verse-id={verse.verseId}
+                  data-speaking={verse.verseId === activeVerseId ? "true" : undefined}
+                  className={
+                    verse.verseId === activeVerseId
+                      ? "-mx-2 rounded-md bg-amber-100/80 px-2 transition-colors dark:bg-amber-300/10"
+                      : "transition-colors"
+                  }
+                >
                   <span aria-hidden="true" className="mr-1.5 align-super text-[10px] font-bold text-[#87102C]/70 dark:text-[#FFB3C1]/70">
                     {verse.verse}
                   </span>

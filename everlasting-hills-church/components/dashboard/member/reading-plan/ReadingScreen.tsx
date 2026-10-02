@@ -18,6 +18,8 @@ import WordTabs from "./WordTabs";
 import ReadingPlanSelector from "./ReadingPlanSelector";
 import { Select } from "@/components/ui/select";
 import { ChapterPassage } from "./ChapterPassage";
+import { ListenBar } from "./ListenBar";
+import { ReadAloudProvider, ReadAloudSpacer, useRegisterPassage } from "./read-aloud";
 import {
   readingHref,
   useCompleteDay,
@@ -258,6 +260,11 @@ export default function ReadingScreen() {
         </div>
       </header>
 
+      {/* Keyed by the day and translation, so changing either stops anything
+          being read and starts the next day from its first verse. */}
+      <ReadAloudProvider key={`${subscriptionId}:${dayIndex}:${translation.code}`} expected={day.Portions.length}>
+      <ListenBar />
+
       {/* What the day holds, before the text of it. On a four portion morning a
           reader sees the shape and can jump to the part they want. */}
       {day.Portions.length > 1 && (
@@ -351,6 +358,8 @@ export default function ReadingScreen() {
           </button>
         )}
       </div>
+      <ReadAloudSpacer />
+      </ReadAloudProvider>
     </div>
   );
 }
@@ -434,6 +443,19 @@ function Portion({ portion, translation }: { portion: DayPortion; translation: s
     portion.endVerseId,
     translation,
   );
+  const registerForListening = useRegisterPassage();
+
+  // The text already fetched for the page is what gets read aloud, so
+  // listening never costs a second request.
+  useEffect(() => {
+    if (!data) return;
+    registerForListening?.({
+      sequence: portion.sequence,
+      label: portion.label,
+      reference: data.reference,
+      verses: data.verses,
+    });
+  }, [data, portion.sequence, portion.label, registerForListening]);
 
   if (isLoading) {
     return (
