@@ -147,10 +147,17 @@ describe('what the email says', () => {
     expect(build(day(), false).text).toContain('still being prepared. Watch it here: https://youtube.com/watch?v=a');
   });
 
+  it('makes plain that a meal day means one meal and nothing else', () => {
+    const mail = build(day({ kind: 'meal', dryDay: undefined, dryLength: undefined, breakTime: undefined }));
+    expect(mail.subject).toBe('Furnace 2026 · Day 3 of 30: one meal today, from 3pm');
+    expect(mail.text).toContain('nothing else until 3pm tomorrow. No snacks, no second plate');
+  });
+
   it('warns that today is the last meal before a dry fast', () => {
     const mail = build(day({ kind: 'meal', dryDay: undefined, dryLength: undefined, breakTime: undefined, lastMealBefore: { days: 3 } }));
     expect(mail.subject).toContain('one meal at 3pm, then the dry fast begins');
     expect(mail.text).toContain('last meal before the 3-day dry fast');
+    expect(mail.text).toContain('that is your meal for the day. No snacks');
   });
 
   it('always attaches the flyer, and carries one-click unsubscribe', () => {

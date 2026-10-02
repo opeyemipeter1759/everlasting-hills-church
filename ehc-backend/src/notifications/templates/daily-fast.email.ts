@@ -54,13 +54,17 @@ function fastLines(d: DailyFastDay): string[] {
     ];
   }
   if (d.kind === 'dry') return [`Dry fast, day ${d.dryDay} of ${d.dryLength}: no food or water today.`];
-  const lines = [`One meal today, from ${d.mealTime}.`];
+  const lines = [
+    `One meal today, from ${d.mealTime}.`,
+    // Tomorrow is a dry day before a dry fast, so there's no "until tomorrow's meal".
+    `Eat once, and that is your meal for the day${d.lastMealBefore ? '' : `: nothing else until ${d.mealTime} tomorrow`}. No snacks, no second plate, and no splitting your meal into portions to eat later.`,
+  ];
   if (d.lastMealBefore) {
     lines.push(
       `This is your last meal before the ${d.lastMealBefore.days}-day dry fast that begins tomorrow. Drink well and eat a light, nourishing meal.`,
     );
   } else {
-    lines.push('Drink water, and keep your one meal balanced and moderate.');
+    lines.push('Water is allowed throughout the day.');
   }
   return lines;
 }
