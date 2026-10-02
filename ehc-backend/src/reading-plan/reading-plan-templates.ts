@@ -15,10 +15,17 @@ import {
   type ChapterUnit,
 } from './plan-generator';
 import { readingIntensity } from './reading-intensity';
+import { fromVerseId } from './verse-id.util';
 
 interface StreamPlan {
   label: string;
   selection: BookSelection[];
+  /**
+   * Labels for particular books, so one stream can carry several divisions in
+   * turn (the Gospels, then Acts, then Revelation) and each portion still says
+   * which division it belongs to. Books not named here take `label`.
+   */
+  bookLabels?: Record<number, string>;
   /** Repeat the selection until it covers at least this many chapters. */
   cycleTo?: number;
   /** Repeat the selection exactly this many times. */
@@ -53,6 +60,18 @@ const NEW_TESTAMENT: BookSelection[] = Array.from({ length: 27 }, (_, i) => ({ b
 const WHOLE_BIBLE: BookSelection[] = Array.from({ length: 66 }, (_, i) => ({ bookId: i + 1 }));
 const OLD_TESTAMENT: BookSelection[] = Array.from({ length: 39 }, (_, i) => ({ bookId: i + 1 }));
 const GOSPELS: BookSelection[] = Array.from({ length: 4 }, (_, i) => ({ bookId: i + 40 }));
+
+/** Whole books from `first` to `last` inclusive, by canonical book id. */
+function booksFrom(first: number, last: number): BookSelection[] {
+  return Array.from({ length: last - first + 1 }, (_, i) => ({ bookId: first + i }));
+}
+
+// The Bible's traditional divisions, as the four month plan reads them.
+const LAW = booksFrom(1, 5); // Genesis to Deuteronomy
+const HISTORY = booksFrom(6, 17); // Joshua to Esther
+const POETRY_AND_WISDOM = booksFrom(18, 22); // Job to Song of Solomon
+const PROPHETS = booksFrom(23, 39); // Isaiah to Malachi
+const EPISTLES = booksFrom(45, 65); // Romans to Jude
 
 /**
  * The specification's curated set is fifteen psalms, which leaves the 90 day
@@ -218,14 +237,36 @@ READING_PLAN_TEMPLATES.push(
     'An intensive journey from Genesis to Revelation. Set aside a longer daily reading time, or take each reading at your own pace.',
     ReadingTrack.MATURE,
   ),
-  canonicalPlan(
-    'bible-in-four-months',
-    'The Bible in four months',
-    120,
-    WHOLE_BIBLE,
-    'Genesis to Revelation in four months, in book order. A substantial daily reading that keeps the whole story close together, so what came before is still fresh as the rest unfolds.',
-    ReadingTrack.MATURE,
-  ),
+  {
+    // Version 1 read Genesis to Revelation straight through. Version 2 reads
+    // the Bible's divisions side by side, so every day has a reading from the
+    // Law, History, Poetry and Wisdom, the Prophets and the Epistles. Each of
+    // those has at least 121 chapters, enough for all 120 days without
+    // splitting one. Acts (28 chapters) and Revelation (22) are too short to
+    // fill a daily stream, so they follow the Gospels in one, each portion
+    // still labelled with its own division.
+    slug: 'bible-in-four-months',
+    version: 2,
+    title: 'The Bible in four months',
+    subtitle: (minutes) =>
+      `The Bible’s divisions side by side, six readings a day. Four months, about ${minutes} minutes a day.`,
+    description:
+      'Each day reads from the Law, the Historical Books, Poetry and Wisdom, the Prophets and the Epistles, and from the Gospels, which give way to Acts and then Revelation. Every chapter of the Bible once, in 120 days.',
+    track: ReadingTrack.MATURE,
+    durationDays: 120,
+    streams: [
+      { label: 'Law', selection: LAW },
+      { label: 'History', selection: HISTORY },
+      { label: 'Poetry and Wisdom', selection: POETRY_AND_WISDOM },
+      { label: 'Prophets', selection: PROPHETS },
+      {
+        label: 'Gospels',
+        selection: [...GOSPELS, { bookId: 44 }, { bookId: 66 }],
+        bookLabels: { 44: 'Church History', 66: 'Revelation' },
+      },
+      { label: 'Epistles', selection: EPISTLES },
+    ],
+  },
   canonicalPlan(
     'bible-in-180-days',
     'The Bible in 180 days',
@@ -331,13 +372,22 @@ export interface GeneratedPlanDay {
   }[];
 }
 
+/**
+ * A portion's label: the stream's own, unless the stream names a division for
+ * the portion's book. toPortionRanges never joins two books into one portion,
+ * so every portion has exactly one book and one label.
+ */
+function portionLabel(stream: StreamPlan, range: { startVerseId: number }): string {
+  return stream.bookLabels?.[fromVerseId(range.startVerseId).bookId] ?? stream.label;
+}
+
 /** Pure generation also used by tests and dry runs; no persistence or random IDs. */
 export function buildReadingPlan(spec: ReadingPlanTemplate, corpus: ReadingPlanCorpus) {
   const streamDays = spec.streams.map((stream) => {
     let units = selectChapters(stream.selection, corpus.chaptersByBook);
     if (stream.repeat) units = Array.from({ length: stream.repeat }, () => units).flat();
     if (stream.cycleTo) units = cycleToAtLeast(units, stream.cycleTo);
-    return { label: stream.label, days: spreadAcrossDays(units, spec.durationDays) };
+    return { plan: stream, days: spreadAcrossDays(units, spec.durationDays) };
   });
 
   const days: GeneratedPlanDay[] = [];
@@ -349,7 +399,7 @@ export function buildReadingPlan(spec: ReadingPlanTemplate, corpus: ReadingPlanC
       const units = stream.days[dayIndex - 1];
       labelUnits.push(...units);
       for (const range of toPortionRanges(units)) {
-        portions.push({ ...range, sequence: portions.length + 1, label: stream.label });
+        portions.push({ ...range, sequence: portions.length + 1, label: portionLabel(stream.plan, range) });
       }
     }
     if (portions.length === 0) {

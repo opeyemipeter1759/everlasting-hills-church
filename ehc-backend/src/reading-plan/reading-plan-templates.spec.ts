@@ -69,7 +69,6 @@ describe('reading plan templates', () => {
 
   it.each([
     ['bible-in-90-days', 1, 66],
-    ['bible-in-four-months', 1, 66],
     ['bible-in-180-days', 1, 66],
     ['bible-in-a-year', 1, 66],
     ['bible-in-two-years', 1, 66],
@@ -108,6 +107,35 @@ describe('reading plan templates', () => {
     for (const [chapter, count] of counts) {
       const book = Number(chapter.split(':')[0]);
       expect(count).toBe(book === 19 || book >= 40 ? 2 : 1);
+    }
+  });
+
+  it('reads the four month plan by the Bible’s divisions: six readings a day, every chapter once', () => {
+    const division = (book: number) =>
+      book <= 5 ? 'Law'
+        : book <= 17 ? 'History'
+          : book <= 22 ? 'Poetry and Wisdom'
+            : book <= 39 ? 'Prophets'
+              : book <= 43 ? 'Gospels'
+                : book === 44 ? 'Church History'
+                  : book <= 65 ? 'Epistles'
+                    : 'Revelation';
+    // Acts and then Revelation take the Gospels' daily place, so the three
+    // count as one of the six readings.
+    const reading = (label: string) => (label === 'Church History' || label === 'Revelation' ? 'Gospels' : label);
+    const plan = generate('bible-in-four-months');
+
+    const counts = new Map<string, number>();
+    for (const chapter of prescribedChapters(plan)) counts.set(chapter, (counts.get(chapter) ?? 0) + 1);
+    expect(counts.size).toBe(1_189);
+    expect(new Set(counts.values())).toEqual(new Set([1]));
+
+    for (const day of plan.days) {
+      for (const portion of day.portions) {
+        expect(portion.label).toBe(division(Math.floor(portion.startVerseId / 1_000_000)));
+      }
+      expect([...new Set(day.portions.map((portion) => reading(portion.label)))])
+        .toEqual(['Law', 'History', 'Poetry and Wisdom', 'Prophets', 'Gospels', 'Epistles']);
     }
   });
 

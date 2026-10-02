@@ -450,37 +450,58 @@ function actsInThreeDays() {
   );
 }
 
-// A hundred and twenty days as four months of thirty. The generator reaches
-// Matthew on day 93, so the Old Testament fills three months and two days, and
-// the last month is almost all gold: the New Testament.
-const FOUR_MONTHS_NEW_TESTAMENT_FROM_DAY = 93;
+// Six lanes, one for each of the day's readings, side by side through four
+// months of thirty days. Each lane is as thick as its share of the reading
+// time, from the live corpus: History about 8 minutes a day, the Epistles
+// about 2.5. The Gospels lane hands over to Acts on day 85 and to Revelation
+// on day 109, where the generator reaches them; the breaks mark those days.
+const FOUR_MONTH_LANES = [
+  ["LAW", 6.2, CREAM, 0.8],
+  ["HISTORY", 8.0, CREAM, 0.68],
+  ["POETRY", 3.4, CREAM, 0.56],
+  ["PROPHETS", 6.6, CREAM, 0.44],
+  ["GOSPELS", 4.8, GOLD, 0.95],
+  ["EPISTLES", 2.5, BLUSH, 0.85],
+];
+const GOSPELS_LANE_HANDOVERS = [85, 109];
 
 function bibleInFourMonths() {
-  const cols = 6;
-  const rows = 5;
-  const cell = 20;
-  const gap = 6;
-  const blockW = cols * cell + (cols - 1) * gap;
-  const blockH = rows * cell + (rows - 1) * gap;
-  const blockGap = 24;
-  const x0 = W - 56 - (4 * blockW + 3 * blockGap);
-  const y0 = Math.round((H - blockH) / 2);
-  const cells = [];
-  for (let day = 1; day <= 120; day += 1) {
-    const i = day - 1;
-    const month = Math.floor(i / 30);
-    const inMonth = i % 30;
-    const x = x0 + month * (blockW + blockGap) + (inMonth % cols) * (cell + gap);
-    const y = y0 + Math.floor(inMonth / cols) * (cell + gap);
-    const newTestament = day >= FOUR_MONTHS_NEW_TESTAMENT_FROM_DAY;
-    const opacity = newTestament ? 0.95 : 0.16 + (i / (FOUR_MONTHS_NEW_TESTAMENT_FROM_DAY - 2)) * 0.58;
-    cells.push(
-      `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="4" fill="${newTestament ? GOLD : CREAM}" fill-opacity="${opacity.toFixed(2)}"/>`,
-    );
+  const x0 = 180;
+  const x1 = W - 56;
+  const monthGap = 10;
+  const monthW = (x1 - x0 - 3 * monthGap) / 4;
+  const dayW = monthW / 30;
+  const laneGap = 9;
+  const pxPerMinute = 4.2;
+  // Top-aligned high enough that the card title, bottom left, sits clear below.
+  let y = 64;
+
+  const shapes = [];
+  for (const [name, minutes, colour, opacity] of FOUR_MONTH_LANES) {
+    const h = minutes * pxPerMinute;
+    const breaks = name === "GOSPELS" ? GOSPELS_LANE_HANDOVERS : [];
+    for (let month = 0; month < 4; month += 1) {
+      const first = month * 30 + 1;
+      const last = first + 29;
+      // Split the month where the lane hands over to its next book.
+      const cuts = [first, ...breaks.filter((day) => day > first && day <= last), last + 1];
+      for (let i = 0; i < cuts.length - 1; i += 1) {
+        const from = cuts[i];
+        const to = cuts[i + 1];
+        const handover = i > 0;
+        const x = x0 + month * (monthW + monthGap) + (from - first) * dayW + (handover ? 2 : 0);
+        const w = (to - from) * dayW - (handover ? 2 : 0) - (i < cuts.length - 2 ? 2 : 0);
+        shapes.push(
+          `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="${Math.min(h / 2, 6).toFixed(1)}" fill="${colour}" fill-opacity="${opacity}"/>`,
+        );
+      }
+    }
+    y += h + laneGap;
   }
+
   return svg(
     `<rect width="${W}" height="${H}" fill="url(#months)"/>
-  <g>${cells.join("\n  ")}</g>`,
+  <g>${shapes.join("\n  ")}</g>`,
     `<linearGradient id="months" x1="0" y1="0" x2="1" y2="1">
     <stop offset="0" stop-color="${WINE}"/>
     <stop offset="1" stop-color="${WINE_DEEP}"/>
