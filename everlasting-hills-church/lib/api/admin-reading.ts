@@ -1,13 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 
 /**
  * READING      read at least once in the last seven days
  * QUIET        has a plan in progress or paused, but no reading this week
  * FINISHED     every plan they started is complete
- * NOT_STARTED  has never started a plan
+ * NOT_STARTED  has no plan right now: never started, or removed them all
  */
 export type ReaderState = "READING" | "QUIET" | "FINISHED" | "NOT_STARTED";
 
@@ -44,6 +44,12 @@ export interface ReadingMonitorData {
     plansCompleted: number;
   };
   readers: Reader[];
+  /**
+   * What "Clear gone quiet" would remove: in-progress or paused plans of
+   * members who have gone quiet, begun before this week. Optional because an
+   * older cached response may not carry it.
+   */
+  clearable?: { plans: number; members: number };
 }
 
 /** How every active member is reading. Pastors and admins only; read-only. */
@@ -51,5 +57,18 @@ export function useReadingMonitor() {
   return useQuery({
     queryKey: ["reading-monitor"],
     queryFn: () => api.get<ReadingMonitorData>("/reading-monitor"),
+  });
+}
+
+/**
+ * Clears gone quiet in one step. The admin confirms the number of plans they
+ * were shown; if the list has changed since, the server removes nothing.
+ */
+export function useClearGoneQuiet() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (expectedPlans: number) =>
+      api.post<{ removedPlans: number; members: number }>("/reading-monitor/clear-gone-quiet", { expectedPlans }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reading-monitor"] }),
   });
 }

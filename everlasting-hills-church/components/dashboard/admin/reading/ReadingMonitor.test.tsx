@@ -1,10 +1,10 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ReadingMonitor from "./ReadingMonitor";
-import { useReadingMonitor, type ReadingMonitorData } from "@/lib/api/admin-reading";
+import { useClearGoneQuiet, useReadingMonitor, type ReadingMonitorData } from "@/lib/api/admin-reading";
 import { useReadingPlans, useShareReadingPlan, type ReadingPlanSummary } from "@/lib/api/reading-plan";
 
-vi.mock("@/lib/api/admin-reading", () => ({ useReadingMonitor: vi.fn() }));
+vi.mock("@/lib/api/admin-reading", () => ({ useReadingMonitor: vi.fn(), useClearGoneQuiet: vi.fn() }));
 vi.mock("@/lib/api/reading-plan", () => ({
   useReadingPlans: vi.fn(),
   useShareReadingPlan: vi.fn(),
@@ -70,7 +70,22 @@ const shareMutate = vi.fn();
 const names = () => screen.getAllByRole("listitem").map((row) => within(row).getByRole("link").textContent);
 const tile = (label: string) => screen.getByText(label, { selector: "dt" }).parentElement as HTMLElement;
 
+const clearMutate = vi.fn();
+
+function withClearable(plans: number, members: number) {
+  vi.mocked(useReadingMonitor).mockReturnValue({
+    data: { ...DATA, clearable: { plans, members } },
+    isLoading: false,
+    isError: false,
+    isFetching: false,
+    refetch,
+  } as never);
+}
+
 beforeEach(() => {
+  clearMutate.mockReset();
+  clearMutate.mockResolvedValue({ removedPlans: 3, members: 2 });
+  vi.mocked(useClearGoneQuiet).mockReturnValue({ mutateAsync: clearMutate, isPending: false } as never);
   vi.mocked(useReadingMonitor).mockReturnValue({ data: DATA, isLoading: false, isError: false, isFetching: false, refetch } as never);
   vi.mocked(useReadingPlans).mockReturnValue({ data: plans, isLoading: false } as never);
   vi.mocked(useShareReadingPlan).mockReturnValue({ mutateAsync: shareMutate, isPending: false } as never);
@@ -150,5 +165,49 @@ describe("ReadingMonitor", () => {
     expect(
       await screen.findByText("The Bible in Four Months was shared with 14 members."),
     ).toBeInTheDocument();
+  });
+});
+
+describe("clearing gone quiet", () => {
+  it("asks first, then removes exactly the number of plans it showed", async () => {
+    withClearable(3, 2);
+    render(<ReadingMonitor />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear gone quiet" }));
+    const dialog = screen.getByRole("dialog", { name: "Clear gone quiet?" });
+    expect(dialog).toHaveTextContent("This removes 3 plans from 2 members who have read nothing in the last 7 days.");
+    expect(dialog).toHaveTextContent("Plans started this week stay.");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Remove 3 plans" }));
+
+    await waitFor(() => expect(clearMutate).toHaveBeenCalledWith(3));
+    expect(await screen.findByText(/Removed 3 plans from 2 members\./)).toBeInTheDocument();
+  });
+
+  it("keeps everything when the admin changes their mind", () => {
+    withClearable(3, 2);
+    render(<ReadingMonitor />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear gone quiet" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Clear gone quiet?" })).getByRole("button", { name: "Keep them" }));
+
+    expect(clearMutate).not.toHaveBeenCalled();
+  });
+
+  it("offers nothing to clear when nobody has gone quiet long enough", () => {
+    withClearable(0, 0);
+    render(<ReadingMonitor />);
+
+    expect(screen.queryByRole("button", { name: "Clear gone quiet" })).not.toBeInTheDocument();
+  });
+
+  it("says so when gone quiet changed before the admin confirmed", async () => {
+    withClearable(3, 2);
+    clearMutate.mockRejectedValue({ status: 409, message: "Gone quiet has changed since this page loaded. Refresh the page and try again." });
+    render(<ReadingMonitor />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear gone quiet" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Clear gone quiet?" })).getByRole("button", { name: "Remove 3 plans" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Gone quiet has changed since this page loaded.");
   });
 });

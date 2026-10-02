@@ -430,6 +430,36 @@
         "properties": {},
         "type": "object"
       },
+      "ClearGoneQuietDto": {
+        "properties": {
+          "expectedPlans": {
+            "description": "How many plans the admin was shown and confirmed. If gone quiet has changed since, nothing is removed.",
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "expectedPlans"
+        ],
+        "type": "object"
+      },
+      "ClearGoneQuietResultDto": {
+        "properties": {
+          "members": {
+            "description": "Members those plans belonged to",
+            "type": "number"
+          },
+          "removedPlans": {
+            "description": "Plans removed, kept as history rather than deleted",
+            "type": "number"
+          }
+        },
+        "required": [
+          "removedPlans",
+          "members"
+        ],
+        "type": "object"
+      },
       "ConfirmFollowUpDto": {
         "properties": {
           "note": {
@@ -27803,6 +27833,65 @@
           }
         ],
         "summary": "How every active member is reading: plans, progress, last reading and recent activity (ADMIN+)",
+        "tags": [
+          "reading-plans"
+        ]
+      }
+    },
+    "/reading-monitor/clear-gone-quiet": {
+      "post": {
+        "operationId": "AdminReadingController_clearGoneQuiet",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClearGoneQuietDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ClearGoneQuietResultDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove the plans of members who have gone quiet, keeping plans started this week and all reading history (ADMIN+)",
         "tags": [
           "reading-plans"
         ]

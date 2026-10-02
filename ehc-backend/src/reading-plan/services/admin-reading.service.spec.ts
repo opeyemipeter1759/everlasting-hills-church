@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { MemberStatus, SubscriptionStatus } from '@prisma/client';
 import { AdminReadingService } from './admin-reading.service';
 
@@ -21,8 +22,10 @@ const plan = (
   profileId: string,
   status: SubscriptionStatus,
   lastReadOn: string | null,
-  extra: Partial<{ completedDays: number; currentStreak: number; title: string; durationDays: number }> = {},
+  extra: Partial<{ completedDays: number; currentStreak: number; title: string; durationDays: number; id: string; startedOn: string }> = {},
 ) => ({
+  id: extra.id ?? `${profileId}-${extra.title ?? 'A plan'}`,
+  startedOn: date(extra.startedOn ?? '2026-09-01'),
   profileId,
   status,
   completedDays: extra.completedDays ?? 5,
@@ -38,7 +41,7 @@ const SUBSCRIPTIONS = [
   plan('p-cal', SubscriptionStatus.COMPLETED, '2026-08-20', { completedDays: 31, durationDays: 31 }),
 ];
 
-function makeService() {
+function makeService(subscriptions: ReturnType<typeof plan>[] = SUBSCRIPTIONS) {
   const groupBy = jest.fn(async ({ where }: { where: { completedOn: { gte: Date } } }) =>
     // The week window starts on the 8th, the month window in August.
     where.completedOn.gte.toISOString().startsWith('2026-09-08')
@@ -51,7 +54,10 @@ function makeService() {
   );
   const prisma = {
     member: { findMany: jest.fn(async () => MEMBERS) },
-    memberPlanSubscription: { findMany: jest.fn(async () => SUBSCRIPTIONS) },
+    memberPlanSubscription: {
+      findMany: jest.fn(async () => subscriptions),
+      updateMany: jest.fn(async ({ where }: { where: { id: { in: string[] } } }) => ({ count: where.id.in.length })),
+    },
     memberPlanProgress: { groupBy },
   };
   const service = new AdminReadingService(
@@ -121,5 +127,45 @@ describe('reading monitor', () => {
       ['tenant-1', '2026-09-08'],
       ['tenant-1', '2026-08-16'],
     ]);
+  });
+});
+
+describe('clearing gone quiet', () => {
+  it('counts what an admin can clear: in progress or paused, quiet members only, begun before this week', async () => {
+    const { service } = makeService([
+      ...SUBSCRIPTIONS,
+      // Ben began this one on the 12th, inside the week, so it has been touched.
+      plan('p-ben', SubscriptionStatus.PAUSED, null, { id: 'ben-this-week', startedOn: '2026-09-12' }),
+    ]);
+
+    expect((await service.overview()).clearable).toEqual({ plans: 1, members: 1 });
+  });
+
+  it('removes exactly those plans, marked removed rather than deleted', async () => {
+    const { service, prisma } = makeService();
+
+    await expect(service.clearGoneQuiet(1)).resolves.toEqual({ removedPlans: 1, members: 1 });
+    expect(prisma.memberPlanSubscription.updateMany).toHaveBeenCalledWith({
+      where: {
+        tenantId: 'tenant-1',
+        id: { in: ['p-ben-Proverbs'] },
+        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.PAUSED] },
+      },
+      data: { status: SubscriptionStatus.ABANDONED },
+    });
+  });
+
+  it('removes nothing when gone quiet has changed since the admin looked', async () => {
+    const { service, prisma } = makeService();
+
+    await expect(service.clearGoneQuiet(5)).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.memberPlanSubscription.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when nobody has gone quiet', async () => {
+    const { service, prisma } = makeService(SUBSCRIPTIONS.filter((subscription) => subscription.profileId !== 'p-ben'));
+
+    await expect(service.clearGoneQuiet(0)).resolves.toEqual({ removedPlans: 0, members: 0 });
+    expect(prisma.memberPlanSubscription.updateMany).not.toHaveBeenCalled();
   });
 });

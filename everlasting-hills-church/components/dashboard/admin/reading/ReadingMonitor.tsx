@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, CheckCircle2, Flame, Loader2, Moon, RefreshCw, Search, Share2, Sprout } from "lucide-react";
-import { useReadingMonitor, type Reader, type ReaderState } from "@/lib/api/admin-reading";
+import { BookOpen, CheckCircle2, Eraser, Flame, Loader2, Moon, RefreshCw, Search, Share2, Sprout } from "lucide-react";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { userMessageForError } from "@/lib/api/user-message";
+import { useClearGoneQuiet, useReadingMonitor, type Reader, type ReaderState } from "@/lib/api/admin-reading";
 import { useReadingPlans } from "@/lib/api/reading-plan";
 import SharePlanDialog from "@/components/dashboard/member/reading-plan/SharePlanDialog";
 
@@ -12,8 +14,10 @@ import SharePlanDialog from "@/components/dashboard/member/reading-plan/SharePla
  * Bible reading across the church, for pastors and admins.
  *
  * The page exists so leaders can encourage people, so it opens on who has gone
- * quiet: a plan in progress, nothing read in a week. It is not a leaderboard,
- * and it is read-only; nothing here can change anyone's plan.
+ * quiet: a plan in progress, nothing read in a week. It is not a leaderboard.
+ * The one change it makes to anyone's reading is "Clear gone quiet", which an
+ * admin confirms: it removes stale plans the way a member's own Remove does,
+ * keeping their reading history. Sharing a plan only sends a notification.
  */
 
 const STATE: Record<ReaderState, { label: string; badge: string }> = {
@@ -59,6 +63,24 @@ export default function ReadingMonitor() {
   const [search, setSearch] = useState("");
   const [shareOpen, setShareOpen] = useState(false);
   const [shared, setShared] = useState<{ title: string; recipients: number } | null>(null);
+  const clearGoneQuiet = useClearGoneQuiet();
+  const [confirmingClear, setConfirmingClear] = useState(false);
+  const [cleared, setCleared] = useState<{ removedPlans: number; members: number } | null>(null);
+  const [clearError, setClearError] = useState<string | null>(null);
+  const clearable = data?.clearable;
+  const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+
+  async function confirmClear() {
+    if (!clearable) return;
+    setClearError(null);
+    try {
+      setCleared(await clearGoneQuiet.mutateAsync(clearable.plans));
+    } catch (cause) {
+      setClearError(userMessageForError(cause, "Could not clear gone quiet. Refresh the page and try again."));
+    } finally {
+      setConfirmingClear(false);
+    }
+  }
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -75,7 +97,7 @@ export default function ReadingMonitor() {
     ? [
         { label: "Reading this week", value: stats.reading, detail: `of ${stats.activeMembers} active members`, icon: BookOpen, tone: "brand" as const },
         { label: "Gone quiet", value: stats.quiet, detail: "A plan in progress, nothing read in 7 days", icon: Moon, tone: stats.quiet ? ("warn" as const) : ("plain" as const) },
-        { label: "Not started", value: stats.notStarted, detail: "Never begun a plan", icon: Sprout, tone: "plain" as const },
+        { label: "Not started", value: stats.notStarted, detail: "No plan right now", icon: Sprout, tone: "plain" as const },
         { label: "Readings this week", value: stats.readingsThisWeek, detail: "Plan days read by members", icon: Flame, tone: "plain" as const },
         { label: "Plans finished", value: stats.plansCompleted, detail: "By current members", icon: CheckCircle2, tone: "good" as const },
       ]
@@ -109,6 +131,17 @@ export default function ReadingMonitor() {
             {plansLoading ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
             Share a plan
           </button>
+          {!!clearable?.plans && (
+            <button
+              type="button"
+              onClick={() => { setClearError(null); setConfirmingClear(true); }}
+              disabled={clearGoneQuiet.isPending}
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-red-200 px-3 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
+            >
+              <Eraser size={15} aria-hidden="true" />
+              Clear gone quiet
+            </button>
+          )}
           <button
             type="button"
             onClick={() => refetch()}
@@ -120,6 +153,17 @@ export default function ReadingMonitor() {
           </button>
         </div>
       </header>
+
+      {cleared && (
+        <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300">
+          Removed {plural(cleared.removedPlans, "plan")} from {plural(cleared.members, "member")}. Their reading history stays, and plans started this week were kept.
+        </p>
+      )}
+      {clearError && (
+        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-300">
+          {clearError}
+        </p>
+      )}
 
       {shared && (
         <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300">
@@ -205,6 +249,20 @@ export default function ReadingMonitor() {
             </ul>
           )}
         </>
+      )}
+
+      {clearable && (
+        <ConfirmDialog
+          open={confirmingClear}
+          tone="danger"
+          title="Clear gone quiet?"
+          description={`This removes ${plural(clearable.plans, "plan")} from ${plural(clearable.members, "member")} who have read nothing in the last 7 days. Plans started this week stay. Nothing is deleted: their reading history stays, and they can choose a plan again at any time.`}
+          confirmLabel={`Remove ${plural(clearable.plans, "plan")}`}
+          cancelLabel="Keep them"
+          loading={clearGoneQuiet.isPending}
+          onConfirm={confirmClear}
+          onCancel={() => setConfirmingClear(false)}
+        />
       )}
 
       <SharePlanDialog

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MemberStatus, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -22,7 +22,8 @@ export type ReaderState = 'READING' | 'QUIET' | 'FINISHED' | 'NOT_STARTED';
  * Read-only, one row per active member: which plans they are on, how far
  * along, when they last read, and how much in the last week and month. It is
  * here so leaders can encourage people, which is why the state that leads is
- * "gone quiet" rather than a ranking of who reads most.
+ * "gone quiet" rather than a ranking of who reads most. The one change it can
+ * make is clearing gone quiet, which an admin confirms by number.
  *
  * The church's day is Lagos's, the same day the member screens count in.
  */
@@ -38,6 +39,43 @@ export class AdminReadingService {
   }
 
   async overview() {
+    const { clearablePlanIds, clearableMembers, ...overview } = await this.build();
+    return { ...overview, clearable: { plans: clearablePlanIds.length, members: clearableMembers } };
+  }
+
+  /**
+   * Clears "gone quiet" in one step, for an admin who wants a clean slate.
+   *
+   * Removes the plans of members who have read nothing this week, where the
+   * plan is in progress or paused and began before this week: a plan started
+   * in the last seven days has been touched, so it stays. Removed, not
+   * deleted: the same ABANDONED a member's own Remove sets, so their reading
+   * history stays and they can choose a plan again. Members reading this week
+   * and finished plans are never touched.
+   *
+   * The admin confirms the number they were shown. If the list has changed
+   * since the page loaded, nothing is removed and they are asked to refresh.
+   */
+  async clearGoneQuiet(expectedPlans: number) {
+    const { clearablePlanIds, clearableMembers } = await this.build();
+    if (clearablePlanIds.length !== expectedPlans) {
+      throw new ConflictException(
+        'Gone quiet has changed since this page loaded. Refresh the page and try again.',
+      );
+    }
+    if (clearablePlanIds.length === 0) return { removedPlans: 0, members: 0 };
+    const result = await this.prisma.memberPlanSubscription.updateMany({
+      where: {
+        tenantId: this.tenantId,
+        id: { in: clearablePlanIds },
+        status: { in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.PAUSED] },
+      },
+      data: { status: SubscriptionStatus.ABANDONED },
+    });
+    return { removedPlans: result.count, members: clearableMembers };
+  }
+
+  private async build() {
     const today = localDate('Africa/Lagos');
     const weekFrom = addDays(today, -(READING_NOW_DAYS - 1));
     const monthFrom = addDays(today, -29);
@@ -57,8 +95,10 @@ export class AdminReadingService {
         },
         orderBy: { createdAt: 'desc' },
         select: {
+          id: true,
           profileId: true,
           status: true,
+          startedOn: true,
           completedDays: true,
           currentStreak: true,
           lastReadOn: true,
@@ -86,6 +126,11 @@ export class AdminReadingService {
       plansByProfile.set(subscription.profileId, list);
     }
 
+    // Plans an admin may clear: in progress or paused, belonging to someone
+    // who has gone quiet, and begun before this week.
+    const clearablePlanIds: string[] = [];
+    const clearableProfiles = new Set<string>();
+
     const readers = members.map((member) => {
       const plans = plansByProfile.get(member.profileId) ?? [];
       const readingsLast7 = readingsThisWeek.get(member.profileId) ?? 0;
@@ -103,6 +148,16 @@ export class AdminReadingService {
             : inProgress.length > 0
               ? 'QUIET'
               : 'FINISHED';
+
+      if (state === 'QUIET') {
+        for (const plan of inProgress) {
+          const started = fromDateColumn(plan.startedOn);
+          if (started !== null && started < weekFrom) {
+            clearablePlanIds.push(plan.id);
+            clearableProfiles.add(member.profileId);
+          }
+        }
+      }
 
       return {
         memberId: member.id,
@@ -144,6 +199,8 @@ export class AdminReadingService {
         ),
       },
       readers,
+      clearablePlanIds,
+      clearableMembers: clearableProfiles.size,
     };
   }
 }

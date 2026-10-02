@@ -5819,6 +5819,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reading-monitor/clear-gone-quiet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Remove the plans of members who have gone quiet, keeping plans started this week and all reading history (ADMIN+) */
+        post: operations["AdminReadingController_clearGoneQuiet"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reading-plans": {
         parameters: {
             query?: never;
@@ -7872,6 +7889,16 @@ export interface components {
             password: string;
         };
         CheckInDto: Record<string, never>;
+        ClearGoneQuietDto: {
+            /** @description How many plans the admin was shown and confirmed. If gone quiet has changed since, nothing is removed. */
+            expectedPlans: number;
+        };
+        ClearGoneQuietResultDto: {
+            /** @description Members those plans belonged to */
+            members: number;
+            /** @description Plans removed, kept as history rather than deleted */
+            removedPlans: number;
+        };
         ConfirmFollowUpDto: {
             /** @example Great work — she joined the membership class. */
             note?: string;
@@ -23592,6 +23619,41 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AdminReadingController_clearGoneQuiet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClearGoneQuietDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClearGoneQuietResultDto"];
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
                 };
