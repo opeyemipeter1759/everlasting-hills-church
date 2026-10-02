@@ -244,6 +244,38 @@ describe("ReadingScreen with multiple plans", () => {
     expect(completeDay).not.toHaveBeenCalled();
   });
 
+  it("opens NKJV chapters in the licensed reader", () => {
+    vi.mocked(usePassage).mockReturnValue({
+      data: {
+        translation: { code: "NKJV", name: "New King James Version" },
+        reference: "John 3:1-4:54",
+        startVerseId: 43_003_001,
+        endVerseId: 43_004_054,
+        verses: [],
+        externalLinks: [
+          { label: "John 3", url: "https://www.bible.com/bible/114/JHN.3.NKJV" },
+          { label: "John 4", url: "https://www.bible.com/bible/114/JHN.4.NKJV" },
+        ],
+        copyright: "© 1982 by Thomas Nelson, Inc. All rights reserved. Used by permission.",
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    } as never);
+    render(<ReadingScreen />);
+
+    expect(screen.getByRole("link", { name: "Read John 3" })).toHaveAttribute(
+      "href",
+      "https://www.bible.com/bible/114/JHN.3.NKJV",
+    );
+    expect(screen.getByRole("link", { name: "Read John 4" })).toHaveAttribute(
+      "href",
+      "https://www.bible.com/bible/114/JHN.4.NKJV",
+    );
+    expect(screen.getByText(/licensed NKJV reader/)).toBeInTheDocument();
+    expect(screen.getByText(/© 1982 by Thomas Nelson/)).toBeInTheDocument();
+  });
+
   it("keeps a failed save unread so the member can retry the same plan and day", async () => {
     completeDay.mockRejectedValue(new Error("Could not save your reading."));
     render(<ReadingScreen />);

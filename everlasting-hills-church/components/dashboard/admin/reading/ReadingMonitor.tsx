@@ -3,8 +3,10 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, CheckCircle2, Flame, Loader2, Moon, RefreshCw, Search, Sprout } from "lucide-react";
+import { BookOpen, CheckCircle2, Flame, Loader2, Moon, RefreshCw, Search, Share2, Sprout } from "lucide-react";
 import { useReadingMonitor, type Reader, type ReaderState } from "@/lib/api/admin-reading";
+import { useReadingPlans } from "@/lib/api/reading-plan";
+import SharePlanDialog from "@/components/dashboard/member/reading-plan/SharePlanDialog";
 
 /**
  * Bible reading across the church, for pastors and admins.
@@ -52,8 +54,11 @@ const TONE = {
 
 export default function ReadingMonitor() {
   const { data, isLoading, isError, isFetching, refetch } = useReadingMonitor();
+  const { data: plans, isLoading: plansLoading } = useReadingPlans();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [search, setSearch] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shared, setShared] = useState<{ title: string; recipients: number } | null>(null);
 
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -94,16 +99,33 @@ export default function ReadingMonitor() {
             their own progress.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-gray-200 px-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
-        >
-          {isFetching ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={15} aria-hidden="true" />}
-          Refresh
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setShareOpen(true)}
+            disabled={plansLoading || !plans?.length}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#87102C] px-3 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-60"
+          >
+            {plansLoading ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
+            Share a plan
+          </button>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-gray-200 px-3 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:opacity-60 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
+          >
+            {isFetching ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <RefreshCw size={15} aria-hidden="true" />}
+            Refresh
+          </button>
+        </div>
       </header>
+
+      {shared && (
+        <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300">
+          {shared.title} was shared with {shared.recipients} {shared.recipients === 1 ? "member" : "members"}.
+        </p>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -184,6 +206,16 @@ export default function ReadingMonitor() {
           )}
         </>
       )}
+
+      <SharePlanDialog
+        open={shareOpen}
+        plans={plans ?? []}
+        onClose={() => setShareOpen(false)}
+        onShared={(result) => {
+          setShared(result);
+          setShareOpen(false);
+        }}
+      />
     </div>
   );
 }

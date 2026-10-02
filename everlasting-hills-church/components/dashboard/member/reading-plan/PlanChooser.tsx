@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BookOpen, Check, Clock, Loader2, Search, Share2 } from "lucide-react";
 import Image from "next/image";
@@ -8,10 +8,10 @@ import Link from "next/link";
 import Modal from "@/components/ui/overlay/Modal";
 import { Select } from "@/components/ui/select";
 import WordTabs from "./WordTabs";
+import SharePlanDialog from "./SharePlanDialog";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { hasMinRole } from "@/lib/auth/frontend-session";
-import { userMessageForError } from "@/lib/api/user-message";
-import { readingHref, useReadingPlans, useReadingSubscriptions, useShareReadingPlan, useSubscribeToPlan, useTranslations, type ReadingIntensity, type ReadingPlanSummary, type ReadingTrack } from "@/lib/api/reading-plan";
+import { readingHref, useReadingPlans, useReadingSubscriptions, useSubscribeToPlan, useTranslations, type ReadingIntensity, type ReadingPlanSummary, type ReadingTrack } from "@/lib/api/reading-plan";
 
 const EFFORT: Record<ReadingIntensity, { label: string; time: string }> = {
   LOW: { label: "Low", time: "Up to 5 min/day" },
@@ -36,11 +36,7 @@ export default function PlanChooser() {
   const currentUser = useCurrentUser();
   // The server decides; this only keeps the button away from members.
   const canShare = hasMinRole(currentUser?.role, "ADMIN");
-  const share = useShareReadingPlan();
   const [sharing, setSharing] = useState<ReadingPlanSummary | null>(null);
-  const [shareNote, setShareNote] = useState("");
-  const [shareByEmail, setShareByEmail] = useState(false);
-  const [shareError, setShareError] = useState<string | null>(null);
   const [shared, setShared] = useState<{ title: string; recipients: number } | null>(null);
   const openedLinkedPlan = useRef(false);
   const [effort, setEffort] = useState<ReadingIntensity | "ALL">("ALL");
@@ -89,26 +85,6 @@ export default function PlanChooser() {
     setEffort("ALL");
     setDuration("ALL");
     setSearch("");
-  }
-
-  function openShare(plan: ReadingPlanSummary) {
-    setShareNote("");
-    setShareByEmail(false);
-    setShareError(null);
-    setSharing(plan);
-  }
-
-  async function shareWithChurch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!sharing || share.isPending) return;
-    setShareError(null);
-    try {
-      const result = await share.mutateAsync({ planId: sharing.id, note: shareNote, sendEmail: shareByEmail });
-      setShared({ title: sharing.title, recipients: result.recipients });
-      setSharing(null);
-    } catch (cause) {
-      setShareError(userMessageForError(cause, "Could not share this plan. Please try again."));
-    }
   }
 
   async function startPlan() {
@@ -239,7 +215,7 @@ export default function PlanChooser() {
                     className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-3 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-50">
                     <BookOpen size={15} /> {paused ? "Resume this plan" : "Choose this plan"}
                   </button>}
-                  {canShare && <button type="button" onClick={() => openShare(plan)} aria-label={`Share ${plan.title} with the church`}
+                  {canShare && <button type="button" onClick={() => setSharing(plan)} aria-label={`Share ${plan.title} with the church`}
                     className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#87102C]/30 px-3 py-2 text-sm font-semibold text-[#87102C] transition-colors hover:bg-[#FFF4F6] dark:border-[#FFB3C1]/30 dark:text-[#FFB3C1] dark:hover:bg-white/5">
                     <Share2 size={15} aria-hidden="true" /> Share with the church
                   </button>}
@@ -258,6 +234,7 @@ export default function PlanChooser() {
           </p>
           <p className="text-sm leading-relaxed text-gray-600 dark:text-white/65">Read at your own pace. You can do more than one day or take a break; unread days stay ready for you.</p>
           {!selectedPaused && translations && translations.length > 0 && <label className="block text-sm font-semibold text-gray-700 dark:text-white/75">Bible translation<Select aria-label="Bible translation" value={chosenTranslation ?? ""} onChange={setTranslationCode} disabled={subscribe.isPending} className="mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-gray-900" options={translations.map((translation) => ({ value: translation.code, label: `${translation.code} — ${translation.name}` }))} /></label>}
+          {!selectedPaused && chosenTranslation === "NKJV" && <p className="text-xs leading-relaxed text-gray-500 dark:text-white/55">NKJV chapters open in YouVersion&rsquo;s licensed reader.</p>}
           {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <button type="button" onClick={() => setSelected(null)} disabled={subscribe.isPending} className="min-h-11 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70">Cancel</button>
@@ -266,35 +243,15 @@ export default function PlanChooser() {
         </div>}
       </Modal>
 
-      <Modal open={Boolean(sharing)} onClose={() => { if (!share.isPending) setSharing(null); }} title="Share with the church">
-        {sharing && <form onSubmit={shareWithChurch} className="space-y-4">
-          <div>
-            <p className="break-words font-serif text-xl font-bold text-gray-900 dark:text-white">{sharing.title}</p>
-            <p className="mt-1 text-sm text-gray-500 dark:text-white/60">{sharing.durationDays} days{sharing.avgMinutesPerDay != null ? ` · about ${sharing.avgMinutesPerDay} min/day` : ""}</p>
-          </div>
-          <p className="rounded-xl bg-[#FFF4F6] p-3 text-sm leading-relaxed text-[#6E0C24] dark:bg-[#87102C]/20 dark:text-[#FFB3C1]">
-            Every member gets a notification that opens this plan, ready to start, and a push notification if they have turned those on. It also appears in the church announcements.
-          </p>
-          <label className="block text-sm font-semibold text-gray-700 dark:text-white/75">
-            A note from you (optional)
-            <textarea value={shareNote} onChange={(event) => setShareNote(event.target.value)} maxLength={500} rows={3} disabled={share.isPending}
-              placeholder="For example: we start together on Monday."
-              className="mt-1.5 block w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-normal text-gray-800 dark:border-white/10 dark:bg-gray-900 dark:text-white" />
-          </label>
-          <label className="flex min-h-11 items-start gap-3 text-sm text-gray-700 dark:text-white/75">
-            <input type="checkbox" checked={shareByEmail} onChange={(event) => setShareByEmail(event.target.checked)} disabled={share.isPending} className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#87102C]" />
-            <span>Also email every member who has an email address</span>
-          </label>
-          {shareError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{shareError}</p>}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button type="button" onClick={() => setSharing(null)} disabled={share.isPending} className="min-h-11 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70">Cancel</button>
-            <button type="submit" disabled={share.isPending} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
-              {share.isPending ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} aria-hidden="true" />}
-              {share.isPending ? "Sharing…" : "Share with the church"}
-            </button>
-          </div>
-        </form>}
-      </Modal>
+      <SharePlanDialog
+        open={Boolean(sharing)}
+        plans={sharing ? [sharing] : []}
+        onClose={() => setSharing(null)}
+        onShared={(result) => {
+          setShared(result);
+          setSharing(null);
+        }}
+      />
     </div>
   );
 }

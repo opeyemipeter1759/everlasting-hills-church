@@ -60,8 +60,9 @@ export class DailyScriptureController {
   @ApiOperation({
     summary: 'Bible translations available for the public daily scripture',
   })
+  @ApiQuery({ name: 'context', required: false, enum: ['reading-plan'] })
   @Header('Cache-Control', 'public, max-age=86400')
-  translations() {
-    return this.passages.translations();
+  translations(@Query('context') context?: string) {
+    return this.passages.translations(context);
   }
 }

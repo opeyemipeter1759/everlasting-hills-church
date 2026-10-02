@@ -13024,7 +13024,9 @@ export interface operations {
     };
     DailyScriptureController_translations: {
         parameters: {
-            query?: never;
+            query?: {
+                context?: "reading-plan";
+            };
             header?: never;
             path?: never;
             cookie?: never;

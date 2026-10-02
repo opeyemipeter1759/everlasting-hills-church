@@ -10279,7 +10279,19 @@
     "/bible/translations": {
       "get": {
         "operationId": "DailyScriptureController_translations",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "context",
+            "required": false,
+            "schema": {
+              "enum": [
+                "reading-plan"
+              ],
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { chooseOption } from "@/test/choose-option";
 import PlanChooser from "./PlanChooser";
 import {
   useReadingPlans,
@@ -165,6 +166,22 @@ describe("PlanChooser with multiple plans", () => {
       "/dashboard/reading?subscription=subscription-mark",
     );
     expect(screen.getAllByRole("link", { name: "Continue reading" })).toHaveLength(3);
+  });
+
+  it("explains that NKJV readings open in the licensed reader", () => {
+    vi.mocked(useTranslations).mockReturnValue({
+      data: [
+        { id: 1, code: "WEB", name: "World English Bible", isDefault: true },
+        { id: 3, code: "NKJV", name: "New King James Version", isDefault: false },
+      ],
+    } as never);
+    render(<PlanChooser />);
+
+    const mark = within(screen.getByRole("article", { name: "Plan MARK" }));
+    fireEvent.click(mark.getByRole("button", { name: "Choose this plan" }));
+    chooseOption("Bible translation", /NKJV/);
+
+    expect(screen.getByText(/NKJV chapters open in YouVersion/)).toBeInTheDocument();
   });
 
   it("offers to resume a paused plan with its saved day and completed effort", async () => {

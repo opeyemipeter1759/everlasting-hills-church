@@ -10,6 +10,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   Flame,
   Loader2,
   PenLine,
@@ -448,7 +449,7 @@ function Portion({ portion, translation }: { portion: DayPortion; translation: s
   // The text already fetched for the page is what gets read aloud, so
   // listening never costs a second request.
   useEffect(() => {
-    if (!data) return;
+    if (!data?.verses.length) return;
     registerForListening?.({
       sequence: portion.sequence,
       label: portion.label,
@@ -486,7 +487,29 @@ function Portion({ portion, translation }: { portion: DayPortion; translation: s
         )}
       </div>
 
-      <ChapterPassage verses={data.verses} />
+      {data.externalLinks?.length ? (
+        <div className="rounded-2xl border border-[#E7CDD3] bg-[#FFF4F6]/60 p-4 dark:border-[#FFB3C1]/20 dark:bg-[#87102C]/10">
+          <p className="text-sm leading-relaxed text-gray-700 dark:text-white/75">
+            Read this passage in YouVersion&rsquo;s licensed NKJV reader, then return here to mark the day read.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {data.externalLinks.map((link) => (
+              <a
+                key={link.url}
+                href={link.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#87102C] px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24]"
+              >
+                Read {link.label} <ExternalLink size={14} aria-hidden="true" />
+              </a>
+            ))}
+          </div>
+          {data.copyright && <p className="mt-3 text-[11px] leading-relaxed text-gray-500 dark:text-white/45">{data.copyright}</p>}
+        </div>
+      ) : (
+        <ChapterPassage verses={data.verses} />
+      )}
     </section>
   );
 }

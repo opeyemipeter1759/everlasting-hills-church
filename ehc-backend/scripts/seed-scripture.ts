@@ -1,5 +1,7 @@
 /**
  * One time ingest of the public domain scripture corpus: KJV and WEB.
+ * NKJV is deliberately not ingested: it is copyrighted, so reading plans link
+ * its assigned chapters to YouVersion's licensed reader instead.
  *
  *   npx ts-node --transpile-only scripts/seed-scripture.ts
  *   npx ts-node --transpile-only scripts/seed-scripture.ts --force   (re-ingest)

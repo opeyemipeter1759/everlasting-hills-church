@@ -2,8 +2,42 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ReadingMonitor from "./ReadingMonitor";
 import { useReadingMonitor, type ReadingMonitorData } from "@/lib/api/admin-reading";
+import { useReadingPlans, useShareReadingPlan, type ReadingPlanSummary } from "@/lib/api/reading-plan";
 
 vi.mock("@/lib/api/admin-reading", () => ({ useReadingMonitor: vi.fn() }));
+vi.mock("@/lib/api/reading-plan", () => ({
+  useReadingPlans: vi.fn(),
+  useShareReadingPlan: vi.fn(),
+}));
+
+const plans: ReadingPlanSummary[] = [
+  {
+    id: "plan-gospels",
+    slug: "gospels",
+    title: "Walk with Jesus",
+    subtitle: null,
+    description: null,
+    track: "NEW_BELIEVER",
+    durationDays: 30,
+    avgMinutesPerDay: 8,
+    intensity: "LOW",
+    coverImageUrl: null,
+    version: 1,
+  },
+  {
+    id: "plan-bible",
+    slug: "bible-in-four-months",
+    title: "The Bible in Four Months",
+    subtitle: null,
+    description: null,
+    track: "MATURE",
+    durationDays: 120,
+    avgMinutesPerDay: 34,
+    intensity: "HIGH",
+    coverImageUrl: null,
+    version: 3,
+  },
+];
 
 const DATA: ReadingMonitorData = {
   today: "2026-09-14",
@@ -32,11 +66,14 @@ const DATA: ReadingMonitorData = {
 };
 
 const refetch = vi.fn();
+const shareMutate = vi.fn();
 const names = () => screen.getAllByRole("listitem").map((row) => within(row).getByRole("link").textContent);
 const tile = (label: string) => screen.getByText(label, { selector: "dt" }).parentElement as HTMLElement;
 
 beforeEach(() => {
   vi.mocked(useReadingMonitor).mockReturnValue({ data: DATA, isLoading: false, isError: false, isFetching: false, refetch } as never);
+  vi.mocked(useReadingPlans).mockReturnValue({ data: plans, isLoading: false } as never);
+  vi.mocked(useShareReadingPlan).mockReturnValue({ mutateAsync: shareMutate, isPending: false } as never);
 });
 afterEach(() => {
   cleanup();
@@ -90,5 +127,28 @@ describe("ReadingMonitor", () => {
   it("links each name to that member's page", () => {
     render(<ReadingMonitor />);
     expect(screen.getByRole("link", { name: "Ben Quiet" })).toHaveAttribute("href", "/dashboard/admin/members/m-ben");
+  });
+
+  it("shares a chosen reading plan from the admin page", async () => {
+    shareMutate.mockResolvedValue({ announcementId: "announcement-1", recipients: 14 });
+    render(<ReadingMonitor />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Share a plan" }));
+    const dialog = screen.getByRole("dialog", { name: "Share with the church" });
+    fireEvent.click(within(dialog).getByRole("combobox", { name: "Plan" }));
+    fireEvent.click(await screen.findByRole("option", { name: /The Bible in Four Months/ }));
+    fireEvent.change(within(dialog).getByRole("textbox", { name: /A note from you/ }), {
+      target: { value: "We begin together on Monday." },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Share with the church" }));
+
+    expect(shareMutate).toHaveBeenCalledWith({
+      planId: "plan-bible",
+      note: "We begin together on Monday.",
+      sendEmail: false,
+    });
+    expect(
+      await screen.findByText("The Bible in Four Months was shared with 14 members."),
+    ).toBeInTheDocument();
   });
 });

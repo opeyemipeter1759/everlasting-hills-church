@@ -80,6 +80,9 @@ export interface Passage {
   startVerseId: number;
   endVerseId: number;
   verses: { verseId: number; book: string; chapter: number; verse: number; text: string }[];
+  /** Copyrighted translations remain in their licensed reader. */
+  externalLinks?: { label: string; url: string }[];
+  copyright?: string;
 }
 
 const ME_KEY = ["reading-plan", "me"] as const;
@@ -267,10 +270,10 @@ export function useCompletedDays(subscriptionId?: string) {
 
 export function useTranslations() {
   return useQuery({
-    queryKey: ["bible", "translations"],
+    queryKey: ["bible", "translations", "reading-plan"],
     queryFn: () =>
       api.get<{ id: number; code: string; name: string; isDefault: boolean }[]>(
-        "/bible/translations",
+        "/bible/translations?context=reading-plan",
       ),
     staleTime: 24 * 60 * 60 * 1000,
   });
