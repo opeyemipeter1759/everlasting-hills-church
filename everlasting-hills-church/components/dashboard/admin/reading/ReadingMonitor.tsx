@@ -1,12 +1,33 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, CheckCircle2, Eraser, Flame, Loader2, Moon, RefreshCw, Search, Share2, Sprout } from "lucide-react";
+import {
+  BookOpen,
+  CheckCircle2,
+  CircleDashed,
+  Eraser,
+  Flame,
+  Loader2,
+  Moon,
+  RefreshCw,
+  Search,
+  Share2,
+  Sparkles,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { userMessageForError } from "@/lib/api/user-message";
-import { useClearGoneQuiet, useReadingMonitor, type Reader, type ReaderState } from "@/lib/api/admin-reading";
+import {
+  useClearGoneQuiet,
+  useReadingMonitor,
+  useRemoveMemberPlan,
+  type Reader,
+  type ReaderPlan,
+  type ReaderState,
+} from "@/lib/api/admin-reading";
 import { useReadingPlans } from "@/lib/api/reading-plan";
 import SharePlanDialog from "@/components/dashboard/member/reading-plan/SharePlanDialog";
 
@@ -14,20 +35,26 @@ import SharePlanDialog from "@/components/dashboard/member/reading-plan/SharePla
  * Bible reading across the church, for pastors and admins.
  *
  * The page exists so leaders can encourage people, so it opens on who has gone
- * quiet: a plan in progress, nothing read in a week. It is not a leaderboard.
- * The one change it makes to anyone's reading is "Clear gone quiet", which an
- * admin confirms: it removes stale plans the way a member's own Remove does,
- * keeping their reading history. Sharing a plan only sends a notification.
+ * quiet: a plan over a week old with nothing read in it this week. Someone who
+ * began a plan this week has just started, not gone quiet. It is not a
+ * leaderboard. Every number above the list is a button that shows the people
+ * behind it.
+ *
+ * Admins can tidy reading here: remove one member's plan, or clear gone quiet
+ * in one step. Both remove plans the way a member's own Remove does, so their
+ * reading history stays. Sharing a plan only sends a notification.
  */
 
 const STATE: Record<ReaderState, { label: string; badge: string }> = {
   QUIET: { label: "Gone quiet", badge: "bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-300" },
+  NEW: { label: "Just started", badge: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300" },
   READING: { label: "Reading", badge: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" },
-  NOT_STARTED: { label: "Not started", badge: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
+  NOT_STARTED: { label: "No plan", badge: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60" },
   FINISHED: { label: "Finished", badge: "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300" },
 };
-const ORDER: ReaderState[] = ["QUIET", "READING", "NOT_STARTED", "FINISHED"];
-type Filter = "ALL" | ReaderState;
+const ORDER: ReaderState[] = ["QUIET", "NEW", "READING", "NOT_STARTED", "FINISHED"];
+/** One group of people: a state, everyone, or anyone who has finished a plan. */
+type Filter = "ALL" | ReaderState | "HAS_FINISHED";
 
 const DAY_MS = 86_400_000;
 
@@ -49,6 +76,14 @@ const initials = (name: string) =>
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("") || "?";
 
+const plural = (count: number, word: string, many = `${word}s`) => `${count} ${count === 1 ? word : many}`;
+
+function inGroup(reader: Reader, filter: Filter) {
+  if (filter === "ALL") return true;
+  if (filter === "HAS_FINISHED") return reader.plans.some((plan) => plan.status === "COMPLETED");
+  return reader.state === filter;
+}
+
 const TONE = {
   brand: "border-[#E7CDD3]/70 bg-[#FFF4F6]/60 dark:border-[#FFB3C1]/20 dark:bg-[#87102C]/10",
   warn: "border-amber-200 bg-amber-50/70 dark:border-amber-500/25 dark:bg-amber-500/10",
@@ -56,36 +91,73 @@ const TONE = {
   plain: "border-gray-200 bg-white dark:border-white/10 dark:bg-white/[0.03]",
 } as const;
 
+interface Tile {
+  label: string;
+  value: number;
+  detail: string;
+  icon: LucideIcon;
+  tone: keyof typeof TONE;
+  /** The group of people this number is about, shown when the tile is pressed. */
+  filter: Filter;
+}
+
 export default function ReadingMonitor() {
   const { data, isLoading, isError, isFetching, refetch } = useReadingMonitor();
   const { data: plans, isLoading: plansLoading } = useReadingPlans();
   const [filter, setFilter] = useState<Filter>("ALL");
   const [search, setSearch] = useState("");
+  const listRef = useRef<HTMLDivElement>(null);
+
   const [shareOpen, setShareOpen] = useState(false);
   const [shared, setShared] = useState<{ title: string; recipients: number } | null>(null);
+
   const clearGoneQuiet = useClearGoneQuiet();
   const [confirmingClear, setConfirmingClear] = useState(false);
   const [cleared, setCleared] = useState<{ removedPlans: number; members: number } | null>(null);
-  const [clearError, setClearError] = useState<string | null>(null);
   const clearable = data?.clearable;
-  const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
+
+  const removeMemberPlan = useRemoveMemberPlan();
+  const [removing, setRemoving] = useState<{ reader: Reader; plan: ReaderPlan } | null>(null);
+  const [removedPlan, setRemovedPlan] = useState<string | null>(null);
+
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function confirmClear() {
     if (!clearable) return;
-    setClearError(null);
+    setActionError(null);
     try {
       setCleared(await clearGoneQuiet.mutateAsync(clearable.plans));
     } catch (cause) {
-      setClearError(userMessageForError(cause, "Could not clear gone quiet. Refresh the page and try again."));
+      setActionError(userMessageForError(cause, "Could not clear gone quiet. Refresh the page and try again."));
     } finally {
       setConfirmingClear(false);
     }
   }
 
+  async function confirmRemovePlan() {
+    if (!removing?.plan.subscriptionId) return;
+    setActionError(null);
+    try {
+      await removeMemberPlan.mutateAsync(removing.plan.subscriptionId);
+      setRemovedPlan(`Removed ${removing.plan.title} from ${removing.reader.name}. The days they read stay in their history.`);
+    } catch (cause) {
+      setActionError(userMessageForError(cause, "Could not remove this plan. Please try again."));
+    } finally {
+      setRemoving(null);
+    }
+  }
+
+  /** A tile shows the people behind its number. */
+  function showGroup(next: Filter) {
+    setFilter(next);
+    setSearch("");
+    listRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  }
+
   const rows = useMemo(() => {
     const term = search.trim().toLowerCase();
     return (data?.readers ?? [])
-      .filter((reader) => filter === "ALL" || reader.state === filter)
+      .filter((reader) => inGroup(reader, filter))
       .filter((reader) => !term || reader.name.toLowerCase().includes(term))
       .sort(
         (a, b) => ORDER.indexOf(a.state) - ORDER.indexOf(b.state) || a.name.localeCompare(b.name),
@@ -93,22 +165,25 @@ export default function ReadingMonitor() {
   }, [data, filter, search]);
 
   const stats = data?.stats;
-  const tiles = stats
+  const finishedSomething = (data?.readers ?? []).filter((reader) => inGroup(reader, "HAS_FINISHED")).length;
+  const tiles: Tile[] = stats
     ? [
-        { label: "Reading this week", value: stats.reading, detail: `of ${stats.activeMembers} active members`, icon: BookOpen, tone: "brand" as const },
-        { label: "Gone quiet", value: stats.quiet, detail: "A plan in progress, nothing read in 7 days", icon: Moon, tone: stats.quiet ? ("warn" as const) : ("plain" as const) },
-        { label: "Not started", value: stats.notStarted, detail: "No plan right now", icon: Sprout, tone: "plain" as const },
-        { label: "Readings this week", value: stats.readingsThisWeek, detail: "Plan days read by members", icon: Flame, tone: "plain" as const },
-        { label: "Plans finished", value: stats.plansCompleted, detail: "By current members", icon: CheckCircle2, tone: "good" as const },
+        { label: "Reading", value: stats.reading, detail: `of ${stats.activeMembers} members read in the last 7 days`, icon: BookOpen, tone: "brand", filter: "READING" },
+        { label: "Days read this week", value: stats.readingsThisWeek, detail: `by the ${plural(stats.reading, "person", "people")} reading`, icon: Flame, tone: "plain", filter: "READING" },
+        { label: "Just started", value: stats.justStarted ?? 0, detail: "Began a plan this week, nothing read yet", icon: Sparkles, tone: "plain", filter: "NEW" },
+        { label: "Gone quiet", value: stats.quiet, detail: "A plan over a week old, nothing read in 7 days", icon: Moon, tone: stats.quiet ? "warn" : "plain", filter: "QUIET" },
+        { label: "No plan", value: stats.notStarted, detail: "Not on any plan right now", icon: CircleDashed, tone: "plain", filter: "NOT_STARTED" },
+        { label: "Plans finished", value: stats.plansCompleted, detail: `by ${plural(finishedSomething, "member")}`, icon: CheckCircle2, tone: "good", filter: "HAS_FINISHED" },
       ]
     : [];
 
   const filters: { value: Filter; label: string; count?: number }[] = [
     { value: "ALL", label: "Everyone", count: stats?.activeMembers },
     { value: "QUIET", label: "Gone quiet", count: stats?.quiet },
+    { value: "NEW", label: "Just started", count: stats?.justStarted },
     { value: "READING", label: "Reading", count: stats?.reading },
-    { value: "NOT_STARTED", label: "Not started", count: stats?.notStarted },
-    { value: "FINISHED", label: "Finished", count: stats?.finished },
+    { value: "NOT_STARTED", label: "No plan", count: stats?.notStarted },
+    { value: "HAS_FINISHED", label: "Finished a plan", count: stats ? finishedSomething : undefined },
   ];
 
   return (
@@ -117,8 +192,8 @@ export default function ReadingMonitor() {
         <div className="min-w-0">
           <h1 className="text-2xl font-black tracking-tight text-[#111] dark:text-white">Bible reading</h1>
           <p className="mt-1 max-w-xl text-sm text-gray-500 dark:text-white/55">
-            How the church is reading, so you know who to encourage. Read-only: members only ever see
-            their own progress.
+            How the church is reading, so you know who to encourage. Members only ever see their own
+            progress.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -131,17 +206,16 @@ export default function ReadingMonitor() {
             {plansLoading ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
             Share a plan
           </button>
-          {!!clearable?.plans && (
-            <button
-              type="button"
-              onClick={() => { setClearError(null); setConfirmingClear(true); }}
-              disabled={clearGoneQuiet.isPending}
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-red-200 px-3 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
-            >
-              <Eraser size={15} aria-hidden="true" />
-              Clear gone quiet
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => { setActionError(null); setConfirmingClear(true); }}
+            disabled={!clearable?.plans || clearGoneQuiet.isPending}
+            title={clearable?.plans ? undefined : "Nobody's plan has been quiet for over a week"}
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-red-200 px-3 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-transparent dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 dark:disabled:border-white/10 dark:disabled:text-white/35"
+          >
+            <Eraser size={15} aria-hidden="true" />
+            Clear gone quiet
+          </button>
           <button
             type="button"
             onClick={() => refetch()}
@@ -159,12 +233,16 @@ export default function ReadingMonitor() {
           Removed {plural(cleared.removedPlans, "plan")} from {plural(cleared.members, "member")}. Their reading history stays, and plans started this week were kept.
         </p>
       )}
-      {clearError && (
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-300">
-          {clearError}
+      {removedPlan && (
+        <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300">
+          {removedPlan}
         </p>
       )}
-
+      {actionError && (
+        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-300">
+          {actionError}
+        </p>
+      )}
       {shared && (
         <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300">
           {shared.title} was shared with {shared.recipients} {shared.recipients === 1 ? "member" : "members"}.
@@ -172,8 +250,8 @@ export default function ReadingMonitor() {
       )}
 
       {isLoading ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, index) => (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          {Array.from({ length: 6 }).map((_, index) => (
             <div key={index} className="h-24 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
           ))}
         </div>
@@ -186,22 +264,30 @@ export default function ReadingMonitor() {
         </div>
       ) : (
         <>
-          {/* On a phone the headline tile takes the full width, so the other four
-              pair up and none is left alone on a row. */}
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {tiles.map(({ label, value, detail, icon: Icon, tone }, index) => (
-              <div key={label} className={`min-w-0 rounded-2xl border p-4 ${TONE[tone]} ${index === 0 ? "col-span-2 sm:col-span-1" : ""}`}>
-                <dt className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-white/65">
-                  <Icon size={14} aria-hidden="true" className="shrink-0 text-[#87102C] dark:text-[#FFB3C1]" />
-                  {label}
-                </dt>
-                <dd className="mt-1.5 text-2xl font-black tabular-nums text-[#111] dark:text-white">{value}</dd>
-                <dd className="mt-0.5 text-[11px] leading-snug text-gray-500 dark:text-white/45">{detail}</dd>
-              </div>
-            ))}
-          </dl>
+          <div role="group" aria-label="Reading at a glance" className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+            {tiles.map((tile) => {
+              const Icon = tile.icon;
+              const selected = filter === tile.filter;
+              return (
+                <button
+                  key={tile.label}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => showGroup(tile.filter)}
+                  className={`min-w-0 rounded-2xl border p-4 text-left transition-shadow hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#87102C] dark:focus-visible:ring-[#FFB3C1] ${TONE[tile.tone]} ${selected ? "ring-2 ring-[#87102C]/50 dark:ring-[#FFB3C1]/50" : ""}`}
+                >
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-white/65">
+                    <Icon size={14} aria-hidden="true" className="shrink-0 text-[#87102C] dark:text-[#FFB3C1]" />
+                    {tile.label}
+                  </span>
+                  <span className="mt-1.5 block text-2xl font-black tabular-nums text-[#111] dark:text-white">{tile.value}</span>
+                  <span className="mt-0.5 block text-[11px] leading-snug text-gray-500 dark:text-white/45">{tile.detail}</span>
+                </button>
+              );
+            })}
+          </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div ref={listRef} className="flex scroll-mt-24 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-1.5" role="group" aria-label="Show">
               {filters.map((option) => (
                 <button
@@ -244,7 +330,12 @@ export default function ReadingMonitor() {
           ) : (
             <ul className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200 dark:divide-white/[0.06] dark:border-white/10">
               {rows.map((reader) => (
-                <ReaderRow key={reader.memberId} reader={reader} today={data!.today} />
+                <ReaderRow
+                  key={reader.memberId}
+                  reader={reader}
+                  today={data!.today}
+                  onRemovePlan={(plan) => { setActionError(null); setRemoving({ reader, plan }); }}
+                />
               ))}
             </ul>
           )}
@@ -265,6 +356,18 @@ export default function ReadingMonitor() {
         />
       )}
 
+      <ConfirmDialog
+        open={Boolean(removing)}
+        tone="danger"
+        title={removing ? `Remove ${removing.plan.title} from ${removing.reader.name}?` : "Remove this plan?"}
+        description="It leaves their plans and this page. The days they have read stay in their history, and they can choose the plan again at any time."
+        confirmLabel="Remove plan"
+        cancelLabel="Keep it"
+        loading={removeMemberPlan.isPending}
+        onConfirm={confirmRemovePlan}
+        onCancel={() => setRemoving(null)}
+      />
+
       <SharePlanDialog
         open={shareOpen}
         plans={plans ?? []}
@@ -278,7 +381,7 @@ export default function ReadingMonitor() {
   );
 }
 
-function ReaderRow({ reader, today }: { reader: Reader; today: string }) {
+function ReaderRow({ reader, today, onRemovePlan }: { reader: Reader; today: string; onRemovePlan: (plan: ReaderPlan) => void }) {
   const state = STATE[reader.state];
   return (
     <li className="flex flex-col gap-3 bg-white px-4 py-3.5 dark:bg-white/[0.02] lg:flex-row lg:items-center">
@@ -316,16 +419,29 @@ function ReaderRow({ reader, today }: { reader: Reader; today: string }) {
         ) : (
           reader.plans.map((plan, index) => {
             const percent = plan.durationDays ? Math.min(100, Math.round((plan.completedDays / plan.durationDays) * 100)) : 0;
+            // A finished plan is history; only plans in progress or paused can be removed.
+            const removable = Boolean(plan.subscriptionId) && plan.status !== "COMPLETED";
             return (
               <span
-                key={`${plan.title}-${index}`}
+                key={plan.subscriptionId ?? `${plan.title}-${index}`}
                 title={`${plan.title}: ${plan.completedDays} of ${plan.durationDays} days`}
-                className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] text-gray-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/75"
+                className={`inline-flex max-w-full items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 py-1 pl-2.5 text-[11px] text-gray-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-white/75 ${removable ? "pr-1" : "pr-2.5"}`}
               >
                 <span className="truncate">{plan.title}</span>
                 <span className="tabular-nums font-semibold text-[#87102C] dark:text-[#FFB3C1]">{percent}%</span>
                 {plan.status === "PAUSED" && <span className="text-amber-700 dark:text-amber-300">paused</span>}
                 {plan.status === "COMPLETED" && <span className="text-emerald-700 dark:text-emerald-400">done</span>}
+                {removable && (
+                  <button
+                    type="button"
+                    onClick={() => onRemovePlan(plan)}
+                    aria-label={`Remove ${plan.title} from ${reader.name}`}
+                    title="Remove this plan"
+                    className="-my-1 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:text-white/40 dark:hover:bg-red-500/10 dark:hover:text-red-300"
+                  >
+                    <X size={12} aria-hidden="true" />
+                  </button>
+                )}
               </span>
             );
           })

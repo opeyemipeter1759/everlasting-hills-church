@@ -5836,6 +5836,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reading-monitor/subscriptions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove one member's plan; the days they read stay in their history (ADMIN+) */
+        delete: operations["AdminReadingController_removePlan"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reading-plans": {
         parameters: {
             query?: never;
@@ -23654,6 +23671,39 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ClearGoneQuietResultDto"];
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AdminReadingController_removePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
                 };

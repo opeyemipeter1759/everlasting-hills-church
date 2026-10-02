@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MemberStatus, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -10,11 +10,16 @@ export const READING_NOW_DAYS = 7;
 
 /**
  * READING      read at least once in the last week
- * QUIET        has a plan in progress or paused, but no reading this week
+ * NEW          began a plan this week and has not read yet: just started
+ * QUIET        a plan in progress or paused for over a week, nothing read in it
+ *              this week: gone quiet
  * FINISHED     every plan they started is complete, and nothing read this week
- * NOT_STARTED  has never started a plan
+ * NOT_STARTED  no plan right now: never started one, or every plan was removed
+ *
+ * A plan begun this week is not "gone quiet". Counting it there filled the
+ * group the page exists to surface with people who had only just begun.
  */
-export type ReaderState = 'READING' | 'QUIET' | 'FINISHED' | 'NOT_STARTED';
+export type ReaderState = 'READING' | 'NEW' | 'QUIET' | 'FINISHED' | 'NOT_STARTED';
 
 /**
  * Bible reading across the church, for pastors and admins.
@@ -75,6 +80,29 @@ export class AdminReadingService {
     return { removedPlans: result.count, members: clearableMembers };
   }
 
+  /**
+   * Removes one member's plan, for an admin tidying the list. The same
+   * ABANDONED a member's own Remove sets, so their reading history stays and
+   * they can choose the plan again. A finished plan is history and stays.
+   * Removing a plan already removed is not an error.
+   */
+  async removePlan(subscriptionId: string) {
+    const subscription = await this.prisma.memberPlanSubscription.findFirst({
+      where: { id: subscriptionId, tenantId: this.tenantId },
+      select: { id: true, status: true },
+    });
+    if (!subscription) throw new NotFoundException('Reading plan not found');
+    if (subscription.status === SubscriptionStatus.COMPLETED) {
+      throw new BadRequestException('A finished plan stays in the member’s history.');
+    }
+    if (subscription.status === SubscriptionStatus.ABANDONED) return subscription;
+    return this.prisma.memberPlanSubscription.update({
+      where: { id: subscription.id },
+      data: { status: SubscriptionStatus.ABANDONED },
+      select: { id: true, status: true },
+    });
+  }
+
   private async build() {
     const today = localDate('Africa/Lagos');
     const weekFrom = addDays(today, -(READING_NOW_DAYS - 1));
@@ -126,8 +154,8 @@ export class AdminReadingService {
       plansByProfile.set(subscription.profileId, list);
     }
 
-    // Plans an admin may clear: in progress or paused, belonging to someone
-    // who has gone quiet, and begun before this week.
+    // Plans an admin may clear: the in-progress or paused plans of everyone
+    // gone quiet, which by definition began before this week.
     const clearablePlanIds: string[] = [];
     const clearableProfiles = new Set<string>();
 
@@ -140,14 +168,20 @@ export class AdminReadingService {
         .filter((date): date is string => date !== null)
         .sort();
 
+      const startedThisWeek = inProgress.some((plan) => {
+        const started = fromDateColumn(plan.startedOn);
+        return started !== null && started >= weekFrom;
+      });
       const state: ReaderState =
         plans.length === 0
           ? 'NOT_STARTED'
           : readingsLast7 > 0
             ? 'READING'
-            : inProgress.length > 0
-              ? 'QUIET'
-              : 'FINISHED';
+            : inProgress.length === 0
+              ? 'FINISHED'
+              : startedThisWeek
+                ? 'NEW'
+                : 'QUIET';
 
       if (state === 'QUIET') {
         for (const plan of inProgress) {
@@ -174,6 +208,8 @@ export class AdminReadingService {
             .map((plan) => plan.currentStreak),
         ),
         plans: plans.map((plan) => ({
+          subscriptionId: plan.id,
+          startedOn: fromDateColumn(plan.startedOn),
           title: plan.Plan.title,
           status: plan.status,
           completedDays: plan.completedDays,
@@ -189,6 +225,7 @@ export class AdminReadingService {
         activeMembers: readers.length,
         reading: inState('READING'),
         quiet: inState('QUIET'),
+        justStarted: inState('NEW'),
         finished: inState('FINISHED'),
         notStarted: inState('NOT_STARTED'),
         readingsThisWeek: readers.reduce((sum, reader) => sum + reader.readingsLast7, 0),

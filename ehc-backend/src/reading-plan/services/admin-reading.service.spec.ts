@@ -1,4 +1,4 @@
-import { ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { MemberStatus, SubscriptionStatus } from '@prisma/client';
 import { AdminReadingService } from './admin-reading.service';
 
@@ -56,6 +56,14 @@ function makeService(subscriptions: ReturnType<typeof plan>[] = SUBSCRIPTIONS) {
     member: { findMany: jest.fn(async () => MEMBERS) },
     memberPlanSubscription: {
       findMany: jest.fn(async () => subscriptions),
+      findFirst: jest.fn(async ({ where }: { where: { id: string } }) => {
+        const found = subscriptions.find((subscription) => subscription.id === where.id);
+        return found ? { id: found.id, status: found.status } : null;
+      }),
+      update: jest.fn(async ({ where, data }: { where: { id: string }; data: { status: string } }) => ({
+        id: where.id,
+        status: data.status,
+      })),
       updateMany: jest.fn(async ({ where }: { where: { id: { in: string[] } } }) => ({ count: where.id.in.length })),
     },
     memberPlanProgress: { groupBy },
@@ -102,6 +110,7 @@ describe('reading monitor', () => {
       activeMembers: 4,
       reading: 1,
       quiet: 1,
+      justStarted: 0,
       finished: 1,
       notStarted: 1,
       // p-gone read 7 times this month but is not an active member.
@@ -131,14 +140,23 @@ describe('reading monitor', () => {
 });
 
 describe('clearing gone quiet', () => {
-  it('counts what an admin can clear: in progress or paused, quiet members only, begun before this week', async () => {
-    const { service } = makeService([
-      ...SUBSCRIPTIONS,
-      // Ben began this one on the 12th, inside the week, so it has been touched.
-      plan('p-ben', SubscriptionStatus.PAUSED, null, { id: 'ben-this-week', startedOn: '2026-09-12' }),
-    ]);
+  it('counts what an admin can clear: the in-progress plans of everyone gone quiet', async () => {
+    const { service } = makeService();
 
     expect((await service.overview()).clearable).toEqual({ plans: 1, members: 1 });
+  });
+
+  it('counts someone who began a plan this week as just started, not gone quiet, and leaves them out of clearing', async () => {
+    const { service } = makeService([
+      ...SUBSCRIPTIONS,
+      // Ben began this one on the 12th, inside the week, so he is active again.
+      plan('p-ben', SubscriptionStatus.PAUSED, null, { id: 'ben-this-week', startedOn: '2026-09-12' }),
+    ]);
+    const overview = await service.overview();
+
+    expect(overview.readers.find((reader) => reader.memberId === 'm-ben')?.state).toBe('NEW');
+    expect(overview.stats).toMatchObject({ quiet: 0, justStarted: 1 });
+    expect(overview.clearable).toEqual({ plans: 0, members: 0 });
   });
 
   it('removes exactly those plans, marked removed rather than deleted', async () => {
@@ -167,5 +185,44 @@ describe('clearing gone quiet', () => {
 
     await expect(service.clearGoneQuiet(0)).resolves.toEqual({ removedPlans: 0, members: 0 });
     expect(prisma.memberPlanSubscription.updateMany).not.toHaveBeenCalled();
+  });
+});
+
+describe("removing one member's plan", () => {
+  it('removes it as history rather than deleting it', async () => {
+    const { service, prisma } = makeService();
+
+    await expect(service.removePlan('p-ben-Proverbs')).resolves.toEqual({ id: 'p-ben-Proverbs', status: 'ABANDONED' });
+    expect(prisma.memberPlanSubscription.findFirst).toHaveBeenCalledWith({
+      where: { id: 'p-ben-Proverbs', tenantId: 'tenant-1' },
+      select: { id: true, status: true },
+    });
+    expect(prisma.memberPlanSubscription.update).toHaveBeenCalledWith({
+      where: { id: 'p-ben-Proverbs' },
+      data: { status: SubscriptionStatus.ABANDONED },
+      select: { id: true, status: true },
+    });
+  });
+
+  it('keeps a finished plan in the member’s history', async () => {
+    const { service, prisma } = makeService();
+
+    await expect(service.removePlan('p-cal-A plan')).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.memberPlanSubscription.update).not.toHaveBeenCalled();
+  });
+
+  it('treats removing a plan twice as done', async () => {
+    const { service, prisma } = makeService([
+      plan('p-ben', SubscriptionStatus.ABANDONED, null, { id: 'gone' }),
+    ]);
+
+    await expect(service.removePlan('gone')).resolves.toEqual({ id: 'gone', status: SubscriptionStatus.ABANDONED });
+    expect(prisma.memberPlanSubscription.update).not.toHaveBeenCalled();
+  });
+
+  it('cannot reach a plan in another church', async () => {
+    const { service } = makeService();
+
+    await expect(service.removePlan('not-here')).rejects.toBeInstanceOf(NotFoundException);
   });
 });

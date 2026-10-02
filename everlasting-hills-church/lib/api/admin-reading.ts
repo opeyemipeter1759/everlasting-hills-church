@@ -5,13 +5,17 @@ import { api } from "@/lib/api/request";
 
 /**
  * READING      read at least once in the last seven days
- * QUIET        has a plan in progress or paused, but no reading this week
+ * NEW          began a plan this week and has not read yet: just started
+ * QUIET        a plan in progress or paused for over a week, nothing read this week
  * FINISHED     every plan they started is complete
  * NOT_STARTED  has no plan right now: never started, or removed them all
  */
-export type ReaderState = "READING" | "QUIET" | "FINISHED" | "NOT_STARTED";
+export type ReaderState = "READING" | "NEW" | "QUIET" | "FINISHED" | "NOT_STARTED";
 
 export interface ReaderPlan {
+  /** Optional because an older cached response may not carry it. */
+  subscriptionId?: string;
+  startedOn?: string | null;
   title: string;
   status: "ACTIVE" | "PAUSED" | "COMPLETED";
   completedDays: number;
@@ -38,6 +42,8 @@ export interface ReadingMonitorData {
     activeMembers: number;
     reading: number;
     quiet: number;
+    /** Optional because an older cached response may not carry it. */
+    justStarted?: number;
     finished: number;
     notStarted: number;
     readingsThisWeek: number;
@@ -69,6 +75,19 @@ export function useClearGoneQuiet() {
   return useMutation({
     mutationFn: (expectedPlans: number) =>
       api.post<{ removedPlans: number; members: number }>("/reading-monitor/clear-gone-quiet", { expectedPlans }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["reading-monitor"] }),
+  });
+}
+
+/**
+ * Removes one member's plan. The days they read stay in their history, and
+ * they can choose the plan again; a finished plan cannot be removed.
+ */
+export function useRemoveMemberPlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (subscriptionId: string) =>
+      api.delete<{ id: string; status: string }>(`/reading-monitor/subscriptions/${encodeURIComponent(subscriptionId)}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["reading-monitor"] }),
   });
 }

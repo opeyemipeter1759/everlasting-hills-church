@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Header, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -6,8 +6,9 @@ import { AdminReadingService } from './services/admin-reading.service';
 import { ClearGoneQuietDto, ClearGoneQuietResultDto } from './dto/admin-reading.dto';
 
 /**
- * Bible reading across the church. Read-only, apart from clearing gone quiet,
- * which an admin confirms by number.
+ * Bible reading across the church. Admins can also tidy it: remove one
+ * member's plan, or clear gone quiet in one step, confirmed by number. Both
+ * keep the member's reading history.
  *
  * ADMIN admits ADMIN, ADMIN_HEAD, PASTOR and SUPER_ADMIN, the same set that
  * reads the service-team roster. A member's own progress stays on the
@@ -28,6 +29,15 @@ export class AdminReadingController {
   })
   overview() {
     return this.service.overview();
+  }
+
+  @Delete('subscriptions/:id')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({
+    summary: "Remove one member's plan; the days they read stay in their history (ADMIN+)",
+  })
+  removePlan(@Param('id') id: string) {
+    return this.service.removePlan(id);
   }
 
   @Post('clear-gone-quiet')
