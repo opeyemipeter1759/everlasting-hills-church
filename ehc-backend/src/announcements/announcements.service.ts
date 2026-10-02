@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ConfigService } from '@nestjs/config';
 import { EventStatus, Prisma, Role } from '@prisma/client';
@@ -30,6 +30,22 @@ interface AudienceTargeting {
   targetGenders: string[];
   targetProfileIds: string[];
 }
+
+/** A member call to action for the email copy, as a path on the member site. */
+interface EmailCta {
+  label: string;
+  path: string;
+  closingLine: string;
+}
+
+const EVERYONE: AudienceTargeting = { targetRoles: [], targetGenders: [], targetProfileIds: [] };
+
+/**
+ * How long a plan stays "just shared". A second share inside this window is
+ * refused, so a double tap, or two admins acting at once, cannot notify the
+ * whole church twice.
+ */
+export const READING_PLAN_RESHARE_WINDOW_MS = 10 * 60 * 1000;
 
 /**
  * Church-wide announcements. Publishing one (on create, or later via /publish
@@ -149,6 +165,7 @@ export class AnnouncementsService {
     imageUrl?: string | null,
     greeting?: string | null,
     link = '/dashboard',
+    emailCta?: EmailCta,
   ): Promise<number> {
     const allProfiles = await this.prisma.profile.findMany({
       where: { tenantId: this.tenantId },
@@ -194,6 +211,9 @@ export class AnnouncementsService {
                 imageUrl,
                 targeted,
                 recipientKind: recipient.kind,
+                cta: emailCta
+                  ? { label: emailCta.label, href: `${frontendUrl}${emailCta.path}`, closingLine: emailCta.closingLine }
+                  : undefined,
               }),
             ),
           ),
@@ -336,14 +356,87 @@ export class AnnouncementsService {
     }
   }
 
+  /**
+   * Share a reading plan with the whole church.
+   *
+   * Every member gets an in-app notification that opens the plan ready to
+   * start, members who allow announcement pushes get one that opens the same
+   * place, and the admin can choose to email everyone as well. It is recorded
+   * as an ordinary announcement, so it shows on the member dashboard and in
+   * the admin's list, where it can be unpublished like any other.
+   *
+   * Refuses a second share of the same plan within the reshare window. The
+   * check is a read before the write, so two requests landing in the same
+   * instant could both pass; the plan chooser disables its button while a
+   * share is in flight, which covers the double tap this exists for.
+   */
+  async announceReadingPlan(input: {
+    plan: { title: string; subtitle: string | null; slug: string };
+    note?: string | null;
+    sendEmail: boolean;
+    sharedById: string | null;
+  }): Promise<{ id: string; recipients: number }> {
+    const title = `Read with us: ${input.plan.title}`;
+    const recent = await this.prisma.announcement.findFirst({
+      where: {
+        tenantId: this.tenantId,
+        title,
+        createdAt: { gte: new Date(Date.now() - READING_PLAN_RESHARE_WINDOW_MS) },
+      },
+      select: { id: true },
+    });
+    if (recent) {
+      throw new ConflictException(
+        'This plan was shared with the church in the last few minutes. Members have already been notified.',
+      );
+    }
+
+    const body =
+      [input.note?.trim(), input.plan.subtitle?.trim()].filter(Boolean).join('\n\n') ||
+      `Start ${input.plan.title} from the Bible plans in your dashboard.`;
+    const link = `/dashboard/reading/plans?plan=${encodeURIComponent(input.plan.slug)}`;
+
+    const recipients = await this.fanOut(title, body, input.sendEmail, EVERYONE, null, null, link, {
+      label: 'Start the plan',
+      path: link,
+      closingLine: 'Start the plan in your member dashboard:',
+    });
+
+    const created = await this.prisma.announcement.create({
+      data: {
+        id: randomUUID(),
+        tenantId: this.tenantId,
+        title,
+        body,
+        imageUrl: null,
+        greeting: null,
+        audience: 'all',
+        sendEmail: input.sendEmail,
+        status: EventStatus.PUBLISHED,
+        createdById: input.sharedById,
+        recipients,
+        targetRoles: [],
+        targetGenders: [],
+        targetProfileIds: [],
+        targetProfileNames: [],
+        eventTime: null,
+        venue: null,
+      },
+    });
+
+    this.emitPush(created, link);
+    return { id: created.id, recipients };
+  }
+
   /** Fire-and-forget push fan-out. Never awaited, never allowed to fail a request. */
-  private emitPush(announcement: { id: string; title: string; body: string; audience: string }) {
+  private emitPush(announcement: { id: string; title: string; body: string; audience: string }, url?: string) {
     this.emitter.emit(PushEvents.AnnouncementPublished, {
       tenantId: this.tenantId,
       announcementId: announcement.id,
       title: announcement.title,
       body: announcement.body,
       audience: announcement.audience,
+      ...(url ? { url } : {}),
     } satisfies AnnouncementPublishedPayload);
   }
 

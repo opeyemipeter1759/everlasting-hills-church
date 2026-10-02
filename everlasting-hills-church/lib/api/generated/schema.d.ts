@@ -5886,6 +5886,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/reading-plans/{planId}/share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Share a published plan with the whole church: in-app notification and push for every member, email if asked (ADMIN+) */
+        post: operations["ReadingPlanShareController_shareWithChurch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/reports/member/{userId}": {
         parameters: {
             query?: never;
@@ -8993,6 +9010,21 @@ export interface components {
              *     ]
              */
             tags: string[];
+        };
+        ShareReadingPlanDto: {
+            /** @description A short note from the admin, shown above the plan in the notification and email. */
+            note?: string;
+            /**
+             * @description Also email every active member who has an address on file.
+             * @default false
+             */
+            sendEmail: boolean;
+        };
+        ShareReadingPlanResultDto: {
+            /** @description The announcement that records the share */
+            announcementId: string;
+            /** @description How many members were sent an in-app notification */
+            recipients: number;
         };
         SnoozeFollowUpDto: {
             /** @example 2026-09-04T09:00:00.000Z */
@@ -23662,6 +23694,43 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ReadingPlanShareController_shareWithChurch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                planId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareReadingPlanDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShareReadingPlanResultDto"];
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
                 };

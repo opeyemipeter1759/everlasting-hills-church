@@ -5,17 +5,22 @@ import PlanChooser from "./PlanChooser";
 import {
   useReadingPlans,
   useReadingSubscriptions,
+  useShareReadingPlan,
   useSubscribeToPlan,
   useTranslations,
   type ReadingPlanSummary,
   type ReadingSubscription,
 } from "@/lib/api/reading-plan";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-const navigation = vi.hoisted(() => ({ push: vi.fn() }));
+const navigation = vi.hoisted(() => ({ push: vi.fn(), params: new URLSearchParams() }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => navigation,
+  useSearchParams: () => navigation.params,
 }));
+
+vi.mock("@/hooks/useCurrentUser", () => ({ useCurrentUser: vi.fn() }));
 
 vi.mock("./WordTabs", () => ({ default: () => <nav aria-label="Bible plan navigation" /> }));
 
@@ -28,11 +33,17 @@ vi.mock("@/lib/api/reading-plan", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/lib/api/reading-plan")>(),
   useReadingPlans: vi.fn(),
   useReadingSubscriptions: vi.fn(),
+  useShareReadingPlan: vi.fn(),
   useSubscribeToPlan: vi.fn(),
   useTranslations: vi.fn(),
 }));
 
 const subscribe = vi.fn();
+const shareMutate = vi.fn();
+
+function signedInAs(role: string) {
+  vi.mocked(useCurrentUser).mockReturnValue({ email: null, role, fullName: null, picture: null, loggedIn: true });
+}
 const retryPlans = vi.fn();
 const retrySubscriptions = vi.fn();
 
@@ -105,6 +116,10 @@ beforeEach(() => {
   } as never);
   subscribe.mockResolvedValue({ id: "subscription-new" });
   vi.mocked(useSubscribeToPlan).mockReturnValue({ mutateAsync: subscribe, isPending: false } as never);
+  navigation.params = new URLSearchParams();
+  signedInAs("MEMBER");
+  shareMutate.mockResolvedValue({ announcementId: "announcement-1", recipients: 312 });
+  vi.mocked(useShareReadingPlan).mockReturnValue({ mutateAsync: shareMutate, isPending: false } as never);
 });
 
 afterEach(cleanup);
@@ -207,5 +222,65 @@ describe("PlanChooser with multiple plans", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(retrySubscriptions).toHaveBeenCalledOnce();
+  });
+});
+
+describe("sharing a plan with the church", () => {
+  it("keeps the share action away from members", () => {
+    render(<PlanChooser />);
+
+    expect(screen.queryByRole("button", { name: /with the church/i })).not.toBeInTheDocument();
+  });
+
+  it("lets an admin share a plan with a note and an email, then says how many members were told", async () => {
+    signedInAs("ADMIN");
+    render(<PlanChooser />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Share Plan PSALMS with the church" }));
+    const dialog = screen.getByRole("dialog", { name: "Share with the church" });
+    fireEvent.change(within(dialog).getByLabelText(/a note from you/i), { target: { value: "We start together on Monday." } });
+    fireEvent.click(within(dialog).getByLabelText(/also email every member/i));
+    fireEvent.click(within(dialog).getByRole("button", { name: "Share with the church" }));
+
+    await waitFor(() => expect(shareMutate).toHaveBeenCalledWith({
+      planId: "plan-psalms",
+      note: "We start together on Monday.",
+      sendEmail: true,
+    }));
+    expect(await screen.findByText("Shared Plan PSALMS with the church. 312 members were notified.")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Share with the church" })).not.toBeInTheDocument();
+  });
+
+  it("explains a refused share and keeps the dialog open", async () => {
+    signedInAs("PASTOR");
+    shareMutate.mockRejectedValue({
+      status: 409,
+      message: "This plan was shared with the church in the last few minutes. Members have already been notified.",
+    });
+    render(<PlanChooser />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Share Plan JOHN with the church" }));
+    const dialog = screen.getByRole("dialog", { name: "Share with the church" });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Share with the church" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("shared with the church in the last few minutes");
+    expect(shareMutate).toHaveBeenCalledWith({ planId: "plan-john", note: "", sendEmail: false });
+  });
+
+  it("opens a plan shared with the church, ready to start", () => {
+    navigation.params = new URLSearchParams({ plan: "proverbs" });
+    render(<PlanChooser />);
+
+    const dialog = screen.getByRole("dialog", { name: "Start your Bible plan" });
+    expect(within(dialog).getByText("Plan PROVERBS")).toBeInTheDocument();
+  });
+
+  it("takes a member already reading a shared plan straight to today's reading", async () => {
+    navigation.params = new URLSearchParams({ plan: "psalms" });
+    useSubscriptions([subscription("psalms")]);
+    render(<PlanChooser />);
+
+    await waitFor(() => expect(navigation.push).toHaveBeenCalledWith("/dashboard/reading?subscription=subscription-psalms"));
+    expect(screen.queryByRole("dialog", { name: "Start your Bible plan" })).not.toBeInTheDocument();
   });
 });

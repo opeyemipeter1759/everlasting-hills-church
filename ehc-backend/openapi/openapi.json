@@ -3061,6 +3061,38 @@
         ],
         "type": "object"
       },
+      "ShareReadingPlanDto": {
+        "properties": {
+          "note": {
+            "description": "A short note from the admin, shown above the plan in the notification and email.",
+            "maxLength": 500,
+            "type": "string"
+          },
+          "sendEmail": {
+            "default": false,
+            "description": "Also email every active member who has an address on file.",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ShareReadingPlanResultDto": {
+        "properties": {
+          "announcementId": {
+            "description": "The announcement that records the share",
+            "type": "string"
+          },
+          "recipients": {
+            "description": "How many members were sent an in-app notification",
+            "type": "number"
+          }
+        },
+        "required": [
+          "announcementId",
+          "recipients"
+        ],
+        "type": "object"
+      },
       "SnoozeFollowUpDto": {
         "properties": {
           "until": {
@@ -27973,6 +28005,74 @@
           }
         ],
         "summary": "One day with its portions. References only, no scripture text",
+        "tags": [
+          "reading-plans"
+        ]
+      }
+    },
+    "/reading-plans/{planId}/share": {
+      "post": {
+        "operationId": "ReadingPlanShareController_shareWithChurch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "planId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareReadingPlanDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ShareReadingPlanResultDto"
+                    },
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Share a published plan with the whole church: in-app notification and push for every member, email if asked (ADMIN+)",
         "tags": [
           "reading-plans"
         ]

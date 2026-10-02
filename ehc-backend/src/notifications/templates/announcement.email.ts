@@ -24,6 +24,12 @@ interface Args {
    * the wrong welcome.
    */
   recipientKind?: 'member' | 'visitor';
+  /**
+   * The member call to action, when the announcement leads somewhere more
+   * specific than the dashboard, such as a reading plan to start. Visitors
+   * keep the website link: they have no account to open it with.
+   */
+  cta?: { label: string; href: string; closingLine: string };
 }
 
 export function buildAnnouncementEmail({
@@ -37,6 +43,7 @@ export function buildAnnouncementEmail({
   imageUrl,
   targeted = false,
   recipientKind = 'member',
+  cta: memberCta,
 }: Args): SendEmailPayload {
   const isVisitor = recipientKind === 'visitor';
   const audienceNote = isVisitor
@@ -46,10 +53,14 @@ export function buildAnnouncementEmail({
       : 'You are receiving this because you are part of the Everlasting Hills Church family.';
   const cta = isVisitor
     ? { label: 'Visit our website', href: siteUrl }
-    : { label: 'View in Dashboard', href: dashboardUrl };
+    : memberCta
+      ? { label: memberCta.label, href: memberCta.href }
+      : { label: 'View in Dashboard', href: dashboardUrl };
   const closingLine = isVisitor
     ? ['We would love to see you again:', siteUrl]
-    : ['View this and all announcements in your member dashboard:', dashboardUrl];
+    : memberCta
+      ? [memberCta.closingLine, memberCta.href]
+      : ['View this and all announcements in your member dashboard:', dashboardUrl];
   // Referenced by URL rather than attached: the flyer already lives on a public
   // R2 bucket, every mail client can render an https image, and inlining a
   // multi-MB JPEG into a church-wide blast would push messages past provider

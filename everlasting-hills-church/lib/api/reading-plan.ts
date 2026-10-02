@@ -149,6 +149,29 @@ export function usePassage(startVerseId?: number, endVerseId?: number, translati
   });
 }
 
+export interface ShareReadingPlanResult {
+  announcementId: string;
+  /** Members sent an in-app notification. */
+  recipients: number;
+}
+
+/**
+ * An admin sharing a plan with the whole church: a notification for every
+ * member that opens the plan, a push where members allow it, and an email if
+ * asked. The server records it as an announcement, so the feed is refreshed.
+ */
+export function useShareReadingPlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ planId, note, sendEmail }: { planId: string; note?: string; sendEmail: boolean }) =>
+      api.post<ShareReadingPlanResult>(`/reading-plans/${encodeURIComponent(planId)}/share`, {
+        ...(note?.trim() ? { note: note.trim() } : {}),
+        sendEmail,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["announcements"] }),
+  });
+}
+
 export function useSubscribeToPlan() {
   const qc = useQueryClient();
   return useMutation({

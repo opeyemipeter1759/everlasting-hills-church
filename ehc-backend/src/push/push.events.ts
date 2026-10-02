@@ -22,6 +22,8 @@ export interface AnnouncementPublishedPayload {
   body: string;
   /** "all" for church-wide, otherwise a department or unit id. */
   audience: string;
+  /** Where tapping the notification opens. Defaults to the dashboard. */
+  url?: string;
 }
 
 export interface SermonPublishedPayload {

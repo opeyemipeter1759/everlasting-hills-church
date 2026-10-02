@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
+import { AnnouncementsModule } from '../announcements/announcements.module';
 import { ReadingPlanController } from './reading-plan.controller';
 import { MeReadingPlanController } from './me-reading-plan.controller';
 import { ReadingPlanCatalogueService } from './services/reading-plan-catalogue.service';
@@ -10,6 +11,8 @@ import { DailyScriptureController } from './daily-scripture.controller';
 import { DailyScriptureService } from './services/daily-scripture.service';
 import { AdminReadingController } from './admin-reading.controller';
 import { AdminReadingService } from './services/admin-reading.service';
+import { ReadingPlanShareController } from './reading-plan-share.controller';
+import { ReadingPlanShareService } from './services/reading-plan-share.service';
 
 /**
  * Daily scripture reading.
@@ -19,12 +22,13 @@ import { AdminReadingService } from './services/admin-reading.service';
  * never cached.
  */
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, AnnouncementsModule],
   controllers: [
     ReadingPlanController,
     MeReadingPlanController,
     DailyScriptureController,
     AdminReadingController,
+    ReadingPlanShareController,
   ],
   providers: [
     ReadingPlanCatalogueService,
@@ -33,6 +37,7 @@ import { AdminReadingService } from './services/admin-reading.service';
     PlanProgressRepository,
     DailyScriptureService,
     AdminReadingService,
+    ReadingPlanShareService,
   ],
   exports: [PlanProgressRepository],
 })

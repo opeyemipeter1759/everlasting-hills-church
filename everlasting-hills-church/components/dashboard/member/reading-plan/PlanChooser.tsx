@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { BookOpen, Check, Clock, Loader2, Search } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { BookOpen, Check, Clock, Loader2, Search, Share2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import Modal from "@/components/ui/overlay/Modal";
 import { Select } from "@/components/ui/select";
 import WordTabs from "./WordTabs";
-import { readingHref, useReadingPlans, useReadingSubscriptions, useSubscribeToPlan, useTranslations, type ReadingIntensity, type ReadingPlanSummary, type ReadingTrack } from "@/lib/api/reading-plan";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { hasMinRole } from "@/lib/auth/frontend-session";
+import { userMessageForError } from "@/lib/api/user-message";
+import { readingHref, useReadingPlans, useReadingSubscriptions, useShareReadingPlan, useSubscribeToPlan, useTranslations, type ReadingIntensity, type ReadingPlanSummary, type ReadingTrack } from "@/lib/api/reading-plan";
 
 const EFFORT: Record<ReadingIntensity, { label: string; time: string }> = {
   LOW: { label: "Low", time: "Up to 5 min/day" },
@@ -28,6 +31,18 @@ export default function PlanChooser() {
   const { data: subscriptions, isLoading: currentLoading, isError: currentError, refetch: retrySubscriptions } = useReadingSubscriptions();
   const { data: translations } = useTranslations();
   const subscribe = useSubscribeToPlan();
+  const params = useSearchParams();
+  const linkedSlug = params?.get("plan") ?? null;
+  const currentUser = useCurrentUser();
+  // The server decides; this only keeps the button away from members.
+  const canShare = hasMinRole(currentUser?.role, "ADMIN");
+  const share = useShareReadingPlan();
+  const [sharing, setSharing] = useState<ReadingPlanSummary | null>(null);
+  const [shareNote, setShareNote] = useState("");
+  const [shareByEmail, setShareByEmail] = useState(false);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const [shared, setShared] = useState<{ title: string; recipients: number } | null>(null);
+  const openedLinkedPlan = useRef(false);
   const [effort, setEffort] = useState<ReadingIntensity | "ALL">("ALL");
   const [duration, setDuration] = useState("ALL");
   const [search, setSearch] = useState("");
@@ -37,6 +52,21 @@ export default function PlanChooser() {
   const [error, setError] = useState<string | null>(null);
   const activePlans = (subscriptions ?? []).filter((subscription) => subscription.status === "ACTIVE");
   const selectedPaused = (subscriptions ?? []).find((subscription) => subscription.plan.id === selected?.id && subscription.status === "PAUSED");
+
+  // A plan shared with the church arrives as ?plan=<slug>, the same link for
+  // every member. Open it ready to start, once. Someone already reading it,
+  // in any version, goes straight to their reading instead of a second copy.
+  useEffect(() => {
+    if (!linkedSlug || openedLinkedPlan.current || !plans || !subscriptions) return;
+    const linked = plans.find((candidate) => candidate.slug === linkedSlug);
+    if (!linked) return;
+    openedLinkedPlan.current = true;
+    const reading = subscriptions.find(
+      (subscription) => subscription.plan.slug === linked.slug && subscription.status === "ACTIVE",
+    );
+    if (reading) router.push(readingHref(reading.subscriptionId));
+    else setSelected(linked);
+  }, [linkedSlug, plans, subscriptions, router]);
 
   const visiblePlans = (plans ?? []).filter((plan) => {
     if (effort !== "ALL" && intensityFor(plan) !== effort) return false;
@@ -59,6 +89,26 @@ export default function PlanChooser() {
     setEffort("ALL");
     setDuration("ALL");
     setSearch("");
+  }
+
+  function openShare(plan: ReadingPlanSummary) {
+    setShareNote("");
+    setShareByEmail(false);
+    setShareError(null);
+    setSharing(plan);
+  }
+
+  async function shareWithChurch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!sharing || share.isPending) return;
+    setShareError(null);
+    try {
+      const result = await share.mutateAsync({ planId: sharing.id, note: shareNote, sendEmail: shareByEmail });
+      setShared({ title: sharing.title, recipients: result.recipients });
+      setSharing(null);
+    } catch (cause) {
+      setShareError(userMessageForError(cause, "Could not share this plan. Please try again."));
+    }
   }
 
   async function startPlan() {
@@ -153,6 +203,9 @@ export default function PlanChooser() {
           {(effort !== "ALL" || duration !== "ALL" || search) && <button type="button" onClick={resetFilters} className="min-h-11 text-xs font-bold text-[#87102C] dark:text-[#FFB3C1]">Clear filters</button>}
         </div>
         {recommended && <p role="status" className="mb-3 text-sm text-gray-600 dark:text-white/65">Suggested for you: <strong>{recommended.title}</strong>, within your selected time and length.</p>}
+        {shared && <p role="status" className="mb-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
+          Shared {shared.title} with the church. {shared.recipients} {shared.recipients === 1 ? "member was" : "members were"} notified.
+        </p>}
         {visiblePlans.length === 0 ? <div className="mt-3 rounded-2xl border border-dashed border-gray-200 p-4 xs:p-6 text-center dark:border-white/10"><p className="text-sm text-gray-600 dark:text-white/65">No plans match these filters.</p><button type="button" onClick={resetFilters} className="mt-2 min-h-11 font-semibold text-[#87102C] dark:text-[#FFB3C1]">Show all plans</button></div> :
           <div className="mt-3 grid items-stretch gap-4 sm:grid-cols-2">
             {visiblePlans.map((plan) => {
@@ -186,6 +239,10 @@ export default function PlanChooser() {
                     className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-3 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-50">
                     <BookOpen size={15} /> {paused ? "Resume this plan" : "Choose this plan"}
                   </button>}
+                  {canShare && <button type="button" onClick={() => openShare(plan)} aria-label={`Share ${plan.title} with the church`}
+                    className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#87102C]/30 px-3 py-2 text-sm font-semibold text-[#87102C] transition-colors hover:bg-[#FFF4F6] dark:border-[#FFB3C1]/30 dark:text-[#FFB3C1] dark:hover:bg-white/5">
+                    <Share2 size={15} aria-hidden="true" /> Share with the church
+                  </button>}
                 </div>
               </article>;
             })}
@@ -207,6 +264,36 @@ export default function PlanChooser() {
             <button type="button" onClick={startPlan} disabled={subscribe.isPending} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{subscribe.isPending && <Loader2 size={15} className="animate-spin" />}{subscribe.isPending ? "Opening…" : selectedPaused ? "Resume reading" : "Start reading"}</button>
           </div>
         </div>}
+      </Modal>
+
+      <Modal open={Boolean(sharing)} onClose={() => { if (!share.isPending) setSharing(null); }} title="Share with the church">
+        {sharing && <form onSubmit={shareWithChurch} className="space-y-4">
+          <div>
+            <p className="break-words font-serif text-xl font-bold text-gray-900 dark:text-white">{sharing.title}</p>
+            <p className="mt-1 text-sm text-gray-500 dark:text-white/60">{sharing.durationDays} days{sharing.avgMinutesPerDay != null ? ` · about ${sharing.avgMinutesPerDay} min/day` : ""}</p>
+          </div>
+          <p className="rounded-xl bg-[#FFF4F6] p-3 text-sm leading-relaxed text-[#6E0C24] dark:bg-[#87102C]/20 dark:text-[#FFB3C1]">
+            Every member gets a notification that opens this plan, ready to start, and a push notification if they have turned those on. It also appears in the church announcements.
+          </p>
+          <label className="block text-sm font-semibold text-gray-700 dark:text-white/75">
+            A note from you (optional)
+            <textarea value={shareNote} onChange={(event) => setShareNote(event.target.value)} maxLength={500} rows={3} disabled={share.isPending}
+              placeholder="For example: we start together on Monday."
+              className="mt-1.5 block w-full min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-normal text-gray-800 dark:border-white/10 dark:bg-gray-900 dark:text-white" />
+          </label>
+          <label className="flex min-h-11 items-start gap-3 text-sm text-gray-700 dark:text-white/75">
+            <input type="checkbox" checked={shareByEmail} onChange={(event) => setShareByEmail(event.target.checked)} disabled={share.isPending} className="mt-0.5 h-4 w-4 flex-shrink-0 accent-[#87102C]" />
+            <span>Also email every member who has an email address</span>
+          </label>
+          {shareError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{shareError}</p>}
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={() => setSharing(null)} disabled={share.isPending} className="min-h-11 rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70">Cancel</button>
+            <button type="submit" disabled={share.isPending} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+              {share.isPending ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} aria-hidden="true" />}
+              {share.isPending ? "Sharing…" : "Share with the church"}
+            </button>
+          </div>
+        </form>}
       </Modal>
     </div>
   );

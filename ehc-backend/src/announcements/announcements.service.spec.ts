@@ -1,5 +1,6 @@
-import { NotFoundException } from '@nestjs/common';
-import { AnnouncementsService } from './announcements.service';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { AnnouncementsService, READING_PLAN_RESHARE_WINDOW_MS } from './announcements.service';
+import { PushEvents } from '../push/push.events';
 
 /**
  * Covers the publish/unpublish pair.
@@ -204,5 +205,132 @@ describe('AnnouncementsService email audience', () => {
 
     expect(sentTo(dispatch)).toEqual(['member@example.com']);
     expect(prisma.visitor.findMany).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Sharing a reading plan with the whole church: every member is notified with
+ * a link that opens the plan, and the share is kept as an announcement.
+ */
+const PLAN_LINK = '/dashboard/reading/plans?plan=bible-in-four-months';
+const SHARE = {
+  plan: { title: 'The Bible in four months', subtitle: 'Six readings a day.', slug: 'bible-in-four-months' },
+  note: '  We start together on Monday.  ',
+  sendEmail: false,
+  sharedById: 'admin-profile',
+};
+
+function makeShareService(options: { recentShare?: boolean; members?: string[] } = {}) {
+  const members = options.members ?? ['a@example.com', 'b@example.com'];
+  const createMany = jest.fn().mockResolvedValue(members.length);
+  const dispatch = jest.fn();
+  const emit = jest.fn();
+  const prisma = {
+    profile: {
+      findMany: jest.fn().mockResolvedValue(
+        members.map((email, i) => ({ id: `p${i}`, Member: { email, firstName: 'Ada', status: 'ACTIVE' } })),
+      ),
+    },
+    announcement: {
+      findFirst: jest.fn().mockResolvedValue(options.recentShare ? { id: 'earlier-share' } : null),
+      create: jest.fn(async ({ data }: { data: Record<string, unknown> }) => ({ ...data })),
+    },
+  };
+  const config = {
+    get: jest.fn((key: string) => (key === 'FRONTEND_URL' ? 'https://www.everlastinghills.church/' : 'tenant-1')),
+  };
+  const service = new AnnouncementsService(
+    prisma as never,
+    { createMany } as never,
+    { dispatch } as never,
+    { emit } as never,
+    config as never,
+  );
+  return { service, prisma, createMany, dispatch, emit };
+}
+
+describe('AnnouncementsService.announceReadingPlan', () => {
+  afterEach(() => jest.useRealTimers());
+
+  it('notifies every member with a link that opens the plan, and records it as an announcement', async () => {
+    const { service, createMany, prisma, emit } = makeShareService();
+
+    const result = await service.announceReadingPlan(SHARE);
+
+    const notifications = createMany.mock.calls[0][0];
+    expect(notifications).toHaveLength(2);
+    expect(notifications[0]).toMatchObject({
+      profileId: 'p0',
+      title: 'Read with us: The Bible in four months',
+      body: 'We start together on Monday.\n\nSix readings a day.',
+      link: PLAN_LINK,
+    });
+    expect(prisma.announcement.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        title: 'Read with us: The Bible in four months',
+        audience: 'all',
+        status: 'PUBLISHED',
+        createdById: 'admin-profile',
+        recipients: 2,
+        sendEmail: false,
+      }),
+    });
+    expect(emit).toHaveBeenCalledWith(
+      PushEvents.AnnouncementPublished,
+      expect.objectContaining({ url: PLAN_LINK, audience: 'all' }),
+    );
+    expect(result).toEqual({ id: expect.any(String), recipients: 2 });
+  });
+
+  it('sends no email unless the admin asks for one', async () => {
+    const { service, dispatch } = makeShareService();
+
+    await service.announceReadingPlan(SHARE);
+
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it('emails members a button that starts the plan, at the full site address', async () => {
+    const { service, dispatch } = makeShareService({ members: ['ada@example.com'] });
+
+    await service.announceReadingPlan({ ...SHARE, sendEmail: true });
+
+    const { to, html, text } = dispatch.mock.calls[0][0];
+    expect(to).toBe('ada@example.com');
+    expect(html).toContain('Start the plan');
+    expect(html).toContain(`https://www.everlastinghills.church${PLAN_LINK}`);
+    expect(html).not.toContain('View in Dashboard');
+    expect(text).toContain(
+      `Start the plan in your member dashboard:\nhttps://www.everlastinghills.church${PLAN_LINK}`,
+    );
+  });
+
+  it('refuses to notify the church about the same plan twice within minutes', async () => {
+    jest.useFakeTimers({ now: new Date('2026-10-02T10:00:00Z') });
+    const { service, createMany, prisma, emit } = makeShareService({ recentShare: true });
+
+    await expect(service.announceReadingPlan(SHARE)).rejects.toBeInstanceOf(ConflictException);
+
+    expect(prisma.announcement.findFirst).toHaveBeenCalledWith({
+      where: {
+        tenantId: 'tenant-1',
+        title: 'Read with us: The Bible in four months',
+        createdAt: { gte: new Date(Date.parse('2026-10-02T10:00:00Z') - READING_PLAN_RESHARE_WINDOW_MS) },
+      },
+      select: { id: true },
+    });
+    expect(createMany).not.toHaveBeenCalled();
+    expect(prisma.announcement.create).not.toHaveBeenCalled();
+    expect(emit).not.toHaveBeenCalled();
+  });
+
+  it('still tells members what to do when there is no note and no subtitle', async () => {
+    const { service, createMany } = makeShareService();
+
+    await service.announceReadingPlan({ ...SHARE, note: '   ', plan: { ...SHARE.plan, subtitle: null } });
+
+    expect(createMany.mock.calls[0][0][0].body).toBe(
+      'Start The Bible in four months from the Bible plans in your dashboard.',
+    );
   });
 });

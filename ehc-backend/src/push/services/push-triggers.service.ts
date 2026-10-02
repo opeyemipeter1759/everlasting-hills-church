@@ -88,7 +88,7 @@ export class PushTriggersService {
           // Strip Markdown before truncating: a lock screen shows the raw
           // text, and `**Date:**` reads as a typo to a member.
           body: truncate(stripMarkdown(payload.body), 140),
-          url: '/dashboard',
+          url: payload.url ?? '/dashboard',
           tag: `announcement-${payload.announcementId}`,
         },
       );
