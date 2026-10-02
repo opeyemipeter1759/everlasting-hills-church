@@ -110,7 +110,7 @@ describe('reading plan templates', () => {
     }
   });
 
-  it('reads the four month plan by the Bible’s divisions: six readings a day, every chapter once', () => {
+  it('reads the four month plan by the Bible’s divisions: six readings a day, the Epistles twice, everything else once', () => {
     const division = (book: number) =>
       book <= 5 ? 'Law'
         : book <= 17 ? 'History'
@@ -128,7 +128,9 @@ describe('reading plan templates', () => {
     const counts = new Map<string, number>();
     for (const chapter of prescribedChapters(plan)) counts.set(chapter, (counts.get(chapter) ?? 0) + 1);
     expect(counts.size).toBe(1_189);
-    expect(new Set(counts.values())).toEqual(new Set([1]));
+    for (const [chapter, count] of counts) {
+      expect(count).toBe(division(Number(chapter.split(':')[0])) === 'Epistles' ? 2 : 1);
+    }
 
     for (const day of plan.days) {
       for (const portion of day.portions) {
@@ -140,8 +142,7 @@ describe('reading plan templates', () => {
   });
 
   it('assigns lighter loads to slower versions of the same coverage', () => {
-    expect(generate('bible-in-90-days').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-four-months').avgMinutesPerDay);
-    expect(generate('bible-in-four-months').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-180-days').avgMinutesPerDay);
+    expect(generate('bible-in-90-days').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-180-days').avgMinutesPerDay);
     expect(generate('acts-in-three-days').avgMinutesPerDay).toBeGreaterThan(generate('acts-in-28-days').avgMinutesPerDay);
     expect(generate('bible-in-180-days').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-a-year').avgMinutesPerDay);
     expect(generate('bible-in-a-year').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-two-years').avgMinutesPerDay);

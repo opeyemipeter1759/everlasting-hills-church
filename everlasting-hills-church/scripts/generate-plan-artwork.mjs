@@ -452,16 +452,18 @@ function actsInThreeDays() {
 
 // Six lanes, one for each of the day's readings, side by side through four
 // months of thirty days. Each lane is as thick as its share of the reading
-// time, from the live corpus: History about 8 minutes a day, the Epistles
-// about 2.5. The Gospels lane hands over to Acts on day 85 and to Revelation
-// on day 109, where the generator reaches them; the breaks mark those days.
+// time, from the live corpus: History about 8 minutes a day, Poetry and Wisdom
+// about 3.4. The Epistles are read twice and start again at Romans on day 61,
+// the first day of the third month. The Gospels lane hands over to Acts on day
+// 85 and to Revelation on day 109, where the generator reaches them; the
+// breaks mark those days.
 const FOUR_MONTH_LANES = [
   ["LAW", 6.2, CREAM, 0.8],
   ["HISTORY", 8.0, CREAM, 0.68],
   ["POETRY", 3.4, CREAM, 0.56],
   ["PROPHETS", 6.6, CREAM, 0.44],
   ["GOSPELS", 4.8, GOLD, 0.95],
-  ["EPISTLES", 2.5, BLUSH, 0.85],
+  ["EPISTLES", 5.0, BLUSH, 0.85],
 ];
 const GOSPELS_LANE_HANDOVERS = [85, 109];
 

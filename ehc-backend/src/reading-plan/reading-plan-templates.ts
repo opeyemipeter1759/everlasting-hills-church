@@ -238,20 +238,24 @@ READING_PLAN_TEMPLATES.push(
     ReadingTrack.MATURE,
   ),
   {
-    // Version 1 read Genesis to Revelation straight through. Version 2 reads
+    // Version 1 read Genesis to Revelation straight through. Version 2 read
     // the Bible's divisions side by side, so every day has a reading from the
     // Law, History, Poetry and Wisdom, the Prophets and the Epistles. Each of
     // those has at least 121 chapters, enough for all 120 days without
     // splitting one. Acts (28 chapters) and Revelation (22) are too short to
     // fill a daily stream, so they follow the Gospels in one, each portion
     // still labelled with its own division.
+    //
+    // Version 3 reads the Epistles twice. Once through, they came to a single
+    // chapter a day beside about two from every other division; twice, they
+    // start again at Romans on day 61, halfway through.
     slug: 'bible-in-four-months',
-    version: 2,
+    version: 3,
     title: 'The Bible in four months',
     subtitle: (minutes) =>
-      `The Bible’s divisions side by side, six readings a day. Four months, about ${minutes} minutes a day.`,
+      `The Bible’s divisions side by side, with the Epistles twice. Four months, about ${minutes} minutes a day.`,
     description:
-      'Each day reads from the Law, the Historical Books, Poetry and Wisdom, the Prophets and the Epistles, and from the Gospels, which give way to Acts and then Revelation. Every chapter of the Bible once, in 120 days.',
+      'Each day reads from the Law, the Historical Books, Poetry and Wisdom, the Prophets and the Epistles, and from the Gospels, which give way to Acts and then Revelation. The whole Bible in 120 days, with the Epistles read twice, about two chapters a day.',
     track: ReadingTrack.MATURE,
     durationDays: 120,
     streams: [
@@ -264,7 +268,7 @@ READING_PLAN_TEMPLATES.push(
         selection: [...GOSPELS, { bookId: 44 }, { bookId: 66 }],
         bookLabels: { 44: 'Church History', 66: 'Revelation' },
       },
-      { label: 'Epistles', selection: EPISTLES },
+      { label: 'Epistles', selection: EPISTLES, repeat: 2 },
     ],
   },
   canonicalPlan(

@@ -26,8 +26,8 @@
   <rect x="575.8" y="201.6" width="24.7" height="20.2" rx="6.0" fill="#E8B44A" fill-opacity="0.95"/>
   <rect x="610.5" y="201.6" width="78.1" height="20.2" rx="6.0" fill="#E8B44A" fill-opacity="0.95"/>
   <rect x="692.6" y="201.6" width="51.4" height="20.2" rx="6.0" fill="#E8B44A" fill-opacity="0.95"/>
-  <rect x="180.0" y="230.8" width="133.5" height="10.5" rx="5.3" fill="#FFB3C1" fill-opacity="0.85"/>
-  <rect x="323.5" y="230.8" width="133.5" height="10.5" rx="5.3" fill="#FFB3C1" fill-opacity="0.85"/>
-  <rect x="467.0" y="230.8" width="133.5" height="10.5" rx="5.3" fill="#FFB3C1" fill-opacity="0.85"/>
-  <rect x="610.5" y="230.8" width="133.5" height="10.5" rx="5.3" fill="#FFB3C1" fill-opacity="0.85"/></g>
+  <rect x="180.0" y="230.8" width="133.5" height="21.0" rx="6.0" fill="#FFB3C1" fill-opacity="0.85"/>
+  <rect x="323.5" y="230.8" width="133.5" height="21.0" rx="6.0" fill="#FFB3C1" fill-opacity="0.85"/>
+  <rect x="467.0" y="230.8" width="133.5" height="21.0" rx="6.0" fill="#FFB3C1" fill-opacity="0.85"/>
+  <rect x="610.5" y="230.8" width="133.5" height="21.0" rx="6.0" fill="#FFB3C1" fill-opacity="0.85"/></g>
 </svg>
