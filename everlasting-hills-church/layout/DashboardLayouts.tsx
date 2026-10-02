@@ -24,7 +24,7 @@ export default function DashboardLayouts({ children }: { children: React.ReactNo
       <AppSidebar />
       {isMobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-[55] bg-black/50 lg:hidden"
           aria-hidden="true"
           onClick={toggleMobileSidebar}
         />

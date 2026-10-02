@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronRight, Megaphone, Users2 } from 'lucide-react';
+import { ChevronRight, Megaphone, Users2, X } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import { useTheme } from '@/context/ThemeContext';
 import { NAV_GROUPS, ROLE_LABELS, hasMinRole } from '@/config/config';
@@ -70,6 +70,11 @@ const AppSidebar: React.FC = () => {
     } else {
       toggleSidebar();
     }
+  };
+
+  // On a phone the sidebar covers the page, so going anywhere from it closes it.
+  const closeOnMobile = () => {
+    if (isMobileOpen) toggleMobileSidebar();
   };
 
   const pathname = usePathname();
@@ -291,6 +296,7 @@ const AppSidebar: React.FC = () => {
                       <li key={child.name}>
                         <Link
                           href={child.path}
+                          onClick={closeOnMobile}
                           aria-current={cActive ? 'page' : undefined}
                           className={`flex items-center gap-2.5 px-2.5 py-1.5 text-[11.5px] font-medium transition-colors duration-150 rounded-lg ${
                             cActive
@@ -318,6 +324,7 @@ const AppSidebar: React.FC = () => {
           <li key={item.name}>
             <Link
               href={item.path}
+              onClick={closeOnMobile}
               aria-current={active ? 'page' : undefined}
               title={!showLabels ? item.name : undefined}
               className={`group flex items-center gap-3 rounded-xl px-2.5 py-2 transition-colors duration-150 ${
@@ -343,7 +350,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col no-scrollbar
+      className={`fixed top-0 bottom-0 left-0 z-[60] lg:z-50 flex flex-col no-scrollbar
         border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900
         font-sans text-[13px] transition-all duration-300 ease-in-out
         w-[240px] ${sidebarW}
@@ -359,7 +366,7 @@ const AppSidebar: React.FC = () => {
       <>
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-3 py-[16px] dark:border-gray-800">
-        <Link href="/" className="flex items-center gap-2.5 min-w-0">
+        <Link href="/" onClick={closeOnMobile} aria-label="Everlasting Hills home" className="flex items-center gap-2.5 min-w-0">
             <Image src={logoSrc} alt="Everlasting Hills" width={42} height={22} className="object-cover py-1.5" />
           {showLabels && (
             <div className="min-w-0">
@@ -383,6 +390,7 @@ const AppSidebar: React.FC = () => {
               dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-200
               transition-colors duration-150"
           >
+            {isMobileOpen && <X size={18} strokeWidth={2} />}
           </button>
         )}
       </div>
@@ -437,6 +445,7 @@ const AppSidebar: React.FC = () => {
       <div className="shrink-0 border-t border-gray-100 p-2 dark:border-gray-800">
         <Link
           href="/dashboard/profile"
+          onClick={closeOnMobile}
           className={`flex items-center rounded-xl py-2 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/60 ${
             showLabels ? 'gap-3 px-2' : 'justify-center px-1'
           }`}
