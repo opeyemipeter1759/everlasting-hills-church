@@ -23842,6 +23842,60 @@
       }
     },
     "/me/reading-plan/subscriptions/{id}": {
+      "delete": {
+        "operationId": "MeReadingPlanController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove a plan you no longer follow. It leaves your plans; the days you read stay in your history.",
+        "tags": [
+          "reading-plans"
+        ]
+      },
       "patch": {
         "operationId": "MeReadingPlanController_update",
         "parameters": [

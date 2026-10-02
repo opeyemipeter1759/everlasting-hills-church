@@ -1,18 +1,20 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ReadingOverview from "./ReadingOverview";
-import { useReadingActivity, useReadingSubscriptions, useSetPlanStatus, type ReadingSubscription } from "@/lib/api/reading-plan";
+import { useReadingActivity, useReadingSubscriptions, useRemovePlan, useSetPlanStatus, type ReadingSubscription } from "@/lib/api/reading-plan";
 
 vi.mock("./WordTabs", () => ({ default: () => <nav aria-label="Bible plan navigation" /> }));
 vi.mock("@/lib/api/reading-plan", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/lib/api/reading-plan")>(),
   useReadingActivity: vi.fn(),
   useReadingSubscriptions: vi.fn(),
+  useRemovePlan: vi.fn(),
   useSetPlanStatus: vi.fn(),
 }));
 
 const refetch = vi.fn();
 const mutateAsync = vi.fn();
+const removePlan = vi.fn();
 
 function subscription(id: string, overrides: Partial<ReadingSubscription> = {}): ReadingSubscription {
   return {
@@ -43,6 +45,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   mutateAsync.mockResolvedValue({});
   vi.mocked(useSetPlanStatus).mockReturnValue({ mutateAsync, isPending: false } as never);
+  removePlan.mockResolvedValue({ id: "john", status: "ABANDONED" });
+  vi.mocked(useRemovePlan).mockReturnValue({ mutateAsync: removePlan, isPending: false } as never);
   // The effort calendar is covered in ReadingActivity.test; here it stays empty.
   vi.mocked(useReadingActivity).mockReturnValue({ data: undefined, isLoading: false, isError: false } as never);
   useData([]);
@@ -148,5 +152,60 @@ describe("ReadingOverview", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(refetch).toHaveBeenCalledOnce();
     expect(screen.queryByRole("region", { name: "Your reading effort" })).not.toBeInTheDocument();
+  });
+});
+
+describe("removing a plan the member no longer follows", () => {
+  it("asks first, then removes the plan and says their reading history stays", async () => {
+    useData([subscription("john"), subscription("romans", { status: "PAUSED" })]);
+    render(<ReadingOverview />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove Plan john" }));
+    const dialog = screen.getByRole("dialog", { name: "Remove Plan john?" });
+    expect(dialog).toHaveTextContent("The days you have read stay in your reading history");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Remove plan" }));
+
+    await waitFor(() => expect(removePlan).toHaveBeenCalledWith("john"));
+    expect(await screen.findByText("Removed Plan john. The days you read stay in your reading history.")).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Remove Plan john?" })).not.toBeInTheDocument();
+  });
+
+  it("lets a paused plan be removed too", async () => {
+    useData([subscription("romans", { status: "PAUSED" })]);
+    render(<ReadingOverview />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove Plan romans" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Remove Plan romans?" })).getByRole("button", { name: "Remove plan" }));
+
+    await waitFor(() => expect(removePlan).toHaveBeenCalledWith("romans"));
+  });
+
+  it("keeps the plan when the member changes their mind", () => {
+    useData([subscription("john")]);
+    render(<ReadingOverview />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove Plan john" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Remove Plan john?" })).getByRole("button", { name: "Keep it" }));
+
+    expect(removePlan).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog", { name: "Remove Plan john?" })).not.toBeInTheDocument();
+  });
+
+  it("keeps a finished plan as history, with no way to remove it", () => {
+    useData([subscription("mark", { status: "COMPLETED", completedDays: 10, completedAt: "2026-09-13T08:00:00Z" })]);
+    render(<ReadingOverview />);
+
+    expect(screen.queryByRole("button", { name: "Remove Plan mark" })).not.toBeInTheDocument();
+  });
+
+  it("says why when a plan could not be removed", async () => {
+    removePlan.mockRejectedValue({ status: 400, message: "A finished plan stays in your history. Only plans you are reading or have paused can be removed." });
+    useData([subscription("john")]);
+    render(<ReadingOverview />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Remove Plan john" }));
+    fireEvent.click(within(screen.getByRole("dialog", { name: "Remove Plan john?" })).getByRole("button", { name: "Remove plan" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("A finished plan stays in your history.");
   });
 });

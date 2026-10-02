@@ -3,10 +3,13 @@
 import { useId, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Check, Flame, Layers, Loader2, Pause, Play, Plus, Trophy } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Flame, Layers, Loader2, Pause, Play, Plus, Trash2, Trophy } from "lucide-react";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { userMessageForError } from "@/lib/api/user-message";
 import {
   readingHref,
   useReadingSubscriptions,
+  useRemovePlan,
   useSetPlanStatus,
   type ReadingSubscription,
 } from "@/lib/api/reading-plan";
@@ -25,9 +28,11 @@ function ReadingDate({ value, timezone = "UTC" }: { value: string; timezone?: st
   }).format(new Date(dateOnly ? `${value}T12:00:00Z` : value))}</time>;
 }
 
-function PlanProgressCard({ subscription }: { subscription: ReadingSubscription }) {
+function PlanProgressCard({ subscription, onRemoved }: { subscription: ReadingSubscription; onRemoved: (title: string) => void }) {
   const titleId = useId();
   const setStatus = useSetPlanStatus();
+  const removePlan = useRemovePlan();
+  const [confirmingRemoval, setConfirmingRemoval] = useState(false);
   const [notice, setNotice] = useState<{ message: string; error: boolean } | null>(null);
   const { plan, status, completedDays, currentStreak, longestStreak, lastReadOn } = subscription;
   const percentage = plan.durationDays > 0
@@ -43,6 +48,20 @@ function PlanProgressCard({ subscription }: { subscription: ReadingSubscription 
       setNotice({ message: paused ? "Plan resumed. Your other plans stay active." : "Plan paused. Your progress is saved.", error: false });
     } catch (cause) {
       setNotice({ message: cause instanceof Error ? cause.message : "Could not update this plan. Please try again.", error: true });
+    }
+  }
+
+  // Removing is for a plan the member has stopped following, so it is offered
+  // on active and paused plans; a finished plan is history and stays.
+  async function confirmRemoval() {
+    setNotice(null);
+    try {
+      await removePlan.mutateAsync(subscription.subscriptionId);
+      setConfirmingRemoval(false);
+      onRemoved(plan.title);
+    } catch (cause) {
+      setConfirmingRemoval(false);
+      setNotice({ message: userMessageForError(cause, "Could not remove this plan. Please try again."), error: true });
     }
   }
 
@@ -109,7 +128,21 @@ function PlanProgressCard({ subscription }: { subscription: ReadingSubscription 
           {!complete && !paused && <button type="button" onClick={changeStatus} disabled={setStatus.isPending} aria-label={`Pause ${plan.title}`} className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-xs font-semibold text-gray-500 hover:text-[#87102C] disabled:opacity-50 dark:text-white/55 dark:hover:text-[#FFB3C1] ${focusRing}`}>
             {setStatus.isPending ? <Loader2 size={13} aria-hidden="true" className="animate-spin" /> : <Pause size={13} aria-hidden="true" />}Pause
           </button>}
+          {!complete && <button type="button" onClick={() => setConfirmingRemoval(true)} disabled={removePlan.isPending || setStatus.isPending} aria-label={`Remove ${plan.title}`} className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-xs font-semibold text-gray-500 hover:text-red-600 disabled:opacity-50 dark:text-white/55 dark:hover:text-red-400 ${focusRing}`}>
+            <Trash2 size={13} aria-hidden="true" />Remove
+          </button>}
         </div>
+        <ConfirmDialog
+          open={confirmingRemoval}
+          tone="danger"
+          title={`Remove ${plan.title}?`}
+          description="It leaves your plans for good. The days you have read stay in your reading history, and you can choose the plan again from Bible plans to start it fresh. To take a break instead, pause it."
+          confirmLabel="Remove plan"
+          cancelLabel="Keep it"
+          loading={removePlan.isPending}
+          onConfirm={confirmRemoval}
+          onCancel={() => setConfirmingRemoval(false)}
+        />
         {notice && <p role={notice.error ? "alert" : "status"} className={`mt-3 text-xs leading-relaxed ${notice.error ? "text-red-600 dark:text-red-400" : "text-emerald-700 dark:text-emerald-300"}`}>{notice.message}</p>}
       </div>
     </article>
@@ -117,6 +150,7 @@ function PlanProgressCard({ subscription }: { subscription: ReadingSubscription 
 }
 
 export default function ReadingOverview() {
+  const [removed, setRemoved] = useState<string | null>(null);
   const { data: subscriptions = [], isLoading, isError, refetch } = useReadingSubscriptions();
   const activePlans = subscriptions.filter((subscription) => subscription.status === "ACTIVE");
   const pausedPlans = subscriptions.filter((subscription) => subscription.status === "PAUSED");
@@ -146,6 +180,12 @@ export default function ReadingOverview() {
         </div>
         <Link href="/dashboard/reading/plans" className={secondaryAction}><Plus size={16} aria-hidden="true" />Add a plan</Link>
       </header>
+
+      {removed && (
+        <p role="status" className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-300">
+          Removed {removed}. The days you read stay in your reading history.
+        </p>
+      )}
 
       {isLoading ? (
         <div role="status" className="mt-6 space-y-5">
@@ -186,7 +226,7 @@ export default function ReadingOverview() {
               <h2 className="font-serif text-xl font-bold text-gray-900 dark:text-white">{group.title}<span className="ml-2 font-sans text-sm font-normal text-gray-500 dark:text-white/50">({group.plans.length})</span></h2>
               <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-white/55">{group.description}</p>
               <div className="mt-4 grid items-stretch gap-4 sm:grid-cols-2">
-                {group.plans.map((subscription) => <PlanProgressCard key={subscription.subscriptionId} subscription={subscription} />)}
+                {group.plans.map((subscription) => <PlanProgressCard onRemoved={setRemoved} key={subscription.subscriptionId} subscription={subscription} />)}
               </div>
             </section>
           ))}

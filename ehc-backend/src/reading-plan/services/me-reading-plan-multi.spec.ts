@@ -508,3 +508,56 @@ describe('completion isolation and history', () => {
     },
   );
 });
+
+describe('removing a plan the member no longer follows', () => {
+  it('takes an active or paused plan off their list and keeps the days they read', async () => {
+    const { service, subscriptions, daysFor } = setup(
+      [subscription(), subscription({ id: 'paused', planId: 'plan-2', status: 'PAUSED' })],
+      { 'sub-1': [1, 2] },
+    );
+
+    await service.remove(ACTOR, 'sub-1');
+    await service.remove(ACTOR, 'paused');
+
+    expect(subscriptions.get('sub-1')?.status).toBe('ABANDONED');
+    expect(subscriptions.get('paused')?.status).toBe('ABANDONED');
+    expect(daysFor('sub-1')).toEqual(new Set([1, 2]));
+    expect(await service.subscriptions(ACTOR)).toEqual([]);
+  });
+
+  it('starts the plan fresh if they choose it again', async () => {
+    const { service, subscriptions } = setup([
+      subscription({ completedDays: 5, currentDayIndex: 6 }),
+    ]);
+
+    await service.remove(ACTOR, 'sub-1');
+    const again = await service.subscribe(ACTOR, { planId: 'plan-1' });
+
+    expect(again.id).not.toBe('sub-1');
+    expect(subscriptions.get(again.id)).toMatchObject({
+      status: 'ACTIVE',
+      currentDayIndex: 1,
+      completedDays: 0,
+    });
+  });
+
+  it('keeps a finished plan as history', async () => {
+    const { service, subscriptions } = setup([subscription({ status: 'COMPLETED' })]);
+
+    await expect(service.remove(ACTOR, 'sub-1')).rejects.toBeInstanceOf(BadRequestException);
+    expect(subscriptions.get('sub-1')?.status).toBe('COMPLETED');
+  });
+
+  it('treats removing a plan twice as done, not as an error', async () => {
+    const { service } = setup([subscription({ status: 'ABANDONED' })]);
+
+    await expect(service.remove(ACTOR, 'sub-1')).resolves.toEqual({ id: 'sub-1', status: 'ABANDONED' });
+  });
+
+  it("cannot remove another member's plan", async () => {
+    const { service, subscriptions } = setup([subscription({ profileId: 'profile-2' })]);
+
+    await expect(service.remove(ACTOR, 'sub-1')).rejects.toBeInstanceOf(NotFoundException);
+    expect(subscriptions.get('sub-1')?.status).toBe('ACTIVE');
+  });
+});

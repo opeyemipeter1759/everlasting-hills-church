@@ -121,6 +121,20 @@ export function useSetPlanStatus() {
   });
 }
 
+/**
+ * Removes a plan the member no longer follows. Unlike pausing, it leaves their
+ * plans altogether; the days they read stay in their history, and choosing
+ * the plan again starts it fresh.
+ */
+export function useRemovePlan() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (subscriptionId: string) =>
+      api.delete<{ id: string; status: string }>(`/me/reading-plan/subscriptions/${encodeURIComponent(subscriptionId)}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ME_KEY }),
+  });
+}
+
 export function useReadingPlans(track?: ReadingTrack) {
   return useQuery({
     queryKey: ["reading-plan", "catalogue", track ?? "all"],

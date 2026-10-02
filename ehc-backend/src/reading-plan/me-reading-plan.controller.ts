@@ -87,6 +87,15 @@ export class MeReadingPlanController {
     return this.service.update(actor, id, body);
   }
 
+  @Delete('subscriptions/:id')
+  @ApiOperation({
+    summary:
+      'Remove a plan you no longer follow. It leaves your plans; the days you read stay in your history.',
+  })
+  remove(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.service.remove(actor, id);
+  }
+
   @Get('subscriptions/:id/days/completed')
   @Header('Cache-Control', 'no-store')
   @ApiOperation({

@@ -429,6 +429,37 @@ export class MeReadingPlanService {
   }
 
   /**
+   * Removes a plan the member no longer follows, which is not the same as
+   * pausing one they mean to come back to.
+   *
+   * The row stays, marked ABANDONED, so the days they read still count in
+   * their reading history and the church's weekly numbers. It leaves their
+   * plans and the admin reading page, and choosing the plan again starts it
+   * fresh. A finished plan is history rather than something to stop, so it
+   * stays. Removing a plan that is already removed is not an error.
+   */
+  async remove(actor: AuthUser, subscriptionId: string) {
+    const profileId = this.profileOrThrow(actor);
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockMember(tx, profileId);
+      const current = await this.ownedSubscription(actor, subscriptionId, tx);
+      if (current.status === SubscriptionStatus.COMPLETED) {
+        throw new BadRequestException(
+          'A finished plan stays in your history. Only plans you are reading or have paused can be removed.',
+        );
+      }
+      if (current.status === SubscriptionStatus.ABANDONED) {
+        return { id: current.id, status: current.status };
+      }
+      return tx.memberPlanSubscription.update({
+        where: { id: current.id },
+        data: { status: SubscriptionStatus.ABANDONED },
+        select: { id: true, status: true },
+      });
+    });
+  }
+
+  /**
    * Marks a day complete.
    *
    * Addressed by the day it affects rather than an implied cursor, which makes
@@ -452,7 +483,9 @@ export class MeReadingPlanService {
         );
       }
       if (subscription.status === SubscriptionStatus.ABANDONED) {
-        throw new BadRequestException('This reading plan has been abandoned.');
+        throw new BadRequestException(
+          'You removed this plan. Choose it again from the Bible plans to start it fresh.',
+        );
       }
       const duration = subscription.Plan.durationDays;
       if (!Number.isInteger(dayIndex) || dayIndex < 1 || dayIndex > duration) {
