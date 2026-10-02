@@ -3,9 +3,12 @@
  *
  *   npx ts-node --transpile-only scripts/seed-reading-plans.ts --list
  *   npx ts-node --transpile-only scripts/seed-reading-plans.ts --dry-run
+ *   npx ts-node --transpile-only scripts/seed-reading-plans.ts --only=acts-in-three-days,bible-in-four-months
  *   npx ts-node --transpile-only scripts/seed-reading-plans.ts
  *
- * --list is offline. --dry-run reads the corpus but never writes. Existing
+ * --list is offline. --dry-run reads the corpus but never writes. --only limits
+ * any run to the named slugs, so a new plan can go live without also publishing
+ * every other template still waiting in the file. Existing
  * versions always remain untouched, including subscriptions and progress.
  * Corrections use explicit versions in reading-plan-templates.ts.
  * See READING_PLANS.md and prisma/MIGRATIONS.md before an operator runs seeds.
@@ -116,14 +119,29 @@ export async function publishReadingPlan(
   return 'published';
 }
 
+const ONLY = '--only=';
+
+/** The templates an --only=slug,slug argument names, or every template without one. */
+export function selectTemplates(args: string[]): ReadingPlanTemplate[] {
+  const onlyArgs = args.filter((arg) => arg.startsWith(ONLY));
+  if (onlyArgs.length === 0) return READING_PLAN_TEMPLATES;
+  if (onlyArgs.length > 1) throw new Error('Pass --only once, with the slugs separated by commas.');
+  const slugs = onlyArgs[0].slice(ONLY.length).split(',').map((slug) => slug.trim()).filter(Boolean);
+  if (slugs.length === 0) throw new Error('--only needs at least one plan slug, for example --only=acts-in-three-days');
+  const unknown = slugs.filter((slug) => !READING_PLAN_TEMPLATES.some((spec) => spec.slug === slug));
+  if (unknown.length > 0) throw new Error(`No reading plan template has the slug: ${unknown.join(', ')}`);
+  return READING_PLAN_TEMPLATES.filter((spec) => slugs.includes(spec.slug));
+}
+
 export async function main(args = process.argv.slice(2)) {
   if (args.includes('--force')) {
     throw new Error('--force is no longer supported. Publish a new template version to preserve member progress.');
   }
-  const unknown = args.find((arg) => !['--list', '--dry-run'].includes(arg));
+  const unknown = args.find((arg) => !['--list', '--dry-run'].includes(arg) && !arg.startsWith(ONLY));
   if (unknown) throw new Error(`Unknown argument: ${unknown}`);
+  const templates = selectTemplates(args);
   if (args.includes('--list')) {
-    console.table(READING_PLAN_TEMPLATES.map(({ slug, durationDays, version }) => ({
+    console.table(templates.map(({ slug, durationDays, version }) => ({
       slug,
       durationDays,
       version: version ?? 1,
@@ -135,7 +153,7 @@ export async function main(args = process.argv.slice(2)) {
   try {
     const corpus = await loadCorpus(prisma);
     const results: string[] = [];
-    for (const spec of READING_PLAN_TEMPLATES) {
+    for (const spec of templates) {
       results.push(await publishReadingPlan(prisma, spec, corpus, args.includes('--dry-run')));
     }
     console.log(`${results.filter((result) => result === 'published').length} new versions published; ` +

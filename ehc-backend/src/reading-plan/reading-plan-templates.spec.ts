@@ -49,8 +49,8 @@ function allChapters(firstBook: number, lastBook: number) {
 }
 
 describe('reading plan templates', () => {
-  it('offers twenty distinct plans across light, medium and intensive reading loads', () => {
-    expect(new Set(READING_PLAN_TEMPLATES.map((plan) => plan.slug)).size).toBe(20);
+  it('offers twenty two distinct plans across light, medium and intensive reading loads', () => {
+    expect(new Set(READING_PLAN_TEMPLATES.map((plan) => plan.slug)).size).toBe(22);
     expect(new Set(READING_PLAN_TEMPLATES.map((plan) => generate(plan.slug).intensity)))
       .toEqual(new Set(['LOW', 'MEDIUM', 'HIGH']));
   });
@@ -69,6 +69,7 @@ describe('reading plan templates', () => {
 
   it.each([
     ['bible-in-90-days', 1, 66],
+    ['bible-in-four-months', 1, 66],
     ['bible-in-180-days', 1, 66],
     ['bible-in-a-year', 1, 66],
     ['bible-in-two-years', 1, 66],
@@ -83,6 +84,7 @@ describe('reading plan templates', () => {
     ['psalms-one-a-day', 19, 19],
     ['proverbs-in-a-month', 20, 20],
     ['john-in-21-days', 43, 43],
+    ['acts-in-three-days', 44, 44],
     ['acts-in-28-days', 44, 44],
     ['wisdom-in-60-days', 19, 20],
   ] as const)('%s reads every advertised chapter exactly once, in order', (slug, firstBook, lastBook) => {
@@ -110,7 +112,9 @@ describe('reading plan templates', () => {
   });
 
   it('assigns lighter loads to slower versions of the same coverage', () => {
-    expect(generate('bible-in-90-days').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-180-days').avgMinutesPerDay);
+    expect(generate('bible-in-90-days').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-four-months').avgMinutesPerDay);
+    expect(generate('bible-in-four-months').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-180-days').avgMinutesPerDay);
+    expect(generate('acts-in-three-days').avgMinutesPerDay).toBeGreaterThan(generate('acts-in-28-days').avgMinutesPerDay);
     expect(generate('bible-in-180-days').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-a-year').avgMinutesPerDay);
     expect(generate('bible-in-a-year').avgMinutesPerDay).toBeGreaterThan(generate('bible-in-two-years').avgMinutesPerDay);
   });

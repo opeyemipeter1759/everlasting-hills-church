@@ -1,6 +1,6 @@
 import { PrismaClient, ReadingTrack } from '@prisma/client';
-import { main, publishReadingPlan } from '../../scripts/seed-reading-plans';
-import type { ReadingPlanTemplate } from './reading-plan-templates';
+import { main, publishReadingPlan, selectTemplates } from '../../scripts/seed-reading-plans';
+import { READING_PLAN_TEMPLATES, type ReadingPlanTemplate } from './reading-plan-templates';
 
 const spec: ReadingPlanTemplate = {
   slug: 'fixture', title: 'Fixture', description: 'Fixture', track: ReadingTrack.GROWING,
@@ -56,5 +56,19 @@ describe('reading plan seed safeguards', () => {
 
   it('rejects the old destructive --force command before creating a database client', async () => {
     await expect(main(['--force'])).rejects.toThrow('preserve member progress');
+  });
+
+  it('limits a run to the plans --only names, so one new plan can go live on its own', () => {
+    expect(selectTemplates([])).toBe(READING_PLAN_TEMPLATES);
+    expect(selectTemplates(['--dry-run', '--only=acts-in-three-days, bible-in-four-months']).map((plan) => plan.slug))
+      .toEqual(['bible-in-four-months', 'acts-in-three-days']);
+  });
+
+  it.each([
+    [['--only='], 'at least one plan slug'],
+    [['--only=acts-in-3-days'], 'acts-in-3-days'],
+    [['--only=acts-in-three-days', '--only=bible-in-four-months'], 'Pass --only once'],
+  ])('rejects %j before creating a database client', async (args, message) => {
+    await expect(main(args)).rejects.toThrow(message);
   });
 });

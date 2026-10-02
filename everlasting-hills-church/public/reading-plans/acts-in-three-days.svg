@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" role="img">
+<defs><linearGradient id="acts" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#87102C"/>
+    <stop offset="1" stop-color="#4A0817"/>
+  </linearGradient>
+  <radialGradient id="jerusalem" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="#E8B44A" stop-opacity="0.55"/>
+    <stop offset="1" stop-color="#E8B44A" stop-opacity="0"/>
+  </radialGradient></defs>
+<rect width="800" height="400" fill="url(#acts)"/>
+  <circle cx="520" cy="200" r="58" fill="url(#jerusalem)"/>
+  <g><circle cx="520" cy="200" r="54" fill="none" stroke="#FFF4F6" stroke-opacity="0.36" stroke-width="2"/>
+  <circle cx="520" cy="200" r="96" fill="none" stroke="#FFF4F6" stroke-opacity="0.29" stroke-width="2"/>
+  <circle cx="520" cy="200" r="138" fill="none" stroke="#FFF4F6" stroke-opacity="0.22" stroke-width="2"/></g>
+  <g><circle cx="558.6" cy="237.8" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="525.3" cy="253.7" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="489.5" cy="244.6" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="468.0" cy="214.5" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="470.8" cy="177.7" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="496.6" cy="151.3" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="533.4" cy="147.7" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="563.9" cy="168.5" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="573.8" cy="204.1" r="6.5" fill="#FFF4F6" fill-opacity="0.55"/>
+  <circle cx="608.2" cy="237.8" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="569.2" cy="282.5" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="511.3" cy="295.6" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="456.8" cy="272.2" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="426.4" cy="221.3" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="431.8" cy="162.2" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="470.8" cy="117.5" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="528.7" cy="104.4" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="583.2" cy="127.8" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="613.6" cy="178.7" r="6.5" fill="#FFF4F6" fill-opacity="0.70"/>
+  <circle cx="655.9" cy="224.0" r="6.5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="608.7" cy="305.7" r="6.5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="520.0" cy="338.0" r="6.5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="431.3" cy="305.7" r="6.5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="384.1" cy="224.0" r="6.5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="400.5" cy="131.0" r="6.5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="472.8" cy="70.3" r="6.5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="567.2" cy="70.3" r="6.5" fill="#FFF4F6" fill-opacity="0.85"/>
+  <circle cx="639.5" cy="131.0" r="10" fill="#E8B44A" fill-opacity="1"/></g>
+  <circle cx="520" cy="200" r="11" fill="#E8B44A"/>
+</svg>

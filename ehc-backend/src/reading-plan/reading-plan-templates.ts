@@ -219,6 +219,14 @@ READING_PLAN_TEMPLATES.push(
     ReadingTrack.MATURE,
   ),
   canonicalPlan(
+    'bible-in-four-months',
+    'The Bible in four months',
+    120,
+    WHOLE_BIBLE,
+    'Genesis to Revelation in four months, in book order. A substantial daily reading that keeps the whole story close together, so what came before is still fresh as the rest unfolds.',
+    ReadingTrack.MATURE,
+  ),
+  canonicalPlan(
     'bible-in-180-days',
     'The Bible in 180 days',
     180,
@@ -279,6 +287,13 @@ READING_PLAN_TEMPLATES.push(
     [{ bookId: 43 }],
     'Meet Jesus in the Gospel of John, one chapter a day. A short plan for beginning or renewing a daily reading habit.',
     ReadingTrack.NEW_BELIEVER,
+  ),
+  canonicalPlan(
+    'acts-in-three-days',
+    'Acts in three days',
+    3,
+    [{ bookId: 44 }],
+    'All twenty eight chapters of Acts in three long readings, from Jesus’ ascension to Paul preaching in Rome. Reading it quickly lets you follow the good news spreading out from Jerusalem as one story.',
   ),
   canonicalPlan(
     'acts-in-28-days',

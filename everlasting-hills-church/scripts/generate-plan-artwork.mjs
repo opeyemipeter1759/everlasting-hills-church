@@ -400,6 +400,94 @@ function proverbsInAMonth() {
   );
 }
 
+// Three rings widening from one point, one ring for each reading, with a mark
+// for every chapter that reading holds: Acts 1-9, 10-19 and 20-28, as the
+// generator splits the book by length. Acts moves the same way, outward from
+// Jerusalem (Acts 1:8), so the centre is gold and so is the last mark, Rome.
+const ACTS_READINGS = [9, 10, 9];
+
+function actsInThreeDays() {
+  const cx = W * 0.65;
+  const cy = H / 2;
+  const radii = [54, 96, 138];
+  const total = ACTS_READINGS.reduce((sum, count) => sum + count, 0);
+  const rings = radii.map(
+    (r, i) =>
+      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${CREAM}" stroke-opacity="${(0.36 - i * 0.07).toFixed(2)}" stroke-width="2"/>`,
+  );
+  const marks = [];
+  let chapter = 0;
+  ACTS_READINGS.forEach((count, ring) => {
+    const r = radii[ring];
+    // Marks run clockwise and finish on the right, each ring a little lower
+    // than the one outside it so they never line up as spokes. The outer ring
+    // finishes up and to the right: the last chapter, where the eye ends.
+    const end = -Math.PI / 6 + (ACTS_READINGS.length - 1 - ring) * 0.3;
+    const start = end - ((count - 1) / count) * Math.PI * 2;
+    for (let k = 0; k < count; k += 1) {
+      chapter += 1;
+      const a = start + (k / count) * Math.PI * 2;
+      const last = chapter === total;
+      marks.push(
+        `<circle cx="${(cx + Math.cos(a) * r).toFixed(1)}" cy="${(cy + Math.sin(a) * r).toFixed(1)}" r="${last ? 10 : 6.5}" fill="${last ? GOLD : CREAM}" fill-opacity="${last ? 1 : (0.55 + ring * 0.15).toFixed(2)}"/>`,
+      );
+    }
+  });
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#acts)"/>
+  <circle cx="${cx}" cy="${cy}" r="58" fill="url(#jerusalem)"/>
+  <g>${rings.join("\n  ")}</g>
+  <g>${marks.join("\n  ")}</g>
+  <circle cx="${cx}" cy="${cy}" r="11" fill="${GOLD}"/>`,
+    `<linearGradient id="acts" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${WINE}"/>
+    <stop offset="1" stop-color="${WINE_DEEP}"/>
+  </linearGradient>
+  <radialGradient id="jerusalem" cx="0.5" cy="0.5" r="0.5">
+    <stop offset="0" stop-color="${GOLD}" stop-opacity="0.55"/>
+    <stop offset="1" stop-color="${GOLD}" stop-opacity="0"/>
+  </radialGradient>`,
+  );
+}
+
+// A hundred and twenty days as four months of thirty. The generator reaches
+// Matthew on day 93, so the Old Testament fills three months and two days, and
+// the last month is almost all gold: the New Testament.
+const FOUR_MONTHS_NEW_TESTAMENT_FROM_DAY = 93;
+
+function bibleInFourMonths() {
+  const cols = 6;
+  const rows = 5;
+  const cell = 20;
+  const gap = 6;
+  const blockW = cols * cell + (cols - 1) * gap;
+  const blockH = rows * cell + (rows - 1) * gap;
+  const blockGap = 24;
+  const x0 = W - 56 - (4 * blockW + 3 * blockGap);
+  const y0 = Math.round((H - blockH) / 2);
+  const cells = [];
+  for (let day = 1; day <= 120; day += 1) {
+    const i = day - 1;
+    const month = Math.floor(i / 30);
+    const inMonth = i % 30;
+    const x = x0 + month * (blockW + blockGap) + (inMonth % cols) * (cell + gap);
+    const y = y0 + Math.floor(inMonth / cols) * (cell + gap);
+    const newTestament = day >= FOUR_MONTHS_NEW_TESTAMENT_FROM_DAY;
+    const opacity = newTestament ? 0.95 : 0.16 + (i / (FOUR_MONTHS_NEW_TESTAMENT_FROM_DAY - 2)) * 0.58;
+    cells.push(
+      `<rect x="${x}" y="${y}" width="${cell}" height="${cell}" rx="4" fill="${newTestament ? GOLD : CREAM}" fill-opacity="${opacity.toFixed(2)}"/>`,
+    );
+  }
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#months)"/>
+  <g>${cells.join("\n  ")}</g>`,
+    `<linearGradient id="months" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${WINE}"/>
+    <stop offset="1" stop-color="${WINE_DEEP}"/>
+  </linearGradient>`,
+  );
+}
+
 const COVERS = {
   "start-with-jesus": startWithJesus,
   "know-the-whole-story": knowTheWholeStory,
@@ -410,6 +498,8 @@ const COVERS = {
   "psalms-in-30-days": psalmsIn30Days,
   "gospels-in-30-days": gospelsIn30Days,
   "proverbs-in-a-month": proverbsInAMonth,
+  "acts-in-three-days": actsInThreeDays,
+  "bible-in-four-months": bibleInFourMonths,
 };
 
 mkdirSync(OUT, { recursive: true });
