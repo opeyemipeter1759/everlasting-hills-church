@@ -9,6 +9,7 @@ import {
   estimateMinutes,
   formatReference,
   selectChapters,
+  splitByChapterCount,
   spreadAcrossDays,
   toPortionRanges,
   type BookSelection,
@@ -26,6 +27,12 @@ interface StreamPlan {
    * which division it belongs to. Books not named here take `label`.
    */
   bookLabels?: Record<number, string>;
+  /**
+   * How the chapters are shared out across the days: by words, the default, so
+   * days take about the same time; or by chapters, where the promise is a
+   * number of chapters a day and one long chapter must not stand alone.
+   */
+  pace?: 'words' | 'chapters';
   /** Repeat the selection until it covers at least this many chapters. */
   cycleTo?: number;
   /** Repeat the selection exactly this many times. */
@@ -249,13 +256,17 @@ READING_PLAN_TEMPLATES.push(
     // Version 3 reads the Epistles twice. Once through, they came to a single
     // chapter a day beside about two from every other division; twice, they
     // start again at Romans on day 61, halfway through.
+    //
+    // Version 4 shares the Epistles out by chapters, two every day. Balanced
+    // by words, a long chapter such as Romans 1 stood alone on its day, which
+    // read as one chapter of the Epistles when two were promised.
     slug: 'bible-in-four-months',
-    version: 3,
+    version: 4,
     title: 'The Bible in four months',
     subtitle: (minutes) =>
       `The Bible’s divisions side by side, with the Epistles twice. Four months, about ${minutes} minutes a day.`,
     description:
-      'Each day reads from the Law, the Historical Books, Poetry and Wisdom, the Prophets and the Epistles, and from the Gospels, which give way to Acts and then Revelation. The whole Bible in 120 days, with the Epistles read twice, about two chapters a day.',
+      'Each day reads from the Law, the Historical Books, Poetry and Wisdom, the Prophets and the Epistles, and from the Gospels, which give way to Acts and then Revelation. The whole Bible in 120 days, with the Epistles read twice, two chapters every day.',
     track: ReadingTrack.MATURE,
     durationDays: 120,
     streams: [
@@ -268,7 +279,7 @@ READING_PLAN_TEMPLATES.push(
         selection: [...GOSPELS, { bookId: 44 }, { bookId: 66 }],
         bookLabels: { 44: 'Church History', 66: 'Revelation' },
       },
-      { label: 'Epistles', selection: EPISTLES, repeat: 2 },
+      { label: 'Epistles', selection: EPISTLES, repeat: 2, pace: 'chapters' },
     ],
   },
   canonicalPlan(
@@ -391,7 +402,11 @@ export function buildReadingPlan(spec: ReadingPlanTemplate, corpus: ReadingPlanC
     let units = selectChapters(stream.selection, corpus.chaptersByBook);
     if (stream.repeat) units = Array.from({ length: stream.repeat }, () => units).flat();
     if (stream.cycleTo) units = cycleToAtLeast(units, stream.cycleTo);
-    return { plan: stream, days: spreadAcrossDays(units, spec.durationDays) };
+    const days =
+      stream.pace === 'chapters'
+        ? splitByChapterCount(units, spec.durationDays)
+        : spreadAcrossDays(units, spec.durationDays);
+    return { plan: stream, days };
   });
 
   const days: GeneratedPlanDay[] = [];

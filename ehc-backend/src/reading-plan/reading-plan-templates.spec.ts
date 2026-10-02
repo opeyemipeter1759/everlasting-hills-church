@@ -110,7 +110,7 @@ describe('reading plan templates', () => {
     }
   });
 
-  it('reads the four month plan by the Bible’s divisions: six readings a day, the Epistles twice, everything else once', () => {
+  it('reads the four month plan by the Bible’s divisions: six readings a day, the Epistles twice at two chapters a day, everything else once', () => {
     const division = (book: number) =>
       book <= 5 ? 'Law'
         : book <= 17 ? 'History'
@@ -138,6 +138,17 @@ describe('reading plan templates', () => {
       }
       expect([...new Set(day.portions.map((portion) => reading(portion.label)))])
         .toEqual(['Law', 'History', 'Poetry and Wisdom', 'Prophets', 'Gospels', 'Epistles']);
+      const epistleChapters = day.portions
+        .filter((portion) => portion.label === 'Epistles')
+        .reduce(
+          (sum, portion) =>
+            sum +
+            Math.floor((portion.endVerseId % 1_000_000) / 1_000) -
+            Math.floor((portion.startVerseId % 1_000_000) / 1_000) +
+            1,
+          0,
+        );
+      expect([2, 3]).toContain(epistleChapters);
     }
   });
 

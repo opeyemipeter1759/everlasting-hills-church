@@ -4,6 +4,7 @@ import {
   estimateMinutes,
   formatReference,
   selectChapters,
+  splitByChapterCount,
   spreadAcrossDays,
   toPortionRanges,
   type ChapterUnit,
@@ -192,5 +193,30 @@ describe('spreadAcrossDays', () => {
   it('keeps reading order across the gaps', () => {
     const days = spreadAcrossDays(PSALMS.slice(0, 4), 12);
     expect(days.flat().map((c) => c.chapter)).toEqual([117, 118, 119, 120]);
+  });
+});
+
+describe('splitByChapterCount', () => {
+  // The Epistles twice over: 242 chapters, deliberately uneven in length.
+  const units = Array.from({ length: 242 }, (_, index) =>
+    chapter(45 + Math.floor(index / 22), (index % 22) + 1, 10, 150 + (index % 9) * 350),
+  );
+
+  it('gives every day the same number of chapters, give or take one, whatever their length', () => {
+    const days = splitByChapterCount(units, 120);
+
+    expect(days).toHaveLength(120);
+    expect(new Set(days.map((day) => day.length))).toEqual(new Set([2, 3]));
+    expect(days.flat()).toEqual(units);
+  });
+
+  it('spreads the extra chapters through the plan rather than leaving them for the end', () => {
+    const extraDays = splitByChapterCount(units, 120).flatMap((day, index) => (day.length === 3 ? [index + 1] : []));
+
+    expect(extraDays).toEqual([30, 90]);
+  });
+
+  it('refuses more days than there are chapters', () => {
+    expect(() => splitByChapterCount(units.slice(0, 5), 6)).toThrow(RangeError);
   });
 });

@@ -136,6 +136,33 @@ export function spreadAcrossDays(units: ChapterUnit[], days: number): ChapterUni
 }
 
 /**
+ * Splits chapters across exactly `days` days by count rather than by words.
+ *
+ * For a stream whose promise is a number of chapters, such as two chapters of
+ * the Epistles every day. Balanced by words, one long chapter (Romans 1,
+ * 1 Corinthians 15) stands alone on its day, which reads as one chapter when
+ * two were promised. When the count does not divide evenly the extra chapters
+ * are spread through the plan, so no two days differ by more than one.
+ */
+export function splitByChapterCount(units: ChapterUnit[], days: number): ChapterUnit[][] {
+  if (days < 1) throw new RangeError(`days must be at least 1, received ${days}`);
+  if (units.length < days) {
+    throw new RangeError(
+      `Cannot give ${days} days a chapter each from ${units.length} chapters. ` +
+        'Either shorten the plan or widen its book selection.',
+    );
+  }
+  const result: ChapterUnit[][] = [];
+  let cursor = 0;
+  for (let day = 1; day <= days; day += 1) {
+    const end = Math.round((units.length * day) / days);
+    result.push(units.slice(cursor, end));
+    cursor = end;
+  }
+  return result;
+}
+
+/**
  * A reader facing label such as "Genesis 1-3" or "Psalm 23".
  *
  * Consecutive chapters of one book collapse into a range, and separate books
