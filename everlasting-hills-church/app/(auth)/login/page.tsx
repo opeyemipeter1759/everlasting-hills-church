@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { auth } from "@/lib/api";
-import { getLandingPage } from "@/lib/auth/frontend-session";
+import { postLoginPath } from "@/lib/auth/post-login-path";
 import AuthSplitScreen from "@/components/auth/AuthSplitScreen";
 import { AuthDivider } from "@/components/auth/AuthDivider";
 import { AuthSubmitButton } from "@/components/auth/AuthSubmitButton";
@@ -34,9 +34,9 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const resp = await auth.login({ email, password });
-      const next = resp.user.needsPasswordChange
-        ? "/change-password"
-        : getLandingPage(resp.user.role);
+      // Read at submit time rather than through useSearchParams, which would
+      // make this statically rendered page need a Suspense boundary.
+      const next = postLoginPath(resp.user, window.location.search);
       window.location.assign(next);
       showToast.success("Login successful!");
     } catch (error) {

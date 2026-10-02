@@ -6,6 +6,7 @@ import Modal from "@/components/ui/overlay/Modal";
 import { Select } from "@/components/ui/select";
 import { userMessageForError } from "@/lib/api/user-message";
 import { useShareReadingPlan, type ReadingPlanSummary } from "@/lib/api/reading-plan";
+import { PlanLinkField } from "./SharePlanLinkButton";
 
 /**
  * An admin sharing a plan with the whole church.
@@ -85,6 +86,7 @@ export default function SharePlanDialog({
           <p className="rounded-xl bg-[#FFF4F6] p-3 text-sm leading-relaxed text-[#6E0C24] dark:bg-[#87102C]/20 dark:text-[#FFB3C1]">
             Every member gets a notification that opens this plan, ready to start, and a push notification if they have turned those on. It also appears in the church announcements.
           </p>
+          <PlanLinkField plan={plan} />
           <label className="block text-sm font-semibold text-gray-700 dark:text-white/75">
             A note from you (optional)
             <textarea

@@ -21,6 +21,7 @@ import {
   type BackendSession,
 } from "@/lib/auth/server-session";
 import { verifySupabaseJwt } from "@/lib/auth/verify-jwt";
+import { AUTH_PAGES, safeNextPath } from "@/lib/auth/safe-next-path";
 import {
   LOOKUP_TIMEOUT_MS,
   REFRESH_TIMEOUT_MS,
@@ -39,7 +40,6 @@ import {
   type NavPermissionsMap,
 } from "@/lib/nav-permissions-core";
 
-const AUTH_PAGES = new Set(["/login", "/register", "/forgot-password"]);
 const ROLELESS_LANDING = "/dashboard/profile";
 
 // Sermon management is PASTOR+ by role, but every member of the Audio
@@ -224,12 +224,6 @@ function withSessionCookies(response: NextResponse, session: BackendSession | nu
 // session that lapsed during the consent round trip shouldn't strand the
 // user on a login redirect instead of completing the connection. Scoped to
 // exactly this path + query shape so a normal calendar visit is unaffected.
-/** A same-site path to return to after login; another site ("//evil.com") or a login page is ignored. */
-export function safeNextPath(next: string | null): string | null {
-  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return null;
-  return AUTH_PAGES.has(next.split("?")[0]) ? null : next;
-}
-
 function isGoogleCalendarCallback(pathname: string, searchParams: URLSearchParams): boolean {
   return pathname === "/dashboard/calendar" && searchParams.has("code") && searchParams.has("state");
 }

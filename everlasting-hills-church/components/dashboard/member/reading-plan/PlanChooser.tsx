@@ -9,6 +9,7 @@ import Modal from "@/components/ui/overlay/Modal";
 import { Select } from "@/components/ui/select";
 import WordTabs from "./WordTabs";
 import SharePlanDialog from "./SharePlanDialog";
+import { SharePlanLinkButton } from "./SharePlanLinkButton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { hasMinRole } from "@/lib/auth/frontend-session";
 import { readingHref, useReadingPlans, useReadingSubscriptions, useSubscribeToPlan, useTranslations, type ReadingIntensity, type ReadingPlanSummary, type ReadingTrack } from "@/lib/api/reading-plan";
@@ -192,6 +193,7 @@ export default function PlanChooser() {
                 <div className="relative flex min-h-40 items-end overflow-hidden bg-[#4A0817] p-4">
                   {plan.coverImageUrl && <Image src={plan.coverImageUrl} alt="" fill sizes="(max-width: 640px) 100vw, 420px" className="object-cover" unoptimized />}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <SharePlanLinkButton plan={plan} className="absolute right-3 top-3 z-10" />
                   <div className="relative min-w-0">
                     <div className="mb-2 flex flex-wrap gap-1.5">
                       {recommended?.id === plan.id && <span className="rounded-full bg-[#87102C] px-2 py-1 text-[10px] font-bold text-white">Suggested</span>}

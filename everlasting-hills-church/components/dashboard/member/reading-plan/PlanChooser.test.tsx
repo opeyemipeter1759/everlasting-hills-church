@@ -301,3 +301,13 @@ describe("sharing a plan with the church", () => {
     expect(screen.queryByRole("dialog", { name: "Start your Bible plan" })).not.toBeInTheDocument();
   });
 });
+
+describe("sending a plan as a link", () => {
+  it("gives every member a way to send any plan as a link", () => {
+    render(<PlanChooser />);
+
+    for (const title of ["Plan JOHN", "Plan PSALMS", "Plan PROVERBS", "Plan MARK"]) {
+      expect(screen.getByRole("button", { name: `Send a link to ${title}` })).toBeInTheDocument();
+    }
+  });
+});
