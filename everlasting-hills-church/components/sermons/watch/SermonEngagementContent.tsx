@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   Share2, Bookmark, BookmarkCheck, BookOpen, Headphones,
@@ -43,11 +43,14 @@ export default function SermonEngagementContent({
   memberCtx,
   isLoggedIn,
   compact,
+  afterDetails,
 }: {
   sermon: WatchSermon;
   memberCtx: MemberSermonContext | null;
   isLoggedIn: boolean;
   compact?: boolean;
+  /** Shown once the reader knows what this is — e.g. a series' episode list. */
+  afterDetails?: ReactNode;
 }) {
   const [reaction, setReaction] = useState(memberCtx?.reaction?.type ?? null);
   const [bookmarked, setBookmarked] = useState(!!memberCtx?.bookmark);
@@ -103,12 +106,12 @@ export default function SermonEngagementContent({
         {sermon.series && (
           <Link
             href={`/sermons/series/${sermon.seriesSlug}`}
-            className="inline-block text-[11px] font-bold uppercase tracking-widest text-[#87102C] dark:text-[#e8768a] hover:underline"
+            className="inline-block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#87102C] dark:text-[#e8768a] hover:underline"
           >
-            {sermon.series}
+            {sermon.type !== 'SERIES' ? sermon.series : sermon.series.trim().toLowerCase() === sermon.title.trim().toLowerCase() ? 'Series' : `Series · ${sermon.series}`}
           </Link>
         )}
-        <h1 className={`font-black text-gray-900 dark:text-white leading-tight ${compact ? 'text-xl' : 'text-2xl sm:text-3xl'}`}>
+        <h1 className={`font-semibold tracking-tight text-gray-900 dark:text-white leading-tight ${compact ? 'text-xl' : 'text-2xl sm:text-[28px]'}`}>
           {sermon.title}
         </h1>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-400 dark:text-gray-500">
@@ -127,7 +130,7 @@ export default function SermonEngagementContent({
           </span>
         </div>
         {sermon.description && (
-          <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-sm">{sermon.description}</p>
+          <p className="max-w-prose whitespace-pre-line text-gray-600 dark:text-gray-400 leading-relaxed text-[15px]">{sermon.description.trim()}</p>
         )}
         {sermon.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
@@ -192,6 +195,8 @@ export default function SermonEngagementContent({
         </div>
       </div>
 
+      {afterDetails}
+
       {/* ── Transcript ───────────────────────────────────────────── */}
       {sermon.transcript && (
         <div className="rounded-xl border border-gray-100 dark:border-white/10 overflow-hidden">
@@ -215,7 +220,7 @@ export default function SermonEngagementContent({
 
       {/* ── Tabs ─────────────────────────────────────────────────── */}
       <div>
-        <div className="flex items-center gap-1 border-b border-gray-100 dark:border-white/8 mb-4">
+        <div className="flex items-center gap-1 border-b border-gray-100 dark:border-white/8 mb-4 overflow-x-auto no-scrollbar">
           {TABS.map((t) => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -224,7 +229,7 @@ export default function SermonEngagementContent({
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-bold border-b-2 transition-colors ${
+                className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 text-xs font-bold border-b-2 transition-colors ${
                   active
                     ? 'border-[#87102C] text-[#87102C] dark:text-[#e8768a]'
                     : 'border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
