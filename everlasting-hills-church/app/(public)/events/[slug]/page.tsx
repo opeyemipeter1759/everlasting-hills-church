@@ -5,7 +5,6 @@ import { notFound, redirect } from "next/navigation";
 import { serverApi, type ApiError } from "@/lib/api/server";
 import type { EventDetail } from "@/types";
 import EventHero from "@/components/events/detail/EventHero";
-import EventDetailsBento from "@/components/events/detail/EventDetailsBento";
 import EventRsvpForm from "@/components/events/detail/EventRsvpForm";
 import EventSectionsRenderer from "@/components/events/detail/EventSectionsRenderer";
 import MobileLiveBar from "@/components/events/detail/MobileLiveBar";
@@ -13,13 +12,6 @@ import { formatEventDateRange } from "@/components/events/detail/event-format";
 
 const SITE_URL = getSiteUrl();
 
-/**
- * The frontend deploys on push and the API does not, so this page has to cope
- * with an older payload that predates schedules, sections and the timezone
- * field. Filling them in here — once, at the boundary — keeps every component
- * below free of the same defensive checks, and a 500 on a live event page is
- * far worse than an event rendering without its extras for a few hours.
- */
 function normalize(event: EventDetail): EventDetail {
   return {
     ...event,
@@ -29,8 +21,6 @@ function normalize(event: EventDetail): EventDetail {
   };
 }
 
-/** Shown when the API cannot be reached — a branded, honest holding page
- * rather than a crash screen on a link somebody has just shared. */
 function EventUnavailable() {
   return (
     <main className="flex min-h-[70vh] flex-col items-center justify-center bg-white px-5 py-24 text-center">
@@ -70,10 +60,6 @@ async function fetchEvent(slug: string): Promise<FetchResult> {
   } catch (error) {
     const status = (error as ApiError).status;
     if (status === 404) return { state: "missing" };
-    // The API being down is not the visitor's problem to decode. A shared
-    // event link landing on a crash screen looks like the church's page is
-    // broken for good; this says it plainly and invites them back. The failure
-    // is still logged and reported server-side by the API itself.
     if (status !== undefined && status >= 500) return { state: "unavailable" };
     throw error;
   }
@@ -126,7 +112,6 @@ export default async function EventDetailPage({ params }: { params: { slug: stri
     <main className={`bg-white ${event.liveUrl ? "pb-20 md:pb-0" : ""}`}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, "\\u003c") }} />
       <EventHero event={event} />
-      <EventDetailsBento event={event} />
       <EventSectionsRenderer event={event} />
       {event.registrationRequired !== false && event.rsvpEnabled && (
         <EventRsvpForm slug={event.slug} eventTitle={event.title} dateLabel={formatEventDateRange(event.startAt, event.endAt, event.timezone)} />

@@ -158,7 +158,7 @@ export class DailyFastEmailService {
       isLast: info.isLast,
       morning: info.morning,
       evening: info.evening,
-      liveUrl: fast.liveUrl ?? 'https://www.youtube.com/@everlastinghillschurch',
+      liveUrl: fast.liveUrl ?? 'https://www.youtube.com/@everlastinghillschurch/streams',
     };
     return { day, yesterday: await this.yesterday(date), eventUrl: `${this.unsubscribes.siteUrl}/events/${fast.eventSlug}` };
   }
