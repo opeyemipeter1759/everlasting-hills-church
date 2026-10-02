@@ -348,6 +348,8 @@ export interface SermonEpisodeInput {
   url: string;
   duration: number;
   order: number;
+  /** Optional cover; the series' thumbnail stands in when empty. */
+  thumbnailUrl?: string | null;
 }
 
 export type SermonType = 'SINGLE' | 'SERIES';

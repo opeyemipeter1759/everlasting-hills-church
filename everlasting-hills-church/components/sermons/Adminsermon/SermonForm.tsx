@@ -68,6 +68,7 @@ type EpisodeRow = {
   url: string;           // audio URL — filled by upload or typed
   duration: string;
   order: string;
+  thumbnailUrl: string;  // optional; the series cover is used when empty
   audioMode: AudioMode;  // UI-only: which audio input mode is active
 };
 
@@ -76,6 +77,7 @@ const BLANK_EPISODE: EpisodeRow = {
   url: '',
   duration: '',
   order: '0',
+  thumbnailUrl: '',
   audioMode: 'upload',
 };
 
@@ -143,6 +145,7 @@ function episodesToRows(episodes?: SermonEpisodeInput[]): EpisodeRow[] {
     url: ep.url,
     duration: ep.duration != null ? String(ep.duration) : '',
     order: String(ep.order),
+    thumbnailUrl: ep.thumbnailUrl ?? '',
     audioMode: 'upload' as AudioMode,
   }));
 }
@@ -290,6 +293,7 @@ export default function SermonForm({ mode }: SermonFormProps) {
               url: ep.url,
               duration: Number(ep.duration || 0),
               order: ep.order ? Number(ep.order) : i,
+              thumbnailUrl: ep.thumbnailUrl || null,
             }),
           ),
         }),
@@ -694,6 +698,21 @@ export default function SermonForm({ mode }: SermonFormProps) {
                               className={INPUT}
                             />
                           </div>
+                        </div>
+
+                        {/* episode cover */}
+                        <div>
+                          <label className={LABEL}>
+                            Cover Image{' '}
+                            <span className="font-normal text-gray-400">(optional — the series cover is used if empty)</span>
+                          </label>
+                          <FileUpload
+                            type="image"
+                            endpoint="/uploads/image"
+                            value={ep.thumbnailUrl}
+                            onChange={(url) => updateEpisode(i, 'thumbnailUrl', url)}
+                            disabled={isPending}
+                          />
                         </div>
                       </div>
                     ))}

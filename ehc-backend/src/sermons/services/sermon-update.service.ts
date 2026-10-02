@@ -142,6 +142,7 @@ export class SermonUpdateService {
           url: episode.url,
           duration: episode.duration,
           order: episode.order ?? index,
+          thumbnailUrl: episode.thumbnailUrl || null,
           updatedAt: new Date(),
         })),
       });

@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { SermonStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
-import { SERMON_COUNTS_INCLUDE, SERMON_EPISODES_INCLUDE, serializeSermon } from '../sermon-serialization.util';
+import { SERMON_COUNTS_INCLUDE, SERMON_EPISODES_INCLUDE, serializeSermonForListeners } from '../sermon-serialization.util';
 
 /** Public (unauthenticated) sermon reads. */
 @Injectable()
@@ -41,7 +41,7 @@ export class SermonPublicReadService {
       },
     });
 
-    return sermons.map(serializeSermon);
+    return sermons.map(serializeSermonForListeners);
   }
 
   async getSermonBySlug(slug: string) {
@@ -65,7 +65,7 @@ export class SermonPublicReadService {
       throw new NotFoundException('Sermon not found');
     }
 
-    return serializeSermon(sermon);
+    return serializeSermonForListeners(sermon);
   }
 
   async getFeaturedSermon() {
@@ -77,7 +77,7 @@ export class SermonPublicReadService {
       },
     });
 
-    return sermon ? serializeSermon(sermon) : null;
+    return sermon ? serializeSermonForListeners(sermon) : null;
   }
 
   async getLatestSermons(limit = 3) {
@@ -91,7 +91,7 @@ export class SermonPublicReadService {
       },
     });
 
-    return sermons.map(serializeSermon);
+    return sermons.map(serializeSermonForListeners);
   }
 
   async getSeriesList() {
@@ -104,6 +104,6 @@ export class SermonPublicReadService {
       },
     });
 
-    return sermons.map(serializeSermon);
+    return sermons.map(serializeSermonForListeners);
   }
 }

@@ -25,6 +25,13 @@ export class SermonEpisodeInputDto {
   @Min(0)
   duration!: number;
 
+  @ApiProperty({ example: 'https://cdn.example.com/part-1.jpg', required: false, nullable: true, description: "Episode cover; the series' image is used when empty." })
+  @IsOptional()
+  @IsString()
+  @IsUrl({ require_protocol: true })
+  @MaxLength(2048)
+  thumbnailUrl?: string | null;
+
   @ApiProperty({ example: 0, required: false })
   @IsOptional()
   @IsInt()

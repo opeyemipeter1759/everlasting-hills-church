@@ -6,7 +6,7 @@ import { Play, BookOpen } from 'lucide-react';
 import SermonEngagementContent from './SermonEngagementContent';
 import { useSermonPlayer } from '@/context/SermonPlayerContext';
 import { useIncrementSermonPlay } from '@/lib/api';
-import type { MemberSermonContext, WatchSermon } from '@/lib/api/sermon-types';
+import { formatSermonDuration, type MemberSermonContext, type WatchSermon } from '@/lib/api/sermon-types';
 
 function getYouTubeEmbedUrl(url: string) {
   if (url.includes('youtube.com/embed') || url.includes('player.vimeo.com')) return url;
@@ -29,7 +29,7 @@ export default function SermonWatchPanel({
   memberCtx: MemberSermonContext | null;
   isLoggedIn: boolean;
 }) {
-  const { play, activeSlug } = useSermonPlayer();
+  const { play, activeSlug, activeEpisodeId } = useSermonPlayer();
   const playCounted = useRef(false);
   const incrementPlay = useIncrementSermonPlay();
 
@@ -82,6 +82,58 @@ export default function SermonWatchPanel({
           )}
         </button>
       ) : null}
+
+      {sermon.episodes.length > 0 && (
+        <section aria-labelledby="episodes-heading">
+          <h2 id="episodes-heading" className="mb-3 text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+            {sermon.episodes.length} {sermon.episodes.length === 1 ? 'Episode' : 'Episodes'}
+          </h2>
+          <ol className="space-y-2">
+            {sermon.episodes.map((ep, i) => {
+              const isCurrent = isPlayingHere && (activeEpisodeId ?? sermon.episodes[0].id) === ep.id;
+              const cover = ep.thumbnailUrl || sermon.thumbnailUrl;
+              return (
+                <li key={ep.id}>
+                  <button
+                    type="button"
+                    onClick={() => play(sermon.slug, ep.id)}
+                    aria-current={isCurrent ? 'true' : undefined}
+                    className={`group flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left transition-colors ${
+                      isCurrent
+                        ? 'border-[#87102C]/30 bg-[#87102C]/[0.05] dark:border-[#87102C]/50 dark:bg-[#87102C]/15'
+                        : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#87102C]/10">
+                      {cover ? (
+                        <Image src={cover} alt="" fill sizes="56px" className="object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-sm font-bold text-[#87102C] dark:text-[#e8768a]">
+                          {i + 1}
+                        </span>
+                      )}
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/25 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Play size={16} fill="white" className="text-white" />
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+                        Part {i + 1}
+                      </span>
+                      <span className={`block truncate text-sm font-bold ${isCurrent ? 'text-[#87102C] dark:text-[#e8768a]' : 'text-gray-900 dark:text-white'}`}>
+                        {ep.title}
+                      </span>
+                      <span className="block text-xs text-gray-400 dark:text-gray-500">
+                        {isCurrent ? 'Now playing' : formatSermonDuration(ep.duration)}
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )}
 
       <SermonEngagementContent sermon={sermon} memberCtx={memberCtx} isLoggedIn={isLoggedIn} />
     </div>

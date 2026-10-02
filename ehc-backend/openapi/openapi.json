@@ -2949,6 +2949,12 @@
             "example": 0,
             "type": "number"
           },
+          "thumbnailUrl": {
+            "description": "Episode cover; the series' image is used when empty.",
+            "example": "https://cdn.example.com/part-1.jpg",
+            "nullable": true,
+            "type": "object"
+          },
           "title": {
             "example": "Part 1",
             "type": "string"

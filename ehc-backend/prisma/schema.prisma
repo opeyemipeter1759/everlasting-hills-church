@@ -781,17 +781,19 @@ model Sermon {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model SermonEpisode {
-  id        String   @id
-  tenantId  String
-  sermonId  String
-  title     String
-  url       String
-  duration  Int
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  Sermon    Sermon   @relation(fields: [sermonId], references: [id])
-  Tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  id           String   @id
+  tenantId     String
+  sermonId     String
+  title        String
+  url          String
+  duration     Int
+  order        Int      @default(0)
+  /// Optional cover for this episode; the series' thumbnail is used when empty.
+  thumbnailUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+  Sermon       Sermon   @relation(fields: [sermonId], references: [id])
+  Tenant       Tenant   @relation(fields: [tenantId], references: [id])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.

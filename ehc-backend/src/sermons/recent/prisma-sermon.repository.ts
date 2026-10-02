@@ -25,6 +25,7 @@ type SermonRow = {
   thumbnailUrl: string | null;
   audioDuration: number | null;
   status: SermonStatus;
+  Episodes: { url: string; duration: number }[];
 };
 
 const SELECT = {
@@ -41,6 +42,8 @@ const SELECT = {
   thumbnailUrl: true,
   audioDuration: true,
   status: true,
+  // A series keeps its audio on its episodes: the first one plays from the card.
+  Episodes: { select: { url: true, duration: true }, orderBy: { order: 'asc' } },
 } satisfies Prisma.SermonSelect;
 
 /**
@@ -55,6 +58,8 @@ export class PrismaSermonRepository implements SermonRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   private static toRecord(row: SermonRow): SermonRecord {
+    const audioUrl = row.audioUrl ?? row.Episodes[0]?.url ?? null;
+    const seriesSeconds = row.Episodes.reduce((sum, e) => sum + (e.duration || 0), 0);
     return {
       id: row.id,
       tenantId: row.tenantId,
@@ -64,11 +69,11 @@ export class PrismaSermonRepository implements SermonRepository {
       preachedAt: row.date.toISOString(),
       series: row.series,
       description: row.description,
-      mediaType: deriveMediaType(row.audioUrl, row.videoUrl),
-      audioUrl: row.audioUrl,
+      mediaType: deriveMediaType(audioUrl, row.videoUrl),
+      audioUrl,
       videoUrl: row.videoUrl,
       thumbnailUrl: row.thumbnailUrl,
-      durationSeconds: row.audioDuration,
+      durationSeconds: row.audioDuration ?? (seriesSeconds || null),
       published: row.status === SermonStatus.PUBLISHED,
     };
   }

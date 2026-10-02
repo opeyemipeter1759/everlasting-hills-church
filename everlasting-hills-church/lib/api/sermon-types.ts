@@ -35,6 +35,16 @@ export interface SermonCountUi {
   comments: number;
 }
 
+/** One part of a series. Its cover falls back to the series' own thumbnail. */
+export interface SermonEpisode {
+  id: string;
+  title: string;
+  url: string;
+  duration: number;
+  order: number;
+  thumbnailUrl?: string | null;
+}
+
 export interface SermonListItemRaw {
   id: string;
   title: string;
@@ -54,6 +64,7 @@ export interface SermonListItemRaw {
   tags: string[];
   status: SermonStatus;
   _count: SermonCountRaw;
+  episodes?: SermonEpisode[];
 }
 
 export interface SermonListItemUi {
@@ -201,6 +212,8 @@ export interface WatchSermon {
   tags: string[];
   _count: SermonCountUi;
   discussion: WatchDiscussionQuestion[];
+  /** In play order; empty for a single sermon. */
+  episodes: SermonEpisode[];
 }
 
 export function toWatchSermon(raw: SermonDetailRaw): WatchSermon {
@@ -223,6 +236,7 @@ export function toWatchSermon(raw: SermonDetailRaw): WatchSermon {
     playCount: raw.playCount,
     tags: raw.tags,
     _count: toUiCount(raw._count),
+    episodes: [...(raw.episodes ?? [])].sort((a, b) => a.order - b.order),
     discussion: raw.DiscussionQuestion.map((q) => ({
       id: q.id,
       question: q.question,

@@ -7,6 +7,7 @@ export type SermonEpisodeLike = {
   url: string;
   duration: number;
   order: number;
+  thumbnailUrl?: string | null;
 };
 
 export type SermonEpisodeInputLike = {
@@ -15,6 +16,7 @@ export type SermonEpisodeInputLike = {
   url: string;
   duration: number;
   order?: number;
+  thumbnailUrl?: string | null;
 };
 
 export type SermonLike = {
@@ -45,6 +47,24 @@ export function serializeEpisode(episode: SermonEpisodeLike) {
     url: episode.url,
     duration: episode.duration,
     order: episode.order,
+    thumbnailUrl: episode.thumbnailUrl ?? null,
+  };
+}
+
+/**
+ * The same, for listeners: a series has no audio of its own, so it is given its
+ * first episode's as `audioUrl` and the whole series' length as `audioDuration`.
+ * Every list and player that plays `audioUrl` then plays a series too, instead
+ * of showing it as having nothing to listen to. Admin reads keep the raw row so
+ * the edit form never mistakes episode one for a single sermon's file.
+ */
+export function serializeSermonForListeners(sermon: SermonLike) {
+  const out = serializeSermon(sermon);
+  if (out.type !== SermonType.SERIES || out.episodes.length === 0) return out;
+  return {
+    ...out,
+    audioUrl: (sermon.audioUrl as string | null | undefined) ?? out.episodes[0].url,
+    audioDuration: out.episodes.reduce((sum, e) => sum + (e.duration || 0), 0) || null,
   };
 }
 

@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import {
-  Play, Pause, X, ChevronUp, ChevronDown, RotateCcw, RotateCw, Loader2, Video as VideoIcon,
+  Play, Pause, X, ChevronUp, ChevronDown, RotateCcw, RotateCw, Loader2, Video as VideoIcon, SkipForward,
 } from 'lucide-react';
 import SermonEngagementContent from './SermonEngagementContent';
 import { useSermonBySlug, useSermonMemberContext, useSermonProgress, useIncrementSermonPlay } from '@/lib/api';
 import { getFrontendSessionUser } from '@/lib/auth/frontend-session';
-import { toWatchSermon } from '@/lib/api/sermon-types';
+import { formatSermonDuration, toWatchSermon } from '@/lib/api/sermon-types';
 
 function fmtTime(s: number) {
   if (!isFinite(s)) return '0:00';
@@ -31,7 +31,18 @@ function getYouTubeEmbedUrl(url: string) {
  * notes/reflection; collapsing it never stops playback since the <audio> element lives here,
  * not inside the drawer content.
  */
-export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClose: () => void }) {
+export default function SermonPlayerBar({
+  slug,
+  episodeId,
+  onEpisodeChange,
+  onClose,
+}: {
+  slug: string;
+  /** For a series: the episode to play. Null starts at the first. */
+  episodeId: string | null;
+  onEpisodeChange: (episodeId: string) => void;
+  onClose: () => void;
+}) {
   const { data: raw, isLoading } = useSermonBySlug(slug);
   const session = getFrontendSessionUser();
   const isLoggedIn = !!session?.loggedIn;
@@ -49,6 +60,14 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
   const seededPosition = useRef(false);
 
   const sermon = raw ? toWatchSermon(raw) : null;
+  // A series has no audio of its own: each episode is its own file, and the
+  // bar plays one at a time, then the next.
+  const episodes = sermon?.episodes ?? [];
+  const episodeIndex = episodes.length ? Math.max(0, episodes.findIndex((e) => e.id === episodeId)) : -1;
+  const episode = episodeIndex >= 0 ? episodes[episodeIndex] : null;
+  const nextEpisode = episodeIndex >= 0 ? episodes[episodeIndex + 1] ?? null : null;
+  const src = episode?.url ?? sermon?.audioUrl ?? undefined;
+  const cover = episode?.thumbnailUrl || sermon?.thumbnailUrl || null;
 
   function countPlayOnce() {
     if (playCounted.current || !sermon) return;
@@ -56,13 +75,21 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
     incrementPlay.mutate(sermon.id);
   }
 
+  // A new file (another sermon, or the next episode) starts from its own beginning.
+  useEffect(() => {
+    seededPosition.current = false;
+    setCurrent(0);
+  }, [src]);
+
   // Seed the saved listening position once metadata is known, then start playing — pressing
   // Play on a card should start the sermon immediately, not just load it into the bar.
+  // Progress is saved per sermon, not per episode, so an episode always starts from its
+  // top rather than at a position that belongs to some other part of the series.
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !sermon?.audioUrl || seededPosition.current) return;
+    if (!audio || !src || seededPosition.current) return;
     const onLoaded = () => {
-      const pos = memberCtx?.progress?.positionSec ?? 0;
+      const pos = episode ? 0 : memberCtx?.progress?.positionSec ?? 0;
       if (pos > 0 && pos < audio.duration - 5) audio.currentTime = pos;
       setDuration(audio.duration || 0);
       seededPosition.current = true;
@@ -70,7 +97,8 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
     };
     audio.addEventListener('loadedmetadata', onLoaded);
     return () => audio.removeEventListener('loadedmetadata', onLoaded);
-  }, [sermon?.audioUrl, memberCtx?.progress?.positionSec]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src, memberCtx?.progress?.positionSec]);
 
   // Video sermons have no <audio> to autoplay — expand the drawer straight away instead so
   // picking a video sermon also "starts playing" immediately rather than sitting collapsed.
@@ -162,6 +190,48 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
                     />
                   </div>
                 )}
+                {episodes.length > 1 && (
+                  <div>
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                      Episodes
+                    </p>
+                    <ol className="space-y-1.5">
+                      {episodes.map((ep, i) => {
+                        const isCurrent = i === episodeIndex;
+                        const epCover = ep.thumbnailUrl || sermon.thumbnailUrl;
+                        return (
+                          <li key={ep.id}>
+                            <button
+                              type="button"
+                              onClick={() => onEpisodeChange(ep.id)}
+                              aria-current={isCurrent ? 'true' : undefined}
+                              className={`flex w-full items-center gap-3 rounded-xl p-2 text-left transition-colors ${
+                                isCurrent ? 'bg-[#87102C]/[0.07] dark:bg-[#87102C]/20' : 'hover:bg-gray-50 dark:hover:bg-white/5'
+                              }`}
+                            >
+                              {epCover ? (
+                                <Image src={epCover} alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                              ) : (
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#87102C]/10 text-xs font-bold text-[#87102C] dark:text-[#e8768a]">
+                                  {i + 1}
+                                </span>
+                              )}
+                              <span className="min-w-0 flex-1">
+                                <span className={`block truncate text-sm font-semibold ${isCurrent ? 'text-[#87102C] dark:text-[#e8768a]' : 'text-gray-800 dark:text-gray-100'}`}>
+                                  {ep.title}
+                                </span>
+                                <span className="block text-xs text-gray-400 dark:text-gray-500">
+                                  {isCurrent ? (playing ? 'Playing' : 'Paused') : formatSermonDuration(ep.duration) || `Part ${i + 1}`}
+                                </span>
+                              </span>
+                              {!isCurrent && <Play size={14} className="shrink-0 text-gray-300 dark:text-gray-600" />}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  </div>
+                )}
                 <SermonEngagementContent sermon={sermon} memberCtx={memberCtx ?? null} isLoggedIn={isLoggedIn} compact />
               </div>
             )}
@@ -178,11 +248,14 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
         )}
         <audio
           ref={audioRef}
-          src={sermon?.audioUrl ?? undefined}
+          src={src}
           preload="metadata"
           onPlay={() => { setPlaying(true); countPlayOnce(); }}
           onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
+          onEnded={() => {
+            setPlaying(false);
+            if (nextEpisode) onEpisodeChange(nextEpisode.id);
+          }}
           onDurationChange={(e) => setDuration(e.currentTarget.duration || 0)}
           onTimeUpdate={handleTimeUpdate}
           className="hidden"
@@ -194,8 +267,8 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
             onClick={() => setExpanded((v) => !v)}
             className="flex items-center gap-3 flex-1 min-w-0 text-left"
           >
-            {sermon?.thumbnailUrl ? (
-              <Image src={sermon.thumbnailUrl} alt="" width={44} height={44} className="h-11 w-11 rounded-lg object-cover shrink-0" />
+            {cover ? (
+              <Image src={cover} alt="" width={44} height={44} className="h-11 w-11 rounded-lg object-cover shrink-0" />
             ) : (
               <div className="h-11 w-11 rounded-lg bg-[#87102C]/10 dark:bg-[#87102C]/20 flex items-center justify-center shrink-0">
                 {isVideo ? <VideoIcon size={16} className="text-[#87102C] dark:text-[#e8768a]" /> : <Play size={16} className="text-[#87102C] dark:text-[#e8768a]" />}
@@ -203,10 +276,14 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
             )}
             <div className="min-w-0">
               <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
-                {sermon?.title ?? 'Loading…'}
+                {episode ? episode.title : sermon?.title ?? 'Loading…'}
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500 truncate">
-                {isVideo ? 'Video · tap to watch' : sermon ? `${sermon.speaker} · ${fmtTime(current)} / ${fmtTime(duration)}` : ''}
+                {isVideo
+                  ? 'Video · tap to watch'
+                  : sermon
+                    ? `${episode ? `${sermon.title} · ${episodeIndex + 1} of ${episodes.length}` : sermon.speaker} · ${fmtTime(current)} / ${fmtTime(duration)}`
+                    : ''}
               </p>
             </div>
             <ChevronUp size={16} className={`shrink-0 text-gray-300 dark:text-gray-600 transition-transform hidden sm:block ${expanded ? 'rotate-180' : ''}`} />
@@ -227,6 +304,17 @@ export default function SermonPlayerBar({ slug, onClose }: { slug: string; onClo
               <button type="button" onClick={() => skip(15)} title="Forward 15s" className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
                 <RotateCw size={16} />
               </button>
+              {nextEpisode && (
+                <button
+                  type="button"
+                  onClick={() => onEpisodeChange(nextEpisode.id)}
+                  title={`Next: ${nextEpisode.title}`}
+                  aria-label={`Next episode: ${nextEpisode.title}`}
+                  className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                >
+                  <SkipForward size={16} />
+                </button>
+              )}
             </div>
           )}
 

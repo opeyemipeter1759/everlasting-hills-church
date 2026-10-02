@@ -8938,6 +8938,11 @@ export interface components {
             id?: string;
             /** @example 0 */
             order?: number;
+            /**
+             * @description Episode cover; the series' image is used when empty.
+             * @example https://cdn.example.com/part-1.jpg
+             */
+            thumbnailUrl?: Record<string, never> | null;
             /** @example Part 1 */
             title: string;
             /** @example https://cdn.example.com/part-1.mp3 */
