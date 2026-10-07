@@ -58,7 +58,7 @@ export function ListenBar() {
               ? `${status === "paused" ? "Paused at" : "Reading"} ${current.reference}`
               : status === "finished"
                 ? "Finished. Mark today as read below when you are ready."
-                : "Hear today’s passages read aloud, with the verse being read highlighted."}
+                : "Hear today’s passages read aloud, with the verse being read highlighted. Keep this page open: most phones pause the voice when you leave it, and it carries on when you come back."}
           </p>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">

@@ -383,6 +383,23 @@ export function ReadAloudProvider({ expected, children }: { expected: number; ch
   const activeVerseId = activeSegment?.verseId ?? null;
   const currentPassage = activeSegment ? passages.get(activeSegment.sequence) ?? null : null;
 
+  // Phones, and some laptop browsers, silence the device voice when the page
+  // leaves the screen, and often never fire the end of the verse that was
+  // cut off, which left the reading stuck. Coming back picks it up again at
+  // the same verse.
+  useEffect(() => {
+    const onVisible = () => {
+      const synth = speech();
+      if (document.visibilityState !== "visible" || !synth || statusRef.current !== "playing") return;
+      if (synth.paused) synth.resume();
+      window.setTimeout(() => {
+        if (statusRef.current === "playing" && !synth.speaking && !synth.pending) startAt(indexRef.current);
+      }, 300);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [startAt]);
+
   // Keep the verse being read on screen, without fighting a reader who has it
   // in view already.
   useEffect(() => {

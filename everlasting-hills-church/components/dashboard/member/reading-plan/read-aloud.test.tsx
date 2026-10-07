@@ -225,6 +225,21 @@ describe("listening to the day's reading", () => {
     expect(lastSaid()).toBe("In the beginning, God created the heavens and the earth.");
   });
 
+  it("picks the reading up at the same verse after the phone silenced it in the background", async () => {
+    render(<Day />);
+    fireEvent.click(screen.getByRole("button", { name: "Listen" }));
+    finishSpeaking();
+    expect(lastSaid()).toBe("In the beginning, God created the heavens and the earth.");
+    // The browser cut the voice off while hidden and never said the verse ended.
+    synth.speaking = false;
+    const said = spoken.length;
+
+    act(() => { document.dispatchEvent(new Event("visibilitychange")); });
+
+    await waitFor(() => expect(spoken).toHaveLength(said + 1));
+    expect(lastSaid()).toBe("In the beginning, God created the heavens and the earth.");
+  });
+
   it("skips to the next passage", async () => {
     render(<Day />);
     fireEvent.click(screen.getByRole("button", { name: "Listen" }));
