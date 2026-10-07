@@ -4,16 +4,16 @@
     <stop offset="1" stop-color="#4A0817"/>
   </linearGradient></defs>
 <rect width="800" height="400" fill="url(#books)"/>
-  <g><rect x="294.8" y="70.0" width="34.0" height="180.0" rx="6.0" fill="#FFF4F6" fill-opacity="0.45"/>
-  <rect x="418.3" y="113.9" width="34.0" height="136.1" rx="6.0" fill="#FFF4F6" fill-opacity="0.55"/>
-  <rect x="541.8" y="83.4" width="34.0" height="166.6" rx="6.0" fill="#FFF4F6" fill-opacity="0.65"/>
-  <rect x="665.3" y="94.1" width="34.0" height="155.9" rx="6.0" fill="#E8B44A" fill-opacity="0.95"/></g>
-  <line x1="250" y1="258" x2="744" y2="258" stroke="#FFF4F6" stroke-opacity="0.25" stroke-width="1.5"/>
-  <g><circle cx="606.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="628.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="650.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="672.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="694.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="716.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="738.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/></g>
+  <g><text x="310.5" y="70.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Matthew</text>
+  <rect x="320.5" y="54.9" width="399.1" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="725.6" y="69.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">28</text>
+  <text x="310.5" y="118.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Mark</text>
+  <rect x="320.5" y="102.9" width="301.7" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="628.2" y="117.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">16</text>
+  <text x="310.5" y="166.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Luke</text>
+  <rect x="320.5" y="150.9" width="369.5" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="696.0" y="165.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">24</text>
+  <text x="310.5" y="214.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="1">John</text>
+  <rect x="320.5" y="198.9" width="345.6" height="18.2" rx="9.1" fill="#E8B44A" fill-opacity="0.95"/>
+  <text x="672.1" y="213.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">21</text></g>
 </svg>

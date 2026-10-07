@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { BookOpen, Check, Clock, Loader2, Search, Share2 } from "lucide-react";
+import { BookOpen, Check, Clock, Loader2, Search, Share2, Eye } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import Modal from "@/components/ui/overlay/Modal";
 import { Select } from "@/components/ui/select";
 import WordTabs from "./WordTabs";
 import SharePlanDialog from "./SharePlanDialog";
+import PlanPreviewDialog from "./PlanPreviewDialog";
 import { SharePlanLinkButton } from "./SharePlanLinkButton";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { hasMinRole } from "@/lib/auth/frontend-session";
@@ -38,6 +39,7 @@ export default function PlanChooser() {
   // The server decides; this only keeps the button away from members.
   const canShare = hasMinRole(currentUser?.role, "ADMIN");
   const [sharing, setSharing] = useState<ReadingPlanSummary | null>(null);
+  const [previewing, setPreviewing] = useState<ReadingPlanSummary | null>(null);
   const [shared, setShared] = useState<{ title: string; recipients: number } | null>(null);
   const openedLinkedPlan = useRef(false);
   const [effort, setEffort] = useState<ReadingIntensity | "ALL">("ALL");
@@ -217,6 +219,10 @@ export default function PlanChooser() {
                     className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-3 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#6E0C24] disabled:opacity-50">
                     <BookOpen size={15} /> {paused ? "Resume this plan" : "Choose this plan"}
                   </button>}
+                  <button type="button" onClick={() => setPreviewing(plan)} aria-label={`Preview ${plan.title}`}
+                    className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:text-white/75 dark:hover:bg-white/5">
+                    <Eye size={15} aria-hidden="true" /> Preview this plan
+                  </button>
                   {canShare && <button type="button" onClick={() => setSharing(plan)} aria-label={`Share ${plan.title} with the church`}
                     className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#87102C]/30 px-3 py-2 text-sm font-semibold text-[#87102C] transition-colors hover:bg-[#FFF4F6] dark:border-[#FFB3C1]/30 dark:text-[#FFB3C1] dark:hover:bg-white/5">
                     <Share2 size={15} aria-hidden="true" /> Share with the church
@@ -244,6 +250,17 @@ export default function PlanChooser() {
           </div>
         </div>}
       </Modal>
+
+      <PlanPreviewDialog
+        plan={previewing}
+        onClose={() => setPreviewing(null)}
+        onStart={(previewing && activePlans.some((subscription) => subscription.plan.id === previewing.id)) || currentLoading || currentError ? undefined : (plan) => {
+          setPreviewing(null);
+          setError(null);
+          setTranslationCode("");
+          setSelected(plan);
+        }}
+      />
 
       <SharePlanDialog
         open={Boolean(sharing)}

@@ -6,6 +6,7 @@ import PlanChooser from "./PlanChooser";
 import {
   useReadingPlans,
   useReadingSubscriptions,
+  usePlanDays,
   useShareReadingPlan,
   useSubscribeToPlan,
   useTranslations,
@@ -34,6 +35,7 @@ vi.mock("@/lib/api/reading-plan", async (importOriginal) => ({
   ...await importOriginal<typeof import("@/lib/api/reading-plan")>(),
   useReadingPlans: vi.fn(),
   useReadingSubscriptions: vi.fn(),
+  usePlanDays: vi.fn(),
   useShareReadingPlan: vi.fn(),
   useSubscribeToPlan: vi.fn(),
   useTranslations: vi.fn(),
@@ -118,6 +120,18 @@ beforeEach(() => {
   subscribe.mockResolvedValue({ id: "subscription-new" });
   vi.mocked(useSubscribeToPlan).mockReturnValue({ mutateAsync: subscribe, isPending: false } as never);
   navigation.params = new URLSearchParams();
+  vi.mocked(usePlanDays).mockReturnValue({
+    data: {
+      days: [
+        { dayIndex: 1, title: null, referenceLabel: "John 1-3", estimatedMinutes: 12, totalWordCount: 2400 },
+        { dayIndex: 2, title: null, referenceLabel: "John 4-6", estimatedMinutes: 13, totalWordCount: 2600 },
+      ],
+      meta: { page: 1, limit: 30, total: 2 },
+    },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  } as never);
   signedInAs("MEMBER");
   shareMutate.mockResolvedValue({ announcementId: "announcement-1", recipients: 312 });
   vi.mocked(useShareReadingPlan).mockReturnValue({ mutateAsync: shareMutate, isPending: false } as never);
@@ -309,5 +323,21 @@ describe("sending a plan as a link", () => {
     for (const title of ["Plan JOHN", "Plan PSALMS", "Plan PROVERBS", "Plan MARK"]) {
       expect(screen.getByRole("button", { name: `Send a link to ${title}` })).toBeInTheDocument();
     }
+  });
+});
+
+describe("previewing a plan before choosing it", () => {
+  it("shows every day's reading, then starts the plan from the preview", () => {
+    render(<PlanChooser />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Preview Plan JOHN" }));
+    const preview = screen.getByRole("dialog", { name: "Plan preview" });
+    expect(within(preview).getByText("John 1-3")).toBeInTheDocument();
+    expect(within(preview).getByText("John 4-6")).toBeInTheDocument();
+    expect(usePlanDays).toHaveBeenCalledWith("plan-john", 1, 30);
+
+    fireEvent.click(within(preview).getByRole("button", { name: "Start this plan" }));
+    expect(screen.getByRole("dialog", { name: "Start your Bible plan" })).toHaveTextContent("Plan JOHN");
+    expect(subscribe).not.toHaveBeenCalled();
   });
 });

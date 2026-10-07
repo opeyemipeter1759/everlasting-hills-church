@@ -4,34 +4,19 @@
     <stop offset="1" stop-color="#4A0817"/>
   </linearGradient></defs>
 <rect width="800" height="400" fill="url(#books)"/>
-  <g><rect x="282.4" y="70.0" width="34.0" height="180.0" rx="6.0" fill="#FFF4F6" fill-opacity="0.45"/>
-  <rect x="381.2" y="89.0" width="34.0" height="161.0" rx="6.0" fill="#FFF4F6" fill-opacity="0.53"/>
-  <rect x="480.0" y="117.7" width="34.0" height="132.3" rx="6.0" fill="#FFF4F6" fill-opacity="0.61"/>
-  <rect x="578.8" y="97.3" width="34.0" height="152.7" rx="6.0" fill="#FFF4F6" fill-opacity="0.69"/>
-  <rect x="677.6" y="101.6" width="34.0" height="148.4" rx="6.0" fill="#E8B44A" fill-opacity="0.95"/></g>
-  <line x1="250" y1="258" x2="744" y2="258" stroke="#FFF4F6" stroke-opacity="0.25" stroke-width="1.5"/>
-  <g><circle cx="264.6" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="285.2" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="305.8" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="326.3" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="346.9" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="367.5" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="388.1" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="408.7" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="429.3" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="449.8" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="470.4" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="491.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="511.6" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="532.2" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="552.8" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="573.3" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="593.9" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="614.5" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="635.1" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="655.7" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="676.3" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="696.8" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="717.4" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
-  <circle cx="738.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/></g>
+  <g><text x="353.0" y="67.9" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Genesis</text>
+  <rect x="363.0" y="53.1" width="356.6" height="16.1" rx="8.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="725.6" y="66.9" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">50</text>
+  <text x="353.0" y="110.3" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Exodus</text>
+  <rect x="363.0" y="95.5" width="318.9" height="16.1" rx="8.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="688.0" y="109.3" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">40</text>
+  <text x="353.0" y="152.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Leviticus</text>
+  <rect x="363.0" y="137.9" width="262.0" height="16.1" rx="8.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="631.1" y="151.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">27</text>
+  <text x="353.0" y="195.0" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Numbers</text>
+  <rect x="363.0" y="180.3" width="302.6" height="16.1" rx="8.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="671.6" y="194.1" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">36</text>
+  <text x="353.0" y="237.4" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="1">Deuteronomy</text>
+  <rect x="363.0" y="222.7" width="294.0" height="16.1" rx="8.1" fill="#E8B44A" fill-opacity="0.95"/>
+  <text x="663.1" y="236.5" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">34</text></g>
 </svg>
