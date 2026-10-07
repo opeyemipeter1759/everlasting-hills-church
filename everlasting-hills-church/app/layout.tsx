@@ -28,16 +28,6 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * Next injects `width=device-width, initial-scale=1` on its own; this export
- * exists for the two things it does not add.
- *
- * viewportFit: "cover" lets the page paint under the iPhone notch and home
- * indicator, which is what makes env(safe-area-inset-*) resolve to anything
- * other than 0 — the install prompt and the dashboard tab bar both pad
- * themselves with it. themeColor tints the browser chrome around the installed
- * app; the manifest's theme_color only covers the standalone window.
- */
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -56,11 +46,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={FONT_VARIABLES}>
       <head>
-        {/* Dark mode is a dashboard setting. The public site and the sign-in
-            screens are designed light-only, so a member's saved preference must
-            not paint them dark; that is how the public pledge form once rendered
-            white labels on a white card. Applied here, before paint, so the
-            dashboard itself never flashes light first. */}
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(location.pathname.indexOf('/dashboard')!==0)return;var t=localStorage.getItem('ehc-theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()` }} />
        <link rel="icon" href="/favicon/favicon.ico" />
         <link
@@ -75,11 +60,7 @@ export default function RootLayout({
           sizes="32x32"
           href="/favicon/favicon-32x32.png"
         />
-        {/* iOS ignores the manifest's icons for the home screen and reads this
-            instead. Points at the generated PWA set, whose mark sits on the
-            brand's black base — the older /favicon/android-chrome-*.png are a
-            white mark on transparency, which iOS composites onto black and
-            renders as an almost invisible icon. */}
+
         <link
           rel="apple-touch-icon"
           type="image/png"
@@ -99,9 +80,6 @@ export default function RootLayout({
             {children}
             <ToastProvider />
             <BirthdayCelebration />
-            {/* Mounted at the app root so every phone gets the install flow,
-                regardless of whether the visitor is on the public site, an
-                auth screen, or inside the member dashboard. */}
             <InstallPrompt />
           </SermonPlayerProvider>
         </QueryProvider>
