@@ -1,7 +1,6 @@
 /**
- * One time ingest of the public domain scripture corpus: WEB, KJV and ASV.
- * NKJV is deliberately not ingested: it is copyrighted, so reading plans link
- * its assigned chapters to YouVersion's licensed reader instead.
+ * One time ingest of the public domain scripture corpus: WEB, KJV, ASV, BSB
+ * and UKJV. Copyrighted versions such as NKJV are deliberately not offered.
  *
  *   npx ts-node --transpile-only scripts/seed-scripture.ts
  *   npx ts-node --transpile-only scripts/seed-scripture.ts --force      (re-ingest)
@@ -79,6 +78,24 @@ const SOURCES: Source[] = [
         // verse before the stanza they introduce.
         .replace(/\s+[\u05D0-\u05EA]\s+[A-Z]+\.$/, '')
         .trim(),
+  },
+  {
+    // Modern and readable; dedicated to the public domain in 2023.
+    code: 'BSB',
+    name: 'Berean Standard Bible',
+    url: 'https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/BSB.json',
+    file: 'BSB.json',
+    sha256: 'cec3c644088a8ef4a50cf1e2de035f79d8825f394625d116bb7ee7e1d57739c9',
+    isDefault: false,
+  },
+  {
+    // The KJV with its archaic words updated: the nearest free text to NKJV.
+    code: 'UKJV',
+    name: 'Updated King James Version',
+    url: 'https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/UKJV.json',
+    file: 'UKJV.json',
+    sha256: 'bdfd7bbc03786a1c077ff292595f8768d201582a87b236d2466c603fdc9cc01b',
+    isDefault: false,
   },
 ];
 
