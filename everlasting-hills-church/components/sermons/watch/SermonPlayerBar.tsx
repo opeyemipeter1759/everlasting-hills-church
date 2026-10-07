@@ -144,6 +144,83 @@ export default function SermonPlayerBar({
     setCurrent(Number(e.target.value));
   }
 
+  // Lock screen, notification shade and headset controls. Registering the
+  // sermon with the Media Session API is what lets a phone keep it playing,
+  // and controllable, after the browser is minimised or the screen locks.
+  const mediaTitle = episode ? episode.title : sermon?.title;
+  const mediaArtist = sermon?.speaker ?? 'Everlasting Hills Church';
+  const mediaAlbum = episode ? sermon?.title : 'Everlasting Hills Church';
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !src || !mediaTitle) return;
+    const session = navigator.mediaSession;
+    try {
+      session.metadata = new MediaMetadata({
+        title: mediaTitle,
+        artist: mediaArtist,
+        album: mediaAlbum ?? undefined,
+        artwork: cover
+          ? [{ src: new URL(cover, window.location.href).toString(), sizes: '512x512' }]
+          : [{ src: new URL('/icons/icon-512.png', window.location.href).toString(), sizes: '512x512', type: 'image/png' }],
+      });
+    } catch {
+      // Older browsers without MediaMetadata still play; they just show no details.
+    }
+    const audio = () => audioRef.current;
+    const handlers: [MediaSessionAction, MediaSessionActionHandler | null][] = [
+      ['play', () => { audio()?.play().catch(() => {}); }],
+      ['pause', () => audio()?.pause()],
+      ['stop', () => audio()?.pause()],
+      ['seekbackward', (details) => { const a = audio(); if (a) a.currentTime = Math.max(0, a.currentTime - (details.seekOffset ?? 15)); }],
+      ['seekforward', (details) => { const a = audio(); if (a) a.currentTime = Math.min(a.duration || 0, a.currentTime + (details.seekOffset ?? 15)); }],
+      ['seekto', (details) => { const a = audio(); if (a && details.seekTime != null) a.currentTime = details.seekTime; }],
+      ['nexttrack', nextEpisode ? () => onEpisodeChange(nextEpisode.id) : null],
+    ];
+    for (const [action, handler] of handlers) {
+      try {
+        session.setActionHandler(action, handler);
+      } catch {
+        // An action this browser does not support.
+      }
+    }
+    return () => {
+      for (const [action] of handlers) {
+        try {
+          session.setActionHandler(action, null);
+        } catch {
+          // Unsupported action, nothing to clear.
+        }
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src, mediaTitle, mediaArtist, mediaAlbum, cover, nextEpisode?.id]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !src) return;
+    navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
+  }, [playing, src]);
+
+  // Keeps the lock-screen progress bar honest, every few seconds rather than
+  // on every timeupdate.
+  const positionShownAt = useRef(0);
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('mediaSession' in navigator) || !duration || !isFinite(duration)) return;
+    if (Math.abs(current - positionShownAt.current) < 5) return;
+    positionShownAt.current = current;
+    try {
+      navigator.mediaSession.setPositionState({ duration, position: Math.min(current, duration), playbackRate: audioRef.current?.playbackRate ?? 1 });
+    } catch {
+      // Not supported here.
+    }
+  }, [current, duration]);
+
+  // Clear the lock-screen entry when the player closes.
+  useEffect(() => () => {
+    if (typeof navigator !== 'undefined' && 'mediaSession' in navigator) {
+      navigator.mediaSession.metadata = null;
+      navigator.mediaSession.playbackState = 'none';
+    }
+  }, []);
+
   const pct = duration > 0 ? (current / duration) * 100 : 0;
   const isVideo = !!sermon?.videoUrl;
 
