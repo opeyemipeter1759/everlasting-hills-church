@@ -2,6 +2,7 @@
 
 import { Headphones, Loader2, Pause, Play, SkipBack, SkipForward, Square } from "lucide-react";
 import { Select } from "@/components/ui/select";
+import { RECORDING_CREDIT } from "@/lib/bible-audio";
 import { RATES, useReadAloud } from "./read-aloud";
 
 /**
@@ -12,6 +13,9 @@ import { RATES, useReadAloud } from "./read-aloud";
  * the passage skips and stop, because the verse being read scrolls the page
  * away from the card. Nothing renders where the browser has no speech voices,
  * rather than a button that cannot work.
+ *
+ * In the WEB the reading is a recording, which keeps playing with the phone
+ * locked; the skips then move by chapter and the credit for the reader shows.
  */
 export function ListenBar() {
   const audio = useReadAloud();
@@ -19,6 +23,8 @@ export function ListenBar() {
 
   const { status, ready, rate, voices, voiceURI, error, current, passageCount } = audio;
   const active = status === "playing" || status === "paused";
+  const recording = audio.kind === "recording";
+  const unit = recording ? "chapter" : "passage";
   const primaryLabel = !ready
     ? "Preparing audio…"
     : status === "playing"
@@ -58,7 +64,9 @@ export function ListenBar() {
               ? `${status === "paused" ? "Paused at" : "Reading"} ${current.reference}`
               : status === "finished"
                 ? "Finished. Mark today as read below when you are ready."
-                : "Hear today’s passages read aloud, with the verse being read highlighted. Keep this page open: most phones pause the voice when you leave it, and it carries on when you come back."}
+                : recording
+                  ? "Hear today’s chapters read aloud from a recording. It keeps playing when you lock your phone or leave the app, and the lock screen can pause it or skip a chapter."
+                  : "Hear today’s passages read aloud, with the verse being read highlighted. Keep this page open: most phones pause the voice when you leave it, and it carries on when you come back."}
           </p>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -85,6 +93,7 @@ export function ListenBar() {
             />
           )}
         </div>
+        {recording && <p className="mt-2 text-[11px] text-[#8a7e80] dark:text-white/40">{RECORDING_CREDIT}</p>}
         {error && (
           <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
             {error}
@@ -101,7 +110,7 @@ export function ListenBar() {
           <button
             type="button"
             onClick={() => audio.skip(-1)}
-            aria-label="Previous passage"
+            aria-label={`Previous ${unit}`}
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-white/10"
           >
             <SkipBack size={17} aria-hidden="true" />
@@ -118,7 +127,7 @@ export function ListenBar() {
             type="button"
             onClick={() => audio.skip(1)}
             disabled={passageCount < 2}
-            aria-label="Next passage"
+            aria-label={`Next ${unit}`}
             className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl hover:bg-white/10 disabled:opacity-40"
           >
             <SkipForward size={17} aria-hidden="true" />

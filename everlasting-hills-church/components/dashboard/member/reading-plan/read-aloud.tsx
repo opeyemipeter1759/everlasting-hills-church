@@ -43,7 +43,7 @@ export type ReadAloudStatus = "idle" | "playing" | "paused" | "finished" | "erro
 
 export const RATES = [0.75, 1, 1.25, 1.5] as const;
 
-const RATE_KEY = "ehc.read-aloud.rate";
+export const RATE_KEY = "ehc.read-aloud.rate";
 const VOICE_KEY = "ehc.read-aloud.voice";
 /** About twelve seconds at normal speed, under Chrome's cut-off even at 0.75×. */
 const MAX_UTTERANCE = 180;
@@ -138,7 +138,7 @@ function speech(): SpeechSynthesis | null {
   return window.speechSynthesis;
 }
 
-function readSetting(key: string): string | null {
+export function readSetting(key: string): string | null {
   try {
     return window.localStorage.getItem(key);
   } catch {
@@ -146,7 +146,7 @@ function readSetting(key: string): string | null {
   }
 }
 
-function saveSetting(key: string, value: string) {
+export function saveSetting(key: string, value: string) {
   try {
     window.localStorage.setItem(key, value);
   } catch {
@@ -155,6 +155,8 @@ function saveSetting(key: string, value: string) {
 }
 
 export interface ReadAloudState {
+  /** The device voice reading the text, or a recorded reading of each chapter. */
+  kind?: "voice" | "recording";
   supported: boolean;
   /** Every passage of the day has loaded, so there is something to read. */
   ready: boolean;
@@ -174,10 +176,10 @@ export interface ReadAloudState {
   setVoice: (voiceURI: string) => void;
 }
 
-const PlayerContext = createContext<ReadAloudState | null>(null);
+export const PlayerContext = createContext<ReadAloudState | null>(null);
 // Kept apart from the player so registering a passage, which every portion
 // does once its text loads, does not depend on the verse being read.
-const RegisterContext = createContext<((passage: ReadAloudPassage) => void) | null>(null);
+export const RegisterContext = createContext<((passage: ReadAloudPassage) => void) | null>(null);
 
 export function useReadAloud(): ReadAloudState | null {
   return useContext(PlayerContext);
