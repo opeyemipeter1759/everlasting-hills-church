@@ -1,10 +1,11 @@
 /**
- * One time ingest of the public domain scripture corpus: KJV and WEB.
+ * One time ingest of the public domain scripture corpus: WEB, KJV and ASV.
  * NKJV is deliberately not ingested: it is copyrighted, so reading plans link
  * its assigned chapters to YouVersion's licensed reader instead.
  *
  *   npx ts-node --transpile-only scripts/seed-scripture.ts
- *   npx ts-node --transpile-only scripts/seed-scripture.ts --force   (re-ingest)
+ *   npx ts-node --transpile-only scripts/seed-scripture.ts --force      (re-ingest)
+ *   npx ts-node --transpile-only scripts/seed-scripture.ts --only=ASV   (one translation)
  *
  * Nothing in the running application ever fetches scripture. This script
  * downloads each source once into a gitignored cache, verifies it against a
@@ -39,6 +40,8 @@ interface Source {
   /** SHA-256 of the downloaded artefact, pinned so an upstream change is loud. */
   sha256: string;
   isDefault: boolean;
+  /** Tidies a source's own artefacts out of each verse. */
+  clean?: (text: string) => string;
 }
 
 const SOURCES: Source[] = [
@@ -58,6 +61,24 @@ const SOURCES: Source[] = [
     file: 'KJV.json',
     sha256: 'f0b09dc49dfb97bb84f03aae1fbf026485048c3cab31a7a41017e2d86ac1d11c',
     isDefault: false,
+  },
+  {
+    // The 1901 revision of the KJV tradition, in the same versification: the
+    // closest public domain text to NKJV that can be read in the app itself.
+    code: 'ASV',
+    name: 'American Standard Version',
+    url: 'https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/ASV.json',
+    file: 'ASV.json',
+    sha256: '602445e22c280a682ac4c489117ead179271f5ee50a78ee4531b249c71e7ce99',
+    isDefault: false,
+    clean: (text) =>
+      text
+        // "[Selah" with no closing bracket, 74 times in the Psalms.
+        .replace(/\[Selah\b/g, 'Selah')
+        // Psalm 119's stanza headings ("ב BETH.") are glued to the end of the
+        // verse before the stanza they introduce.
+        .replace(/\s+[\u05D0-\u05EA]\s+[A-Z]+\.$/, '')
+        .trim(),
   },
 ];
 
@@ -319,15 +340,19 @@ async function seedTranslation(source: Source, verses: ParsedVerse[], force: boo
 
 async function main() {
   const force = process.argv.includes('--force');
+  const only = process.argv.find((a) => a.startsWith('--only='))?.slice('--only='.length).toUpperCase();
+  const sources = only ? SOURCES.filter((s) => s.code === only) : SOURCES;
+  if (sources.length === 0) throw new Error(`No source ${only}`);
   const chapterCounts = new Map<number, number>();
   const parsedBySource = new Map<string, ParsedVerse[]>();
 
-  for (const source of SOURCES) {
+  for (const source of sources) {
     const buffer = await download(source);
-    const verses =
+    const parsed =
       source.file.endsWith('.zip')
         ? parseVpl(readFromZip(buffer, 'engwebp_vpl.txt'))
         : parseScrollmapper(buffer.toString('utf8'));
+    const verses = source.clean ? parsed.map((v) => ({ ...v, text: source.clean!(v.text) })) : parsed;
 
     if (verses.length < 30_000) {
       throw new Error(`${source.code} parsed only ${verses.length} verses, which cannot be right`);
@@ -341,15 +366,18 @@ async function main() {
     console.log(`  ${source.code}: parsed ${verses.length} verses`);
   }
 
-  await seedBooks(chapterCounts);
-  console.log(`  books: ${BOOKS.length} seeded`);
+  // Books come from the full set; one translation alone must not rewrite them.
+  if (!only) {
+    await seedBooks(chapterCounts);
+    console.log(`  books: ${BOOKS.length} seeded`);
+  }
 
-  for (const source of SOURCES) {
+  for (const source of sources) {
     await seedTranslation(source, parsedBySource.get(source.code)!, force);
   }
 
   const total = await prisma.bibleVerse.count();
-  console.log(`\nCorpus loaded: ${total} verses across ${SOURCES.length} translations.`);
+  console.log(`\nCorpus loaded: ${total} verses across ${await prisma.bibleTranslation.count()} translations.`);
 }
 
 main()
