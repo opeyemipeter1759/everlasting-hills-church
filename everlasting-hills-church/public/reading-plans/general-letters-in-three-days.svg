@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" role="img">
+<defs><linearGradient id="books" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#87102C"/>
+    <stop offset="1" stop-color="#4A0817"/>
+  </linearGradient></defs>
+<rect width="800" height="400" fill="url(#books)"/>
+  <g><rect x="263.9" y="70.0" width="34.0" height="180.0" rx="6.0" fill="#FFF4F6" fill-opacity="0.45"/>
+  <rect x="325.6" y="138.4" width="34.0" height="111.6" rx="6.0" fill="#FFF4F6" fill-opacity="0.50"/>
+  <rect x="387.4" y="138.4" width="34.0" height="111.6" rx="6.0" fill="#FFF4F6" fill-opacity="0.55"/>
+  <rect x="449.1" y="163.5" width="34.0" height="86.5" rx="6.0" fill="#FFF4F6" fill-opacity="0.60"/>
+  <rect x="510.9" y="138.4" width="34.0" height="111.6" rx="6.0" fill="#FFF4F6" fill-opacity="0.65"/>
+  <rect x="572.6" y="200.1" width="34.0" height="49.9" rx="6.0" fill="#FFF4F6" fill-opacity="0.70"/>
+  <rect x="634.4" y="200.1" width="34.0" height="49.9" rx="6.0" fill="#FFF4F6" fill-opacity="0.75"/>
+  <rect x="696.1" y="200.1" width="34.0" height="49.9" rx="6.0" fill="#E8B44A" fill-opacity="0.95"/></g>
+  <line x1="250" y1="258" x2="744" y2="258" stroke="#FFF4F6" stroke-opacity="0.25" stroke-width="1.5"/>
+  <g><circle cx="694.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
+  <circle cx="716.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/>
+  <circle cx="738.0" cy="276" r="6.0" fill="#E8B44A" fill-opacity="0.85"/></g>
+</svg>
