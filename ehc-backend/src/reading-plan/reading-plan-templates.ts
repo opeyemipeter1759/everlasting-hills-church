@@ -345,6 +345,27 @@ READING_PLAN_TEMPLATES.push(
     ReadingTrack.NEW_BELIEVER,
   ),
   canonicalPlan(
+    'gospels-in-seven-days',
+    'The Gospels in seven days',
+    7,
+    GOSPELS,
+    'Matthew, Mark, Luke and John in one week. Long daily readings that let you see the whole life of Jesus at once, from his birth to his resurrection.',
+  ),
+  canonicalPlan(
+    'pauls-letters-in-four-days',
+    'Paul’s letters in four days',
+    4,
+    booksFrom(45, 57),
+    'Romans to Philemon, all thirteen of Paul’s letters, in four long readings. Read them close together to hear one apostle teaching many churches.',
+  ),
+  canonicalPlan(
+    'general-letters-in-three-days',
+    'Hebrews to Jude in three days',
+    3,
+    booksFrom(58, 65),
+    'Hebrews, James, 1 and 2 Peter, 1, 2 and 3 John, and Jude: the letters written to the whole church, in three readings.',
+  ),
+  canonicalPlan(
     'acts-in-three-days',
     'Acts in three days',
     3,
