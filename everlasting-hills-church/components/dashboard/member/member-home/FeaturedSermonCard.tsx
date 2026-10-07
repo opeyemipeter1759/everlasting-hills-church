@@ -1,24 +1,20 @@
 "use client";
 
-import { useState, useRef } from "react";
 import Link from "next/link";
 import { Mic, BookOpen, Play, Pause } from "lucide-react";
 import SermonCover from "@/components/sermons/SermonCover";
 import type { MemberHomeProps } from "./types";
 import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle, muted } from "./tokens";
 import { fmtDate } from "./helpers";
+import { useSermonPlayer } from "@/context/SermonPlayerContext";
 
 export function FeaturedSermonCard({ sermon }: {
   sermon: NonNullable<MemberHomeProps["featuredSermon"]>;
 }) {
-  const [playing, setPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  function togglePlay() {
-    if (!audioRef.current) return;
-    if (playing) { audioRef.current.pause(); setPlaying(false); }
-    else { void audioRef.current.play(); setPlaying(true); }
-  }
+  // Plays through the app-wide sermon player, so it keeps going when the
+  // member leaves this page or the app, with lock-screen controls.
+  const player = useSermonPlayer();
+  const playingHere = player.activeSlug === sermon.slug;
 
   return (
     <section className={card}>
@@ -66,14 +62,14 @@ export function FeaturedSermonCard({ sermon }: {
           <div className="flex flex-wrap items-center gap-2">
             {sermon.audioUrl ? (
               <>
-                <audio ref={audioRef} src={sermon.audioUrl} onEnded={() => setPlaying(false)} />
                 <button
                   type="button"
-                  onClick={togglePlay}
+                  onClick={() => player.play(sermon.slug)}
+                  disabled={playingHere}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-xs font-semibold hover:bg-[#6E0C24] hover:-translate-y-0.5 transition-all shadow-sm shadow-[#87102C]/20"
                 >
-                  {playing ? <Pause size={12} /> : <Play size={12} fill="currentColor" />}
-                  {playing ? "Pause" : "Play"}
+                  {playingHere ? <Pause size={12} /> : <Play size={12} fill="currentColor" />}
+                  {playingHere ? "Playing below" : "Play"}
                 </button>
               </>
             ) : null}
