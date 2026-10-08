@@ -3150,3 +3150,14 @@ model EmailUnsubscribe {
 
   @@unique([tenantId, email])
 }
+
+/// A one-off push notice that has gone out (or been claimed to go out), keyed
+/// so it can never be sent twice — e.g. "fast:furnace-2026:2026-10-08:evening:live".
+model PushNoticeLog {
+  id        String   @id
+  tenantId  String
+  key       String
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, key])
+}

@@ -4,6 +4,7 @@ import { PushTriggersService } from '../push/services/push-triggers.service';
 import { GoogleCalendarSyncService } from '../calendar/services/google-calendar-sync.service';
 import { SermonDigestService } from '../sermon-digest/sermon-digest.service';
 import { DailyFastEmailService } from '../fasting-email/daily-fast-email.service';
+import { FastingPushService } from '../fasting-email/fasting-push.service';
 import { FastingRecapsService } from '../fasting-email/fasting-recaps.service';
 
 /** Names match the @Cron({ name }) options so logs and Cloud Scheduler agree. */
@@ -21,6 +22,7 @@ export const JOB_NAMES = [
   'sermon-digest',
   'fasting-recaps',
   'daily-fast-email',
+  'fasting-push',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -50,6 +52,7 @@ export class JobsRunnerService {
     private readonly sermonDigest: SermonDigestService,
     private readonly fastingRecaps: FastingRecapsService,
     private readonly dailyFastEmail: DailyFastEmailService,
+    private readonly fastingPush: FastingPushService,
   ) {}
 
   isJob(name: string): name is JobName {
@@ -103,6 +106,8 @@ export class JobsRunnerService {
         return this.fastingRecaps.run().then(() => undefined);
       case 'daily-fast-email':
         return this.dailyFastEmail.run().then(() => undefined);
+      case 'fasting-push':
+        return this.fastingPush.run().then(() => undefined);
     }
   }
 }

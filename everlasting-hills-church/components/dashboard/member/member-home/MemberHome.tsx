@@ -16,6 +16,7 @@ import { ProfileCompletionToast } from "./ProfileCompletionToast";
 import TodayReadingCard from "../reading-plan/TodayReadingCard";
 import DailyScriptureCard from "./DailyScriptureCard";
 import { PledgeAppeal } from "./PledgeAppeal";
+import { PushOptInCard } from "./PushOptInCard";
 import LatestSermonSummary from "@/components/sermon-digest/LatestSermonSummary";
 
 const DEFAULT_STREAK: StreakState = {
@@ -74,6 +75,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         streak={streak}
         nextService={nextService}
       />
+
+      <PushOptInCard />
 
       <PledgeAppeal member={member} userEmail={userEmail} />
 

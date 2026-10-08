@@ -39,6 +39,7 @@ JOBS=(
   "fasting-recaps|45 */3 * * *|Recaps of each streamed session during a church fast, for the next morning's email (Gemini)"
   "daily-fast-email|0 5 * * *|5am email to everyone during a church fast: the day, when to break it, yesterday's recap"
   "daily-fast-email-retry|20 5 * * *|Finishes any daily fast email the 5am run ran out of time for (never sends twice)|daily-fast-email"
+  "fasting-push|*/5 * * * *|Push during a church fast: 2 hours before each session, and when it goes live on YouTube"
 )
 
 for spec in "${JOBS[@]}"; do

@@ -182,6 +182,30 @@ export class YouTubeServices {
       .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
   }
 
+  /**
+   * The church's stream that is live right now, if any. A broadcast in progress
+   * sits at the top of the uploads playlist, so the newest few are enough.
+   * Costs 3 units of the daily quota.
+   */
+  async liveNow(): Promise<{ id: string; title: string } | null> {
+    const playlist = await this.uploadsPlaylist();
+    const items = await this.get<{ items?: { contentDetails: { videoId: string } }[] }>('playlistItems', {
+      part: 'contentDetails',
+      playlistId: playlist,
+      maxResults: '5',
+    });
+    const ids = (items.items ?? []).map((i) => i.contentDetails.videoId);
+    if (ids.length === 0) return null;
+    const videos = await this.get<{ items?: YouTubeVideoItem[] }>('videos', {
+      part: 'snippet,liveStreamingDetails',
+      id: ids.join(','),
+    });
+    const live = (videos.items ?? []).find(
+      (v) => v.snippet.liveBroadcastContent === 'live' && v.liveStreamingDetails?.actualStartTime && !v.liveStreamingDetails.actualEndTime,
+    );
+    return live ? { id: live.id, title: live.snippet.title } : null;
+  }
+
   private async uploadsPlaylist(): Promise<string> {
     const res = await this.get<{ items?: { contentDetails: { relatedPlaylists: { uploads: string } } }[] }>('channels', {
       part: 'contentDetails',
