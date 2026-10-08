@@ -16033,6 +16033,57 @@
         ]
       }
     },
+    "/evangelism/form/workers": {
+      "get": {
+        "operationId": "EvangelismFormController_workers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Members whose name matches what was typed (2+ letters), for the public evangelism form",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
     "/evangelism/me": {
       "get": {
         "operationId": "EvangelismController_me",
@@ -16075,6 +16126,53 @@
           }
         ],
         "summary": "Whether I am on the Evangelism Team, and whether I lead it",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/mine/tally": {
+      "get": {
+        "operationId": "EvangelismController_myTally",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "How many people I have preached to, and how many were saved",
         "tags": [
           "evangelism"
         ]

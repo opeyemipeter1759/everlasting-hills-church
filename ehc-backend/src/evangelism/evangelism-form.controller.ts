@@ -1,5 +1,5 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Logger, NotFoundException, Post } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpCode, HttpStatus, Logger, NotFoundException, Post, Query } from '@nestjs/common';
+import { ApiCreatedResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
 import { PublicEvangelismContactDto } from './dto/evangelism.dto';
@@ -32,6 +32,19 @@ export class EvangelismFormController {
     if (!unit) return { workers: [], outreaches: [] };
     const [team, outreaches] = await Promise.all([this.access.team(unit.id), this.outreaches.activeForForm()]);
     return { workers: team.map((m) => ({ id: m.id, name: m.name })), outreaches };
+  }
+
+  /**
+   * Any church member can be the worker, not only the team. The roll is never
+   * listed: this answers a typed name with at most ten matching names.
+   */
+  @Public()
+  @Throttle({ default: { limit: 40, ttl: 60_000 } })
+  @Get('workers')
+  @ApiOperation({ summary: 'Members whose name matches what was typed (2+ letters), for the public evangelism form' })
+  @ApiQuery({ name: 'q', required: true })
+  async workers(@Query('q') q?: string) {
+    return this.access.searchMembers(String(q ?? '').slice(0, 60));
   }
 
   @Public()

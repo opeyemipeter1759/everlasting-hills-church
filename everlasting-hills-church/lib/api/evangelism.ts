@@ -258,6 +258,15 @@ export interface PerformanceRow {
   outreaches: number;
 }
 
+/** One member's evangelism record: counts only. */
+export interface EvangelismTally {
+  reached: number;
+  saved: number;
+  alreadySaved: number;
+  thisYear: { reached: number; saved: number };
+  lastContactDate: string | null;
+}
+
 export interface PublicFormOptions {
   workers: { id: string; name: string }[];
   outreaches: { id: string; name: string; date: string }[];
@@ -365,6 +374,27 @@ export function usePublicFormOptions() {
     queryKey: [...ROOT, "form-options"],
     queryFn: () => api.get<PublicFormOptions>("/evangelism/form/options"),
     staleTime: 10 * 60_000,
+  });
+}
+
+/** Members matching a typed name, for the public form. Nothing under two letters. */
+export function usePublicWorkerSearch(query: string) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: [...ROOT, "form-workers", q.toLowerCase()],
+    queryFn: () => api.get<{ id: string; name: string }[]>(`/evangelism/form/workers?q=${encodeURIComponent(q)}`),
+    enabled: q.length >= 2,
+    staleTime: 5 * 60_000,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** The signed-in member's own evangelism record, for their home page. */
+export function useMyEvangelismTally() {
+  return useQuery({
+    queryKey: [...ROOT, "mine", "tally"],
+    queryFn: () => api.get<EvangelismTally>("/evangelism/mine/tally"),
+    staleTime: 5 * 60_000,
   });
 }
 

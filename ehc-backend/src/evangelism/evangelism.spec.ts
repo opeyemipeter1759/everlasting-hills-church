@@ -257,3 +257,55 @@ describe('Feedback on a contact', () => {
     expect(prisma.followUpNote.findFirst.mock.calls[0][0].where).toMatchObject({ subjectKind: 'EVANGELISM' });
   });
 });
+
+describe('Any member can be the worker on the public form', () => {
+  function searchWith(rows: { id: string; firstName: string; lastName: string }[] = []) {
+    const findMany = jest.fn().mockResolvedValue(rows);
+    const svc = new EvangelismAccessService({ member: { findMany } } as never, config);
+    return { svc, findMany };
+  }
+
+  it('answers nothing until two letters are typed, so the roll is never listed', async () => {
+    const { svc, findMany } = searchWith();
+    await expect(svc.searchMembers('')).resolves.toEqual([]);
+    await expect(svc.searchMembers(' a ')).resolves.toEqual([]);
+    expect(findMany).not.toHaveBeenCalled();
+  });
+
+  it('finds active members by first or last name, names only, ten at most', async () => {
+    const { svc, findMany } = searchWith([{ id: 'm9', firstName: 'Olamide', lastName: 'Ajayi' }]);
+    await expect(svc.searchMembers('ola aj')).resolves.toEqual([{ id: 'm9', name: 'Olamide Ajayi' }]);
+    const args = findMany.mock.calls[0][0];
+    expect(args.where).toMatchObject({ tenantId: 'tenant', status: 'ACTIVE' });
+    expect(args.where.AND).toHaveLength(2);
+    expect(args.select).toEqual({ id: true, firstName: true, lastName: true });
+    expect(args.take).toBe(10);
+  });
+});
+
+describe("A member's evangelism tally", () => {
+  it('counts everyone they preached to, those saved, and this year', async () => {
+    const groupBy = jest
+      .fn()
+      .mockResolvedValueOnce([
+        { savedStatus: 'YES', _count: { _all: 12 } },
+        { savedStatus: 'NO', _count: { _all: 33 } },
+        { savedStatus: 'ALREADY', _count: { _all: 3 } },
+      ])
+      .mockResolvedValueOnce([
+        { savedStatus: 'YES', _count: { _all: 9 } },
+        { savedStatus: 'NO', _count: { _all: 22 } },
+      ]);
+    const last = new Date('2026-10-04T10:00:00Z');
+    const prisma = { evangelismContact: { groupBy, findFirst: jest.fn().mockResolvedValue({ contactDate: last }) } };
+    const svc = new EvangelismAccessService(prisma as never, config);
+    await expect(svc.tally('m1')).resolves.toEqual({
+      reached: 48,
+      saved: 12,
+      alreadySaved: 3,
+      thisYear: { reached: 31, saved: 9 },
+      lastContactDate: last,
+    });
+    expect(groupBy.mock.calls[0][0].where).toEqual({ tenantId: 'tenant', workerMemberId: 'm1' });
+  });
+});

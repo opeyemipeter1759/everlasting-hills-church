@@ -1,3 +1,4 @@
+import type { EvangelismTally } from "@/lib/api/evangelism";
 import type { PersonRole } from "@/lib/api/people";
 
 export interface CarePerson {
@@ -37,6 +38,8 @@ export interface MemberDetail {
     Service: { id: string; name: string; scheduledAt: string };
   }[];
   PastorNote: { id: string; content: string; createdAt: string }[];
+  /** People they preached to and saw saved. Missing from an older API. */
+  evangelism?: EvangelismTally;
   FollowUpTask: {
     id: string;
     title: string;

@@ -53,13 +53,13 @@ function Day() {
   );
 }
 
-let play: ReturnType<typeof vi.fn>;
-let pause: ReturnType<typeof vi.fn>;
+let play: ReturnType<typeof vi.fn<() => Promise<void>>>;
+let pause: ReturnType<typeof vi.fn<() => void>>;
 
 beforeEach(() => {
   window.localStorage.clear();
-  play = vi.fn(() => Promise.resolve());
-  pause = vi.fn();
+  play = vi.fn<() => Promise<void>>(() => Promise.resolve());
+  pause = vi.fn<() => void>();
   vi.spyOn(HTMLMediaElement.prototype, "play").mockImplementation(play);
   vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(pause);
   vi.spyOn(HTMLMediaElement.prototype, "load").mockImplementation(() => {});

@@ -3,7 +3,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import EvangelismPublicForm from "./EvangelismPublicForm";
 
 const mutateAsync = vi.fn();
+const search = vi.hoisted(() => ({ results: [] as { id: string; name: string }[], lastQuery: "" }));
+const session = vi.hoisted(() => ({ member: null as null | { id: string; firstName: string; lastName: string } }));
+vi.mock("@/hooks/useCurrentUser", () => ({
+  useCurrentUser: () => (session.member ? { loggedIn: true } : null),
+}));
+vi.mock("@/lib/api", () => ({
+  useMe: () => ({ data: session.member ? { member: session.member } : undefined }),
+}));
 vi.mock("@/lib/api/evangelism", () => ({
+  usePublicWorkerSearch: (q: string) => {
+    search.lastQuery = q;
+    return { data: q.trim().length >= 2 ? search.results : undefined, isFetching: false };
+  },
   usePublicFormOptions: () => ({
     data: { workers: [{ id: "m2", name: "Bola Ade" }], outreaches: [{ id: "o1", name: "Street Outreach – Sept 2026", date: "2026-09-27" }] },
     isLoading: false,
@@ -13,20 +25,35 @@ vi.mock("@/lib/api/evangelism", () => ({
 }));
 // The searchable worker list is covered by its own tests; a plain select stands in.
 vi.mock("@/components/ui/form/Combobox", () => ({
-  Combobox: ({ options, value, onChange }: { options: { id: string; label: string }[]; value: string; onChange: (v: string) => void }) => (
-    <select aria-label="Worker" value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">Choose</option>
-      {options.map((o) => (
-        <option key={o.id} value={o.id}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+  Combobox: ({
+    options,
+    value,
+    onChange,
+    onQueryChange,
+  }: {
+    options: { id: string; label: string }[];
+    value: string;
+    onChange: (v: string) => void;
+    onQueryChange?: (q: string) => void;
+  }) => (
+    <>
+      <input aria-label="Search names" onChange={(e) => onQueryChange?.(e.target.value)} />
+      <select aria-label="Worker" value={value} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Choose</option>
+        {options.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </>
   ),
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
+  search.results = [];
+  session.member = null;
   mutateAsync.mockResolvedValue({ ok: true });
   window.localStorage.clear();
   window.scrollTo = vi.fn() as never;
@@ -117,5 +144,38 @@ describe("the public evangelism form", () => {
     expect(screen.getByLabelText(/Full name/)).toHaveValue("");
     fireEvent.click(screen.getByRole("button", { name: /Back/ }));
     expect(screen.getByLabelText("Worker")).toHaveValue("m2");
+  });
+});
+
+describe("choosing the worker who preached", () => {
+  it("finds any church member by name, not only the team", async () => {
+    search.results = [{ id: "m9", name: "Olamide Ajayi" }];
+    render(<EvangelismPublicForm />);
+    expect(screen.queryByRole("option", { name: "Olamide Ajayi" })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Search names"), { target: { value: "Ola" } });
+    expect(await screen.findByRole("option", { name: "Olamide Ajayi" })).toBeInTheDocument();
+    expect(search.lastQuery).toBe("Ola");
+    expect(screen.getByRole("option", { name: "Bola Ade" })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Worker"), { target: { value: "m9" } });
+    cont();
+    expect(screen.getByText("Step 2 of 4 — Person")).toBeInTheDocument();
+  });
+
+  it("fills in a signed-in member's own name", async () => {
+    session.member = { id: "m7", firstName: "Tola", lastName: "Bakare" };
+    render(<EvangelismPublicForm />);
+    await waitFor(() => expect(screen.getByLabelText("Worker")).toHaveValue("m7"));
+    expect(screen.getByRole("option", { name: "Tola Bakare (you)" })).toBeInTheDocument();
+    expect(screen.getByText(/Signed in as Tola Bakare/)).toBeInTheDocument();
+  });
+
+  it("invites someone who is not signed in to sign in, and still lets them carry on", () => {
+    render(<EvangelismPublicForm />);
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login?next=%2Fevangelism%2Fform");
+    fireEvent.change(screen.getByLabelText("Worker"), { target: { value: "m2" } });
+    cont();
+    expect(screen.getByText("Step 2 of 4 — Person")).toBeInTheDocument();
   });
 });

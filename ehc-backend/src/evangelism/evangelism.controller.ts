@@ -78,6 +78,14 @@ export class EvangelismController {
     return { unitId: v.unitId, canLead: v.canLead, memberId: v.memberId };
   }
 
+  /** Open to every signed-in member: anyone may preach, not only the team. */
+  @Get('mine/tally')
+  @ApiOperation({ summary: 'How many people I have preached to, and how many were saved' })
+  async myTally(@CurrentUser() user: AuthUser) {
+    if (!user.memberId) return { reached: 0, saved: 0, alreadySaved: 0, thisYear: { reached: 0, saved: 0 }, lastContactDate: null };
+    return this.access.tally(user.memberId);
+  }
+
   @Get('team')
   @ApiOperation({ summary: 'The Evangelism Team roster' })
   async team(@CurrentUser() user: AuthUser) {

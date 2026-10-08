@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import type { UpdateMemberInput } from '../members.types';
+import { evangelismTally } from '../../evangelism/evangelism-tally';
 
 /** Admin CRUD on a single member: read, edit core fields, change status. */
 @Injectable()
@@ -45,10 +46,14 @@ export class MemberCrudService {
     });
     if (!member) return null;
     // Effective role (grants + assignments) exposed as Profile.role + top-level role.
-    const role = member.Profile
-      ? (await this.effectiveRoles.getEffectiveRoles(member.Profile.id)).primaryRole
-      : Role.MEMBER;
-    return { ...member, role, Profile: member.Profile ? { ...member.Profile, role } : null };
+    const [role, evangelism] = await Promise.all([
+      member.Profile
+        ? this.effectiveRoles.getEffectiveRoles(member.Profile.id).then((r) => r.primaryRole)
+        : Promise.resolve(Role.MEMBER),
+      // People they preached to and saw saved, as counts only.
+      evangelismTally(this.prisma, this.tenantId, member.id),
+    ]);
+    return { ...member, role, Profile: member.Profile ? { ...member.Profile, role } : null, evangelism };
   }
 
   /** Admin edit of a member's core fields. */

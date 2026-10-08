@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useMe } from "@/lib/api";
 import { Combobox } from "@/components/ui/form/Combobox";
 import { Select } from "@/components/ui/select";
-import { usePublicFormOptions, useSubmitPublicContact, type NextAction, type SavedStatus } from "@/lib/api/evangelism";
+import { usePublicFormOptions, usePublicWorkerSearch, useSubmitPublicContact, type NextAction, type SavedStatus } from "@/lib/api/evangelism";
 import {
   OTHER_WORKER,
   contactInput,
@@ -32,20 +35,27 @@ const STEP_FIELDS: (keyof ContactFormState)[][] = [
 /** Remembered on this phone between submissions: the worker and outreach rarely change mid-outreach. */
 const REMEMBER_KEY = "ehc-evangelism-form";
 
-function remembered(): Partial<ContactFormState> {
+type Remembered = Partial<ContactFormState> & { workerLabel?: string };
+
+function remembered(): Remembered {
   try {
     const raw = window.localStorage.getItem(REMEMBER_KEY);
     if (!raw) return {};
-    const saved = JSON.parse(raw) as Partial<ContactFormState>;
-    return { workerId: saved.workerId ?? "", workerOther: saved.workerOther ?? "", outreachId: saved.outreachId ?? "" };
+    const saved = JSON.parse(raw) as Remembered;
+    return {
+      workerId: saved.workerId ?? "",
+      workerOther: saved.workerOther ?? "",
+      outreachId: saved.outreachId ?? "",
+      workerLabel: saved.workerLabel ?? "",
+    };
   } catch {
     return {};
   }
 }
 
-function remember(s: ContactFormState) {
+function remember(s: ContactFormState, workerLabel: string) {
   try {
-    window.localStorage.setItem(REMEMBER_KEY, JSON.stringify({ workerId: s.workerId, workerOther: s.workerOther, outreachId: s.outreachId }));
+    window.localStorage.setItem(REMEMBER_KEY, JSON.stringify({ workerId: s.workerId, workerOther: s.workerOther, outreachId: s.outreachId, workerLabel }));
   } catch {
     // Private browsing: nothing to remember, nothing lost.
   }
@@ -158,7 +168,36 @@ export default function EvangelismPublicForm() {
   // tap while the first send is still on its way, must not record them twice.
   const sending = useRef(false);
 
-  useEffect(() => setForm((f) => ({ ...f, ...remembered() })), []);
+  // Any church member can be the worker. The team shows first; anyone else is
+  // found by typing their name, so the public form never lists the whole roll.
+  const [workerQuery, setWorkerQuery] = useState("");
+  const [searchFor, setSearchFor] = useState("");
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSearchFor(workerQuery), 250);
+    return () => window.clearTimeout(timer);
+  }, [workerQuery]);
+  const found = usePublicWorkerSearch(searchFor);
+  /** The chosen worker's name, kept so it shows even when not in the team list. */
+  const [workerLabel, setWorkerLabel] = useState("");
+
+  // A signed-in member is the worker unless they choose someone else.
+  const session = useCurrentUser();
+  const me = useMe({ enabled: !!session?.loggedIn });
+  const signedIn = me.data?.member ?? null;
+  const signedInName = signedIn ? `${signedIn.firstName ?? ""} ${signedIn.lastName ?? ""}`.trim() : "";
+  const workerTouched = useRef(false);
+
+  useEffect(() => {
+    const { workerLabel: label, ...saved } = remembered();
+    setForm((f) => ({ ...f, ...saved }));
+    setWorkerLabel(label ?? "");
+  }, []);
+
+  useEffect(() => {
+    if (!signedIn || workerTouched.current) return;
+    setForm((f) => ({ ...f, workerId: signedIn.id, workerOther: "" }));
+    setWorkerLabel(signedInName);
+  }, [signedIn, signedInName]);
 
   // A remembered outreach that has since closed shouldn't be sent.
   const outreaches = options.data?.outreaches;
@@ -208,7 +247,7 @@ export default function EvangelismPublicForm() {
     sending.current = true;
     try {
       await submit.mutateAsync({ ...contactInput(form), ...(honeypot ? { website: honeypot } : {}) });
-      remember(form);
+      remember(form, workerLabel);
       setDone(form.name.trim());
       window.scrollTo({ top: 0 });
     } catch (err) {
@@ -252,7 +291,19 @@ export default function EvangelismPublicForm() {
   }
 
   const progress = Math.round(((step + 1) / STEPS.length) * 100);
-  const workers = options.data?.workers ?? [];
+  const team = options.data?.workers ?? [];
+  const workerChoices = new Map<string, string>();
+  if (signedIn && signedInName) workerChoices.set(signedIn.id, `${signedInName} (you)`);
+  for (const w of team) if (!workerChoices.has(w.id)) workerChoices.set(w.id, w.name);
+  if (workerQuery.trim().length >= 2) for (const w of found.data ?? []) if (!workerChoices.has(w.id)) workerChoices.set(w.id, w.name);
+  if (form.workerId && form.workerId !== OTHER_WORKER && !workerChoices.has(form.workerId) && workerLabel) {
+    workerChoices.set(form.workerId, workerLabel);
+  }
+  const chooseWorker = (id: string) => {
+    workerTouched.current = true;
+    setWorkerLabel(id === OTHER_WORKER ? "" : (workerChoices.get(id) ?? "").replace(/ \(you\)$/, ""));
+    set("workerId", id);
+  };
 
   return (
     <>
@@ -305,15 +356,31 @@ export default function EvangelismPublicForm() {
               <div>
                 <Label required>Your name (the worker who preached)</Label>
                 <Combobox
-                  options={[...workers.map((w) => ({ id: w.id, label: w.name })), { id: OTHER_WORKER, label: "Other (type a name)" }]}
+                  options={[
+                    ...Array.from(workerChoices, ([id, label]) => ({ id, label })),
+                    { id: OTHER_WORKER, label: "Other (type a name)" },
+                  ]}
                   value={form.workerId}
-                  onChange={(id) => set("workerId", id)}
+                  onChange={chooseWorker}
+                  onQueryChange={setWorkerQuery}
                   placeholder="Choose your name"
-                  searchPlaceholder="Search the team…"
+                  searchPlaceholder="Type your name…"
+                  emptyText={workerQuery.trim().length < 2 ? "Type at least 2 letters of your name." : found.isFetching ? "Searching…" : "No member with that name. Choose “Other”."}
                   loading={options.isLoading}
                   triggerClassName={ic(!!errors.workerId)}
                 />
                 <FieldError message={errors.workerId} />
+                {signedIn ? (
+                  <p className="mt-1.5 text-xs text-gray-500">Signed in as {signedInName}, so your name is filled in. Pick another name if someone else preached.</p>
+                ) : (
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    Not on the team? Type your name to find it.{" "}
+                    <Link href="/login?next=%2Fevangelism%2Fform" className="font-semibold text-church-maroon underline">
+                      Sign in
+                    </Link>{" "}
+                    and it fills itself in, so everyone you reach is counted on your dashboard.
+                  </p>
+                )}
                 {options.isError && (
                   <p className="mt-1.5 text-xs text-amber-700">Couldn&apos;t load the team list. Choose &ldquo;Other&rdquo; and type your name.</p>
                 )}
