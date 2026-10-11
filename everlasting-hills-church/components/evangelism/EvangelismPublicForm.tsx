@@ -149,6 +149,7 @@ function RadioCard({
 
 const SAVED_OPTIONS: { value: SavedStatus; label: string }[] = [
   { value: "YES", label: "Yes, they gave their life to Christ" },
+  { value: "REDEDICATED", label: "They rededicated their life to Christ" },
   { value: "NO", label: "No, not yet" },
   { value: "ALREADY", label: "They were already saved" },
 ];

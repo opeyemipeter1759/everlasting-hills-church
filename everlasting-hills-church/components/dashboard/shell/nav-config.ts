@@ -103,7 +103,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Members",       href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
-      { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookOpen,      minRole: "ADMIN" },
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
@@ -138,6 +137,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
       { label: "Decisions for Christ", href: "/dashboard/pastor/salvation",       icon: Sparkles,       minRole: "PASTOR" },
+      // Who is reading and who has gone quiet is a pastoral question. Admins
+      // keep it: the minimum role is unchanged from when it sat under Administration.
+      { label: "Bible Reading",     href: "/dashboard/admin/reading",      icon: BookOpen,       minRole: "ADMIN" },
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
       { label: "Reports",           href: "/dashboard/pastor/reports",     icon: FileText,       minRole: "PASTOR" },
     ],

@@ -12,6 +12,7 @@ import type {
 
 export const SAVED_LABEL: Record<SavedStatus, string> = {
   YES: "Saved",
+  REDEDICATED: "Rededicated",
   NO: "Not yet",
   ALREADY: "Already saved",
 };
@@ -19,12 +20,14 @@ export const SAVED_LABEL: Record<SavedStatus, string> = {
 /** The form asks it as a question. */
 export const SAVED_QUESTION: { value: SavedStatus; label: string }[] = [
   { value: "YES", label: "Yes" },
+  { value: "REDEDICATED", label: "Rededicated" },
   { value: "NO", label: "No" },
   { value: "ALREADY", label: "Already saved" },
 ];
 
 export const SAVED_TONE: Record<SavedStatus, string> = {
   YES: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  REDEDICATED: "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
   NO: "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/60",
   ALREADY: "bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300",
 };

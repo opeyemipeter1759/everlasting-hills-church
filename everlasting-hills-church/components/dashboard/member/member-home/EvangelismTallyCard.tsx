@@ -35,6 +35,11 @@ export function EvangelismTallyCard() {
           <p className="text-3xl font-bold tabular-nums text-[#87102C] dark:text-[#FFB3C1]">{data.saved}</p>
           <p className={`text-sm ${muted}`}>gave their life to Christ</p>
         </div>
+        {data.rededicated > 0 && (
+          <p className={`col-span-2 text-sm ${muted}`}>
+            {people(data.rededicated)} rededicated their life to Christ
+          </p>
+        )}
         <p className={`col-span-2 text-xs ${muted}`}>
           This year: {people(data.thisYear.reached)} reached · {data.thisYear.saved} saved
         </p>

@@ -1634,6 +1634,7 @@
           "savedStatus": {
             "enum": [
               "YES",
+              "REDEDICATED",
               "NO",
               "ALREADY"
             ],
@@ -2483,6 +2484,7 @@
           "savedStatus": {
             "enum": [
               "YES",
+              "REDEDICATED",
               "NO",
               "ALREADY"
             ],
@@ -3568,6 +3570,7 @@
           "savedStatus": {
             "enum": [
               "YES",
+              "REDEDICATED",
               "NO",
               "ALREADY"
             ],
@@ -15361,6 +15364,7 @@
             "schema": {
               "enum": [
                 "YES",
+                "REDEDICATED",
                 "NO",
                 "ALREADY"
               ],

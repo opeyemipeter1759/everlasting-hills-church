@@ -7,6 +7,8 @@ export interface EvangelismTally {
   reached: number;
   /** Of those, how many gave their life to Christ. */
   saved: number;
+  /** Of those, how many rededicated their life to Christ. */
+  rededicated: number;
   /** Of those, how many were already saved. */
   alreadySaved: number;
   thisYear: { reached: number; saved: number };
@@ -38,6 +40,7 @@ export async function evangelismTally(
   return {
     reached: count(byStatus),
     saved: count(byStatus, 'YES'),
+    rededicated: count(byStatus, 'REDEDICATED'),
     alreadySaved: count(byStatus, 'ALREADY'),
     thisYear: { reached: count(thisYear), saved: count(thisYear, 'YES') },
     lastContactDate: last?.contactDate ?? null,

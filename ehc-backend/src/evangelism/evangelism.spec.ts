@@ -291,6 +291,7 @@ describe("A member's evangelism tally", () => {
         { savedStatus: 'YES', _count: { _all: 12 } },
         { savedStatus: 'NO', _count: { _all: 33 } },
         { savedStatus: 'ALREADY', _count: { _all: 3 } },
+        { savedStatus: 'REDEDICATED', _count: { _all: 5 } },
       ])
       .mockResolvedValueOnce([
         { savedStatus: 'YES', _count: { _all: 9 } },
@@ -300,8 +301,9 @@ describe("A member's evangelism tally", () => {
     const prisma = { evangelismContact: { groupBy, findFirst: jest.fn().mockResolvedValue({ contactDate: last }) } };
     const svc = new EvangelismAccessService(prisma as never, config);
     await expect(svc.tally('m1')).resolves.toEqual({
-      reached: 48,
+      reached: 53,
       saved: 12,
+      rededicated: 5,
       alreadySaved: 3,
       thisYear: { reached: 31, saved: 9 },
       lastContactDate: last,

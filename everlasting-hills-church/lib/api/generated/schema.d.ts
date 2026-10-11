@@ -8461,7 +8461,7 @@ export interface components {
              */
             phone: string;
             /** @enum {string} */
-            savedStatus: "YES" | "NO" | "ALREADY";
+            savedStatus: "YES" | "REDEDICATED" | "NO" | "ALREADY";
             /** @example University of Lagos */
             school?: string;
             /** @description Evangelism Team member who preached to them */
@@ -8833,7 +8833,7 @@ export interface components {
              */
             phone: string;
             /** @enum {string} */
-            savedStatus: "YES" | "NO" | "ALREADY";
+            savedStatus: "YES" | "REDEDICATED" | "NO" | "ALREADY";
             /** @example University of Lagos */
             school?: string;
             /** @description Leave empty */
@@ -9311,7 +9311,7 @@ export interface components {
             outreachId?: Record<string, never> | null;
             phone?: string;
             /** @enum {string} */
-            savedStatus?: "YES" | "NO" | "ALREADY";
+            savedStatus?: "YES" | "REDEDICATED" | "NO" | "ALREADY";
             school?: Record<string, never> | null;
             workerMemberId?: Record<string, never> | null;
             workerName?: string;
@@ -16217,7 +16217,7 @@ export interface operations {
                 workerMemberId?: string;
                 /** @description "none" for personal evangelism */
                 outreachId?: string;
-                savedStatus?: "YES" | "NO" | "ALREADY";
+                savedStatus?: "YES" | "REDEDICATED" | "NO" | "ALREADY";
                 isStudent?: boolean;
                 status?: "NEW" | "CALL_DONE" | "CALL_BACK" | "NEEDS_VISIT" | "VISITED" | "INVITED" | "ATTENDED" | "JOINED" | "NOT_INTERESTED";
                 flag?: "DUE" | "OVERDUE" | "REVIEW";

@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/api/axios";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export type SavedStatus = "YES" | "NO" | "ALREADY";
+export type SavedStatus = "YES" | "REDEDICATED" | "NO" | "ALREADY";
 export type NextAction = "FOLLOW_UP_CALL" | "CALL_BACK" | "NEEDS_VISIT" | "INVITE";
 export type ContactStatus =
   | "NEW"
@@ -262,6 +262,7 @@ export interface PerformanceRow {
 export interface EvangelismTally {
   reached: number;
   saved: number;
+  rededicated: number;
   alreadySaved: number;
   thisYear: { reached: number; saved: number };
   lastContactDate: string | null;

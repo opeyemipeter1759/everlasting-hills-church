@@ -18,9 +18,10 @@ export default function EvangelismSection({ tally }: { tally: EvangelismTally })
     : null;
   return (
     <>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <Figure value={tally.reached} label="Reached" />
         <Figure value={tally.saved} label="Saved" />
+        <Figure value={tally.rededicated ?? 0} label="Rededicated" />
         <Figure value={tally.alreadySaved} label="Already saved" />
       </div>
       <div className="mt-4 space-y-1 text-sm text-gray-600 dark:text-white/60">
