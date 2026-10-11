@@ -56,6 +56,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Home",            href: "/dashboard",                  icon: LayoutDashboard, minRole: "MEMBER" },
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
+      { label: "Church Family",   href: "/dashboard/family",           icon: Users,           minRole: "MEMBER" },
       { label: "My Attendance",   href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "MEMBER", maxRole: "ADMIN" },
       // Members had no nav entry for either of these: sermons were reachable
       // only from a dashboard card. They are tabbed together as one section,

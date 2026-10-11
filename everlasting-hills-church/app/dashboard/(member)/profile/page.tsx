@@ -18,6 +18,9 @@ interface MeResponse {
     address: string | null;
     dateOfBirth: string | null;
     weddingAnniversary: string | null;
+    maritalStatus?: "SINGLE" | "MARRIED";
+    spouseName?: string | null;
+    spouse?: { id: string; name: string; photoUrl: string | null } | null;
     gender: string | null;
     tags: string[];
     household: string | null;
@@ -62,6 +65,9 @@ export default async function ProfilePage() {
     gender: me.member?.gender ?? null,
     dateOfBirth: me.member?.dateOfBirth ?? null,
     weddingAnniversary: me.member?.weddingAnniversary ?? null,
+    maritalStatus: me.member?.maritalStatus ?? (me.member?.weddingAnniversary ? "MARRIED" : "SINGLE"),
+    spouse: me.member?.spouse ?? null,
+    spouseName: me.member?.spouseName ?? null,
     tags: me.member?.tags ?? [],
     household: me.member?.household ?? null,
     instagram: me.member?.instagram ?? null,

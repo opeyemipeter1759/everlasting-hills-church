@@ -19,6 +19,11 @@ export interface ProfileViewModel {
   gender: string | null;
   dateOfBirth: string | null;
   weddingAnniversary: string | null;
+  maritalStatus?: "SINGLE" | "MARRIED";
+  /** Shown only once both have confirmed. */
+  spouse?: { id: string; name: string; photoUrl: string | null } | null;
+  /** A spouse who is not a church member. */
+  spouseName?: string | null;
   tags: string[];
   household: string | null;
   instagram: string | null;

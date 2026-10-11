@@ -17,6 +17,10 @@ export interface MemberDetail {
   gender: string | null;
   dateOfBirth: string | null;
   weddingAnniversary: string | null;
+  maritalStatus?: "SINGLE" | "MARRIED" | null;
+  spouseName?: string | null;
+  /** Set only once both members have confirmed. */
+  Spouse?: { id: string; firstName: string; lastName: string; photoUrl: string | null } | null;
   address: string | null;
   joinedAt: string;
   bio: string | null;

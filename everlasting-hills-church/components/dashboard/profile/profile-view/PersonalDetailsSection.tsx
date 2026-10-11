@@ -3,14 +3,14 @@ import ScrollReveal from "@/components/home/ScrollReveal";
 import type { ProfileViewModel } from "@/components/dashboard/profile/profile-view-model";
 import { ChipCard } from "./ChipCard";
 import { MaritalStatusCard } from "./MaritalStatusCard";
-import { fmtDayMonth } from "./helpers";
+import { fmtDayMonth, isMarried as marriedOf } from "./helpers";
 
 /**
  * Section 3b — Gender, birthday + age, marital status, anniversary, household.
  * Household only rendered when assigned — no wasted empty-state card.
  */
 export function PersonalDetailsSection({ profile }: { profile: ProfileViewModel }) {
-  const isMarried = !!profile.weddingAnniversary;
+  const isMarried = marriedOf(profile);
   const birthday = fmtDayMonth(profile.dateOfBirth);
   const anniversary = fmtDayMonth(profile.weddingAnniversary);
 
@@ -61,7 +61,7 @@ export function PersonalDetailsSection({ profile }: { profile: ProfileViewModel 
         </ScrollReveal>
 
         <ScrollReveal delay={0.15}>
-          <MaritalStatusCard isMarried={isMarried} anniversary={anniversary} />
+          <MaritalStatusCard isMarried={isMarried} anniversary={anniversary} spouse={profile.spouse ?? null} spouseName={profile.spouseName ?? null} />
         </ScrollReveal>
 
         {profile.household && (

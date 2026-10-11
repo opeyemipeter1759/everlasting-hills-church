@@ -32,6 +32,9 @@ export class AuthMeService {
             address: true,
             dateOfBirth: true,
             weddingAnniversary: true,
+            maritalStatus: true,
+            spouseName: true,
+            Spouse: { select: { id: true, firstName: true, lastName: true, photoUrl: true } },
             gender: true,
             instagram: true,
             facebook: true,
@@ -89,6 +92,8 @@ export class AuthMeService {
     const {
       Household,
       UnitMember,
+      Spouse,
+      maritalStatus,
       dateOfBirth,
       weddingAnniversary,
       joinedAt,
@@ -111,6 +116,8 @@ export class AuthMeService {
             weddingAnniversary: weddingAnniversary ? weddingAnniversary.toISOString() : null,
             joinedAt: joinedAt!.toISOString(),
             household: Household?.name ?? null,
+            maritalStatus: maritalStatus === 'MARRIED' || maritalStatus === 'SINGLE' ? maritalStatus : weddingAnniversary ? 'MARRIED' : 'SINGLE',
+            spouse: Spouse ? { id: Spouse.id, name: `${Spouse.firstName} ${Spouse.lastName}`.trim(), photoUrl: Spouse.photoUrl } : null,
             gender,
             units: (UnitMember ?? []).map((um) => ({
               id: um.Unit.id,

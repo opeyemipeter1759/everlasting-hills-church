@@ -4989,6 +4989,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/{id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A member's profile as the church family sees it: no phone, email or address (MEMBER+) */
+        get: operations["MembersFamilyController_profile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/{id}/status": {
         parameters: {
             query?: never;
@@ -5210,6 +5227,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/family": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active members by name, a page at a time, for the church family directory (MEMBER+) */
+        get: operations["MembersFamilyController_directory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/follow-up/{taskId}": {
         parameters: {
             query?: never;
@@ -5359,6 +5393,76 @@ export interface paths {
         put?: never;
         /** Reactivate my own (self-deactivated) account */
         post: operations["MembersSelfServiceController_reactivateMe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/spouse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My marital status, spouse, and spouse requests waiting on me or them */
+        get: operations["MembersFamilyController_mySpouse"];
+        put?: never;
+        post?: never;
+        /** Remove my spouse link, for both of us */
+        delete: operations["MembersFamilyController_unlinkSpouse"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/spouse-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask a member to confirm they are my spouse */
+        post: operations["MembersFamilyController_requestSpouse"];
+        /** Withdraw the spouse request I sent */
+        delete: operations["MembersFamilyController_cancelSpouseRequest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/spouse-requests/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm I am married to the member who asked */
+        post: operations["MembersFamilyController_acceptSpouse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/spouse-requests/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a spouse request */
+        post: operations["MembersFamilyController_declineSpouse"];
         delete?: never;
         options?: never;
         head?: never;
@@ -9109,6 +9213,10 @@ export interface components {
             /** @example 2026-09-04T09:00:00.000Z */
             until?: Record<string, never>;
         };
+        SpouseRequestDto: {
+            /** @description The member being asked to confirm they are my spouse */
+            memberId: string;
+        };
         StreakDto: {
             /** @description Every level already cleared, oldest first */
             history: components["schemas"]["PassedLevelDto"][];
@@ -9454,14 +9562,24 @@ export interface components {
             lastName?: Record<string, never>;
             /** @example opeyemi.peter */
             linkedin?: Record<string, never>;
+            /**
+             * @description SINGLE also removes any spouse link, for both members.
+             * @enum {string}
+             */
+            maritalStatus?: "SINGLE" | "MARRIED";
             /** @example +234 801 234 5678 */
             phone?: Record<string, never>;
+            /**
+             * @description A spouse who is not a church member. A member spouse is linked by request instead.
+             * @example Funke Peter
+             */
+            spouseName?: Record<string, never>;
             /** @example opeyemi.peter */
             tiktok?: Record<string, never>;
             /** @example opeyemi.peter */
             twitter?: Record<string, never>;
             /**
-             * @description Pass null to clear it and mark the member as single.
+             * @description Pass null to clear it. Marital status is its own field.
              * @example 2015-06-20
              */
             weddingAnniversary?: Record<string, never>;
@@ -21745,6 +21863,39 @@ export interface operations {
             };
         };
     };
+    MembersFamilyController_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersController_updateStatus: {
         parameters: {
             query?: never;
@@ -22225,6 +22376,40 @@ export interface operations {
             };
         };
     };
+    MembersFamilyController_directory: {
+        parameters: {
+            query?: {
+                q?: string;
+                page?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersPastoralController_deleteFollowUp: {
         parameters: {
             query?: never;
@@ -22581,6 +22766,200 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_mySpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_unlinkSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_requestSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpouseRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_cancelSpouseRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_acceptSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_declineSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;

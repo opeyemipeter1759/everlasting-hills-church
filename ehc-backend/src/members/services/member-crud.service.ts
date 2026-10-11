@@ -32,6 +32,7 @@ export class MemberCrudService {
           take: 20,
         },
         PastorNote: { orderBy: { createdAt: 'desc' } },
+        Spouse: { select: { id: true, firstName: true, lastName: true, photoUrl: true } },
         FollowUpTask: { orderBy: { createdAt: 'desc' } },
         UnitMember: { include: { Unit: true } },
         CareAsMember: {

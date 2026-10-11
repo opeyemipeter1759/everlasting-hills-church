@@ -2,7 +2,7 @@
 
 import type { ProfileViewModel } from "@/components/dashboard/profile/profile-view-model";
 import { ROLE_LABEL } from "./constants";
-import { initialsOf, tenureFrom } from "./helpers";
+import { initialsOf, isMarried as marriedOf, tenureFrom } from "./helpers";
 import { getMyMinistries } from "./ministries";
 import { PageHeader } from "./PageHeader";
 import { HeroAndStorySection } from "./HeroAndStorySection";
@@ -23,7 +23,7 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
   const isWorker = profile.role === "MEMBER" && profile.units.length > 0;
   const role = isWorker ? "Worker" : profile.role ? (ROLE_LABEL[profile.role] ?? profile.role) : "Member";
   const tenure = tenureFrom(profile.joinedAt);
-  const isMarried = !!profile.weddingAnniversary;
+  const isMarried = marriedOf(profile);
   const ministries = getMyMinistries(profile.dateOfBirth, profile.gender, isMarried);
 
   return (

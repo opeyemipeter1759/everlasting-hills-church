@@ -179,6 +179,16 @@ model Member {
   tags                          String[]
   householdId                   String?
   deactivationRequestedAt       DateTime?
+  /// SINGLE or MARRIED. Null on older records, where a wedding date meant married.
+  maritalStatus                 String?
+  /// The spouse, set on both members only once the spouse has agreed.
+  spouseMemberId                String?
+  /// A spouse who is not a church member, typed in by the member.
+  spouseName                    String?
+  Spouse                        Member?                    @relation("Spouse", fields: [spouseMemberId], references: [id], onDelete: SetNull)
+  SpouseOf                      Member[]                   @relation("Spouse")
+  SpouseRequestsSent            SpouseRequest[]            @relation("SpouseRequestFrom")
+  SpouseRequestsReceived        SpouseRequest[]            @relation("SpouseRequestTo")
   AttendanceRecord              AttendanceRecord[]
   DiscussionResponse            DiscussionResponse[]
   EngagementScore               EngagementScore?
@@ -221,6 +231,25 @@ model Member {
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
   @@index([tenantId, email])
+  @@index([spouseMemberId])
+}
+
+/// A member asking another to confirm they are married. Nothing shows on
+/// either profile until the other member accepts.
+model SpouseRequest {
+  id           String    @id
+  tenantId     String
+  fromMemberId String
+  toMemberId   String
+  /// PENDING, ACCEPTED, DECLINED or CANCELLED.
+  status       String    @default("PENDING")
+  createdAt    DateTime  @default(now())
+  respondedAt  DateTime?
+  From         Member    @relation("SpouseRequestFrom", fields: [fromMemberId], references: [id], onDelete: Cascade)
+  To           Member    @relation("SpouseRequestTo", fields: [toMemberId], references: [id], onDelete: Cascade)
+
+  @@index([toMemberId, status])
+  @@index([fromMemberId, status])
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).

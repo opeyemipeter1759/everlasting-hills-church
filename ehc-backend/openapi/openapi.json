@@ -3134,6 +3134,18 @@
         },
         "type": "object"
       },
+      "SpouseRequestDto": {
+        "properties": {
+          "memberId": {
+            "description": "The member being asked to confirm they are my spouse",
+            "type": "string"
+          }
+        },
+        "required": [
+          "memberId"
+        ],
+        "type": "object"
+      },
       "StreakDto": {
         "properties": {
           "history": {
@@ -3982,8 +3994,21 @@
             "example": "opeyemi.peter",
             "type": "object"
           },
+          "maritalStatus": {
+            "description": "SINGLE also removes any spouse link, for both members.",
+            "enum": [
+              "SINGLE",
+              "MARRIED"
+            ],
+            "type": "string"
+          },
           "phone": {
             "example": "+234 801 234 5678",
+            "type": "object"
+          },
+          "spouseName": {
+            "description": "A spouse who is not a church member. A member spouse is linked by request instead.",
+            "example": "Funke Peter",
             "type": "object"
           },
           "tiktok": {
@@ -3995,7 +4020,7 @@
             "type": "object"
           },
           "weddingAnniversary": {
-            "description": "Pass null to clear it and mark the member as single.",
+            "description": "Pass null to clear it. Marital status is its own field.",
             "example": "2015-06-20",
             "type": "object"
           }
@@ -24634,6 +24659,62 @@
         ]
       }
     },
+    "/members/{id}/profile": {
+      "get": {
+        "operationId": "MembersFamilyController_profile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A member's profile as the church family sees it: no phone, email or address (MEMBER+)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/{id}/status": {
       "patch": {
         "operationId": "MembersController_updateStatus",
@@ -25484,6 +25565,70 @@
         ]
       }
     },
+    "/members/family": {
+      "get": {
+        "operationId": "MembersFamilyController_directory",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Active members by name, a page at a time, for the church family directory (MEMBER+)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/follow-up/{taskId}": {
       "delete": {
         "operationId": "MembersPastoralController_deleteFollowUp",
@@ -26092,6 +26237,312 @@
           }
         ],
         "summary": "Reactivate my own (self-deactivated) account",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/spouse": {
+      "delete": {
+        "operationId": "MembersFamilyController_unlinkSpouse",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove my spouse link, for both of us",
+        "tags": [
+          "members"
+        ]
+      },
+      "get": {
+        "operationId": "MembersFamilyController_mySpouse",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "My marital status, spouse, and spouse requests waiting on me or them",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/spouse-requests": {
+      "delete": {
+        "operationId": "MembersFamilyController_cancelSpouseRequest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Withdraw the spouse request I sent",
+        "tags": [
+          "members"
+        ]
+      },
+      "post": {
+        "operationId": "MembersFamilyController_requestSpouse",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpouseRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Ask a member to confirm they are my spouse",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/spouse-requests/{id}/accept": {
+      "post": {
+        "operationId": "MembersFamilyController_acceptSpouse",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Confirm I am married to the member who asked",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/spouse-requests/{id}/decline": {
+      "post": {
+        "operationId": "MembersFamilyController_declineSpouse",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Decline a spouse request",
         "tags": [
           "members"
         ]
