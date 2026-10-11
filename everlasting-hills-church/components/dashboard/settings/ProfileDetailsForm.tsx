@@ -81,7 +81,8 @@ export default function ProfileDetailsForm({ user }: Props) {
     reset,
     watch,
     setValue,
-    formState: { isSubmitting, isDirty },
+    setError,
+    formState: { isSubmitting, isDirty, errors },
   } = useForm<FormValues>({ defaultValues: initial });
 
   const [saved, setSaved] = useState(false);
@@ -94,6 +95,15 @@ export default function ProfileDetailsForm({ user }: Props) {
   async function onSubmit(values: FormValues) {
     setSaved(false);
     setServerError(null);
+    // Being married is recorded by the wedding date: there is no separate
+    // field. Saving "Married" without one used to store nothing, and the
+    // profile went back to Single.
+    if (values.maritalStatus === "married" && !values.weddingAnniversary) {
+      setError("weddingAnniversary", {
+        message: "Add your wedding date to be shown as married.",
+      });
+      return;
+    }
     try {
       await apiClient.patch("/members/me", {
         gender: values.gender || null,
@@ -193,6 +203,9 @@ export default function ProfileDetailsForm({ user }: Props) {
               icon={Heart}
               type="date"
               max={todayStr}
+              required
+              error={errors.weddingAnniversary?.message}
+              hint="Needed to show you as married. The church also celebrates your anniversary."
               {...register("weddingAnniversary")}
             />
           )}
