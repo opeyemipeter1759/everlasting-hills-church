@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { ChevronDown, Menu, X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -12,9 +12,22 @@ import NavUserBadge, { useIsLoggedIn } from "./NavUserBadge";
 // unmounts the sermon player (and its <audio> element) on every tap.
 const MotionLink = motion(Link);
 
-const navLinks = [
-  { label: "About", href: "/about" },
-  { label: "Beliefs", href: "/beliefs" },
+type NavLink = {
+  label: string;
+  href: string;
+  /** Present only for items that render as a dropdown (desktop) / accordion (mobile). */
+  children?: { label: string; href: string }[];
+};
+
+const navLinks: NavLink[] = [
+  {
+    label: "About",
+    href: "/about",
+    children: [
+      { label: "About Us", href: "/about" },
+      { label: "Beliefs", href: "/beliefs" },
+    ],
+  },
   { label: "Sermons", href: "/sermons" },
   { label: "Events", href: "/events" },
   { label: "Ministries", href: "/ministries" },
@@ -26,13 +39,16 @@ const navLinks = [
 
 // Shown last (after Give), only when signed in — jumps straight to the check-in panel on the
 // landing page instead of making members scroll down to find it.
-const ATTENDANCE_LINK = { label: "Attendance", href: "/#attendance" };
+const ATTENDANCE_LINK: NavLink = { label: "Attendance", href: "/#attendance" };
 
-const mobileOnlyLinks: { label: string; href: string }[] = [];
+const mobileOnlyLinks: NavLink[] = [];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
+  const aboutRef = useRef<HTMLDivElement>(null);
   const isLoggedIn = useIsLoggedIn(); // null on first paint (hydration-safe), then true/false
   const pathname = usePathname();
   // Only the home page has a dark hero — every other public page has a light background.
@@ -52,6 +68,29 @@ export default function Navbar() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // Close the About dropdown on an outside click, Escape, or navigation.
+  useEffect(() => {
+    if (!aboutOpen) return;
+    function onPointerDown(e: PointerEvent) {
+      if (aboutRef.current && !aboutRef.current.contains(e.target as Node)) setAboutOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setAboutOpen(false);
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [aboutOpen]);
+
+  useEffect(() => {
+    setAboutOpen(false);
+    setMenuOpen(false);
+    setMobileAboutOpen(false);
+  }, [pathname]);
 
   return (
     <>
@@ -95,17 +134,61 @@ export default function Navbar() {
 
             {/* Desktop nav */}
             <nav className="hidden lg:flex items-center gap-6">
-              {effectiveNavLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-[13px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${
-                    scrolled || !darkHero ? "text-[#333]" : "text-white/90"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {effectiveNavLinks.map((link) =>
+                link.children ? (
+                  <div key={link.href} ref={aboutRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setAboutOpen((o) => !o)}
+                      aria-haspopup="menu"
+                      aria-expanded={aboutOpen}
+                      className={`flex items-center gap-1 text-[13px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${
+                        scrolled || !darkHero ? "text-[#333]" : "text-white/90"
+                      }`}
+                    >
+                      {link.label}
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform duration-200 ${aboutOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    <AnimatePresence>
+                      {aboutOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.15 }}
+                          role="menu"
+                          className="absolute left-0 top-full mt-3 w-44 overflow-hidden rounded-xl border border-brand-rose bg-white py-1.5 shadow-xl"
+                        >
+                          {link.children.map((child) => (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              role="menuitem"
+                              onClick={() => setAboutOpen(false)}
+                              className="block px-4 py-2.5 text-[13px] font-medium text-[#333] hover:bg-brand-blush hover:text-burgundy transition-colors"
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`text-[13px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${
+                      scrolled || !darkHero ? "text-[#333]" : "text-white/90"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ),
+              )}
             </nav>
             <div className="flex shrink-0 items-center gap-2 xs:gap-3">
               {/* Authenticated → avatar + dropdown. Anonymous → Login + Join CTAs. */}
@@ -151,22 +234,61 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="fixed top-16 inset-x-0 z-40 bg-white border-b border-brand-rose shadow-xl lg:hidden"
+            className="fixed top-16 inset-x-0 z-40 bg-white border-b border-brand-rose shadow-xl lg:hidden max-h-[calc(100vh-4rem)] overflow-y-auto"
           >
             <nav className="flex flex-col py-4 px-4 xs:px-5">
-              {[...effectiveNavLinks, ...mobileOnlyLinks].map((link, i) => (
-                <MotionLink
-                  key={link.href}
-                  href={link.href}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  onClick={() => setMenuOpen(false)}
-                  className="py-3.5 text-[15px] font-medium text-[#222] border-b border-brand-rose/50 last:border-0 hover:text-burgundy transition-colors"
-                >
-                  {link.label}
-                </MotionLink>
-              ))}
+              {[...effectiveNavLinks, ...mobileOnlyLinks].map((link, i) =>
+                link.children ? (
+                  <div key={link.href} className="border-b border-brand-rose/50 last:border-0">
+                    <button
+                      type="button"
+                      onClick={() => setMobileAboutOpen((o) => !o)}
+                      aria-expanded={mobileAboutOpen}
+                      className="flex w-full items-center justify-between py-3.5 text-[15px] font-medium text-[#222] hover:text-burgundy transition-colors"
+                    >
+                      {link.label}
+                      <ChevronDown
+                        size={16}
+                        className={`transition-transform duration-200 ${mobileAboutOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {mobileAboutOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          {link.children.map((child) => (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              onClick={() => setMenuOpen(false)}
+                              className="block py-3 pl-4 text-[14px] font-medium text-[#555] hover:text-burgundy transition-colors"
+                            >
+                              {child.label}
+                            </Link>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <MotionLink
+                    key={link.href}
+                    href={link.href}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    onClick={() => setMenuOpen(false)}
+                    className="py-3.5 text-[15px] font-medium text-[#222] border-b border-brand-rose/50 last:border-0 hover:text-burgundy transition-colors"
+                  >
+                    {link.label}
+                  </MotionLink>
+                ),
+              )}
               <div className="flex gap-3 mt-4">
                 {isLoggedIn === true ? (
                   <Link

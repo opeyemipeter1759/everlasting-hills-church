@@ -10,9 +10,11 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { FirstTimerDto } from './dto/first-timer.dto';
 import { PrayerRequestDto, UpdatePrayerRequestStatusDto } from './dto/prayer-request.dto';
 import { QuestionDto, UpdateQuestionStatusDto } from './dto/question.dto';
+import { WelfareRequestDto, UpdateWelfareRequestStatusDto } from './dto/welfare-request.dto';
 import { FirstTimerFormService } from './services/first-timer-form.service';
 import { PrayerRequestFormService } from './services/prayer-request-form.service';
 import { QuestionFormService } from './services/question-form.service';
+import { WelfareRequestFormService } from './services/welfare-request-form.service';
 
 /**
  * Public-facing intake forms: first-timer registration, prayer requests, questions.
@@ -27,6 +29,7 @@ export class FormsController {
     private readonly firstTimer: FirstTimerFormService,
     private readonly prayerRequestSvc: PrayerRequestFormService,
     private readonly questionSvc: QuestionFormService,
+    private readonly welfareRequestSvc: WelfareRequestFormService,
   ) {}
 
   @Public()
@@ -82,6 +85,44 @@ export class FormsController {
   @ApiOperation({ summary: 'Mark a prayer request prayed-for/pending (ADMIN+)' })
   async updatePrayerRequestStatus(@Param('id') id: string, @Body() body: UpdatePrayerRequestStatusDto) {
     return this.prayerRequestSvc.updatePrayerRequestStatus(id, body.status);
+  }
+
+  @Public()
+  @UseGuards(OptionalJwtAuthGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('welfare-request')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Submit Welfare Request',
+    description:
+      'Create a welfare/benevolence request and notify the church welfare team by email. Public — works with no ' +
+      'session. Returns a referenceCode the submitter can quote when following up.',
+  })
+  @ApiCreatedResponse({ description: 'Welfare request submitted successfully' })
+  @ApiBadRequestResponse({ description: 'Validation failed' })
+  async welfareRequest(@Body() body: WelfareRequestDto, @CurrentUser() user?: AuthUser) {
+    return this.welfareRequestSvc.submitWelfareRequest(body, user?.memberId ?? null);
+  }
+
+  @Get('welfare-requests')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'List all welfare requests, newest first (ADMIN+)' })
+  async listWelfareRequests() {
+    return this.welfareRequestSvc.listWelfareRequests();
+  }
+
+  @Delete('welfare-requests/:id')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Delete a welfare request (ADMIN+)' })
+  async deleteWelfareRequest(@Param('id') id: string) {
+    return this.welfareRequestSvc.deleteWelfareRequest(id);
+  }
+
+  @Patch('welfare-requests/:id/status')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'Update a welfare request status (ADMIN+)' })
+  async updateWelfareRequestStatus(@Param('id') id: string, @Body() body: UpdateWelfareRequestStatusDto) {
+    return this.welfareRequestSvc.updateWelfareRequestStatus(id, body.status);
   }
 
   @Public()

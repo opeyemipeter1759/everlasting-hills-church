@@ -57,6 +57,7 @@ const quickLinks = [
 const connectLinks = [
   { label: "First Timers", href: "/first-timer" },
   { label: "Prayer Request", href: "/prayer-request" },
+  { label: "Welfare Request", href: "/welfare" },
   { label: "Testimony", href: "/testimony" },
   { label: "Questions", href: "/questions" },
 ];
