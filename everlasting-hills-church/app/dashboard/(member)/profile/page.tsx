@@ -53,6 +53,7 @@ export default async function ProfilePage() {
   }
 
   const profile: ProfileViewModel = {
+    id: me.member?.id ?? null,
     firstName: me.member?.firstName ?? null,
     lastName: me.member?.lastName ?? null,
     email: me.member?.email ?? null,

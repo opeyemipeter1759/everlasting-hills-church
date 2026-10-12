@@ -31,6 +31,8 @@ import { InboxModule } from '../inbox/inbox.module';
 import { MembersFamilyController } from './controllers/members-family.controller';
 import { MemberSpouseService } from './services/member-spouse.service';
 import { MemberFamilyService } from './services/member-family.service';
+import { MemberActivityService } from './services/member-activity.service';
+import { ProfileSocialService } from './services/profile-social.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, InboxModule],
@@ -52,6 +54,8 @@ import { MemberFamilyService } from './services/member-family.service';
     MemberHouseholdService,
     MemberSpouseService,
     MemberFamilyService,
+    MemberActivityService,
+    ProfileSocialService,
     MemberBulkOpsService,
     MemberSelfLookupService,
     MemberProfileService,

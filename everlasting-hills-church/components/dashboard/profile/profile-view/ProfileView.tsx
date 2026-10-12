@@ -28,7 +28,7 @@ export default function ProfileView({ profile }: { profile: ProfileViewModel }) 
 
   return (
     <div className="space-y-8">
-      <PageHeader />
+      <PageHeader memberId={profile.id ?? null} />
 
       <HeroAndStorySection profile={profile} displayName={displayName} initials={initials} role={role} tenure={tenure} />
 

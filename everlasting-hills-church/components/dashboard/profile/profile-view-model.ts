@@ -7,6 +7,8 @@ export interface UnitMembership {
 }
 
 export interface ProfileViewModel {
+  /** Member id, for the link to the profile the church family sees. */
+  id?: string | null;
   firstName: string | null;
   lastName: string | null;
   email: string | null;

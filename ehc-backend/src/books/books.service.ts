@@ -131,4 +131,29 @@ export class BooksService {
     await this.prisma.bookComment.delete({ where: { id: commentId } });
     return { id: commentId, deleted: true };
   }
+
+  /** Books a member has finished, for the library and their reading badges. */
+  async readBookIds(memberId: string): Promise<string[]> {
+    const rows = await this.prisma.memberBookRead.findMany({ where: { memberId }, select: { bookId: true } });
+    return rows.map((r) => r.bookId);
+  }
+
+  async markRead(memberId: string, bookId: string) {
+    const book = await this.prisma.book.findFirst({
+      where: { id: bookId, tenantId: this.tenantId, status: EventStatus.PUBLISHED },
+      select: { id: true },
+    });
+    if (!book) throw new NotFoundException('Book not found');
+    await this.prisma.memberBookRead.upsert({
+      where: { memberId_bookId: { memberId, bookId } },
+      create: { id: randomUUID(), tenantId: this.tenantId, memberId, bookId },
+      update: {},
+    });
+    return { read: true };
+  }
+
+  async unmarkRead(memberId: string, bookId: string) {
+    await this.prisma.memberBookRead.deleteMany({ where: { memberId, bookId } });
+    return { read: false };
+  }
 }

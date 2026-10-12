@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Search, Users } from "lucide-react";
 import { useFamilyDirectory, type FamilyDirectoryEntry } from "@/lib/api/family";
+import { Pagination } from "./Pagination";
 
 function Avatar({ m }: { m: Pick<FamilyDirectoryEntry, "firstName" | "lastName" | "photoUrl"> }) {
   const initials = `${m.firstName[0] ?? ""}${m.lastName[0] ?? ""}`.toUpperCase();
@@ -17,20 +19,55 @@ function Avatar({ m }: { m: Pick<FamilyDirectoryEntry, "firstName" | "lastName" 
   );
 }
 
-/** Every active member, searchable by name, each opening their profile. */
+/**
+ * Every active member, searchable by name, each opening their profile.
+ *
+ * The search and the page live in the address (?q=…&page=…), so the back
+ * button from a profile returns to the same page of the same search, and a
+ * page can be shared.
+ */
 export default function FamilyDirectory() {
-  const [query, setQuery] = useState("");
-  const [searchFor, setSearchFor] = useState("");
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const searchFor = params.get("q") ?? "";
+  const page = Math.max(1, Number(params.get("page")) || 1);
+  const [query, setQuery] = useState(searchFor);
+  const listTop = useRef<HTMLLabelElement>(null);
+
+  const go = (next: { q?: string; page?: number }) => {
+    const q = next.q ?? searchFor;
+    const p = next.page ?? page;
+    const search = new URLSearchParams();
+    if (q.trim()) search.set("q", q.trim());
+    if (p > 1) search.set("page", String(p));
+    const qs = search.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
+  // Typing searches after a short pause, from the first page.
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setSearchFor(query);
-      setPage(1);
-    }, 250);
+    if (query.trim() === searchFor.trim()) return;
+    const timer = window.setTimeout(() => go({ q: query, page: 1 }), 300);
     return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
+
   const { data, isLoading, isError, refetch } = useFamilyDirectory(searchFor, page);
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
+
+  // A page past the end (after a search narrowed the list) falls back to the last.
+  useEffect(() => {
+    if (data && page > pages) go({ page: pages });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, page, pages]);
+
+  const changePage = (next: number) => {
+    go({ page: next });
+    listTop.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const first = data ? (data.page - 1) * data.pageSize + 1 : 0;
+  const last = data ? Math.min(data.total, first + data.items.length - 1) : 0;
 
   return (
     <div className="space-y-6">
@@ -44,7 +81,7 @@ export default function FamilyDirectory() {
         </p>
       </header>
 
-      <label className="relative block">
+      <label className="relative block scroll-mt-24" ref={listTop}>
         <span className="sr-only">Search members by name</span>
         <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#8a7e80]" aria-hidden="true" />
         <input
@@ -75,8 +112,10 @@ export default function FamilyDirectory() {
         </div>
       ) : (
         <>
-          <p className="text-xs text-[#8a7e80] dark:text-white/45">
-            {data.total} {data.total === 1 ? "member" : "members"}
+          <p aria-live="polite" className="text-xs text-[#8a7e80] dark:text-white/45">
+            {data.total <= data.pageSize
+              ? `${data.total} ${data.total === 1 ? "member" : "members"}`
+              : `Showing ${first}–${last} of ${data.total} members`}
           </p>
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {data.items.map((m) => (
@@ -98,31 +137,7 @@ export default function FamilyDirectory() {
               </li>
             ))}
           </ul>
-          {pages > 1 && (
-            <nav aria-label="Pages" className="flex items-center justify-center gap-3">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setPage((p) => p - 1)}
-                aria-label="Previous page"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#E7CDD3] disabled:opacity-40 dark:border-white/[0.14]"
-              >
-                <ChevronLeft size={16} aria-hidden="true" />
-              </button>
-              <span className="text-sm text-[#5A4A4D] dark:text-white/70">
-                Page {page} of {pages}
-              </span>
-              <button
-                type="button"
-                disabled={page >= pages}
-                onClick={() => setPage((p) => p + 1)}
-                aria-label="Next page"
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#E7CDD3] disabled:opacity-40 dark:border-white/[0.14]"
-              >
-                <ChevronRight size={16} aria-hidden="true" />
-              </button>
-            </nav>
-          )}
+          <Pagination page={page} pages={pages} onChange={changePage} label="Church family pages" />
         </>
       )}
     </div>

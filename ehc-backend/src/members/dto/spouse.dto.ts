@@ -7,3 +7,10 @@ export class SpouseRequestDto {
   @MaxLength(64)
   memberId!: string;
 }
+
+export class ProfileCommentDto {
+  @ApiProperty({ description: 'A word of encouragement, up to 500 characters' })
+  @IsString()
+  @MaxLength(500)
+  body!: string;
+}

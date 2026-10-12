@@ -189,6 +189,11 @@ model Member {
   SpouseOf                      Member[]                   @relation("Spouse")
   SpouseRequestsSent            SpouseRequest[]            @relation("SpouseRequestFrom")
   SpouseRequestsReceived        SpouseRequest[]            @relation("SpouseRequestTo")
+  ProfileLikesReceived          ProfileLike[]              @relation("ProfileLiked")
+  ProfileLikesGiven             ProfileLike[]              @relation("ProfileLiker")
+  ProfileCommentsReceived       ProfileComment[]           @relation("ProfileCommented")
+  ProfileCommentsWritten        ProfileComment[]           @relation("ProfileCommentAuthor")
+  BooksRead                     MemberBookRead[]
   AttendanceRecord              AttendanceRecord[]
   DiscussionResponse            DiscussionResponse[]
   EngagementScore               EngagementScore?
@@ -232,6 +237,48 @@ model Member {
   @@index([tenantId, joinedAt])
   @@index([tenantId, email])
   @@index([spouseMemberId])
+}
+
+/// One member liking another's profile, once.
+model ProfileLike {
+  id            String   @id
+  tenantId      String
+  memberId      String
+  likerMemberId String
+  createdAt     DateTime @default(now())
+  Member        Member   @relation("ProfileLiked", fields: [memberId], references: [id], onDelete: Cascade)
+  Liker         Member   @relation("ProfileLiker", fields: [likerMemberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, likerMemberId])
+  @@index([likerMemberId])
+}
+
+/// A word of encouragement left on a member's profile.
+model ProfileComment {
+  id             String   @id
+  tenantId       String
+  memberId       String
+  authorMemberId String
+  body           String
+  createdAt      DateTime @default(now())
+  Member         Member   @relation("ProfileCommented", fields: [memberId], references: [id], onDelete: Cascade)
+  Author         Member   @relation("ProfileCommentAuthor", fields: [authorMemberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, createdAt])
+  @@index([authorMemberId])
+}
+
+/// A book from the library a member says they have finished.
+model MemberBookRead {
+  id       String   @id
+  tenantId String
+  memberId String
+  bookId   String
+  readAt   DateTime @default(now())
+  Member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  Book     Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, bookId])
 }
 
 /// A member asking another to confirm they are married. Nothing shows on
@@ -1871,21 +1918,22 @@ model Announcement {
 /// members until unpublished or deleted. DRAFT lets an admin stage one before
 /// it's visible, same status pattern as Announcement.
 model Book {
-  id           String          @id
+  id           String           @id
   tenantId     String
   title        String
   author       String?
   description  String?
   coverUrl     String?
   fileUrl      String
-  status       EventStatus     @default(PUBLISHED)
+  status       EventStatus      @default(PUBLISHED)
   collectionId String?
   createdById  String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  Tenant       Tenant          @relation(fields: [tenantId], references: [id])
-  Collection   BookCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  Tenant       Tenant           @relation(fields: [tenantId], references: [id])
+  Collection   BookCollection?  @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   BookComment  BookComment[]
+  ReadBy       MemberBookRead[]
 
   @@index([tenantId, status])
   @@index([collectionId])

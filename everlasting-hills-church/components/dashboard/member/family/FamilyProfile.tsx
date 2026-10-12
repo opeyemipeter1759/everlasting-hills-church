@@ -1,35 +1,44 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Cake, Network, UserCircle2 } from "lucide-react";
+import { ArrowLeft, Cake, Heart, Network, UserCircle2 } from "lucide-react";
+import { useMe } from "@/lib/api";
 import { useFamilyProfile, type FamilyProfile as Profile } from "@/lib/api/family";
-import { ChipCard } from "@/components/dashboard/profile/profile-view/ChipCard";
-import { MaritalStatusCard } from "@/components/dashboard/profile/profile-view/MaritalStatusCard";
 import { SocialCard } from "@/components/dashboard/profile/profile-view/SocialCard";
 import { SOCIAL_PLATFORMS } from "@/components/dashboard/profile/profile-view/social-platforms";
+import EncouragementWall from "./EncouragementWall";
+import { ArticlesSection, BadgesSection, CardTitle, ProfileHeader, StatsStrip, card } from "./ProfileSections";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
 const dayMonth = (d: Profile["birthday"]) => (d ? `${d.day} ${MONTHS[d.month - 1]}` : null);
+const STAFF = ["PASTOR", "ADMIN", "ADMIN_HEAD", "SUPER_ADMIN"];
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
+function Detail({ icon: Icon, label, children }: { icon: typeof Cake; label: string; children: React.ReactNode }) {
   return (
-    <div className="mb-4 flex items-center gap-3">
-      <h2 className="flex-shrink-0 text-xs font-semibold uppercase tracking-[0.1em] text-[#87102C] dark:text-white/40 xs:tracking-[0.2em]">
-        {children}
-      </h2>
-      <span aria-hidden="true" className="h-px flex-1 bg-[#E7CDD3]/60 dark:bg-white/[0.07]" />
-    </div>
+    <li className="flex items-start gap-3 py-2">
+      <Icon size={16} className="mt-0.5 flex-shrink-0 text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#8a7e80] dark:text-white/45">{label}</p>
+        <div className="text-sm font-semibold text-[#111] dark:text-white">{children}</div>
+      </div>
+    </li>
   );
 }
 
-const notOnFile = <span className="text-sm font-normal italic text-[#b8a8ac] dark:text-white/30">Not shared</span>;
-
-/** Another member's profile, as the church family sees it. */
+/**
+ * A member's profile, laid out like a LinkedIn page for a walk with God: a
+ * cover and headline, the figures that matter here, their badges, the
+ * articles they have written, and words of encouragement from the family.
+ * Anyone signed in can open it, and it can be shared as a link.
+ */
 export default function FamilyProfile({ id }: { id: string }) {
   const { data: p, isLoading, isError } = useFamilyProfile(id);
+  const { data: me } = useMe();
+  const viewerId = me?.member?.id ?? null;
+  const isStaff = (me?.effectiveRoles ?? []).some((r) => STAFF.includes(r));
 
   const back = (
     <Link href="/dashboard/family" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
@@ -41,8 +50,8 @@ export default function FamilyProfile({ id }: { id: string }) {
     return (
       <div className="space-y-4">
         {back}
-        <div className="h-40 animate-pulse rounded-3xl bg-gray-100 dark:bg-white/5" />
-        <div className="h-32 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
+        <div className="h-72 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
+        <div className="h-24 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
       </div>
     );
   }
@@ -57,77 +66,96 @@ export default function FamilyProfile({ id }: { id: string }) {
     );
   }
 
-  const name = `${p.firstName} ${p.lastName}`.trim();
-  const initials = `${p.firstName[0] ?? ""}${p.lastName[0] ?? ""}`.toUpperCase();
-  const joined = new Date(p.joinedAt).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const married = p.maritalStatus === "MARRIED";
   const socials = SOCIAL_PLATFORMS.filter((platform) => p.socials[platform.key]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {back}
-
-      <section
-        className="relative overflow-hidden rounded-3xl p-6 text-white sm:p-8"
-        style={{ background: "linear-gradient(150deg, #87102C 0%, #6E0C24 55%, #4a0819 100%)" }}
-      >
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          {p.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={p.photoUrl} alt="" className="h-24 w-24 rounded-2xl border-2 border-white/25 object-cover" />
-          ) : (
-            <span className="flex h-24 w-24 items-center justify-center rounded-2xl border-2 border-white/25 bg-white/10 text-3xl font-bold">
-              {initials}
-            </span>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-5">
+          <ProfileHeader p={p} />
+          <StatsStrip p={p} />
+          {p.bio && (
+            <section className={`${card} p-5 sm:p-6`}>
+              <CardTitle>About</CardTitle>
+              <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#3d3436] dark:text-white/80">{p.bio}</p>
+            </section>
           )}
-          <div className="min-w-0">
-            <h1 className="text-3xl font-bold tracking-tight">{name}</h1>
-            <p className="mt-1 text-sm text-white/70">Member since {joined}</p>
-            {p.bio && <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85">{p.bio}</p>}
-          </div>
+          <BadgesSection p={p} />
+          <ArticlesSection p={p} />
+          <EncouragementWall memberId={p.id} firstName={p.firstName} isMe={p.isMe} viewerId={viewerId} isStaff={isStaff} />
         </div>
-      </section>
 
-      <section>
-        <SectionTitle>About</SectionTitle>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          <ChipCard icon={UserCircle2} label="Gender" value={p.gender ?? notOnFile} />
-          <ChipCard icon={Cake} label="Birthday" value={dayMonth(p.birthday) ?? notOnFile} />
-          <MaritalStatusCard
-            isMarried={p.maritalStatus === "MARRIED"}
-            anniversary={dayMonth(p.anniversary)}
-            spouse={p.spouse}
-            spouseName={p.spouseName}
-          />
-        </div>
-      </section>
+        <aside className="space-y-5">
+          <section className={`${card} p-5`}>
+            <CardTitle>Details</CardTitle>
+            <ul className="divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06]">
+              {p.gender && (
+                <Detail icon={UserCircle2} label="Gender">
+                  {p.gender}
+                </Detail>
+              )}
+              {p.birthday && (
+                <Detail icon={Cake} label="Birthday">
+                  {dayMonth(p.birthday)}
+                </Detail>
+              )}
+              <Detail icon={Heart} label="Marital status">
+                {married ? (
+                  p.spouse ? (
+                    <>
+                      Married to{" "}
+                      <Link href={`/dashboard/family/${p.spouse.id}`} className="text-[#87102C] hover:underline dark:text-[#FFB3C1]">
+                        {p.spouse.name}
+                      </Link>
+                    </>
+                  ) : p.spouseName ? (
+                    `Married to ${p.spouseName}`
+                  ) : (
+                    "Married"
+                  )
+                ) : (
+                  "Single"
+                )}
+                {married && p.anniversary && (
+                  <span className="block text-xs font-normal text-[#8a7e80] dark:text-white/45">Anniversary · {dayMonth(p.anniversary)}</span>
+                )}
+              </Detail>
+            </ul>
+          </section>
 
-      {p.units.length > 0 && (
-        <section>
-          <SectionTitle>Serving in</SectionTitle>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {p.units.map((u) => (
-              <ChipCard
-                key={u.id}
-                icon={Network}
-                label={u.isLead ? "Leads" : u.isAssistant ? "Assistant lead" : "Serves in"}
-                value={u.name}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+          {p.units.length > 0 && (
+            <section className={`${card} p-5`}>
+              <CardTitle>Serving in</CardTitle>
+              <ul className="space-y-3">
+                {p.units.map((u) => (
+                  <li key={u.id} className="flex items-start gap-3">
+                    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#FFE8ED] dark:bg-[#87102C]/25">
+                      <Network size={15} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-bold text-[#111] dark:text-white">{u.name}</p>
+                      <p className="text-xs text-[#8a7e80] dark:text-white/45">{u.isLead ? "Leads" : u.isAssistant ? "Assistant lead" : "Serves in"}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
-      {socials.length > 0 && (
-        <section>
-          <SectionTitle>Connect</SectionTitle>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {socials.map((platform) => (
-              <SocialCard key={platform.key} platform={platform} value={p.socials[platform.key]} />
-            ))}
-          </div>
-        </section>
-      )}
-
+          {socials.length > 0 && (
+            <section className={`${card} p-5`}>
+              <CardTitle>Connect</CardTitle>
+              <div className="space-y-3">
+                {socials.map((platform) => (
+                  <SocialCard key={platform.key} platform={platform} value={p.socials[platform.key]} />
+                ))}
+              </div>
+            </section>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

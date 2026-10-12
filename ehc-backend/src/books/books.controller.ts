@@ -83,4 +83,28 @@ export class BooksController {
     const isPastor = actor.effectiveRoles?.some((r) => ['PASTOR', 'SUPER_ADMIN'].includes(r)) ?? false;
     return this.books.deleteComment(commentId, { memberId: actor.memberId, isPastor });
   }
+
+  @Get('me/read')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'The ids of the books I have marked as read (MEMBER+)' })
+  myRead(@CurrentUser() actor: AuthUser) {
+    if (!actor.memberId) return [];
+    return this.books.readBookIds(actor.memberId);
+  }
+
+  @Post('me/:id/read')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Mark a book as read; it counts towards reading badges (MEMBER+)' })
+  markRead(@Param('id') id: string, @CurrentUser() actor: AuthUser) {
+    if (!actor.memberId) throw new BadRequestException('No member profile linked to this account');
+    return this.books.markRead(actor.memberId, id);
+  }
+
+  @Delete('me/:id/read')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Unmark a book as read (MEMBER+)' })
+  unmarkRead(@Param('id') id: string, @CurrentUser() actor: AuthUser) {
+    if (!actor.memberId) throw new BadRequestException('No member profile linked to this account');
+    return this.books.unmarkRead(actor.memberId, id);
+  }
 }
