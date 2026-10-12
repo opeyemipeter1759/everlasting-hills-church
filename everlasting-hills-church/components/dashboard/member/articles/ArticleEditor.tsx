@@ -353,7 +353,7 @@ export default function ArticleEditor() {
           {isPending
             ? "Waiting for the head of comms or an admin. You can update it, or withdraw it to a draft."
             : isPublished
-              ? "Changes to a published story are approved again before they show. Until then the church keeps reading the approved version."
+              ? "Submitting changes takes this story off the site until they are approved: it moves to Waiting for approval in Your stories, and someone other than you (the head of comms, a pastor or an admin) approves it."
               : "When you submit, the head of comms or an admin reads it first. Once approved it appears to the church and on the public blog."}
         </p>
         {existing?.status === "DRAFT" && existing.reviewNote && (
