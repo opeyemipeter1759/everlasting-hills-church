@@ -1,11 +1,18 @@
 import Link from "next/link";
-import { Send, Youtube, Heart, Home, Users2, Mic, HelpCircle } from "lucide-react";
+import { Send, Youtube, Heart, Home, Users, Users2, Mic, HelpCircle } from "lucide-react";
 import { CHURCH } from "@/config/config";
 import { useAutoScroll } from "./useAutoScroll";
 
 export function QuickActionsStrip() {
   const scrollRef = useAutoScroll<HTMLDivElement>();
   const actions = [
+    // First, so members find each other: the directory is otherwise only in
+    // the side menu, which starts collapsed and is behind the menu on a phone.
+    {
+      icon: Users, label: "Church Family", href: "/dashboard/family", external: false,
+      cls: "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200/60 dark:border-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/25",
+      iconCls: "text-rose-600 dark:text-rose-400",
+    },
     {
       icon: Send, label: "Submit Prayer", href: "/prayer-request", external: false,
       cls: "bg-violet-50 dark:bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-200/60 dark:border-violet-500/20 hover:bg-violet-100 dark:hover:bg-violet-500/25",

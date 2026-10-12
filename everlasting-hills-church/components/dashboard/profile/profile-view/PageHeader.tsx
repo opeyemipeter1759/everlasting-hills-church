@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { LayoutDashboard } from "lucide-react";
+import { LayoutDashboard, Users } from "lucide-react";
 import { ease } from "./constants";
 
 /** Section 1 — section label + page title + breadcrumb. */
@@ -19,6 +19,12 @@ export function PageHeader() {
         <h1 className="text-3xl sm:text-4xl font-bold text-[#111] dark:text-white tracking-tight leading-[1.1] text-balance">
           My Profile
         </h1>
+        <Link
+          href="/dashboard/family"
+          className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#E7CDD3] px-4 text-sm font-semibold text-[#87102C] transition-colors hover:bg-[#FFF4F6] dark:border-white/[0.14] dark:text-[#FFB3C1] dark:hover:bg-white/[0.06]"
+        >
+          <Users size={15} aria-hidden="true" /> Browse the church family
+        </Link>
       </div>
 
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-[#8a7e80] dark:text-white/45">
