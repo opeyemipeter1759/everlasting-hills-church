@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { FamilyProfile as Profile, ProfileCommentsPage } from "@/lib/api/family";
 import FamilyProfile from "./FamilyProfile";
@@ -109,7 +109,11 @@ describe("a member's profile", () => {
     render(<FamilyProfile id="ada" />);
     fireEvent.click(screen.getByRole("button", { name: "Like" }));
     expect(like).toHaveBeenCalledWith(true);
-    expect(screen.getByRole("button", { name: "Share profile" })).toBeInTheDocument();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+    fireEvent.click(screen.getByRole("button", { name: "Copy profile link" }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/dashboard/family/ada`));
+    expect(await screen.findByText("Link copied")).toBeInTheDocument();
 
     fireEvent.change(screen.getByRole("textbox", { name: "Write something nice about Ada" }), { target: { value: "God bless you!" } });
     fireEvent.click(screen.getByRole("button", { name: "Post" }));
@@ -128,7 +132,7 @@ describe("a member's profile", () => {
     state.data = { ...ada, isMe: true };
     render(<FamilyProfile id="ada" />);
     expect(screen.getByRole("link", { name: "Edit profile" })).toHaveAttribute("href", "/dashboard/settings");
-    expect(screen.getByRole("button", { name: "Share my profile" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy my profile link" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Like" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Write something nice about/)).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What the family says about you" })).toBeInTheDocument();

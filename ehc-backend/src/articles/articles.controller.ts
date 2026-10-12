@@ -1,6 +1,9 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  UploadedFile,
+  UseInterceptors,
   Delete,
   Get,
   Header,
@@ -9,8 +12,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { hasValidFileSignature } from '../uploads/file-signature.util';
+import { UploadsService } from '../uploads/uploads.service';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiQuery,
   ApiTags,
@@ -46,7 +55,26 @@ export class ArticlesController {
     private readonly articles: ArticlesService,
     private readonly review: ArticleReviewService,
     private readonly blog: ArticleBlogService,
+    private readonly uploads: UploadsService,
   ) {}
+
+  /** A cover picture for an article, uploaded before the article is saved. */
+  @Post('cover')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiOperation({ summary: 'Upload an article cover picture (JPG, PNG or WebP, up to 5 MB); returns its URL' })
+  async cover(
+    @UploadedFile() file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
+  ) {
+    if (!file) throw new BadRequestException('No file provided');
+    if (file.size > 5 * 1024 * 1024) throw new BadRequestException('Choose a picture under 5 MB');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      throw new BadRequestException('Choose a JPG, PNG or WebP picture');
+    }
+    if (!hasValidFileSignature(file)) throw new BadRequestException('That picture does not match its declared format');
+    return this.uploads.uploadObject(file, 'article-covers');
+  }
 
   // Declared before :slug routes, which would otherwise take "manage" as a slug.
   @Get('manage/list')
@@ -96,16 +124,22 @@ export class ArticlesController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'authorId', required: false })
+  @ApiQuery({ name: 'q', required: false, description: 'Search titles, subtitles and passages' })
+  @ApiQuery({ name: 'tab', required: false, enum: ['for-you', 'featured', 'saved'] })
   feed(
     @CurrentUser() actor: AuthUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('authorId') authorId?: string,
+    @Query('q') q?: string,
+    @Query('tab') tab?: string,
   ) {
     return this.articles.feed(actor, {
       page: Number(page) || 1,
       limit: Number(limit) || 20,
       authorId,
+      q,
+      tab,
     });
   }
 
@@ -168,8 +202,20 @@ export class ArticlesController {
     return this.articles.update(actor, id, body);
   }
 
+  @Post(':id/bookmark')
+  @ApiOperation({ summary: 'Save a published article to read later' })
+  bookmark(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.articles.setBookmark(actor, id, true);
+  }
+
+  @Delete(':id/bookmark')
+  @ApiOperation({ summary: 'Take an article off my saved list' })
+  unbookmark(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.articles.setBookmark(actor, id, false);
+  }
+
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete your own article' })
+  @ApiOperation({ summary: 'Delete an article: its author, or a pastor or admin' })
   remove(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
     return this.articles.remove(actor, id);
   }

@@ -730,7 +730,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete your own article */
+        /** Delete an article: its author, or a pastor or admin */
         delete: operations["ArticlesController_remove"];
         options?: never;
         head?: never;
@@ -750,6 +750,24 @@ export interface paths {
         /** Approve a piece waiting for review, which publishes it */
         post: operations["ArticlesController_approve"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}/bookmark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save a published article to read later */
+        post: operations["ArticlesController_bookmark"];
+        /** Take an article off my saved list */
+        delete: operations["ArticlesController_unbookmark"];
         options?: never;
         head?: never;
         patch?: never;
@@ -855,6 +873,23 @@ export interface paths {
         post?: never;
         /** Remove a comment: its writer, the article's author, or a pastor or admin */
         delete: operations["ArticlesController_deleteComment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an article cover picture (JPG, PNG or WebP, up to 5 MB); returns its URL */
+        post: operations["ArticlesController_cover"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -8380,6 +8415,8 @@ export interface components {
         CreateArticleDto: {
             /** @description Markdown, the same subset announcements use */
             body: string;
+            /** @description Cover picture, from POST /articles/cover */
+            coverImageUrl?: Record<string, never>;
             /** @example 45008039 */
             endVerseId?: number;
             /** @description Submit for approval by another reviewer rather than saving a draft */
@@ -8391,6 +8428,8 @@ export interface components {
              * @example 45001001
              */
             startVerseId?: number;
+            /** @description A one-line subtitle under the title */
+            subtitle?: Record<string, never>;
             /** @example What Romans 8 showed me this week */
             title: string;
         };
@@ -9626,6 +9665,8 @@ export interface components {
         };
         UpdateArticleDto: {
             body?: string;
+            /** @description Cover picture, from POST /articles/cover */
+            coverImageUrl?: Record<string, never>;
             endVerseId?: Record<string, never>;
             /** @description The revision loaded by the editor; prevents overwriting later changes */
             revision?: number;
@@ -9633,6 +9674,8 @@ export interface components {
             startVerseId?: Record<string, never>;
             /** @enum {string} */
             status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "ARCHIVED";
+            /** @description A one-line subtitle under the title */
+            subtitle?: Record<string, never>;
             title?: string;
         };
         UpdateBookCollectionDto: {
@@ -11595,6 +11638,9 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 authorId?: string;
+                /** @description Search titles, subtitles and passages */
+                q?: string;
+                tab?: "for-you" | "featured" | "saved";
             };
             header?: never;
             path?: never;
@@ -11745,6 +11791,72 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_bookmark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_unbookmark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12052,6 +12164,44 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_cover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

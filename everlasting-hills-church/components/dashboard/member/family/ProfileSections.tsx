@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Award, Camera, Check, Heart, Loader2, Pencil, Share2, Trash2 } from "lucide-react";
+import { Award, Camera, Check, Heart, Link2, Loader2, Pencil, Share2, Trash2 } from "lucide-react";
 import { useLikeProfile, useProfileCover, type BadgeProgress, type FamilyProfile, type ProfileBadge } from "@/lib/api/family";
 import { LEVEL_STYLE, TRACK_ICON, TRACK_LABEL } from "./badge-style";
 
@@ -27,32 +27,49 @@ export function profileUrl(id: string) {
   return `${origin}/dashboard/family/${id}`;
 }
 
+/**
+ * Share and Copy link, side by side. Share opens the phone's share sheet;
+ * Copy link always just copies, because on a computer the share sheet is not
+ * what people expect and there was no other way to get the link.
+ */
 export function ShareProfileButton({ id, name, isMe }: { id: string; name: string; isMe: boolean }) {
   const [copied, setCopied] = useState(false);
-  async function share() {
-    const url = profileUrl(id);
-    const text = isMe ? "See my profile in the Everlasting Hills church family" : `${name} in the Everlasting Hills church family`;
+  const [canShare, setCanShare] = useState(false);
+  useEffect(() => setCanShare(typeof navigator.share === "function"), []);
+  const url = () => profileUrl(id);
+
+  async function copy() {
     try {
-      if (typeof navigator.share === "function") {
-        await navigator.share({ title: name, text, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
+      await navigator.clipboard.writeText(url());
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard blocked (an old browser, or no permission): show the link to copy by hand.
+      window.prompt("Copy this profile link", url());
+    }
+  }
+  async function share() {
+    const text = isMe ? "See my profile in the Everlasting Hills church family" : `${name} in the Everlasting Hills church family`;
+    try {
+      await navigator.share({ title: name, text, url: url() });
     } catch {
       // The member closed the share sheet: nothing to do.
     }
   }
+  const outline =
+    "inline-flex min-h-11 items-center gap-2 rounded-full border border-[#87102C] px-5 text-sm font-semibold text-[#87102C] transition-colors hover:bg-[#FFF4F6] dark:border-[#FFB3C1]/60 dark:text-[#FFB3C1] dark:hover:bg-white/[0.06]";
   return (
-    <button
-      type="button"
-      onClick={share}
-      className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#87102C] px-5 text-sm font-semibold text-[#87102C] transition-colors hover:bg-[#FFF4F6] dark:border-[#FFB3C1]/60 dark:text-[#FFB3C1] dark:hover:bg-white/[0.06]"
-    >
-      {copied ? <Check size={15} aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
-      {copied ? "Link copied" : isMe ? "Share my profile" : "Share profile"}
-    </button>
+    <>
+      <button type="button" onClick={copy} className={outline} aria-live="polite">
+        {copied ? <Check size={15} aria-hidden="true" /> : <Link2 size={15} aria-hidden="true" />}
+        {copied ? "Link copied" : isMe ? "Copy my profile link" : "Copy profile link"}
+      </button>
+      {canShare && (
+        <button type="button" onClick={share} className={outline}>
+          <Share2 size={15} aria-hidden="true" /> {isMe ? "Share my profile" : "Share profile"}
+        </button>
+      )}
+    </>
   );
 }
 

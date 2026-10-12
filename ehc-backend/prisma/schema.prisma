@@ -2842,6 +2842,8 @@ model MemberArticle {
   /// The same small Markdown subset the announcements use.
   body           String
   excerpt        String?
+  /// The author's own one-line subtitle; the feed falls back to the excerpt.
+  subtitle       String?
   coverImageUrl  String?
   status         ArticleStatus       @default(DRAFT)
   /// Changes whenever the author or reviewer changes the article, not on reads/likes.
@@ -2868,6 +2870,7 @@ model MemberArticle {
   ReviewedBy     Profile?            @relation("MemberArticleReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, map: "MemberArticle_reviewer_fkey")
   Likes          MemberArticleLike[]
   Comments       ArticleComment[]
+  Bookmarks      ArticleBookmark[]
 
   @@unique([tenantId, slug], map: "MemberArticle_tenant_slug")
   @@index([tenantId, status, publishedAt(sort: Desc)], map: "MemberArticle_feed")
@@ -2888,6 +2891,19 @@ model ArticleComment {
 
   @@index([articleId, createdAt])
   @@index([tenantId, createdAt])
+}
+
+/// An article a member has saved to read later.
+model ArticleBookmark {
+  id        String        @id
+  tenantId  String
+  articleId String
+  profileId String
+  createdAt DateTime      @default(now()) @db.Timestamptz(6)
+  Article   MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, profileId])
+  @@index([profileId, createdAt])
 }
 
 /// One row per reader per article, so a double tap cannot inflate a count.

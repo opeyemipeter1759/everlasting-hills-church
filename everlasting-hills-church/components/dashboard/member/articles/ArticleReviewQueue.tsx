@@ -1,54 +1,73 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
-import ArticleTabs from "./ArticleTabs";
-import { AuthorAvatar, formatDate } from "./ArticleMeta";
+import { MAvatar } from "@/components/medium/parts";
+import { storyDate } from "@/components/medium/story";
 import { authorName, useArticleReviewAccess, useArticleReviewQueue } from "@/lib/api/articles";
+import ArticleTabs, { MediumPage } from "./ArticleTabs";
 
+/** Stories waiting for the head of comms, a pastor or an admin to approve. */
 export default function ArticleReviewQueue() {
   const access = useArticleReviewAccess();
   const queue = useArticleReviewQueue(access.data?.canReview === true);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-5">
+    <MediumPage>
       <ArticleTabs />
-      <h1 className="mt-6 font-serif text-3xl font-bold text-[#111] dark:text-white">Article approvals</h1>
-      <p className="mt-2 text-sm text-gray-500 dark:text-white/50">Read each submission, then approve it for the church or return it with feedback.</p>
-      {access.isLoading || (access.data?.canReview && queue.isLoading) ? (
-        <p role="status" className="mt-8 text-sm text-gray-500">Loading submissions...</p>
-      ) : access.error || queue.error ? (
-        <div role="alert" className="mt-8 text-sm text-red-600">
-          Submissions could not be loaded. <button type="button" className="underline" onClick={() => { void access.refetch(); if (access.data?.canReview) void queue.refetch(); }}>Try again</button>
-        </div>
-      ) : !access.data?.canReview ? (
-        <p className="mt-8 rounded-2xl border border-gray-200 p-5 text-sm dark:border-white/10">Reviews are available to the HOD overseeing the Content Writing Team, pastors and church administrators.</p>
-      ) : !queue.data?.length ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-gray-200 px-5 py-12 text-center dark:border-white/10">
-          <ClipboardCheck className="mx-auto text-[#87102C] dark:text-[#FFB3C1]" />
-          <p className="mt-3 font-semibold dark:text-white">No articles waiting for your review</p>
-          <p className="mt-1 text-sm text-gray-500 dark:text-white/50">Your own submissions appear under My writing for another reviewer to approve.</p>
-        </div>
-      ) : (
-        <ul className="mt-8 space-y-3">
-          {queue.data.map((article) => (
-            <li key={article.id}>
-              <Link href={`/dashboard/articles/${article.slug}`} className="block rounded-2xl border border-gray-200 bg-white p-4 hover:border-[#87102C]/40 dark:border-white/10 dark:bg-white/[0.03] sm:p-5">
-                <div className="flex min-w-0 items-center gap-3">
-                  <AuthorAvatar author={article.Author} size={36} />
-                  <div className="min-w-0">
-                    <p className="break-words text-sm font-semibold dark:text-white">{authorName(article.Author)}</p>
-                    <p className="text-xs text-gray-500 dark:text-white/45">Submitted {formatDate(article.submittedAt)} · {article.readingMinutes} min read</p>
-                  </div>
+      <div className="mx-auto max-w-[760px] pt-8">
+        <h1 className="m-display m-ink text-[40px] leading-none sm:text-5xl">Waiting for review</h1>
+        <p className="m-muted mt-3 text-base">Read each one through, then approve it for the church and the public blog, or send it back with a note.</p>
+
+        {access.isLoading || (access.data?.canReview && queue.isLoading) ? (
+          <div className="mt-8 space-y-6" aria-busy="true">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="m-paper h-20 animate-pulse" />
+            ))}
+          </div>
+        ) : access.error || queue.error ? (
+          <p role="alert" className="m-muted mt-8">
+            Submissions could not load.{" "}
+            <button
+              type="button"
+              className="m-ink min-h-11 underline"
+              onClick={() => {
+                void access.refetch();
+                if (access.data?.canReview) void queue.refetch();
+              }}
+            >
+              Try again
+            </button>
+          </p>
+        ) : !access.data?.canReview ? (
+          <p className="m-paper m-ink mt-8 border m-rule p-5 text-sm">
+            Reviews are for the head of comms (the Content Writing Team&apos;s department head), pastors and church admins.
+          </p>
+        ) : !queue.data?.length ? (
+          <p className="m-muted mt-10">Nothing waiting for you. Your own submissions wait for another reviewer.</p>
+        ) : (
+          <ul className="mt-6">
+            {queue.data.map((article) => (
+              <li key={article.id} className="border-b m-rule py-7">
+                <div className="flex items-center gap-2 text-[13px]">
+                  <MAvatar name={authorName(article.Author)} photoUrl={article.Author?.Member?.photoUrl ?? null} size={22} />
+                  <span className="m-ink">{authorName(article.Author)}</span>
+                  <span className="m-muted">· submitted {storyDate(article.submittedAt)}</span>
                 </div>
-                <h2 className="mt-3 break-words font-serif text-xl font-bold text-[#111] dark:text-white">{article.title}</h2>
-                {article.excerpt && <p className="mt-2 line-clamp-3 break-words text-sm text-gray-600 dark:text-white/60">{article.excerpt}</p>}
-                <span className="mt-4 inline-flex min-h-11 items-center text-sm font-bold text-[#87102C] dark:text-[#FFB3C1]">Read and review →</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+                <Link href={`/dashboard/articles/${article.slug}`} className="group mt-3 block">
+                  <h2 className="m-ink break-words text-xl font-bold leading-snug group-hover:underline">{article.title}</h2>
+                  {article.excerpt && <p className="m-muted mt-1 line-clamp-2 break-words text-[15px]">{article.excerpt}</p>}
+                </Link>
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <span className="m-muted text-[13px]">{article.readingMinutes} min read</span>
+                  <Link href={`/dashboard/articles/${article.slug}`} className="m-pill !min-h-9 !px-4">
+                    Read and review
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </MediumPage>
   );
 }

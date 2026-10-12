@@ -14,6 +14,7 @@ export interface BlogArticleSummary {
   slug: string;
   title: string;
   excerpt: string | null;
+  subtitle?: string | null;
   coverImageUrl: string | null;
   scriptureLabel: string | null;
   readingMinutes: number;

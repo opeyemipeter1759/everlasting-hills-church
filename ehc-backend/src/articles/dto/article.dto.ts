@@ -8,6 +8,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  IsUrl,
 } from 'class-validator';
 
 export class CreateArticleDto {
@@ -41,6 +42,18 @@ export class CreateArticleDto {
   @IsString()
   @MaxLength(120)
   scriptureLabel?: string;
+
+  @ApiPropertyOptional({ description: 'A one-line subtitle under the title' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  subtitle?: string | null;
+
+  @ApiPropertyOptional({ description: 'Cover picture, from POST /articles/cover' })
+  @IsOptional()
+  @IsUrl({ protocols: ['https'], require_protocol: true })
+  @MaxLength(1000)
+  coverImageUrl?: string | null;
 
   @ApiPropertyOptional({
     description:
@@ -90,6 +103,18 @@ export class UpdateArticleDto {
   @IsString()
   @MaxLength(120)
   scriptureLabel?: string | null;
+
+  @ApiPropertyOptional({ description: 'A one-line subtitle under the title' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  subtitle?: string | null;
+
+  @ApiPropertyOptional({ description: 'Cover picture, from POST /articles/cover' })
+  @IsOptional()
+  @IsUrl({ protocols: ['https'], require_protocol: true })
+  @MaxLength(1000)
+  coverImageUrl?: string | null;
 
   @ApiPropertyOptional({
     enum: ['DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'ARCHIVED'],

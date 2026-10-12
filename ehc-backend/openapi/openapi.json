@@ -636,6 +636,10 @@
             "description": "Markdown, the same subset announcements use",
             "type": "string"
           },
+          "coverImageUrl": {
+            "description": "Cover picture, from POST /articles/cover",
+            "type": "object"
+          },
           "endVerseId": {
             "example": 45008039,
             "type": "number"
@@ -652,6 +656,10 @@
             "description": "First verse of the passage this came from",
             "example": 45001001,
             "type": "number"
+          },
+          "subtitle": {
+            "description": "A one-line subtitle under the title",
+            "type": "object"
           },
           "title": {
             "example": "What Romans 8 showed me this week",
@@ -3502,6 +3510,10 @@
           "body": {
             "type": "string"
           },
+          "coverImageUrl": {
+            "description": "Cover picture, from POST /articles/cover",
+            "type": "object"
+          },
           "endVerseId": {
             "type": "object"
           },
@@ -3523,6 +3535,10 @@
               "ARCHIVED"
             ],
             "type": "string"
+          },
+          "subtitle": {
+            "description": "A one-line subtitle under the title",
+            "type": "object"
           },
           "title": {
             "type": "string"
@@ -7341,6 +7357,28 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Search titles, subtitles and passages",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tab",
+            "required": false,
+            "schema": {
+              "enum": [
+                "for-you",
+                "featured",
+                "saved"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -7491,7 +7529,7 @@
             "access-token": []
           }
         ],
-        "summary": "Delete your own article",
+        "summary": "Delete an article: its author, or a pastor or admin",
         "tags": [
           "articles"
         ]
@@ -7622,6 +7660,116 @@
           }
         ],
         "summary": "Approve a piece waiting for review, which publishes it",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}/bookmark": {
+      "delete": {
+        "operationId": "ArticlesController_unbookmark",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Take an article off my saved list",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "ArticlesController_bookmark",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Save a published article to read later",
         "tags": [
           "articles"
         ]
@@ -8148,6 +8296,69 @@
           }
         ],
         "summary": "Remove a comment: its writer, the article's author, or a pastor or admin",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/cover": {
+      "post": {
+        "operationId": "ArticlesController_cover",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Upload an article cover picture (JPG, PNG or WebP, up to 5 MB); returns its URL",
         "tags": [
           "articles"
         ]

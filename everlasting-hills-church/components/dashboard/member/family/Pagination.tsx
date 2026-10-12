@@ -30,13 +30,21 @@ export function Pagination({
   pages,
   onChange,
   label = "Pages",
+  tone = "brand",
 }: {
   page: number;
   pages: number;
   onChange: (page: number) => void;
   label?: string;
+  /** "mono" for the articles' reading room: ink pills, no church red. */
+  tone?: "brand" | "mono";
 }) {
   if (pages <= 1) return null;
+  const idle =
+    tone === "mono"
+      ? "m-ink m-rule !rounded-full hover:bg-[var(--m-line)]"
+      : "border-[#E7CDD3] text-[#5A4A4D] hover:bg-[#FFF4F6] dark:border-white/[0.14] dark:text-white/70 dark:hover:bg-white/[0.06]";
+  const current = tone === "mono" ? "!rounded-full border-transparent bg-[var(--m-black)] text-[var(--m-on-black)]" : "border-[#87102C] bg-[#87102C] text-white";
   return (
     <nav aria-label={label} className="flex flex-wrap items-center justify-center gap-1.5">
       <button
@@ -44,7 +52,7 @@ export function Pagination({
         disabled={page <= 1}
         onClick={() => onChange(page - 1)}
         aria-label="Previous page"
-        className={`${cell} border-[#E7CDD3] text-[#5A4A4D] hover:bg-[#FFF4F6] disabled:opacity-40 dark:border-white/[0.14] dark:text-white/70 dark:hover:bg-white/[0.06]`}
+        className={`${cell} ${idle} disabled:opacity-40`}
       >
         <ChevronLeft size={16} aria-hidden="true" />
       </button>
@@ -61,9 +69,7 @@ export function Pagination({
             aria-label={`Page ${p}`}
             aria-current={p === page ? "page" : undefined}
             className={`${cell} ${
-              p === page
-                ? "border-[#87102C] bg-[#87102C] text-white"
-                : "border-[#E7CDD3] text-[#5A4A4D] hover:bg-[#FFF4F6] dark:border-white/[0.14] dark:text-white/70 dark:hover:bg-white/[0.06]"
+              p === page ? current : idle
             }`}
           >
             {p}
@@ -75,7 +81,7 @@ export function Pagination({
         disabled={page >= pages}
         onClick={() => onChange(page + 1)}
         aria-label="Next page"
-        className={`${cell} border-[#E7CDD3] text-[#5A4A4D] hover:bg-[#FFF4F6] disabled:opacity-40 dark:border-white/[0.14] dark:text-white/70 dark:hover:bg-white/[0.06]`}
+        className={`${cell} ${idle} disabled:opacity-40`}
       >
         <ChevronRight size={16} aria-hidden="true" />
       </button>
