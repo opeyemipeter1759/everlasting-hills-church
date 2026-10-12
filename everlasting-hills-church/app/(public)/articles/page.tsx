@@ -85,7 +85,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: { p
         </div>
 
         <aside className="space-y-10 lg:sticky lg:top-28 lg:self-start">
-          <StaffPicks stories={picks} hrefFor={(s) => `/articles/${s.slug}`} />
+          <StaffPicks stories={picks} basePath="/articles" />
           <WriteCard href="/dashboard/articles/write" signedIn={false} />
         </aside>
       </div>

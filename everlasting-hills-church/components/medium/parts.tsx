@@ -152,7 +152,8 @@ export function StoryRow({
 }
 
 /** Pastors' picks down the side, small and textual. */
-export function StaffPicks({ stories, hrefFor, title = "Staff Picks" }: { stories: Story[]; hrefFor: (s: Story) => string; title?: string }) {
+/** basePath is a string, not a function, so a server page can render this client component. */
+export function StaffPicks({ stories, basePath, title = "Staff Picks" }: { stories: Story[]; basePath: string; title?: string }) {
   if (stories.length === 0) return null;
   return (
     <section aria-labelledby="staff-picks">
@@ -166,7 +167,7 @@ export function StaffPicks({ stories, hrefFor, title = "Staff Picks" }: { storie
               <MAvatar name={s.author.name} photoUrl={s.author.photoUrl} size={20} />
               <span className="m-ink">{s.author.name}</span>
             </div>
-            <Link href={hrefFor(s)} className="m-ink mt-1.5 block text-base font-bold leading-snug hover:underline">
+            <Link href={`${basePath}/${s.slug}`} className="m-ink mt-1.5 block text-base font-bold leading-snug hover:underline">
               {s.title}
             </Link>
             <p className="m-muted mt-1 text-[13px]">{storyDate(s.publishedAt)}</p>

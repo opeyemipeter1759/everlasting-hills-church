@@ -120,7 +120,7 @@ export default function ArticleFeed() {
             <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" className="m-paper m-ink w-full rounded-full py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-1 focus:ring-[var(--m-ink)]" />
           </label>
           <WriteCard href="/dashboard/articles/write" />
-          <StaffPicks stories={(featured?.articles ?? []).map(fromCard)} hrefFor={(s) => `/dashboard/articles/${s.slug}`} />
+          <StaffPicks stories={(featured?.articles ?? []).map(fromCard)} basePath="/dashboard/articles" />
         </aside>
       </div>
     </MediumPage>
