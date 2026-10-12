@@ -1,6 +1,9 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MemberSelfLookupService } from './member-self-lookup.service';
+import { MemberProfileDetailsService } from './member-profile-details.service';
+
+type UploadFile = { buffer: Buffer; mimetype: string; originalname: string; size: number };
 import { hasValidFileSignature } from '../../uploads/file-signature.util';
 
 /**
@@ -13,23 +16,35 @@ export class MemberAvatarService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly selfLookup: MemberSelfLookupService,
+    private readonly details: MemberProfileDetailsService,
   ) {}
 
-  async setMyAvatar(
-    userId: string,
-    file: {
-      buffer: Buffer;
-      mimetype: string;
-      originalname: string;
-      size: number;
-    },
-    fallbackEmail?: string,
-  ) {
+  async setMyAvatar(userId: string, file: UploadFile, fallbackEmail?: string) {
     const { memberId } = await this.selfLookup.getMyMember(userId, fallbackEmail);
+    const photoUrl = await this.store(memberId, file, 'avatars', 3);
+    await this.prisma.member.update({
+      where: { id: memberId },
+      data: { photoUrl },
+    });
+    return { photoUrl };
+  }
 
-    const maxBytes = 3 * 1024 * 1024;
-    if (file.size > maxBytes) {
-      throw new BadRequestException('Photo must be under 3 MB');
+  /** The banner across the top of the member's profile. */
+  async setMyCover(userId: string, file: UploadFile, fallbackEmail?: string) {
+    const { memberId } = await this.selfLookup.getMyMember(userId, fallbackEmail);
+    const coverUrl = await this.store(memberId, file, 'covers', 5);
+    return this.details.setCover(memberId, coverUrl);
+  }
+
+  async clearMyCover(userId: string, fallbackEmail?: string) {
+    const { memberId } = await this.selfLookup.getMyMember(userId, fallbackEmail);
+    return this.details.setCover(memberId, null);
+  }
+
+  /** Checks an image and puts it in R2, returning its public URL. */
+  private async store(memberId: string, file: UploadFile, folder: 'avatars' | 'covers', maxMb: number): Promise<string> {
+    if (file.size > maxMb * 1024 * 1024) {
+      throw new BadRequestException(`Photo must be under ${maxMb} MB`);
     }
     const allowed = ['image/png', 'image/jpeg', 'image/jpg'];
     if (!allowed.includes(file.mimetype)) {
@@ -50,7 +65,7 @@ export class MemberAvatarService {
     }
 
     const ext = file.mimetype === 'image/png' ? 'png' : 'jpg';
-    const key = `avatars/${memberId}-${Date.now()}.${ext.toLowerCase()}`;
+    const key = `${folder}/${memberId}-${Date.now()}.${ext.toLowerCase()}`;
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -81,17 +96,11 @@ export class MemberAvatarService {
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
-      throw new InternalServerErrorException(`Avatar upload failed: ${msg}`);
+      throw new InternalServerErrorException(`Photo upload failed: ${msg}`);
     }
 
     const publicBase = (process.env.R2_PUBLIC_URL ?? '').replace(/\/$/, '');
-    const photoUrl = publicBase ? `${publicBase}/${key}` : key;
-
-    await this.prisma.member.update({
-      where: { id: memberId },
-      data: { photoUrl },
-    });
-    return { photoUrl };
+    return publicBase ? `${publicBase}/${key}` : key;
   }
 
   async clearMyAvatar(userId: string, fallbackEmail?: string) {

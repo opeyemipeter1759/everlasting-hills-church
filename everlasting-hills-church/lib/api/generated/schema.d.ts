@@ -5453,6 +5453,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/me/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload the banner across the top of my profile (PNG/JPG, ≤ 5 MB) */
+        post: operations["MembersSelfServiceController_uploadMyCover"];
+        /** Remove my profile banner, back to the church colours */
+        delete: operations["MembersSelfServiceController_clearMyCover"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/me/deactivate": {
         parameters: {
             query?: never;
@@ -5464,6 +5482,24 @@ export interface paths {
         put?: never;
         /** Request deactivation of my own account */
         post: operations["MembersSelfServiceController_deactivateMe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/profile-details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My spiritual and career profile, with who may see each part */
+        get: operations["MembersFamilyController_myDetails"];
+        /** Update my spiritual and career profile, and who may see each part */
+        put: operations["MembersFamilyController_updateMyDetails"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8996,6 +9032,25 @@ export interface components {
             /** @description Something nice about the member, up to 500 characters */
             body: string;
         };
+        ProfileVisibilityDto: {
+            /** @enum {string} */
+            birthday?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            career?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            journey?: "MEMBERS" | "PRIVATE";
+            /**
+             * @description Phone number: PRIVATE unless the member opens it
+             * @enum {string}
+             */
+            phone?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            profile?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            socials?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            testimony?: "MEMBERS" | "PRIVATE";
+        };
         ProgressDto: {
             /** @example false */
             completed?: boolean;
@@ -9682,6 +9737,28 @@ export interface components {
              * @enum {string}
              */
             status: "PENDING" | "PRAYED";
+        };
+        UpdateProfileDetailsDto: {
+            bornAgainYear?: Record<string, never>;
+            employer?: Record<string, never>;
+            favouriteVerse?: Record<string, never>;
+            /** @example Psalm 23:1 */
+            favouriteVerseRef?: Record<string, never>;
+            gifts?: string[];
+            /** @example Civil engineer · Choir member · Lover of the Psalms */
+            headline?: Record<string, never>;
+            holySpiritYear?: Record<string, never>;
+            industry?: Record<string, never>;
+            interests?: string[];
+            languages?: string[];
+            membershipClassYear?: Record<string, never>;
+            occupation?: Record<string, never>;
+            openTo?: string[];
+            prayerFocus?: Record<string, never>;
+            skills?: string[];
+            testimony?: Record<string, never>;
+            visibility?: components["schemas"]["ProfileVisibilityDto"];
+            waterBaptismYear?: Record<string, never>;
         };
         UpdateQuestionStatusDto: {
             /**
@@ -23083,6 +23160,76 @@ export interface operations {
             };
         };
     };
+    MembersSelfServiceController_uploadMyCover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Uploaded; returns the new coverUrl */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersSelfServiceController_clearMyCover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersSelfServiceController_deactivateMe: {
         parameters: {
             query?: never;
@@ -23106,6 +23253,72 @@ export interface operations {
                          *       "success": true
                          *     }
                          */
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_myDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_updateMyDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileDetailsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
                         data: unknown;
                         meta: components["schemas"]["ApiResponseMeta"];
                     };

@@ -2,6 +2,7 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
+import { apiClient } from "@/lib/api/axios";
 
 export type MaritalStatus = "SINGLE" | "MARRIED";
 
@@ -67,6 +68,66 @@ export interface FamilyProfile {
   commentCount: number;
   likedByMe: boolean;
   isMe: boolean;
+  restricted?: false;
+  /** What the member wrote about themselves, filtered to what this viewer may see. */
+  headline: string | null;
+  coverUrl: string | null;
+  favouriteVerse: string | null;
+  favouriteVerseRef: string | null;
+  journey: {
+    bornAgainYear: number | null;
+    waterBaptismYear: number | null;
+    holySpiritYear: number | null;
+    membershipClassYear: number | null;
+  } | null;
+  career: { occupation: string | null; employer: string | null; industry: string | null; skills: string[] } | null;
+  gifts: string[];
+  interests: string[];
+  languages: string[];
+  prayerFocus: string | null;
+  testimony: string | null;
+  openTo: OpenTo[];
+  phone: string | null;
+}
+
+/** A member who keeps their profile private: only who they are. */
+export interface RestrictedProfile {
+  id: string;
+  firstName: string;
+  lastName: string;
+  photoUrl: string | null;
+  headline: string | null;
+  coverUrl: string | null;
+  restricted: true;
+  isMe: boolean;
+}
+
+export type OpenTo = "PRAYER_PARTNER" | "MENTOR" | "MENTEE" | "FELLOWSHIP" | "NETWORKING" | "VOLUNTEERING";
+export type Visible = "MEMBERS" | "PRIVATE";
+export type Visibility = Record<VisibilityKey, Visible>;
+export type VisibilityKey = "profile" | "career" | "testimony" | "journey" | "birthday" | "socials" | "phone";
+
+/** My spiritual and career profile, as I edit it. */
+export interface ProfileDetails {
+  headline: string | null;
+  coverUrl: string | null;
+  favouriteVerse: string | null;
+  favouriteVerseRef: string | null;
+  bornAgainYear: number | null;
+  waterBaptismYear: number | null;
+  holySpiritYear: number | null;
+  membershipClassYear: number | null;
+  occupation: string | null;
+  employer: string | null;
+  industry: string | null;
+  skills: string[];
+  gifts: string[];
+  interests: string[];
+  languages: string[];
+  prayerFocus: string | null;
+  testimony: string | null;
+  openTo: OpenTo[];
+  visibility: Record<VisibilityKey, Visible>;
 }
 
 export interface ProfileStats {
@@ -187,7 +248,7 @@ export function useFamilyDirectory(q: string, page: number) {
 export function useFamilyProfile(id: string) {
   return useQuery({
     queryKey: ["members", "family", "profile", id],
-    queryFn: () => api.get<FamilyProfile>(`/members/${id}/profile`),
+    queryFn: () => api.get<FamilyProfile | RestrictedProfile>(`/members/${id}/profile`),
   });
 }
 
@@ -202,7 +263,7 @@ export function useLikeProfile(memberId: string) {
         ? api.post<SocialSummary>(`/members/${memberId}/like`, {})
         : api.delete<SocialSummary>(`/members/${memberId}/like`),
     onSuccess: (summary) =>
-      client.setQueryData<FamilyProfile>(key, (old) => (old ? { ...old, ...summary } : old)),
+      client.setQueryData<FamilyProfile | RestrictedProfile>(key, (old) => (old && !old.restricted ? { ...old, ...summary } : old)),
   });
 }
 
@@ -236,4 +297,51 @@ export function useDeleteProfileComment(memberId: string) {
     mutationFn: (commentId: string) => api.delete(`/members/${memberId}/comments/${commentId}`),
     onSuccess: changed,
   });
+}
+
+const DETAILS_KEY = ["members", "me", "profile-details"] as const;
+
+export function useMyProfileDetails() {
+  return useQuery({ queryKey: DETAILS_KEY, queryFn: () => api.get<ProfileDetails>("/members/me/profile-details") });
+}
+
+function useProfileChanged() {
+  const client = useQueryClient();
+  return () => client.invalidateQueries({ queryKey: ["members", "family", "profile"] });
+}
+
+export function useUpdateProfileDetails() {
+  const client = useQueryClient();
+  const changed = useProfileChanged();
+  return useMutation({
+    mutationFn: (body: Partial<Omit<ProfileDetails, "coverUrl" | "visibility">> & { visibility?: Partial<Record<VisibilityKey, Visible>> }) =>
+      api.put<ProfileDetails>("/members/me/profile-details", body),
+    onSuccess: (data) => {
+      client.setQueryData(DETAILS_KEY, data);
+      changed();
+    },
+  });
+}
+
+/** The banner across the top of my profile. */
+export function useProfileCover() {
+  const client = useQueryClient();
+  const changed = useProfileChanged();
+  const done = () => {
+    client.invalidateQueries({ queryKey: DETAILS_KEY });
+    changed();
+  };
+  const upload = useMutation({
+    mutationFn: async (file: File) => {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await apiClient.post<{ coverUrl: string }>("/members/me/cover", fd, {
+        headers: { "Content-Type": undefined as unknown as string },
+      });
+      return res.data;
+    },
+    onSuccess: done,
+  });
+  const remove = useMutation({ mutationFn: () => api.delete("/members/me/cover"), onSuccess: done });
+  return { upload, remove };
 }

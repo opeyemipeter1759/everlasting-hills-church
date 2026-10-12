@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Cake, Heart, Network, UserCircle2 } from "lucide-react";
+import { ArrowLeft, Cake, Heart, Lock, Network, UserCircle2 } from "lucide-react";
 import { useMe } from "@/lib/api";
-import { useFamilyProfile, type FamilyProfile as Profile } from "@/lib/api/family";
+import { useFamilyProfile, type FamilyProfile as Profile, type RestrictedProfile } from "@/lib/api/family";
 import { SocialCard } from "@/components/dashboard/profile/profile-view/SocialCard";
 import { SOCIAL_PLATFORMS } from "@/components/dashboard/profile/profile-view/social-platforms";
 import KindWords from "./KindWords";
-import { ArticlesSection, BadgesSection, CardTitle, ProfileHeader, StatsStrip, card } from "./ProfileSections";
+import { ArticlesSection, BadgesSection, CardTitle, Cover, ProfileHeader, StatsStrip, card } from "./ProfileSections";
+import { CareerSection, ConnectSide, GiftsSection, JourneySection, TestimonySection, VerseBanner } from "./ProfileStory";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -66,6 +67,8 @@ export default function FamilyProfile({ id }: { id: string }) {
     );
   }
 
+  if (p.restricted) return <PrivateProfile p={p} back={back} />;
+
   const married = p.maritalStatus === "MARRIED";
   const socials = SOCIAL_PLATFORMS.filter((platform) => p.socials[platform.key]);
 
@@ -75,19 +78,33 @@ export default function FamilyProfile({ id }: { id: string }) {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <div className="min-w-0 space-y-5">
           <ProfileHeader p={p} />
+          <VerseBanner p={p} />
           <StatsStrip p={p} />
           {p.bio && (
             <section className={`${card} p-5 sm:p-6`}>
-              <CardTitle>About</CardTitle>
+              <CardTitle>About {p.isMe ? "me" : p.firstName}</CardTitle>
               <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#3d3436] dark:text-white/80">{p.bio}</p>
             </section>
           )}
+          {p.isMe && !p.headline && !p.favouriteVerse && !p.journey?.bornAgainYear && !p.career?.occupation && (
+            <Link
+              href="/dashboard/settings#spiritual-career"
+              className="block rounded-2xl border-2 border-dashed border-[#E7CDD3] p-5 text-center text-sm font-semibold text-[#87102C] hover:bg-[#FFF4F6] dark:border-white/15 dark:text-[#FFB3C1]"
+            >
+              Add your headline, favourite scripture, spiritual journey and career, so the church family can know you better.
+            </Link>
+          )}
+          <JourneySection p={p} />
           <BadgesSection p={p} />
+          <CareerSection p={p} />
+          <GiftsSection p={p} />
+          <TestimonySection p={p} />
           <ArticlesSection p={p} />
           <KindWords memberId={p.id} firstName={p.firstName} isMe={p.isMe} viewerId={viewerId} isStaff={isStaff} />
         </div>
 
         <aside className="space-y-5">
+          <ConnectSide p={p} />
           <section className={`${card} p-5`}>
             <CardTitle>Details</CardTitle>
             <ul className="divide-y divide-[#E7CDD3]/40 dark:divide-white/[0.06]">
@@ -156,6 +173,37 @@ export default function FamilyProfile({ id }: { id: string }) {
           )}
         </aside>
       </div>
+    </div>
+  );
+}
+
+/** A member who keeps their profile to themselves. */
+function PrivateProfile({ p, back }: { p: RestrictedProfile; back: React.ReactNode }) {
+  const name = `${p.firstName} ${p.lastName}`.trim();
+  const initials = `${p.firstName[0] ?? ""}${p.lastName[0] ?? ""}`.toUpperCase();
+  return (
+    <div className="space-y-5">
+      {back}
+      <section className={`${card} overflow-hidden`}>
+        <Cover coverUrl={p.coverUrl} isMe={false} />
+        <div className="px-5 pb-6 sm:px-8">
+          <div className="relative z-10 -mt-14">
+            {p.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.photoUrl} alt="" className="h-28 w-28 rounded-full border-4 border-white object-cover shadow-md dark:border-[#140b10]" />
+            ) : (
+              <span className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-white bg-[#FFE8ED] text-3xl font-bold text-[#87102C] shadow-md dark:border-[#140b10]">
+                {initials}
+              </span>
+            )}
+          </div>
+          <h1 className="mt-4 text-2xl font-bold text-[#111] dark:text-white">{name}</h1>
+          {p.headline && <p className="mt-1 text-[15px] text-[#3d3436] dark:text-white/80">{p.headline}</p>}
+          <p className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#FFF4F6] px-4 py-3 text-sm text-[#5A4A4D] dark:bg-white/[0.04] dark:text-white/60">
+            <Lock size={15} aria-hidden="true" /> {p.firstName} keeps their profile private.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

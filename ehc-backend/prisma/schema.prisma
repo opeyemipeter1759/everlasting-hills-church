@@ -194,6 +194,7 @@ model Member {
   ProfileCommentsReceived       ProfileComment[]           @relation("ProfileCommented")
   ProfileCommentsWritten        ProfileComment[]           @relation("ProfileCommentAuthor")
   BooksRead                     MemberBookRead[]
+  ProfileDetails                MemberProfileDetails?
   AttendanceRecord              AttendanceRecord[]
   DiscussionResponse            DiscussionResponse[]
   EngagementScore               EngagementScore?
@@ -237,6 +238,37 @@ model Member {
   @@index([tenantId, joinedAt])
   @@index([tenantId, email])
   @@index([spouseMemberId])
+}
+
+/// The LinkedIn-style part of a member's profile, in their own words: kept
+/// apart from Member so the many queries that load a member never carry it.
+model MemberProfileDetails {
+  memberId             String   @id
+  tenantId             String
+  headline             String?
+  /// The banner image across the top of the profile.
+  coverUrl             String?
+  favouriteVerse       String?
+  favouriteVerseRef    String?
+  bornAgainYear        Int?     @db.SmallInt
+  waterBaptismYear     Int?     @db.SmallInt
+  holySpiritYear       Int?     @db.SmallInt
+  membershipClassYear  Int?     @db.SmallInt
+  occupation           String?
+  employer             String?
+  industry             String?
+  skills               String[] @default([])
+  gifts                String[] @default([])
+  interests            String[] @default([])
+  languages            String[] @default([])
+  prayerFocus          String?
+  testimony            String?
+  /// What the member welcomes from others: PRAYER_PARTNER, MENTOR, MENTEE, FELLOWSHIP, NETWORKING, VOLUNTEERING.
+  openTo               String[] @default([])
+  /// Who sees what: { profile, career, testimony, journey, birthday, socials, phone }, each MEMBERS or PRIVATE.
+  visibility           Json     @default("{}")
+  updatedAt            DateTime @default(now()) @updatedAt
+  Member               Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 /// One member liking another's profile, once.

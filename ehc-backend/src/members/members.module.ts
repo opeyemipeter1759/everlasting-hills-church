@@ -33,6 +33,7 @@ import { MemberSpouseService } from './services/member-spouse.service';
 import { MemberFamilyService } from './services/member-family.service';
 import { MemberActivityService } from './services/member-activity.service';
 import { ProfileSocialService } from './services/profile-social.service';
+import { MemberProfileDetailsService } from './services/member-profile-details.service';
 
 @Module({
   imports: [PrismaModule, AuthModule, InboxModule],
@@ -56,6 +57,7 @@ import { ProfileSocialService } from './services/profile-social.service';
     MemberFamilyService,
     MemberActivityService,
     ProfileSocialService,
+    MemberProfileDetailsService,
     MemberBulkOpsService,
     MemberSelfLookupService,
     MemberProfileService,

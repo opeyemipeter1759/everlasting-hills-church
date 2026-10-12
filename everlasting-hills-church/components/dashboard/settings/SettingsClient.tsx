@@ -7,6 +7,7 @@ import PersonalInformationForm, {
   type PersonalFormUser,
 } from "./PersonalInformationForm";
 import ProfileDetailsForm, { type ProfileDetailsUser } from "./ProfileDetailsForm";
+import ProfileStoryForm from "./ProfileStoryForm";
 import SocialLinksForm, { type SocialLinksUser } from "./SocialLinksForm";
 import ProfilePhotoCard from "./ProfilePhotoCard";
 import CalendarSubscriptionCard from "./CalendarSubscriptionCard";
@@ -86,6 +87,14 @@ export default function SettingsClient({ user }: Props) {
             transition={{ duration: 0.55, delay: 0.14, ease: easeOut }}
           >
             <ProfileDetailsForm user={user} />
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.17, ease: easeOut }}
+          >
+            <ProfileStoryForm memberId={user.id ?? null} />
           </motion.div>
 
           <motion.div

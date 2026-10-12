@@ -16,6 +16,7 @@ vi.mock("@/lib/api/family", () => ({
   useProfileComments: () => ({ data: state.comments, isLoading: false }),
   useAddProfileComment: () => ({ mutateAsync: addComment, isPending: false }),
   useDeleteProfileComment: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useProfileCover: () => ({ upload: { mutateAsync: vi.fn(), isPending: false }, remove: { mutate: vi.fn(), isPending: false } }),
 }));
 vi.mock("@/lib/api", () => ({ useMe: () => ({ data: { member: { id: "bayo" }, effectiveRoles: ["MEMBER"] } }) }));
 
@@ -59,6 +60,19 @@ const ada: Profile = {
   commentCount: 1,
   likedByMe: false,
   isMe: false,
+  headline: "Civil engineer · Choir member · Lover of the Psalms",
+  coverUrl: null,
+  favouriteVerse: "The Lord is my shepherd; I shall not want.",
+  favouriteVerseRef: "Psalm 23:1",
+  journey: { bornAgainYear: 2008, waterBaptismYear: 2009, holySpiritYear: null, membershipClassYear: null },
+  career: { occupation: "Civil engineer", employer: "Ibadan Works", industry: "Construction", skills: ["AutoCAD"] },
+  gifts: ["Music"],
+  interests: ["Football"],
+  languages: ["English", "Yoruba"],
+  prayerFocus: "Wisdom for my new role",
+  testimony: "God healed me in 2019.",
+  openTo: ["PRAYER_PARTNER"],
+  phone: null,
 };
 
 beforeEach(() => {
@@ -73,7 +87,13 @@ describe("a member's profile", () => {
     state.data = ada;
     render(<FamilyProfile id="ada" />);
     expect(screen.getByRole("heading", { name: "Ada Obi" })).toBeInTheDocument();
-    expect(screen.getByText("Leads Choir")).toBeInTheDocument();
+    expect(screen.getByText("Civil engineer · Choir member · Lover of the Psalms")).toBeInTheDocument();
+    expect(screen.getByText("“The Lord is my shepherd; I shall not want.”")).toBeInTheDocument();
+    expect(screen.getByText("Born again")).toBeInTheDocument();
+    expect(screen.getByText("Ibadan Works")).toBeInTheDocument();
+    expect(screen.getByText("Wisdom for my new role")).toBeInTheDocument();
+    expect(screen.getByText(/Being a prayer partner/)).toBeInTheDocument();
+    expect(screen.getByText("God healed me in 2019.")).toBeInTheDocument();
     const glance = screen.getByRole("region", { name: "At a glance" });
     expect(within(glance).getByText("42")).toBeInTheDocument();
     expect(within(glance).getByText("Services attended")).toBeInTheDocument();
@@ -112,6 +132,24 @@ describe("a member's profile", () => {
     expect(screen.queryByRole("button", { name: "Like" })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Write something nice about/)).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "What the family says about you" })).toBeInTheDocument();
+  });
+
+  it("lets me change my banner, and no one else", () => {
+    state.data = { ...ada, isMe: true };
+    render(<FamilyProfile id="ada" />);
+    expect(screen.getByRole("button", { name: /Add a banner/ })).toBeInTheDocument();
+    cleanup();
+    state.data = ada;
+    render(<FamilyProfile id="ada" />);
+    expect(screen.queryByRole("button", { name: /Add a banner/ })).not.toBeInTheDocument();
+  });
+
+  it("shows only who someone is when they keep their profile private", () => {
+    state.data = { id: "ada", firstName: "Ada", lastName: "Obi", photoUrl: null, headline: "Teacher", coverUrl: null, restricted: true, isMe: false } as never;
+    render(<FamilyProfile id="ada" />);
+    expect(screen.getByRole("heading", { name: "Ada Obi" })).toBeInTheDocument();
+    expect(screen.getByText("Ada keeps their profile private.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Like" })).not.toBeInTheDocument();
   });
 
   it("says so when the member cannot be found", () => {

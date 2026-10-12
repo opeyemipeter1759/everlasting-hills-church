@@ -2429,6 +2429,61 @@
         ],
         "type": "object"
       },
+      "ProfileVisibilityDto": {
+        "properties": {
+          "birthday": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "career": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "journey": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "phone": {
+            "description": "Phone number: PRIVATE unless the member opens it",
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "profile": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "socials": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "testimony": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ProgressDto": {
         "properties": {
           "completed": {
@@ -4053,6 +4108,82 @@
         "required": [
           "status"
         ],
+        "type": "object"
+      },
+      "UpdateProfileDetailsDto": {
+        "properties": {
+          "bornAgainYear": {
+            "type": "object"
+          },
+          "employer": {
+            "type": "object"
+          },
+          "favouriteVerse": {
+            "type": "object"
+          },
+          "favouriteVerseRef": {
+            "example": "Psalm 23:1",
+            "type": "object"
+          },
+          "gifts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "headline": {
+            "example": "Civil engineer · Choir member · Lover of the Psalms",
+            "type": "object"
+          },
+          "holySpiritYear": {
+            "type": "object"
+          },
+          "industry": {
+            "type": "object"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "membershipClassYear": {
+            "type": "object"
+          },
+          "occupation": {
+            "type": "object"
+          },
+          "openTo": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "prayerFocus": {
+            "type": "object"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "testimony": {
+            "type": "object"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/ProfileVisibilityDto"
+          },
+          "waterBaptismYear": {
+            "type": "object"
+          }
+        },
         "type": "object"
       },
       "UpdateQuestionStatusDto": {
@@ -26613,6 +26744,114 @@
         ]
       }
     },
+    "/members/me/cover": {
+      "delete": {
+        "operationId": "MembersSelfServiceController_clearMyCover",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove my profile banner, back to the church colours",
+        "tags": [
+          "members"
+        ]
+      },
+      "post": {
+        "operationId": "MembersSelfServiceController_uploadMyCover",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Uploaded; returns the new coverUrl"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Upload the banner across the top of my profile (PNG/JPG, ≤ 5 MB)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/me/deactivate": {
       "post": {
         "operationId": "MembersSelfServiceController_deactivateMe",
@@ -26661,6 +26900,108 @@
           }
         ],
         "summary": "Request deactivation of my own account",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/profile-details": {
+      "get": {
+        "operationId": "MembersFamilyController_myDetails",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "My spiritual and career profile, with who may see each part",
+        "tags": [
+          "members"
+        ]
+      },
+      "put": {
+        "operationId": "MembersFamilyController_updateMyDetails",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDetailsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update my spiritual and career profile, and who may see each part",
         "tags": [
           "members"
         ]
