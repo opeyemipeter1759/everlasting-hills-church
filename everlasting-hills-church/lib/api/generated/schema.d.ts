@@ -4997,10 +4997,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Words of encouragement on a member's profile, newest first */
+        /** Kind words written on a member's profile, newest first */
         get: operations["MembersFamilyController_comments"];
         put?: never;
-        /** Write a word of encouragement on a member's profile */
+        /** Write something nice about a member, on their profile */
         post: operations["MembersFamilyController_comment"];
         delete?: never;
         options?: never;
@@ -8993,7 +8993,7 @@ export interface components {
             request: string;
         };
         ProfileCommentDto: {
-            /** @description A word of encouragement, up to 500 characters */
+            /** @description Something nice about the member, up to 500 characters */
             body: string;
         };
         ProgressDto: {

@@ -130,8 +130,8 @@ export function ProfileHeader({ p }: { p: FamilyProfile }) {
           <span>
             {p.likeCount} {p.likeCount === 1 ? "like" : "likes"}
           </span>
-          <a href="#encouragement" className="hover:underline">
-            {p.commentCount} {p.commentCount === 1 ? "encouragement" : "encouragements"}
+          <a href="#kind-words" className="hover:underline">
+            {p.commentCount} kind {p.commentCount === 1 ? "word" : "words"}
           </a>
           {topBadge && (
             <span className="inline-flex items-center gap-1">

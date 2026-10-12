@@ -6,7 +6,7 @@ import { useMe } from "@/lib/api";
 import { useFamilyProfile, type FamilyProfile as Profile } from "@/lib/api/family";
 import { SocialCard } from "@/components/dashboard/profile/profile-view/SocialCard";
 import { SOCIAL_PLATFORMS } from "@/components/dashboard/profile/profile-view/social-platforms";
-import EncouragementWall from "./EncouragementWall";
+import KindWords from "./KindWords";
 import { ArticlesSection, BadgesSection, CardTitle, ProfileHeader, StatsStrip, card } from "./ProfileSections";
 
 const MONTHS = [
@@ -31,7 +31,7 @@ function Detail({ icon: Icon, label, children }: { icon: typeof Cake; label: str
 /**
  * A member's profile, laid out like a LinkedIn page for a walk with God: a
  * cover and headline, the figures that matter here, their badges, the
- * articles they have written, and words of encouragement from the family.
+ * articles they have written, and kind words from the family.
  * Anyone signed in can open it, and it can be shared as a link.
  */
 export default function FamilyProfile({ id }: { id: string }) {
@@ -84,7 +84,7 @@ export default function FamilyProfile({ id }: { id: string }) {
           )}
           <BadgesSection p={p} />
           <ArticlesSection p={p} />
-          <EncouragementWall memberId={p.id} firstName={p.firstName} isMe={p.isMe} viewerId={viewerId} isStaff={isStaff} />
+          <KindWords memberId={p.id} firstName={p.firstName} isMe={p.isMe} viewerId={viewerId} isStaff={isStaff} />
         </div>
 
         <aside className="space-y-5">

@@ -9,7 +9,7 @@ export class SpouseRequestDto {
 }
 
 export class ProfileCommentDto {
-  @ApiProperty({ description: 'A word of encouragement, up to 500 characters' })
+  @ApiProperty({ description: 'Something nice about the member, up to 500 characters' })
   @IsString()
   @MaxLength(500)
   body!: string;

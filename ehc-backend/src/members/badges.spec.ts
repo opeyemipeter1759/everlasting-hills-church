@@ -60,7 +60,7 @@ describe('Member badges', () => {
   });
 });
 
-describe('Likes and encouragement on profiles', () => {
+describe('Likes and kind words on profiles', () => {
   function setup() {
     const prisma = {
       member: {
@@ -104,14 +104,14 @@ describe('Likes and encouragement on profiles', () => {
     await expect(svc.comment('ada', 'ada', 'Hi')).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('keeps a word of encouragement and tells the owner', async () => {
+  it('keeps kind words and tells the owner', async () => {
     const { svc, prisma, inbox } = setup();
     await svc.comment('ada', 'bayo', '  God bless you, sister!  ');
     expect(prisma.profileComment.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ memberId: 'ada', authorMemberId: 'bayo', body: 'God bless you, sister!' }),
       select: { id: true },
     });
-    expect(inbox.createMany).toHaveBeenCalledWith([expect.objectContaining({ title: 'Bayo Ade wrote on your profile' })]);
+    expect(inbox.createMany).toHaveBeenCalledWith([expect.objectContaining({ title: 'Bayo Ade wrote something nice about you' })]);
   });
 
   it('lets the writer, the owner or staff remove a comment, and no one else', async () => {

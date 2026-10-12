@@ -2420,7 +2420,7 @@
       "ProfileCommentDto": {
         "properties": {
           "body": {
-            "description": "A word of encouragement, up to 500 characters",
+            "description": "Something nice about the member, up to 500 characters",
             "type": "string"
           }
         },
@@ -24749,7 +24749,7 @@
             "access-token": []
           }
         ],
-        "summary": "Words of encouragement on a member's profile, newest first",
+        "summary": "Kind words written on a member's profile, newest first",
         "tags": [
           "members"
         ]
@@ -24813,7 +24813,7 @@
             "access-token": []
           }
         ],
-        "summary": "Write a word of encouragement on a member's profile",
+        "summary": "Write something nice about a member, on their profile",
         "tags": [
           "members"
         ]

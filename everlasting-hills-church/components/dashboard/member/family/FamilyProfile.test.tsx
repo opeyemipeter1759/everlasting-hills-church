@@ -84,16 +84,24 @@ describe("a member's profile", () => {
     expect(screen.getByRole("link", { name: "Chidi Obi" })).toHaveAttribute("href", "/dashboard/family/chidi");
   });
 
-  it("can be liked, shared and encouraged by another member", async () => {
+  it("can be liked, shared, and written about by another member", async () => {
     state.data = ada;
     render(<FamilyProfile id="ada" />);
     fireEvent.click(screen.getByRole("button", { name: "Like" }));
     expect(like).toHaveBeenCalledWith(true);
     expect(screen.getByRole("button", { name: "Share profile" })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/Write a word of encouragement for Ada/), { target: { value: "God bless you!" } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Write something nice about Ada" }), { target: { value: "God bless you!" } });
     fireEvent.click(screen.getByRole("button", { name: "Post" }));
     expect(addComment).toHaveBeenCalledWith("God bless you!");
+  });
+
+  it("offers ways to begin writing something nice", () => {
+    state.data = ada;
+    render(<FamilyProfile id="ada" />);
+    expect(screen.getByRole("heading", { name: "Write something nice about Ada" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "I thank God for you because…" }));
+    expect(screen.getByRole("textbox", { name: "Write something nice about Ada" })).toHaveValue("I thank God for you because ");
   });
 
   it("on my own profile, offers editing and sharing instead of liking", () => {
@@ -102,7 +110,8 @@ describe("a member's profile", () => {
     expect(screen.getByRole("link", { name: "Edit profile" })).toHaveAttribute("href", "/dashboard/settings");
     expect(screen.getByRole("button", { name: "Share my profile" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Like" })).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Write a word of encouragement/)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Write something nice about/)).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "What the family says about you" })).toBeInTheDocument();
   });
 
   it("says so when the member cannot be found", () => {

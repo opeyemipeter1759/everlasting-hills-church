@@ -11,7 +11,7 @@ const AUTHOR = { id: true, firstName: true, lastName: true, photoUrl: true } as 
 const fullName = (m: { firstName: string; lastName: string }) => `${m.firstName} ${m.lastName}`.trim();
 
 /**
- * Likes and words of encouragement on member profiles. A member cannot like
+ * Likes and kind words ("write something nice about…") on member profiles. A member cannot like
  * or write on their own profile. The owner hears about each one in their
  * notifications; a comment can be removed by its writer, by the profile's
  * owner, or by a pastor or admin.
@@ -111,7 +111,7 @@ export class ProfileSocialService {
   }
 
   async comment(memberId: string, viewerId: string, body: string) {
-    if (memberId === viewerId) throw new BadRequestException('Leave encouragement on someone else’s profile.');
+    if (memberId === viewerId) throw new BadRequestException('Write something nice about someone else.');
     const text = body.trim();
     if (!text) throw new BadRequestException('Write something first.');
     const owner = await this.owner(memberId);
@@ -123,10 +123,10 @@ export class ProfileSocialService {
       {
         tenantId: this.tenantId,
         profileId: owner.profileId,
-        title: `${await this.viewerName(viewerId)} wrote on your profile`,
+        title: `${await this.viewerName(viewerId)} wrote something nice about you`,
         body: text.length > 120 ? `${text.slice(0, 117)}…` : text,
         type: 'profile-comment',
-        link: `/dashboard/family/${memberId}#encouragement`,
+        link: `/dashboard/family/${memberId}#kind-words`,
       },
     ]);
     return created;

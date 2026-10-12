@@ -105,14 +105,14 @@ export class MembersFamilyController {
   }
 
   @Get(':id/comments')
-  @ApiOperation({ summary: "Words of encouragement on a member's profile, newest first" })
+  @ApiOperation({ summary: "Kind words written on a member's profile, newest first" })
   @ApiQuery({ name: 'page', required: false })
   comments(@Param('id') id: string, @Query('page') page?: string) {
     return this.social.comments(id, Number(page) || 1);
   }
 
   @Post(':id/comments')
-  @ApiOperation({ summary: "Write a word of encouragement on a member's profile" })
+  @ApiOperation({ summary: "Write something nice about a member, on their profile" })
   @ApiBody({ type: ProfileCommentDto })
   comment(@Param('id') id: string, @Body() body: ProfileCommentDto, @CurrentUser() actor: AuthUser) {
     return this.social.comment(id, this.viewer(actor), body.body);
