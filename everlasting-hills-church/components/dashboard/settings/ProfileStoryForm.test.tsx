@@ -45,7 +45,6 @@ describe("the spiritual and career profile form", () => {
     fireEvent.change(screen.getByLabelText("Skills"), { target: { value: "Maths" } });
     fireEvent.keyDown(screen.getByLabelText("Skills"), { key: "Enter" });
     fireEvent.click(screen.getByRole("button", { name: "+ Yoruba" }));
-    fireEvent.click(screen.getByRole("button", { name: "Mentoring someone" }));
     fireEvent.click(screen.getByRole("button", { name: /Career: seen by the church family/ }));
     fireEvent.click(screen.getByRole("button", { name: /My phone number: only me/ }));
     fireEvent.click(screen.getByRole("button", { name: "Save profile" }));
@@ -57,7 +56,6 @@ describe("the spiritual and career profile form", () => {
       occupation: "Teacher",
       skills: ["Maths"],
       languages: ["Yoruba"],
-      openTo: ["MENTOR"],
       visibility: { career: "PRIVATE", phone: "MEMBERS" },
     });
     expect(await screen.findByText("Saved")).toBeInTheDocument();

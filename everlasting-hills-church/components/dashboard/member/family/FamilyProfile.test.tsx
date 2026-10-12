@@ -92,7 +92,7 @@ describe("a member's profile", () => {
     expect(screen.getByText("Born again")).toBeInTheDocument();
     expect(screen.getByText("Ibadan Works")).toBeInTheDocument();
     expect(screen.getByText("Wisdom for my new role")).toBeInTheDocument();
-    expect(screen.getByText(/Being a prayer partner/)).toBeInTheDocument();
+    expect(screen.queryByText(/Open to/)).not.toBeInTheDocument();
     expect(screen.getByText("God healed me in 2019.")).toBeInTheDocument();
     const glance = screen.getByRole("region", { name: "At a glance" });
     expect(within(glance).getByText("42")).toBeInTheDocument();

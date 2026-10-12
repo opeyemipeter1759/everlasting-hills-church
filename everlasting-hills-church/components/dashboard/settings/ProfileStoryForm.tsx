@@ -6,12 +6,10 @@ import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
 import {
   useMyProfileDetails,
   useUpdateProfileDetails,
-  type OpenTo,
   type ProfileDetails,
   type Visibility,
   type VisibilityKey,
 } from "@/lib/api/family";
-import { OPEN_TO_LABEL } from "@/components/dashboard/member/family/ProfileStory";
 
 const input =
   "w-full rounded-xl border border-[#E7CDD3]/60 bg-white px-4 py-3 text-sm text-[#111] focus:border-[#87102C] focus:outline-none focus:ring-2 focus:ring-[#87102C]/15 dark:border-white/[0.10] dark:bg-white/[0.06] dark:text-white";
@@ -144,7 +142,7 @@ function YearSelect({ id, value, onChange }: { id: string; value: number | null;
 /**
  * The LinkedIn-style part of the profile, written by the member: headline,
  * favourite scripture, spiritual journey, career, gifts, interests, languages,
- * prayer focus, testimony, what they are open to, and who sees each part.
+ * prayer focus, testimony, and who sees each part.
  */
 export default function ProfileStoryForm({ memberId }: { memberId?: string | null }) {
   const { data, isLoading } = useMyProfileDetails();
@@ -170,7 +168,6 @@ export default function ProfileStoryForm({ memberId }: { memberId?: string | nul
   };
   const vis = (key: VisibilityKey) => d.visibility[key];
   const setVis = (key: VisibilityKey, value: "MEMBERS" | "PRIVATE") => set("visibility", { ...d.visibility, [key]: value } as Visibility);
-  const toggleOpenTo = (o: OpenTo) => set("openTo", d.openTo.includes(o) ? d.openTo.filter((x) => x !== o) : [...d.openTo, o]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -312,26 +309,7 @@ export default function ProfileStoryForm({ memberId }: { memberId?: string | nul
         </Block>
 
         <Block title="Connecting with you" hint="Your contact details stay private unless you choose to share your phone number.">
-          <p className={label}>I am open to</p>
-          <div className="flex flex-wrap gap-2">
-            {(Object.keys(OPEN_TO_LABEL) as OpenTo[]).map((o) => {
-              const on = d.openTo.includes(o);
-              return (
-                <button
-                  key={o}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => toggleOpenTo(o)}
-                  className={`min-h-9 rounded-full border px-3 text-xs font-semibold transition-colors ${
-                    on ? "border-[#87102C] bg-[#87102C] text-white" : "border-[#E7CDD3] text-[#5A4A4D] hover:border-[#87102C] dark:border-white/15 dark:text-white/70"
-                  }`}
-                >
-                  {OPEN_TO_LABEL[o]}
-                </button>
-              );
-            })}
-          </div>
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2">
             {(
               [
                 ["phone", "My phone number"],

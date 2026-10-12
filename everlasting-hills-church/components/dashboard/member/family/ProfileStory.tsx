@@ -1,17 +1,8 @@
 "use client";
 
 import { Briefcase, Droplets, Flame, GraduationCap, HandHeart, Languages, Phone, Quote, Sparkles, Sprout, Users } from "lucide-react";
-import type { FamilyProfile, OpenTo } from "@/lib/api/family";
+import type { FamilyProfile } from "@/lib/api/family";
 import { CardTitle, card } from "./ProfileSections";
-
-export const OPEN_TO_LABEL: Record<OpenTo, string> = {
-  PRAYER_PARTNER: "Being a prayer partner",
-  MENTOR: "Mentoring someone",
-  MENTEE: "Being mentored",
-  FELLOWSHIP: "Fellowship and friendship",
-  NETWORKING: "Career and business networking",
-  VOLUNTEERING: "Volunteering",
-};
 
 function Chips({ items, tone = "rose" }: { items: string[]; tone?: "rose" | "gold" | "slate" }) {
   const cls =
@@ -147,9 +138,9 @@ export function TestimonySection({ p }: { p: FamilyProfile }) {
   );
 }
 
-/** Prayer focus, what they welcome from others, and a phone number if they chose to share it. */
+/** Prayer focus, and a phone number if they chose to share it. */
 export function ConnectSide({ p }: { p: FamilyProfile }) {
-  if (!p.prayerFocus && p.openTo.length === 0 && !p.phone) return null;
+  if (!p.prayerFocus && !p.phone) return null;
   return (
     <section className={`${card} space-y-4 p-5`}>
       <CardTitle>Connect with {p.isMe ? "me" : p.firstName}</CardTitle>
@@ -159,18 +150,6 @@ export function ConnectSide({ p }: { p: FamilyProfile }) {
             <HandHeart size={13} aria-hidden="true" /> Pray with {p.isMe ? "me" : p.firstName}
           </p>
           <p className="mt-1 text-sm font-semibold text-[#111] dark:text-white">{p.prayerFocus}</p>
-        </div>
-      )}
-      {p.openTo.length > 0 && (
-        <div>
-          <p className="mb-2 text-sm font-bold text-[#111] dark:text-white">Open to</p>
-          <ul className="space-y-1.5">
-            {p.openTo.map((o) => (
-              <li key={o} className="text-sm text-[#3d3436] dark:text-white/75">
-                · {OPEN_TO_LABEL[o] ?? o}
-              </li>
-            ))}
-          </ul>
         </div>
       )}
       {p.phone && (
