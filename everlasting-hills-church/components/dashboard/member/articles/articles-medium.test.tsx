@@ -141,6 +141,22 @@ describe("writing a story", () => {
     expect(nav.push).toHaveBeenCalledWith("/dashboard/articles/a-new-word");
   });
 
+  it("publishes what was learned from a Bible reading, with the passage attached", async () => {
+    const label = "Deuteronomy 29 · Nehemiah 13 · Esther 1 · Ecclesiastes 12 · Song of Solomon 1-2 · Zechariah 8-9 · Revelation 16-17 · 2 Peter 3 · 1 John 1-2";
+    nav.params = new URLSearchParams({ start: "5029001", end: "62002029", label });
+    api.create.mockResolvedValue({ id: "a7", slug: "what-i-learned", status: "PENDING_REVIEW" });
+    render(<ArticleEditor />);
+    expect(screen.getByText(`About ${label}`)).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "What I learned today" } });
+    fireEvent.change(screen.getByLabelText("Your story"), { target: { value: "God keeps His covenant even when we forget ours." } });
+    fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
+    await waitFor(() =>
+      expect(api.create).toHaveBeenCalledWith(
+        expect.objectContaining({ scriptureLabel: label, startVerseId: 5029001, endVerseId: 62002029, publish: true }),
+      ),
+    );
+  });
+
   it("offers back words left on this device", () => {
     window.localStorage.setItem(
       "ehc.article-draft.new",

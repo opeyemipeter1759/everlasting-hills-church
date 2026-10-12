@@ -40,7 +40,7 @@ export class CreateArticleDto {
   @ApiPropertyOptional({ example: 'Romans 8' })
   @IsOptional()
   @IsString()
-  @MaxLength(120)
+  @MaxLength(300)
   scriptureLabel?: string;
 
   @ApiPropertyOptional({ description: 'A one-line subtitle under the title' })
@@ -101,7 +101,7 @@ export class UpdateArticleDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @MaxLength(120)
+  @MaxLength(300)
   scriptureLabel?: string | null;
 
   @ApiPropertyOptional({ description: 'A one-line subtitle under the title' })

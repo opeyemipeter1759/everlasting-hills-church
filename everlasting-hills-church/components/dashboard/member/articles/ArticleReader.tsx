@@ -94,7 +94,8 @@ export default function ArticleReader({ slug }: { slug: string }) {
     setActionError(null);
     try {
       if (kind === "delete") await remove.mutateAsync(article.id);
-      else await takeDown.mutateAsync({ id: article.id, revision: article.revision, status: "ARCHIVED" });
+      // Taken down = back to waiting for approval: off the site, still here for reviewers.
+      else await takeDown.mutateAsync({ id: article.id, revision: article.revision, status: "PENDING_REVIEW" });
       setConfirm(null);
       router.push(kind === "delete" ? "/dashboard/articles" : `/dashboard/articles/${article.slug}`);
     } catch (err) {
@@ -265,7 +266,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
         description={
           confirm === "delete"
             ? `"${article.title}" will be removed from the app and the public blog, with its likes and responses. This cannot be undone.`
-            : "It stops showing to the church and on the public blog. The author keeps it and can submit it again."
+            : "It goes back to Waiting for approval: hidden from the church and the public blog, still visible to admins and reviewers, who can approve it again."
         }
         confirmLabel={confirm === "delete" ? "Delete" : "Take down"}
         loading={remove.isPending || takeDown.isPending}

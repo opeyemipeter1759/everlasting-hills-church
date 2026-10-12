@@ -340,6 +340,15 @@ export class ArticleReviewService {
    * A failed notification must not undo a review that already happened, so
    * it is logged rather than thrown.
    */
+  /** Tells the author their story is off the site until it is approved again. */
+  async notifyTakenDown(article: { authorId: string; title: string; slug: string }) {
+    await this.notify(article.authorId, {
+      title: 'Your story is waiting for approval again',
+      body: `"${article.title}" was taken off the site by an admin and is back in review.`,
+      link: `/dashboard/articles/${article.slug}`,
+    });
+  }
+
   private async notify(
     profileId: string,
     message: { title: string; body: string; link: string },

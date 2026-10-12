@@ -72,7 +72,7 @@ describe("moderating somebody else's story", () => {
     render(<ArticleReader slug="a-word" />);
     fireEvent.click(screen.getByRole("button", { name: "Take down" }));
     fireEvent.click(screen.getAllByRole("button", { name: "Take down" }).at(-1)!);
-    await waitFor(() => expect(update).toHaveBeenCalledWith({ id: "a-1", revision: 3, status: "ARCHIVED" }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ id: "a-1", revision: 3, status: "PENDING_REVIEW" }));
   });
 
   it("says why when the server refuses", async () => {

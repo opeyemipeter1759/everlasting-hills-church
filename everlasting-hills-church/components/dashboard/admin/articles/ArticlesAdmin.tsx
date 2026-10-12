@@ -244,7 +244,7 @@ export default function ArticlesAdmin() {
         open={archiving != null}
         tone="warning"
         title="Take this article off the site?"
-        description="It stops showing on the public blog and in the app. The author keeps it, and it can be published again."
+        description="It goes back to Waiting for approval: hidden from the public blog and the church feed, still here for admins and reviewers, who can approve it again."
         confirmLabel="Take down"
         loading={archive.isPending}
         onCancel={() => setArchiving(null)}

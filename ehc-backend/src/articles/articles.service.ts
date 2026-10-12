@@ -341,22 +341,36 @@ export class ArticlesService {
       );
     }
 
-    // A moderator may archive somebody's piece. They may not rewrite it.
+    // A moderator may take somebody's piece off the site. They may not rewrite
+    // it. Taken down means back to "waiting for approval": hidden from the
+    // church and the public blog, still there for admins and reviewers, who can
+    // approve it again. (ARCHIVED from older clients means the same.)
     if (!isAuthor) {
-      if (input.status !== 'ARCHIVED') {
+      if (input.status !== 'ARCHIVED' && input.status !== 'PENDING_REVIEW') {
         throw new ForbiddenException(
-          'You can archive this article, but not edit it',
+          'You can take this article down, but not edit it',
         );
       }
       const { count } = await this.prisma.memberArticle.updateMany({
         where: { id, tenantId: this.tenantId, revision: article.revision },
-        data: { status: ArticleStatus.ARCHIVED, revision: { increment: 1 } },
+        data: {
+          status: ArticleStatus.PENDING_REVIEW,
+          revision: { increment: 1 },
+          submittedAt: new Date(),
+          reviewedAt: null,
+          reviewedById: null,
+          reviewNote: null,
+          featuredAt: null,
+        },
       });
       if (!count)
         throw new ConflictException(
           'This article has changed. Reload it before saving.',
         );
-      return { id, slug: article.slug, status: ArticleStatus.ARCHIVED };
+      if (article.status === ArticleStatus.PUBLISHED) {
+        await this.review.notifyTakenDown(article);
+      }
+      return { id, slug: article.slug, status: ArticleStatus.PENDING_REVIEW };
     }
 
     if (input.startVerseId !== undefined || input.endVerseId !== undefined) {

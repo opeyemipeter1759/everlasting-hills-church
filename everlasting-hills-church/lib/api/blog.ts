@@ -133,7 +133,8 @@ export function useDeleteArticle() {
 export function useArchiveArticle() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => api.patch(`/articles/${id}`, { status: "ARCHIVED" }),
+    // Taken down = back to waiting for approval, not archived away.
+    mutationFn: (id: string) => api.patch(`/articles/${id}`, { status: "PENDING_REVIEW" }),
     onSuccess: () => client.invalidateQueries({ queryKey: ["articles"] }),
   });
 }
