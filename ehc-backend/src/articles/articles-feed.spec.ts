@@ -65,3 +65,19 @@ describe('Saving an article for later', () => {
     await expect(draftOnly.setBookmark(READER, 'draft', true)).rejects.toBeInstanceOf(NotFoundException);
   });
 });
+
+describe('Deleting somebody else’s article', () => {
+  it('lets a super admin delete any article', async () => {
+    const del = jest.fn().mockResolvedValue({});
+    const prisma = {
+      memberArticle: {
+        findFirst: jest.fn().mockResolvedValue({ id: 'a-1', authorId: 'someone-else', tenantId: 'tenant-1' }),
+        delete: del,
+      },
+    };
+    const svc = new ArticlesService(prisma as never, { get: () => 'tenant-1' } as never, {} as never);
+    const superAdmin = { tenantId: 'tenant-1', profileId: 'sa-1', effectiveRoles: [Role.MEMBER, Role.SUPER_ADMIN] } as AuthUser;
+    await expect(svc.remove(superAdmin, 'a-1')).resolves.toEqual({ id: 'a-1', deleted: true });
+    expect(del).toHaveBeenCalledWith({ where: { id: 'a-1' } });
+  });
+});

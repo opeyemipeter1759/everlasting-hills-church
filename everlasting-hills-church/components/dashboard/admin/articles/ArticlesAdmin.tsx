@@ -58,6 +58,16 @@ export default function ArticlesAdmin() {
   const [deleting, setDeleting] = useState<ManagedArticle | null>(null);
   const [archiving, setArchiving] = useState<ManagedArticle | null>(null);
   const [removingComment, setRemovingComment] = useState<string | null>(null);
+  // Shown, not swallowed: a refused delete must say why.
+  const [actionError, setActionError] = useState<string | null>(null);
+  const run = async (action: () => Promise<unknown>) => {
+    setActionError(null);
+    try {
+      await action();
+    } catch (err) {
+      setActionError((err as { message?: string }).message ?? "That did not work. Please try again.");
+    }
+  };
   const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
 
   return (
@@ -79,6 +89,12 @@ export default function ArticlesAdmin() {
           </a>
         </div>
       </header>
+
+      {actionError && (
+        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+          {actionError}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         {TABS.map((t) => (
@@ -220,7 +236,7 @@ export default function ArticlesAdmin() {
         loading={remove.isPending}
         onCancel={() => setDeleting(null)}
         onConfirm={async () => {
-          if (deleting) await remove.mutateAsync(deleting.id).catch(() => {});
+          if (deleting) await run(() => remove.mutateAsync(deleting.id));
           setDeleting(null);
         }}
       />
@@ -233,7 +249,7 @@ export default function ArticlesAdmin() {
         loading={archive.isPending}
         onCancel={() => setArchiving(null)}
         onConfirm={async () => {
-          if (archiving) await archive.mutateAsync(archiving.id).catch(() => {});
+          if (archiving) await run(() => archive.mutateAsync(archiving.id));
           setArchiving(null);
         }}
       />
@@ -246,7 +262,7 @@ export default function ArticlesAdmin() {
         loading={removeComment.isPending}
         onCancel={() => setRemovingComment(null)}
         onConfirm={async () => {
-          if (removingComment) await removeComment.mutateAsync(removingComment).catch(() => {});
+          if (removingComment) await run(() => removeComment.mutateAsync(removingComment));
           setRemovingComment(null);
         }}
       />

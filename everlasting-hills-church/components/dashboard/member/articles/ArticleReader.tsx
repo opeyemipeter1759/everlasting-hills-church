@@ -1,7 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BookOpen, Bookmark, BookmarkCheck, ExternalLink, Heart, MessageCircle, Pencil, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { ArrowLeft, Archive, Trash2, BookOpen, Bookmark, BookmarkCheck, ExternalLink, Heart, MessageCircle, Pencil, Sparkles } from "lucide-react";
 import ReadingView from "@/components/medium/ReadingView";
 import ShareMenu from "@/components/medium/ShareMenu";
 import { MAvatar, StoryRow } from "@/components/medium/parts";
@@ -12,7 +15,9 @@ import {
   authorName,
   useArticle,
   useArticleFeed,
+  useDeleteArticle,
   useSetArticleBookmark,
+  useUpdateArticle,
   useSetArticleFeatured,
   useSetArticleLike,
 } from "@/lib/api/articles";
@@ -37,6 +42,11 @@ export default function ArticleReader({ slug }: { slug: string }) {
   const like = useSetArticleLike();
   const save = useSetArticleBookmark();
   const feature = useSetArticleFeatured();
+  const remove = useDeleteArticle();
+  const takeDown = useUpdateArticle();
+  const router = useRouter();
+  const [confirm, setConfirm] = useState<"delete" | "archive" | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const user = useCurrentUser();
   const canModerate = MODERATOR_ROLES.has(normalizeRole(user?.role) ?? "");
   // The next few pieces, so finishing one leads somewhere.
@@ -76,6 +86,22 @@ export default function ArticleReader({ slug }: { slug: string }) {
   }
 
   const published = article.status === "PUBLISHED";
+  // Pastors and admins (super admins included) can take down or delete anyone's story.
+  const canRemove = article.isAuthor || canModerate;
+
+  async function act(kind: "delete" | "archive") {
+    if (!article) return;
+    setActionError(null);
+    try {
+      if (kind === "delete") await remove.mutateAsync(article.id);
+      else await takeDown.mutateAsync({ id: article.id, revision: article.revision, status: "ARCHIVED" });
+      setConfirm(null);
+      router.push(kind === "delete" ? "/dashboard/articles" : `/dashboard/articles/${article.slug}`);
+    } catch (err) {
+      setConfirm(null);
+      setActionError((err as { message?: string }).message ?? "That did not work. Please try again.");
+    }
+  }
   const name = authorName(article.Author);
   const memberId = article.Author?.Member?.id ?? null;
   const profileHref = memberId ? `/dashboard/family/${memberId}` : null;
@@ -116,10 +142,31 @@ export default function ArticleReader({ slug }: { slug: string }) {
                   <Sparkles size={14} aria-hidden="true" /> {article.featuredAt ? "Featured" : "Feature"}
                 </button>
               )}
+              {canModerate && !article.isAuthor && published && (
+                <button type="button" onClick={() => setConfirm("archive")} className="m-pill-outline !min-h-9 !px-4">
+                  <Archive size={14} aria-hidden="true" /> Take down
+                </button>
+              )}
+              {canRemove && (
+                <button type="button" onClick={() => setConfirm("delete")} className="m-pill-outline !min-h-9 !px-4">
+                  <Trash2 size={14} aria-hidden="true" /> Delete
+                </button>
+              )}
             </div>
           </div>
         }
-        notice={notice}
+        notice={
+          actionError ? (
+            <>
+              <p role="alert" className="m-paper m-ink border-l-2 border-[var(--m-ink)] px-4 py-3 text-sm">
+                {actionError}
+              </p>
+              {notice && <div className="mt-3">{notice}</div>}
+            </>
+          ) : (
+            notice
+          )
+        }
         article={{
           title: article.title,
           subtitle: article.subtitle?.trim() || null,
@@ -210,6 +257,20 @@ export default function ArticleReader({ slug }: { slug: string }) {
             )}
           </>
         }
+      />
+      <ConfirmDialog
+        open={confirm != null}
+        tone={confirm === "delete" ? "danger" : "warning"}
+        title={confirm === "delete" ? "Delete this story for good?" : "Take this story off the site?"}
+        description={
+          confirm === "delete"
+            ? `"${article.title}" will be removed from the app and the public blog, with its likes and responses. This cannot be undone.`
+            : "It stops showing to the church and on the public blog. The author keeps it and can submit it again."
+        }
+        confirmLabel={confirm === "delete" ? "Delete" : "Take down"}
+        loading={remove.isPending || takeDown.isPending}
+        onCancel={() => setConfirm(null)}
+        onConfirm={() => (confirm ? act(confirm) : undefined)}
       />
     </MediumPage>
   );
