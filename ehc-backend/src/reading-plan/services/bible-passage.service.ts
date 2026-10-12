@@ -7,8 +7,13 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { fromVerseId } from '../verse-id.util';
 import { nkjvChapterLinks } from '../external-bible-passage';
 
-/** A passage cannot be larger than this in one request. */
-const MAX_VERSES = 400;
+/**
+ * A passage cannot be larger than this in one request: the longest book,
+ * Psalms, with room to spare. A plan's portion never crosses a book, so this
+ * fits any day of any plan. It was 400, which the fast plans outgrew: a day of
+ * the Gospels in seven days is over 500 verses of one Gospel, and failed to load.
+ */
+export const MAX_VERSES = 2_600;
 
 export interface BiblePassage {
   translation: { code: string; name: string };
