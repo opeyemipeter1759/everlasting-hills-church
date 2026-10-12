@@ -296,11 +296,10 @@ describe('moderation', () => {
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it("refuses to let a pastor delete somebody else's writing", async () => {
-    const { service } = makeService(PUBLISHED);
-    await expect(service.remove(PASTOR, 'a-1')).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+  it("lets a pastor or admin delete a piece from the site", async () => {
+    const { service, prisma } = makeService(PUBLISHED);
+    await expect(service.remove(PASTOR, 'a-1')).resolves.toEqual({ id: 'a-1', deleted: true });
+    expect(prisma.memberArticle.delete).toHaveBeenCalledWith({ where: { id: 'a-1' } });
   });
 
   it("hides an ordinary member's attempt to touch a piece that is not theirs", async () => {

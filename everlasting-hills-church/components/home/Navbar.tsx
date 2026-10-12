@@ -16,6 +16,7 @@ const navLinks = [
   { label: "About", href: "/about" },
   { label: "Beliefs", href: "/beliefs" },
   { label: "Sermons", href: "/sermons" },
+  { label: "Articles", href: "/articles" },
   { label: "Events", href: "/events" },
   { label: "Ministries", href: "/ministries" },
   { label: "Home Cell", href: "/home-cell" },

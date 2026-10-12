@@ -21,12 +21,14 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { ArticlesService } from './articles.service';
 import {
+  ArticleCommentDto,
   CreateArticleDto,
   RequestChangesDto,
   ReviewArticleDto,
   UpdateArticleDto,
 } from './dto/article.dto';
 import { ArticleReviewService } from './article-review.service';
+import { ArticleBlogService } from './article-blog.service';
 
 /**
  * Member written articles: what people are learning, published to the church.
@@ -43,7 +45,48 @@ export class ArticlesController {
   constructor(
     private readonly articles: ArticlesService,
     private readonly review: ArticleReviewService,
+    private readonly blog: ArticleBlogService,
   ) {}
+
+  // Declared before :slug routes, which would otherwise take "manage" as a slug.
+  @Get('manage/list')
+  @ApiOperation({ summary: 'Every article in every state, for pastors and admins to manage' })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'q', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  manageList(
+    @CurrentUser() actor: AuthUser,
+    @Query('status') status?: string,
+    @Query('q') q?: string,
+    @Query('page') page?: string,
+  ) {
+    return this.blog.adminList(actor, { status, q, page: Number(page) || 1 });
+  }
+
+  @Get('manage/comments')
+  @ApiOperation({ summary: 'The newest comments on articles, for pastors and admins to moderate' })
+  manageComments(@CurrentUser() actor: AuthUser) {
+    return this.blog.recentComments(actor);
+  }
+
+  @Delete('comments/:commentId')
+  @ApiOperation({ summary: "Remove a comment: its writer, the article's author, or a pastor or admin" })
+  deleteComment(@CurrentUser() actor: AuthUser, @Param('commentId') commentId: string) {
+    return this.blog.deleteComment(commentId, actor);
+  }
+
+  @Get(':slug/comments')
+  @ApiOperation({ summary: 'Comments on a published article, with which ones I may remove' })
+  @ApiQuery({ name: 'page', required: false })
+  comments(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Query('page') page?: string) {
+    return this.blog.comments(slug, Number(page) || 1, actor);
+  }
+
+  @Post(':slug/comments')
+  @ApiOperation({ summary: 'Comment on a published article as a member' })
+  comment(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Body() body: ArticleCommentDto) {
+    return this.blog.comment(slug, { body: body.body }, actor);
+  }
 
   @Get()
   @Header('Cache-Control', 'no-store')

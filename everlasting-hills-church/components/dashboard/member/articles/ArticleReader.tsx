@@ -16,6 +16,8 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { normalizeRole } from "@/lib/auth/frontend-session";
 import ArticleReviewActions from "./ArticleReviewActions";
+import ShareArticle from "@/components/blog/ShareArticle";
+import ArticleComments from "@/components/blog/ArticleComments";
 
 const MODERATOR_ROLES = new Set(["PASTOR", "ADMIN", "ADMIN_HEAD", "SUPER_ADMIN"]);
 
@@ -209,6 +211,18 @@ export default function ArticleReader({ slug }: { slug: string }) {
               like.mutate({ id: article.id, liked: !article.likedByMe, slug: article.slug })
             }
           />
+        </div>
+
+        {/* Published pieces are on the public blog too: share that link anywhere. */}
+        <div className="mt-8">
+          <ShareArticle slug={article.slug} title={article.title} />
+          <a href={`/articles/${article.slug}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
+            View on the public website
+          </a>
+        </div>
+
+        <div className="mt-10">
+          <ArticleComments slug={article.slug} asMember />
         </div>
 
         {more.length > 0 && (

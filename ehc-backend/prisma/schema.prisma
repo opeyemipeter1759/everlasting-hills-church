@@ -2867,10 +2867,27 @@ model MemberArticle {
   Author         Profile             @relation("MemberArticleAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   ReviewedBy     Profile?            @relation("MemberArticleReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, map: "MemberArticle_reviewer_fkey")
   Likes          MemberArticleLike[]
+  Comments       ArticleComment[]
 
   @@unique([tenantId, slug], map: "MemberArticle_tenant_slug")
   @@index([tenantId, status, publishedAt(sort: Desc)], map: "MemberArticle_feed")
   @@index([authorId, status, updatedAt(sort: Desc)], map: "MemberArticle_author")
+}
+
+/// A comment on a published article, from a signed-in member (profileId set)
+/// or a visitor to the public blog, who gives a name.
+model ArticleComment {
+  id          String        @id
+  tenantId    String
+  articleId   String
+  profileId   String?
+  authorName  String
+  body        String
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  Article     MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt])
+  @@index([tenantId, createdAt])
 }
 
 /// One row per reader per article, so a double tap cannot inflate a count.

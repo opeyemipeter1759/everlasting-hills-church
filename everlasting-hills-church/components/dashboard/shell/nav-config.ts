@@ -119,6 +119,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
       // The queue already existed, reachable only from a tab inside Articles.
       { label: "Article Approvals", href: "/dashboard/articles/review", icon: ClipboardCheck, minRole: "ADMIN" },
+      { label: "Articles",      href: "/dashboard/admin/articles",     icon: Newspaper,     minRole: "ADMIN" },
       { label: "Books",         href: "/dashboard/admin/books",   icon: Library,       minRole: "ADMIN" },
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },

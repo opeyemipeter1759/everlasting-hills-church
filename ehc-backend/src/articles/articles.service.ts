@@ -410,11 +410,10 @@ export class ArticlesService {
   }
 
   async remove(actor: AuthUser, id: string) {
+    // The author, or a pastor or admin taking a piece off the site for good.
     const { isAuthor } = await this.ownedOrThrow(actor, id);
-    if (!isAuthor) {
-      throw new ForbiddenException(
-        'Only the author can delete an article. Archive it instead.',
-      );
+    if (!isAuthor && !this.isModerator(actor)) {
+      throw new ForbiddenException('Only the author, a pastor or an admin can delete an article.');
     }
     await this.prisma.memberArticle.delete({ where: { id } });
     return { id, deleted: true };

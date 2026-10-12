@@ -32,6 +32,9 @@ const OVERSEEING_ROLES: Role[] = [
   Role.SUPER_ADMIN,
 ];
 
+/** Told of every submission alongside the head of comms. */
+const ADMIN_REVIEWERS: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
+
 /**
  * Review of member articles before the church reads them.
  *
@@ -259,18 +262,18 @@ export class ArticleReviewService {
           .filter((id) => id !== article.authorId);
       }
 
-      if (reviewerIds.length === 0) {
-        const grants = await this.prisma.roleGrant.findMany({
-          where: {
-            tenantId: this.tenantId,
-            endedAt: null,
-            role: { in: OVERSEEING_ROLES },
-            userId: { not: article.authorId },
-          },
-          select: { userId: true },
-        });
-        reviewerIds = grants.map((g) => g.userId);
-      }
+      // The head of comms (the Content Writing Team's department) and the
+      // church admins both hear a piece is waiting, so it never sits unseen.
+      const grants = await this.prisma.roleGrant.findMany({
+        where: {
+          tenantId: this.tenantId,
+          endedAt: null,
+          role: { in: reviewerIds.length === 0 ? OVERSEEING_ROLES : ADMIN_REVIEWERS },
+          userId: { not: article.authorId },
+        },
+        select: { userId: true },
+      });
+      reviewerIds = [...reviewerIds, ...grants.map((g) => g.userId)];
 
       const recipients = Array.from(new Set(reviewerIds)).filter(
         (pid) => pid !== article.authorId,

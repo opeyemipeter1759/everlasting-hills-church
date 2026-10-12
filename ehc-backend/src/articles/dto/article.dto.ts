@@ -129,3 +129,23 @@ export class RequestChangesDto {
   @MaxLength(1_000)
   note!: string;
 }
+
+export class ArticleCommentDto {
+  @ApiProperty({ description: 'The comment, up to 1,000 characters' })
+  @IsString()
+  @MaxLength(1000)
+  body!: string;
+}
+
+export class PublicArticleCommentDto extends ArticleCommentDto {
+  @ApiProperty({ description: 'The name the visitor gives' })
+  @IsString()
+  @MaxLength(60)
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Left empty by people; bots fill it in' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  website?: string;
+}

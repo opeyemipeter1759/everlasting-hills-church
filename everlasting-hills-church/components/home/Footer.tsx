@@ -47,6 +47,7 @@ const quickLinks = [
   { label: "What We Believe", href: "/beliefs" },
   { label: "Ministries", href: "/ministries" },
   { label: "Sermons", href: "/sermons" },
+  { label: "Articles", href: "/articles" },
   { label: "Home Cell", href: "/connect/home-cell" },
   { label: "Plan a Visit", href: "/visit" },
   { label: "Give", href: "/give" },
