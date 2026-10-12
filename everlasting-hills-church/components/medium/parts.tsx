@@ -41,7 +41,7 @@ export function MTabs<T extends string>({
             aria-selected={on}
             onClick={() => onChange(t.value)}
             className={`-mb-px min-h-11 whitespace-nowrap border-b pb-3 pt-1 text-sm transition-colors ${
-              on ? "m-ink border-[var(--m-ink)]" : "m-muted border-transparent hover:text-[var(--m-ink)]"
+              on ? "m-ink border-[var(--m-brand)]" : "m-muted border-transparent hover:text-[var(--m-ink)]"
             }`}
           >
             {t.label}
@@ -94,7 +94,7 @@ export function StoryRow({
 
       <Link href={href} className="group mt-3 flex items-start gap-6 sm:gap-12">
         <div className="min-w-0 flex-1">
-          <h2 className="m-ink text-xl font-bold leading-snug tracking-[-0.016em] sm:text-[22px]">{story.title}</h2>
+          <h2 className="m-ink text-xl font-bold leading-snug tracking-[-0.016em] transition-colors group-hover:text-[var(--m-brand)] sm:text-[22px]">{story.title}</h2>
           {story.subtitle && <p className="m-muted mt-2 line-clamp-2 text-[15px] leading-snug sm:text-base">{story.subtitle}</p>}
         </div>
         {story.coverImageUrl && (
@@ -167,7 +167,7 @@ export function StaffPicks({ stories, basePath, title = "Staff Picks" }: { stori
               <MAvatar name={s.author.name} photoUrl={s.author.photoUrl} size={20} />
               <span className="m-ink">{s.author.name}</span>
             </div>
-            <Link href={`${basePath}/${s.slug}`} className="m-ink mt-1.5 block text-base font-bold leading-snug hover:underline">
+            <Link href={`${basePath}/${s.slug}`} className="m-ink mt-1.5 block text-base font-bold leading-snug hover:text-[var(--m-brand)]">
               {s.title}
             </Link>
             <p className="m-muted mt-1 text-[13px]">{storyDate(s.publishedAt)}</p>
@@ -183,8 +183,8 @@ export function WriteCard({ href, signedIn = true }: { href: string; signedIn?: 
   return (
     <section className="m-paper border m-rule">
       <div className="m-canvas border-b m-rule p-5">
-        <Link href={href} className="m-paper m-muted m-serif flex items-center gap-3 border m-rule px-4 py-3 text-lg italic hover:text-[var(--m-ink)]">
-          <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-full border m-rule not-italic">
+        <Link href={href} className="m-paper m-muted m-serif flex items-center gap-3 border m-rule px-4 py-3 text-lg italic hover:text-[var(--m-brand)]">
+          <span aria-hidden="true" className="m-brand flex h-7 w-7 items-center justify-center rounded-full border border-[var(--m-brand)] not-italic">
             +
           </span>
           Just start writing
@@ -199,6 +199,46 @@ export function WriteCard({ href, signedIn = true }: { href: string; signedIn?: 
           {signedIn ? "Write a story" : "Sign in to write"}
         </Link>
       </div>
+    </section>
+  );
+}
+
+/**
+ * Other stories beside the one being read, so the next one is a click away
+ * rather than a trip back to the list. Compact: a square thumbnail, the title,
+ * who wrote it and how long it takes.
+ */
+export function MoreStories({ stories, basePath, title = "More stories" }: { stories: Story[]; basePath: string; title?: string }) {
+  if (stories.length === 0) return null;
+  return (
+    <section aria-labelledby="more-stories">
+      <h2 id="more-stories" className="m-ink text-base font-bold">
+        {title}
+      </h2>
+      <ul className="mt-2 divide-y m-rule">
+        {stories.map((s) => (
+          <li key={s.id}>
+            <Link href={`${basePath}/${s.slug}`} className="group flex items-start gap-3 py-4">
+              {s.coverImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={s.coverImageUrl} alt="" className="h-14 w-14 flex-shrink-0 object-cover" />
+              ) : (
+                <span aria-hidden="true" className="m-paper m-brand m-display flex h-14 w-14 flex-shrink-0 items-center justify-center border m-rule text-2xl">
+                  {s.title.trim().charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="min-w-0 flex-1">
+                <span className="m-ink line-clamp-2 text-[15px] font-bold leading-snug transition-colors group-hover:text-[var(--m-brand)]">
+                  {s.title}
+                </span>
+                <span className="m-muted mt-1 block truncate text-[13px]">
+                  {s.author.name} · {s.readingMinutes} min read
+                </span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

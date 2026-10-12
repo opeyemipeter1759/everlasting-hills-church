@@ -31,13 +31,15 @@ const ATTENDANCE_LINK = { label: "Attendance", href: "/#attendance" };
 
 const mobileOnlyLinks: { label: string; href: string }[] = [];
 
+/** Public pages that open on a light background, so the bar starts with dark text. */
+const LIGHT_PAGES = ["/articles"];
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const isLoggedIn = useIsLoggedIn(); // null on first paint (hydration-safe), then true/false
   const pathname = usePathname();
-  // Only the home page has a dark hero — every other public page has a light background.
-  const darkHero = pathname != "/ewlnwjenk";
+  const darkHero = !LIGHT_PAGES.some((path) => pathname === path || pathname?.startsWith(`${path}/`));
   const effectiveNavLinks = isLoggedIn === true ? [...navLinks, ATTENDANCE_LINK] : navLinks;
 
   useEffect(() => {
@@ -111,7 +113,7 @@ export default function Navbar() {
             <div className="flex shrink-0 items-center gap-2 xs:gap-3">
               {/* Authenticated → avatar + dropdown. Anonymous → Login + Join CTAs. */}
               {isLoggedIn === true ? (
-                <NavUserBadge scrolled={scrolled} />
+                <NavUserBadge scrolled={scrolled || !darkHero} />
               ) : (
                 <>
                   <Link

@@ -67,54 +67,7 @@ export default function ArticleComments({ slug, asMember }: { slug: string; asMe
         Responses{data?.total ? ` (${data.total})` : ""}
       </h2>
 
-      <form onSubmit={submit} className="m-paper mt-5 space-y-3 border m-rule p-4">
-        <div aria-hidden="true" className="absolute -left-[10000px] h-px w-px overflow-hidden">
-          <label>
-            Website
-            <input tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
-          </label>
-        </div>
-        {!asMember && (
-          <div>
-            <label htmlFor="comment-name" className="m-muted mb-1 block text-[13px]">
-              Your name
-            </label>
-            <input id="comment-name" className="m-input" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
-          </div>
-        )}
-        <div>
-          <label htmlFor="comment-body" className="m-muted mb-1 block text-[13px]">
-            Your comment
-          </label>
-          <textarea
-            id="comment-body"
-            rows={3}
-            className="m-input m-serif resize-y"
-            value={body}
-            onChange={(e) => {
-              setBody(e.target.value.slice(0, MAX));
-              setThanks(false);
-            }}
-            placeholder="What are your thoughts?"
-          />
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="m-muted text-[13px]" aria-live="polite">
-            {thanks ? "Thank you, your response is up." : asMember ? "You respond as yourself." : "Your name shows with your response. Please keep it kind."}
-          </p>
-          <button type="submit" disabled={post.isPending || !body.trim()} className="m-pill">
-            {post.isPending && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
-            Respond
-          </button>
-        </div>
-        {error && (
-          <p role="alert" className="m-ink text-sm">
-            {error}
-          </p>
-        )}
-      </form>
-
-      <div className="mt-6">
+      <div className="mt-5">
         {isLoading ? (
           <div className="m-paper h-20 animate-pulse" />
         ) : isError ? (
@@ -162,6 +115,54 @@ export default function ArticleComments({ slug, asMember }: { slug: string; asMe
           </>
         )}
       </div>
+
+
+      <form onSubmit={submit} className="m-paper mt-8 space-y-3 border m-rule p-4">
+        <div aria-hidden="true" className="absolute -left-[10000px] h-px w-px overflow-hidden">
+          <label>
+            Website
+            <input tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+          </label>
+        </div>
+        {!asMember && (
+          <div>
+            <label htmlFor="comment-name" className="m-muted mb-1 block text-[13px]">
+              Your name
+            </label>
+            <input id="comment-name" className="m-input" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+          </div>
+        )}
+        <div>
+          <label htmlFor="comment-body" className="m-muted mb-1 block text-[13px]">
+            Your comment
+          </label>
+          <textarea
+            id="comment-body"
+            rows={3}
+            className="m-input m-serif resize-y"
+            value={body}
+            onChange={(e) => {
+              setBody(e.target.value.slice(0, MAX));
+              setThanks(false);
+            }}
+            placeholder="What are your thoughts?"
+          />
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="m-muted text-[13px]" aria-live="polite">
+            {thanks ? "Thank you, your response is up." : asMember ? "You respond as yourself." : "Your name shows with your response. Please keep it kind."}
+          </p>
+          <button type="submit" disabled={post.isPending || !body.trim()} className="m-pill">
+            {post.isPending && <Loader2 size={15} className="animate-spin" aria-hidden="true" />}
+            Respond
+          </button>
+        </div>
+        {error && (
+          <p role="alert" className="m-ink text-sm">
+            {error}
+          </p>
+        )}
+      </form>
 
       <ConfirmDialog
         open={removing != null}

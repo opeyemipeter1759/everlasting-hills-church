@@ -139,6 +139,7 @@ import {
   UserCog,
   Library,
   HandCoins,
+  UsersRound,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -242,6 +243,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Home",           href: "/dashboard",            icon: BookOpen,       minRole: "MEMBER" },
       { label: "Attendance",     href: "/dashboard/attendance", icon: CheckCircle,    minRole: "MEMBER" },
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
+      { label: "Family",      href: "/dashboard/family",          icon: UsersRound,          minRole: "MEMBER" },
       { label: "Bible Plan",          href: "/dashboard/reading",            icon: BookMarked,          minRole: "MEMBER" },
       { label: "Articles",            href: "/dashboard/articles",           icon: Newspaper,           minRole: "MEMBER" },
       { label: "Books",                href: "/dashboard/books",             icon: Library,             minRole: "MEMBER" },
@@ -249,7 +251,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Explore Course",           href: "/dashboard/explore-courses",            icon: Compass,       minRole: "MEMBER" },
       { label: "Unit", href: "/dashboard/unit", icon: Users2, minRole: "MEMBER", requiresAccess: "unitMember", dynamicUnits: "member" },
       { label: "Calendar",     href: "/dashboard/calendar",   icon: CalendarClock, minRole: "MEMBER" },
-
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
 
     ],

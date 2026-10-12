@@ -15,11 +15,7 @@ export const metadata = {
 };
 export const dynamic = "force-dynamic";
 
-/**
- * The public blog, laid out like Medium: a cream reading room, a serif
- * headline, then the stories down the left and the pastors' picks on the
- * right. Anyone can read; writing goes through the app.
- */
+
 export default async function ArticlesPage({ searchParams }: { searchParams: { page?: string } }) {
   const page = Math.max(1, Number(searchParams.page) || 1);
   let data: BlogPage<BlogArticleSummary> = { items: [], total: 0, page, pageSize: 12 };
@@ -38,15 +34,21 @@ export default async function ArticlesPage({ searchParams }: { searchParams: { p
       {page === 1 && (
         <section className="border-b m-rule">
           <div className="mx-auto max-w-[1200px] px-4 pb-16 pt-12 xs:px-6 sm:pb-24 sm:pt-20">
-            <h1 className="m-display m-ink text-[56px] leading-[0.9] sm:text-[96px] lg:text-[120px] lg:leading-[0.83]">
+            <p className="m-brand text-xs font-semibold uppercase tracking-[0.2em]">The Everlasting Hills blog</p>
+            <h1 className="m-display m-ink mt-5 text-[56px] leading-[0.9] sm:text-[96px] lg:text-[120px] lg:leading-[0.83]">
               Stories
               <br />
-              &amp; ideas
+              <span className="m-brand italic">&amp; ideas</span>
             </h1>
             <p className="m-muted mt-8 max-w-xl text-xl">What the Everlasting Hills family is learning from God&apos;s Word, written by the church.</p>
-            <a href="#stories" className="m-pill mt-10 px-6">
-              Start reading
-            </a>
+            <div className="mt-10 flex flex-wrap items-center gap-3">
+              <a href="#stories" className="m-pill px-6">
+                Start reading
+              </a>
+              <Link href="/dashboard/articles/write" className="m-pill-outline px-6">
+                Write a story
+              </Link>
+            </div>
           </div>
         </section>
       )}

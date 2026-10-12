@@ -8,30 +8,22 @@ import { YouTubeServices } from '../sermon-digest/youtube-services';
 import { ActiveFastService, type ActiveFast } from './active-fast.service';
 import { fastDay, lagosDate, type FastDayInfo } from './fasting-day.util';
 
-/** Sunday service time when the schedule doesn't say (church-info: "Sundays · 9:00 AM"). */
 const DEFAULT_SERVICE_TIME = '9am';
 const REMINDER_LEAD_MIN = 120;
-/** The job runs every 5 minutes; a reminder up to this late is still worth sending. */
 const REMINDER_GRACE_MIN = 30;
-/** Start looking for the stream a little early: the team often goes live before time. */
 const LIVE_FROM_MIN = -10;
-/** No stream found by now: say the session has started anyway, linking to the channel. */
 const LIVE_FALLBACK_MIN = 15;
-/** Past this, a "we've started" notice is no use to anyone. */
 const LIVE_UNTIL_MIN = 90;
 const MIN = 60_000;
 const STREAMS_URL = 'https://www.youtube.com/@everlastinghillschurch/streams';
 
 export interface FastSession {
   key: 'morning' | 'service' | 'evening';
-  /** "Morning prayer" */
   name: string;
-  /** "6am" */
   time: string;
   startsAt: Date;
 }
 
-/** "6am", "8 pm", "5:30pm", "9:00 AM" → minutes after midnight; null if unreadable. */
 export function parseClock(value: string): number | null {
   const m = /^\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*$/i.exec(value);
   if (!m) return null;
@@ -41,12 +33,10 @@ export function parseClock(value: string): number | null {
   return ((hour % 12) + (m[3].toLowerCase() === 'pm' ? 12 : 0)) * 60 + minute;
 }
 
-/** A Lagos wall-clock time on a date, as an instant (Lagos is UTC+1 all year). */
 function lagosInstant(date: string, minutes: number): Date {
   return new Date(Date.parse(`${date}T00:00:00Z`) + (minutes - 60) * MIN);
 }
 
-/** The day's sessions in order: morning prayer or Sunday service, then evening prayer. */
 export function fastSessions(fast: ActiveFast, info: FastDayInfo): FastSession[] {
   const rules = fast.rules as ActiveFast['rules'] & { serviceTime?: string };
   const out: FastSession[] = [];
@@ -130,7 +120,6 @@ export class FastingPushService {
     return (await this.prisma.pushNoticeLog.count({ where: { tenantId: this.fasts.tenant, key } })) > 0;
   }
 
-  /** Claims the key, then sends. False when another run already claimed it. */
   private async once(key: string, category: PushCategory, payload: PushPayload): Promise<boolean> {
     try {
       await this.prisma.pushNoticeLog.create({ data: { id: randomUUID(), tenantId: this.fasts.tenant, key } });
