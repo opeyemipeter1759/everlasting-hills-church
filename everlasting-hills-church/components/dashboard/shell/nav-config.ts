@@ -32,6 +32,7 @@ import {
   UserCog,
   Library,
   HandCoins,
+  ClipboardCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -51,12 +52,19 @@ export type NavGroup = {
 };
 
 export const NAV_GROUPS: NavGroup[] = [
+  // No section heading, so it is never folded away: the Member section starts
+  // collapsed for anyone with other sections, which hid the directory.
+  {
+    section: null,
+    items: [
+      { label: "Church Family",   href: "/dashboard/family",           icon: Users,           minRole: "MEMBER" },
+    ],
+  },
   {
     section: "Member",
     items: [
       { label: "Home",            href: "/dashboard",                  icon: LayoutDashboard, minRole: "MEMBER" },
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
-      { label: "Church Family",   href: "/dashboard/family",           icon: Users,           minRole: "MEMBER" },
       { label: "My Attendance",   href: "/dashboard/attendance",       icon: CheckCircle,     minRole: "MEMBER", maxRole: "ADMIN" },
       // Members had no nav entry for either of these: sermons were reachable
       // only from a dashboard card. They are tabbed together as one section,
@@ -109,6 +117,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
+      // The queue already existed, reachable only from a tab inside Articles.
+      { label: "Article Approvals", href: "/dashboard/articles/review", icon: ClipboardCheck, minRole: "ADMIN" },
       { label: "Books",         href: "/dashboard/admin/books",   icon: Library,       minRole: "ADMIN" },
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
