@@ -2449,6 +2449,24 @@
         ],
         "type": "object"
       },
+      "ProfileRoleDto": {
+        "properties": {
+          "org": {
+            "description": "Where, written as a handle or a name",
+            "example": "sparkpayhq",
+            "type": "object"
+          },
+          "title": {
+            "example": "CEO",
+            "type": "string"
+          },
+          "url": {
+            "example": "https://sparkpay.co",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "ProfileVisibilityDto": {
         "properties": {
           "birthday": {
@@ -4247,6 +4265,13 @@
           },
           "prayerFocus": {
             "type": "object"
+          },
+          "roles": {
+            "description": "What you do, e.g. CEO @sparkpayhq, Lead Pastor @everlastinghills (up to 8)",
+            "items": {
+              "$ref": "#/components/schemas/ProfileRoleDto"
+            },
+            "type": "array"
           },
           "skills": {
             "items": {

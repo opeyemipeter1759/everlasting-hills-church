@@ -120,6 +120,7 @@ export class MembersFamilyController {
         lastName: profile.lastName,
         photoUrl: profile.photoUrl,
         headline: own.headline,
+        roles: own.roles,
         coverUrl: own.coverUrl,
         restricted: true,
         isMe,

@@ -9232,6 +9232,17 @@ export interface components {
             /** @description Something nice about the member, up to 500 characters */
             body: string;
         };
+        ProfileRoleDto: {
+            /**
+             * @description Where, written as a handle or a name
+             * @example sparkpayhq
+             */
+            org?: Record<string, never>;
+            /** @example CEO */
+            title?: string;
+            /** @example https://sparkpay.co */
+            url?: Record<string, never>;
+        };
         ProfileVisibilityDto: {
             /** @enum {string} */
             birthday?: "MEMBERS" | "PRIVATE";
@@ -9978,6 +9989,8 @@ export interface components {
             occupation?: Record<string, never>;
             openTo?: string[];
             prayerFocus?: Record<string, never>;
+            /** @description What you do, e.g. CEO @sparkpayhq, Lead Pastor @everlastinghills (up to 8) */
+            roles?: components["schemas"]["ProfileRoleDto"][];
             skills?: string[];
             testimony?: Record<string, never>;
             visibility?: components["schemas"]["ProfileVisibilityDto"];

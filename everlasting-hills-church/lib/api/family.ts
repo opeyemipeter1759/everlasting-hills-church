@@ -71,6 +71,7 @@ export interface FamilyProfile {
   restricted?: false;
   /** What the member wrote about themselves, filtered to what this viewer may see. */
   headline: string | null;
+  roles: ProfileRole[];
   coverUrl: string | null;
   favouriteVerse: string | null;
   favouriteVerseRef: string | null;
@@ -97,9 +98,17 @@ export interface RestrictedProfile {
   lastName: string;
   photoUrl: string | null;
   headline: string | null;
+  roles?: ProfileRole[];
   coverUrl: string | null;
   restricted: true;
   isMe: boolean;
+}
+
+/** One thing a member does: "CEO" at "sparkpayhq", shown as CEO @sparkpayhq. */
+export interface ProfileRole {
+  title: string;
+  org: string | null;
+  url: string | null;
 }
 
 export type OpenTo = "PRAYER_PARTNER" | "MENTOR" | "MENTEE" | "FELLOWSHIP" | "NETWORKING" | "VOLUNTEERING";
@@ -110,6 +119,7 @@ export type VisibilityKey = "profile" | "career" | "testimony" | "journey" | "bi
 /** My spiritual and career profile, as I edit it. */
 export interface ProfileDetails {
   headline: string | null;
+  roles: ProfileRole[];
   coverUrl: string | null;
   favouriteVerse: string | null;
   favouriteVerseRef: string | null;

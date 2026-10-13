@@ -7,6 +7,7 @@ import { useFamilyProfile, type FamilyProfile as Profile, type RestrictedProfile
 import { SocialCard } from "@/components/dashboard/profile/profile-view/SocialCard";
 import { SOCIAL_PLATFORMS } from "@/components/dashboard/profile/profile-view/social-platforms";
 import KindWords from "./KindWords";
+import RolesLine from "./RolesLine";
 import { ArticlesSection, BadgesSection, CardTitle, Cover, ProfileHeader, StatsStrip, card } from "./ProfileSections";
 import { CareerSection, ConnectSide, GiftsSection, JourneySection, TestimonySection, VerseBanner } from "./ProfileStory";
 
@@ -202,6 +203,7 @@ function PrivateProfile({ p, back }: { p: RestrictedProfile; back: React.ReactNo
             )}
           </div>
           <h1 className="mt-4 text-2xl font-bold text-[#111] dark:text-white">{name}</h1>
+          <RolesLine roles={p.roles} className="mt-2" />
           {p.headline && <p className="mt-1 text-[15px] text-[#3d3436] dark:text-white/80">{p.headline}</p>}
           <p className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#FFF4F6] px-4 py-3 text-sm text-[#5A4A4D] dark:bg-white/[0.04] dark:text-white/60">
             <Lock size={15} aria-hidden="true" /> {p.firstName} keeps their profile private.

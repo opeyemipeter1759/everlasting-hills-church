@@ -46,6 +46,43 @@ export function cleanList(items: string[] | undefined, max = 15): string[] | und
   return out;
 }
 
+export interface ProfileRole {
+  title: string;
+  org: string | null;
+  url: string | null;
+}
+
+/**
+ * Tidies what someone does: a title is required; "@sparkpayhq" keeps its
+ * handle without the @; a link must be http(s), and gets https:// added when
+ * typed bare ("sparkpay.co"). Anything else is dropped rather than refused.
+ */
+export function cleanRoles(raw: unknown): ProfileRole[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ProfileRole[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const r = item as Record<string, unknown>;
+    const title = typeof r.title === 'string' ? r.title.trim().replace(/\s+/g, ' ').slice(0, 60) : '';
+    if (!title) continue;
+    const org = typeof r.org === 'string' ? r.org.trim().replace(/^@+/, '').replace(/\s+/g, ' ').slice(0, 60) || null : null;
+    let url = typeof r.url === 'string' ? r.url.trim().slice(0, 200) : '';
+    if (url && !/^https?:\/\//i.test(url)) url = `https://${url}`;
+    let safe: string | null = null;
+    if (url) {
+      try {
+        const parsed = new URL(url);
+        safe = parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.toString() : null;
+      } catch {
+        safe = null;
+      }
+    }
+    out.push({ title, org, url: safe });
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+
 const text = (value: string | null | undefined) => (value === undefined ? undefined : value?.trim() || null);
 
 type Details = Prisma.MemberProfileDetailsGetPayload<object>;
@@ -70,6 +107,7 @@ export class MemberProfileDetailsService {
   private shape(d: Details | null) {
     return {
       headline: d?.headline ?? null,
+      roles: cleanRoles(d?.roles),
       coverUrl: d?.coverUrl ?? null,
       favouriteVerse: d?.favouriteVerse ?? null,
       favouriteVerseRef: d?.favouriteVerseRef ?? null,
@@ -99,6 +137,7 @@ export class MemberProfileDetailsService {
     const current = await this.prisma.memberProfileDetails.findUnique({ where: { memberId }, select: { visibility: true } });
     const data = {
       headline: text(dto.headline),
+      roles: dto.roles ? (cleanRoles(dto.roles) as unknown as Prisma.InputJsonValue) : undefined,
       favouriteVerse: text(dto.favouriteVerse),
       favouriteVerseRef: text(dto.favouriteVerseRef),
       bornAgainYear: dto.bornAgainYear,
@@ -153,6 +192,8 @@ export class MemberProfileDetailsService {
     return {
       restricted: !open('profile'),
       headline: details.headline,
+      // What they do sits under the name, so it shows with the profile itself.
+      roles: details.roles,
       coverUrl: details.coverUrl,
       favouriteVerse: details.favouriteVerse,
       favouriteVerseRef: details.favouriteVerseRef,

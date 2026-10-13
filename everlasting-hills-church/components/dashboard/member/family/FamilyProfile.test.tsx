@@ -65,6 +65,10 @@ const ada: Profile = {
   likedByMe: false,
   isMe: false,
   headline: "Civil engineer · Choir member · Lover of the Psalms",
+  roles: [
+    { title: "CEO", org: "sparkpayhq", url: "https://sparkpay.co/" },
+    { title: "Lead Pastor", org: "everlastinghills", url: null },
+  ],
   coverUrl: null,
   favouriteVerse: "The Lord is my shepherd; I shall not want.",
   favouriteVerseRef: "Psalm 23:1",
@@ -92,6 +96,10 @@ describe("a member's profile", () => {
     render(<FamilyProfile id="ada" />);
     expect(screen.getByRole("heading", { name: "Ada Obi" })).toBeInTheDocument();
     expect(screen.getByText("Civil engineer · Choir member · Lover of the Psalms")).toBeInTheDocument();
+    // What they do, under the name: CEO @sparkpayhq · Lead Pastor @everlastinghills.
+    expect(screen.getByText("CEO")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "@sparkpayhq" })).toHaveAttribute("href", "https://sparkpay.co/");
+    expect(screen.getByRole("link", { name: "@everlastinghills" })).toHaveAttribute("href", "/");
     expect(screen.getByText("“The Lord is my shepherd; I shall not want.”")).toBeInTheDocument();
     expect(screen.getByText("Born again")).toBeInTheDocument();
     expect(screen.getByText("Ibadan Works")).toBeInTheDocument();

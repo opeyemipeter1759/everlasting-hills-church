@@ -1,10 +1,11 @@
-import { MemberProfileDetailsService, cleanList, visibilityOf } from './member-profile-details.service';
+import { MemberProfileDetailsService, cleanList, cleanRoles, visibilityOf } from './member-profile-details.service';
 
 const config = { get: () => 'tenant' } as never;
 const stored = {
   memberId: 'ada',
   tenantId: 'tenant',
   headline: 'Civil engineer · Choir member',
+  roles: [{ title: 'CEO', org: 'sparkpayhq', url: 'https://sparkpay.co/' }],
   coverUrl: 'https://cdn.test/covers/ada.jpg',
   favouriteVerse: 'The Lord is my shepherd',
   favouriteVerseRef: 'Psalm 23:1',
@@ -74,5 +75,29 @@ describe('A member’s spiritual and career profile', () => {
     const { create } = prisma.memberProfileDetails.upsert.mock.calls[0][0];
     expect(create).toMatchObject({ headline: 'Teacher', skills: ['Maths'], openTo: ['MENTOR'] });
     expect(create.visibility).toMatchObject({ phone: 'MEMBERS', career: 'MEMBERS' });
+  });
+});
+
+describe('What a member does (CEO @sparkpayhq)', () => {
+  it('keeps the title, the handle without its @, and a safe link', () => {
+    expect(
+      cleanRoles([
+        { title: ' CEO ', org: '@sparkpayhq', url: 'sparkpay.co' },
+        { title: 'Lead Pastor', org: 'everlastinghills' },
+        { title: '', org: 'nothing' },
+        { title: 'Bad link', url: 'javascript:alert(1)' },
+        'not a role',
+      ]),
+    ).toEqual([
+      { title: 'CEO', org: 'sparkpayhq', url: 'https://sparkpay.co/' },
+      { title: 'Lead Pastor', org: 'everlastinghills', url: null },
+      { title: 'Bad link', org: null, url: null },
+    ]);
+    expect(cleanRoles(Array.from({ length: 12 }, (_, i) => ({ title: `Role ${i}` })))).toHaveLength(8);
+  });
+
+  it('shows them with the profile', async () => {
+    const { svc } = setup();
+    expect((await svc.forViewer('ada', false)).roles).toEqual([{ title: 'CEO', org: 'sparkpayhq', url: 'https://sparkpay.co/' }]);
   });
 });

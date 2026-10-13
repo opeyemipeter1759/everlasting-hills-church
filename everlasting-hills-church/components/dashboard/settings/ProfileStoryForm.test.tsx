@@ -6,6 +6,7 @@ import ProfileStoryForm from "./ProfileStoryForm";
 const save = vi.hoisted(() => vi.fn());
 const blank: ProfileDetails = {
   headline: null,
+  roles: [],
   coverUrl: null,
   favouriteVerse: null,
   favouriteVerseRef: null,
@@ -40,6 +41,11 @@ describe("the spiritual and career profile form", () => {
     save.mockResolvedValue(blank);
     render(<ProfileStoryForm memberId="ada" />);
     fireEvent.change(screen.getByLabelText("Headline"), { target: { value: "Teacher · Choir" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add a role" }));
+    fireEvent.change(screen.getByLabelText("Role"), { target: { value: "CEO" } });
+    fireEvent.change(screen.getByLabelText("@ Where"), { target: { value: "@sparkpayhq" } });
+    fireEvent.change(screen.getByLabelText("Link (optional)"), { target: { value: "sparkpay.co" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add a role" }));
     fireEvent.change(screen.getByLabelText("Born again"), { target: { value: "2008" } });
     fireEvent.change(screen.getByLabelText("Occupation"), { target: { value: "Teacher" } });
     fireEvent.change(screen.getByLabelText("Skills"), { target: { value: "Maths" } });
@@ -52,6 +58,8 @@ describe("the spiritual and career profile form", () => {
     await waitFor(() => expect(save).toHaveBeenCalled());
     expect(save.mock.calls[0][0]).toMatchObject({
       headline: "Teacher · Choir",
+      // The second, empty row is dropped.
+      roles: [{ title: "CEO", org: "sparkpayhq", url: "sparkpay.co" }],
       bornAgainYear: 2008,
       occupation: "Teacher",
       skills: ["Maths"],

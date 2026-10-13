@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Eye, EyeOff, Loader2, X } from "lucide-react";
+import { Check, Eye, EyeOff, Loader2, Plus, X } from "lucide-react";
 import {
   useMyProfileDetails,
   useUpdateProfileDetails,
@@ -174,7 +174,8 @@ export default function ProfileStoryForm({ memberId }: { memberId?: string | nul
     if (!d) return;
     setError(null);
     try {
-      await save.mutateAsync(d);
+      // Rows left without a role title are dropped rather than saved blank.
+      await save.mutateAsync({ ...d, roles: d.roles.filter((r) => r.title.trim()) });
       setSaved(true);
     } catch (err) {
       setError((err as { message?: string }).message ?? "Could not save. Please try again.");
@@ -213,6 +214,71 @@ export default function ProfileStoryForm({ memberId }: { memberId?: string | nul
             Headline
           </label>
           <input id="pd-headline" className={input} maxLength={120} value={d.headline ?? ""} onChange={(e) => set("headline", e.target.value)} placeholder="Civil engineer · Choir member · Lover of the Psalms" />
+        </Block>
+
+        <Block
+          title="What you do"
+          hint="Shown under your name, like CEO @sparkpayhq · Lead Pastor @everlastinghills. Add a link to make the @ clickable."
+        >
+          <ul className="space-y-3">
+            {d.roles.map((role, i) => {
+              const update = (patch: Partial<typeof role>) => set("roles", d.roles.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+              return (
+                <li key={i} className="grid grid-cols-1 gap-2 rounded-xl bg-[#FFF8F9] p-3 dark:bg-white/[0.04] sm:grid-cols-[1fr_1fr_auto]">
+                  <div>
+                    <label htmlFor={`pd-role-title-${i}`} className={label}>
+                      Role
+                    </label>
+                    <input id={`pd-role-title-${i}`} className={input} maxLength={60} value={role.title} onChange={(e) => update({ title: e.target.value })} placeholder="CEO" />
+                  </div>
+                  <div>
+                    <label htmlFor={`pd-role-org-${i}`} className={label}>
+                      @ Where
+                    </label>
+                    <input
+                      id={`pd-role-org-${i}`}
+                      className={input}
+                      maxLength={61}
+                      value={role.org ? `@${role.org}` : ""}
+                      onChange={(e) => update({ org: e.target.value.replace(/^@+/, "") || null })}
+                      placeholder="@sparkpayhq"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => set("roles", d.roles.filter((_, j) => j !== i))}
+                    aria-label={`Remove ${role.title || "this role"}`}
+                    className="inline-flex min-h-11 min-w-11 items-center justify-center self-end rounded-xl text-[#8a7e80] hover:bg-white hover:text-red-600 dark:text-white/50"
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </button>
+                  <div className="sm:col-span-2">
+                    <label htmlFor={`pd-role-url-${i}`} className={label}>
+                      Link (optional)
+                    </label>
+                    <input
+                      id={`pd-role-url-${i}`}
+                      className={input}
+                      maxLength={200}
+                      value={role.url ?? ""}
+                      onChange={(e) => update({ url: e.target.value || null })}
+                      placeholder="sparkpay.co"
+                      inputMode="url"
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {d.roles.length < 8 && (
+            <button
+              type="button"
+              onClick={() => set("roles", [...d.roles, { title: "", org: null, url: null }])}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-dashed border-[#E7CDD3] px-4 text-sm font-semibold text-[#87102C] hover:border-[#87102C] dark:border-white/15 dark:text-[#FFB3C1]"
+            >
+              <Plus size={15} aria-hidden="true" /> Add a role
+            </button>
+          )}
         </Block>
 
         <Block title="Favourite scripture" hint="Shown as a banner quote on your profile.">

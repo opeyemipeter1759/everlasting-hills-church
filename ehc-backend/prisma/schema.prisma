@@ -257,6 +257,8 @@ model MemberProfileDetails {
   occupation          String?
   employer            String?
   industry            String?
+  /// What the member does, LinkedIn-style: [{ title, org, url? }], e.g. CEO @sparkpayhq.
+  roles               Json     @default("[]")
   skills              String[] @default([])
   gifts               String[] @default([])
   interests           String[] @default([])

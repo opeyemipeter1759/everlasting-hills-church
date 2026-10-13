@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Award, Camera, Check, Heart, Link2, Loader2, Pencil, Share2, Trash2 } from "lucide-react";
 import { useLikeProfile, useProfileCover, type BadgeProgress, type FamilyProfile, type ProfileBadge } from "@/lib/api/family";
 import { LEVEL_STYLE, TRACK_ICON, TRACK_LABEL } from "./badge-style";
+import RolesLine from "./RolesLine";
 
 export const card =
   "rounded-2xl border border-[#E7CDD3]/60 bg-white dark:border-white/[0.09] dark:bg-white/[0.04]";
@@ -203,6 +204,7 @@ export function ProfileHeader({ p }: { p: FamilyProfile }) {
           </div>
         </div>
         <h1 className="mt-4 text-2xl font-bold tracking-tight text-[#111] dark:text-white sm:text-3xl">{name}</h1>
+        <RolesLine roles={p.roles} className="mt-2" />
         <p className="mt-1 text-[15px] text-[#3d3436] dark:text-white/80">{headline}</p>
         <p className="mt-1 text-sm text-[#8a7e80] dark:text-white/45">
           Everlasting Hills Church, Ibadan · Member since {joined}
