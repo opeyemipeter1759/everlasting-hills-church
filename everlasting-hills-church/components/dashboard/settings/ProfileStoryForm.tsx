@@ -154,7 +154,8 @@ export default function ProfileStoryForm({ memberId }: { memberId?: string | nul
   useEffect(() => {
     if (data && !d) {
       const { coverUrl: _cover, ...rest } = data;
-      setD(rest);
+      // An older server sends no roles; treat that as none rather than failing.
+      setD({ ...rest, roles: rest.roles ?? [] });
     }
   }, [data, d]);
 
