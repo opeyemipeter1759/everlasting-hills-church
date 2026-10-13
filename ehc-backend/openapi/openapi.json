@@ -2819,6 +2819,17 @@
         ],
         "type": "object"
       },
+      "ResolveReviewNoteDto": {
+        "properties": {
+          "resolved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "resolved"
+        ],
+        "type": "object"
+      },
       "ReviewArticleDto": {
         "properties": {
           "note": {
@@ -2856,6 +2867,26 @@
         },
         "required": [
           "outcome"
+        ],
+        "type": "object"
+      },
+      "ReviewNoteDto": {
+        "properties": {
+          "body": {
+            "description": "The comment, up to 2,000 characters",
+            "type": "string"
+          },
+          "quote": {
+            "description": "The highlighted words the comment is about",
+            "type": "object"
+          },
+          "suggestion": {
+            "description": "Suggested wording to replace the highlighted words",
+            "type": "object"
+          }
+        },
+        "required": [
+          "body"
         ],
         "type": "object"
       },
@@ -8056,6 +8087,262 @@
           }
         ],
         "summary": "Send a piece back to its author with a note",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}/review-notes": {
+      "get": {
+        "operationId": "ArticlesController_reviewNotes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Private notes between the author and reviewers, oldest first",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "ArticlesController_addReviewNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Comment on an article, or on a highlighted passage with suggested wording, without approving or returning it",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}/review-notes/{noteId}": {
+      "delete": {
+        "operationId": "ArticlesController_deleteReviewNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a review note you wrote",
+        "tags": [
+          "articles"
+        ]
+      },
+      "patch": {
+        "operationId": "ArticlesController_resolveReviewNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveReviewNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Mark a review note dealt with, or open it again",
         "tags": [
           "articles"
         ]

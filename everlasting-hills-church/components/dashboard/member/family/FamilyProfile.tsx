@@ -35,9 +35,13 @@ function Detail({ icon: Icon, label, children }: { icon: typeof Cake; label: str
  * articles they have written, and kind words from the family.
  * Anyone signed in can open it, and it can be shared as a link.
  */
-export default function FamilyProfile({ id }: { id: string }) {
-  const { data: p, isLoading, isError } = useFamilyProfile(id);
-  const { data: me } = useMe();
+export default function FamilyProfile({ id: routeId }: { id: string }) {
+  const { data: me, isLoading: meLoading } = useMe();
+  // "/dashboard/family/me" opens your own profile: the sidebar's "My badges" link.
+  const id = routeId === "me" ? me?.member?.id : routeId;
+  const { data: p, isLoading: profileLoading, isError: profileError } = useFamilyProfile(id);
+  const isLoading = profileLoading || (routeId === "me" && meLoading);
+  const isError = profileError || (routeId === "me" && !meLoading && !id);
   const viewerId = me?.member?.id ?? null;
   const isStaff = (me?.effectiveRoles ?? []).some((r) => STAFF.includes(r));
 

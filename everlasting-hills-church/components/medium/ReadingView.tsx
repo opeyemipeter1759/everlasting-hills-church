@@ -27,8 +27,11 @@ export default function ReadingView({
   actions,
   footer,
   back,
+  bodyId,
 }: {
   article: ReadingArticle;
+  /** An id for the story's text, so review notes can find and highlight passages in it. */
+  bodyId?: string;
   notice?: ReactNode;
   actions?: ReactNode;
   footer?: ReactNode;
@@ -67,7 +70,7 @@ export default function ReadingView({
         <img src={a.coverImageUrl} alt="" className="mt-10 w-full object-cover" />
       )}
 
-      <div className="mt-10">
+      <div className="mt-10" id={bodyId}>
         <RichText text={a.body} density="comfortable" className="m-article" emphasisClassName="m-ink" />
       </div>
 

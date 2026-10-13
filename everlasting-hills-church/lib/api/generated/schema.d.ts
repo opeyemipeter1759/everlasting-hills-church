@@ -826,6 +826,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/articles/{id}/review-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Private notes between the author and reviewers, oldest first */
+        get: operations["ArticlesController_reviewNotes"];
+        put?: never;
+        /** Comment on an article, or on a highlighted passage with suggested wording, without approving or returning it */
+        post: operations["ArticlesController_addReviewNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}/review-notes/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a review note you wrote */
+        delete: operations["ArticlesController_deleteReviewNote"];
+        options?: never;
+        head?: never;
+        /** Mark a review note dealt with, or open it again */
+        patch: operations["ArticlesController_resolveReviewNote"];
+        trace?: never;
+    };
     "/articles/{slug}": {
         parameters: {
             query?: never;
@@ -9337,6 +9373,9 @@ export interface components {
             /** @enum {string} */
             toStatus: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "AWAY" | "OPTED_OUT";
         };
+        ResolveReviewNoteDto: {
+            resolved: boolean;
+        };
         ReviewArticleDto: {
             /** @description A word to the author with the approval */
             note?: string;
@@ -9349,6 +9388,14 @@ export interface components {
             note?: string;
             /** @enum {string} */
             outcome: "HANDED_OVER" | "EXTENDED" | "CLOSED";
+        };
+        ReviewNoteDto: {
+            /** @description The comment, up to 2,000 characters */
+            body: string;
+            /** @description The highlighted words the comment is about */
+            quote?: Record<string, never>;
+            /** @description Suggested wording to replace the highlighted words */
+            suggestion?: Record<string, never>;
         };
         ReviewUnitTaskReportDto: {
             /** @description Feedback for the author — expected when sending a report back */
@@ -12026,6 +12073,148 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_reviewNotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_addReviewNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_deleteReviewNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_resolveReviewNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveReviewNoteDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

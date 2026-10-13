@@ -353,3 +353,53 @@ export function authorInitials(author: ArticleAuthor | null | undefined): string
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 }
+
+/** A private note between the author and reviewers, maybe about a highlighted passage. */
+export interface ReviewNote {
+  id: string;
+  authorName: string;
+  fromReviewer: boolean;
+  body: string;
+  quote: string | null;
+  suggestion: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  mine: boolean;
+}
+
+const notesKey = (articleId: string) => ["articles", "review-notes", articleId] as const;
+
+export function useReviewNotes(articleId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: notesKey(articleId ?? ""),
+    queryFn: () => api.get<{ isAuthor: boolean; isReviewer: boolean; notes: ReviewNote[] }>(`/articles/${articleId}/review-notes`),
+    enabled: enabled && !!articleId,
+    retry: false,
+  });
+}
+
+export function useAddReviewNote(articleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { body: string; quote?: string | null; suggestion?: string | null }) =>
+      api.post<ReviewNote>(`/articles/${articleId}/review-notes`, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: notesKey(articleId) }),
+  });
+}
+
+export function useResolveReviewNote(articleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ noteId, resolved }: { noteId: string; resolved: boolean }) =>
+      api.patch(`/articles/${articleId}/review-notes/${noteId}`, { resolved }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: notesKey(articleId) }),
+  });
+}
+
+export function useDeleteReviewNote(articleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (noteId: string) => api.delete(`/articles/${articleId}/review-notes/${noteId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: notesKey(articleId) }),
+  });
+}

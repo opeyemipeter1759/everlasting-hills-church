@@ -174,3 +174,28 @@ export class PublicArticleCommentDto extends ArticleCommentDto {
   @MaxLength(200)
   website?: string;
 }
+
+export class ReviewNoteDto {
+  @ApiProperty({ description: 'The comment, up to 2,000 characters' })
+  @IsString()
+  @MaxLength(2000)
+  body!: string;
+
+  @ApiPropertyOptional({ description: 'The highlighted words the comment is about' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  quote?: string | null;
+
+  @ApiPropertyOptional({ description: 'Suggested wording to replace the highlighted words' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  suggestion?: string | null;
+}
+
+export class ResolveReviewNoteDto {
+  @ApiProperty()
+  @IsBoolean()
+  resolved!: boolean;
+}

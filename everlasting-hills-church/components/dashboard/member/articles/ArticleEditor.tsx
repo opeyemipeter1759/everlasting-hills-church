@@ -8,6 +8,7 @@ import RichText from "@/components/ui/display/RichText";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { uploadArticleCover, useArticle, useCreateArticle, useDeleteArticle, useUpdateArticle } from "@/lib/api/articles";
 import { MediumPage } from "./ArticleTabs";
+import ReviewNotes, { applySuggestion } from "./ReviewNotes";
 
 /** Matches the DTO, so the server never has to reject something the form allowed. */
 export const TITLE_MIN = 3;
@@ -457,6 +458,20 @@ export default function ArticleEditor() {
           <p role="alert" className="m-paper m-ink mt-6 border-l-2 border-[var(--m-ink)] px-4 py-3 text-sm">
             {error}
           </p>
+        )}
+
+        {existing && (
+          <ReviewNotes
+            articleId={existing.id}
+            enabled
+            onApply={(note) => {
+              if (!note.quote || note.suggestion == null) return false;
+              const next = applySuggestion(body, note.quote, note.suggestion);
+              if (next == null) return false;
+              change(setBody)(next);
+              return true;
+            }}
+          />
         )}
 
         {existing && (

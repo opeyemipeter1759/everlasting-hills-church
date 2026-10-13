@@ -44,9 +44,10 @@ const BOTTOM_TABS: BottomTab[] = [
   { label: "Reading",    href: "/dashboard/reading",                 icon: BookMarked,      minRole: "MEMBER",    maxRole: "ADMIN" },
   { label: "Profile",    href: "/dashboard/profile",                 icon: User,            minRole: "MEMBER",    maxRole: "ADMIN" },
   { label: "Attendance", href: "/dashboard/attendance",              icon: CheckCircle,     minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
-  // Ahead of Prayer, which is also a quick action on the home page.
-  { label: "Family",     href: "/dashboard/family",                  icon: Users,           minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
-  { label: "Prayer",     href: "/prayer-request",                    icon: Heart,           minRole: "MEMBER" },
+  // Everyone, admins too: the phone bar was the only way to it, and admins had none.
+  { label: "Family",     href: "/dashboard/family",                  icon: Users,           minRole: "MEMBER" },
+  // Admins get Members and Analytics in its place; Prayer is a home quick action.
+  { label: "Prayer",     href: "/prayer-request",                    icon: Heart,           minRole: "MEMBER",    maxRole: "ADMIN" },
   { label: "Testimony",  href: "/testimony",                         icon: MessageSquare,   minRole: "MEMBER",    maxRole: "UNIT_LEAD" },
   { label: "Depts",      href: "/dashboard/analytics/departments",   icon: Network,         minRole: "UNIT_LEAD", maxRole: "ADMIN" },
   { label: "Members",    href: "/dashboard/admin/members",           icon: Users,           minRole: "ADMIN" },

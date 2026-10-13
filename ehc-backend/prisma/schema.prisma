@@ -243,32 +243,32 @@ model Member {
 /// The LinkedIn-style part of a member's profile, in their own words: kept
 /// apart from Member so the many queries that load a member never carry it.
 model MemberProfileDetails {
-  memberId             String   @id
-  tenantId             String
-  headline             String?
+  memberId            String   @id
+  tenantId            String
+  headline            String?
   /// The banner image across the top of the profile.
-  coverUrl             String?
-  favouriteVerse       String?
-  favouriteVerseRef    String?
-  bornAgainYear        Int?     @db.SmallInt
-  waterBaptismYear     Int?     @db.SmallInt
-  holySpiritYear       Int?     @db.SmallInt
-  membershipClassYear  Int?     @db.SmallInt
-  occupation           String?
-  employer             String?
-  industry             String?
-  skills               String[] @default([])
-  gifts                String[] @default([])
-  interests            String[] @default([])
-  languages            String[] @default([])
-  prayerFocus          String?
-  testimony            String?
+  coverUrl            String?
+  favouriteVerse      String?
+  favouriteVerseRef   String?
+  bornAgainYear       Int?     @db.SmallInt
+  waterBaptismYear    Int?     @db.SmallInt
+  holySpiritYear      Int?     @db.SmallInt
+  membershipClassYear Int?     @db.SmallInt
+  occupation          String?
+  employer            String?
+  industry            String?
+  skills              String[] @default([])
+  gifts               String[] @default([])
+  interests           String[] @default([])
+  languages           String[] @default([])
+  prayerFocus         String?
+  testimony           String?
   /// What the member welcomes from others: PRAYER_PARTNER, MENTOR, MENTEE, FELLOWSHIP, NETWORKING, VOLUNTEERING.
-  openTo               String[] @default([])
+  openTo              String[] @default([])
   /// Who sees what: { profile, career, testimony, journey, birthday, socials, phone }, each MEMBERS or PRIVATE.
-  visibility           Json     @default("{}")
-  updatedAt            DateTime @default(now()) @updatedAt
-  Member               Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  visibility          Json     @default("{}")
+  updatedAt           DateTime @default(now()) @updatedAt
+  Member              Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
 
 /// One member liking another's profile, once.
@@ -2871,6 +2871,7 @@ model MemberArticle {
   Likes          MemberArticleLike[]
   Comments       ArticleComment[]
   Bookmarks      ArticleBookmark[]
+  ReviewNotes    ArticleReviewNote[]
 
   @@unique([tenantId, slug], map: "MemberArticle_tenant_slug")
   @@index([tenantId, status, publishedAt(sort: Desc)], map: "MemberArticle_feed")
@@ -2880,17 +2881,40 @@ model MemberArticle {
 /// A comment on a published article, from a signed-in member (profileId set)
 /// or a visitor to the public blog, who gives a name.
 model ArticleComment {
-  id          String        @id
-  tenantId    String
-  articleId   String
-  profileId   String?
-  authorName  String
-  body        String
-  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
-  Article     MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id         String        @id
+  tenantId   String
+  articleId  String
+  profileId  String?
+  authorName String
+  body       String
+  createdAt  DateTime      @default(now()) @db.Timestamptz(6)
+  Article    MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
 
   @@index([articleId, createdAt])
   @@index([tenantId, createdAt])
+}
+
+/// A private note between an article's author and its reviewers, sent without
+/// approving or returning the piece. Never shown to readers.
+model ArticleReviewNote {
+  id           String        @id
+  tenantId     String
+  articleId    String
+  profileId    String
+  authorName   String
+  /// True when written by a reviewer, false when it is the author replying.
+  fromReviewer Boolean
+  body         String
+  /// The passage the note is about, as highlighted (Google Docs style), or null for the whole piece.
+  quote        String?
+  /// Suggested wording to replace the quoted passage.
+  suggestion   String?
+  /// Set when the author marks it dealt with, or applies the suggestion.
+  resolvedAt   DateTime?     @db.Timestamptz(6)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  Article      MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt])
 }
 
 /// An article a member has saved to read later.

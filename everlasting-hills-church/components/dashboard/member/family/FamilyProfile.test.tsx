@@ -6,12 +6,16 @@ import { pageWindow } from "./Pagination";
 
 const state = vi.hoisted(() => ({
   data: undefined as Profile | undefined,
+  asked: undefined as string | undefined,
   comments: { items: [], total: 0, page: 1, pageSize: 20 } as ProfileCommentsPage,
 }));
 const like = vi.hoisted(() => vi.fn());
 const addComment = vi.hoisted(() => vi.fn());
 vi.mock("@/lib/api/family", () => ({
-  useFamilyProfile: () => ({ data: state.data, isLoading: false, isError: !state.data }),
+  useFamilyProfile: (id: string | undefined) => {
+    state.asked = id;
+    return { data: state.data, isLoading: false, isError: !state.data };
+  },
   useLikeProfile: () => ({ mutate: like, isPending: false }),
   useProfileComments: () => ({ data: state.comments, isLoading: false }),
   useAddProfileComment: () => ({ mutateAsync: addComment, isPending: false }),
@@ -154,6 +158,13 @@ describe("a member's profile", () => {
     expect(screen.getByRole("heading", { name: "Ada Obi" })).toBeInTheDocument();
     expect(screen.getByText("Ada keeps their profile private.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Like" })).not.toBeInTheDocument();
+  });
+
+  it("opens my own profile from the My Badges link", () => {
+    state.data = { ...ada, id: "bayo", isMe: true };
+    render(<FamilyProfile id="me" />);
+    expect(state.asked).toBe("bayo");
+    expect(screen.getByRole("link", { name: "Edit profile" })).toBeInTheDocument();
   });
 
   it("says so when the member cannot be found", () => {

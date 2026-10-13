@@ -24,6 +24,7 @@ import {
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { normalizeRole } from "@/lib/auth/frontend-session";
 import ArticleReviewActions from "./ArticleReviewActions";
+import ReviewNotes from "./ReviewNotes";
 import { MediumPage } from "./ArticleTabs";
 
 const MODERATOR_ROLES = new Set(["PASTOR", "ADMIN", "ADMIN_HEAD", "SUPER_ADMIN"]);
@@ -156,6 +157,7 @@ export default function ArticleReader({ slug }: { slug: string }) {
             </div>
           </div>
         }
+        bodyId="article-body"
         notice={
           actionError ? (
             <>
@@ -217,6 +219,8 @@ export default function ArticleReader({ slug }: { slug: string }) {
         }
         footer={
           <>
+            {/* Comments and suggestions on passages, Google Docs style; never a decision. */}
+            <ReviewNotes articleId={article.id} bodyId="article-body" enabled={article.isAuthor || article.canReview || canModerate} />
             {article.canReview && <ArticleReviewActions article={article} />}
 
             {article.startVerseId && article.endVerseId && (

@@ -31,6 +31,8 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { ArticlesService } from './articles.service';
 import {
   ArticleCommentDto,
+  ResolveReviewNoteDto,
+  ReviewNoteDto,
   CreateArticleDto,
   RequestChangesDto,
   ReviewArticleDto,
@@ -38,6 +40,7 @@ import {
 } from './dto/article.dto';
 import { ArticleReviewService } from './article-review.service';
 import { ArticleBlogService } from './article-blog.service';
+import { ArticleReviewNotesService } from './article-review-notes.service';
 
 /**
  * Member written articles: what people are learning, published to the church.
@@ -56,7 +59,40 @@ export class ArticlesController {
     private readonly review: ArticleReviewService,
     private readonly blog: ArticleBlogService,
     private readonly uploads: UploadsService,
+    private readonly notes: ArticleReviewNotesService,
   ) {}
+
+  @Get(':id/review-notes')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({ summary: 'Private notes between the author and reviewers, oldest first' })
+  reviewNotes(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.notes.list(actor, id);
+  }
+
+  @Post(':id/review-notes')
+  @ApiOperation({
+    summary: 'Comment on an article, or on a highlighted passage with suggested wording, without approving or returning it',
+  })
+  addReviewNote(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: ReviewNoteDto) {
+    return this.notes.add(actor, id, body);
+  }
+
+  @Patch(':id/review-notes/:noteId')
+  @ApiOperation({ summary: 'Mark a review note dealt with, or open it again' })
+  resolveReviewNote(
+    @CurrentUser() actor: AuthUser,
+    @Param('id') id: string,
+    @Param('noteId') noteId: string,
+    @Body() body: ResolveReviewNoteDto,
+  ) {
+    return this.notes.resolve(actor, id, noteId, body.resolved);
+  }
+
+  @Delete(':id/review-notes/:noteId')
+  @ApiOperation({ summary: 'Delete a review note you wrote' })
+  deleteReviewNote(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Param('noteId') noteId: string) {
+    return this.notes.remove(actor, id, noteId);
+  }
 
   /** A cover picture for an article, uploaded before the article is saved. */
   @Post('cover')

@@ -33,6 +33,7 @@ import {
   Library,
   HandCoins,
   ClipboardCheck,
+  Award,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -58,6 +59,8 @@ export const NAV_GROUPS: NavGroup[] = [
     section: null,
     items: [
       { label: "Church Family",   href: "/dashboard/family",           icon: Users,           minRole: "MEMBER" },
+      // Your own profile as the church sees it: badges, figures and articles.
+      { label: "My Badges",       href: "/dashboard/family/me",        icon: Award,           minRole: "MEMBER" },
     ],
   },
   {

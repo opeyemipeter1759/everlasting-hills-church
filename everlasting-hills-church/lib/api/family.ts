@@ -245,10 +245,11 @@ export function useFamilyDirectory(q: string, page: number) {
   });
 }
 
-export function useFamilyProfile(id: string) {
+export function useFamilyProfile(id: string | undefined) {
   return useQuery({
     queryKey: ["members", "family", "profile", id],
     queryFn: () => api.get<FamilyProfile | RestrictedProfile>(`/members/${id}/profile`),
+    enabled: !!id,
   });
 }
 

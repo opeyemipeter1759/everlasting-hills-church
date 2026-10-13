@@ -8,6 +8,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push }), usePathname: ()
 const role = vi.hoisted(() => ({ value: "SUPER_ADMIN" }));
 vi.mock("@/hooks/useCurrentUser", () => ({ useCurrentUser: () => ({ role: role.value, loggedIn: true }) }));
 vi.mock("@/components/blog/ArticleComments", () => ({ default: () => null }));
+vi.mock("./ReviewNotes", () => ({ default: () => null, applySuggestion: vi.fn() }));
 
 const remove = vi.hoisted(() => vi.fn());
 const update = vi.hoisted(() => vi.fn());
