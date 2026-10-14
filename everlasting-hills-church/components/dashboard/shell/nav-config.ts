@@ -32,6 +32,8 @@ import {
   UserCog,
   Library,
   HandCoins,
+  ClipboardCheck,
+  Award,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { UserRole } from "./role-utils";
@@ -51,6 +53,16 @@ export type NavGroup = {
 };
 
 export const NAV_GROUPS: NavGroup[] = [
+  // No section heading, so it is never folded away: the Member section starts
+  // collapsed for anyone with other sections, which hid the directory.
+  {
+    section: null,
+    items: [
+      { label: "Church Family",   href: "/dashboard/family",           icon: Users,           minRole: "MEMBER" },
+      // Your own profile as the church sees it: badges, figures and articles.
+      { label: "My Badges",       href: "/dashboard/family/me",        icon: Award,           minRole: "MEMBER" },
+    ],
+  },
   {
     section: "Member",
     items: [
@@ -103,12 +115,14 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Members",       href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
-      { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookOpen,      minRole: "ADMIN" },
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },
       { label: "Events",        href: "/dashboard/admin/events",        icon: CalendarDays,  minRole: "ADMIN" },
       { label: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone,     minRole: "ADMIN" },
+      // The queue already existed, reachable only from a tab inside Articles.
+      { label: "Article Approvals", href: "/dashboard/articles/review", icon: ClipboardCheck, minRole: "ADMIN" },
+      { label: "Articles",      href: "/dashboard/admin/articles",     icon: Newspaper,     minRole: "ADMIN" },
       { label: "Books",         href: "/dashboard/admin/books",   icon: Library,       minRole: "ADMIN" },
       { label: "Gatherings",    href: "/dashboard/admin/gatherings", icon: CalendarClock, minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory", icon: Package,     minRole: "ADMIN" },
@@ -138,6 +152,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Testimonials",      href: "/dashboard/pastor/testimonials",       icon: MessageSquare,  minRole: "PASTOR" },
       { label: "Decisions for Christ", href: "/dashboard/pastor/salvation",       icon: Sparkles,       minRole: "PASTOR" },
+      // Who is reading and who has gone quiet is a pastoral question. Admins
+      // keep it: the minimum role is unchanged from when it sat under Administration.
+      { label: "Bible Reading",     href: "/dashboard/admin/reading",      icon: BookOpen,       minRole: "ADMIN" },
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
       { label: "Reports",           href: "/dashboard/pastor/reports",     icon: FileText,       minRole: "PASTOR" },
     ],

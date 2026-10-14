@@ -1,235 +1,128 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { ChevronLeft, ChevronRight, PencilLine, Sparkles } from "lucide-react";
-import ArticleTabs from "./ArticleTabs";
-import { Byline, LikeButton, ScriptureChip } from "./ArticleMeta";
-import {
-  useArticleFeed,
-  useSetArticleLike,
-  type ArticleCard,
-} from "@/lib/api/articles";
+import { useEffect, useState } from "react";
+import { Search } from "lucide-react";
+import { MTabs, StaffPicks, StoryRow, WriteCard } from "@/components/medium/parts";
+import { fromCard } from "@/components/medium/story";
+import { Pagination } from "@/components/dashboard/member/family/Pagination";
+import { useArticleFeed, useSetArticleBookmark, useSetArticleLike, type FeedTab } from "@/lib/api/articles";
+import ArticleTabs, { MediumPage } from "./ArticleTabs";
+
+const TABS: { value: FeedTab; label: string }[] = [
+  { value: "for-you", label: "For you" },
+  { value: "featured", label: "Featured" },
+  { value: "saved", label: "Saved" },
+];
+
+const EMPTY: Record<FeedTab, string> = {
+  "for-you": "No stories yet. Be the first to write one.",
+  featured: "Nothing featured yet. Pastors feature stories from the reader.",
+  saved: "Nothing saved yet. Tap the bookmark on a story to read it later.",
+};
 
 /**
- * What the church is learning.
- *
- * Laid out like a publication rather than a dashboard table: one lead piece,
- * then a single readable column. The excerpt is the pitch, so it gets room, and
- * everything else on a card is small enough to skim past.
+ * The church's stories in the app, laid out like Medium's home: tabs and a
+ * search over a single reading column, the pastors' picks and a writing
+ * invitation down the side. Like and save happen in place.
  */
 export default function ArticleFeed() {
+  const [tab, setTab] = useState<FeedTab>("for-you");
+  const [query, setQuery] = useState("");
+  const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useArticleFeed(page);
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setQ(query);
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(t);
+  }, [query]);
+
+  const { data, isLoading, isError, refetch } = useArticleFeed(page, undefined, { tab, q });
+  const { data: featured } = useArticleFeed(1, undefined, { tab: "featured", limit: 5 });
   const like = useSetArticleLike();
+  const save = useSetArticleBookmark();
 
-  const articles = data?.articles ?? [];
-  const total = data?.meta.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / (data?.meta.limit ?? 20)));
-
-  // Only the first page gets a lead: on page two "featured" has already been
-  // seen, and promoting an arbitrary article there would be a lie about rank.
-  const lead = page === 1 && articles.length > 2 ? articles[0] : null;
-  const rest = lead ? articles.slice(1) : articles;
-
-  function toggleLike(article: ArticleCard) {
-    like.mutate({ id: article.id, liked: !article.likedByMe, slug: article.slug });
-  }
+  const stories = (data?.articles ?? []).map(fromCard);
+  const pages = data ? Math.max(1, Math.ceil(data.meta.total / data.meta.limit)) : 1;
+  const busy = like.isPending || save.isPending;
 
   return (
-    <div className="mx-auto max-w-full md:px-5 py-6">
+    <MediumPage>
       <ArticleTabs />
+      <div className="mx-auto grid max-w-[1200px] gap-12 pt-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-20">
+        <div className="min-w-0">
+          <label className="relative mb-6 block sm:hidden">
+            <span className="sr-only">Search stories</span>
+            <Search size={17} aria-hidden="true" className="m-muted pointer-events-none absolute left-4 top-1/2 -translate-y-1/2" />
+            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" className="m-paper m-ink w-full rounded-full py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-1 focus:ring-[var(--m-ink)]" />
+          </label>
 
-      <header className="mt-6 border-b border-gray-100 pb-6 dark:border-white/10">
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-[#111] dark:text-white sm:text-4xl">
-          What we are learning
-        </h1>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-[#8a7e80] dark:text-white/45">
-          Written by the church, for the church. Read what somebody found in
-          scripture this week, and write your own when something lands.
-        </p>
-      </header>
+          <MTabs
+            tabs={TABS}
+            value={tab}
+            onChange={(t) => {
+              setTab(t);
+              setPage(1);
+            }}
+            label="Which stories"
+          />
 
-      {isLoading ? (
-        <div className="mt-8 space-y-6">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <div className="h-4 w-24 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
-              <div className="h-5 w-3/4 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
-              <div className="h-12 animate-pulse rounded bg-gray-100 dark:bg-white/5" />
+          {q.trim() && (
+            <p className="m-muted mt-6 text-sm">
+              Results for <span className="m-ink">“{q.trim()}”</span>
+            </p>
+          )}
+
+          {isLoading ? (
+            <div className="mt-6 space-y-8" aria-busy="true">
+              {Array.from({ length: 4 }, (_, i) => (
+                <div key={i} className="space-y-3">
+                  <div className="m-paper h-4 w-40 animate-pulse" />
+                  <div className="m-paper h-6 w-3/4 animate-pulse" />
+                  <div className="m-paper h-4 w-1/2 animate-pulse" />
+                </div>
+              ))}
             </div>
-          ))}
+          ) : isError ? (
+            <p role="alert" className="m-muted py-10">
+              Stories could not load.{" "}
+              <button type="button" onClick={() => refetch()} className="m-ink min-h-11 underline">
+                Try again
+              </button>
+            </p>
+          ) : stories.length === 0 ? (
+            <p className="m-muted py-10">{q.trim() ? "No stories match that search." : EMPTY[tab]}</p>
+          ) : (
+            <>
+              {stories.map((s) => (
+                <StoryRow
+                  key={s.id}
+                  story={s}
+                  href={`/dashboard/articles/${s.slug}`}
+                  authorHref={s.author.memberId ? `/dashboard/family/${s.author.memberId}` : null}
+                  busy={busy}
+                  onLike={() => like.mutate({ id: s.id, liked: !s.likedByMe, slug: s.slug })}
+                  onBookmark={() => save.mutate({ id: s.id, saved: !s.bookmarkedByMe, slug: s.slug })}
+                />
+              ))}
+              <div className="mt-8">
+                <Pagination page={page} pages={pages} onChange={setPage} label="Story pages" tone="mono" />
+              </div>
+            </>
+          )}
         </div>
-      ) : articles.length === 0 ? (
-        <EmptyFeed />
-      ) : (
-        <>
-          {lead && <LeadCard article={lead} onLike={() => toggleLike(lead)} />}
 
-          <ol className="mt-2 divide-y divide-gray-100 dark:divide-white/[0.07]">
-            {rest.map((article) => (
-              <li key={article.id}>
-                <Row article={article} onLike={() => toggleLike(article)} />
-              </li>
-            ))}
-          </ol>
-        </>
-      )}
-
-      {totalPages > 1 && (
-        <div className="mt-8 flex items-center justify-between gap-3 border-t border-gray-100 pt-5 dark:border-white/10">
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40 dark:border-white/10 dark:text-white/60"
-          >
-            <ChevronLeft size={13} /> Newer
-          </button>
-          <span className="text-[11px] text-gray-400 dark:text-white/35">
-            Page {page} of {totalPages}
-          </span>
-          <button
-            type="button"
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages}
-            className="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 disabled:opacity-40 dark:border-white/10 dark:text-white/60"
-          >
-            Older <ChevronRight size={13} />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function LeadCard({ article, onLike }: { article: ArticleCard; onLike: () => void }) {
-  return (
-    <article className="mt-8">
-      {article.featuredAt && (
-        <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-          <Sparkles size={11} /> Featured
-        </p>
-      )}
-
-      <Link href={`/dashboard/articles/${article.slug}`} className="group block">
-        {article.coverImageUrl && (
-          <div className="relative mb-4 aspect-[2/1] w-full overflow-hidden rounded-2xl bg-gray-100 dark:bg-white/5">
-            <Image
-              src={article.coverImageUrl}
-              alt=""
-              fill
-              sizes="(max-width: 768px) 100vw, 768px"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-            />
-          </div>
-        )}
-
-        <h2 className="font-serif text-2xl font-bold leading-snug tracking-tight text-[#111] group-hover:text-[#87102C] dark:text-white dark:group-hover:text-[#FFB3C1] sm:text-3xl">
-          {article.title}
-        </h2>
-
-        {article.excerpt && (
-          <p className="mt-2.5 text-[15px] leading-relaxed text-gray-600 dark:text-white/55">
-            {article.excerpt}
-          </p>
-        )}
-      </Link>
-
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <Byline
-          author={article.Author}
-          publishedAt={article.publishedAt}
-          readingMinutes={article.readingMinutes}
-          size={32}
-        />
-        <div className="flex items-center gap-2">
-          <ScriptureChip label={article.scriptureLabel} />
-          <LikeButton liked={article.likedByMe} count={article.likeCount} onToggle={onLike} />
-        </div>
+        <aside className="space-y-10 lg:sticky lg:top-6 lg:self-start">
+          <label className="relative hidden sm:block">
+            <span className="sr-only">Search stories</span>
+            <Search size={17} aria-hidden="true" className="m-muted pointer-events-none absolute left-4 top-1/2 -translate-y-1/2" />
+            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search" className="m-paper m-ink w-full rounded-full py-2.5 pl-11 pr-4 text-sm outline-none focus:ring-1 focus:ring-[var(--m-ink)]" />
+          </label>
+          <WriteCard href="/dashboard/articles/write" />
+          <StaffPicks stories={(featured?.articles ?? []).map(fromCard)} basePath="/dashboard/articles" />
+        </aside>
       </div>
-
-      <hr className="mt-8 border-gray-100 dark:border-white/10" />
-    </article>
-  );
-}
-
-function Row({ article, onLike }: { article: ArticleCard; onLike: () => void }) {
-  return (
-    <article className="py-6">
-      <div className="flex items-start gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Byline
-              author={article.Author}
-              publishedAt={article.publishedAt}
-              readingMinutes={article.readingMinutes}
-              size={22}
-            />
-            {article.featuredAt && (
-              <Sparkles size={12} className="text-amber-500" aria-label="Featured" />
-            )}
-          </div>
-
-          <Link href={`/dashboard/articles/${article.slug}`} className="group mt-2.5 block">
-            <h2 className="font-serif text-lg font-bold leading-snug text-[#111] group-hover:text-[#87102C] dark:text-white dark:group-hover:text-[#FFB3C1]">
-              {article.title}
-            </h2>
-            {article.excerpt && (
-              <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-gray-500 dark:text-white/45">
-                {article.excerpt}
-              </p>
-            )}
-          </Link>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <ScriptureChip label={article.scriptureLabel} />
-            <LikeButton liked={article.likedByMe} count={article.likeCount} onToggle={onLike} />
-          </div>
-        </div>
-
-        {/* The thumbnail is the one thing that may be dropped on a phone: a
-            120px crop of a wide image tells a reader nothing the headline has
-            not already told them. */}
-        {article.coverImageUrl && (
-          <Link
-            href={`/dashboard/articles/${article.slug}`}
-            className="relative hidden h-24 w-32 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100 sm:block dark:bg-white/5"
-            aria-hidden
-            tabIndex={-1}
-          >
-            <Image
-              src={article.coverImageUrl}
-              alt=""
-              fill
-              sizes="128px"
-              className="object-cover"
-            />
-          </Link>
-        )}
-      </div>
-    </article>
-  );
-}
-
-function EmptyFeed() {
-  return (
-    <div className="mt-12 rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center dark:border-white/10">
-      <PencilLine size={22} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
-      <p className="font-serif text-lg font-bold text-[#111] dark:text-white">
-        Nobody has written yet.
-      </p>
-      <p className="mx-auto mt-1.5 max-w-sm text-sm text-[#8a7e80] dark:text-white/45">
-        Somebody has to be first. If a passage stayed with you this week, write a
-        few paragraphs about it.
-      </p>
-      <Link
-        href="/dashboard/articles/write"
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#6E0C24]"
-      >
-        <PencilLine size={15} /> Write the first one
-      </Link>
-    </div>
+    </MediumPage>
   );
 }

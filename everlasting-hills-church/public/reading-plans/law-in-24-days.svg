@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" role="img">
+<defs><linearGradient id="books" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#87102C"/>
+    <stop offset="1" stop-color="#4A0817"/>
+  </linearGradient></defs>
+<rect width="800" height="400" fill="url(#books)"/>
+  <g><text x="353.0" y="67.9" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Genesis</text>
+  <rect x="363.0" y="53.1" width="356.6" height="16.1" rx="8.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="725.6" y="66.9" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">50</text>
+  <text x="353.0" y="110.3" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Exodus</text>
+  <rect x="363.0" y="95.5" width="318.9" height="16.1" rx="8.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="688.0" y="109.3" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">40</text>
+  <text x="353.0" y="152.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Leviticus</text>
+  <rect x="363.0" y="137.9" width="262.0" height="16.1" rx="8.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="631.1" y="151.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">27</text>
+  <text x="353.0" y="195.0" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Numbers</text>
+  <rect x="363.0" y="180.3" width="302.6" height="16.1" rx="8.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="671.6" y="194.1" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">36</text>
+  <text x="353.0" y="237.4" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="1">Deuteronomy</text>
+  <rect x="363.0" y="222.7" width="294.0" height="16.1" rx="8.1" fill="#E8B44A" fill-opacity="0.95"/>
+  <text x="663.1" y="236.5" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">34</text></g>
+</svg>

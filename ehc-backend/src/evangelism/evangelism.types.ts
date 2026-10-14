@@ -3,7 +3,8 @@ import { Role } from '@prisma/client';
 /** Church admins: full access to Evangelism whether or not they are on the team. */
 export const EVANGELISM_ADMIN_ROLES: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN];
 
-export const SAVED_STATUSES = ['YES', 'NO', 'ALREADY'] as const;
+/** REDEDICATED: already a believer who had fallen away and recommitted their life to Christ. */
+export const SAVED_STATUSES = ['YES', 'REDEDICATED', 'NO', 'ALREADY'] as const;
 export type SavedStatus = (typeof SAVED_STATUSES)[number];
 
 export const NEXT_ACTIONS = ['FOLLOW_UP_CALL', 'CALL_BACK', 'NEEDS_VISIT', 'INVITE'] as const;

@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, CalendarDays, CheckCircle2, Heart, Network, Users } from "lucide-react";
+import { Activity, CalendarDays, CheckCircle2, Heart, Megaphone, Network, Users } from "lucide-react";
 import { useMemberDetail } from "./member-detail/useMemberDetail";
 import { completion } from "./member-detail/types";
 import { BackLink, Section } from "./member-detail/shared";
@@ -14,6 +14,7 @@ import CareSection from "./member-detail/CareSection";
 import AttendanceSection from "./member-detail/AttendanceSection";
 import FollowUpSection from "./member-detail/FollowUpSection";
 import PastorNotesSection from "./member-detail/PastorNotesSection";
+import EvangelismSection from "./member-detail/EvangelismSection";
 
 export default function MemberDetailClient({ id }: { id: string }) {
   const { data: m, isLoading, error } = useMemberDetail(id);
@@ -43,6 +44,12 @@ export default function MemberDetailClient({ id }: { id: string }) {
         <Section title="Care & discipleship" icon={<Heart size={15} />}>
           <CareSection asMember={m.CareAsMember} asLeader={m.CareAsLeader} />
         </Section>
+
+        {m.evangelism && (
+          <Section title="Evangelism" icon={<Megaphone size={15} />} wide>
+            <EvangelismSection tally={m.evangelism} />
+          </Section>
+        )}
       </div>
 
       <Section title="Recent attendance" icon={<CalendarDays size={15} />} wide>

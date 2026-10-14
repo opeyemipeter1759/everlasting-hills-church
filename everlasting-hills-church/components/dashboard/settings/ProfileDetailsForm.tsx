@@ -7,11 +7,18 @@ import { Cake, Check, Heart } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { FormInput, labelBase } from "@/components/ui/form/FormInput";
 import { Select } from "@/components/ui/select";
+import { SpouseLink, SpouseRequestsInbox } from "./SpouseLink";
 
 export type ProfileDetailsUser = {
+  id?: string | null;
   gender: string | null;
   dateOfBirth: string | null;
   weddingAnniversary: string | null;
+  maritalStatus?: "SINGLE" | "MARRIED" | null;
+  /** A spouse who is not a church member. */
+  spouseName?: string | null;
+  /** Set once a member spouse has confirmed. */
+  hasLinkedSpouse?: boolean;
 };
 
 type FormValues = {
@@ -20,6 +27,9 @@ type FormValues = {
   birthMonth: string;
   maritalStatus: "single" | "married";
   weddingAnniversary: string;
+  /** Whether the spouse is a church member, linked by request, or typed in. */
+  spouseIsMember: "yes" | "no";
+  spouseName: string;
 };
 
 function toDateInputValue(iso: string | null): string {
@@ -68,8 +78,10 @@ export default function ProfileDetailsForm({ user }: Props) {
     gender: (user.gender as "Male" | "Female" | null) ?? "",
     birthDay: initialDay,
     birthMonth: initialMonth,
-    maritalStatus: user.weddingAnniversary ? "married" : "single",
+    maritalStatus: (user.maritalStatus ? user.maritalStatus === "MARRIED" : !!user.weddingAnniversary) ? "married" : "single",
     weddingAnniversary: toDateInputValue(user.weddingAnniversary),
+    spouseIsMember: user.spouseName && !user.hasLinkedSpouse ? "no" : "yes",
+    spouseName: user.spouseName ?? "",
   };
   // Year isn't shown or edited, but is preserved on submit so an existing accurate
   // birth year isn't silently overwritten by the sentinel used for new profiles.
@@ -88,18 +100,24 @@ export default function ProfileDetailsForm({ user }: Props) {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const maritalStatus = watch("maritalStatus");
+  const spouseIsMember = watch("spouseIsMember");
   const birthDay = watch("birthDay");
   const birthMonth = watch("birthMonth");
 
   async function onSubmit(values: FormValues) {
     setSaved(false);
     setServerError(null);
+    const married = values.maritalStatus === "married";
     try {
       await apiClient.patch("/members/me", {
         gender: values.gender || null,
         dateOfBirth: composeDobIso(values.birthDay, values.birthMonth, dobYear),
-        weddingAnniversary:
-          values.maritalStatus === "married" ? values.weddingAnniversary || null : null,
+        maritalStatus: married ? "MARRIED" : "SINGLE",
+        weddingAnniversary: married ? values.weddingAnniversary || null : null,
+        // A typed name only for a spouse who is not a member; a member spouse
+        // is linked by request, outside this form.
+        ...(married && values.spouseIsMember === "no" && { spouseName: values.spouseName.trim() || null }),
+        ...(married && values.spouseIsMember === "yes" && !user.hasLinkedSpouse && { spouseName: null }),
       });
       setSaved(true);
       reset(values, { keepValues: true });
@@ -135,6 +153,7 @@ export default function ProfileDetailsForm({ user }: Props) {
 
       {/* Fields */}
       <div className="px-6 sm:px-8 py-6 space-y-6">
+        <SpouseRequestsInbox />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
             <label className={labelBase}>Gender</label>
@@ -193,10 +212,39 @@ export default function ProfileDetailsForm({ user }: Props) {
               icon={Heart}
               type="date"
               max={todayStr}
+              hint="Optional. Shared with your spouse, and the church celebrates it with you."
               {...register("weddingAnniversary")}
             />
           )}
         </div>
+
+        {maritalStatus === "married" && (
+          <div className="space-y-3">
+            <label className={labelBase}>Your spouse</label>
+            {!user.hasLinkedSpouse && (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className={radioCardClass}>
+                  <input type="radio" value="yes" {...register("spouseIsMember")} className="sr-only" />
+                  A church member
+                </label>
+                <label className={radioCardClass}>
+                  <input type="radio" value="no" {...register("spouseIsMember")} className="sr-only" />
+                  Not a member
+                </label>
+              </div>
+            )}
+            {spouseIsMember === "yes" || user.hasLinkedSpouse ? (
+              <SpouseLink selfId={user.id} />
+            ) : (
+              <FormInput
+                label="Spouse's name"
+                placeholder="e.g. Funke Adeyemi"
+                maxLength={120}
+                {...register("spouseName")}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Card footer */}

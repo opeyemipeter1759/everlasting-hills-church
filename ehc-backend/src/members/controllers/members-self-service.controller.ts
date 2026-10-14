@@ -97,6 +97,41 @@ export class MembersSelfServiceController {
     return this.avatar.clearMyAvatar(actor.userId, actor.email);
   }
 
+  @Post('me/cover')
+  @Roles(Role.MEMBER)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload the banner across the top of my profile (PNG/JPG, ≤ 5 MB)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
+  @ApiOkResponse({ description: 'Uploaded; returns the new coverUrl' })
+  async uploadMyCover(
+    @CurrentUser() actor: AuthUser,
+    @UploadedFile()
+    file:
+      | { buffer: Buffer; mimetype: string; originalname: string; size: number }
+      | undefined,
+  ) {
+    if (!file) throw new BadRequestException('No file provided');
+    return this.avatar.setMyCover(actor.userId, file, actor.email);
+  }
+
+  @Delete('me/cover')
+  @Roles(Role.MEMBER)
+  @ApiOperation({ summary: 'Remove my profile banner, back to the church colours' })
+  async clearMyCover(@CurrentUser() actor: AuthUser) {
+    return this.avatar.clearMyCover(actor.userId, actor.email);
+  }
+
   @Post('me/deactivate')
   @Roles(Role.MEMBER)
   @ApiOperation({ summary: 'Request deactivation of my own account' })

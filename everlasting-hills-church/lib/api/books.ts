@@ -86,3 +86,20 @@ export function useDeleteBookComment() {
     },
   });
 }
+
+/** Books I have marked as finished: they count towards my reading badges. */
+export function useMyReadBooks() {
+  return useQuery({
+    queryKey: ["books", "me", "read"],
+    queryFn: () => api.get<string[]>("/books/me/read"),
+  });
+}
+
+export function useToggleBookRead() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ bookId, read }: { bookId: string; read: boolean }) =>
+      read ? api.post(`/books/me/${bookId}/read`, {}) : api.delete(`/books/me/${bookId}/read`),
+    onSuccess: () => client.invalidateQueries({ queryKey: ["books", "me", "read"] }),
+  });
+}

@@ -47,11 +47,22 @@ export class UpdateMyProfileDto {
   @ApiProperty({
     required: false,
     example: '2015-06-20',
-    description: 'Pass null to clear it and mark the member as single.',
+    description: 'Pass null to clear it. Marital status is its own field.',
   })
   @IsOptional()
   @IsDateString()
   weddingAnniversary?: string | null;
+
+  @ApiProperty({ required: false, enum: ['SINGLE', 'MARRIED'], description: 'SINGLE also removes any spouse link, for both members.' })
+  @IsOptional()
+  @IsIn(['SINGLE', 'MARRIED'])
+  maritalStatus?: 'SINGLE' | 'MARRIED';
+
+  @ApiProperty({ required: false, example: 'Funke Peter', description: 'A spouse who is not a church member. A member spouse is linked by request instead.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  spouseName?: string | null;
 
   @ApiProperty({ required: false, example: 'opeyemi.peter' })
   @IsOptional()

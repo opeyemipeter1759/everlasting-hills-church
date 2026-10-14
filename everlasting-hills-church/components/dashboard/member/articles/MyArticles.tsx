@@ -1,172 +1,142 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Eye, Heart, Pencil, PencilLine } from "lucide-react";
-import ArticleTabs from "./ArticleTabs";
-import { formatDate } from "./ArticleMeta";
-import { useMyArticles, type ArticleStatus, type MyArticle } from "@/lib/api/articles";
+import { Eye, Heart, Trash2 } from "lucide-react";
+import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { MTabs } from "@/components/medium/parts";
+import { storyDate } from "@/components/medium/story";
+import { useDeleteArticle, useMyArticles, type ArticleStatus, type MyArticle } from "@/lib/api/articles";
+import ArticleTabs, { MediumPage } from "./ArticleTabs";
 
-const STATUS_STYLE: Record<ArticleStatus, { label: string; className: string }> = {
-  PENDING_REVIEW: {
-    label: "Awaiting approval",
-    className: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
-  },
-  DRAFT: {
-    label: "Draft",
-    className:
-      "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-  },
-  PUBLISHED: {
-    label: "Published",
-    className:
-      "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-  },
-  ARCHIVED: {
-    label: "Archived",
-    className: "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/45",
-  },
+type Tab = "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "ARCHIVED";
+const TAB_LABEL: Record<Tab, string> = {
+  DRAFT: "Drafts",
+  PENDING_REVIEW: "Waiting for approval",
+  PUBLISHED: "Published",
+  ARCHIVED: "Taken down",
+};
+const EMPTY: Record<Tab, string> = {
+  DRAFT: "No drafts. Start one whenever something lands.",
+  PENDING_REVIEW: "Nothing waiting. Submitted stories wait here for the head of comms or an admin.",
+  PUBLISHED: "Nothing published yet. Approved stories appear to the church and on the public blog.",
+  ARCHIVED: "Nothing taken down.",
 };
 
 /**
- * A member's own shelf.
- *
- * Drafts come first, because an unfinished piece is the thing most likely to
- * have brought somebody here. Reads and likes sit on each row: quiet, but the
- * only evidence a writer gets that anybody is out there.
+ * "Your stories", as Medium has it: drafts, waiting, published and taken
+ * down, each a quiet list with what to do next.
  */
 export default function MyArticles() {
   const { data, isLoading, error, refetch } = useMyArticles();
-  const articles = data ?? [];
-
-  const drafts = articles.filter((a) => a.status === "DRAFT");
-  const pending = articles.filter((a) => a.status === "PENDING_REVIEW");
-  const published = articles.filter((a) => a.status === "PUBLISHED");
-  const archived = articles.filter((a) => a.status === "ARCHIVED");
-
-  const totalReads = published.reduce((sum, a) => sum + a.viewCount, 0);
-  const totalLikes = published.reduce((sum, a) => sum + a.likeCount, 0);
+  const remove = useDeleteArticle();
+  const [deleting, setDeleting] = useState<MyArticle | null>(null);
+  const counts = useMemo(() => {
+    const c: Record<ArticleStatus, number> = { DRAFT: 0, PENDING_REVIEW: 0, PUBLISHED: 0, ARCHIVED: 0 };
+    for (const a of data ?? []) c[a.status] += 1;
+    return c;
+  }, [data]);
+  const first = (Object.keys(TAB_LABEL) as Tab[]).find((t) => counts[t] > 0) ?? "DRAFT";
+  const [chosen, setChosen] = useState<Tab | null>(null);
+  const tab = chosen ?? first;
+  const items = (data ?? []).filter((a) => a.status === tab);
 
   return (
-    <div className="mx-auto max-w-full md:px-5 py-6">
+    <MediumPage>
       <ArticleTabs />
+      <div className="mx-auto max-w-[760px] pt-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h1 className="m-display m-ink text-[40px] leading-none sm:text-5xl">Your stories</h1>
+          <Link href="/dashboard/articles/write" className="m-pill">
+            Write a story
+          </Link>
+        </div>
 
-      <header className="mt-6">
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-[#111] dark:text-white">
-          My writing
-        </h1>
-        {published.length > 0 && (
-          <p className="mt-2 text-sm text-[#8a7e80] dark:text-white/45">
-            {published.length} published · {totalReads} read{totalReads === 1 ? "" : "s"} ·{" "}
-            {totalLikes} like{totalLikes === 1 ? "" : "s"}
+        <div className="mt-8">
+          <MTabs
+            tabs={(Object.keys(TAB_LABEL) as Tab[]).map((t) => ({ value: t, label: `${TAB_LABEL[t]}${counts[t] ? ` ${counts[t]}` : ""}` }))}
+            value={tab}
+            onChange={setChosen}
+            label="Your stories by status"
+          />
+        </div>
+
+        {isLoading ? (
+          <div className="mt-6 space-y-6" aria-busy="true">
+            {Array.from({ length: 3 }, (_, i) => (
+              <div key={i} className="m-paper h-16 animate-pulse" />
+            ))}
+          </div>
+        ) : error ? (
+          <p role="alert" className="m-muted py-10">
+            Your stories could not load.{" "}
+            <button type="button" onClick={() => refetch()} className="m-ink min-h-11 underline">
+              Try again
+            </button>
           </p>
-        )}
-      </header>
-
-      {isLoading ? (
-        <div className="mt-8 space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5" />
-          ))}
-        </div>
-      ) : error ? (
-        <div role="alert" className="mt-8 text-sm text-red-600">
-          Your writing could not be loaded. <button type="button" onClick={() => void refetch()} className="underline">Try again</button>
-        </div>
-      ) : articles.length === 0 ? (
-        <Empty />
-      ) : (
-        <div className="mt-8 space-y-8">
-          <Section title="Drafts" articles={drafts} />
-          <Section title="Awaiting approval" articles={pending} />
-          <Section title="Published" articles={published} />
-          <Section title="Archived" articles={archived} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Section({ title, articles }: { title: string; articles: MyArticle[] }) {
-  if (articles.length === 0) return null;
-
-  return (
-    <section>
-      <h2 className="text-[10px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-gray-400 dark:text-white/35">
-        {title}
-      </h2>
-      <ul className="mt-3 divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200 dark:divide-white/[0.06] dark:border-white/10">
-        {articles.map((article) => {
-          const status = STATUS_STYLE[article.status];
-          // A draft opens in the editor, since there is nothing to read yet.
-          const href =
-            article.status === "DRAFT"
-              ? `/dashboard/articles/write?slug=${article.slug}`
-              : `/dashboard/articles/${article.slug}`;
-
-          return (
-            <li key={article.id}>
-              <div className="flex items-center gap-3 bg-white px-4 py-3.5 dark:bg-white/[0.02]">
-                <Link href={href} className="group min-w-0 flex-1">
-                  <p className="truncate font-serif text-[15px] font-bold text-[#111] group-hover:text-[#87102C] dark:text-white dark:group-hover:text-[#FFB3C1]">
-                    {article.title}
-                  </p>
-                  <p className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-[#8a7e80] dark:text-white/40">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${status.className}`}
-                    >
-                      {article.status === "DRAFT" && article.reviewNote ? "Changes requested" : status.label}
-                    </span>
-                    {article.publishedAt && <span>{formatDate(article.publishedAt)}</span>}
-                    {article.scriptureLabel && <span>{article.scriptureLabel}</span>}
-                    {article.status === "PUBLISHED" && (
-                      <>
-                        <span className="inline-flex items-center gap-1">
-                          <Eye size={10} /> {article.viewCount}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Heart size={10} /> {article.likeCount}
-                        </span>
-                      </>
-                    )}
-                  </p>
-                  {article.status === "DRAFT" && article.reviewNote && (
-                    <p className="mt-2 whitespace-pre-wrap break-words text-xs text-amber-800 dark:text-amber-300">Reviewer: {article.reviewNote}</p>
+        ) : items.length === 0 ? (
+          <p className="m-muted py-10">{EMPTY[tab]}</p>
+        ) : (
+          <ul>
+            {items.map((a) => {
+              const view = `/dashboard/articles/${a.slug}`;
+              return (
+                <li key={a.id} className="border-b m-rule py-6">
+                  <Link href={view} className="group block">
+                    <h2 className="m-ink text-xl font-bold leading-snug group-hover:underline">{a.title}</h2>
+                    {(a.subtitle || a.excerpt) && <p className="m-muted mt-1 line-clamp-2 text-[15px]">{a.subtitle || a.excerpt}</p>}
+                  </Link>
+                  {a.status === "DRAFT" && a.reviewNote && (
+                    <p className="m-paper m-ink mt-3 border-l-2 border-[var(--m-ink)] px-3 py-2 text-sm">Changes requested: {a.reviewNote}</p>
                   )}
-                </Link>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="m-muted flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+                      <span>
+                        {a.status === "PUBLISHED" ? `Published ${storyDate(a.publishedAt)}` : `Last edited ${storyDate(a.updatedAt)}`}
+                      </span>
+                      <span>{a.readingMinutes} min read</span>
+                      {a.status === "PUBLISHED" && (
+                        <>
+                          <span className="inline-flex items-center gap-1">
+                            <Eye size={13} aria-hidden="true" /> {a.viewCount}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Heart size={13} aria-hidden="true" /> {a.likeCount}
+                          </span>
+                        </>
+                      )}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {a.status !== "ARCHIVED" && (
+                        <Link href={`/dashboard/articles/write?slug=${a.slug}`} className="m-pill-outline !min-h-9 !px-4">
+                          Edit
+                        </Link>
+                      )}
+                      <button type="button" onClick={() => setDeleting(a)} aria-label={`Delete ${a.title}`} className="m-icon-btn">
+                        <Trash2 size={16} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
-                <Link
-                  href={`/dashboard/articles/write?slug=${article.slug}`}
-                  aria-label={`Edit ${article.title}`}
-                  className="flex-shrink-0 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-[#87102C] dark:text-white/35 dark:hover:bg-white/5 dark:hover:text-[#FFB3C1]"
-                >
-                  <Pencil size={14} />
-                </Link>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-function Empty() {
-  return (
-    <div className="mt-10 rounded-2xl border border-dashed border-gray-200 px-6 py-12 text-center dark:border-white/10">
-      <PencilLine size={22} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
-      <p className="font-serif text-lg font-bold text-[#111] dark:text-white">
-        You have not written anything yet.
-      </p>
-      <p className="mx-auto mt-1.5 max-w-sm text-sm text-[#8a7e80] dark:text-white/45">
-        You do not have to be a teacher to write here. A few honest paragraphs
-        about what a passage did in you is enough.
-      </p>
-      <Link
-        href="/dashboard/articles/write"
-        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#6E0C24]"
-      >
-        <PencilLine size={15} /> Start writing
-      </Link>
-    </div>
+      <ConfirmDialog
+        open={deleting != null}
+        tone="danger"
+        title="Delete this story?"
+        description={deleting ? `"${deleting.title}" will be gone for good, with its likes and responses.` : ""}
+        confirmLabel="Delete"
+        loading={remove.isPending}
+        onCancel={() => setDeleting(null)}
+        onConfirm={async () => {
+          if (deleting) await remove.mutateAsync(deleting.id).catch(() => {});
+          setDeleting(null);
+        }}
+      />
+    </MediumPage>
   );
 }

@@ -1,9 +1,11 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { MemberStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { EVANGELISM_ADMIN_ROLES, type EvangelismViewer } from '../evangelism.types';
+import { evangelismTally, type EvangelismTally } from '../evangelism-tally';
 
 /** Unit names are typed by admins: "Evangelism Team", "Evangelism Unit", "EVANGELISM" all count. */
 export function isEvangelismUnitName(name: string | null | undefined): boolean {
@@ -82,6 +84,37 @@ export class EvangelismAccessService {
     const v = await this.viewer(actor);
     if (!v.canLead) throw new ForbiddenException('Only the Evangelism unit leader or an admin can do that.');
     return v;
+  }
+
+  /**
+   * Active members whose first or last name starts a word in what was typed,
+   * for the public form. Names only, a handful at a time, and nothing until two
+   * letters are typed, so the form never hands out the church roll.
+   */
+  async searchMembers(query: string): Promise<{ id: string; name: string }[]> {
+    const terms = query.trim().split(/\s+/).filter((t) => t.length >= 2).slice(0, 3);
+    if (terms.length === 0) return [];
+    const rows = await this.prisma.member.findMany({
+      where: {
+        tenantId: this.tenantId,
+        status: MemberStatus.ACTIVE,
+        AND: terms.map((t) => ({
+          OR: [
+            { firstName: { startsWith: t, mode: 'insensitive' as const } },
+            { lastName: { startsWith: t, mode: 'insensitive' as const } },
+          ],
+        })),
+      },
+      select: { id: true, firstName: true, lastName: true },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }],
+      take: 10,
+    });
+    return rows.map((m) => ({ id: m.id, name: `${m.firstName} ${m.lastName}`.trim() }));
+  }
+
+  /** How many people a member has preached to and seen saved. */
+  tally(memberId: string): Promise<EvangelismTally> {
+    return evangelismTally(this.prisma, this.tenantId, memberId);
   }
 
   /** Current team, for pickers and the performance table. */

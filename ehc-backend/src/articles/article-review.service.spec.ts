@@ -283,8 +283,9 @@ describe('telling reviewers a piece is waiting', () => {
     const recipients = (inbox.createMany as jest.Mock).mock.calls[0][0].map(
       (n: { profileId: string }) => n.profileId,
     );
-    expect(recipients).toEqual(['hod-content']);
-    expect(sent).toBe(1);
+    // The head of comms, and the church admins alongside them.
+    expect(recipients).toEqual(['hod-content', 'pastor-1']);
+    expect(sent).toBe(2);
   });
 
   it('falls back to pastors and super admins when the department has no head', async () => {

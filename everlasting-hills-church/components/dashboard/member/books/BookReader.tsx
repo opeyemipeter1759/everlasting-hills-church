@@ -5,6 +5,7 @@ import { ArrowLeft, Download, Loader2 } from "lucide-react";
 import { useBook } from "@/lib/api/books";
 import BookComments from "./BookComments";
 import BookShareButton from "./BookShareButton";
+import MarkAsReadButton from "./MarkAsReadButton";
 
 /**
  * Reads the PDF in-browser via the native viewer rather than forcing a
@@ -25,6 +26,7 @@ export default function BookReader({ id }: { id: string }) {
         </Link>
         {book && (
           <div className="flex items-center gap-2">
+            <MarkAsReadButton bookId={book.id} />
             <BookShareButton book={book} variant="button" />
             <a
               href={book.fileUrl}

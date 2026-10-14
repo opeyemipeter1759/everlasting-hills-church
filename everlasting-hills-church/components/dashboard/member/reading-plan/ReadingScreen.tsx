@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -21,6 +21,8 @@ import { Select } from "@/components/ui/select";
 import { ChapterPassage } from "./ChapterPassage";
 import { ListenBar } from "./ListenBar";
 import { ReadAloudProvider, ReadAloudSpacer, useRegisterPassage } from "./read-aloud";
+import { RecordedAudioProvider } from "./recorded-audio";
+import { hasRecording } from "@/lib/bible-audio";
 import {
   readingHref,
   useCompleteDay,
@@ -262,8 +264,10 @@ export default function ReadingScreen() {
       </header>
 
       {/* Keyed by the day and translation, so changing either stops anything
-          being read and starts the next day from its first verse. */}
-      <ReadAloudProvider key={`${subscriptionId}:${dayIndex}:${translation.code}`} expected={day.Portions.length}>
+          being read and starts the next day from its first verse. A recorded
+          translation plays the recording, which carries on with the phone
+          locked; any other is read by the device voice. */}
+      <ListenProvider key={`${subscriptionId}:${dayIndex}:${translation.code}`} translation={translation.code} planTitle={plan.title} expected={day.Portions.length}>
       <ListenBar />
 
       {/* What the day holds, before the text of it. On a four portion morning a
@@ -360,7 +364,7 @@ export default function ReadingScreen() {
         )}
       </div>
       <ReadAloudSpacer />
-      </ReadAloudProvider>
+      </ListenProvider>
     </div>
   );
 }
@@ -435,6 +439,24 @@ function NoPlan({ finished }: { finished?: boolean }) {
         </Link>
       </div>
     </div>
+  );
+}
+
+function ListenProvider({
+  translation,
+  planTitle,
+  expected,
+  children,
+}: {
+  translation: string;
+  planTitle: string;
+  expected: number;
+  children: ReactNode;
+}) {
+  return hasRecording(translation) ? (
+    <RecordedAudioProvider expected={expected} planTitle={planTitle}>{children}</RecordedAudioProvider>
+  ) : (
+    <ReadAloudProvider expected={expected}>{children}</ReadAloudProvider>
   );
 }
 

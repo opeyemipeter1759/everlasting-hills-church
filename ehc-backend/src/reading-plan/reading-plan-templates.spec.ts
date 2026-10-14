@@ -49,8 +49,8 @@ function allChapters(firstBook: number, lastBook: number) {
 }
 
 describe('reading plan templates', () => {
-  it('offers twenty two distinct plans across light, medium and intensive reading loads', () => {
-    expect(new Set(READING_PLAN_TEMPLATES.map((plan) => plan.slug)).size).toBe(22);
+  it('offers twenty nine distinct plans across light, medium and intensive reading loads', () => {
+    expect(new Set(READING_PLAN_TEMPLATES.map((plan) => plan.slug)).size).toBe(29);
     expect(new Set(READING_PLAN_TEMPLATES.map((plan) => generate(plan.slug).intensity)))
       .toEqual(new Set(['LOW', 'MEDIUM', 'HIGH']));
   });
@@ -83,6 +83,13 @@ describe('reading plan templates', () => {
     ['psalms-one-a-day', 19, 19],
     ['proverbs-in-a-month', 20, 20],
     ['john-in-21-days', 43, 43],
+    ['gospels-in-seven-days', 40, 43],
+    ['pauls-letters-in-four-days', 45, 57],
+    ['general-letters-in-three-days', 58, 65],
+    ['law-in-24-days', 1, 5],
+    ['history-in-32-days', 6, 17],
+    ['poetry-and-wisdom-in-31-days', 18, 22],
+    ['prophets-in-32-days', 23, 39],
     ['acts-in-three-days', 44, 44],
     ['acts-in-28-days', 44, 44],
     ['wisdom-in-60-days', 19, 20],

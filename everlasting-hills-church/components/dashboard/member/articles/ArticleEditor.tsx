@@ -1,52 +1,69 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  ArrowLeft,
-  BookMarked,
-  Eye,
-  Loader2,
-  PencilLine,
-  Send,
-  Trash2,
-  X,
-} from "lucide-react";
+import { ArrowLeft, BookMarked, ImagePlus, Loader2, Trash2, X } from "lucide-react";
 import RichText from "@/components/ui/display/RichText";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
-import {
-  useArticle,
-  useCreateArticle,
-  useDeleteArticle,
-  useUpdateArticle,
-} from "@/lib/api/articles";
+import { uploadArticleCover, useArticle, useCreateArticle, useDeleteArticle, useUpdateArticle } from "@/lib/api/articles";
+import { MediumPage } from "./ArticleTabs";
+import ReviewNotes, { applySuggestion } from "./ReviewNotes";
 
 /** Matches the DTO, so the server never has to reject something the form allowed. */
-const TITLE_MIN = 3;
-const TITLE_MAX = 160;
-const BODY_MIN = 20;
-const BODY_MAX = 40_000;
+export const TITLE_MIN = 3;
+export const TITLE_MAX = 160;
+export const SUBTITLE_MAX = 200;
+export const BODY_MIN = 20;
+export const BODY_MAX = 40_000;
 
-const FORMATTING_HINT =
-  "**bold**  ·  *italic*  ·  ## heading  ·  - list  ·  > quote  ·  [link](url)";
+const FORMATTING_HINT = "**bold** · *italic* · ## heading · - list · > quote · [link](url)";
+const LOCAL_PREFIX = "ehc.article-draft.";
+
+interface LocalDraft {
+  title: string;
+  subtitle: string;
+  body: string;
+  coverImageUrl: string | null;
+  savedAt: number;
+}
+
+export function validateArticle(title: string, body: string): string | null {
+  if (title.trim().length < TITLE_MIN) return "Give it a title of at least three characters.";
+  if (title.trim().length > TITLE_MAX) return `The title is longer than ${TITLE_MAX} characters.`;
+  if (body.trim().length < BODY_MIN) return "Write a little more before saving: at least a couple of sentences.";
+  if (body.length > BODY_MAX) return "This is longer than the editor can hold. Try splitting it in two.";
+  return null;
+}
+
+function readLocal(key: string): LocalDraft | null {
+  try {
+    const raw = window.localStorage.getItem(LOCAL_PREFIX + key);
+    return raw ? (JSON.parse(raw) as LocalDraft) : null;
+  } catch {
+    return null;
+  }
+}
+function writeLocal(key: string, draft: LocalDraft | null) {
+  try {
+    if (draft) window.localStorage.setItem(LOCAL_PREFIX + key, JSON.stringify(draft));
+    else window.localStorage.removeItem(LOCAL_PREFIX + key);
+  } catch {
+    // Storage full or blocked: the server copy is still the safe one.
+  }
+}
 
 /**
- * The writing screen.
- *
- * Two modes on one route: a new piece, or an existing one loaded by slug. The
- * scripture citation can arrive pre-filled from the reading screen, which is
- * the whole path this feature was built for — a member finishes Romans 8 and
- * writes about Romans 8 without having to say which passage twice.
- *
- * Drafts are the default. Publishing is a separate, deliberate button, and
- * nothing here waits for approval.
+ * The writing screen, as Medium's: nothing on the page but the title, a
+ * subtitle, an optional cover and the story. A copy is kept on this device as
+ * you type, so a dropped connection or a closed tab never loses the words.
+ * Submitting sends it to the head of comms or an admin for approval.
  */
 export default function ArticleEditor() {
   const router = useRouter();
   const params = useSearchParams();
-
   const editingSlug = params.get("slug");
+  const localKey = editingSlug ?? "new";
   const { data: existing, isLoading, error: loadError } = useArticle(editingSlug ?? undefined);
 
   const create = useCreateArticle();
@@ -59,64 +76,101 @@ export default function ArticleEditor() {
   const prefillLabel = params.get("label") ?? undefined;
 
   const [title, setTitle] = useState("");
+  const [subtitle, setSubtitle] = useState("");
   const [body, setBody] = useState("");
-  const [scripture, setScripture] = useState<{
-    label: string;
-    startVerseId?: number;
-    endVerseId?: number;
-  } | null>(prefillLabel ? { label: prefillLabel, startVerseId: prefillStart, endVerseId: prefillEnd } : null);
-
+  const [cover, setCover] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [scripture, setScripture] = useState<{ label: string; startVerseId?: number; endVerseId?: number } | null>(
+    prefillLabel ? { label: prefillLabel, startVerseId: prefillStart, endVerseId: prefillEnd } : null,
+  );
   const [preview, setPreview] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(!editingSlug);
   const [loadedRevision, setLoadedRevision] = useState<number | undefined>();
+  const [restorable, setRestorable] = useState<LocalDraft | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [localSavedAt, setLocalSavedAt] = useState<number | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const bodyBox = useRef<HTMLTextAreaElement>(null);
 
-  // Loaded once. Re-syncing on every refetch would throw away what somebody is
-  // in the middle of typing.
+  // Loaded once. Re-syncing on every refetch would throw away what somebody is typing.
   useEffect(() => {
     if (!existing || loaded) return;
     setTitle(existing.title);
+    setSubtitle(existing.subtitle ?? "");
     setBody(existing.body);
+    setCover(existing.coverImageUrl ?? null);
     setLoadedRevision(existing.revision);
     setScripture(
       existing.scriptureLabel
-        ? {
-            label: existing.scriptureLabel,
-            startVerseId: existing.startVerseId ?? undefined,
-            endVerseId: existing.endVerseId ?? undefined,
-          }
+        ? { label: existing.scriptureLabel, startVerseId: existing.startVerseId ?? undefined, endVerseId: existing.endVerseId ?? undefined }
         : null,
     );
     setLoaded(true);
   }, [existing, loaded]);
 
+  // A copy left on this device that differs from what is saved: offer it back.
+  useEffect(() => {
+    if (!loaded) return;
+    const local = readLocal(localKey);
+    if (!local) return;
+    const same = local.title === (existing?.title ?? "") && local.body === (existing?.body ?? "") && local.subtitle === (existing?.subtitle ?? "");
+    if (same || (!local.title.trim() && !local.body.trim())) writeLocal(localKey, null);
+    else setRestorable(local);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, localKey]);
+
+  // Keep a copy on this device a moment after each change.
+  useEffect(() => {
+    if (!loaded || !dirty) return;
+    const timer = window.setTimeout(() => {
+      const savedAt = Date.now();
+      writeLocal(localKey, { title, subtitle, body, coverImageUrl: cover, savedAt });
+      setLocalSavedAt(savedAt);
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [title, subtitle, body, cover, loaded, dirty, localKey]);
+
+  // Warn before leaving with changes not yet saved to the church.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  // The story box grows with the story.
+  useEffect(() => {
+    const el = bodyBox.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(320, el.scrollHeight)}px`;
+  }, [body, preview]);
+
   const words = useMemo(() => body.split(/\s+/).filter(Boolean).length, [body]);
   const minutes = Math.max(1, Math.round(words / 200));
-  const busy = create.isPending || update.isPending || remove.isPending;
-
-  function validate(): string | null {
-    if (title.trim().length < TITLE_MIN) return "Give it a title of at least three characters.";
-    if (title.trim().length > TITLE_MAX) return `The title is longer than ${TITLE_MAX} characters.`;
-    if (body.trim().length < BODY_MIN) return "Write a little more before saving — at least a couple of sentences.";
-    if (body.length > BODY_MAX) return "This is longer than the editor can hold. Try splitting it in two.";
-    return null;
-  }
+  const busy = create.isPending || update.isPending || remove.isPending || uploading;
+  const change = <T,>(setter: (v: T) => void) => (v: T) => {
+    setter(v);
+    setDirty(true);
+  };
 
   async function save(publish: boolean) {
-    const problem = validate();
-    if (problem) {
-      setError(problem);
-      return;
-    }
+    const problem = validateArticle(title, body);
+    if (problem) return setError(problem);
     setError(null);
-
     try {
       if (existing) {
         const result = await update.mutateAsync({
           id: existing.id,
           revision: loadedRevision,
           title: title.trim(),
+          subtitle: subtitle.trim() || null,
+          coverImageUrl: cover,
           body,
           // Explicit null, so removing the citation actually removes it.
           scriptureLabel: scripture?.label ?? null,
@@ -124,20 +178,62 @@ export default function ArticleEditor() {
           endVerseId: scripture?.endVerseId ?? null,
           status: publish ? "PENDING_REVIEW" : "DRAFT",
         });
+        writeLocal(localKey, null);
+        setDirty(false);
         router.push(`/dashboard/articles/${result.slug}`);
       } else {
         const result = await create.mutateAsync({
           title: title.trim(),
+          subtitle: subtitle.trim() || null,
+          coverImageUrl: cover,
           body,
           scriptureLabel: scripture?.label,
           startVerseId: scripture?.startVerseId,
           endVerseId: scripture?.endVerseId,
           publish,
         });
+        writeLocal(localKey, null);
+        setDirty(false);
         router.push(publish ? `/dashboard/articles/${result.slug}` : "/dashboard/articles/mine");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "That did not save. Check your connection and try again.");
+      const status = (err as { status?: number }).status;
+      setError(
+        status === 409
+          ? "This story was changed somewhere else since you opened it. Your words are kept on this device: copy them, reload the page, and paste them back."
+          : err instanceof Error
+            ? err.message
+            : "That did not save. Your words are kept on this device; check your connection and try again.",
+      );
+    }
+  }
+
+  // Ctrl/Cmd+S keeps a draft without leaving the page's flow.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        if (!busy && existing?.status !== "PUBLISHED") void save(false);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  async function chooseCover(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return setError("Choose a JPG, PNG or WebP picture for the cover.");
+    if (file.size > 5 * 1024 * 1024) return setError("Choose a cover picture under 5 MB.");
+    setError(null);
+    setUploading(true);
+    try {
+      change(setCover)(await uploadArticleCover(file));
+    } catch (err) {
+      setError((err as { message?: string }).message ?? "The cover could not upload. Please try again.");
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -145,209 +241,258 @@ export default function ArticleEditor() {
     if (!existing) return;
     try {
       await update.mutateAsync({ id: existing.id, revision: loadedRevision, status: "DRAFT" });
+      setDirty(false);
       router.push("/dashboard/articles/mine");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "The article could not be withdrawn. Please try again.");
+      setError(err instanceof Error ? err.message : "The story could not be withdrawn. Please try again.");
     }
   }
 
   async function destroy() {
     if (!existing) return;
     await remove.mutateAsync(existing.id);
+    writeLocal(localKey, null);
+    setDirty(false);
     router.push("/dashboard/articles/mine");
   }
 
   if (editingSlug && isLoading) {
     return (
-      <div className="mx-auto max-w-full space-y-4 md:px-5 py-8 xs:py-10">
-        <div className="h-9 w-3/4 animate-pulse rounded bg-gray-100 dark:bg-white/10" />
-        <div className="h-64 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/5" />
-      </div>
+      <MediumPage>
+        <div className="mx-auto max-w-[740px] space-y-5 pt-12" aria-busy="true">
+          <div className="m-paper h-12 w-3/4 animate-pulse" />
+          <div className="m-paper h-72 animate-pulse" />
+        </div>
+      </MediumPage>
+    );
+  }
+
+  if (editingSlug && (loadError || !existing || !existing.isAuthor)) {
+    return (
+      <MediumPage>
+        <p role="alert" className="m-ink mx-auto max-w-[740px] py-12 text-sm">
+          This story could not be opened for editing.{" "}
+          <Link href="/dashboard/articles/mine" className="underline">
+            Back to your stories
+          </Link>
+        </p>
+      </MediumPage>
     );
   }
 
   const isPublished = existing?.status === "PUBLISHED";
   const isPending = existing?.status === "PENDING_REVIEW";
-
-  if (editingSlug && (loadError || !existing || !existing.isAuthor)) {
-    return <p role="alert" className="mx-auto max-w-2xl px-4 xs:px-5 py-8 xs:py-10 text-sm">This article could not be opened for editing. <Link href="/dashboard/articles/mine" className="underline">Back to my writing</Link></p>;
-  }
+  const statusLine = isPending ? "Waiting for approval" : isPublished ? "Published" : "Draft";
 
   return (
-    <div className="mx-auto max-w-full md:px-5 py-6">
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href="/dashboard/articles/mine"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#87102C] dark:text-white/45 dark:hover:text-[#FFB3C1]"
-        >
-          <ArrowLeft size={14} /> My writing
-        </Link>
-
-        <button
-          type="button"
-          onClick={() => setPreview((p) => !p)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 px-3 py-1 text-[11px] font-bold text-gray-600 hover:border-[#87102C]/30 hover:text-[#87102C] dark:border-white/10 dark:text-white/55 dark:hover:text-[#FFB3C1]"
-        >
-          {preview ? <PencilLine size={11} /> : <Eye size={11} />}
-          {preview ? "Keep writing" : "Preview"}
-        </button>
-      </div>
-
-      <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-500/25 dark:bg-amber-500/10 dark:text-amber-200">
-        {isPending
-          ? "Your article is awaiting approval. You can update your submission or save it as a draft to withdraw it."
-          : isPublished
-            ? "Changes to a published article need approval again. Submitting will hide it from the church feed until it is approved."
-            : "Submit your article for approval by the HOD overseeing the Content Writing Team. It appears in the church feed after approval."}
-        {existing?.status === "DRAFT" && existing.reviewNote && (
-          <p className="mt-3 whitespace-pre-wrap break-words"><strong>Changes requested:</strong> {existing.reviewNote}</p>
-        )}
-      </div>
-
-      {/* The passage this came from. Removable, because not everything somebody
-          wants to write is about a specific chapter. */}
-      {scripture && (
-        <div className="mt-5 flex items-center gap-2 rounded-xl border border-[#E7CDD3]/60 bg-[#FFF4F6]/50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
-          <BookMarked size={13} className="flex-shrink-0 text-[#87102C] dark:text-[#FFB3C1]" />
-          <span className="min-w-0 flex-1 truncate text-xs font-bold text-[#87102C] dark:text-[#FFB3C1]">
-            About {scripture.label}
+    <MediumPage>
+      <header className="mx-auto flex max-w-[1000px] flex-wrap items-center justify-between gap-3 border-b m-rule pb-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Link href="/dashboard/articles/mine" className="m-muted inline-flex min-h-11 items-center gap-1.5 text-sm hover:text-[var(--m-ink)]">
+            <ArrowLeft size={15} aria-hidden="true" /> Your stories
+          </Link>
+          <span className="m-muted truncate text-sm" aria-live="polite">
+            {statusLine}
+            {dirty && localSavedAt ? " · Saved on this device" : ""}
           </span>
-          <button
-            type="button"
-            onClick={() => setScripture(null)}
-            aria-label="Remove the passage"
-            className="rounded p-0.5 text-gray-400 hover:text-gray-700 dark:text-white/35 dark:hover:text-white"
-          >
-            <X size={13} />
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => setPreview((p) => !p)} className="m-icon-btn px-2 text-sm">
+            {preview ? "Edit" : "Preview"}
           </button>
-        </div>
-      )}
-
-      {preview ? (
-        <article className="mt-6">
-          <h1 className="font-serif text-3xl font-bold leading-[1.15] tracking-tight text-[#111] dark:text-white">
-            {title || "Untitled"}
-          </h1>
-          <p className="mt-2 text-[11px] text-[#8a7e80] dark:text-white/40">
-            {minutes} min read · {words} words
-          </p>
-          <div className="mt-6">
-            {body.trim() ? (
-              <RichText
-                text={body}
-                density="comfortable"
-                className="text-[17px] leading-[1.75] text-gray-800 dark:text-white/75"
-                emphasisClassName="text-[#111] dark:text-white"
-              />
-            ) : (
-              <p className="text-sm italic text-gray-400 dark:text-white/35">Nothing written yet.</p>
-            )}
-          </div>
-        </article>
-      ) : (
-        <div className="mt-6">
-          <label htmlFor="article-title" className="sr-only">
-            Title
-          </label>
-          <input
-            id="article-title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="What did you learn?"
-            maxLength={TITLE_MAX}
-            className="w-full border-0 bg-transparent p-0 font-serif text-3xl font-bold leading-tight tracking-tight text-[#111] outline-none placeholder:text-gray-300 focus:ring-0 dark:text-white dark:placeholder:text-white/20"
-          />
-
-          <label htmlFor="article-body" className="sr-only">
-            Your article
-          </label>
-          <textarea
-            id="article-body"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder={"Start where it started for you.\n\nWhat did the passage say, and what did it change?"}
-            rows={18}
-            maxLength={BODY_MAX}
-            className="mt-5 w-full resize-y border-0 bg-transparent p-0 text-[17px] leading-[1.75] text-gray-800 outline-none placeholder:text-gray-300 focus:ring-0 dark:text-white/80 dark:placeholder:text-white/20"
-          />
-
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-3 dark:border-white/10">
-            <p className="text-[11px] text-gray-400 dark:text-white/30">{FORMATTING_HINT}</p>
-            <p className="text-[11px] tabular-nums text-gray-400 dark:text-white/30">
-              {words} words · {minutes} min
-            </p>
-          </div>
-        </div>
-      )}
-
-      {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-xs font-semibold text-red-700 dark:border-red-500/25 dark:bg-red-500/10 dark:text-red-400"
-        >
-          {error}
-        </p>
-      )}
-
-      <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-gray-100 pt-6 dark:border-white/10">
-        <button
-          type="button"
-          onClick={() => save(true)}
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-5 py-3 text-sm font-bold text-white transition-all hover:-translate-y-0.5 hover:bg-[#6E0C24] disabled:opacity-60 disabled:hover:translate-y-0"
-        >
-          {create.isPending || update.isPending ? (
-            <Loader2 size={15} className="animate-spin" />
-          ) : (
-            <Send size={15} />
+          {!isPublished && (
+            <button type="button" onClick={() => save(false)} disabled={busy} className="m-pill-outline !min-h-9 !px-4">
+              {isPending ? "Withdraw to draft" : "Save draft"}
+            </button>
           )}
-          {isPending ? "Update submission" : isPublished ? "Submit changes for approval" : "Submit for approval"}
-        </button>
-
-        {!isPublished && (
-          <button
-            type="button"
-            onClick={() => save(false)}
-            disabled={busy}
-            className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-700 hover:border-gray-300 disabled:opacity-60 dark:border-white/10 dark:text-white/70"
-          >
-            {isPending ? "Withdraw and save draft" : "Save draft"}
+          {isPublished && (
+            <button type="button" onClick={unpublish} disabled={busy} className="m-pill-outline !min-h-9 !px-4">
+              Unpublish
+            </button>
+          )}
+          <button type="button" onClick={() => save(true)} disabled={busy} className="m-pill !min-h-9 !px-4">
+            {(create.isPending || update.isPending) && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
+            {isPending ? "Update submission" : isPublished ? "Submit changes" : "Submit for review"}
           </button>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-[740px] pb-10 pt-8">
+        {restorable && (
+          <div role="status" className="m-paper m-ink mb-6 flex flex-wrap items-center justify-between gap-3 border m-rule px-4 py-3 text-sm">
+            <span>You have unsaved words from {new Date(restorable.savedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })} on this device.</span>
+            <span className="flex gap-2">
+              <button
+                type="button"
+                className="m-pill !min-h-9 !px-4"
+                onClick={() => {
+                  setTitle(restorable.title);
+                  setSubtitle(restorable.subtitle);
+                  setBody(restorable.body);
+                  setCover(restorable.coverImageUrl);
+                  setDirty(true);
+                  setRestorable(null);
+                }}
+              >
+                Restore
+              </button>
+              <button
+                type="button"
+                className="m-pill-outline !min-h-9 !px-4"
+                onClick={() => {
+                  writeLocal(localKey, null);
+                  setRestorable(null);
+                }}
+              >
+                Discard
+              </button>
+            </span>
+          </div>
         )}
 
-        {isPublished && (
-          <button
-            type="button"
-            onClick={unpublish}
-            disabled={busy}
-            className="rounded-xl border border-gray-200 px-4 py-3 text-sm font-bold text-gray-700 hover:border-gray-300 disabled:opacity-60 dark:border-white/10 dark:text-white/70"
-          >
-            Unpublish
-          </button>
+        <p className="m-muted mb-6 text-[13px]">
+          {isPending
+            ? "Waiting for the head of comms or an admin. You can update it, or withdraw it to a draft."
+            : isPublished
+              ? "Submitting changes takes this story off the site until they are approved: it moves to Waiting for approval in Your stories, and someone other than you (the head of comms, a pastor or an admin) approves it."
+              : "When you submit, the head of comms or an admin reads it first. Once approved it appears to the church and on the public blog."}
+        </p>
+        {existing?.status === "DRAFT" && existing.reviewNote && (
+          <p className="m-paper m-ink mb-6 border-l-2 border-[var(--m-ink)] px-4 py-3 text-sm">
+            <strong>Changes requested:</strong> {existing.reviewNote}
+          </p>
+        )}
+
+        {cover ? (
+          <figure className="relative mb-8">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cover} alt="Cover" className="w-full object-cover" />
+            <button type="button" onClick={() => change(setCover)(null)} aria-label="Remove the cover" className="m-pill absolute right-3 top-3 !min-h-9 !px-3">
+              <X size={14} aria-hidden="true" /> Remove
+            </button>
+          </figure>
+        ) : (
+          !preview && (
+            <>
+              <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={chooseCover} aria-label="Cover picture" />
+              <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading} className="m-icon-btn mb-6 text-sm">
+                {uploading ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <ImagePlus size={17} aria-hidden="true" />}
+                {uploading ? "Uploading cover…" : "Add a cover image"}
+              </button>
+            </>
+          )
+        )}
+
+        {scripture && (
+          <div className="m-muted mb-6 flex items-center gap-2 text-[13px]">
+            <BookMarked size={14} aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">About {scripture.label}</span>
+            <button type="button" onClick={() => change(setScripture)(null)} aria-label="Remove the passage" className="m-icon-btn !min-h-8 !min-w-8">
+              <X size={14} aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
+        {preview ? (
+          <article>
+            <h1 className="m-display m-ink text-[34px] leading-[1.12] sm:text-[44px]">{title || "Untitled"}</h1>
+            {subtitle.trim() && <p className="m-muted mt-3 text-[22px] leading-snug">{subtitle}</p>}
+            <p className="m-muted mt-4 text-sm">
+              {minutes} min read · {words} words
+            </p>
+            <div className="mt-8">
+              {body.trim() ? (
+                <RichText text={body} density="comfortable" className="m-article" emphasisClassName="m-ink" />
+              ) : (
+                <p className="m-muted italic">Nothing written yet.</p>
+              )}
+            </div>
+          </article>
+        ) : (
+          <>
+            <label htmlFor="article-title" className="sr-only">
+              Title
+            </label>
+            <textarea
+              id="article-title"
+              rows={1}
+              value={title}
+              onChange={(e) => change(setTitle)(e.target.value.replace(/\n/g, " "))}
+              placeholder="Title"
+              maxLength={TITLE_MAX}
+              className="m-display m-ink w-full resize-none border-0 bg-transparent p-0 text-[40px] leading-[1.12] outline-none placeholder:text-[var(--m-gray)] placeholder:opacity-60 focus:ring-0 sm:text-[48px]"
+            />
+            <label htmlFor="article-subtitle" className="sr-only">
+              Subtitle
+            </label>
+            <input
+              id="article-subtitle"
+              value={subtitle}
+              onChange={(e) => change(setSubtitle)(e.target.value)}
+              placeholder="Subtitle (optional)"
+              maxLength={SUBTITLE_MAX}
+              className="m-muted mt-3 w-full border-0 bg-transparent p-0 text-[22px] leading-snug outline-none placeholder:opacity-60 focus:ring-0"
+            />
+            <label htmlFor="article-body" className="sr-only">
+              Your story
+            </label>
+            <textarea
+              id="article-body"
+              ref={bodyBox}
+              value={body}
+              onChange={(e) => change(setBody)(e.target.value)}
+              placeholder="Tell your story…"
+              maxLength={BODY_MAX}
+              className="m-article mt-8 w-full resize-none overflow-hidden border-0 bg-transparent p-0 outline-none placeholder:text-[var(--m-gray)] placeholder:opacity-60 focus:ring-0"
+            />
+            <div className="m-muted mt-4 flex flex-wrap items-center justify-between gap-2 border-t m-rule pt-3 text-[12px]">
+              <span>{FORMATTING_HINT}</span>
+              <span className="tabular-nums">
+                {words} words · {minutes} min read
+              </span>
+            </div>
+          </>
+        )}
+
+        {error && (
+          <p role="alert" className="m-paper m-ink mt-6 border-l-2 border-[var(--m-ink)] px-4 py-3 text-sm">
+            {error}
+          </p>
         )}
 
         {existing && (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            disabled={busy}
-            className="ml-auto inline-flex items-center gap-1.5 text-xs font-bold text-gray-400 hover:text-red-600 disabled:opacity-60 dark:text-white/35 dark:hover:text-red-400"
-          >
-            <Trash2 size={13} /> Delete
-          </button>
+          <ReviewNotes
+            articleId={existing.id}
+            enabled
+            onApply={(note) => {
+              if (!note.quote || note.suggestion == null) return false;
+              const next = applySuggestion(body, note.quote, note.suggestion);
+              if (next == null) return false;
+              change(setBody)(next);
+              return true;
+            }}
+          />
+        )}
+
+        {existing && (
+          <div className="mt-10 border-t m-rule pt-6">
+            <button type="button" onClick={() => setConfirmDelete(true)} disabled={busy} className="m-icon-btn text-sm">
+              <Trash2 size={15} aria-hidden="true" /> Delete this story
+            </button>
+          </div>
         )}
       </div>
 
       <ConfirmDialog
         open={confirmDelete}
-        title="Delete this article?"
-        description="It will be gone for good, along with the likes it has collected. Unpublishing keeps it as a draft instead."
+        title="Delete this story?"
+        description="It will be gone for good, with its likes and responses. Unpublishing keeps it as a draft instead."
         confirmLabel="Delete"
         tone="danger"
         loading={remove.isPending}
         onConfirm={destroy}
         onCancel={() => setConfirmDelete(false)}
       />
-    </div>
+    </MediumPage>
   );
 }

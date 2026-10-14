@@ -1,8 +1,20 @@
+import Link from "next/link";
 import { Heart } from "lucide-react";
 import { ChipCard } from "./ChipCard";
 
 /** Marital status — inverted (burgundy) card when married, plain chip when single. */
-export function MaritalStatusCard({ isMarried, anniversary }: { isMarried: boolean; anniversary: string | null }) {
+export function MaritalStatusCard({
+  isMarried,
+  anniversary,
+  spouse = null,
+  spouseName = null,
+}: {
+  isMarried: boolean;
+  anniversary: string | null;
+  /** A member spouse, only once both have confirmed. */
+  spouse?: { id: string; name: string } | null;
+  spouseName?: string | null;
+}) {
   if (!isMarried) return <ChipCard icon={Heart} label="Marital status" value="Single" />;
 
   return (
@@ -24,6 +36,16 @@ export function MaritalStatusCard({ isMarried, anniversary }: { isMarried: boole
       <div className="relative z-10 flex-1">
         <p className="text-[10px] tracking-[0.1em] xs:tracking-[0.2em] uppercase font-semibold text-white/50 mb-1.5">Marital status</p>
         <p className="text-[15px] font-bold text-white">Married</p>
+        {spouse ? (
+          <p className="text-sm text-white/80 mt-1">
+            to{" "}
+            <Link href={`/dashboard/family/${spouse.id}`} className="font-semibold text-white underline decoration-white/40 hover:decoration-white">
+              {spouse.name}
+            </Link>
+          </p>
+        ) : spouseName ? (
+          <p className="text-sm text-white/80 mt-1">to {spouseName}</p>
+        ) : null}
         {anniversary && <p className="text-xs text-white/50 mt-2">Anniversary · {anniversary}</p>}
       </div>
     </div>

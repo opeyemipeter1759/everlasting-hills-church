@@ -730,7 +730,7 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Delete your own article */
+        /** Delete an article: its author, or a pastor or admin */
         delete: operations["ArticlesController_remove"];
         options?: never;
         head?: never;
@@ -750,6 +750,24 @@ export interface paths {
         /** Approve a piece waiting for review, which publishes it */
         post: operations["ArticlesController_approve"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}/bookmark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save a published article to read later */
+        post: operations["ArticlesController_bookmark"];
+        /** Take an article off my saved list */
+        delete: operations["ArticlesController_unbookmark"];
         options?: never;
         head?: never;
         patch?: never;
@@ -808,6 +826,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/articles/{id}/review-notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Private notes between the author and reviewers, oldest first */
+        get: operations["ArticlesController_reviewNotes"];
+        put?: never;
+        /** Comment on an article, or on a highlighted passage with suggested wording, without approving or returning it */
+        post: operations["ArticlesController_addReviewNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{id}/review-notes/{noteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a review note you wrote */
+        delete: operations["ArticlesController_deleteReviewNote"];
+        options?: never;
+        head?: never;
+        /** Mark a review note dealt with, or open it again */
+        patch: operations["ArticlesController_resolveReviewNote"];
+        trace?: never;
+    };
     "/articles/{slug}": {
         parameters: {
             query?: never;
@@ -817,6 +871,92 @@ export interface paths {
         };
         /** One article. A draft is visible to its author alone. */
         get: operations["ArticlesController_bySlug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/{slug}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comments on a published article, with which ones I may remove */
+        get: operations["ArticlesController_comments"];
+        put?: never;
+        /** Comment on a published article as a member */
+        post: operations["ArticlesController_comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a comment: its writer, the article's author, or a pastor or admin */
+        delete: operations["ArticlesController_deleteComment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload an article cover picture (JPG, PNG or WebP, up to 5 MB); returns its URL */
+        post: operations["ArticlesController_cover"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/manage/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The newest comments on articles, for pastors and admins to moderate */
+        get: operations["ArticlesController_manageComments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/articles/manage/list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every article in every state, for pastors and admins to manage */
+        get: operations["ArticlesController_manageList"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1647,6 +1787,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/books/me/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a book as read; it counts towards reading badges (MEMBER+) */
+        post: operations["BooksController_markRead"];
+        /** Unmark a book as read (MEMBER+) */
+        delete: operations["BooksController_unmarkRead"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/books/me/comments/{commentId}": {
         parameters: {
             query?: never;
@@ -1659,6 +1817,23 @@ export interface paths {
         post?: never;
         /** Delete my comment (or any comment, if PASTOR+) */
         delete: operations["BooksController_deleteComment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/books/me/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The ids of the books I have marked as read (MEMBER+) */
+        get: operations["BooksController_myRead"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2922,6 +3097,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/evangelism/form/workers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Members whose name matches what was typed (2+ letters), for the public evangelism form */
+        get: operations["EvangelismFormController_workers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/evangelism/me": {
         parameters: {
             query?: never;
@@ -2931,6 +3123,23 @@ export interface paths {
         };
         /** Whether I am on the Evangelism Team, and whether I lead it */
         get: operations["EvangelismController_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/evangelism/mine/tally": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How many people I have preached to, and how many were saved */
+        get: operations["EvangelismController_myTally"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4921,6 +5130,41 @@ export interface paths {
         patch: operations["MembersController_updateMember"];
         trace?: never;
     };
+    "/members/{id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Kind words written on a member's profile, newest first */
+        get: operations["MembersFamilyController_comments"];
+        put?: never;
+        /** Write something nice about a member, on their profile */
+        post: operations["MembersFamilyController_comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/{id}/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a comment: its writer, the profile owner, or a pastor or admin */
+        delete: operations["MembersFamilyController_deleteComment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/{id}/follow-up": {
         parameters: {
             query?: never;
@@ -4938,6 +5182,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/{id}/like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Like a member's profile */
+        post: operations["MembersFamilyController_like"];
+        /** Take back a like on a member's profile */
+        delete: operations["MembersFamilyController_unlike"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/{id}/pastor-note": {
         parameters: {
             query?: never;
@@ -4949,6 +5211,23 @@ export interface paths {
         put?: never;
         /** Add pastor note for a member (PASTOR+) */
         post: operations["MembersPastoralController_addPastorNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/{id}/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A member's profile as the church family sees it, with their figures, badges, articles and likes: no phone, email or address (MEMBER+) */
+        get: operations["MembersFamilyController_profile"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5176,6 +5455,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/family": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Active members by name, a page at a time, for the church family directory (MEMBER+) */
+        get: operations["MembersFamilyController_directory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/follow-up/{taskId}": {
         parameters: {
             query?: never;
@@ -5297,6 +5593,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/me/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload the banner across the top of my profile (PNG/JPG, ≤ 5 MB) */
+        post: operations["MembersSelfServiceController_uploadMyCover"];
+        /** Remove my profile banner, back to the church colours */
+        delete: operations["MembersSelfServiceController_clearMyCover"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/me/deactivate": {
         parameters: {
             query?: never;
@@ -5314,6 +5628,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/members/me/profile-details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My spiritual and career profile, with who may see each part */
+        get: operations["MembersFamilyController_myDetails"];
+        /** Update my spiritual and career profile, and who may see each part */
+        put: operations["MembersFamilyController_updateMyDetails"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/members/me/reactivate": {
         parameters: {
             query?: never;
@@ -5325,6 +5657,76 @@ export interface paths {
         put?: never;
         /** Reactivate my own (self-deactivated) account */
         post: operations["MembersSelfServiceController_reactivateMe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/spouse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My marital status, spouse, and spouse requests waiting on me or them */
+        get: operations["MembersFamilyController_mySpouse"];
+        put?: never;
+        post?: never;
+        /** Remove my spouse link, for both of us */
+        delete: operations["MembersFamilyController_unlinkSpouse"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/spouse-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Ask a member to confirm they are my spouse */
+        post: operations["MembersFamilyController_requestSpouse"];
+        /** Withdraw the spouse request I sent */
+        delete: operations["MembersFamilyController_cancelSpouseRequest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/spouse-requests/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm I am married to the member who asked */
+        post: operations["MembersFamilyController_acceptSpouse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/members/me/spouse-requests/{id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a spouse request */
+        post: operations["MembersFamilyController_declineSpouse"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5726,6 +6128,58 @@ export interface paths {
          * @description Always answers the same way, whether or not that address has a pledge. A new link replaces any earlier one.
          */
         post: operations["PledgesController_resendTrackingLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/articles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Published articles for the public blog, featured first, newest next */
+        get: operations["PublicArticlesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/articles/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One published article, for the public blog */
+        get: operations["PublicArticlesController_read"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/articles/{slug}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Comments on a published article, newest first */
+        get: operations["PublicArticlesController_comments"];
+        put?: never;
+        /** Comment on a published article as a visitor, with a name */
+        post: operations["PublicArticlesController_comment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -7766,6 +8220,10 @@ export interface components {
             /** Format: date-time */
             timestamp: string;
         };
+        ArticleCommentDto: {
+            /** @description The comment, up to 1,000 characters */
+            body: string;
+        };
         AssignEvangelismContactDto: {
             /** @description Team member to follow them up; null hands it back to the worker who preached */
             assigneeMemberId: Record<string, never> | null;
@@ -7993,6 +8451,8 @@ export interface components {
         CreateArticleDto: {
             /** @description Markdown, the same subset announcements use */
             body: string;
+            /** @description Cover picture, from POST /articles/cover */
+            coverImageUrl?: Record<string, never>;
             /** @example 45008039 */
             endVerseId?: number;
             /** @description Submit for approval by another reviewer rather than saving a draft */
@@ -8004,6 +8464,8 @@ export interface components {
              * @example 45001001
              */
             startVerseId?: number;
+            /** @description A one-line subtitle under the title */
+            subtitle?: Record<string, never>;
             /** @example What Romans 8 showed me this week */
             title: string;
         };
@@ -8427,7 +8889,7 @@ export interface components {
              */
             phone: string;
             /** @enum {string} */
-            savedStatus: "YES" | "NO" | "ALREADY";
+            savedStatus: "YES" | "REDEDICATED" | "NO" | "ALREADY";
             /** @example University of Lagos */
             school?: string;
             /** @description Evangelism Team member who preached to them */
@@ -8766,11 +9228,53 @@ export interface components {
             /** @example Please pray for my family and my job. */
             request: string;
         };
+        ProfileCommentDto: {
+            /** @description Something nice about the member, up to 500 characters */
+            body: string;
+        };
+        ProfileRoleDto: {
+            /**
+             * @description Where, written as a handle or a name
+             * @example sparkpayhq
+             */
+            org?: Record<string, never>;
+            /** @example CEO */
+            title?: string;
+            /** @example https://sparkpay.co */
+            url?: Record<string, never>;
+        };
+        ProfileVisibilityDto: {
+            /** @enum {string} */
+            birthday?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            career?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            journey?: "MEMBERS" | "PRIVATE";
+            /**
+             * @description Phone number: PRIVATE unless the member opens it
+             * @enum {string}
+             */
+            phone?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            profile?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            socials?: "MEMBERS" | "PRIVATE";
+            /** @enum {string} */
+            testimony?: "MEMBERS" | "PRIVATE";
+        };
         ProgressDto: {
             /** @example false */
             completed?: boolean;
             /** @example 120 */
             positionSec: number;
+        };
+        PublicArticleCommentDto: {
+            /** @description The comment, up to 1,000 characters */
+            body: string;
+            /** @description The name the visitor gives */
+            name: string;
+            /** @description Left empty by people; bots fill it in */
+            website?: string;
         };
         PublicEvangelismContactDto: {
             /** @example 12 Adeola Street, Ikeja */
@@ -8799,7 +9303,7 @@ export interface components {
              */
             phone: string;
             /** @enum {string} */
-            savedStatus: "YES" | "NO" | "ALREADY";
+            savedStatus: "YES" | "REDEDICATED" | "NO" | "ALREADY";
             /** @example University of Lagos */
             school?: string;
             /** @description Leave empty */
@@ -8880,6 +9384,9 @@ export interface components {
             /** @enum {string} */
             toStatus: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "AWAY" | "OPTED_OUT";
         };
+        ResolveReviewNoteDto: {
+            resolved: boolean;
+        };
         ReviewArticleDto: {
             /** @description A word to the author with the approval */
             note?: string;
@@ -8892,6 +9399,14 @@ export interface components {
             note?: string;
             /** @enum {string} */
             outcome: "HANDED_OVER" | "EXTENDED" | "CLOSED";
+        };
+        ReviewNoteDto: {
+            /** @description The comment, up to 2,000 characters */
+            body: string;
+            /** @description The highlighted words the comment is about */
+            quote?: Record<string, never>;
+            /** @description Suggested wording to replace the highlighted words */
+            suggestion?: Record<string, never>;
         };
         ReviewUnitTaskReportDto: {
             /** @description Feedback for the author — expected when sending a report back */
@@ -9075,6 +9590,10 @@ export interface components {
             /** @example 2026-09-04T09:00:00.000Z */
             until?: Record<string, never>;
         };
+        SpouseRequestDto: {
+            /** @description The member being asked to confirm they are my spouse */
+            memberId: string;
+        };
         StreakDto: {
             /** @description Every level already cleared, oldest first */
             history: components["schemas"]["PassedLevelDto"][];
@@ -9204,6 +9723,8 @@ export interface components {
         };
         UpdateArticleDto: {
             body?: string;
+            /** @description Cover picture, from POST /articles/cover */
+            coverImageUrl?: Record<string, never>;
             endVerseId?: Record<string, never>;
             /** @description The revision loaded by the editor; prevents overwriting later changes */
             revision?: number;
@@ -9211,6 +9732,8 @@ export interface components {
             startVerseId?: Record<string, never>;
             /** @enum {string} */
             status?: "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "ARCHIVED";
+            /** @description A one-line subtitle under the title */
+            subtitle?: Record<string, never>;
             title?: string;
         };
         UpdateBookCollectionDto: {
@@ -9277,7 +9800,7 @@ export interface components {
             outreachId?: Record<string, never> | null;
             phone?: string;
             /** @enum {string} */
-            savedStatus?: "YES" | "NO" | "ALREADY";
+            savedStatus?: "YES" | "REDEDICATED" | "NO" | "ALREADY";
             school?: Record<string, never> | null;
             workerMemberId?: Record<string, never> | null;
             workerName?: string;
@@ -9420,14 +9943,24 @@ export interface components {
             lastName?: Record<string, never>;
             /** @example opeyemi.peter */
             linkedin?: Record<string, never>;
+            /**
+             * @description SINGLE also removes any spouse link, for both members.
+             * @enum {string}
+             */
+            maritalStatus?: "SINGLE" | "MARRIED";
             /** @example +234 801 234 5678 */
             phone?: Record<string, never>;
+            /**
+             * @description A spouse who is not a church member. A member spouse is linked by request instead.
+             * @example Funke Peter
+             */
+            spouseName?: Record<string, never>;
             /** @example opeyemi.peter */
             tiktok?: Record<string, never>;
             /** @example opeyemi.peter */
             twitter?: Record<string, never>;
             /**
-             * @description Pass null to clear it and mark the member as single.
+             * @description Pass null to clear it. Marital status is its own field.
              * @example 2015-06-20
              */
             weddingAnniversary?: Record<string, never>;
@@ -9438,6 +9971,30 @@ export interface components {
              * @enum {string}
              */
             status: "PENDING" | "PRAYED";
+        };
+        UpdateProfileDetailsDto: {
+            bornAgainYear?: Record<string, never>;
+            employer?: Record<string, never>;
+            favouriteVerse?: Record<string, never>;
+            /** @example Psalm 23:1 */
+            favouriteVerseRef?: Record<string, never>;
+            gifts?: string[];
+            /** @example Civil engineer · Choir member · Lover of the Psalms */
+            headline?: Record<string, never>;
+            holySpiritYear?: Record<string, never>;
+            industry?: Record<string, never>;
+            interests?: string[];
+            languages?: string[];
+            membershipClassYear?: Record<string, never>;
+            occupation?: Record<string, never>;
+            openTo?: string[];
+            prayerFocus?: Record<string, never>;
+            /** @description What you do, e.g. CEO @sparkpayhq, Lead Pastor @everlastinghills (up to 8) */
+            roles?: components["schemas"]["ProfileRoleDto"][];
+            skills?: string[];
+            testimony?: Record<string, never>;
+            visibility?: components["schemas"]["ProfileVisibilityDto"];
+            waterBaptismYear?: Record<string, never>;
         };
         UpdateQuestionStatusDto: {
             /**
@@ -11141,6 +11698,9 @@ export interface operations {
                 page?: number;
                 limit?: number;
                 authorId?: string;
+                /** @description Search titles, subtitles and passages */
+                q?: string;
+                tab?: "for-you" | "featured" | "saved";
             };
             header?: never;
             path?: never;
@@ -11291,6 +11851,72 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_bookmark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_unbookmark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -11481,6 +12107,148 @@ export interface operations {
             };
         };
     };
+    ArticlesController_reviewNotes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_addReviewNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewNoteDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_deleteReviewNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_resolveReviewNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                noteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveReviewNoteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     ArticlesController_bySlug: {
         parameters: {
             query?: never;
@@ -11488,6 +12256,215 @@ export interface operations {
             path: {
                 slug: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_comments: {
+        parameters: {
+            query?: {
+                page?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ArticleCommentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_deleteComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_cover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_manageComments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ArticlesController_manageList: {
+        parameters: {
+            query?: {
+                status?: string;
+                q?: string;
+                page?: string;
+            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -13537,6 +14514,72 @@ export interface operations {
             };
         };
     };
+    BooksController_markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    BooksController_unmarkRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     BooksController_deleteComment: {
         parameters: {
             query?: never;
@@ -13544,6 +14587,37 @@ export interface operations {
             path: {
                 commentId: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    BooksController_myRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -16183,7 +17257,7 @@ export interface operations {
                 workerMemberId?: string;
                 /** @description "none" for personal evangelism */
                 outreachId?: string;
-                savedStatus?: "YES" | "NO" | "ALREADY";
+                savedStatus?: "YES" | "REDEDICATED" | "NO" | "ALREADY";
                 isStudent?: boolean;
                 status?: "NEW" | "CALL_DONE" | "CALL_BACK" | "NEEDS_VISIT" | "VISITED" | "INVITED" | "ATTENDED" | "JOINED" | "NOT_INTERESTED";
                 flag?: "DUE" | "OVERDUE" | "REVIEW";
@@ -16542,7 +17616,71 @@ export interface operations {
             };
         };
     };
+    EvangelismFormController_workers: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     EvangelismController_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    EvangelismController_myTally: {
         parameters: {
             query?: never;
             header?: never;
@@ -21573,6 +22711,112 @@ export interface operations {
             };
         };
     };
+    MembersFamilyController_comments: {
+        parameters: {
+            query?: {
+                page?: string;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileCommentDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_deleteComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersPastoralController_addFollowUp: {
         parameters: {
             query?: never;
@@ -21610,6 +22854,72 @@ export interface operations {
             };
         };
     };
+    MembersFamilyController_like: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_unlike: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersPastoralController_addPastorNote: {
         parameters: {
             query?: never;
@@ -21626,6 +22936,39 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_profile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -22127,6 +23470,40 @@ export interface operations {
             };
         };
     };
+    MembersFamilyController_directory: {
+        parameters: {
+            query?: {
+                q?: string;
+                page?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersPastoralController_deleteFollowUp: {
         parameters: {
             query?: never;
@@ -22439,6 +23816,76 @@ export interface operations {
             };
         };
     };
+    MembersSelfServiceController_uploadMyCover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Uploaded; returns the new coverUrl */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersSelfServiceController_clearMyCover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersSelfServiceController_deactivateMe: {
         parameters: {
             query?: never;
@@ -22478,11 +23925,271 @@ export interface operations {
             };
         };
     };
+    MembersFamilyController_myDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_updateMyDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfileDetailsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     MembersSelfServiceController_reactivateMe: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_mySpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_unlinkSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_requestSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SpouseRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_cancelSpouseRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_acceptSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    MembersFamilyController_declineSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -23413,6 +25120,144 @@ export interface operations {
         };
         responses: {
             202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PublicArticlesController_list: {
+        parameters: {
+            query?: {
+                page?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PublicArticlesController_read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PublicArticlesController_comments: {
+        parameters: {
+            query?: {
+                page?: string;
+            };
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PublicArticlesController_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublicArticleCommentDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

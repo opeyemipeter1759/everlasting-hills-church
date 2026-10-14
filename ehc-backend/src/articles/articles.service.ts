@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { ArticleStatus, Role } from '@prisma/client';
+import { ArticleStatus, Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
@@ -102,23 +102,36 @@ export class ArticlesService {
   private authorSelect() {
     return {
       id: true,
-      Member: { select: { firstName: true, lastName: true, photoUrl: true } },
+      Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true } },
     };
   }
 
   /** The church's feed: published pieces, newest first, featured ones lifted. */
   async feed(
     actor: AuthUser,
-    options: { page?: number; limit?: number; authorId?: string } = {},
+    options: { page?: number; limit?: number; authorId?: string; q?: string; tab?: string } = {},
   ) {
     const profileId = this.profileOrThrow(actor);
     const take = Math.min(Math.max(options.limit ?? 20, 1), 50);
     const skip = (Math.max(options.page ?? 1, 1) - 1) * take;
+    const q = options.q?.trim().slice(0, 80);
 
-    const where = {
+    // Tabs: everything ("for-you"), what pastors featured, and what I saved.
+    const where: Prisma.MemberArticleWhereInput = {
       tenantId: this.tenantId,
       status: ArticleStatus.PUBLISHED,
       ...(options.authorId ? { authorId: options.authorId } : {}),
+      ...(options.tab === 'featured' ? { featuredAt: { not: null } } : {}),
+      ...(options.tab === 'saved' ? { Bookmarks: { some: { profileId } } } : {}),
+      ...(q
+        ? {
+            OR: [
+              { title: { contains: q, mode: 'insensitive' as const } },
+              { subtitle: { contains: q, mode: 'insensitive' as const } },
+              { scriptureLabel: { contains: q, mode: 'insensitive' as const } },
+            ],
+          }
+        : {}),
     };
 
     const [articles, total] = await Promise.all([
@@ -135,6 +148,7 @@ export class ArticlesService {
           slug: true,
           title: true,
           excerpt: true,
+          subtitle: true,
           coverImageUrl: true,
           scriptureLabel: true,
           readingMinutes: true,
@@ -143,15 +157,19 @@ export class ArticlesService {
           publishedAt: true,
           Author: { select: this.authorSelect() },
           Likes: { where: { profileId }, select: { id: true } },
+          Bookmarks: { where: { profileId }, select: { id: true } },
+          _count: { select: { Comments: true } },
         },
       }),
       this.prisma.memberArticle.count({ where }),
     ]);
 
     return {
-      articles: articles.map(({ Likes, ...article }) => ({
+      articles: articles.map(({ Likes, Bookmarks, _count, ...article }) => ({
         ...article,
         likedByMe: Likes.length > 0,
+        bookmarkedByMe: (Bookmarks?.length ?? 0) > 0,
+        commentCount: _count?.Comments ?? 0,
       })),
       meta: { page: Math.max(options.page ?? 1, 1), limit: take, total },
     };
@@ -165,6 +183,8 @@ export class ArticlesService {
       include: {
         Author: { select: this.authorSelect() },
         Likes: { where: { profileId }, select: { id: true } },
+        Bookmarks: { where: { profileId }, select: { id: true } },
+        _count: { select: { Comments: true } },
       },
     });
     if (!article) throw new NotFoundException('Article not found');
@@ -190,9 +210,11 @@ export class ArticlesService {
       });
     }
 
-    const { Likes, ...rest } = article;
+    const { Likes, Bookmarks, _count, ...rest } = article;
     return {
       ...rest,
+      bookmarkedByMe: (Bookmarks?.length ?? 0) > 0,
+      commentCount: _count?.Comments ?? 0,
       // Editorial feedback belongs to the author and their reviewer.
       reviewNote: isAuthor || canReview ? rest.reviewNote : null,
       reviewedById: isAuthor || canReview ? rest.reviewedById : null,
@@ -213,6 +235,8 @@ export class ArticlesService {
         slug: true,
         title: true,
         excerpt: true,
+        subtitle: true,
+        coverImageUrl: true,
         status: true,
         scriptureLabel: true,
         readingMinutes: true,
@@ -235,6 +259,8 @@ export class ArticlesService {
       startVerseId?: number;
       endVerseId?: number;
       scriptureLabel?: string;
+      subtitle?: string | null;
+      coverImageUrl?: string | null;
       publish?: boolean;
     },
   ) {
@@ -261,6 +287,8 @@ export class ArticlesService {
         startVerseId: input.startVerseId ?? null,
         endVerseId: input.endVerseId ?? null,
         scriptureLabel: input.scriptureLabel ?? null,
+        subtitle: input.subtitle?.trim() || null,
+        coverImageUrl: input.coverImageUrl || null,
         status,
         publishedAt: null,
         submittedAt: status === ArticleStatus.PENDING_REVIEW ? now : null,
@@ -300,6 +328,8 @@ export class ArticlesService {
       startVerseId?: number | null;
       endVerseId?: number | null;
       scriptureLabel?: string | null;
+      subtitle?: string | null;
+      coverImageUrl?: string | null;
       status?: 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'ARCHIVED';
       revision?: number;
     },
@@ -311,22 +341,36 @@ export class ArticlesService {
       );
     }
 
-    // A moderator may archive somebody's piece. They may not rewrite it.
+    // A moderator may take somebody's piece off the site. They may not rewrite
+    // it. Taken down means back to "waiting for approval": hidden from the
+    // church and the public blog, still there for admins and reviewers, who can
+    // approve it again. (ARCHIVED from older clients means the same.)
     if (!isAuthor) {
-      if (input.status !== 'ARCHIVED') {
+      if (input.status !== 'ARCHIVED' && input.status !== 'PENDING_REVIEW') {
         throw new ForbiddenException(
-          'You can archive this article, but not edit it',
+          'You can take this article down, but not edit it',
         );
       }
       const { count } = await this.prisma.memberArticle.updateMany({
         where: { id, tenantId: this.tenantId, revision: article.revision },
-        data: { status: ArticleStatus.ARCHIVED, revision: { increment: 1 } },
+        data: {
+          status: ArticleStatus.PENDING_REVIEW,
+          revision: { increment: 1 },
+          submittedAt: new Date(),
+          reviewedAt: null,
+          reviewedById: null,
+          reviewNote: null,
+          featuredAt: null,
+        },
       });
       if (!count)
         throw new ConflictException(
           'This article has changed. Reload it before saving.',
         );
-      return { id, slug: article.slug, status: ArticleStatus.ARCHIVED };
+      if (article.status === ArticleStatus.PUBLISHED) {
+        await this.review.notifyTakenDown(article);
+      }
+      return { id, slug: article.slug, status: ArticleStatus.PENDING_REVIEW };
     }
 
     if (input.startVerseId !== undefined || input.endVerseId !== undefined) {
@@ -355,7 +399,9 @@ export class ArticlesService {
       (input.startVerseId !== undefined &&
         input.startVerseId !== article.startVerseId) ||
       (input.endVerseId !== undefined &&
-        input.endVerseId !== article.endVerseId);
+        input.endVerseId !== article.endVerseId) ||
+      (input.subtitle !== undefined && (input.subtitle?.trim() || null) !== article.subtitle) ||
+      (input.coverImageUrl !== undefined && (input.coverImageUrl || null) !== article.coverImageUrl);
     if (status === ArticleStatus.PUBLISHED) {
       status = ArticleStatus.PENDING_REVIEW;
     } else if (
@@ -386,6 +432,8 @@ export class ArticlesService {
         ...(input.scriptureLabel !== undefined && {
           scriptureLabel: input.scriptureLabel,
         }),
+        ...(input.subtitle !== undefined && { subtitle: input.subtitle?.trim() || null }),
+        ...(input.coverImageUrl !== undefined && { coverImageUrl: input.coverImageUrl || null }),
         ...(status !== undefined && { status }),
         ...(submitting && { submittedAt: new Date() }),
         ...(submitting && {
@@ -410,14 +458,33 @@ export class ArticlesService {
   }
 
   async remove(actor: AuthUser, id: string) {
+    // The author, or a pastor or admin taking a piece off the site for good.
     const { isAuthor } = await this.ownedOrThrow(actor, id);
-    if (!isAuthor) {
-      throw new ForbiddenException(
-        'Only the author can delete an article. Archive it instead.',
-      );
+    if (!isAuthor && !this.isModerator(actor)) {
+      throw new ForbiddenException('Only the author, a pastor or an admin can delete an article.');
     }
     await this.prisma.memberArticle.delete({ where: { id } });
     return { id, deleted: true };
+  }
+
+  /** Save a published piece to read later, or take it off the list. Idempotent. */
+  async setBookmark(actor: AuthUser, id: string, saved: boolean) {
+    const profileId = this.profileOrThrow(actor);
+    const article = await this.prisma.memberArticle.findFirst({
+      where: { id, tenantId: this.tenantId, status: ArticleStatus.PUBLISHED },
+      select: { id: true },
+    });
+    if (!article) throw new NotFoundException('Article not found');
+    if (saved) {
+      await this.prisma.articleBookmark.upsert({
+        where: { articleId_profileId: { articleId: id, profileId } },
+        create: { id: randomUUID(), tenantId: this.tenantId, articleId: id, profileId },
+        update: {},
+      });
+    } else {
+      await this.prisma.articleBookmark.deleteMany({ where: { articleId: id, profileId } });
+    }
+    return { id, bookmarkedByMe: saved };
   }
 
   /** Feature or unfeature a piece, which lifts it to the top of the feed. */

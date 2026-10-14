@@ -179,6 +179,22 @@ model Member {
   tags                          String[]
   householdId                   String?
   deactivationRequestedAt       DateTime?
+  /// SINGLE or MARRIED. Null on older records, where a wedding date meant married.
+  maritalStatus                 String?
+  /// The spouse, set on both members only once the spouse has agreed.
+  spouseMemberId                String?
+  /// A spouse who is not a church member, typed in by the member.
+  spouseName                    String?
+  Spouse                        Member?                    @relation("Spouse", fields: [spouseMemberId], references: [id], onDelete: SetNull)
+  SpouseOf                      Member[]                   @relation("Spouse")
+  SpouseRequestsSent            SpouseRequest[]            @relation("SpouseRequestFrom")
+  SpouseRequestsReceived        SpouseRequest[]            @relation("SpouseRequestTo")
+  ProfileLikesReceived          ProfileLike[]              @relation("ProfileLiked")
+  ProfileLikesGiven             ProfileLike[]              @relation("ProfileLiker")
+  ProfileCommentsReceived       ProfileComment[]           @relation("ProfileCommented")
+  ProfileCommentsWritten        ProfileComment[]           @relation("ProfileCommentAuthor")
+  BooksRead                     MemberBookRead[]
+  ProfileDetails                MemberProfileDetails?
   AttendanceRecord              AttendanceRecord[]
   DiscussionResponse            DiscussionResponse[]
   EngagementScore               EngagementScore?
@@ -222,6 +238,100 @@ model Member {
   @@index([tenantId, status])
   @@index([tenantId, joinedAt])
   @@index([tenantId, email])
+  @@index([spouseMemberId])
+}
+
+/// The LinkedIn-style part of a member's profile, in their own words: kept
+/// apart from Member so the many queries that load a member never carry it.
+model MemberProfileDetails {
+  memberId            String   @id
+  tenantId            String
+  headline            String?
+  /// The banner image across the top of the profile.
+  coverUrl            String?
+  favouriteVerse      String?
+  favouriteVerseRef   String?
+  bornAgainYear       Int?     @db.SmallInt
+  waterBaptismYear    Int?     @db.SmallInt
+  holySpiritYear      Int?     @db.SmallInt
+  membershipClassYear Int?     @db.SmallInt
+  occupation          String?
+  employer            String?
+  industry            String?
+  /// What the member does, LinkedIn-style: [{ title, org, url? }], e.g. CEO @sparkpayhq.
+  roles               Json     @default("[]")
+  skills              String[] @default([])
+  gifts               String[] @default([])
+  interests           String[] @default([])
+  languages           String[] @default([])
+  prayerFocus         String?
+  testimony           String?
+  /// What the member welcomes from others: PRAYER_PARTNER, MENTOR, MENTEE, FELLOWSHIP, NETWORKING, VOLUNTEERING.
+  openTo              String[] @default([])
+  /// Who sees what: { profile, career, testimony, journey, birthday, socials, phone }, each MEMBERS or PRIVATE.
+  visibility          Json     @default("{}")
+  updatedAt           DateTime @default(now()) @updatedAt
+  Member              Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+}
+
+/// One member liking another's profile, once.
+model ProfileLike {
+  id            String   @id
+  tenantId      String
+  memberId      String
+  likerMemberId String
+  createdAt     DateTime @default(now())
+  Member        Member   @relation("ProfileLiked", fields: [memberId], references: [id], onDelete: Cascade)
+  Liker         Member   @relation("ProfileLiker", fields: [likerMemberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, likerMemberId])
+  @@index([likerMemberId])
+}
+
+/// A word of encouragement left on a member's profile.
+model ProfileComment {
+  id             String   @id
+  tenantId       String
+  memberId       String
+  authorMemberId String
+  body           String
+  createdAt      DateTime @default(now())
+  Member         Member   @relation("ProfileCommented", fields: [memberId], references: [id], onDelete: Cascade)
+  Author         Member   @relation("ProfileCommentAuthor", fields: [authorMemberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, createdAt])
+  @@index([authorMemberId])
+}
+
+/// A book from the library a member says they have finished.
+model MemberBookRead {
+  id       String   @id
+  tenantId String
+  memberId String
+  bookId   String
+  readAt   DateTime @default(now())
+  Member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  Book     Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, bookId])
+}
+
+/// A member asking another to confirm they are married. Nothing shows on
+/// either profile until the other member accepts.
+model SpouseRequest {
+  id           String    @id
+  tenantId     String
+  fromMemberId String
+  toMemberId   String
+  /// PENDING, ACCEPTED, DECLINED or CANCELLED.
+  status       String    @default("PENDING")
+  createdAt    DateTime  @default(now())
+  respondedAt  DateTime?
+  From         Member    @relation("SpouseRequestFrom", fields: [fromMemberId], references: [id], onDelete: Cascade)
+  To           Member    @relation("SpouseRequestTo", fields: [toMemberId], references: [id], onDelete: Cascade)
+
+  @@index([toMemberId, status])
+  @@index([fromMemberId, status])
 }
 
 /// Care / discipleship assignment: a member shepherded by a leader (also a member).
@@ -1894,21 +2004,22 @@ model Announcement {
 /// members until unpublished or deleted. DRAFT lets an admin stage one before
 /// it's visible, same status pattern as Announcement.
 model Book {
-  id           String          @id
+  id           String           @id
   tenantId     String
   title        String
   author       String?
   description  String?
   coverUrl     String?
   fileUrl      String
-  status       EventStatus     @default(PUBLISHED)
+  status       EventStatus      @default(PUBLISHED)
   collectionId String?
   createdById  String?
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  Tenant       Tenant          @relation(fields: [tenantId], references: [id])
-  Collection   BookCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  Tenant       Tenant           @relation(fields: [tenantId], references: [id])
+  Collection   BookCollection?  @relation(fields: [collectionId], references: [id], onDelete: SetNull)
   BookComment  BookComment[]
+  ReadBy       MemberBookRead[]
 
   @@index([tenantId, status])
   @@index([collectionId])
@@ -2785,6 +2896,8 @@ model MemberArticle {
   /// The same small Markdown subset the announcements use.
   body           String
   excerpt        String?
+  /// The author's own one-line subtitle; the feed falls back to the excerpt.
+  subtitle       String?
   coverImageUrl  String?
   status         ArticleStatus       @default(DRAFT)
   /// Changes whenever the author or reviewer changes the article, not on reads/likes.
@@ -2810,10 +2923,65 @@ model MemberArticle {
   Author         Profile             @relation("MemberArticleAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   ReviewedBy     Profile?            @relation("MemberArticleReviewer", fields: [reviewedById], references: [id], onDelete: SetNull, map: "MemberArticle_reviewer_fkey")
   Likes          MemberArticleLike[]
+  Comments       ArticleComment[]
+  Bookmarks      ArticleBookmark[]
+  ReviewNotes    ArticleReviewNote[]
 
   @@unique([tenantId, slug], map: "MemberArticle_tenant_slug")
   @@index([tenantId, status, publishedAt(sort: Desc)], map: "MemberArticle_feed")
   @@index([authorId, status, updatedAt(sort: Desc)], map: "MemberArticle_author")
+}
+
+/// A comment on a published article, from a signed-in member (profileId set)
+/// or a visitor to the public blog, who gives a name.
+model ArticleComment {
+  id         String        @id
+  tenantId   String
+  articleId  String
+  profileId  String?
+  authorName String
+  body       String
+  createdAt  DateTime      @default(now()) @db.Timestamptz(6)
+  Article    MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt])
+  @@index([tenantId, createdAt])
+}
+
+/// A private note between an article's author and its reviewers, sent without
+/// approving or returning the piece. Never shown to readers.
+model ArticleReviewNote {
+  id           String        @id
+  tenantId     String
+  articleId    String
+  profileId    String
+  authorName   String
+  /// True when written by a reviewer, false when it is the author replying.
+  fromReviewer Boolean
+  body         String
+  /// The passage the note is about, as highlighted (Google Docs style), or null for the whole piece.
+  quote        String?
+  /// Suggested wording to replace the quoted passage.
+  suggestion   String?
+  /// Set when the author marks it dealt with, or applies the suggestion.
+  resolvedAt   DateTime?     @db.Timestamptz(6)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(6)
+  Article      MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId, createdAt])
+}
+
+/// An article a member has saved to read later.
+model ArticleBookmark {
+  id        String        @id
+  tenantId  String
+  articleId String
+  profileId String
+  createdAt DateTime      @default(now()) @db.Timestamptz(6)
+  Article   MemberArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([articleId, profileId])
+  @@index([profileId, createdAt])
 }
 
 /// One row per reader per article, so a double tap cannot inflate a count.

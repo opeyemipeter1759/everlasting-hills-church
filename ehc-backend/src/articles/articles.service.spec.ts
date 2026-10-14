@@ -93,6 +93,7 @@ function makeService(
   const review = {
     canReview: jest.fn(async () => reviewer),
     notifyReviewers: jest.fn(async () => 1),
+    notifyTakenDown: jest.fn(async () => undefined),
   };
 
   const service = new ArticlesService(
@@ -285,22 +286,22 @@ describe('publishing', () => {
 });
 
 describe('moderation', () => {
-  it('lets a pastor archive a piece but not rewrite it', async () => {
+  it('lets a pastor take a piece down to waiting for approval, but not rewrite it', async () => {
     const { service, updates } = makeService(PUBLISHED);
 
-    await service.update(PASTOR, 'a-1', { status: 'ARCHIVED' });
-    expect(updates[0].status).toBe('ARCHIVED');
+    // Taken down means unpublished and back in review, not archived away.
+    await expect(service.update(PASTOR, 'a-1', { status: 'ARCHIVED' })).resolves.toMatchObject({ status: 'PENDING_REVIEW' });
+    expect(updates[0]).toMatchObject({ status: 'PENDING_REVIEW', reviewNote: null, featuredAt: null });
 
     await expect(
       service.update(PASTOR, 'a-1', { title: 'Rewritten' }),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
-  it("refuses to let a pastor delete somebody else's writing", async () => {
-    const { service } = makeService(PUBLISHED);
-    await expect(service.remove(PASTOR, 'a-1')).rejects.toBeInstanceOf(
-      ForbiddenException,
-    );
+  it("lets a pastor or admin delete a piece from the site", async () => {
+    const { service, prisma } = makeService(PUBLISHED);
+    await expect(service.remove(PASTOR, 'a-1')).resolves.toEqual({ id: 'a-1', deleted: true });
+    expect(prisma.memberArticle.delete).toHaveBeenCalledWith({ where: { id: 'a-1' } });
   });
 
   it("hides an ordinary member's attempt to touch a piece that is not theirs", async () => {

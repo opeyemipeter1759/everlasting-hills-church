@@ -1,4 +1,5 @@
-import { UserCheck, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { UserCheck, UserPlus, Users } from "lucide-react";
 import { btnPrimaryHdr, btnSecondary } from "./constants";
 
 export default function PeopleHeader({ onAssign, onCreate }: { onAssign: () => void; onCreate: () => void }) {
@@ -14,6 +15,10 @@ export default function PeopleHeader({ onAssign, onCreate }: { onAssign: () => v
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        {/* The members' own view: profiles as the church family sees them. */}
+        <Link href="/dashboard/family" className={btnSecondary}>
+          <Users size={15} /> Church Family view
+        </Link>
         <button type="button" onClick={onAssign} className={btnSecondary}>
           <UserCheck size={15} /> Assign
         </button>

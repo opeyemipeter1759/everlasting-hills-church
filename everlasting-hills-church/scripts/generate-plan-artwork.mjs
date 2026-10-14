@@ -511,6 +511,70 @@ function bibleInFourMonths() {
   );
 }
 
+// Short book names for covers, in canonical order.
+const BOOK_NAMES = [
+  "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth",
+  "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra",
+  "Nehemiah", "Esther", "Job", "Psalms", "Proverbs", "Ecclesiastes", "Song of Songs",
+  "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos",
+  "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah",
+  "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians",
+  "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians",
+  "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James",
+  "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation",
+];
+
+// Plans that read one stretch of the Bible: every book named, each with a bar
+// as long as it has chapters (square-rooted, as in the whole counsel, so a
+// one-chapter letter still shows) and its chapter count. The last book is in
+// gold. More than six books fold into two columns so the names stay legible.
+function booksCover(first, last) {
+  const books = CHAPTERS.slice(first - 1, last).map((chapters, i) => ({
+    name: BOOK_NAMES[first - 1 + i],
+    chapters,
+  }));
+  if (books.some((book) => !book.name)) throw new Error(`No name for a book in ${first}-${last}`);
+  const tallest = Math.max(...books.map((book) => book.chapters));
+  const columns = books.length > 6 ? 2 : 1;
+  const rows = Math.ceil(books.length / columns);
+  const left = 236;
+  const right = W - 44;
+  const top = 40;
+  const bottom = 252;
+  const columnGap = 28;
+  const columnW = (right - left - columnGap * (columns - 1)) / columns;
+  const rowH = Math.min(48, (bottom - top) / rows);
+  const font = Math.min(19, rowH * 0.6);
+  const parts = [];
+  books.forEach((book, i) => {
+    const column = Math.floor(i / rows);
+    const row = i % rows;
+    const inColumn = books.slice(column * rows, column * rows + rows);
+    const labelW = Math.max(...inColumn.map((b) => b.name.length)) * font * 0.56;
+    const x = left + column * (columnW + columnGap);
+    const cy = top + row * rowH + rowH / 2;
+    const barX = x + labelW + 10;
+    const countW = font * 1.6;
+    const barMax = Math.max(20, columnW - labelW - 10 - countW - 6);
+    const barW = Math.max(6, (Math.sqrt(book.chapters) / Math.sqrt(tallest)) * barMax);
+    const barH = Math.max(5, rowH * 0.38);
+    const isLast = i === books.length - 1;
+    parts.push(
+      `<text x="${(x + labelW).toFixed(1)}" y="${(cy + font * 0.35).toFixed(1)}" text-anchor="end" font-family="Georgia, serif" font-size="${font.toFixed(1)}" fill="${CREAM}" fill-opacity="${isLast ? 1 : 0.9}">${book.name}</text>`,
+      `<rect x="${barX.toFixed(1)}" y="${(cy - barH / 2).toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="${(barH / 2).toFixed(1)}" fill="${isLast ? GOLD : CREAM}" fill-opacity="${isLast ? 0.95 : 0.55}"/>`,
+      `<text x="${(barX + barW + 6).toFixed(1)}" y="${(cy + font * 0.3).toFixed(1)}" font-family="Georgia, serif" font-size="${(font * 0.72).toFixed(1)}" fill="${GOLD}" fill-opacity="0.9">${book.chapters}</text>`,
+    );
+  });
+  return svg(
+    `<rect width="${W}" height="${H}" fill="url(#books)"/>
+  <g>${parts.join("\n  ")}</g>`,
+    `<linearGradient id="books" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="${WINE}"/>
+    <stop offset="1" stop-color="${WINE_DEEP}"/>
+  </linearGradient>`,
+  );
+}
+
 const COVERS = {
   "start-with-jesus": startWithJesus,
   "know-the-whole-story": knowTheWholeStory,
@@ -523,6 +587,13 @@ const COVERS = {
   "proverbs-in-a-month": proverbsInAMonth,
   "acts-in-three-days": actsInThreeDays,
   "bible-in-four-months": bibleInFourMonths,
+  "gospels-in-seven-days": () => booksCover(40, 43),
+  "pauls-letters-in-four-days": () => booksCover(45, 57),
+  "general-letters-in-three-days": () => booksCover(58, 65),
+  "law-in-24-days": () => booksCover(1, 5),
+  "history-in-32-days": () => booksCover(6, 17),
+  "poetry-and-wisdom-in-31-days": () => booksCover(18, 22),
+  "prophets-in-32-days": () => booksCover(23, 39),
 };
 
 mkdirSync(OUT, { recursive: true });

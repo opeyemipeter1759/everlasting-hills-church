@@ -1,61 +1,56 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ClipboardCheck, Newspaper, PenLine, PencilLine } from "lucide-react";
+import { ClipboardCheck, SquarePen } from "lucide-react";
 import { useArticleReviewAccess } from "@/lib/api/articles";
 
 /**
- * Reading and writing, side by side.
- *
- * The write button is not a tab: it is the point of the section, so it keeps a
- * filled treatment and sits apart from the two things you can browse.
+ * The reading room's frame inside the app: the cream canvas edge to edge
+ * (pulling back the dashboard's padding), and a quiet top bar with the
+ * section links and a Write button, as Medium has.
  */
-const TABS = [
-  { href: "/dashboard/articles", label: "The church", icon: Newspaper },
-  { href: "/dashboard/articles/mine", label: "My writing", icon: PenLine },
+export function MediumPage({ children }: { children: ReactNode }) {
+  return <div className="medium -m-4 min-h-[calc(100dvh-3.5rem)] px-4 pb-28 pt-4 sm:-m-6 sm:px-8 md:pb-12">{children}</div>;
+}
+
+const LINKS = [
+  { href: "/dashboard/articles", label: "Stories" },
+  { href: "/dashboard/articles/mine", label: "Your stories" },
 ];
 
 export default function ArticleTabs() {
   const pathname = usePathname();
   const { data: access } = useArticleReviewAccess();
-  const tabs = access?.canReview
-    ? [...TABS, { href: "/dashboard/articles/review", label: `Review${access.pending ? ` (${access.pending})` : ""}`, icon: ClipboardCheck }]
-    : TABS;
+  const links = access?.canReview ? [...LINKS, { href: "/dashboard/articles/review", label: "Review" }] : LINKS;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex max-w-full flex-wrap gap-1 rounded-2xl border border-gray-200 bg-gray-50 p-1 dark:border-white/10 dark:bg-white/[0.04]">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const active =
-            tab.href === "/dashboard/articles"
-              ? pathname === tab.href
-              : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+    <nav aria-label="Articles" className="mx-auto flex max-w-[1200px] items-center justify-between gap-3 border-b m-rule pb-3">
+      <div className="flex items-center gap-5 overflow-x-auto no-scrollbar">
+        {links.map((l) => {
+          const active = l.href === "/dashboard/articles" ? pathname === l.href : pathname === l.href || pathname.startsWith(`${l.href}/`);
           return (
             <Link
-              key={tab.href}
-              href={tab.href}
+              key={l.href}
+              href={l.href}
               aria-current={active ? "page" : undefined}
-              className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold transition-colors ${
-                active
-                  ? "bg-[#87102C] text-white shadow-sm"
-                  : "text-gray-500 hover:text-gray-800 dark:text-white/45 dark:hover:text-white"
-              }`}
+              className={`inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap text-sm ${active ? "m-ink" : "m-muted hover:text-[var(--m-ink)]"}`}
             >
-              <Icon size={13} />
-              {tab.label}
+              {l.href.endsWith("/review") && <ClipboardCheck size={15} aria-hidden="true" />}
+              {l.label}
+              {l.href.endsWith("/review") && !!access?.pending && (
+                <span className="m-pill !min-h-0 !px-2 !py-0 text-[11px]" aria-label={`${access.pending} waiting`}>
+                  {access.pending}
+                </span>
+              )}
             </Link>
           );
         })}
       </div>
-
-      <Link
-        href="/dashboard/articles/write"
-        className="inline-flex items-center gap-1.5 rounded-full border border-[#87102C]/25 bg-white px-3.5 py-1.5 text-xs font-bold text-[#87102C] transition-colors hover:bg-[#FFF4F6] dark:border-[#FFB3C1]/25 dark:bg-white/[0.04] dark:text-[#FFB3C1] dark:hover:bg-white/[0.08]"
-      >
-        <PencilLine size={13} /> Write
+      <Link href="/dashboard/articles/write" className="m-muted inline-flex min-h-11 items-center gap-2 text-sm hover:text-[var(--m-ink)]">
+        <SquarePen size={20} aria-hidden="true" /> Write
       </Link>
-    </div>
+    </nav>
   );
 }

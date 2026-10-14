@@ -82,6 +82,18 @@
         ],
         "type": "object"
       },
+      "ArticleCommentDto": {
+        "properties": {
+          "body": {
+            "description": "The comment, up to 1,000 characters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "type": "object"
+      },
       "AssignEvangelismContactDto": {
         "properties": {
           "assigneeMemberId": {
@@ -624,6 +636,10 @@
             "description": "Markdown, the same subset announcements use",
             "type": "string"
           },
+          "coverImageUrl": {
+            "description": "Cover picture, from POST /articles/cover",
+            "type": "object"
+          },
           "endVerseId": {
             "example": 45008039,
             "type": "number"
@@ -640,6 +656,10 @@
             "description": "First verse of the passage this came from",
             "example": 45001001,
             "type": "number"
+          },
+          "subtitle": {
+            "description": "A one-line subtitle under the title",
+            "type": "object"
           },
           "title": {
             "example": "What Romans 8 showed me this week",
@@ -1634,6 +1654,7 @@
           "savedStatus": {
             "enum": [
               "YES",
+              "REDEDICATED",
               "NO",
               "ALREADY"
             ],
@@ -2416,6 +2437,91 @@
         ],
         "type": "object"
       },
+      "ProfileCommentDto": {
+        "properties": {
+          "body": {
+            "description": "Something nice about the member, up to 500 characters",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "type": "object"
+      },
+      "ProfileRoleDto": {
+        "properties": {
+          "org": {
+            "description": "Where, written as a handle or a name",
+            "example": "sparkpayhq",
+            "type": "object"
+          },
+          "title": {
+            "example": "CEO",
+            "type": "string"
+          },
+          "url": {
+            "example": "https://sparkpay.co",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "ProfileVisibilityDto": {
+        "properties": {
+          "birthday": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "career": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "journey": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "phone": {
+            "description": "Phone number: PRIVATE unless the member opens it",
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "profile": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "socials": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          },
+          "testimony": {
+            "enum": [
+              "MEMBERS",
+              "PRIVATE"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "ProgressDto": {
         "properties": {
           "completed": {
@@ -2429,6 +2535,27 @@
         },
         "required": [
           "positionSec"
+        ],
+        "type": "object"
+      },
+      "PublicArticleCommentDto": {
+        "properties": {
+          "body": {
+            "description": "The comment, up to 1,000 characters",
+            "type": "string"
+          },
+          "name": {
+            "description": "The name the visitor gives",
+            "type": "string"
+          },
+          "website": {
+            "description": "Left empty by people; bots fill it in",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "name"
         ],
         "type": "object"
       },
@@ -2483,6 +2610,7 @@
           "savedStatus": {
             "enum": [
               "YES",
+              "REDEDICATED",
               "NO",
               "ALREADY"
             ],
@@ -2709,6 +2837,17 @@
         ],
         "type": "object"
       },
+      "ResolveReviewNoteDto": {
+        "properties": {
+          "resolved": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "resolved"
+        ],
+        "type": "object"
+      },
       "ReviewArticleDto": {
         "properties": {
           "note": {
@@ -2746,6 +2885,26 @@
         },
         "required": [
           "outcome"
+        ],
+        "type": "object"
+      },
+      "ReviewNoteDto": {
+        "properties": {
+          "body": {
+            "description": "The comment, up to 2,000 characters",
+            "type": "string"
+          },
+          "quote": {
+            "description": "The highlighted words the comment is about",
+            "type": "object"
+          },
+          "suggestion": {
+            "description": "Suggested wording to replace the highlighted words",
+            "type": "object"
+          }
+        },
+        "required": [
+          "body"
         ],
         "type": "object"
       },
@@ -3132,6 +3291,18 @@
         },
         "type": "object"
       },
+      "SpouseRequestDto": {
+        "properties": {
+          "memberId": {
+            "description": "The member being asked to confirm they are my spouse",
+            "type": "string"
+          }
+        },
+        "required": [
+          "memberId"
+        ],
+        "type": "object"
+      },
       "StreakDto": {
         "properties": {
           "history": {
@@ -3388,6 +3559,10 @@
           "body": {
             "type": "string"
           },
+          "coverImageUrl": {
+            "description": "Cover picture, from POST /articles/cover",
+            "type": "object"
+          },
           "endVerseId": {
             "type": "object"
           },
@@ -3409,6 +3584,10 @@
               "ARCHIVED"
             ],
             "type": "string"
+          },
+          "subtitle": {
+            "description": "A one-line subtitle under the title",
+            "type": "object"
           },
           "title": {
             "type": "string"
@@ -3568,6 +3747,7 @@
           "savedStatus": {
             "enum": [
               "YES",
+              "REDEDICATED",
               "NO",
               "ALREADY"
             ],
@@ -3979,8 +4159,21 @@
             "example": "opeyemi.peter",
             "type": "object"
           },
+          "maritalStatus": {
+            "description": "SINGLE also removes any spouse link, for both members.",
+            "enum": [
+              "SINGLE",
+              "MARRIED"
+            ],
+            "type": "string"
+          },
           "phone": {
             "example": "+234 801 234 5678",
+            "type": "object"
+          },
+          "spouseName": {
+            "description": "A spouse who is not a church member. A member spouse is linked by request instead.",
+            "example": "Funke Peter",
             "type": "object"
           },
           "tiktok": {
@@ -3992,7 +4185,7 @@
             "type": "object"
           },
           "weddingAnniversary": {
-            "description": "Pass null to clear it and mark the member as single.",
+            "description": "Pass null to clear it. Marital status is its own field.",
             "example": "2015-06-20",
             "type": "object"
           }
@@ -4013,6 +4206,89 @@
         "required": [
           "status"
         ],
+        "type": "object"
+      },
+      "UpdateProfileDetailsDto": {
+        "properties": {
+          "bornAgainYear": {
+            "type": "object"
+          },
+          "employer": {
+            "type": "object"
+          },
+          "favouriteVerse": {
+            "type": "object"
+          },
+          "favouriteVerseRef": {
+            "example": "Psalm 23:1",
+            "type": "object"
+          },
+          "gifts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "headline": {
+            "example": "Civil engineer · Choir member · Lover of the Psalms",
+            "type": "object"
+          },
+          "holySpiritYear": {
+            "type": "object"
+          },
+          "industry": {
+            "type": "object"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "membershipClassYear": {
+            "type": "object"
+          },
+          "occupation": {
+            "type": "object"
+          },
+          "openTo": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "prayerFocus": {
+            "type": "object"
+          },
+          "roles": {
+            "description": "What you do, e.g. CEO @sparkpayhq, Lead Pastor @everlastinghills (up to 8)",
+            "items": {
+              "$ref": "#/components/schemas/ProfileRoleDto"
+            },
+            "type": "array"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "testimony": {
+            "type": "object"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/ProfileVisibilityDto"
+          },
+          "waterBaptismYear": {
+            "type": "object"
+          }
+        },
         "type": "object"
       },
       "UpdateQuestionStatusDto": {
@@ -7137,6 +7413,28 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Search titles, subtitles and passages",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tab",
+            "required": false,
+            "schema": {
+              "enum": [
+                "for-you",
+                "featured",
+                "saved"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -7287,7 +7585,7 @@
             "access-token": []
           }
         ],
-        "summary": "Delete your own article",
+        "summary": "Delete an article: its author, or a pastor or admin",
         "tags": [
           "articles"
         ]
@@ -7418,6 +7716,116 @@
           }
         ],
         "summary": "Approve a piece waiting for review, which publishes it",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}/bookmark": {
+      "delete": {
+        "operationId": "ArticlesController_unbookmark",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Take an article off my saved list",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "ArticlesController_bookmark",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Save a published article to read later",
         "tags": [
           "articles"
         ]
@@ -7709,6 +8117,262 @@
         ]
       }
     },
+    "/articles/{id}/review-notes": {
+      "get": {
+        "operationId": "ArticlesController_reviewNotes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Private notes between the author and reviewers, oldest first",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "ArticlesController_addReviewNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Comment on an article, or on a highlighted passage with suggested wording, without approving or returning it",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{id}/review-notes/{noteId}": {
+      "delete": {
+        "operationId": "ArticlesController_deleteReviewNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Delete a review note you wrote",
+        "tags": [
+          "articles"
+        ]
+      },
+      "patch": {
+        "operationId": "ArticlesController_resolveReviewNote",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "noteId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveReviewNoteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Mark a review note dealt with, or open it again",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
     "/articles/{slug}": {
       "get": {
         "operationId": "ArticlesController_bySlug",
@@ -7760,6 +8424,372 @@
           }
         ],
         "summary": "One article. A draft is visible to its author alone.",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/{slug}/comments": {
+      "get": {
+        "operationId": "ArticlesController_comments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Comments on a published article, with which ones I may remove",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "ArticlesController_comment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleCommentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Comment on a published article as a member",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/comments/{commentId}": {
+      "delete": {
+        "operationId": "ArticlesController_deleteComment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove a comment: its writer, the article's author, or a pastor or admin",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/cover": {
+      "post": {
+        "operationId": "ArticlesController_cover",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Upload an article cover picture (JPG, PNG or WebP, up to 5 MB); returns its URL",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/manage/comments": {
+      "get": {
+        "operationId": "ArticlesController_manageComments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The newest comments on articles, for pastors and admins to moderate",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/articles/manage/list": {
+      "get": {
+        "operationId": "ArticlesController_manageList",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Every article in every state, for pastors and admins to manage",
         "tags": [
           "articles"
         ]
@@ -11074,6 +12104,116 @@
         ]
       }
     },
+    "/books/me/{id}/read": {
+      "delete": {
+        "operationId": "BooksController_unmarkRead",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Unmark a book as read (MEMBER+)",
+        "tags": [
+          "books"
+        ]
+      },
+      "post": {
+        "operationId": "BooksController_markRead",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Mark a book as read; it counts towards reading badges (MEMBER+)",
+        "tags": [
+          "books"
+        ]
+      }
+    },
     "/books/me/comments/{commentId}": {
       "delete": {
         "operationId": "BooksController_deleteComment",
@@ -11125,6 +12265,53 @@
           }
         ],
         "summary": "Delete my comment (or any comment, if PASTOR+)",
+        "tags": [
+          "books"
+        ]
+      }
+    },
+    "/books/me/read": {
+      "get": {
+        "operationId": "BooksController_myRead",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The ids of the books I have marked as read (MEMBER+)",
         "tags": [
           "books"
         ]
@@ -15361,6 +16548,7 @@
             "schema": {
               "enum": [
                 "YES",
+                "REDEDICATED",
                 "NO",
                 "ALREADY"
               ],
@@ -16033,6 +17221,57 @@
         ]
       }
     },
+    "/evangelism/form/workers": {
+      "get": {
+        "operationId": "EvangelismFormController_workers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Members whose name matches what was typed (2+ letters), for the public evangelism form",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
     "/evangelism/me": {
       "get": {
         "operationId": "EvangelismController_me",
@@ -16075,6 +17314,53 @@
           }
         ],
         "summary": "Whether I am on the Evangelism Team, and whether I lead it",
+        "tags": [
+          "evangelism"
+        ]
+      }
+    },
+    "/evangelism/mine/tally": {
+      "get": {
+        "operationId": "EvangelismController_myTally",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "How many people I have preached to, and how many were saved",
         "tags": [
           "evangelism"
         ]
@@ -24395,6 +25681,198 @@
         ]
       }
     },
+    "/members/{id}/comments": {
+      "get": {
+        "operationId": "MembersFamilyController_comments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Kind words written on a member's profile, newest first",
+        "tags": [
+          "members"
+        ]
+      },
+      "post": {
+        "operationId": "MembersFamilyController_comment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileCommentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Write something nice about a member, on their profile",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/{id}/comments/{commentId}": {
+      "delete": {
+        "operationId": "MembersFamilyController_deleteComment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove a comment: its writer, the profile owner, or a pastor or admin",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/{id}/follow-up": {
       "post": {
         "operationId": "MembersPastoralController_addFollowUp",
@@ -24464,6 +25942,116 @@
         ]
       }
     },
+    "/members/{id}/like": {
+      "delete": {
+        "operationId": "MembersFamilyController_unlike",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Take back a like on a member's profile",
+        "tags": [
+          "members"
+        ]
+      },
+      "post": {
+        "operationId": "MembersFamilyController_like",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Like a member's profile",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/{id}/pastor-note": {
       "post": {
         "operationId": "MembersPastoralController_addPastorNote",
@@ -24527,6 +26115,62 @@
           }
         ],
         "summary": "Add pastor note for a member (PASTOR+)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/{id}/profile": {
+      "get": {
+        "operationId": "MembersFamilyController_profile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A member's profile as the church family sees it, with their figures, badges, articles and likes: no phone, email or address (MEMBER+)",
         "tags": [
           "members"
         ]
@@ -25382,6 +27026,70 @@
         ]
       }
     },
+    "/members/family": {
+      "get": {
+        "operationId": "MembersFamilyController_directory",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Active members by name, a page at a time, for the church family directory (MEMBER+)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/follow-up/{taskId}": {
       "delete": {
         "operationId": "MembersPastoralController_deleteFollowUp",
@@ -25895,6 +27603,114 @@
         ]
       }
     },
+    "/members/me/cover": {
+      "delete": {
+        "operationId": "MembersSelfServiceController_clearMyCover",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove my profile banner, back to the church colours",
+        "tags": [
+          "members"
+        ]
+      },
+      "post": {
+        "operationId": "MembersSelfServiceController_uploadMyCover",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Uploaded; returns the new coverUrl"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Upload the banner across the top of my profile (PNG/JPG, ≤ 5 MB)",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/me/deactivate": {
       "post": {
         "operationId": "MembersSelfServiceController_deactivateMe",
@@ -25948,6 +27764,108 @@
         ]
       }
     },
+    "/members/me/profile-details": {
+      "get": {
+        "operationId": "MembersFamilyController_myDetails",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "My spiritual and career profile, with who may see each part",
+        "tags": [
+          "members"
+        ]
+      },
+      "put": {
+        "operationId": "MembersFamilyController_updateMyDetails",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDetailsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Update my spiritual and career profile, and who may see each part",
+        "tags": [
+          "members"
+        ]
+      }
+    },
     "/members/me/reactivate": {
       "post": {
         "operationId": "MembersSelfServiceController_reactivateMe",
@@ -25990,6 +27908,312 @@
           }
         ],
         "summary": "Reactivate my own (self-deactivated) account",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/spouse": {
+      "delete": {
+        "operationId": "MembersFamilyController_unlinkSpouse",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove my spouse link, for both of us",
+        "tags": [
+          "members"
+        ]
+      },
+      "get": {
+        "operationId": "MembersFamilyController_mySpouse",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "My marital status, spouse, and spouse requests waiting on me or them",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/spouse-requests": {
+      "delete": {
+        "operationId": "MembersFamilyController_cancelSpouseRequest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Withdraw the spouse request I sent",
+        "tags": [
+          "members"
+        ]
+      },
+      "post": {
+        "operationId": "MembersFamilyController_requestSpouse",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpouseRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Ask a member to confirm they are my spouse",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/spouse-requests/{id}/accept": {
+      "post": {
+        "operationId": "MembersFamilyController_acceptSpouse",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Confirm I am married to the member who asked",
+        "tags": [
+          "members"
+        ]
+      }
+    },
+    "/members/me/spouse-requests/{id}/decline": {
+      "post": {
+        "operationId": "MembersFamilyController_declineSpouse",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Decline a spouse request",
         "tags": [
           "members"
         ]
@@ -27510,6 +29734,226 @@
         "summary": "Email a pledger their private tracking link again",
         "tags": [
           "pledges"
+        ]
+      }
+    },
+    "/public/articles": {
+      "get": {
+        "operationId": "PublicArticlesController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Published articles for the public blog, featured first, newest next",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/public/articles/{slug}": {
+      "get": {
+        "operationId": "PublicArticlesController_read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "One published article, for the public blog",
+        "tags": [
+          "articles"
+        ]
+      }
+    },
+    "/public/articles/{slug}/comments": {
+      "get": {
+        "operationId": "PublicArticlesController_comments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Comments on a published article, newest first",
+        "tags": [
+          "articles"
+        ]
+      },
+      "post": {
+        "operationId": "PublicArticlesController_comment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublicArticleCommentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Comment on a published article as a visitor, with a name",
+        "tags": [
+          "articles"
         ]
       }
     },

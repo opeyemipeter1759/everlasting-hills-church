@@ -1,6 +1,9 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  UploadedFile,
+  UseInterceptors,
   Delete,
   Get,
   Header,
@@ -9,8 +12,14 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { hasValidFileSignature } from '../uploads/file-signature.util';
+import { UploadsService } from '../uploads/uploads.service';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiQuery,
   ApiTags,
@@ -21,12 +30,17 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { ArticlesService } from './articles.service';
 import {
+  ArticleCommentDto,
+  ResolveReviewNoteDto,
+  ReviewNoteDto,
   CreateArticleDto,
   RequestChangesDto,
   ReviewArticleDto,
   UpdateArticleDto,
 } from './dto/article.dto';
 import { ArticleReviewService } from './article-review.service';
+import { ArticleBlogService } from './article-blog.service';
+import { ArticleReviewNotesService } from './article-review-notes.service';
 
 /**
  * Member written articles: what people are learning, published to the church.
@@ -43,7 +57,100 @@ export class ArticlesController {
   constructor(
     private readonly articles: ArticlesService,
     private readonly review: ArticleReviewService,
+    private readonly blog: ArticleBlogService,
+    private readonly uploads: UploadsService,
+    private readonly notes: ArticleReviewNotesService,
   ) {}
+
+  @Get(':id/review-notes')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({ summary: 'Private notes between the author and reviewers, oldest first' })
+  reviewNotes(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.notes.list(actor, id);
+  }
+
+  @Post(':id/review-notes')
+  @ApiOperation({
+    summary: 'Comment on an article, or on a highlighted passage with suggested wording, without approving or returning it',
+  })
+  addReviewNote(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: ReviewNoteDto) {
+    return this.notes.add(actor, id, body);
+  }
+
+  @Patch(':id/review-notes/:noteId')
+  @ApiOperation({ summary: 'Mark a review note dealt with, or open it again' })
+  resolveReviewNote(
+    @CurrentUser() actor: AuthUser,
+    @Param('id') id: string,
+    @Param('noteId') noteId: string,
+    @Body() body: ResolveReviewNoteDto,
+  ) {
+    return this.notes.resolve(actor, id, noteId, body.resolved);
+  }
+
+  @Delete(':id/review-notes/:noteId')
+  @ApiOperation({ summary: 'Delete a review note you wrote' })
+  deleteReviewNote(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Param('noteId') noteId: string) {
+    return this.notes.remove(actor, id, noteId);
+  }
+
+  /** A cover picture for an article, uploaded before the article is saved. */
+  @Post('cover')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiOperation({ summary: 'Upload an article cover picture (JPG, PNG or WebP, up to 5 MB); returns its URL' })
+  async cover(
+    @UploadedFile() file: { buffer: Buffer; mimetype: string; originalname: string; size: number } | undefined,
+  ) {
+    if (!file) throw new BadRequestException('No file provided');
+    if (file.size > 5 * 1024 * 1024) throw new BadRequestException('Choose a picture under 5 MB');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      throw new BadRequestException('Choose a JPG, PNG or WebP picture');
+    }
+    if (!hasValidFileSignature(file)) throw new BadRequestException('That picture does not match its declared format');
+    return this.uploads.uploadObject(file, 'article-covers');
+  }
+
+  // Declared before :slug routes, which would otherwise take "manage" as a slug.
+  @Get('manage/list')
+  @ApiOperation({ summary: 'Every article in every state, for pastors and admins to manage' })
+  @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'q', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  manageList(
+    @CurrentUser() actor: AuthUser,
+    @Query('status') status?: string,
+    @Query('q') q?: string,
+    @Query('page') page?: string,
+  ) {
+    return this.blog.adminList(actor, { status, q, page: Number(page) || 1 });
+  }
+
+  @Get('manage/comments')
+  @ApiOperation({ summary: 'The newest comments on articles, for pastors and admins to moderate' })
+  manageComments(@CurrentUser() actor: AuthUser) {
+    return this.blog.recentComments(actor);
+  }
+
+  @Delete('comments/:commentId')
+  @ApiOperation({ summary: "Remove a comment: its writer, the article's author, or a pastor or admin" })
+  deleteComment(@CurrentUser() actor: AuthUser, @Param('commentId') commentId: string) {
+    return this.blog.deleteComment(commentId, actor);
+  }
+
+  @Get(':slug/comments')
+  @ApiOperation({ summary: 'Comments on a published article, with which ones I may remove' })
+  @ApiQuery({ name: 'page', required: false })
+  comments(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Query('page') page?: string) {
+    return this.blog.comments(slug, Number(page) || 1, actor);
+  }
+
+  @Post(':slug/comments')
+  @ApiOperation({ summary: 'Comment on a published article as a member' })
+  comment(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Body() body: ArticleCommentDto) {
+    return this.blog.comment(slug, { body: body.body }, actor);
+  }
 
   @Get()
   @Header('Cache-Control', 'no-store')
@@ -53,16 +160,22 @@ export class ArticlesController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'authorId', required: false })
+  @ApiQuery({ name: 'q', required: false, description: 'Search titles, subtitles and passages' })
+  @ApiQuery({ name: 'tab', required: false, enum: ['for-you', 'featured', 'saved'] })
   feed(
     @CurrentUser() actor: AuthUser,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('authorId') authorId?: string,
+    @Query('q') q?: string,
+    @Query('tab') tab?: string,
   ) {
     return this.articles.feed(actor, {
       page: Number(page) || 1,
       limit: Number(limit) || 20,
       authorId,
+      q,
+      tab,
     });
   }
 
@@ -125,8 +238,20 @@ export class ArticlesController {
     return this.articles.update(actor, id, body);
   }
 
+  @Post(':id/bookmark')
+  @ApiOperation({ summary: 'Save a published article to read later' })
+  bookmark(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.articles.setBookmark(actor, id, true);
+  }
+
+  @Delete(':id/bookmark')
+  @ApiOperation({ summary: 'Take an article off my saved list' })
+  unbookmark(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
+    return this.articles.setBookmark(actor, id, false);
+  }
+
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete your own article' })
+  @ApiOperation({ summary: 'Delete an article: its author, or a pastor or admin' })
   remove(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
     return this.articles.remove(actor, id);
   }

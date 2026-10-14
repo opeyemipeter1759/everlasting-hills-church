@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" role="img">
+<defs><linearGradient id="books" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#87102C"/>
+    <stop offset="1" stop-color="#4A0817"/>
+  </linearGradient></defs>
+<rect width="800" height="400" fill="url(#books)"/>
+  <g><text x="310.5" y="70.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">Hebrews</text>
+  <rect x="320.5" y="54.9" width="125.1" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="451.6" y="69.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">13</text>
+  <text x="310.5" y="118.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">James</text>
+  <rect x="320.5" y="102.9" width="77.6" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="404.1" y="117.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">5</text>
+  <text x="310.5" y="166.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">1 Peter</text>
+  <rect x="320.5" y="150.9" width="77.6" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="404.1" y="165.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">5</text>
+  <text x="310.5" y="214.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">2 Peter</text>
+  <rect x="320.5" y="198.9" width="60.1" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="386.6" y="213.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">3</text>
+  <text x="573.8" y="70.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">1 John</text>
+  <rect x="583.8" y="54.9" width="84.2" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="674.0" y="69.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">5</text>
+  <text x="573.8" y="118.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">2 John</text>
+  <rect x="583.8" y="102.9" width="37.7" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="627.5" y="117.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">1</text>
+  <text x="573.8" y="166.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="0.9">3 John</text>
+  <rect x="583.8" y="150.9" width="37.7" height="18.2" rx="9.1" fill="#FFF4F6" fill-opacity="0.55"/>
+  <text x="627.5" y="165.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">1</text>
+  <text x="573.8" y="214.7" text-anchor="end" font-family="Georgia, serif" font-size="19.0" fill="#FFF4F6" fill-opacity="1">Jude</text>
+  <rect x="583.8" y="198.9" width="37.7" height="18.2" rx="9.1" fill="#E8B44A" fill-opacity="0.95"/>
+  <text x="627.5" y="213.7" font-family="Georgia, serif" font-size="13.7" fill="#E8B44A" fill-opacity="0.9">1</text></g>
+</svg>

@@ -13,3 +13,9 @@ export function startOfLagosQuarter(now: Date = new Date()): Date {
   const month = Math.floor(lagos.getUTCMonth() / 3) * 3;
   return new Date(Date.UTC(lagos.getUTCFullYear(), month, 1) - LAGOS_OFFSET_MS);
 }
+
+/** Midnight on 1 January of the current year in Lagos. */
+export function startOfLagosYear(now: Date = new Date()): Date {
+  const lagos = new Date(now.getTime() + LAGOS_OFFSET_MS);
+  return new Date(Date.UTC(lagos.getUTCFullYear(), 0, 1) - LAGOS_OFFSET_MS);
+}

@@ -27,14 +27,23 @@ import { BirthdayGreetingsService } from './services/birthday-greetings.service'
 import { MemberPastoralCareService } from './services/member-pastoral-care.service';
 import { MemberRiskService } from './services/member-risk.service';
 
+import { InboxModule } from '../inbox/inbox.module';
+import { MembersFamilyController } from './controllers/members-family.controller';
+import { MemberSpouseService } from './services/member-spouse.service';
+import { MemberFamilyService } from './services/member-family.service';
+import { MemberActivityService } from './services/member-activity.service';
+import { ProfileSocialService } from './services/profile-social.service';
+import { MemberProfileDetailsService } from './services/member-profile-details.service';
+
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, InboxModule],
   // Order matters: MembersController owns the GET /:id catch-all, so it must be
   // registered last — otherwise it would swallow specific routes like /search,
   // /absent, /at-risk, /follow-ups declared on the other controllers below.
   controllers: [
     MembersOnboardingController,
     MembersSelfServiceController,
+    MembersFamilyController,
     MembersPastoralController,
     MembersBirthdayGreetingsController,
     MembersController,
@@ -44,6 +53,11 @@ import { MemberRiskService } from './services/member-risk.service';
     MemberAuthProvisioningService,
     MemberBulkImportService,
     MemberHouseholdService,
+    MemberSpouseService,
+    MemberFamilyService,
+    MemberActivityService,
+    ProfileSocialService,
+    MemberProfileDetailsService,
     MemberBulkOpsService,
     MemberSelfLookupService,
     MemberProfileService,

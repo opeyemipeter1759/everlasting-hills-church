@@ -17,6 +17,8 @@ import TodayReadingCard from "../reading-plan/TodayReadingCard";
 import DailyScriptureCard from "./DailyScriptureCard";
 import { PledgeAppeal } from "./PledgeAppeal";
 import { PushOptInCard } from "./PushOptInCard";
+import { EvangelismTallyCard } from "./EvangelismTallyCard";
+import { SpouseRequestsInbox } from "@/components/dashboard/settings/SpouseLink";
 import LatestSermonSummary from "@/components/sermon-digest/LatestSermonSummary";
 
 const DEFAULT_STREAK: StreakState = {
@@ -66,6 +68,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     <div className="space-y-5 max-w-full">
       <ProfileCompletionToast member={member} />
       <QrCheckinBanner />
+      <SpouseRequestsInbox />
       <WelcomeHero
         firstName={firstName}
         initials={initials}
@@ -87,6 +90,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
       />
 
       <QuickActionsStrip />
+
+      <EvangelismTallyCard />
 
       {/* Side by side from lg up: the reading and the day's word are read together. */}
         <TodayReadingCard />

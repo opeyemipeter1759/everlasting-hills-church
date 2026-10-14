@@ -18,6 +18,9 @@ interface MeResponse {
     address: string | null;
     dateOfBirth: string | null;
     weddingAnniversary: string | null;
+    maritalStatus?: "SINGLE" | "MARRIED";
+    spouseName?: string | null;
+    spouse?: { id: string; name: string; photoUrl: string | null } | null;
     gender: string | null;
     instagram: string | null;
     facebook: string | null;
@@ -43,6 +46,7 @@ export default async function SettingsPage() {
   }
 
   const user = {
+    id: me.member?.id ?? null,
     firstName: me.member?.firstName ?? null,
     lastName: me.member?.lastName ?? null,
     email: me.member?.email ?? null,
@@ -53,6 +57,9 @@ export default async function SettingsPage() {
     gender: me.member?.gender ?? null,
     dateOfBirth: me.member?.dateOfBirth ?? null,
     weddingAnniversary: me.member?.weddingAnniversary ?? null,
+    maritalStatus: me.member?.maritalStatus ?? null,
+    spouseName: me.member?.spouseName ?? null,
+    hasLinkedSpouse: !!me.member?.spouse,
     instagram: me.member?.instagram ?? null,
     facebook: me.member?.facebook ?? null,
     twitter: me.member?.twitter ?? null,

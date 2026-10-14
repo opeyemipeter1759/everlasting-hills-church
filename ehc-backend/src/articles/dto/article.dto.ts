@@ -8,6 +8,7 @@ import {
   MaxLength,
   Min,
   MinLength,
+  IsUrl,
 } from 'class-validator';
 
 export class CreateArticleDto {
@@ -39,8 +40,20 @@ export class CreateArticleDto {
   @ApiPropertyOptional({ example: 'Romans 8' })
   @IsOptional()
   @IsString()
-  @MaxLength(120)
+  @MaxLength(300)
   scriptureLabel?: string;
+
+  @ApiPropertyOptional({ description: 'A one-line subtitle under the title' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  subtitle?: string | null;
+
+  @ApiPropertyOptional({ description: 'Cover picture, from POST /articles/cover' })
+  @IsOptional()
+  @IsUrl({ protocols: ['https'], require_protocol: true })
+  @MaxLength(1000)
+  coverImageUrl?: string | null;
 
   @ApiPropertyOptional({
     description:
@@ -88,8 +101,20 @@ export class UpdateArticleDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  @MaxLength(120)
+  @MaxLength(300)
   scriptureLabel?: string | null;
+
+  @ApiPropertyOptional({ description: 'A one-line subtitle under the title' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  subtitle?: string | null;
+
+  @ApiPropertyOptional({ description: 'Cover picture, from POST /articles/cover' })
+  @IsOptional()
+  @IsUrl({ protocols: ['https'], require_protocol: true })
+  @MaxLength(1000)
+  coverImageUrl?: string | null;
 
   @ApiPropertyOptional({
     enum: ['DRAFT', 'PENDING_REVIEW', 'PUBLISHED', 'ARCHIVED'],
@@ -128,4 +153,49 @@ export class RequestChangesDto {
   @MinLength(3)
   @MaxLength(1_000)
   note!: string;
+}
+
+export class ArticleCommentDto {
+  @ApiProperty({ description: 'The comment, up to 1,000 characters' })
+  @IsString()
+  @MaxLength(1000)
+  body!: string;
+}
+
+export class PublicArticleCommentDto extends ArticleCommentDto {
+  @ApiProperty({ description: 'The name the visitor gives' })
+  @IsString()
+  @MaxLength(60)
+  name!: string;
+
+  @ApiPropertyOptional({ description: 'Left empty by people; bots fill it in' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  website?: string;
+}
+
+export class ReviewNoteDto {
+  @ApiProperty({ description: 'The comment, up to 2,000 characters' })
+  @IsString()
+  @MaxLength(2000)
+  body!: string;
+
+  @ApiPropertyOptional({ description: 'The highlighted words the comment is about' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  quote?: string | null;
+
+  @ApiPropertyOptional({ description: 'Suggested wording to replace the highlighted words' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  suggestion?: string | null;
+}
+
+export class ResolveReviewNoteDto {
+  @ApiProperty()
+  @IsBoolean()
+  resolved!: boolean;
 }

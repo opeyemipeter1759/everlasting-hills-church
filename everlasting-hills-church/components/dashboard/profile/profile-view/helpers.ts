@@ -29,9 +29,9 @@ export function fmtDayMonth(iso: string | null): string | null {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
 }
 
-/** weddingAnniversary doubles as the "are they married" signal — there's no separate boolean field. */
-export function maritalStatus(weddingAnniversary: string | null): "Married" | "Single" {
-  return weddingAnniversary ? "Married" : "Single";
+/** Marital status is its own field; older records only had the wedding date. */
+export function isMarried(p: { maritalStatus?: "SINGLE" | "MARRIED" | null; weddingAnniversary: string | null }): boolean {
+  return p.maritalStatus ? p.maritalStatus === "MARRIED" : !!p.weddingAnniversary;
 }
 
 export function computeAge(dateOfBirth: string | null): number | null {

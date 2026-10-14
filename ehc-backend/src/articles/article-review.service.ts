@@ -32,6 +32,9 @@ const OVERSEEING_ROLES: Role[] = [
   Role.SUPER_ADMIN,
 ];
 
+/** Told of every submission alongside the head of comms. */
+const ADMIN_REVIEWERS: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
+
 /**
  * Review of member articles before the church reads them.
  *
@@ -259,18 +262,18 @@ export class ArticleReviewService {
           .filter((id) => id !== article.authorId);
       }
 
-      if (reviewerIds.length === 0) {
-        const grants = await this.prisma.roleGrant.findMany({
-          where: {
-            tenantId: this.tenantId,
-            endedAt: null,
-            role: { in: OVERSEEING_ROLES },
-            userId: { not: article.authorId },
-          },
-          select: { userId: true },
-        });
-        reviewerIds = grants.map((g) => g.userId);
-      }
+      // The head of comms (the Content Writing Team's department) and the
+      // church admins both hear a piece is waiting, so it never sits unseen.
+      const grants = await this.prisma.roleGrant.findMany({
+        where: {
+          tenantId: this.tenantId,
+          endedAt: null,
+          role: { in: reviewerIds.length === 0 ? OVERSEEING_ROLES : ADMIN_REVIEWERS },
+          userId: { not: article.authorId },
+        },
+        select: { userId: true },
+      });
+      reviewerIds = [...reviewerIds, ...grants.map((g) => g.userId)];
 
       const recipients = Array.from(new Set(reviewerIds)).filter(
         (pid) => pid !== article.authorId,
@@ -337,6 +340,15 @@ export class ArticleReviewService {
    * A failed notification must not undo a review that already happened, so
    * it is logged rather than thrown.
    */
+  /** Tells the author their story is off the site until it is approved again. */
+  async notifyTakenDown(article: { authorId: string; title: string; slug: string }) {
+    await this.notify(article.authorId, {
+      title: 'Your story is waiting for approval again',
+      body: `"${article.title}" was taken off the site by an admin and is back in review.`,
+      link: `/dashboard/articles/${article.slug}`,
+    });
+  }
+
   private async notify(
     profileId: string,
     message: { title: string; body: string; link: string },

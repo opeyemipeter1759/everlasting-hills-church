@@ -1,7 +1,8 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
+import { apiClient } from "@/lib/api/axios";
 
 /**
  * Member written articles.
@@ -16,7 +17,7 @@ export type ArticleStatus = "DRAFT" | "PENDING_REVIEW" | "PUBLISHED" | "ARCHIVED
 
 export interface ArticleAuthor {
   id: string;
-  Member: { firstName: string | null; lastName: string | null; photoUrl: string | null } | null;
+  Member: { id?: string; firstName: string | null; lastName: string | null; photoUrl: string | null } | null;
 }
 
 export interface ArticleCard {
@@ -24,6 +25,8 @@ export interface ArticleCard {
   slug: string;
   title: string;
   excerpt: string | null;
+  /** The author's own subtitle; show the excerpt when there is none. */
+  subtitle?: string | null;
   coverImageUrl: string | null;
   scriptureLabel: string | null;
   readingMinutes: number;
@@ -32,6 +35,8 @@ export interface ArticleCard {
   publishedAt: string | null;
   Author: ArticleAuthor | null;
   likedByMe: boolean;
+  bookmarkedByMe?: boolean;
+  commentCount?: number;
 }
 
 export interface Article extends ArticleCard {
@@ -58,6 +63,8 @@ export interface MyArticle {
   slug: string;
   title: string;
   excerpt: string | null;
+  subtitle?: string | null;
+  coverImageUrl?: string | null;
   status: ArticleStatus;
   scriptureLabel: string | null;
   readingMinutes: number;
@@ -111,15 +118,59 @@ export function useReviewArticle() {
   });
 }
 
-export function useArticleFeed(page = 1, authorId?: string) {
+export type FeedTab = "for-you" | "featured" | "saved";
+
+export function useArticleFeed(page = 1, authorId?: string, options: { tab?: FeedTab; q?: string; limit?: number } = {}) {
+  const tab = options.tab ?? "for-you";
+  const q = options.q?.trim() ?? "";
   return useQuery({
-    queryKey: [...FEED_KEY, page, authorId ?? "all"],
+    queryKey: [...FEED_KEY, page, authorId ?? "all", tab, q.toLowerCase(), options.limit ?? 20],
     queryFn: () =>
-      api.get<ArticleFeed>(
-        `/articles?page=${page}&limit=20${authorId ? `&authorId=${authorId}` : ""}`,
-      ),
+      api.get<ArticleFeed>("/articles", {
+        page,
+        limit: options.limit ?? 20,
+        authorId: authorId || undefined,
+        tab: tab === "for-you" ? undefined : tab,
+        q: q || undefined,
+      }),
     staleTime: 60 * 1000,
+    placeholderData: keepPreviousData,
   });
+}
+
+/** Save a piece to read later, applied to the cache first like a like. */
+export function useSetArticleBookmark() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, saved }: { id: string; saved: boolean; slug?: string }) =>
+      saved ? api.post(`/articles/${id}/bookmark`) : api.delete(`/articles/${id}/bookmark`),
+    onMutate: async ({ id, saved, slug }) => {
+      await qc.cancelQueries({ queryKey: FEED_KEY });
+      const previous = qc.getQueriesData({ queryKey: FEED_KEY });
+      qc.setQueriesData<ArticleFeed>({ queryKey: FEED_KEY }, (old) =>
+        old ? { ...old, articles: old.articles.map((a) => (a.id === id ? { ...a, bookmarkedByMe: saved } : a)) } : old,
+      );
+      const oneKey = ["articles", "one", slug] as const;
+      const previousOne = slug ? qc.getQueryData<Article>(oneKey) : undefined;
+      if (slug && previousOne) qc.setQueryData<Article>(oneKey, { ...previousOne, bookmarkedByMe: saved });
+      return { previous, previousOne, slug };
+    },
+    onError: (_err, _vars, context) => {
+      context?.previous?.forEach(([key, data]) => qc.setQueryData(key, data));
+      if (context?.slug && context.previousOne) qc.setQueryData(["articles", "one", context.slug], context.previousOne);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: FEED_KEY }),
+  });
+}
+
+/** Upload a cover picture; the URL goes on the article when it is saved. */
+export async function uploadArticleCover(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await apiClient.post<{ url: string }>("/articles/cover", fd, {
+    headers: { "Content-Type": undefined as unknown as string },
+  });
+  return res.data.url;
 }
 
 /** One article. A draft comes back only for its author. */
@@ -142,6 +193,8 @@ export function useMyArticles() {
 export interface ArticleDraft {
   title: string;
   body: string;
+  subtitle?: string | null;
+  coverImageUrl?: string | null;
   startVerseId?: number;
   endVerseId?: number;
   scriptureLabel?: string;
@@ -176,6 +229,8 @@ export interface ArticleEdit {
   startVerseId?: number | null;
   endVerseId?: number | null;
   scriptureLabel?: string | null;
+  subtitle?: string | null;
+  coverImageUrl?: string | null;
   status?: ArticleStatus;
 }
 
@@ -297,4 +352,54 @@ export function authorInitials(author: ArticleAuthor | null | undefined): string
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
+}
+
+/** A private note between the author and reviewers, maybe about a highlighted passage. */
+export interface ReviewNote {
+  id: string;
+  authorName: string;
+  fromReviewer: boolean;
+  body: string;
+  quote: string | null;
+  suggestion: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  mine: boolean;
+}
+
+const notesKey = (articleId: string) => ["articles", "review-notes", articleId] as const;
+
+export function useReviewNotes(articleId: string | undefined, enabled: boolean) {
+  return useQuery({
+    queryKey: notesKey(articleId ?? ""),
+    queryFn: () => api.get<{ isAuthor: boolean; isReviewer: boolean; notes: ReviewNote[] }>(`/articles/${articleId}/review-notes`),
+    enabled: enabled && !!articleId,
+    retry: false,
+  });
+}
+
+export function useAddReviewNote(articleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { body: string; quote?: string | null; suggestion?: string | null }) =>
+      api.post<ReviewNote>(`/articles/${articleId}/review-notes`, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: notesKey(articleId) }),
+  });
+}
+
+export function useResolveReviewNote(articleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ noteId, resolved }: { noteId: string; resolved: boolean }) =>
+      api.patch(`/articles/${articleId}/review-notes/${noteId}`, { resolved }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: notesKey(articleId) }),
+  });
+}
+
+export function useDeleteReviewNote(articleId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (noteId: string) => api.delete(`/articles/${articleId}/review-notes/${noteId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: notesKey(articleId) }),
+  });
 }

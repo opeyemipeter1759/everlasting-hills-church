@@ -43,7 +43,7 @@ export type ReadAloudStatus = "idle" | "playing" | "paused" | "finished" | "erro
 
 export const RATES = [0.75, 1, 1.25, 1.5] as const;
 
-const RATE_KEY = "ehc.read-aloud.rate";
+export const RATE_KEY = "ehc.read-aloud.rate";
 const VOICE_KEY = "ehc.read-aloud.voice";
 /** About twelve seconds at normal speed, under Chrome's cut-off even at 0.75×. */
 const MAX_UTTERANCE = 180;
@@ -138,7 +138,7 @@ function speech(): SpeechSynthesis | null {
   return window.speechSynthesis;
 }
 
-function readSetting(key: string): string | null {
+export function readSetting(key: string): string | null {
   try {
     return window.localStorage.getItem(key);
   } catch {
@@ -146,7 +146,7 @@ function readSetting(key: string): string | null {
   }
 }
 
-function saveSetting(key: string, value: string) {
+export function saveSetting(key: string, value: string) {
   try {
     window.localStorage.setItem(key, value);
   } catch {
@@ -155,6 +155,8 @@ function saveSetting(key: string, value: string) {
 }
 
 export interface ReadAloudState {
+  /** The device voice reading the text, or a recorded reading of each chapter. */
+  kind?: "voice" | "recording";
   supported: boolean;
   /** Every passage of the day has loaded, so there is something to read. */
   ready: boolean;
@@ -174,10 +176,10 @@ export interface ReadAloudState {
   setVoice: (voiceURI: string) => void;
 }
 
-const PlayerContext = createContext<ReadAloudState | null>(null);
+export const PlayerContext = createContext<ReadAloudState | null>(null);
 // Kept apart from the player so registering a passage, which every portion
 // does once its text loads, does not depend on the verse being read.
-const RegisterContext = createContext<((passage: ReadAloudPassage) => void) | null>(null);
+export const RegisterContext = createContext<((passage: ReadAloudPassage) => void) | null>(null);
 
 export function useReadAloud(): ReadAloudState | null {
   return useContext(PlayerContext);
@@ -382,6 +384,23 @@ export function ReadAloudProvider({ expected, children }: { expected: number; ch
   const activeSegment = activeIndex == null ? null : segments[activeIndex] ?? null;
   const activeVerseId = activeSegment?.verseId ?? null;
   const currentPassage = activeSegment ? passages.get(activeSegment.sequence) ?? null : null;
+
+  // Phones, and some laptop browsers, silence the device voice when the page
+  // leaves the screen, and often never fire the end of the verse that was
+  // cut off, which left the reading stuck. Coming back picks it up again at
+  // the same verse.
+  useEffect(() => {
+    const onVisible = () => {
+      const synth = speech();
+      if (document.visibilityState !== "visible" || !synth || statusRef.current !== "playing") return;
+      if (synth.paused) synth.resume();
+      window.setTimeout(() => {
+        if (statusRef.current === "playing" && !synth.speaking && !synth.pending) startAt(indexRef.current);
+      }, 300);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [startAt]);
 
   // Keep the verse being read on screen, without fighting a reader who has it
   // in view already.
