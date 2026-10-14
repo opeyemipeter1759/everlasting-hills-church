@@ -1,6 +1,7 @@
 import type { PrayerRequestDto } from './dto/prayer-request.dto';
 import type { QuestionDto } from './dto/question.dto';
 import type { TestimonyDto } from './dto/testimony.dto';
+import type { WelfareRequestDto } from './dto/welfare-request.dto';
 import { escapeHtml, renderEmailLayout } from '../notifications/templates/layout';
 
 export function buildPrayerAdminText(d: PrayerRequestDto): string {
@@ -96,6 +97,39 @@ export function buildTestimonyVisitorText(d: TestimonyDto): string {
     'We celebrate what God has done in your life.',
     '',
     'God bless you,',
+    'Everlasting Hills Church',
+  ].join('\n');
+}
+
+export function buildWelfareAdminText(d: WelfareRequestDto, referenceCode: string): string {
+  return [
+    `Reference: ${referenceCode}`,
+    `Name: ${d.fullName}`,
+    `Phone: ${d.phone}`,
+    `Email: ${d.email}`,
+    `Worker in church: ${d.isWorkerInChurch ? 'Yes' : 'No'}`,
+    `Address: ${d.address}`,
+    `Attending for: ${d.attendanceLength}`,
+    `Occupation: ${d.occupation}`,
+    `Needs help with: ${d.category}`,
+    `Urgency: ${d.urgency}`,
+    '',
+    'Description:',
+    d.description,
+  ].join('\n');
+}
+
+export function buildWelfareVisitorText(d: WelfareRequestDto, referenceCode: string): string {
+  const firstName = d.fullName.trim().split(/\s+/)[0] || 'Friend';
+  return [
+    `Dear ${firstName},`,
+    '',
+    'We have received your request and someone from our welfare team will reach out to you soon.',
+    'This conversation stays between you and the team handling it.',
+    '',
+    `Your reference code is ${referenceCode}. Please keep it in case you need to follow up.`,
+    '',
+    'With love,',
     'Everlasting Hills Church',
   ].join('\n');
 }

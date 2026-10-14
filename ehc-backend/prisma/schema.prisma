@@ -226,6 +226,7 @@ model Member {
   CourseEnrollment              CourseEnrollment[]
   CourseCategoryEnrollment      CourseCategoryEnrollment[]
   PrayerRequest                 PrayerRequest[]
+  WelfareRequest                WelfareRequest[]
   Question                      Question[]
   Testimonial                   Testimonial[]
   UnitTaskAssigned              UnitTask[]
@@ -709,6 +710,56 @@ enum PrayerRequestStatus {
   PRAYED
 }
 
+enum WelfareUrgency {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum WelfareRequestStatus {
+  PENDING
+  IN_REVIEW
+  RESOLVED
+  DECLINED
+}
+
+/// Public welfare/benevolence intake — someone in need asks the church for
+/// practical help. Same optional-auth, admin-list-and-triage shape as
+/// PrayerRequest, plus a short referenceCode the submitter can quote when
+/// following up, since (unlike a prayer request) this is often a conversation
+/// that continues over days.
+model WelfareRequest {
+  id               String                @id
+  tenantId         String
+  referenceCode    String                @unique
+  fullName         String
+  phone            String
+  email            String
+  /// Whether the submitter serves in a unit/department, not just attends.
+  isWorkerInChurch Boolean
+  /// Free text — a street/area is enough context for the welfare team.
+  address          String
+  /// Free text, e.g. "about 2 years" — not modeled as an enum since the UI
+  /// options may evolve and a stray value should never fail validation.
+  attendanceLength String
+  /// "What do you do for a living" — free text.
+  occupation       String
+  /// Free text — "what do you need help with", in the submitter's own words
+  /// rather than a fixed category, so nothing gets forced into the wrong bucket.
+  category         String
+  description      String
+  urgency          WelfareUrgency
+  status           WelfareRequestStatus  @default(PENDING)
+  submittedAt      DateTime              @default(now())
+  /// Set only when a signed-in member submits (optional auth on the public form).
+  memberId         String?
+  Tenant           Tenant                @relation(fields: [tenantId], references: [id])
+  Member           Member?               @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status])
+  @@index([memberId])
+}
+
 /// Public "Ask a Question" submissions — same shape and semantics as PrayerRequest
 /// (optional auth, anonymous-name-only, admin list/delete), just a different intake.
 model Question {
@@ -1157,6 +1208,7 @@ model Tenant {
   PastoralAlert            PastoralAlert[]
   PaystackWebhookLog       PaystackWebhookLog[]
   PrayerRequest            PrayerRequest[]
+  WelfareRequest           WelfareRequest[]
   RoleAssignment           RoleAssignment[]
   Sermon                   Sermon[]
   SermonBookmark           SermonBookmark[]

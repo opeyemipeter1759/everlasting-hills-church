@@ -8,6 +8,7 @@ import { FormsEmailDispatchService } from './services/forms-email-dispatch.servi
 import { FirstTimerFormService } from './services/first-timer-form.service';
 import { PrayerRequestFormService } from './services/prayer-request-form.service';
 import { PrayerTriageService } from './services/prayer-triage.service';
+import { WelfareRequestFormService } from './services/welfare-request-form.service';
 import { QuestionFormService } from './services/question-form.service';
 import { TestimonyFormService } from './services/testimony-form.service';
 import { ServeTeamFormService } from './services/serve-team-form.service';
@@ -25,6 +26,7 @@ import { PledgesController } from './pledges.controller';
     FirstTimerFormService,
     PrayerRequestFormService,
     PrayerTriageService,
+    WelfareRequestFormService,
     QuestionFormService,
     TestimonyFormService,
     ServeTeamFormService,
