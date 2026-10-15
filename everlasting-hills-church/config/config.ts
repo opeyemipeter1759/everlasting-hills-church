@@ -43,6 +43,7 @@ export type UserRole =
   | "ADMIN_HEAD"
   | "HOD"
   | "HEAD_USHER"
+  | "FINANCE_HEAD"
   | "UNIT_LEAD"
   | "MEMBER"
   | "VISITOR";
@@ -55,6 +56,7 @@ const LEVELS: Record<UserRole, number> = {
   MEMBER: 1,
   UNIT_LEAD: 2,
   HEAD_USHER: 3,
+  FINANCE_HEAD: 3,
   HOD: 4,
   ADMIN_HEAD: 6,
   ADMIN: 6,
@@ -66,6 +68,12 @@ const CHURCH_WIDE_ROLES = new Set<UserRole>(["ADMIN", "ADMIN_HEAD", "PASTOR", "S
 const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER"]);
 
 export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
+  // Finance visibility does NOT follow the normal "any church-wide role passes
+  // a lateral gate" rule — Admin/Admin Head are deliberately excluded from
+  // finance data. Only Pastor, Finance Head, and Super Admin get through.
+  if (minRole === "FINANCE_HEAD") {
+    return userRole === "FINANCE_HEAD" || userRole === "PASTOR" || userRole === "SUPER_ADMIN";
+  }
   if (LATERAL_ROLES.has(minRole)) {
     return userRole === minRole || CHURCH_WIDE_ROLES.has(userRole);
   }
@@ -82,6 +90,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   ADMIN_HEAD: "Admin Head",
   HOD: "Head of Department",
   HEAD_USHER: "Head Usher",
+  FINANCE_HEAD: "Finance Head",
   UNIT_LEAD: "Unit Lead",
   MEMBER: "Member",
   VISITOR: "Visitor",
@@ -94,6 +103,7 @@ export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
   ADMIN_HEAD: "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30",
   HOD: "bg-teal-500/20 text-teal-300 border border-teal-500/30",
   HEAD_USHER: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
+  FINANCE_HEAD: "bg-green-500/20 text-green-300 border border-green-500/30",
   UNIT_LEAD: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
   MEMBER: "bg-white/10 text-white/70 border border-white/10",
   VISITOR: "bg-white/10 text-white/70 border border-white/10",
@@ -192,6 +202,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
+      { label: "Finance",       href: "/dashboard/admin/finance",       icon: DollarSign,    minRole: "FINANCE_HEAD" },
       { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
       { label: "Attendance",    href: "/dashboard/admin/attendance",    icon: ClipboardList, minRole: "ADMIN" },

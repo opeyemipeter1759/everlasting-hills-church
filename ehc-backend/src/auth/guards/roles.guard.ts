@@ -14,6 +14,11 @@ export const ROLE_LEVEL: Record<Role, number> = {
   UNIT_LEAD: 2,
   // Head usher: records congregation headcounts. Lateral specialist above unit lead.
   HEAD_USHER: 3,
+  // Finance head: same tier as Head Usher for level-comparison purposes, but the
+  // finance module itself is NOT gated with @Roles(FINANCE_HEAD) — it uses
+  // FinanceRolesGuard instead, since Admin/Admin Head must not see finance data
+  // despite outranking this role under the normal hierarchy.
+  FINANCE_HEAD: 3,
   // HOD: appointed under a department by its Admin Head (or Pastor/Super Admin).
   HOD: 4,
   // Admin merged into Admin Head — one tier, same level. ADMIN is legacy (kept
@@ -38,9 +43,10 @@ const CHURCH_WIDE_ROLES = new Set<Role>([
   Role.SUPER_ADMIN,
 ]);
 
-const LATERAL_ROLES = new Set<Role>([Role.HOD, Role.HEAD_USHER]);
+const LATERAL_ROLES = new Set<Role>([Role.HOD, Role.HEAD_USHER, Role.FINANCE_HEAD]);
 const LATERAL_IMPLICATIONS: Partial<Record<Role, ReadonlySet<Role>>> = {
   [Role.HEAD_USHER]: new Set([Role.MEMBER, Role.HEAD_USHER]),
+  [Role.FINANCE_HEAD]: new Set([Role.MEMBER, Role.FINANCE_HEAD]),
   // HOD can appoint unit leads only through the department-scoped service.
   // It must not inherit every unscoped UNIT_LEAD controller capability.
   [Role.HOD]: new Set([Role.MEMBER, Role.HOD]),

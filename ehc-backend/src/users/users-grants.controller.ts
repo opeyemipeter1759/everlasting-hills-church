@@ -47,4 +47,16 @@ export class UsersGrantsController {
   async removeHeadUsher(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
     return this.grants.removeHeadUsher(actor, profileId);
   }
+
+  @Post(':profileId/finance-head')
+  @ApiOperation({ summary: 'Assign Finance Head — global, unscoped, additive' })
+  async assignFinanceHead(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.grants.assignFinanceHead(actor, profileId);
+  }
+
+  @Delete(':profileId/finance-head')
+  @ApiOperation({ summary: 'End an active Finance Head assignment' })
+  async removeFinanceHead(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.grants.removeFinanceHead(actor, profileId);
+  }
 }

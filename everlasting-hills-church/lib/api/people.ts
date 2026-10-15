@@ -18,6 +18,7 @@ export type PersonRole =
   | "ADMIN_HEAD"
   | "HOD"
   | "HEAD_USHER"
+  | "FINANCE_HEAD"
   | "UNIT_LEAD"
   | "MEMBER"
   | "VISITOR";
@@ -300,6 +301,25 @@ export function useRemoveHeadUsher() {
   const invalidate = useInvalidateUsers();
   return useMutation({
     mutationFn: (profileId: string) => api.delete(`/users/${profileId}/head-usher`),
+    onSuccess: invalidate,
+  });
+}
+
+/** Finance Head is global/unscoped like Head Usher, backed by its own
+ * FinanceHeadAssignment table. Grants visibility into /finance, not any
+ * admin-hierarchy capability. */
+export function useAssignFinanceHead() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: (profileId: string) => api.post(`/users/${profileId}/finance-head`),
+    onSuccess: invalidate,
+  });
+}
+
+export function useRemoveFinanceHead() {
+  const invalidate = useInvalidateUsers();
+  return useMutation({
+    mutationFn: (profileId: string) => api.delete(`/users/${profileId}/finance-head`),
     onSuccess: invalidate,
   });
 }

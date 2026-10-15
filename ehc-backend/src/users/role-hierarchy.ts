@@ -20,6 +20,11 @@ export const ROLE_LEVELS: Record<Role, number> = {
   UNIT_LEAD: 2,
   // Head usher: records congregation headcounts. Lateral specialist above unit lead.
   HEAD_USHER: 3,
+  // Finance head: records tithe/offering and other church income/expense. Same
+  // tier as Head Usher — assignable by anyone above it, but note the finance
+  // *data* itself is gated separately (FinanceRolesGuard), not by this level,
+  // since Admin/Admin Head must NOT see it despite outranking this role here.
+  FINANCE_HEAD: 3,
   // HOD: appointed by an Admin Head (or Pastor/Super Admin) under a department.
   // Own capability is appointing Unit Leads within that department's units.
   HOD: 4,
@@ -38,7 +43,12 @@ export function canActOnRole(actorRole: Role | null | undefined, targetRole: Rol
   // Global grants and the unscoped Head Usher assignment are never managed by
   // lateral/scoped roles. HOD unit-lead appointments go through the separately
   // scope-checked UnitsRoleService.
-  if (actorRole === Role.HOD || actorRole === Role.HEAD_USHER || actorRole === Role.UNIT_LEAD) {
+  if (
+    actorRole === Role.HOD ||
+    actorRole === Role.HEAD_USHER ||
+    actorRole === Role.FINANCE_HEAD ||
+    actorRole === Role.UNIT_LEAD
+  ) {
     return false;
   }
   if (actorRole === Role.SUPER_ADMIN && targetRole === Role.SUPER_ADMIN) return true;
@@ -52,7 +62,12 @@ export function canActOnRole(actorRole: Role | null | undefined, targetRole: Rol
  */
 export function assignableRoles(actorRole: Role | null | undefined): Role[] {
   if (!actorRole) return [];
-  if (actorRole === Role.HOD || actorRole === Role.HEAD_USHER || actorRole === Role.UNIT_LEAD) {
+  if (
+    actorRole === Role.HOD ||
+    actorRole === Role.HEAD_USHER ||
+    actorRole === Role.FINANCE_HEAD ||
+    actorRole === Role.UNIT_LEAD
+  ) {
     return [];
   }
   const actorLevel = ROLE_LEVELS[actorRole];

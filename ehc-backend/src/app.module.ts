@@ -41,6 +41,7 @@ import { GivingModule } from './giving/giving.module';
 import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { BooksModule } from './books/books.module';
+import { FinanceModule } from './finance/finance.module';
 import { BookCollectionsModule } from './book-collections/book-collections.module';
 import { EmailsModule } from './emails/emails.module';
 import { CommunityModule } from './community/community.module';
@@ -154,6 +155,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     AnnouncementsModule,
     BookCollectionsModule,
     BooksModule,
+    FinanceModule,
     EmailsModule,
     CommunityModule,
     HomeCellModule,

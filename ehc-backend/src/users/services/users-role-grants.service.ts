@@ -106,4 +106,40 @@ export class UsersRoleGrantsService {
     this.effectiveRoles.invalidate(profileId);
     return { removed: Role.HEAD_USHER };
   }
+
+  /** Assign Finance Head — global, unscoped, same shape as Head Usher. Grants
+   * visibility into the finance module (see FinanceRolesGuard), not any
+   * admin-hierarchy capability. History-preserving. */
+  async assignFinanceHead(actor: AuthUser, profileId: string) {
+    await this.assertTargetInTenant(profileId);
+    this.auth.assertCanActOn(actor, Role.FINANCE_HEAD);
+    this.auth.assertCanActOn(actor, await this.auth.targetPrimaryRole(profileId));
+
+    const existing = await this.prisma.financeHeadAssignment.findFirst({
+      where: { userId: profileId, endedAt: null },
+      select: { id: true },
+    });
+    if (!existing) {
+      await this.prisma.financeHeadAssignment.create({
+        data: { id: randomUUID(), tenantId: this.tenantId, userId: profileId, assignedById: actor.profileId ?? null },
+      });
+      await this.auth.writeAudit(actor, 'ASSIGN_FINANCE_HEAD', profileId, { role: Role.FINANCE_HEAD });
+      this.effectiveRoles.invalidate(profileId);
+    }
+    return { assigned: Role.FINANCE_HEAD };
+  }
+
+  async removeFinanceHead(actor: AuthUser, profileId: string) {
+    await this.assertTargetInTenant(profileId);
+    this.auth.assertCanActOn(actor, Role.FINANCE_HEAD);
+    this.auth.assertCanActOn(actor, await this.auth.targetPrimaryRole(profileId));
+
+    await this.prisma.financeHeadAssignment.updateMany({
+      where: { userId: profileId, endedAt: null },
+      data: { endedAt: new Date() },
+    });
+    await this.auth.writeAudit(actor, 'REMOVE_FINANCE_HEAD', profileId, { role: Role.FINANCE_HEAD });
+    this.effectiveRoles.invalidate(profileId);
+    return { removed: Role.FINANCE_HEAD };
+  }
 }

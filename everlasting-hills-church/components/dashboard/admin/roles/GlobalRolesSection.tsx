@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2, ShieldCheck, UserMinus, UserPlus } from "lucide-react";
 import { useUsersByRole } from "@/lib/api";
-import { useRevokeGrant, useRemoveHeadUsher, type PersonRole } from "@/lib/api/people";
+import { useRevokeGrant, useRemoveHeadUsher, useRemoveFinanceHead, type PersonRole } from "@/lib/api/people";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
@@ -19,6 +19,7 @@ export default function GlobalRolesSection({ grantable }: { grantable: PersonRol
   const byRole = useUsersByRole();
   const revoke = useRevokeGrant();
   const removeHeadUsher = useRemoveHeadUsher();
+  const removeFinanceHead = useRemoveFinanceHead();
   const [grantOpen, setGrantOpen] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState<{ profileId: string; role: PersonRole; name: string } | null>(null);
 
@@ -28,9 +29,10 @@ export default function GlobalRolesSection({ grantable }: { grantable: PersonRol
     { role: "ADMIN_HEAD", people: byRole.data?.ADMIN_HEAD ?? [] },
     { role: "HOD", people: byRole.data?.HOD ?? [] },
     { role: "HEAD_USHER", people: byRole.data?.HEAD_USHER ?? [] },
+    { role: "FINANCE_HEAD", people: byRole.data?.FINANCE_HEAD ?? [] },
   ];
 
-  const revokePending = revoke.isPending || removeHeadUsher.isPending;
+  const revokePending = revoke.isPending || removeHeadUsher.isPending || removeFinanceHead.isPending;
 
   return (
     <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5">
@@ -50,7 +52,7 @@ export default function GlobalRolesSection({ grantable }: { grantable: PersonRol
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {groups.map((g) => (
           <div key={g.role}>
             <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-400">{ROLE_LABEL[g.role]}</p>
@@ -106,6 +108,8 @@ export default function GlobalRolesSection({ grantable }: { grantable: PersonRol
           try {
             if (confirmRevoke.role === "HEAD_USHER") {
               await removeHeadUsher.mutateAsync(confirmRevoke.profileId);
+            } else if (confirmRevoke.role === "FINANCE_HEAD") {
+              await removeFinanceHead.mutateAsync(confirmRevoke.profileId);
             } else {
               await revoke.mutateAsync(confirmRevoke);
             }

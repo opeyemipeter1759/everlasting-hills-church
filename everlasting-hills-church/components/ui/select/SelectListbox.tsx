@@ -45,7 +45,7 @@ export function SelectListbox({
         maxWidth: Math.max(rect.width, 320),
         ...(openUp ? { bottom: window.innerHeight - rect.triggerTop + 6 } : { top: rect.triggerBottom + 6 }),
       }}
-      className="z-[60] max-h-72 overflow-y-auto rounded-xl border border-gray-200/90 bg-white p-1.5 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.18)] dark:border-white/[0.1] dark:bg-[#1c1c1e] dark:shadow-black/50"
+      className="z-[110] max-h-72 overflow-y-auto rounded-xl border border-gray-200/90 bg-white p-1.5 shadow-[0_12px_32px_-8px_rgba(16,24,40,0.18)] dark:border-white/[0.1] dark:bg-[#1c1c1e] dark:shadow-black/50"
     >
       {options.length === 0 && (
         <li className="px-3 py-2 text-sm text-[#8a7e80] dark:text-white/40">Nothing to choose from</li>
