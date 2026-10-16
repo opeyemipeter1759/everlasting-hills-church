@@ -3,6 +3,8 @@ import { useSidebar } from '@/context/SidebarContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Menu, Sun, Moon, X, Bell } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 import React, { useEffect, useMemo, useState } from 'react';
 import SessionActionMenu from '@/components/auth/SessionActionMenu';
 import { AppHeaderSkeleton } from '@/components/ui/skeleton/AppHeaderSkeleton';
@@ -90,6 +92,18 @@ const AppHeader: React.FC = () => {
         >
           {isMobileOpen ? <X size={19} strokeWidth={2} /> : <Menu size={19} strokeWidth={2} />}
         </button>
+
+        {/* On a phone the sidebar is tucked away, so the logo is the way home. */}
+        <Link href="/" aria-label="Everlasting Hills home" className="flex shrink-0 items-center lg:hidden">
+          <Image
+            src={theme === 'dark' ? '/logo.png' : '/logoblack.png'}
+            alt="Everlasting Hills Church"
+            width={36}
+            height={36}
+            className="h-9 w-9 object-contain"
+            priority
+          />
+        </Link>
 
         {/* page title + date */}
         <div className="hidden sm:flex gap-1 flex-col min-w-0 leading-none">
