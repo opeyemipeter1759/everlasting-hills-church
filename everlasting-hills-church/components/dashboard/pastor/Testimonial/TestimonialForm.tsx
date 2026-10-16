@@ -39,7 +39,6 @@ export default function TestimonialForm({
   const isEdit = !!initial;
   const charCount = data.content.length;
   const minChars = 20;
-  const maxChars = 1500;
 
   async function polishWithAI() {
     if (data.content.trim().length < minChars) return;
@@ -146,16 +145,15 @@ export default function TestimonialForm({
         />
       </Field>
 
-      <Field label={`Testimonial *  (${charCount}/${maxChars})`}>
+      <Field label={`Testimonial *  (${charCount.toLocaleString()} characters)`}>
         <textarea
           required
           rows={6}
           minLength={minChars}
-          maxLength={maxChars}
           value={data.content}
           onChange={(e) => { setData({ ...data, content: e.target.value }); setPolishError(null); }}
           placeholder="What has being part of Everlasting Hills meant to you?"
-          className={`${inputCls} resize-none`}
+          className={`${inputCls} resize-y`}
         />
         <div className="mt-1.5 flex items-center justify-between gap-2">
           {charCount > 0 && charCount < minChars ? (

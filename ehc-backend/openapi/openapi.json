@@ -4718,6 +4718,24 @@
         },
         "type": "object"
       },
+      "UpdateWelfareRequestStatusDto": {
+        "properties": {
+          "status": {
+            "enum": [
+              "PENDING",
+              "IN_REVIEW",
+              "RESOLVED",
+              "DECLINED"
+            ],
+            "example": "IN_REVIEW",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object"
+      },
       "VisitorImportRowDto": {
         "properties": {
           "address": {
@@ -4783,6 +4801,71 @@
         "required": [
           "firstName",
           "lastName"
+        ],
+        "type": "object"
+      },
+      "WelfareRequestDto": {
+        "properties": {
+          "address": {
+            "example": "Bodija, Ibadan",
+            "type": "string"
+          },
+          "attendanceLength": {
+            "example": "About 2 years",
+            "type": "string"
+          },
+          "category": {
+            "description": "What they need help with, in their own words",
+            "example": "Help with rent",
+            "type": "string"
+          },
+          "description": {
+            "example": "I was given a quit notice and need help covering rent for one more month.",
+            "type": "string"
+          },
+          "email": {
+            "example": "adaeze@example.com",
+            "type": "string"
+          },
+          "fullName": {
+            "example": "Adaeze Okafor",
+            "type": "string"
+          },
+          "isWorkerInChurch": {
+            "description": "Whether the submitter serves in a unit/department at the church",
+            "example": true,
+            "type": "boolean"
+          },
+          "occupation": {
+            "description": "What they do for a living",
+            "example": "Tailor",
+            "type": "string"
+          },
+          "phone": {
+            "example": "+234 801 234 5678",
+            "type": "string"
+          },
+          "urgency": {
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH"
+            ],
+            "example": "MEDIUM",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fullName",
+          "phone",
+          "email",
+          "isWorkerInChurch",
+          "address",
+          "attendanceLength",
+          "occupation",
+          "category",
+          "description",
+          "urgency"
         ],
         "type": "object"
       },
@@ -23020,6 +23103,223 @@
           }
         },
         "summary": "Submit Testimony",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/forms/welfare-request": {
+      "post": {
+        "description": "Create a welfare/benevolence request and notify the church welfare team by email. Public — works with no session. Returns a referenceCode the submitter can quote when following up.",
+        "operationId": "FormsController_welfareRequest",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WelfareRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Welfare request submitted successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Validation failed"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Submit Welfare Request",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/forms/welfare-requests": {
+      "get": {
+        "operationId": "FormsController_listWelfareRequests",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "List all welfare requests, newest first (ADMIN+)",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/forms/welfare-requests/{id}": {
+      "delete": {
+        "operationId": "FormsController_deleteWelfareRequest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Delete a welfare request (ADMIN+)",
+        "tags": [
+          "forms"
+        ]
+      }
+    },
+    "/forms/welfare-requests/{id}/status": {
+      "patch": {
+        "operationId": "FormsController_updateWelfareRequestStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWelfareRequestStatusDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Update a welfare request status (ADMIN+)",
         "tags": [
           "forms"
         ]

@@ -12,7 +12,6 @@ export class TestimonyDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(5)
-  @MaxLength(5000)
   testimony!: string;
 
   @ApiProperty({ example: 'Jane Doe', required: false })

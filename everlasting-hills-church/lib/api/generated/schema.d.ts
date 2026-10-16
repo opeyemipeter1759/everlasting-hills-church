@@ -4518,6 +4518,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/forms/welfare-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit Welfare Request
+         * @description Create a welfare/benevolence request and notify the church welfare team by email. Public — works with no session. Returns a referenceCode the submitter can quote when following up.
+         */
+        post: operations["FormsController_welfareRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/welfare-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all welfare requests, newest first (ADMIN+) */
+        get: operations["FormsController_listWelfareRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/welfare-requests/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a welfare request (ADMIN+) */
+        delete: operations["FormsController_deleteWelfareRequest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/forms/welfare-requests/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update a welfare request status (ADMIN+) */
+        patch: operations["FormsController_updateWelfareRequestStatus"];
+        trace?: never;
+    };
     "/gatherings": {
         parameters: {
             query?: never;
@@ -10171,6 +10242,13 @@ export interface components {
             prayerPoint?: string;
             serviceExperience?: string;
         };
+        UpdateWelfareRequestStatusDto: {
+            /**
+             * @example IN_REVIEW
+             * @enum {string}
+             */
+            status: "PENDING" | "IN_REVIEW" | "RESOLVED" | "DECLINED";
+        };
         VisitorImportRowDto: {
             address?: string;
             /** @description Day of birth, 1-31 (no year collected) */
@@ -10195,6 +10273,40 @@ export interface components {
             /** @description Original submission timestamp, for backfilling historical data */
             submittedAt?: string;
             whatsappInterest?: boolean;
+        };
+        WelfareRequestDto: {
+            /** @example Bodija, Ibadan */
+            address: string;
+            /** @example About 2 years */
+            attendanceLength: string;
+            /**
+             * @description What they need help with, in their own words
+             * @example Help with rent
+             */
+            category: string;
+            /** @example I was given a quit notice and need help covering rent for one more month. */
+            description: string;
+            /** @example adaeze@example.com */
+            email: string;
+            /** @example Adaeze Okafor */
+            fullName: string;
+            /**
+             * @description Whether the submitter serves in a unit/department at the church
+             * @example true
+             */
+            isWorkerInChurch: boolean;
+            /**
+             * @description What they do for a living
+             * @example Tailor
+             */
+            occupation: string;
+            /** @example +234 801 234 5678 */
+            phone: string;
+            /**
+             * @example MEDIUM
+             * @enum {string}
+             */
+            urgency: "LOW" | "MEDIUM" | "HIGH";
         };
         WhatsappCommunityDto: {
             /** @description True once this person has been added to the WhatsApp community */
@@ -21069,6 +21181,152 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_welfareRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WelfareRequestDto"];
+            };
+        };
+        responses: {
+            /** @description Welfare request submitted successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_listWelfareRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_deleteWelfareRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FormsController_updateWelfareRequestStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWelfareRequestStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
             /** @description Error response */

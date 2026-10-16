@@ -315,7 +315,7 @@ export class UpdateEvangelismOutreachDto {
 
 export class EvangelismTestimonyDto {
   @ApiProperty() @Transform(trim) @IsString() @IsNotEmpty() @MaxLength(160) title!: string;
-  @ApiProperty() @Transform(trim) @IsString() @IsNotEmpty() @MaxLength(8000) body!: string;
+  @ApiProperty() @Transform(trim) @IsString() @IsNotEmpty() body!: string;
   @ApiPropertyOptional({ description: 'Defaults to today' }) @Transform(emptyToUndefined) @IsOptional() @IsDateString() date?: string;
   @ApiPropertyOptional() @Transform(emptyToUndefined) @IsOptional() @IsString() contactId?: string;
   @ApiPropertyOptional() @Transform(emptyToUndefined) @IsOptional() @IsString() outreachId?: string;
@@ -325,7 +325,7 @@ export class EvangelismTestimonyDto {
 
 export class UpdateEvangelismTestimonyDto {
   @ApiPropertyOptional() @Transform(trim) @IsOptional() @IsString() @IsNotEmpty() @MaxLength(160) title?: string;
-  @ApiPropertyOptional() @Transform(trim) @IsOptional() @IsString() @IsNotEmpty() @MaxLength(8000) body?: string;
+  @ApiPropertyOptional() @Transform(trim) @IsOptional() @IsString() @IsNotEmpty() body?: string;
   @ApiPropertyOptional() @IsOptional() @IsDateString() date?: string;
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsString() contactId?: string | null;
   @ApiPropertyOptional({ nullable: true }) @IsOptional() @IsString() outreachId?: string | null;

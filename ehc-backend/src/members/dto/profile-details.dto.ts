@@ -63,7 +63,7 @@ export class UpdateProfileDetailsDto {
   @ApiPropertyOptional({ type: [String] }) @apply(list(30)) interests?: string[];
   @ApiPropertyOptional({ type: [String] }) @apply(list(15)) languages?: string[];
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(200) prayerFocus?: string | null;
-  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(3000) testimony?: string | null;
+  @ApiPropertyOptional() @IsOptional() @IsString() testimony?: string | null;
   @ApiPropertyOptional({ type: [String] }) @apply(list(6)) openTo?: string[];
   @ApiPropertyOptional({ type: ProfileVisibilityDto })
   @IsOptional()

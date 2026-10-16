@@ -33,7 +33,6 @@ export class CreateTestimonialDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(20)
-  @MaxLength(1500)
   content!: string;
 
   @ApiProperty({ example: true, required: false, description: 'Whether to show on public site immediately' })
@@ -70,7 +69,6 @@ export class UpdateTestimonialDto {
   @IsOptional()
   @IsString()
   @MinLength(20)
-  @MaxLength(1500)
   content?: string;
 
   @ApiProperty({ required: false })

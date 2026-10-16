@@ -331,7 +331,7 @@ function TestimonyDialog({ open, onClose, testimony }: { open: boolean; onClose:
         </div>
         <div>
           <span className={labelClass}>Testimony *</span>
-          <textarea className={`${inputClass} min-h-[120px]`} value={body} onChange={(e) => setBody(e.target.value)} maxLength={8000} />
+          <textarea className={`${inputClass} min-h-[120px]`} value={body} onChange={(e) => setBody(e.target.value)} />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>

@@ -371,7 +371,7 @@ export default function ProfileStoryForm({ memberId }: { memberId?: string | nul
           <label htmlFor="pd-testimony" className="sr-only">
             Testimony
           </label>
-          <textarea id="pd-testimony" rows={6} maxLength={3000} className={`${input} resize-y`} value={d.testimony ?? ""} onChange={(e) => set("testimony", e.target.value)} />
+          <textarea id="pd-testimony" rows={6} className={`${input} resize-y`} value={d.testimony ?? ""} onChange={(e) => set("testimony", e.target.value)} />
           <p className="text-right text-xs text-[#8a7e80] dark:text-white/40">{(d.testimony ?? "").length}/3000</p>
         </Block>
 
