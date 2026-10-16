@@ -54,7 +54,7 @@ function fastLines(d: DailyFastDay): string[] {
     ];
   }
   if (d.kind === 'dry') {
-    return [`Dry fast, day ${d.dryDay} of ${d.dryLength}: no food today.`, 'You may drink water  to stay hydrated.'];
+    return [`Dry fast, day ${d.dryDay} of ${d.dryLength}: no food today.`, 'You may drink water to stay hydrated.'];
   }
   const lines = [
     `One meal today, from ${d.mealTime}.`,

@@ -157,7 +157,7 @@ describe('what the email says', () => {
     const mail = build(day({ dryDay: 1, dryLength: 2, breakTime: undefined }));
     expect(mail.subject).toBe('Furnace 2026 · Day 3 of 30: dry fast, day 1 of 2');
     expect(mail.text).toContain('Dry fast, day 1 of 2: no food today.');
-    expect(mail.text).toContain('You may drink water throughout the day to stay hydrated.');
+    expect(mail.text).toContain('You may drink water to stay hydrated.');
     expect(mail.text).not.toMatch(/no food or water/i);
   });
 
