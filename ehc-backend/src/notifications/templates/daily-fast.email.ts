@@ -50,10 +50,12 @@ function fastLines(d: DailyFastDay): string[] {
   if (d.kind === 'dry' && d.breakTime) {
     return [
       `Dry fast, day ${d.dryDay} of ${d.dryLength}. Break your fast today at ${d.breakTime}.`,
-      'Start with water, then something light such as pap, fruit or a light soup.',
+      'No food until then, but drink water to stay hydrated. Break with something light such as pap, fruit or a light soup.',
     ];
   }
-  if (d.kind === 'dry') return [`Dry fast, day ${d.dryDay} of ${d.dryLength}: no food or water today.`];
+  if (d.kind === 'dry') {
+    return [`Dry fast, day ${d.dryDay} of ${d.dryLength}: no food today.`, 'You may drink water  to stay hydrated.'];
+  }
   const lines = [
     `One meal today, from ${d.mealTime}.`,
     // Tomorrow is a dry day before a dry fast, so there's no "until tomorrow's meal".
@@ -64,7 +66,7 @@ function fastLines(d: DailyFastDay): string[] {
       `This is your last meal before the ${d.lastMealBefore.days}-day dry fast that begins tomorrow. Drink well and eat a light, nourishing meal.`,
     );
   } else {
-    lines.push('Water is allowed throughout the day.');
+    lines.push('Water is allowed.');
   }
   return lines;
 }

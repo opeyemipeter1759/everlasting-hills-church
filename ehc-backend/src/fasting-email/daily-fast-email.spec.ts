@@ -153,6 +153,14 @@ describe('what the email says', () => {
     expect(mail.text).toContain('nothing else until 3pm tomorrow. No snacks, no second plate');
   });
 
+  it('allows water on a dry fast day, to stay hydrated', () => {
+    const mail = build(day({ dryDay: 1, dryLength: 2, breakTime: undefined }));
+    expect(mail.subject).toBe('Furnace 2026 · Day 3 of 30: dry fast, day 1 of 2');
+    expect(mail.text).toContain('Dry fast, day 1 of 2: no food today.');
+    expect(mail.text).toContain('You may drink water throughout the day to stay hydrated.');
+    expect(mail.text).not.toMatch(/no food or water/i);
+  });
+
   it('warns that today is the last meal before a dry fast', () => {
     const mail = build(day({ kind: 'meal', dryDay: undefined, dryLength: undefined, breakTime: undefined, lastMealBefore: { days: 3 } }));
     expect(mail.subject).toContain('one meal at 3pm, then the dry fast begins');
