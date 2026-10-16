@@ -16,6 +16,16 @@ const RUN_BUDGET_MS = 240_000;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** Saturday's word about Sunday, which has no email of its own. */
+function sundayNote(sunday: ReturnType<typeof fastDay>): string | undefined {
+  if (!sunday) return undefined;
+  if (sunday.kind === 'dry' && sunday.breakTime) return `Tomorrow (Sunday) is the last day of the dry fast: break it at ${sunday.breakTime}.`;
+  if (sunday.kind === 'dry') return 'Tomorrow (Sunday) is a dry fast day: no food, but drink water to stay hydrated.';
+  return `Tomorrow (Sunday): one meal, from ${sunday.mealTime}.`;
+}
+
+/** 0 = Sunday … 6 = Saturday, for a Lagos calendar date. */
+const weekday = (date: string) => new Date(`${date}T12:00:00Z`).getUTCDay();
 
 export interface DailyFastRunResult {
   day: string | null;
@@ -48,6 +58,12 @@ export class DailyFastEmailService {
     const today = lagosDate();
     const empty = { day: null, sent: 0, failed: 0, skipped: 0, remaining: 0 };
     if (this.running) return empty;
+    // Sunday belongs to the service and its attendance emails: the fast email
+    // stays out of the way, and Monday's recaps the whole weekend instead.
+    if (weekday(today) === 0) {
+      this.logger.log(`daily-fast-email: ${today} is a Sunday — no fast email today`);
+      return empty;
+    }
     const fast = await this.fasts.on(today);
     if (!fast) {
       this.logger.log(`daily-fast-email: no fast on ${today} — nothing to send`);
@@ -159,17 +175,23 @@ export class DailyFastEmailService {
       morning: info.morning,
       evening: info.evening,
       liveUrl: fast.liveUrl ?? 'https://www.youtube.com/@everlastinghillschurch/streams',
+      ...(weekday(date) === 1 && { recapHeading: 'This weekend’s sessions' }),
+      ...(weekday(date) === 6 && { tomorrowNote: sundayNote(fastDay(fast.rules, addDays(date, 1))) }),
     };
     return { day, yesterday: await this.yesterday(date), eventUrl: `${this.unsubscribes.siteUrl}/events/${fast.eventSlug}` };
   }
 
-  /** Yesterday's streamed sessions, with a recap where one has been written. Never fails the email. */
+  /**
+   * The streamed sessions since the last email, with a recap where one has been
+   * written: yesterday's, or on a Monday the whole weekend, since no email goes
+   * out on Sunday. Never fails the email.
+   */
   private async yesterday(date: string): Promise<SessionRecap[]> {
     try {
       if (!this.youtube.configured) return [];
-      const day = addDays(date, -1);
+      const days = weekday(date) === 1 ? [addDays(date, -2), addDays(date, -1)] : [addDays(date, -1)];
       const streams = (await this.youtube.recentStreams())
-        .filter((s) => lagosDate(s.startedAt) === day)
+        .filter((s) => days.includes(lagosDate(s.startedAt)))
         .sort((a, b) => a.startedAt.getTime() - b.startedAt.getTime());
       if (streams.length === 0) return [];
       const recaps = await this.prisma.fastingRecap.findMany({

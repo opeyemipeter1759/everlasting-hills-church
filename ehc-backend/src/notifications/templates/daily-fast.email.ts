@@ -26,6 +26,10 @@ export interface DailyFastDay {
   morning: string | null;
   evening: string | null;
   liveUrl: string;
+  /** Over the recaps. Default "Yesterday's sessions"; Monday's covers the weekend. */
+  recapHeading?: string;
+  /** On a Saturday: what Sunday holds, since no email goes out on Sunday. */
+  tomorrowNote?: string;
 }
 
 interface Args {
@@ -47,6 +51,10 @@ export function fastHeadline(d: DailyFastDay): string {
 }
 
 function fastLines(d: DailyFastDay): string[] {
+  return d.tomorrowNote ? [...todayLines(d), d.tomorrowNote] : todayLines(d);
+}
+
+function todayLines(d: DailyFastDay): string[] {
   if (d.kind === 'dry' && d.breakTime) {
     return [
       `Dry fast, day ${d.dryDay} of ${d.dryLength}. Break your fast today at ${d.breakTime}.`,
@@ -106,7 +114,7 @@ export function buildDailyFastEmail({ to, firstName, day: d, yesterday, imageUrl
     ...(yesterday.length
       ? [
           '',
-          "YESTERDAY'S SESSIONS",
+          (d.recapHeading ?? "Yesterday's sessions").toUpperCase(),
           ...yesterday.flatMap((s) =>
             s.recap
               ? ['', s.recap.title, s.recap.summary, ...s.recap.keyPoints.map((k) => `• ${k}`), `Watch: ${s.url}`]
@@ -151,7 +159,7 @@ export function buildDailyFastEmail({ to, firstName, day: d, yesterday, imageUrl
     <p style="margin:0 0 6px;font-weight:700">Prayer</p>
     ${sessions.map((s) => p(escapeHtml(s), 'margin:0 0 4px')).join('')}
     ${p(`<a href="${escapeHtml(d.liveUrl)}" style="color:#87102C;font-weight:700">Join live on YouTube</a>`, 'margin:6px 0 22px')}
-    ${yesterday.length ? `<p style="margin:0 0 10px;font-weight:700">Yesterday&rsquo;s sessions</p>${recapHtml}` : ''}
+    ${yesterday.length ? `<p style="margin:0 0 10px;font-weight:700">${escapeHtml(d.recapHeading ?? "Yesterday's sessions")}</p>${recapHtml}` : ''}
     <p style="margin:18px 0 0;color:#6B7280;font-size:12px">You&rsquo;re receiving this because you&rsquo;re part of the Everlasting Hills Church family. <a href="${escapeHtml(unsubscribe.page)}" style="color:#6B7280">Stop these daily emails</a>.</p>
   `;
 

@@ -91,6 +91,38 @@ describe('the daily fasting email', () => {
     expect(upsert.mock.calls[0][0].create).toMatchObject({ status: 'FAILED', campaign: 'fast:furnace-2026', day: '2026-10-02' });
   });
 
+  it('sends nothing on a Sunday, leaving the day to the attendance emails', async () => {
+    jest.setSystemTime(new Date('2026-10-04T04:00:00Z')); // 5am Sunday in Lagos
+    const { svc, deliver } = setup();
+    expect(await runAll(svc)).toMatchObject({ day: null, sent: 0 });
+    expect(deliver).not.toHaveBeenCalled();
+  });
+
+  it('tells Saturday’s readers how Sunday goes, since Sunday has no email', async () => {
+    jest.setSystemTime(new Date('2026-10-03T04:00:00Z')); // Saturday, day 1 of the dry fast
+    const { svc, deliver } = setup();
+    await runAll(svc);
+    expect(deliver.mock.calls[0][0].text).toContain('Tomorrow (Sunday) is the last day of the dry fast: break it at 3pm.');
+  });
+
+  it('recaps the whole weekend on Monday', async () => {
+    jest.setSystemTime(new Date('2026-10-05T04:00:00Z')); // 5am Monday in Lagos
+    const { svc, deliver } = setup();
+    const svcAny = svc as unknown as { youtube: Record<string, unknown> };
+    svcAny.youtube.configured = true;
+    svcAny.youtube.recentStreams = jest.fn().mockResolvedValue([
+      { id: 'fri', title: 'Friday evening', startedAt: new Date('2026-10-02T19:00:00Z') },
+      { id: 'sat', title: 'Saturday morning', startedAt: new Date('2026-10-03T05:00:00Z') },
+      { id: 'sun', title: 'Sunday service', startedAt: new Date('2026-10-04T08:00:00Z') },
+    ]);
+    await runAll(svc);
+    const text = deliver.mock.calls[0][0].text as string;
+    expect(text).toContain('THIS WEEKEND’S SESSIONS');
+    expect(text).toContain('Saturday morning');
+    expect(text).toContain('Sunday service');
+    expect(text).not.toContain('Friday evening');
+  });
+
   it('sends nothing outside a fast', async () => {
     const { svc, deliver } = setup();
     (svc as unknown as { fasts: { on: jest.Mock } }).fasts.on.mockResolvedValue(null);
