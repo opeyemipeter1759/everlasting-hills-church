@@ -675,6 +675,7 @@ export interface UsersByRole {
   ADMIN_HEAD:  { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
   HOD:         { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
   HEAD_USHER:  { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
+  FINANCE_HEAD: { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
   UNIT_LEAD:   { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null; units?: { unitId: string; unitName: string; isLead: boolean; isAssistant: boolean }[] } | null }[];
   MEMBER:      { profileId: string; userId: string; role: string; member: { id: string; firstName: string; lastName: string; email: string | null; phone: string | null; photoUrl: string | null } | null }[];
   VISITOR:     { id: string; firstName: string; lastName: string; email: string | null; phone: string | null }[];

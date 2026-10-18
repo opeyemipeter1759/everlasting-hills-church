@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2, Search } from "lucide-react";
 import FormModal, { fieldCls } from "@/components/ui/overlay/FormModal";
 import { Select } from "@/components/ui/select";
-import { usePeople, useGrantRole, useAssignHeadUsher, type PersonRole } from "@/lib/api/people";
+import { usePeople, useGrantRole, useAssignHeadUsher, useAssignFinanceHead, type PersonRole } from "@/lib/api/people";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import { ROLE_LABEL } from "../people/peopleShared";
@@ -30,7 +30,8 @@ export default function GrantRoleModal({
   const q = usePeople({ search, limit: 12, sortBy: "name", sortOrder: "asc" });
   const grant = useGrantRole();
   const assignHeadUsher = useAssignHeadUsher();
-  const pending = grant.isPending || assignHeadUsher.isPending;
+  const assignFinanceHead = useAssignFinanceHead();
+  const pending = grant.isPending || assignHeadUsher.isPending || assignFinanceHead.isPending;
   const people = (q.data?.data ?? []).filter((p) => p.profileId);
 
   async function pick(profileId: string, name: string) {
@@ -39,6 +40,8 @@ export default function GrantRoleModal({
     try {
       if (role === "HEAD_USHER") {
         await assignHeadUsher.mutateAsync(profileId);
+      } else if (role === "FINANCE_HEAD") {
+        await assignFinanceHead.mutateAsync(profileId);
       } else {
         await grant.mutateAsync({ profileId, role });
       }

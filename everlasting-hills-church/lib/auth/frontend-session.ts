@@ -27,6 +27,7 @@ export type UserRole =
   | "ADMIN_HEAD"
   | "HOD"
   | "HEAD_USHER"
+  | "FINANCE_HEAD"
   | "UNIT_LEAD"
   | "MEMBER";
 
@@ -36,6 +37,7 @@ const ROLE_LEVELS: Record<UserRole, number> = {
   MEMBER: 1,
   UNIT_LEAD: 2,
   HEAD_USHER: 3,
+  FINANCE_HEAD: 3,
   HOD: 4,
   ADMIN_HEAD: 6,
   ADMIN: 6,
@@ -77,6 +79,7 @@ export function normalizeRole(role: string | null | undefined): UserRole | null 
   if (cleaned === "member") return "MEMBER";
   if (cleaned === "leader" || cleaned === "unit head" || cleaned === "unit_head") return "UNIT_LEAD";
   if (cleaned === "head usher" || cleaned === "head_usher" || cleaned === "headusher") return "HEAD_USHER";
+  if (cleaned === "finance head" || cleaned === "finance_head" || cleaned === "financehead") return "FINANCE_HEAD";
   if (cleaned === "admin head" || cleaned === "admin_head" || cleaned === "adminhead") return "ADMIN_HEAD";
   if (cleaned === "admin") return "ADMIN";
   if (cleaned === "pastor") return "PASTOR";
@@ -90,6 +93,14 @@ export function normalizeRole(role: string | null | undefined): UserRole | null 
 export function hasMinRole(userRole: string | null | undefined, minRole: UserRole): boolean {
   const normalized = normalizeRole(userRole);
   if (!normalized) return false;
+  // Finance routes do NOT follow the normal "any church-wide role passes a
+  // lateral gate" rule — Admin/Admin Head are deliberately excluded. Only
+  // Pastor, Finance Head, and Super Admin get through. Must be checked before
+  // the LATERAL_ROLES branch below, since FINANCE_HEAD is intentionally not
+  // in that set.
+  if (minRole === "FINANCE_HEAD") {
+    return normalized === "FINANCE_HEAD" || normalized === "PASTOR" || normalized === "SUPER_ADMIN";
+  }
   if (LATERAL_ROLES.has(minRole)) {
     return normalized === minRole || CHURCH_WIDE_ROLES.has(normalized);
   }
@@ -122,6 +133,7 @@ export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
   ["/dashboard/admin/roles", "ADMIN"],
   ["/dashboard/admin/attendance/ushers-report", "HEAD_USHER"],
   ["/dashboard/admin/usher", "HEAD_USHER"],
+  ["/dashboard/admin/finance", "FINANCE_HEAD"],
   // Ushering moved out of /dashboard/admin into its own module. The old path
   // stays above so bookmarks keep resolving to the redirect.
   ["/dashboard/usher", "HEAD_USHER"],

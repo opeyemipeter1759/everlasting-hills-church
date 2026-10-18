@@ -814,6 +814,10 @@ model Profile {
   UnitLeadAssigned              UnitLeadAssignment[]       @relation("UnitLeadAssignedBy")
   HeadUsherOf                   HeadUsherAssignment[]      @relation("HeadUsherUser")
   HeadUsherAssigned             HeadUsherAssignment[]      @relation("HeadUsherAssignedBy")
+  FinanceHeadOf                 FinanceHeadAssignment[]    @relation("FinanceHeadUser")
+  FinanceHeadAssigned           FinanceHeadAssignment[]    @relation("FinanceHeadAssignedBy")
+  FinanceEntryRecorded          FinanceEntry[]
+  ServiceOfferingRecorded       ServiceOffering[]
   SalvationContacted            SalvationDecision[]        @relation("SalvationContactedBy")
   FollowUpAdded                 FollowUpEntry[]            @relation("FollowUpAddedBy")
   FollowUpSentToPastor          FollowUpEntry[]            @relation("FollowUpSentToPastorBy")
@@ -887,6 +891,78 @@ model HeadUsherAssignment {
 
   @@index([tenantId])
   @@index([userId])
+}
+
+/// Global, unscoped — same shape as HeadUsherAssignment. Grants visibility into
+/// the finance module (ServiceOffering, FinanceEntry), which is otherwise
+/// restricted to Pastor and Super Admin even though Admin/Admin Head outrank
+/// this role everywhere else in the app — see FinanceRolesGuard.
+model FinanceHeadAssignment {
+  id           String    @id
+  tenantId     String
+  userId       String
+  assignedById String?
+  assignedAt   DateTime  @default(now())
+  endedAt      DateTime?
+  Tenant       Tenant    @relation(fields: [tenantId], references: [id])
+  User         Profile   @relation("FinanceHeadUser", fields: [userId], references: [id], onDelete: Cascade)
+  AssignedBy   Profile?  @relation("FinanceHeadAssignedBy", fields: [assignedById], references: [id])
+
+  @@index([tenantId])
+  @@index([userId])
+}
+
+enum FinanceEntryKind {
+  INCOME
+  EXPENSE
+}
+
+/// What entered or left the church's accounts for the period, outside of
+/// per-service tithe/offering (see ServiceOffering). Income categories the
+/// finance head uses in practice: Building, Program, Rent, Giving — kept as
+/// free text rather than an enum so a new fund doesn't need a migration.
+/// Expenses share the same shape with their own free-text category.
+model FinanceEntry {
+  id          String           @id
+  tenantId    String
+  kind        FinanceEntryKind
+  category    String
+  /// Short optional title, e.g. "Youth Conference 2026" for a PROGRAM entry.
+  label       String?
+  /// Naira, whole amount.
+  amount      Int
+  /// The date this income/expense is attributed to — what buckets it into a
+  /// week/month, independent of when it was typed in.
+  date        DateTime
+  note        String?
+  recordedById String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  Tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  RecordedBy  Profile?         @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, kind, date])
+  @@index([tenantId, category])
+}
+
+/// Tithe and offering counted for one specific service — the base unit the
+/// weekly/monthly finance totals are summed from. One record per service.
+model ServiceOffering {
+  id           String   @id
+  tenantId     String
+  serviceId    String   @unique
+  /// Naira, whole amount.
+  tithe        Int
+  offering     Int
+  note         String?
+  recordedById String?
+  recordedAt   DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  Service      Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  RecordedBy   Profile? @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, recordedAt])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -1093,6 +1169,7 @@ model Service {
   Visitor               Visitor[]
   ServiceFollowUpReport ServiceFollowUpReport[]
   FollowUpContactLog    FollowUpContactLog[]
+  ServiceOffering       ServiceOffering?
   Tenant                Tenant                  @relation(fields: [tenantId], references: [id])
 
   @@index([tenantId, scheduledAt])
@@ -1226,6 +1303,9 @@ model Tenant {
   RoleGrant                RoleGrant[]
   UnitLeadAssignment       UnitLeadAssignment[]
   HeadUsherAssignment      HeadUsherAssignment[]
+  FinanceHeadAssignment    FinanceHeadAssignment[]
+  FinanceEntry             FinanceEntry[]
+  ServiceOffering          ServiceOffering[]
   SiteSettings             SiteSettings[]
   Testimonial              Testimonial[]
   Unit                     Unit[]
@@ -2460,6 +2540,7 @@ enum Role {
   ADMIN_HEAD
   HOD
   HEAD_USHER
+  FINANCE_HEAD
   UNIT_LEAD
   MEMBER
   VISITOR

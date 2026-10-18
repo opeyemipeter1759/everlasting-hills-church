@@ -29,13 +29,14 @@ export class UsersRolesOverviewService {
     // Counts come from grants + active assignments (the new source of truth), not
     // the legacy column. MEMBER is the universal base = every profile.
     const t = this.tenantId;
-    const [totalProfiles, grantRows, unitLeads, deptHeads, deptHods, ushers, visitorCount] = await Promise.all([
+    const [totalProfiles, grantRows, unitLeads, deptHeads, deptHods, ushers, financeHeads, visitorCount] = await Promise.all([
       this.prisma.profile.count({ where: { tenantId: t } }),
       this.prisma.roleGrant.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true, role: true } }),
       this.prisma.unitLeadAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.departmentHead.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.departmentHod.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.headUsherAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
+      this.prisma.financeHeadAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.visitor.count({ where: { tenantId: t, convertedAt: null } }),
     ]);
 
@@ -51,6 +52,7 @@ export class UsersRolesOverviewService {
       [Role.ADMIN_HEAD]: adminHeadUserIds.size,
       [Role.HOD]: deptHods.length,
       [Role.HEAD_USHER]: ushers.length,
+      [Role.FINANCE_HEAD]: financeHeads.length,
       [Role.UNIT_LEAD]: unitLeads.length,
       [Role.MEMBER]: totalProfiles,
     };
@@ -61,6 +63,7 @@ export class UsersRolesOverviewService {
       { role: Role.ADMIN_HEAD,  label: 'Admin Head',  level: 6, count: countMap[Role.ADMIN_HEAD]  ?? 0 },
       { role: Role.HOD,         label: 'Head of Department', level: 4, count: countMap[Role.HOD]  ?? 0 },
       { role: Role.HEAD_USHER,  label: 'Head Usher',  level: 3, count: countMap[Role.HEAD_USHER]  ?? 0 },
+      { role: Role.FINANCE_HEAD, label: 'Finance Head', level: 3, count: countMap[Role.FINANCE_HEAD] ?? 0 },
       { role: Role.UNIT_LEAD,   label: 'Unit Leader', level: 2, count: countMap[Role.UNIT_LEAD]   ?? 0 },
       { role: Role.MEMBER,      label: 'Member',      level: 1, count: countMap[Role.MEMBER]       ?? 0 },
       { role: 'VISITOR',        label: 'Visitor',     level: 0, count: visitorCount },

@@ -14,6 +14,7 @@ export const ALL_CONCRETE_ROLES: UserRole[] = [
   "ADMIN",
   "HOD",
   "HEAD_USHER",
+  "FINANCE_HEAD",
   "UNIT_LEAD",
   "MEMBER",
 ];
@@ -38,6 +39,7 @@ export const PERMISSION_ROLE_OPTIONS: PermissionRoleOption[] = [
   { role: "ADMIN_HEAD", label: "Admin Head", impliedRoles: ["ADMIN"] },
   { role: "HOD", label: "Head of Department" },
   { role: "HEAD_USHER", label: "Head Usher" },
+  { role: "FINANCE_HEAD", label: "Finance Head" },
   { role: "UNIT_LEAD", label: "Unit Leader" },
   { role: "MEMBER", label: "Member" },
 ];
