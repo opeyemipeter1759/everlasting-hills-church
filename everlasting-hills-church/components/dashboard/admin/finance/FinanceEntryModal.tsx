@@ -64,6 +64,9 @@ export default function FinanceEntryModal({
     if (!category.trim()) return showToast.error("Category is required");
     if (!Number.isFinite(amountNum) || amountNum <= 0) return showToast.error("Enter a valid amount");
     if (!date) return showToast.error("Date is required");
+    if (kind === "INCOME" && ["tithe", "offering"].includes(category.trim().toLowerCase())) {
+      return showToast.error('Tithe and Offering are recorded per service above, not here — use "Record" on the service row instead.');
+    }
 
     try {
       if (isEdit && entry) {
@@ -117,19 +120,34 @@ export default function FinanceEntryModal({
 
         <div>
           <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">Category</label>
+          {kind === "INCOME" && (
+            <p className="mb-1.5 text-xs text-gray-400">
+              Recording Sunday/Wednesday tithe or offering? Close this and use <span className="font-semibold">Record</span> on that service&apos;s row above instead.
+            </p>
+          )}
           <input
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             placeholder={kind === "INCOME" ? "e.g. Building, Program, Rent, Giving" : "e.g. Utilities, Maintenance"}
             className={fieldCls}
-            list="finance-category-suggestions"
           />
           {kind === "INCOME" && (
-            <datalist id="finance-category-suggestions">
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
               {INCOME_CATEGORY_SUGGESTIONS.map((c) => (
-                <option key={c} value={c} />
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCategory(c)}
+                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                    category === c
+                      ? "border-[#87102C] bg-[#87102C] text-white"
+                      : "border-[#E7CDD3] text-gray-600 hover:bg-[#FFF4F6] dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
+                  }`}
+                >
+                  {c}
+                </button>
               ))}
-            </datalist>
+            </div>
           )}
         </div>
 
@@ -147,7 +165,7 @@ export default function FinanceEntryModal({
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="0"
-              className={fieldCls}
+              className={`${fieldCls} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
             />
           </div>
           <div>

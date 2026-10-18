@@ -7,20 +7,38 @@ import type { Env } from '../config/env.validation';
 import { UpsertServiceOfferingDto } from './dto/service-offering.dto';
 import { CreateFinanceEntryDto, UpdateFinanceEntryDto } from './dto/finance-entry.dto';
 
+// Services are scheduled for Nigeria time (WAT, UTC+1) but scheduledAt is
+// stored in UTC, so a WAT-midnight service lands at 23:00 UTC the previous
+// day. Week/month boundaries must be anchored to WAT — not the server's own
+// time zone — or a Sunday/Wednesday service can fall just outside the range
+// computed for "this week". Same convention as attendance.types.ts's
+// WAT_OFFSET_MS.
+const WAT_OFFSET_MS = 60 * 60 * 1000;
+
+/** The UTC instant of WAT midnight on the given "yyyy-MM-dd" calendar day. */
+function watMidnightUtc(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month - 1, day) - WAT_OFFSET_MS);
+}
+
+function dayRange(dateStr: string): { from: Date; to: Date } {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const from = watMidnightUtc(y, m, d);
+  const to = new Date(from.getTime() + 86_400_000 - 1); // end of this WAT day
+  return { from, to };
+}
+
 function weekRange(dateStr: string): { from: Date; to: Date } {
-  const d = new Date(`${dateStr}T00:00:00`);
-  const from = new Date(d);
-  from.setDate(d.getDate() - d.getDay()); // back up to Sunday
-  from.setHours(0, 0, 0, 0);
-  const to = new Date(from);
-  to.setDate(from.getDate() + 6);
-  to.setHours(23, 59, 59, 999);
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const midnight = watMidnightUtc(y, m, d);
+  const watDay = new Date(midnight.getTime() + WAT_OFFSET_MS).getUTCDay();
+  const from = new Date(midnight.getTime() - watDay * 86_400_000); // back up to Sunday, WAT
+  const to = new Date(from.getTime() + 7 * 86_400_000 - 1); // end of Saturday, WAT
   return { from, to };
 }
 
 function monthRange(year: number, month: number): { from: Date; to: Date } {
-  const from = new Date(year, month - 1, 1, 0, 0, 0, 0);
-  const to = new Date(year, month, 0, 23, 59, 59, 999); // day 0 of next month = last day of this one
+  const from = watMidnightUtc(year, month, 1);
+  const to = new Date(watMidnightUtc(month === 12 ? year + 1 : year, month === 12 ? 1 : month + 1, 1).getTime() - 1);
   return { from, to };
 }
 
@@ -54,6 +72,12 @@ export class FinanceService {
         recordedById: actorId,
       },
     });
+  }
+
+  async deleteServiceOffering(serviceId: string) {
+    const result = await this.prisma.serviceOffering.deleteMany({ where: { serviceId, tenantId: this.tenantId } });
+    if (result.count === 0) throw new NotFoundException('No offering recorded for this service');
+    return { serviceId, deleted: true };
   }
 
   /** Every service in range, with its recorded offering if any (so the UI can show what's still unrecorded). */
@@ -174,6 +198,11 @@ export class FinanceService {
       grandIncomeTotal,
       netTotal: grandIncomeTotal - expenseTotal,
     };
+  }
+
+  async getDailySummary(date: string) {
+    const { from, to } = dayRange(date);
+    return this.summarize(from, to);
   }
 
   /** `date` anchors the week — Sunday through Saturday containing it. */
