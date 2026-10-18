@@ -7,6 +7,7 @@ import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
 import {
   formatNaira,
+  useDailyFinanceSummary,
   useDeleteFinanceEntry,
   useFinanceEntries,
   useMonthlyFinanceSummary,
@@ -18,7 +19,9 @@ import {
 import ServiceOfferingRow from "./ServiceOfferingRow";
 import FinanceEntryModal from "./FinanceEntryModal";
 
-type Period = "weekly" | "monthly";
+type Period = "daily" | "weekly" | "monthly";
+
+const PERIOD_LABELS: Record<Period, string> = { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
 
 const MONTH_LABELS = [
   "January", "February", "March", "April", "May", "June",
@@ -39,6 +42,11 @@ const shortDate = (date: string) =>
 // For a UTC scheduledAt instant, the WAT (Nigeria) calendar date — a WAT
 // Sunday service is stored at ~23:00 UTC the day before.
 const watDateStr = (isoUtc: string) => new Date(new Date(isoUtc).getTime() + WAT_OFFSET_MS).toISOString().slice(0, 10);
+
+const serviceDayLabel = (isoUtc: string) =>
+  new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(
+    new Date(new Date(isoUtc).getTime() + WAT_OFFSET_MS),
+  );
 
 function csvCell(value: string | number | null) {
   let text = value == null ? "" : String(value);
@@ -90,6 +98,7 @@ function groupEntries(categories: { category: string; amount: number }[], entrie
 
 export default function FinanceOverview() {
   const [period, setPeriod] = useState<Period>("weekly");
+  const [dailyDate, setDailyDate] = useState(todayIso());
   const [weeklyDate, setWeeklyDate] = useState(todayIso());
   const watNow = new Date(Date.now() + WAT_OFFSET_MS);
   const [monthlyYear, setMonthlyYear] = useState(watNow.getUTCFullYear());
@@ -102,9 +111,10 @@ export default function FinanceOverview() {
   });
   const [removing, setRemoving] = useState<FinanceEntry | null>(null);
 
+  const daily = useDailyFinanceSummary(period === "daily" ? dailyDate : "");
   const weekly = useWeeklyFinanceSummary(period === "weekly" ? weeklyDate : "");
   const monthly = useMonthlyFinanceSummary(period === "monthly" ? monthlyYear : 0, period === "monthly" ? monthlyMonth : 0);
-  const summary = period === "weekly" ? weekly : monthly;
+  const summary = period === "daily" ? daily : period === "weekly" ? weekly : monthly;
 
   const range = summary.data?.range;
   const entries = useFinanceEntries(range ? { from: range.from, to: range.to } : {});
@@ -118,6 +128,7 @@ export default function FinanceOverview() {
   const periodLabel = useMemo(() => {
     if (period === "monthly") return `${MONTH_LABELS[monthlyMonth - 1]} ${monthlyYear}`;
     if (!range) return "";
+    if (period === "daily") return shortDate(range.from);
     return `${shortDate(range.from)} – ${shortDate(range.to)}`;
   }, [period, monthlyMonth, monthlyYear, range]);
 
@@ -133,14 +144,19 @@ export default function FinanceOverview() {
   }
 
   const data = summary.data;
-  const tiles = data
-    ? [
-        { label: "Tithe", caption: "Per service", value: data.titheTotal },
-        { label: "Offering", caption: "Per service", value: data.offeringTotal },
-        { label: "Other income", caption: "Building, Rent, Giving…", value: data.incomeTotal },
-        { label: "Expenses", caption: "Everything paid out", value: data.expenseTotal },
-      ]
-    : [];
+  const tiles = !data
+    ? []
+    : period === "monthly"
+      ? [
+          { label: "Tithe", caption: "Per service", value: data.titheTotal },
+          { label: "Offering", caption: "Per service", value: data.offeringTotal },
+          ...data.incomeByCategory.map((c) => ({ label: c.category, caption: "Income", value: c.amount })),
+          ...data.expenseByCategory.map((c) => ({ label: c.category, caption: "Expense", value: c.amount })),
+        ]
+      : [
+          { label: "Other income", caption: "Building, Rent, Giving…", value: data.incomeTotal },
+          { label: "Expenses", caption: "Everything paid out", value: data.expenseTotal },
+        ];
 
   const incomeGroups = data ? groupEntries(data.incomeByCategory, entries.data ?? [], "INCOME") : [];
   const expenseGroups = data ? groupEntries(data.expenseByCategory, entries.data ?? [], "EXPENSE") : [];
@@ -198,7 +214,7 @@ export default function FinanceOverview() {
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="inline-flex rounded-xl border border-gray-200 p-1 dark:border-white/10">
-          {(["weekly", "monthly"] as Period[]).map((p) => (
+          {(["daily", "weekly", "monthly"] as Period[]).map((p) => (
             <button
               key={p}
               type="button"
@@ -207,12 +223,19 @@ export default function FinanceOverview() {
                 period === p ? "bg-[#87102C] text-white" : "text-gray-500 hover:bg-gray-50 dark:text-white/50 dark:hover:bg-white/5"
               }`}
             >
-              {p === "weekly" ? "Weekly" : "Monthly"}
+              {PERIOD_LABELS[p]}
             </button>
           ))}
         </div>
 
-        {period === "weekly" ? (
+        {period === "daily" ? (
+          <input
+            type="date"
+            value={dailyDate}
+            onChange={(e) => setDailyDate(e.target.value)}
+            className="min-h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:border-white/10 dark:bg-white/5 dark:text-white"
+          />
+        ) : period === "weekly" ? (
           <input
             type="date"
             value={weeklyDate}
@@ -263,6 +286,32 @@ export default function FinanceOverview() {
       ) : (
         data && (
           <>
+            {period !== "monthly" && (
+              <div>
+                <p className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-400">Tithe &amp; offering per service</p>
+                {data.services.length === 0 ? (
+                  <p className="text-sm text-gray-400">No service in this period.</p>
+                ) : (
+                  <dl className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+                    {data.services.map((s) => (
+                      <div key={s.id} className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                        <dt className="flex items-center gap-1.5 text-xs font-semibold text-gray-600 dark:text-white/65">
+                          <Wallet size={14} aria-hidden="true" className="shrink-0 text-[#87102C] dark:text-[#FFB3C1]" />
+                          {serviceDayLabel(s.scheduledAt)}
+                        </dt>
+                        <dd className="mt-1.5 text-sm font-bold tabular-nums text-[#111] dark:text-white">
+                          Tithe: {formatNaira(s.tithe ?? 0)}
+                        </dd>
+                        <dd className="text-sm font-bold tabular-nums text-[#111] dark:text-white">
+                          Offering: {formatNaira(s.offering ?? 0)}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+              </div>
+            )}
+
             <dl className="grid grid-cols-2 gap-3 lg:grid-cols-5">
               {tiles.map(({ label, caption, value }) => (
                 <div key={label} className="min-w-0 rounded-2xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
@@ -290,7 +339,8 @@ export default function FinanceOverview() {
                 Totals by category
               </h2>
               <p className="mb-3 text-xs text-gray-400">
-                {period === "weekly" ? "This week" : "This month"}, summed up — Tithe, Offering, and everything else by category.
+                {period === "daily" ? "Today" : period === "weekly" ? "This week" : "This month"}, summed up — Tithe, Offering, and
+                everything else by category.
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl border border-gray-200 p-4 dark:border-white/10">
@@ -330,7 +380,7 @@ export default function FinanceOverview() {
               </div>
             </section>
 
-            {period === "weekly" && (
+            {period !== "monthly" && (
               <>
                 <section>
                   <h2 className="mb-1 text-sm font-black uppercase tracking-widest text-gray-500 dark:text-white/50">
