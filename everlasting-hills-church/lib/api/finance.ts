@@ -97,6 +97,14 @@ export function useUpsertServiceOffering() {
   });
 }
 
+export function useDeleteServiceOffering() {
+  const invalidate = useInvalidateFinance();
+  return useMutation({
+    mutationFn: (serviceId: string) => api.delete(`/finance/service-offerings/${serviceId}`),
+    onSuccess: invalidate,
+  });
+}
+
 // ── Income / expense entries ────────────────────────────────────────────────
 
 export function useFinanceEntries(params: { from?: string; to?: string; kind?: FinanceEntryKind } = {}) {
@@ -132,6 +140,14 @@ export function useDeleteFinanceEntry() {
 }
 
 // ── Summaries ────────────────────────────────────────────────────────────────
+
+export function useDailyFinanceSummary(date: string) {
+  return useQuery({
+    queryKey: [...FINANCE_KEY, "summary", "daily", date],
+    queryFn: () => api.get<FinanceSummary>("/finance/summary/daily", { date }),
+    enabled: Boolean(date),
+  });
+}
 
 export function useWeeklyFinanceSummary(date: string) {
   return useQuery({

@@ -36,6 +36,12 @@ export class FinanceController {
     return this.finance.upsertServiceOffering(serviceId, body, actor.profileId ?? null);
   }
 
+  @Delete('service-offerings/:serviceId')
+  @ApiOperation({ summary: "Clear a service's recorded tithe & offering" })
+  deleteServiceOffering(@Param('serviceId') serviceId: string) {
+    return this.finance.deleteServiceOffering(serviceId);
+  }
+
   @Get('services')
   @ApiOperation({ summary: 'Services in range, with their recorded offering if any' })
   listServices(@Query('from') from?: string, @Query('to') to?: string) {
@@ -64,6 +70,12 @@ export class FinanceController {
   @ApiOperation({ summary: 'Delete an income/expense entry' })
   deleteEntry(@Param('id') id: string) {
     return this.finance.deleteEntry(id);
+  }
+
+  @Get('summary/daily')
+  @ApiOperation({ summary: 'Totals for a single day' })
+  dailySummary(@Query('date') date: string) {
+    return this.finance.getDailySummary(date);
   }
 
   @Get('summary/weekly')
