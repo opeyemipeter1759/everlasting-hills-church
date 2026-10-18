@@ -162,15 +162,24 @@ export class SchedulingService {
   }
 
   /**
-   * "We missed you" emails to absent members, once attendance has closed.
-   * Polls every 30 minutes, every day (Lagos time), and lets
-   * AttendanceAbsenteeMailService work out which service is due — so the
-   * schedule follows ATTENDANCE_*_CLOSE without a redeploy, a service closing
-   * after the day's last run is caught the next day, and a service is only
-   * ever mailed once.
+   * Sunday "We missed you" emails go out at 17:00 Lagos time, after the
+   * attendance window has closed.
    */
-  @Cron('*/30 * * * *', { name: 'attendance-absentee-emails', timeZone: 'Africa/Lagos' })
+  @Cron('0 17 * * 0', { name: 'attendance-absentee-emails', timeZone: 'Africa/Lagos' })
   async sendAbsenteeEmails(): Promise<void> {
+    await this.runAbsenteeEmails();
+  }
+
+  /**
+   * Keep checking for midweek services that close later than expected or need
+   * a catch-up run. Sundays are handled by the fixed 17:00 send above.
+   */
+  @Cron('*/30 * * * 1-6', { name: 'attendance-absentee-emails-weekdays', timeZone: 'Africa/Lagos' })
+  async sendWeekdayAbsenteeEmails(): Promise<void> {
+    await this.runAbsenteeEmails();
+  }
+
+  private async runAbsenteeEmails(): Promise<void> {
     const result = await this.absenteeMail.run();
     if (result.skipped) {
       // Logged (not debug) so a run that sends nothing says why in production.

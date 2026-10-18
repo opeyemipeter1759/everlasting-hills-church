@@ -64,13 +64,14 @@ curl -s -o /dev/null -w "%{http_code}\n" -H "X-Cron-Secret: $SECRET" "$BASE_URL/
 # ── 4. Cloud Scheduler jobs ─────────────────────────────────────────────────
 gcloud services enable cloudscheduler.googleapis.com --project "$PROJECT" >/dev/null
 
-# name|cron (in $TZ_NAME)|description
+# name|cron (in $TZ_NAME)|description[|job path, when it differs from name]
 JOBS=(
   "birthday-greetings|0 8 * * *|Birthday emails to members whose birthday is today"
   "anniversary-greetings|0 8 * * *|Wedding-anniversary emails"
   "follow-up-auto-surface|0 9 * * *|Create follow-up entries for absentees and new visitors"
   "follow-up-reminders|30 9 * * *|48h reminders, 5-day escalations, they're-back prompts"
-  "attendance-absentee-emails|*/30 * * * *|We-missed-you emails to absent members once attendance closes (self-checks which service is due, catches up for 48h)"
+  "attendance-absentee-emails|0 17 * * 0|Sunday we-missed-you emails at 5pm Lagos time"
+  "attendance-absentee-emails-weekdays|*/30 * * * 1-6|Midweek we-missed-you emails and attendance-close catch-up checks|attendance-absentee-emails"
   "google-calendar-sync|0 */6 * * *|Push services/events/gatherings to Google Calendar"
   "push-service-reminder|0 * * * *|Push: upcoming service reminders"
   "push-serving-reminder|0 * * * *|Push: serving-roster reminders"
@@ -79,12 +80,12 @@ JOBS=(
 )
 
 for spec in "${JOBS[@]}"; do
-  IFS='|' read -r name cron desc <<<"$spec"
+  IFS='|' read -r name cron desc path <<<"$spec"
   job="ehc-$name"
   common=(
     --location "$REGION" --project "$PROJECT"
     --schedule "$cron" --time-zone "$TZ_NAME"
-    --uri "$BASE_URL/jobs/$name" --http-method POST
+    --uri "$BASE_URL/jobs/${path:-$name}" --http-method POST
     --headers "X-Cron-Secret=$SECRET,Content-Type=application/json"
     --attempt-deadline 300s
     --max-retry-attempts 2 --min-backoff 30s --max-backoff 300s
