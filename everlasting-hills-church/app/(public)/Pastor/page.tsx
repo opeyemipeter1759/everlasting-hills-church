@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Mail, Instagram } from "lucide-react";
 import ScrollReveal from "@/components/home/ScrollReveal";
-import PageHero from "@/components/marketing/PageHero";
 
 export const metadata = {
   title: "Our Pastors — Everlasting Hills Church",
@@ -48,12 +47,52 @@ const PASTORS = [
 export default function OurPastorsPage() {
   return (
     <main className="bg-white">
-      <PageHero
-        eyebrow="Our Pastors"
-        title="Meet the pastors"
-        accent="who shepherd us"
-        lead="Shepherds of the Everlasting Hills Church family, given to the word, to people, and to the next generation."
-      />
+      {/* Hero — no photo. Asymmetric, agency-style layout: oversized left-aligned
+          type against one confidently-scaled graphic mark (the church's own
+          mountain motif), plus print-precision registration ticks and a hairline
+          meta row. Pure white, one burgundy touch. */}
+      <section className="relative overflow-hidden bg-white">
+        {/* Corner registration ticks — a small "designed with intent" detail */}
+        <span className="absolute left-6 top-6 h-3 w-3 border-l border-t border-black/20 sm:left-8 sm:top-8" />
+        <span className="absolute right-6 top-6 h-3 w-3 border-r border-t border-black/20 sm:right-8 sm:top-8" />
+        <span className="absolute bottom-6 left-6 h-3 w-3 border-b border-l border-black/20 sm:bottom-8 sm:left-8" />
+        <span className="absolute bottom-6 right-6 h-3 w-3 border-b border-r border-black/20 sm:bottom-8 sm:right-8" />
+
+        <div className="mx-auto max-w-6xl px-4 xs:px-6 pb-16 pt-28 sm:px-8 sm:pb-20 sm:pt-36">
+          {/* Headline row — left-aligned type against a large-scale mountain mark */}
+          <div className="flex items-end justify-between gap-8">
+            <div>
+              <p className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.25em] xs:tracking-[0.5em] text-black/40">
+                <span className="h-1.5 w-1.5 bg-[#87102C]" />
+                Leadership
+              </p>
+              <h1 className="mt-6 max-w-3xl text-balance font-serif text-5xl font-normal leading-[1.02] tracking-tight text-[#111] sm:text-7xl lg:text-[5.25rem]">
+                Meet Our Pastors
+              </h1>
+            </div>
+            <svg
+              viewBox="0 0 40 40"
+              fill="none"
+              aria-hidden="true"
+              className="hidden h-24 w-24 shrink-0 text-[#87102C] sm:block sm:h-28 sm:w-28 lg:h-32 lg:w-32"
+            >
+              <path d="M4 32L20 8L36 32H4Z" stroke="currentColor" strokeWidth="1" opacity="0.3" />
+              <path d="M11 32L20 14L29 32H11Z" stroke="currentColor" strokeWidth="1" opacity="0.55" />
+              <path d="M16 32L20 20L24 32H16Z" fill="currentColor" />
+            </svg>
+          </div>
+
+          {/* Meta row — lead paragraph + a small locational detail, split by a hairline */}
+          <div className="mt-12 flex flex-col gap-6 border-t border-black/[0.09] pt-7 sm:flex-row sm:items-start sm:justify-between">
+            <p className="max-w-md text-base leading-relaxed text-black/50">
+              Shepherds of the Everlasting Hills Church family — given to the word, to people, and to the next generation.
+            </p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] xs:tracking-[0.3em] text-black/30">
+              Everlasting Hills Church — Ibadan
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Pastor features — alternating editorial layout */}
       <section>

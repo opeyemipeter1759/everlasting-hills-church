@@ -1,50 +1,103 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Clock, MapPin, Play } from "lucide-react";
+import { ArrowRight, ChevronDown, Play, Sparkles } from "lucide-react";
 import { HERO_FALLBACK, type HeroContent } from "@/lib/site-settings";
-import { SERVICES } from "@/config/config";
-import HillRidge from "@/components/marketing/HillRidge";
 import HeroWordNotes from "./HeroWordNotes";
-
-function clock(h: number, m: number) {
-  return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
-}
 
 export default function HeroSection({ content }: { content?: HeroContent }) {
   const c = content ?? HERO_FALLBACK;
+  const rootRef = useRef<HTMLElement | null>(null);
   const words = c.headline.split(" ");
 
   return (
     <section
       id="hero"
-      className="relative w-full min-h-[100svh] flex flex-col justify-center overflow-hidden bg-church-dark pt-28 lg:pt-32 pb-20 sm:pb-28 lg:pb-36"
+      ref={rootRef}
+      onMouseMove={(e) => {
+        const el = rootRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const x = (e.clientX - (rect.left + rect.width / 2)) / rect.width;
+        const y = (e.clientY - (rect.top + rect.height / 2)) / rect.height;
+        el.style.setProperty("--mx", String(x));
+        el.style.setProperty("--my", String(y));
+      }}
+      className="relative w-full min-h-[100vh] flex flex-col justify-center overflow-hidden pt-28 lg:pt-32 pb-10"
     >
-      <div aria-hidden="true" className="absolute inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] right-[-10%] w-[55%] h-[65%] bg-church-maroon opacity-25 blur-[130px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[45%] h-[55%] bg-[#4a0819] opacity-40 blur-[110px] rounded-full" />
+      {/* Background — unchanged from original */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[60%] bg-church-maroon opacity-20 blur-[120px] rounded-full group-hover:opacity-30 transition-opacity duration-1000"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[50%] bg-[#4a0819] opacity-30 blur-[100px] rounded-full group-hover:opacity-40 transition-opacity duration-1000"></div>
         <div className="absolute inset-0 bg-grid-white" />
       </div>
 
       <div className="relative z-10 w-full flex flex-col items-center px-4 xs:px-6 lg:px-12">
-        {c.scriptureBadge.visible && (
-          <p
-            style={{ animationDelay: "0ms" }}
-            className="opacity-0 animate-fade-in mb-7 flex items-center gap-2.5 text-sm text-church-accent"
-          >
-            <svg aria-hidden="true" viewBox="0 0 24 14" className="h-3 w-5" fill="none">
-              <path d="M1 13 8 3l5 6 3-4 7 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            {c.scriptureBadge.text}
-          </p>
-        )}
+        {/* Badges */}
+        <div
+          style={{ animationDelay: "0ms" }}
+          className="opacity-0 animate-fade-in flex flex-wrap items-center justify-center gap-3 mb-8"
+        >
+          {c.scriptureBadge.visible && (
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-church-maroon/30 border border-church-maroon/50 backdrop-blur-sm">
+              <Sparkles className="w-3 h-3 text-church-accent" />
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.13em] xs:tracking-[0.25em] font-black text-church-accent">
+                {c.scriptureBadge.text}
+              </span>
+            </span>
+          )}
+        </div>
 
+        {/* Headline block */}
         <div className="relative max-w-4xl mx-auto text-center">
-          {/* The headline is the first thing painted, so it animates in with pure
-              CSS rather than waiting on hydration; each word has its own delay. */}
-          <h1 className="font-serif font-normal text-[2.5rem] xs:text-5xl sm:text-7xl lg:text-[5.5rem] text-white leading-[1.03] tracking-tight text-balance mb-7">
+          <svg
+            viewBox="0 0 60 30"
+            className="hidden lg:block absolute -left-16 top-2 w-10 h-5 text-white/25"
+            fill="none"
+          >
+            <path
+              d="M4 20 Q 20 4 56 10"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+
+          <div className="hidden lg:flex flex-col items-center absolute -right-20 -top-8 text-white/35">
+            <span
+              style={{ fontFamily: "var(--font-dancing)" }}
+              className="text-xl -rotate-6"
+            >
+              {c.mediaCard.eyebrow}
+            </span>
+            <svg
+              viewBox="0 0 70 56"
+              className="w-16 h-[52px] -mt-1 ml-10"
+              fill="none"
+            >
+              <path
+                d="M10 8 C 32 4, 50 14, 42 32"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              {/* <path
+                d="M30 25 L 43 32 L 34 43"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              /> */}
+            </svg>
+          </div>
+
+          {/* Headline is critical above-the-fold content — it renders and animates
+              in via pure CSS (not Framer Motion's initial/animate) so it never sits
+              invisible waiting on JS hydration behind an already-painted background.
+              Each word carries its own staggered delay for a cascading reveal. */}
+          <h1 className="text-[30px] xs:text-[40px] sm:text-[64px] text-white lg:text-[76px] leading-[1.05] sm:leading-[1.02] font-bold font-display tracking-tight mb-6">
             {words.map((word, i) => (
               <span
                 key={`${word}-${i}`}
@@ -57,9 +110,11 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
             <br />
             <span
               style={{ animationDelay: `${80 + words.length * 70 + 60}ms` }}
-              className="opacity-0 animate-fade-up inline-block text-white/55"
+              className="opacity-0 animate-fade-up inline-block"
             >
-              {c.headlineAccent}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-church-accent via-white to-church-maroon font-serif italic font-normal bg-[length:200%_100%] animate-gradient-x">
+                {c.headlineAccent}
+              </span>
             </span>
           </h1>
 
@@ -68,7 +123,7 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           <div className="relative max-w-2xl mx-auto">
             <p
               style={{ animationDelay: "620ms" }}
-              className="opacity-0 animate-fade-up text-white/65 text-base xs:text-lg sm:text-xl leading-relaxed"
+              className="opacity-0 animate-fade-up text-white/60 text-base xs:text-lg sm:text-xl leading-relaxed font-sans font-medium"
             >
               {c.subtext}
             </p>
@@ -77,15 +132,53 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           <HeroWordNotes placement="inline" />
         </div>
 
+        {/* Animated photo marquee */}
         <div
-          style={{ animationDelay: "800ms" }}
-          className="opacity-0 animate-fade-up flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mt-9"
+          style={{ animationDelay: "500ms" }}
+          className="opacity-0 animate-fade-up w-[calc(100%+2rem)] xs:w-[calc(100%+3rem)] lg:w-[calc(100%+6rem)] -mx-4 xs:-mx-6 lg:-mx-12 mt-12 lg:mt-16"
         >
+          <PhotoMarquee images={c.carouselImages} />
+        </div>
+
+        {/* CTAs */}
+        <div
+          style={{ animationDelay: "900ms" }}
+          className="opacity-0 animate-fade-up flex w-full sm:w-auto flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mt-10"
+        >
+          <div className="hidden lg:flex flex-col items-end justify-center pr-2 text-white/35 whitespace-nowrap">
+            <span
+              style={{ fontFamily: "var(--font-dancing)" }}
+              className="text-xl rotate-3"
+            >
+              Everyone&apos;s welcome
+            </span>
+            <svg
+              viewBox="0 0 70 48"
+              className="w-16 h-11 -mt-1 mr-2 scale-x-[-1]"
+              fill="none"
+            >
+              <path
+                d="M8 8 C 30 4, 48 14, 40 32"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+              {/* <path
+                d="M28 25 L 41 32 L 32 43"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              /> */}
+            </svg>
+          </div>
+
           <motion.a
             href={c.ctaPrimary.href}
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.97 }}
-            className="group relative overflow-hidden px-7 sm:px-9 py-3.5 bg-white text-church-dark font-semibold rounded-full flex items-center justify-center gap-3 shadow-2xl shadow-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-church-accent focus-visible:ring-offset-2 focus-visible:ring-offset-church-dark"
+            className="group relative overflow-hidden px-6 sm:px-10 py-3.5 sm:py-4 bg-white text-church-dark font-bold rounded-xl transition-colors flex items-center justify-center gap-3 shadow-2xl shadow-white/10"
           >
             <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/60 to-transparent w-1/2 animate-shine" />
             <span className="relative">{c.ctaPrimary.label}</span>
@@ -93,50 +186,39 @@ export default function HeroSection({ content }: { content?: HeroContent }) {
           </motion.a>
           <motion.a
             href={c.ctaSecondary.href}
-            whileHover={{ scale: 1.03, backgroundColor: "rgba(255,255,255,0.06)" }}
+            whileHover={{
+              scale: 1.03,
+              backgroundColor: "rgba(255,255,255,0.05)",
+            }}
             whileTap={{ scale: 0.97 }}
-            className="group px-7 sm:px-9 py-3.5 border border-white/25 font-semibold rounded-full flex items-center justify-center gap-3 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-church-accent focus-visible:ring-offset-2 focus-visible:ring-offset-church-dark"
+            className="group px-6 sm:px-10 py-3.5 sm:py-4 bg-transparent border border-white/20 font-bold rounded-xl transition-all flex items-center justify-center gap-3 text-white"
           >
-            <span className="w-6 h-6 shrink-0 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:scale-110">
+            <div className="w-6 h-6 shrink-0 rounded-full bg-white/10 flex items-center justify-center transition-transform group-hover:scale-110">
               <Play className="w-3 h-3 fill-white" />
-            </span>
+            </div>
             {c.ctaSecondary.label}
           </motion.a>
         </div>
 
-        {/* When and where — the first thing a new visitor needs. */}
-        <Link
-          href="/visit"
-          style={{ animationDelay: "920ms" }}
-          className="opacity-0 animate-fade-up mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-white/60 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-church-accent rounded"
-        >
-          <span className="inline-flex items-center gap-2">
-            <Clock className="w-4 h-4 text-church-accent" aria-hidden="true" />
-            Sundays {clock(SERVICES.sunday.startH, SERVICES.sunday.startM)}, Wednesdays {clock(SERVICES.wednesday.startH, SERVICES.wednesday.startM)}
-          </span>
-          <span className="inline-flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-church-accent" aria-hidden="true" />
-            Orogun, Ibadan
-          </span>
-        </Link>
-
-        {/* Animated photo marquee */}
-        <div
-          style={{ animationDelay: "500ms" }}
-          className="opacity-0 animate-fade-up w-[calc(100%+2rem)] xs:w-[calc(100%+3rem)] lg:w-[calc(100%+6rem)] -mx-4 xs:-mx-6 lg:-mx-12 mt-12 lg:mt-14"
-        >
-          <PhotoMarquee images={c.carouselImages} />
-        </div>
-
         <p
-          style={{ animationDelay: "1000ms" }}
-          className="opacity-0 animate-fade-up text-sm text-white/45 mt-6 text-center"
+          style={{ animationDelay: "980ms" }}
+          className="opacity-0 animate-fade-up text-[10px] uppercase tracking-[0.13em] xs:tracking-[0.25em] text-white/35 font-bold mt-6"
         >
-          {c.mediaCard.title}. {c.mediaCard.subtitle}
+          {c.mediaCard.title} — {c.mediaCard.subtitle}
         </p>
-      </div>
 
-      <HillRidge fill="#ffffff" />
+        {/* Scroll cue */}
+        <a
+          href="#daily-scripture-today"
+          style={{ animationDelay: "1100ms" }}
+          className="opacity-0 animate-fade-in hidden sm:flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors mt-10"
+        >
+          <span className="text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] font-bold">
+            Scroll
+          </span>
+          <ChevronDown className="w-4 h-4 animate-bounce-soft" />
+        </a>
+      </div>
     </section>
   );
 }
