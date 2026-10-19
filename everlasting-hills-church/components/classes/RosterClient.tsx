@@ -1,20 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, Check, ShieldCheck } from "lucide-react";
-import { useMarkSession, useRoster, useVerifyAction } from "@/lib/api/classes";
+import { AlertTriangle, ArrowLeft, Check } from "lucide-react";
+import { useMarkSession, useRoster } from "@/lib/api/classes";
 import { showToast } from "@/components/ui/toast/toast";
 import { ClassTheme } from "./theme";
 import { ClassError, ClassLoading, ProgressBar, errorText, formatDate } from "./shared";
 
 /**
- * A cohort's learners: progress, session attendance and action steps to
- * verify. Used by facilitators (My Classes) and by staff (admin Classes).
+ * A cohort's learners: progress and session attendance. Used by facilitators (My Classes) and by staff (admin Classes).
  */
 export default function RosterClient({ cohortId, backHref = "/dashboard/classes", embedded = false }: { cohortId: string; backHref?: string; embedded?: boolean }) {
   const { data, isLoading, error, refetch } = useRoster(cohortId);
   const mark = useMarkSession(cohortId);
-  const verify = useVerifyAction(cohortId);
 
   if (isLoading) return <ClassTheme><ClassLoading /></ClassTheme>;
   if (error || !data) return <ClassTheme className="px-4 py-10"><ClassError error={error} onRetry={() => refetch()} /></ClassTheme>;
@@ -26,16 +24,6 @@ export default function RosterClient({ cohortId, backHref = "/dashboard/classes"
       showToast.error(errorText(err));
     }
   }
-
-  async function verifyStep(actionId: string, verified: boolean) {
-    try {
-      await verify.mutateAsync({ actionId, verified });
-    } catch (err) {
-      showToast.error(errorText(err));
-    }
-  }
-
-  const toVerify = data.learners.flatMap((l) => l.actions.filter((a) => a.needsLeader && !a.verifiedAt).map((a) => ({ ...a, learner: l.member.name })));
 
   return (
     <ClassTheme className={embedded ? "" : "mx-auto max-w-[1200px] px-4 py-8"}>
@@ -117,31 +105,6 @@ export default function RosterClient({ cohortId, backHref = "/dashboard/classes"
           </tbody>
         </table>
       </div>
-
-      {/* Action steps to verify */}
-      <section className="mt-10">
-        <h2 className="cls-display text-2xl text-[var(--color-ink)] dark:text-white">Action steps to verify</h2>
-        {toVerify.length === 0 ? (
-          <p className="mt-3 text-sm text-black/55 dark:text-white/55">Nothing waiting. Steps that need a leader appear here once a learner marks them done.</p>
-        ) : (
-          <ul className="mt-4 space-y-3">
-            {toVerify.map((a) => (
-              <li key={a.id} className="flex flex-col gap-3 rounded-[16px] border border-[var(--color-pink-border)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/[0.04]">
-                <span>
-                  <span className="block font-semibold text-[var(--color-ink)] dark:text-white">{a.learner}</span>
-                  <span className="block text-sm text-black/60 dark:text-white/60">
-                    {a.lessonTitle} · marked done {formatDate(a.doneAt)}
-                    {a.note ? ` · "${a.note}"` : ""}
-                  </span>
-                </span>
-                <button type="button" onClick={() => verifyStep(a.id, true)} disabled={verify.isPending} className="cls-btn cls-btn-primary">
-                  <ShieldCheck className="h-4 w-4" aria-hidden /> Verify
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
     </ClassTheme>
   );
 }

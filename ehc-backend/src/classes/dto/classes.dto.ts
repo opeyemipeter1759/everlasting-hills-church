@@ -31,11 +31,6 @@ export class ReflectionDto {
   text!: string;
 }
 
-export class ActionDto {
-  @ApiProperty() @IsBoolean() done!: boolean;
-  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(500) note?: string;
-}
-
 export class ScriptureDto {
   @ApiProperty({ example: 'Genesis 49:26' }) @IsString() @MaxLength(80) ref!: string;
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(2000) text?: string;

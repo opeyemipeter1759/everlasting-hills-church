@@ -6,7 +6,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { ClassesLearnerService } from './classes-learner.service';
 import { ClassesAdminService } from './classes-admin.service';
-import { ActionDto, QuizAnswersDto, ReflectionDto } from './dto/classes.dto';
+import { QuizAnswersDto, ReflectionDto } from './dto/classes.dto';
 
 /**
  * The church's classes, for the signed-in learner: the Membership Class and the
@@ -87,12 +87,5 @@ export class ClassesController {
   @ApiBody({ type: ReflectionDto })
   reflection(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Param('lesson') lesson: string, @Body() body: ReflectionDto) {
     return this.learner.saveReflection(actor, slug, lesson, body.text);
-  }
-
-  @Put(':slug/lessons/:lesson/action')
-  @ApiOperation({ summary: 'Mark the action step done (or not)' })
-  @ApiBody({ type: ActionDto })
-  action(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Param('lesson') lesson: string, @Body() body: ActionDto) {
-    return this.learner.setAction(actor, slug, lesson, body.done, body.note);
   }
 }

@@ -8,7 +8,6 @@ import { api } from "@/lib/api/request";
 export type MembershipStatus = "IN_TRAINING" | "FULL";
 export type EnrollmentStatus = "WAITING" | "ACTIVE" | "COMPLETED";
 export type LessonStatus = "locked" | "not_started" | "in_progress" | "done";
-export type ActionVerification = "SELF" | "LEADER";
 
 export interface Eligibility {
   required: number;
@@ -87,16 +86,6 @@ export interface ClassHome {
       nextSession: ClassSession | null;
     } | null;
   } | null;
-  actions: {
-    lessonId: string;
-    week: number;
-    lessonSlug: string;
-    lessonTitle: string;
-    step: string;
-    verification: ActionVerification;
-    doneAt: string | null;
-    verifiedAt: string | null;
-  }[];
 }
 
 export interface Scripture {
@@ -120,8 +109,6 @@ export interface LessonView {
     scriptures: Scripture[];
     summary: string | null;
     reflectionPrompt: string | null;
-    actionStep: string | null;
-    actionVerification: ActionVerification;
     /** Options only. The correct answers never reach the browser. */
     quiz: { id: string; prompt: string; options: string[] }[];
   };
@@ -132,8 +119,6 @@ export interface LessonView {
     quizPassed: boolean;
     quizAttempts: number;
     reflection: string;
-    actionDone: boolean;
-    actionVerified: boolean;
     completed: boolean;
   };
   previous: LessonRef | null;
@@ -227,12 +212,6 @@ export function useSaveReflection(slug: string, lesson: string) {
   );
 }
 
-export function useSetAction(slug: string, lesson: string) {
-  return useLessonMutation(slug, lesson, (body: { done: boolean; note?: string }) =>
-    api.put<{ completed: boolean }>(`/classes/${slug}/lessons/${lesson}/action`, body),
-  );
-}
-
 export function useCertificate(slug: string) {
   return useQuery({ queryKey: keys.certificate(slug), queryFn: () => api.get<Certificate>(`/classes/${slug}/certificate`), retry: false });
 }
@@ -274,8 +253,6 @@ export interface AdminLesson {
   summary: string | null;
   reflectionPrompt: string | null;
   scriptures: Scripture[] | null;
-  actionStep: string | null;
-  actionVerification: ActionVerification;
   QuizItems: QuizItem[];
 }
 
@@ -313,7 +290,6 @@ export interface RosterLearner {
   progressPct: number;
   lastActivityAt: string | null;
   stalled: boolean;
-  actions: { id: string; lessonId: string; doneAt: string; note: string | null; verifiedAt: string | null; lessonTitle: string; needsLeader: boolean }[];
 }
 
 export interface Roster {
@@ -460,15 +436,6 @@ export function useMarkSession(cohortId: string) {
   return useMutation({
     mutationFn: ({ sessionId, memberId, present }: { sessionId: string; memberId: string; present: boolean }) =>
       api.put(`/class-admin/sessions/${sessionId}/attendance`, { memberId, present }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: admin.roster(cohortId) }),
-  });
-}
-
-export function useVerifyAction(cohortId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ actionId, verified }: { actionId: string; verified: boolean }) =>
-      api.put(`/class-admin/actions/${actionId}/verify`, { verified }),
     onSuccess: () => qc.invalidateQueries({ queryKey: admin.roster(cohortId) }),
   });
 }

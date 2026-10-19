@@ -18,9 +18,7 @@ interface LessonSeed {
   title: string;
   description: string;
   reflection: string;
-  action: string;
   scriptures: string[];
-  verification?: 'SELF' | 'LEADER';
 }
 
 interface WeekSeed {
@@ -41,7 +39,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Welcome and Orientation',
         description: 'How the class works and what to expect.',
         reflection: 'What made you decide to take this class, and what do you hope to receive from it?',
-        action: 'Write down one thing you are trusting God for during these four weeks.',
         scriptures: ['Genesis 49:26', 'Psalm 92:13'],
       },
       {
@@ -49,7 +46,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Introduction to EHC, Vision and Mission',
         description: 'Our story, our calling, and where God is taking us.',
         reflection: 'Which part of the EHC vision speaks to you most, and why?',
-        action: 'Say the EHC vision statement out loud from memory to someone this week.',
         scriptures: ['Habakkuk 2:2-3', 'Proverbs 29:18'],
       },
       {
@@ -57,7 +53,6 @@ const WEEKS: WeekSeed[] = [
         title: 'What It Means to Be Part of the Church',
         description: 'Salvation and membership in the body of Christ.',
         reflection: 'How would you explain, in your own words, how you became part of the body of Christ?',
-        action: 'Thank God in prayer, by name, for the day He saved you.',
         scriptures: ['1 Corinthians 12:12-13', 'Ephesians 2:19-22'],
       },
       {
@@ -65,7 +60,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Why Belong to a Church Family',
         description: 'The bond that holds us together and why no believer should walk alone.',
         reflection: 'Where in your life have you been trying to walk alone?',
-        action: 'Introduce yourself to one person at church you have not met before.',
         scriptures: ['Hebrews 10:24-25', 'Acts 2:42-47'],
       },
       {
@@ -73,9 +67,7 @@ const WEEKS: WeekSeed[] = [
         title: 'Home Cell, and Why',
         description: 'Where church gets personal, and how to join one.',
         reflection: 'What would make it easy for you to open up in a small group?',
-        action: 'Attend a Home Cell meeting near you.',
         scriptures: ['Acts 5:42', 'Acts 20:20'],
-        verification: 'LEADER',
       },
     ],
   },
@@ -89,7 +81,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Who Really Is Jesus?',
         description: 'The person of Christ and the Trinity, clearly explained.',
         reflection: 'Who is Jesus to you today, not just in doctrine but in your daily life?',
-        action: 'Read the Gospel of John chapter 1 this week.',
         scriptures: ['John 1:1-14', 'Colossians 1:15-20', 'Matthew 28:19'],
       },
       {
@@ -97,7 +88,6 @@ const WEEKS: WeekSeed[] = [
         title: 'The Holy Spirit as Lord',
         description: 'Knowing Him as a person, not just a power.',
         reflection: 'How have you related to the Holy Spirit until now: as a person or as a power?',
-        action: 'Spend ten minutes in prayer speaking to the Holy Spirit as a person.',
         scriptures: ['John 14:16-17', '2 Corinthians 3:17', 'Acts 13:2'],
       },
       {
@@ -105,7 +95,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Fruit of the Spirit',
         description: 'The character God grows in us.',
         reflection: 'Which fruit of the Spirit do you most want God to grow in you right now?',
-        action: 'Choose one fruit and practise it on purpose with someone this week.',
         scriptures: ['Galatians 5:22-23', 'John 15:4-5'],
       },
       {
@@ -113,7 +102,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Gifts of the Spirit',
         description: 'The grace God gives through us.',
         reflection: 'What gifts have others noticed in you, even ones you are unsure about?',
-        action: 'Ask a mature believer what gifts they see in your life.',
         scriptures: ['1 Corinthians 12:4-11', 'Romans 12:6-8', '1 Peter 4:10'],
       },
       {
@@ -121,7 +109,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Basic Biblical Doctrine',
         description: 'A summary of what EHC believes.',
         reflection: 'Which of these truths would you like to understand more deeply?',
-        action: 'Write down one doctrine you will study further in the Believers Class or your devotion.',
         scriptures: ['2 Timothy 3:16-17', 'Jude 1:3'],
       },
     ],
@@ -136,7 +123,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Prayer',
         description: 'Building a life of communion with God.',
         reflection: 'What usually gets in the way of your prayer life?',
-        action: 'Set a fixed daily time for prayer and keep it for seven days.',
         scriptures: ['Matthew 6:5-13', 'Luke 18:1', '1 Thessalonians 5:17'],
       },
       {
@@ -144,7 +130,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Personal and Daily Devotion',
         description: 'Meeting God in His Word daily.',
         reflection: 'What has God said to you through His Word recently?',
-        action: 'Start a Bible reading plan in the EHC app and read daily for a week.',
         scriptures: ['Psalm 119:105', 'Joshua 1:8', 'Mark 1:35'],
       },
       {
@@ -152,7 +137,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Love Walk',
         description: 'How we treat one another as family.',
         reflection: 'Is there anyone you need to forgive or make peace with?',
-        action: 'Do one quiet act of kindness for a member of the church family.',
         scriptures: ['1 Corinthians 13:4-7', 'John 13:34-35', '1 John 4:20-21'],
       },
       {
@@ -160,7 +144,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Welfare',
         description: 'How we care for one another in need.',
         reflection: 'How can you be part of how this house cares for its own?',
-        action: 'Reach out to check on one church member this week.',
         scriptures: ['Galatians 6:2', 'Galatians 6:10', 'Acts 4:32-35'],
       },
       {
@@ -168,7 +151,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Living With Purpose in Mind',
         description: 'Discovering why God placed you here.',
         reflection: 'What do you sense God has placed you on earth to do?',
-        action: 'Write a one-sentence purpose statement and pray over it.',
         scriptures: ['Jeremiah 29:11', 'Ephesians 2:10', 'Ecclesiastes 12:13'],
       },
     ],
@@ -183,7 +165,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Church Service Conduct',
         description: 'How we behave in the house of God.',
         reflection: 'What does honouring the presence of God look like for you on a Sunday?',
-        action: 'Arrive early to the next service and spend the time in prayer.',
         scriptures: ['1 Timothy 3:14-15', 'Psalm 100:4', 'Ecclesiastes 5:1'],
       },
       {
@@ -191,7 +172,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Spiritual Leadership and Honor',
         description: 'Knowing and honoring those who watch over your soul.',
         reflection: 'How do you show honour to spiritual leaders in practical ways?',
-        action: 'Pray for your pastors by name every day this week.',
         scriptures: ['Hebrews 13:17', '1 Thessalonians 5:12-13', '1 Timothy 5:17'],
       },
       {
@@ -199,7 +179,6 @@ const WEEKS: WeekSeed[] = [
         title: 'Shining Light',
         description: 'Living as light in your world.',
         reflection: 'Where is God asking you to shine more brightly: home, work or school?',
-        action: 'Choose one place where you will let your faith be seen this week.',
         scriptures: ['Matthew 5:14-16', 'Philippians 2:15'],
       },
       {
@@ -207,18 +186,14 @@ const WEEKS: WeekSeed[] = [
         title: 'How to Evangelize',
         description: 'Sharing your faith simply and confidently.',
         reflection: 'Who is one person you would love to see come to Christ?',
-        action: 'Share your testimony with one person and record it on the Evangelism form.',
         scriptures: ['Matthew 28:18-20', 'Romans 10:14-15', '1 Peter 3:15'],
-        verification: 'LEADER',
       },
       {
         slug: 'what-next',
         title: 'What Next',
         description: 'Your path forward at EHC, plus the class conclusion.',
         reflection: 'What is your next step at EHC after this class?',
-        action: 'Tell your facilitator which unit or next class you want to join.',
         scriptures: ['Psalm 92:12-14', 'Philippians 3:13-14'],
-        verification: 'LEADER',
       },
     ],
   },
@@ -289,8 +264,6 @@ async function main() {
             duration: '10 min',
             sortOrder: li,
             reflectionPrompt: lesson.reflection,
-            actionStep: lesson.action,
-            actionVerification: lesson.verification ?? 'SELF',
             scriptures: lesson.scriptures.map((ref) => ({ ref })),
           },
         });

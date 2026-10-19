@@ -11,7 +11,7 @@ const input =
 
 /** Ready means the learner can complete it: every lesson needs at least one part to do. */
 function partsOf(l: AdminLesson) {
-  return [l.videoUrl && "video", l.QuizItems.length && "quiz", l.reflectionPrompt && "reflection", l.actionStep && "action"].filter(Boolean) as string[];
+  return [l.videoUrl && "video", l.QuizItems.length && "quiz", l.reflectionPrompt && "reflection"].filter(Boolean) as string[];
 }
 
 export default function ContentTab({ courseId }: { courseId: string }) {
@@ -65,7 +65,7 @@ export default function ContentTab({ courseId }: { courseId: string }) {
           <LessonEditor key={selected.id} lesson={selected} courseId={courseId} />
         ) : (
           <p className="rounded-[16px] border border-dashed border-[var(--color-pink-border)] p-8 text-center text-black/55 dark:border-white/15 dark:text-white/55">
-            Choose a lesson to add its video, scriptures, summary, reflection question, quiz and action step.
+            Choose a lesson to add its video, scriptures, summary, reflection question, and quiz.
           </p>
         )}
       </div>
@@ -100,8 +100,6 @@ function LessonEditor({ lesson, courseId }: { lesson: AdminLesson; courseId: str
     scriptures: scripturesToText(lesson.scriptures),
     summary: lesson.summary ?? "",
     reflectionPrompt: lesson.reflectionPrompt ?? "",
-    actionStep: lesson.actionStep ?? "",
-    actionVerification: lesson.actionVerification,
   });
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setF({ ...f, [k]: e.target.value });
 
@@ -118,8 +116,6 @@ function LessonEditor({ lesson, courseId }: { lesson: AdminLesson; courseId: str
         scriptures: textToScriptures(f.scriptures),
         summary: f.summary,
         reflectionPrompt: f.reflectionPrompt,
-        actionStep: f.actionStep,
-        actionVerification: f.actionVerification,
       });
       showToast.success("Lesson saved");
     } catch (err) {
@@ -152,17 +148,6 @@ function LessonEditor({ lesson, courseId }: { lesson: AdminLesson; courseId: str
         )}
         {field("Summary", "One short paragraph", <textarea className={input} rows={4} value={f.summary} onChange={set("summary")} maxLength={3000} />)}
         {field("Reflection question", "Answers are private to the learner", <input className={input} value={f.reflectionPrompt} onChange={set("reflectionPrompt")} maxLength={500} />)}
-        <div className="grid gap-4 sm:grid-cols-[1fr_200px]">
-          {field("Action step", null, <input className={input} value={f.actionStep} onChange={set("actionStep")} maxLength={500} />)}
-          {field(
-            "Checked by",
-            null,
-            <select className={input} value={f.actionVerification} onChange={set("actionVerification")}>
-              <option value="SELF">The learner</option>
-              <option value="LEADER">Their facilitator</option>
-            </select>,
-          )}
-        </div>
         <button type="submit" disabled={update.isPending} className="cls-btn cls-btn-primary">
           {update.isPending ? "Saving..." : "Save lesson"}
         </button>

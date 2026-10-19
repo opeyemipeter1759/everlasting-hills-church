@@ -184,7 +184,7 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
           })}
         </div>
 
-        {/* Side: sessions and action steps */}
+        {/* Side: the cohort and its sessions */}
         <aside className="space-y-6">
           {e?.cohort && (
             <div className="rounded-[20px] border border-[var(--color-pink-border)] bg-[var(--color-blush)] p-6 dark:border-white/10 dark:bg-white/[0.04]">
@@ -201,33 +201,6 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
                   <MapPin className="h-4 w-4" aria-hidden /> {e.cohort.nextSession.location}
                 </p>
               )}
-            </div>
-          )}
-
-          {home.actions.length > 0 && (
-            <div className="rounded-[20px] border border-[var(--color-pink-border)] bg-white p-6 dark:border-white/10 dark:bg-white/[0.04]">
-              <p className="cls-eyebrow text-[var(--color-burgundy)] dark:text-[var(--color-gold)]">Action steps</p>
-              <ul className="mt-4 space-y-3">
-                {home.actions.map((a) => (
-                  <li key={a.lessonId} className="flex gap-3">
-                    <span
-                      className={`mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-md border ${
-                        a.doneAt ? "border-[var(--color-burgundy)] bg-[var(--color-burgundy)] text-white" : "border-[var(--color-pink-border)] dark:border-white/20"
-                      }`}
-                      aria-hidden
-                    >
-                      {a.doneAt && <Check className="h-3.5 w-3.5" />}
-                    </span>
-                    <span className="text-sm">
-                      <span className="block text-[var(--color-ink)] dark:text-white">{a.step}</span>
-                      <span className="block text-black/50 dark:text-white/50">
-                        Week {a.week}, {a.lessonTitle}
-                        {a.verification === "LEADER" ? (a.verifiedAt ? " · verified by your leader" : a.doneAt ? " · waiting for your leader" : " · your leader verifies this") : ""}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
             </div>
           )}
         </aside>

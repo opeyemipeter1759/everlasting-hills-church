@@ -47,7 +47,8 @@ function requirements(l: LoadedLesson) {
     hasVideo: !!l.videoUrl?.trim(),
     quizCount: l._count.QuizItems,
     hasReflection: !!l.reflectionPrompt?.trim(),
-    hasAction: !!l.actionStep?.trim(),
+    // Action steps are retired: no lesson waits on one, whatever text an older lesson still carries.
+    hasAction: false,
   };
 }
 
@@ -141,7 +142,6 @@ export class ClassesLearnerService {
           },
         },
         Progress: { select: { lessonId: true, videoDoneAt: true, quizPassedAt: true, quizScorePct: true, reflectionAt: true, completedAt: true } },
-        Actions: { select: { lessonId: true, doneAt: true, verifiedAt: true } },
       },
     });
   }
@@ -185,10 +185,6 @@ export class ClassesLearnerService {
         completedAt: p.completedAt,
         started: !!(p.videoDoneAt || p.quizScorePct != null || p.reflectionAt),
       });
-    }
-    for (const a of enrollment?.Actions ?? []) {
-      const cur = map.get(a.lessonId);
-      map.set(a.lessonId, { completedAt: cur?.completedAt ?? null, started: true });
     }
     return map;
   }
@@ -268,7 +264,6 @@ export class ClassesLearnerService {
     const attended = enrollment
       ? await this.prisma.sessionAttendance.count({ where: { memberId, sessionId: { in: sessions.map((s) => s.id) } } })
       : 0;
-    const actions = enrollment?.Actions ?? [];
 
     let blocker: string | null = null;
     if (!enrollment) {
@@ -326,21 +321,6 @@ export class ClassesLearnerService {
               : null,
           }
         : null,
-      actions: lessons
-        .filter((l) => l.lesson.actionStep?.trim())
-        .map((l) => {
-          const a = actions.find((x) => x.lessonId === l.lesson.id);
-          return {
-            lessonId: l.lesson.id,
-            week: l.week,
-            lessonSlug: l.lesson.slug ?? l.lesson.id,
-            lessonTitle: l.lesson.title,
-            step: l.lesson.actionStep!,
-            verification: l.lesson.actionVerification,
-            doneAt: a?.doneAt ?? null,
-            verifiedAt: a?.verifiedAt ?? null,
-          };
-        }),
     };
   }
 
@@ -414,7 +394,7 @@ export class ClassesLearnerService {
   async lesson(actor: AuthUser, slug: string, lessonRef: string) {
     const { course, lessons, index, entry, enrollment, statuses } = await this.openLesson(actor, slug, lessonRef);
     const l = entry.lesson;
-    const [quiz, progress, action] = await Promise.all([
+    const [quiz, progress] = await Promise.all([
       this.prisma.lessonQuizItem.findMany({
         where: { lessonId: l.id },
         orderBy: { sortOrder: 'asc' },
@@ -422,7 +402,6 @@ export class ClassesLearnerService {
         select: { id: true, prompt: true, options: true },
       }),
       this.prisma.lessonProgress.findUnique({ where: { enrollmentId_lessonId: { enrollmentId: enrollment.id, lessonId: l.id } } }),
-      this.prisma.actionCompletion.findUnique({ where: { enrollmentId_lessonId: { enrollmentId: enrollment.id, lessonId: l.id } } }),
     ]);
     const ref = (i: number) =>
       lessons[i] ? { week: lessons[i].week, slug: lessons[i].lesson.slug ?? lessons[i].lesson.id, title: lessons[i].lesson.title } : null;
@@ -442,8 +421,6 @@ export class ClassesLearnerService {
         scriptures: scripturesOf(l.scriptures),
         summary: l.summary,
         reflectionPrompt: l.reflectionPrompt,
-        actionStep: l.actionStep,
-        actionVerification: l.actionVerification,
         quiz,
       },
       progress: {
@@ -453,8 +430,6 @@ export class ClassesLearnerService {
         quizPassed: !!progress?.quizPassedAt,
         quizAttempts: progress?.quizAttempts ?? 0,
         reflection: progress?.reflection ?? '',
-        actionDone: !!action,
-        actionVerified: !!action?.verifiedAt,
         completed: !!progress?.completedAt,
       },
       previous: ref(index - 1),
@@ -475,15 +450,11 @@ export class ClassesLearnerService {
       create: { id: randomUUID(), tenantId: this.tenantId, enrollmentId: enrollment.id, lessonId: entry.lesson.id, ...create },
       update: patch,
     });
-    const action = await this.prisma.actionCompletion.findUnique({
-      where: { enrollmentId_lessonId: { enrollmentId: enrollment.id, lessonId: entry.lesson.id } },
-      select: { id: true },
-    });
     const done = lessonComplete(requirements(entry.lesson), {
       videoDone: !!saved.videoDoneAt,
       quizPassed: !!saved.quizPassedAt,
       reflected: !!saved.reflectionAt,
-      actionDone: !!action,
+      actionDone: false,
     });
     if (done && !saved.completedAt) {
       await this.prisma.lessonProgress.update({ where: { id: saved.id }, data: { completedAt: now } });
@@ -568,23 +539,6 @@ export class ClassesLearnerService {
       { reflection: body || null, reflectionAt: body ? now : null },
     );
     return { saved: true, completed };
-  }
-
-  async setAction(actor: AuthUser, slug: string, lessonRef: string, done: boolean, note?: string) {
-    const ctx = await this.openLesson(actor, slug, lessonRef);
-    if (!ctx.entry.lesson.actionStep?.trim()) throw new BadRequestException('This lesson has no action step.');
-    const key = { enrollmentId_lessonId: { enrollmentId: ctx.enrollment.id, lessonId: ctx.entry.lesson.id } };
-    if (done) {
-      await this.prisma.actionCompletion.upsert({
-        where: key,
-        create: { id: randomUUID(), tenantId: this.tenantId, enrollmentId: ctx.enrollment.id, lessonId: ctx.entry.lesson.id, note: note?.trim() || null },
-        update: { note: note?.trim() || null },
-      });
-    } else {
-      await this.prisma.actionCompletion.deleteMany({ where: { enrollmentId: ctx.enrollment.id, lessonId: ctx.entry.lesson.id } });
-    }
-    const completed = await this.touch(ctx, {}, {});
-    return { actionDone: done, completed };
   }
 
   async certificate(actor: AuthUser, slug: string) {
