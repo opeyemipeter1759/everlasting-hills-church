@@ -30,7 +30,7 @@ export const SITE_IDENTITY_FALLBACK: SiteIdentity = {
   faviconUrl: "/favicon.ico",
   contactEmail: "hello@everlastinghills.org",
   contactPhone: "+234 706 872 7719",
-  address: "Ibadan, Oyo State, Nigeria",
+  address: "7 Abimbola Ayorinde Street, Odo Niser, Orogun, Ibadan",
   socials: {
     instagram: "https://www.instagram.com/everlastinghillschurch?igsh=d2YwOWJlc2FtZnNs",
     youtube: "https://youtube.com/@everlastinghillschurch?si=3ftJeVz2a6F7Hu3g",
