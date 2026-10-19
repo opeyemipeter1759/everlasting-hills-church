@@ -132,17 +132,24 @@ export default async function MembershipClassPage() {
 
       {/* 2. Introduction */}
       <section className="bg-white px-4 py-20 sm:py-28 text-[var(--color-ink)]">
-        <div className="mx-auto max-w-[680px] space-y-5 text-lg leading-relaxed text-black/70">
-          <EmphasisHeading before="Welcome" emphasis="home." className="text-4xl sm:text-5xl text-[var(--color-ink)]" />
-          <p>
-            If you have been worshipping with us for a few weeks, you have already felt something of who we are. The
-            Membership Class is where you go from attending EHC to belonging to EHC.
-          </p>
-          <p>
-            Over four weeks, we will walk you through our story, what we believe, how we live as a family, and how you
-            can take your place in the house. This is not a course to pass. It is an invitation to be planted.
-          </p>
-          <p>Our prayer is that by the end, you will not only know EHC, but know that you are a vital part of it.</p>
+        <div className="mx-auto grid max-w-[1100px] gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <EmphasisHeading before="Welcome" emphasis="home." className="text-5xl sm:text-6xl lg:text-7xl text-[var(--color-ink)]" />
+            <span aria-hidden="true" className="mt-6 block h-1 w-14 rounded-full bg-[var(--color-burgundy)]" />
+          </div>
+          <div className="max-w-[680px] space-y-6 text-lg leading-[1.7] text-black/70">
+            <p className="text-xl leading-[1.6] text-[var(--color-ink)] sm:text-2xl">
+              If you’ve been worshipping with us for a few weeks, you already have a feel for who we are. The Membership
+              Class is where attending EHC becomes belonging to EHC.
+            </p>
+            <p>
+              Over four weeks, we’ll walk you through our story, what we believe, how we live as a family, and how you can
+              take your place in the house. There’s no exam at the end. The goal is for you to be planted here.
+            </p>
+            <p className="cls-display border-l-2 border-[var(--color-burgundy)] pl-5 text-2xl italic !leading-[1.3] text-[var(--color-burgundy)] sm:text-[28px]">
+              By the end, we pray you’ll know EHC well, and know that you have a place here that nobody else can fill.
+            </p>
+          </div>
         </div>
       </section>
 
