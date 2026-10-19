@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { ChevronDown, Check, Sparkles, MapPin, Clock, Users, BookOpen } from "lucide-react";
+import { ChevronDown, Check, MapPin, Clock, Users, BookOpen } from "lucide-react";
 import { serverApi } from "@/lib/api/server";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/session-constants";
 import { ClassTheme, EmphasisHeading } from "@/components/classes/theme";
@@ -42,10 +42,10 @@ function primaryAction(status: ClassStatus | null) {
 
 const GAINS = [
   "A clear picture of who EHC is and where we are going",
-  "A firm grasp of the core truths we stand on",
-  "Practical habits for your walk with God",
-  "Real connection through a Home Cell and the church family",
-  "A clear next step for your growth and service",
+  "A solid understanding of the core truths we stand on",
+  "Our house cultures, and how they deepen your walk with God",
+  "A Home Cell to belong to, and a church family to grow with",
+  "Your next step in growth and service, and your place in the house",
 ];
 
 const FAQS: [string, string][] = [
@@ -203,15 +203,18 @@ export default async function MembershipClassPage() {
         </div>
       </section>
 
-      {/* 4. What you'll gain */}
+      {/* 4. What you’ll gain */}
       <section className="bg-[var(--color-blush)] px-4 py-20 sm:py-28 text-[var(--color-ink)]">
         <div className="mx-auto max-w-[1200px]">
-          <EmphasisHeading before="What you'll" emphasis="gain" className="text-4xl sm:text-5xl" />
-          <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <EmphasisHeading before="What you’ll" emphasis="gain" className="text-5xl sm:text-6xl" />
+          <ul className="mt-12 border-t border-[var(--color-pink-border)]">
             {GAINS.map((g) => (
-              <li key={g} className="rounded-[20px] border border-[var(--color-pink-border)] bg-white p-6 text-lg">
-                <Sparkles className="mb-3 h-5 w-5 text-[var(--color-burgundy)]" aria-hidden />
-                {g}
+              <li key={g} className="flex items-start gap-5 border-b border-[var(--color-pink-border)] py-6 sm:gap-7 sm:py-8">
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="mt-1.5 h-6 w-6 flex-none text-[var(--color-burgundy)] sm:mt-2 sm:h-7 sm:w-7" fill="none">
+                  <path d="M3 21V12a9 9 0 0 1 18 0v9Z" stroke="currentColor" strokeWidth="1.5" />
+                  <path d="M8 21v-8a4 4 0 0 1 8 0v8Z" fill="currentColor" />
+                </svg>
+                <p className="cls-display max-w-[52ch] text-2xl !leading-[1.25] sm:text-[32px]">{g}</p>
               </li>
             ))}
           </ul>
