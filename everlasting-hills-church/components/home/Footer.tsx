@@ -63,6 +63,15 @@ const connectLinks = [
   { label: "Questions", href: "/questions" },
 ];
 
+// Only the Membership Class has a public page so far; the rest show as "Soon"
+// until theirs is built (give them an href here to turn them into links).
+const classLinks: { label: string; href?: string }[] = [
+  { label: "Believers", href: undefined },
+  { label: "Membership", href: "/classes/membership" },
+  { label: "Foundation", href: undefined },
+  { label: "Discipleship", href: undefined },
+];
+
 export default async function Footer() {
   const [cfg, settings] = await Promise.all([getSiteConfig(), getAllSiteSettings()]);
   const socialLinks = buildSocialLinks(settings.CONTACT);
@@ -129,20 +138,42 @@ export default async function Footer() {
             </ul>
           </div>
 
-          {/* Connect — page links from Connect page */}
-          <div>
-            <p className="text-white/50 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-medium mb-5">
-              Connect
-            </p>
-            <ul className="space-y-3">
-              {connectLinks.map((link) => (
-                <li key={link.label}>
-                  <a href={link.href} className="text-white/55 text-sm hover:text-white transition-colors duration-200">
-                    {link.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+          {/* Classes — sits under Connect so the footer keeps its four columns */}
+          <div className="space-y-10">
+            <div>
+              <p className="text-white/50 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-medium mb-5">
+                Connect
+              </p>
+              <ul className="space-y-3">
+                {connectLinks.map((link) => (
+                  <li key={link.label}>
+                    <a href={link.href} className="text-white/55 text-sm hover:text-white transition-colors duration-200">
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <p className="text-white/50 text-xs tracking-[0.1em] xs:tracking-[0.2em] uppercase font-medium mb-5">
+                Classes
+              </p>
+              <ul className="space-y-3">
+                {classLinks.map((link) => (
+                  <li key={link.label}>
+                    {link.href ? (
+                      <a href={link.href} className="text-white/55 text-sm hover:text-white transition-colors duration-200">
+                        {link.label}
+                      </a>
+                    ) : (
+                      <span className="text-white/30 text-sm">
+                        {link.label} <span className="text-white/25 text-xs">Soon</span>
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Follow Us — social icons, same as original */}
