@@ -288,17 +288,6 @@ export default async function MembershipClassPage() {
         </div>
       </section>
 
-      {/* 9. Facilitators */}
-      <section className="bg-[var(--color-blush)] px-4 py-20 sm:py-28 text-[var(--color-ink)]">
-        <div className="mx-auto max-w-[800px] text-center">
-          <EmphasisHeading before="Meet your" emphasis="facilitators" className="text-4xl sm:text-5xl" />
-          <p className="mt-6 text-lg text-black/65">
-            Each cohort is led by EHC pastors and trained leaders who know the house and love its people. You will meet
-            yours at the first session, and they will walk with you through all four weeks.
-          </p>
-        </div>
-      </section>
-
       {/* 11. Closing call */}
       <section className="cls-glow cls-on-ink px-4 py-24 sm:py-32 text-center">
         <div className="mx-auto max-w-[800px]">
