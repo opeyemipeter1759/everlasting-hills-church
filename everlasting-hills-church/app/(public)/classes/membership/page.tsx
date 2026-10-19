@@ -6,6 +6,7 @@ import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/session-constants";
 import { ClassTheme, EmphasisHeading } from "@/components/classes/theme";
 import { CLASS_PATHWAY, MEMBERSHIP_WEEKS } from "@/components/classes/membership-content";
 import CurriculumTabs from "@/components/classes/CurriculumTabs";
+import HowItWorks from "@/components/classes/HowItWorks";
 
 export const metadata = {
   title: "Membership Class | Everlasting Hills Church",
@@ -229,42 +230,7 @@ export default async function MembershipClassPage() {
       </section>
 
       {/* 7. How it works */}
-      <section id="how-it-works" className="bg-white px-4 py-20 sm:py-28 text-[var(--color-ink)]">
-        <div className="mx-auto grid max-w-[1200px] gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
-          <div>
-            <EmphasisHeading before="How it" emphasis="works" className="text-5xl sm:text-6xl" />
-            <span aria-hidden="true" className="mt-6 block h-1 w-14 rounded-full bg-[var(--color-burgundy)]" />
-          </div>
-          <dl className="divide-y divide-[var(--color-pink-border)] overflow-hidden rounded-[24px] border border-[var(--color-pink-border)]">
-            <div className="grid gap-2 px-6 py-7 sm:grid-cols-[9rem_1fr] sm:gap-8 sm:px-8">
-              <dt className="cls-display text-2xl text-[var(--color-burgundy)]">Format</dt>
-              <dd className="text-lg leading-relaxed text-black/70">
-                Each week, a recorded class video is posted on your member dashboard. Watch it to the end and write a
-                short summary of what you learnt. Then join us for a 45-minute session after the Sunday service.
-              </dd>
-            </div>
-            <div className="grid gap-2 px-6 py-7 sm:grid-cols-[9rem_1fr] sm:gap-8 sm:px-8">
-              <dt className="cls-display text-2xl text-[var(--color-burgundy)]">Duration</dt>
-              <dd>
-                <p className="text-lg leading-relaxed text-black/70">Four weeks, recurring.</p>
-                <div aria-hidden="true" className="mt-4 grid max-w-sm grid-cols-4 gap-2">
-                  {MEMBERSHIP_WEEKS.map((w) => (
-                    <span key={w.number} className="rounded-full bg-[var(--color-chip)] py-1.5 text-center text-xs font-semibold tabular-nums text-[var(--color-burgundy)]">
-                      Week {w.number}
-                    </span>
-                  ))}
-                </div>
-              </dd>
-            </div>
-            <div className="grid gap-2 px-6 py-7 sm:grid-cols-[9rem_1fr] sm:gap-8 sm:px-8">
-              <dt className="cls-display text-2xl text-[var(--color-burgundy)]">Completion</dt>
-              <dd className="text-lg leading-relaxed text-black/70">
-                Watch all the videos, submit your summaries and attend the sessions to be recognised as a member of EHC.
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </section>
+      <HowItWorks />
 
       {/* 8. Growth journey */}
       <section className="bg-white px-4 pb-20 sm:pb-28 text-[var(--color-ink)]">
