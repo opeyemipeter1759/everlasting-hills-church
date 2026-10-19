@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { ChevronDown, Check, MapPin, Clock, Users, BookOpen } from "lucide-react";
+import { Check, MapPin, Clock, Users, BookOpen } from "lucide-react";
 import { serverApi } from "@/lib/api/server";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/session-constants";
 import { ClassTheme, EmphasisHeading } from "@/components/classes/theme";
@@ -47,27 +47,6 @@ const GAINS = [
   "Our house cultures, and how they deepen your walk with God",
   "A Home Cell to belong to, and a church family to grow with",
   "Your next step in growth and service, and your place in the house",
-];
-
-const FAQS: [string, string][] = [
-  [
-    "Do I have to complete the class to become a member?",
-    "Yes. The class is how we welcome people into membership. When you finish it, a pastor confirms your membership with you.",
-  ],
-  [
-    "What if I miss a session?",
-    "You can catch up through the online lesson, and your facilitator will help you make up the in-person session with the next group.",
-  ],
-  ["Is there a cost?", "No. The Membership Class is free."],
-  [
-    "I'm not sure I'm saved. Is this class for me?",
-    "You're welcome to join. We may also guide you to the Believers Class.",
-  ],
-  ["How long does each session take?", "About an hour, with each online lesson taking 10 to 15 minutes."],
-  [
-    "I filled the first-timer form. How do I get my login?",
-    "Once you fill the first-timer form, the church office creates your account and emails you how to sign in. If it has not arrived, speak to a welcome team member on Sunday.",
-  ],
 ];
 
 export default async function MembershipClassPage() {
@@ -317,24 +296,6 @@ export default async function MembershipClassPage() {
             Each cohort is led by EHC pastors and trained leaders who know the house and love its people. You will meet
             yours at the first session, and they will walk with you through all four weeks.
           </p>
-        </div>
-      </section>
-
-      {/* 10. FAQs */}
-      <section className="bg-white px-4 py-20 sm:py-28 text-[var(--color-ink)]">
-        <div className="mx-auto max-w-[800px]">
-          <EmphasisHeading before="Questions," emphasis="answered" className="text-4xl sm:text-5xl" />
-          <div className="mt-10 divide-y divide-[var(--color-pink-border)] border-y border-[var(--color-pink-border)]">
-            {FAQS.map(([q, a]) => (
-              <details key={q} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold [&::-webkit-details-marker]:hidden">
-                  {q}
-                  <ChevronDown className="h-5 w-5 flex-none transition-transform duration-[400ms] group-open:rotate-180" aria-hidden />
-                </summary>
-                <p className="mt-3 text-black/65">{a}</p>
-              </details>
-            ))}
-          </div>
         </div>
       </section>
 
