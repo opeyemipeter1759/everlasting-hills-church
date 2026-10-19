@@ -50,13 +50,13 @@ describe("CreateAccountBtn", () => {
     await user.click(within(dialog).getByRole("button", { name: "Create Account" }));
 
     await waitFor(() =>
-      expect(apiPost).toHaveBeenCalledWith("/members/convert-visitor/visitor-moronfolu"),
+      expect(apiPost).toHaveBeenCalledWith("/members/convert-visitor/visitor-moronfolu", { creditedSundays: 0 }),
     );
     expect(onCreated).toHaveBeenCalledWith("visitor-moronfolu");
     expect(toast.success).toHaveBeenCalledWith("Kehinde Moronfolu is now a member");
   });
 
-  it("creates an eligible account without the override confirmation", async () => {
+  it("credits Sundays attended before the account existed", async () => {
     const user = userEvent.setup();
     render(
       <CreateAccountBtn
@@ -66,9 +66,16 @@ describe("CreateAccountBtn", () => {
     );
 
     await user.click(screen.getByRole("button", { name: "Create Account" }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveTextContent(/member in training/i);
+    const field = within(dialog).getByRole("spinbutton");
+    await user.clear(field);
+    await user.type(field, "3");
+    await user.click(within(dialog).getByRole("button", { name: "Create Account" }));
 
-    await waitFor(() => expect(apiPost).toHaveBeenCalledTimes(1));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(apiPost).toHaveBeenCalledWith("/members/convert-visitor/visitor-moronfolu", { creditedSundays: 3 }),
+    );
   });
 
   it("still requires contact details before an account can be created", () => {

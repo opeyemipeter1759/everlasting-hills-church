@@ -17,7 +17,7 @@ export class CoursesReadService {
 
   async list() {
     const courses = await this.prisma.course.findMany({
-      where: { tenantId: this.tenantId },
+      where: { tenantId: this.tenantId, isClass: false },
       include: courseListInclude,
       orderBy: { createdAt: 'asc' },
     });
@@ -27,7 +27,7 @@ export class CoursesReadService {
   /** Member-facing detail — never includes exam correctIndex. */
   async getBySlug(slug: string) {
     const course = await this.prisma.course.findFirst({
-      where: { tenantId: this.tenantId, slug },
+      where: { tenantId: this.tenantId, slug, isClass: false },
       include: {
         Prerequisite: { select: { slug: true, title: true } },
         CategoryRef: { include: { Parent: { select: { id: true, name: true } } } },

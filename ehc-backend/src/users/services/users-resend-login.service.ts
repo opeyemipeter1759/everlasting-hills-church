@@ -59,11 +59,8 @@ export class UsersResendLoginService {
       throw new BadRequestException('This membership is non-active. Reactivate it before resending login details.');
     }
 
-    // Same phone-number-as-temp-password convention as first-timer conversion
-    // (MemberAuthProvisioningService); falls back to a random one if the phone
-    // is missing or shorter than Supabase's minimum password length.
-    const phone = target.Member.phone?.trim();
-    const tempPassword = phone && phone.length >= 6 ? phone : generateTempPassword();
+    // Always a generated password: the phone number is never a password.
+    const tempPassword = generateTempPassword();
 
     const client = this.supabaseAdmin.getClient();
     const { error } = await client.auth.admin.updateUserById(target.userId, {

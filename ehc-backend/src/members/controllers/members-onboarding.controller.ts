@@ -2,6 +2,9 @@ import { Body, Controller, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
+import type { AuthUser } from '../../auth/types/auth-user';
+import { ConvertVisitorDto } from '../../classes/dto/classes.dto';
 import { BulkImportDto } from '../dto/bulk-import.dto';
 import { MemberOnboardingService } from '../services/member-onboarding.service';
 import { MemberBulkImportService } from '../services/member-bulk-import.service';
@@ -32,8 +35,15 @@ export class MembersOnboardingController {
       },
     },
   })
-  async convertVisitor(@Param('visitorId') visitorId: string) {
-    return this.onboarding.convertVisitorToMember(visitorId);
+  async convertVisitor(
+    @Param('visitorId') visitorId: string,
+    @CurrentUser() actor: AuthUser,
+    @Body() body: ConvertVisitorDto = {},
+  ) {
+    return this.onboarding.convertVisitorToMember(visitorId, {
+      creditedSundays: body?.creditedSundays,
+      actorProfileId: actor?.profileId ?? null,
+    });
   }
 
   @Post('import')

@@ -15,7 +15,8 @@ export default function CreateAccountBtn({
   onCreated: (visitorId: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
-  const [confirmEarlyAccount, setConfirmEarlyAccount] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [sundays, setSundays] = useState("0");
 
   if (!visitor.email || !visitor.phone) {
     return <span className="text-xs text-[#b8a8ac] dark:text-white/30">No email/phone</span>;
@@ -27,9 +28,10 @@ export default function CreateAccountBtn({
   async function createAccount() {
     setLoading(true);
     try {
-      await apiClient.post(`/members/convert-visitor/${visitor.id}`);
+      const creditedSundays = Math.max(0, Math.min(12, Math.trunc(Number(sundays) || 0)));
+      await apiClient.post(`/members/convert-visitor/${visitor.id}`, { creditedSundays });
       showToast.success(`${visitor.firstName} ${visitor.lastName} is now a member`);
-      setConfirmEarlyAccount(false);
+      setConfirming(false);
       onCreated(visitor.id);
     } catch (err) {
       showToast.error((err as { message?: string }).message ?? "Couldn't create account");
@@ -39,11 +41,8 @@ export default function CreateAccountBtn({
   }
 
   function handleCreate() {
-    if (needsEarlyAccountOverride) {
-      setConfirmEarlyAccount(true);
-      return;
-    }
-    void createAccount();
+    setSundays("0");
+    setConfirming(true);
   }
 
   const highlighted = visitor.membershipInterest === "Yes";
@@ -67,22 +66,40 @@ export default function CreateAccountBtn({
       </button>
 
       <ConfirmDialog
-        open={confirmEarlyAccount}
-        tone="warning"
-        title="Create account before the second visit?"
+        open={confirming}
+        tone={needsEarlyAccountOverride ? "warning" : "info"}
+        title={needsEarlyAccountOverride ? "Create account before the second visit?" : "Create an account?"}
         description={
-          <>
-            No second online visit is recorded for{" "}
-            <strong className="text-gray-900 dark:text-white">
-              {visitor.firstName} {visitor.lastName}
-            </strong>
-            . Creating the account will add them as an active member now.
-          </>
+          <div className="space-y-3">
+            <p>
+              {needsEarlyAccountOverride ? "No second online visit is recorded for " : "This creates a member account for "}
+              <strong className="text-gray-900 dark:text-white">
+                {visitor.firstName} {visitor.lastName}
+              </strong>
+              {needsEarlyAccountOverride
+                ? ". Creating the account will add them as a member in training now."
+                : ". They start as a member in training and are emailed how to sign in."}
+            </p>
+            <label className="block text-sm">
+              <span className="block font-semibold text-gray-900 dark:text-white">Sundays already attended</span>
+              <span className="block text-xs text-gray-500 dark:text-white/50">
+                Services before today that were not checked in. They count toward the Membership Class.
+              </span>
+              <input
+                type="number"
+                min={0}
+                max={12}
+                value={sundays}
+                onChange={(e) => setSundays(e.target.value)}
+                className="mt-1 w-24 rounded-lg border border-gray-200 px-2 py-1 text-gray-900 dark:border-white/15 dark:bg-white/[0.04] dark:text-white"
+              />
+            </label>
+          </div>
         }
         confirmLabel="Create Account"
         loading={loading}
         onConfirm={createAccount}
-        onCancel={() => setConfirmEarlyAccount(false)}
+        onCancel={() => setConfirming(false)}
       />
     </>
   );

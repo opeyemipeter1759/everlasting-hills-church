@@ -26,7 +26,13 @@ export class MemberOnboardingService {
     this.appUrl = config.get('FRONTEND_URL', { infer: true }) ?? 'http://localhost:3000';
   }
 
-  async convertVisitorToMember(visitorId: string) {
+  /**
+   * `creditedSundays` counts Sunday services the person attended before the
+   * account existed, toward class eligibility. `actorProfileId` is the admin
+   * creating the account, kept on the membership record.
+   */
+  async convertVisitorToMember(visitorId: string, opts: { creditedSundays?: number; actorProfileId?: string | null } = {}) {
+    const creditedSundays = Math.max(0, Math.min(12, Math.trunc(opts.creditedSundays ?? 0)));
     const visitor = await this.prisma.visitor.findUnique({ where: { id: visitorId } });
     if (!visitor) throw new NotFoundException('Visitor not found');
     if (!visitor.email) {
@@ -41,10 +47,9 @@ export class MemberOnboardingService {
       throw new ConflictException('A member account already exists for this email address');
     }
 
-    // Temp password = the visitor's own phone number, per explicit product
-    // decision — falls back to a random one inside createOrReuseAuthUser if
-    // absent or too short for Supabase's minimum password length.
-    const provisioned = await this.authProvisioning.createOrReuseAuthUser(visitor.email, visitor.phone ?? undefined);
+    // A generated temp password, emailed, and changed on first sign-in. The
+    // phone number is never used as a password: it is often known to others.
+    const provisioned = await this.authProvisioning.createOrReuseAuthUser(visitor.email);
 
     let member;
     try {
@@ -78,6 +83,23 @@ export class MemberOnboardingService {
             gender: normalizeGender(visitor.gender),
             dateOfBirth: parseBirthday(visitor.dateOfBirth),
             address: visitor.address ?? null,
+            // A new account is a member in training until a Pastor or Admin
+            // confirms full membership after the Membership Class.
+            membershipStatus: 'IN_TRAINING',
+            creditedSundays,
+          },
+        });
+
+        await tx.membershipEvent.create({
+          data: {
+            id: randomUUID(),
+            tenantId: this.tenantId,
+            memberId: createdMember.id,
+            fromStatus: null,
+            toStatus: 'IN_TRAINING',
+            method: 'CREATED',
+            reason: creditedSundays > 0 ? `Account created; ${creditedSundays} earlier Sunday(s) credited` : 'Account created',
+            actorProfileId: opts.actorProfileId ?? null,
           },
         });
 

@@ -299,3 +299,57 @@ iframe {
    list the quotes beside the notes). */
 ::highlight(review-notes) { background-color: rgba(255, 214, 0, 0.35); }
 ::highlight(review-active) { background-color: rgba(255, 170, 0, 0.6); }
+
+/* Classes (Membership Class and the rest): tokens and type from classes.md.
+   Burgundy is the only action colour; gold is for scripture and honour. */
+.ehc-class {
+  --color-ink: #080808;
+  --color-burgundy: #87102C;
+  --color-deep-burgundy: #4a0819;
+  --color-crimson: #8B1A3A;
+  --color-gold: #C8A04A;
+  --color-blush: #FBEAF0;
+  --color-chip: #FFE8ED;
+  --color-pink-border: #E7CDD3;
+  --color-glass: rgba(255, 255, 255, 0.06);
+  --color-glass-border: rgba(255, 255, 255, 0.12);
+  --ease-ehc: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-base: 400ms;
+  font-family: var(--font-sans-class), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.ehc-class .cls-display { font-family: var(--font-display), Georgia, serif; font-weight: 400; letter-spacing: -0.01em; line-height: 1.05; }
+.ehc-class .cls-em { font-style: italic; color: var(--color-burgundy); }
+.ehc-class .cls-on-ink .cls-em, .dark .ehc-class .cls-em { color: var(--color-gold); }
+.ehc-class .cls-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.ehc-class .cls-ink { background: var(--color-ink); color: #fff; }
+.ehc-class .cls-glow { background: radial-gradient(60% 70% at 85% 0%, rgba(135, 16, 44, 0.55), transparent 70%), var(--color-ink); color: #fff; }
+.ehc-class .cls-glass {
+  background: var(--color-glass); border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+.ehc-class .cls-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  border-radius: 999px; padding: 0.8rem 1.5rem; font-weight: 600; font-size: 15px;
+  transition: transform var(--dur-base) var(--ease-ehc), background-color 200ms var(--ease-ehc), opacity 200ms;
+}
+.ehc-class .cls-btn:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 3px; }
+.ehc-class .cls-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.ehc-class .cls-btn-primary { background: var(--color-burgundy); color: #fff; }
+.ehc-class .cls-btn-primary:hover:not(:disabled) { background: #6E0C24; transform: translateY(-1px); }
+.ehc-class .cls-btn-glass { background: rgba(255, 255, 255, 0.08); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); }
+.ehc-class .cls-btn-glass:hover { background: rgba(255, 255, 255, 0.14); }
+.ehc-class .cls-btn-outline { border: 1px solid var(--color-burgundy); color: var(--color-burgundy); background: transparent; }
+.dark .ehc-class .cls-btn-outline { border-color: rgba(255, 255, 255, 0.3); color: #fff; }
+.ehc-class .cls-btn-outline:hover { background: var(--color-chip); }
+.dark .ehc-class .cls-btn-outline:hover { background: rgba(255, 255, 255, 0.08); }
+.ehc-class .cls-chip { display: inline-flex; align-items: center; gap: 0.25rem; border-radius: 999px; padding: 0.2rem 0.65rem; font-size: 12px; font-weight: 600; background: var(--color-chip); color: var(--color-burgundy); }
+.dark .ehc-class .cls-chip { background: rgba(135, 16, 44, 0.25); color: #f3b4c2; }
+.ehc-class .cls-bar { height: 8px; border-radius: 999px; background: var(--color-pink-border); overflow: hidden; }
+.dark .ehc-class .cls-bar, .ehc-class .cls-on-ink .cls-bar { background: rgba(255, 255, 255, 0.12); }
+.ehc-class .cls-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--color-burgundy); transition: width 700ms var(--ease-ehc); }
+.ehc-class .cls-scripture { color: var(--color-gold); font-weight: 600; }
+.ehc-class .cls-reveal { animation: cls-rise 700ms var(--ease-ehc) both; }
+@keyframes cls-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .ehc-class *, .ehc-class *::before, .ehc-class *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

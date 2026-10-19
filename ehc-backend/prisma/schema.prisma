@@ -179,6 +179,11 @@ model Member {
   tags                          String[]
   householdId                   String?
   deactivationRequestedAt       DateTime?
+  /// IN_TRAINING until a Pastor or Admin confirms them after the Membership Class; FULL after.
+  membershipStatus              MembershipStatus           @default(IN_TRAINING)
+  /// Sunday services an admin credited when creating the account, attended before it existed.
+  creditedSundays               Int                        @default(0) @db.SmallInt
+  membershipConfirmedAt         DateTime?
   /// SINGLE or MARRIED. Null on older records, where a wedding date meant married.
   maritalStatus                 String?
   /// The spouse, set on both members only once the spouse has agreed.
@@ -224,6 +229,10 @@ model Member {
   FollowUpSuggestedAsConnection FollowUpConnection[]       @relation("FollowUpConnectionSuggested")
   FollowUpConnectionsIntroduced FollowUpConnection[]       @relation("FollowUpConnectionIntroducedBy")
   CourseEnrollment              CourseEnrollment[]
+  MembershipEvents              MembershipEvent[]
+  MembershipApprovals           MembershipApproval[]
+  CohortsFacilitated            CohortFacilitator[]
+  SessionAttendance             SessionAttendance[]
   CourseCategoryEnrollment      CourseCategoryEnrollment[]
   PrayerRequest                 PrayerRequest[]
   WelfareRequest                WelfareRequest[]
@@ -729,9 +738,9 @@ enum WelfareRequestStatus {
 /// following up, since (unlike a prayer request) this is often a conversation
 /// that continues over days.
 model WelfareRequest {
-  id               String                @id
+  id               String               @id
   tenantId         String
-  referenceCode    String                @unique
+  referenceCode    String               @unique
   fullName         String
   phone            String
   email            String
@@ -749,12 +758,12 @@ model WelfareRequest {
   category         String
   description      String
   urgency          WelfareUrgency
-  status           WelfareRequestStatus  @default(PENDING)
-  submittedAt      DateTime              @default(now())
+  status           WelfareRequestStatus @default(PENDING)
+  submittedAt      DateTime             @default(now())
   /// Set only when a signed-in member submits (optional auth on the public form).
   memberId         String?
-  Tenant           Tenant                @relation(fields: [tenantId], references: [id])
-  Member           Member?               @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  Tenant           Tenant               @relation(fields: [tenantId], references: [id])
+  Member           Member?              @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, status])
   @@index([memberId])
@@ -2579,31 +2588,41 @@ model CommunityPost {
 /// Discipleship course catalog, managed at /dashboard/admin/courses. A course can
 /// require another course be completed (100% exam score) before it unlocks.
 model Course {
-  id             String   @id
-  tenantId       String
-  slug           String
-  title          String
-  tagline        String
-  description    String
-  categoryId     String?
-  iconKey        String
-  gradientFrom   String
-  gradientTo     String
-  duration       String
-  instructorName String
-  instructorRole String
-  outcomes       String[]
-  prerequisiteId String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now()) @updatedAt
+  id                     String   @id
+  tenantId               String
+  slug                   String
+  title                  String
+  tagline                String
+  description            String
+  categoryId             String?
+  iconKey                String
+  gradientFrom           String
+  gradientTo             String
+  duration               String
+  instructorName         String
+  instructorRole         String
+  outcomes               String[]
+  prerequisiteId         String?
+  /// One of the church's classes (Membership Class and the rest), taught in cohorts.
+  isClass                Boolean  @default(false)
+  /// Sunday services a member must have attended before the class opens to them.
+  eligibilitySundays     Int?     @db.SmallInt
+  /// Only full members may enroll (Foundation School, for example).
+  requiresFullMembership Boolean  @default(false)
+  /// Completing it puts the member forward for full membership (the Membership Class).
+  grantsMembership       Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @default(now()) @updatedAt
 
-  Tenant        Tenant             @relation(fields: [tenantId], references: [id])
-  CategoryRef   CourseCategory?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  Prerequisite  Course?            @relation("CoursePrerequisite", fields: [prerequisiteId], references: [id], onDelete: SetNull)
-  UnlocksFor    Course[]           @relation("CoursePrerequisite")
+  Tenant        Tenant               @relation(fields: [tenantId], references: [id])
+  CategoryRef   CourseCategory?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  Prerequisite  Course?              @relation("CoursePrerequisite", fields: [prerequisiteId], references: [id], onDelete: SetNull)
+  UnlocksFor    Course[]             @relation("CoursePrerequisite")
   Modules       CourseModule[]
   ExamQuestions ExamQuestion[]
   Enrollments   CourseEnrollment[]
+  Cohorts       ClassCohort[]
+  Approvals     MembershipApproval[]
 
   @@unique([tenantId, slug])
   @@index([tenantId])
@@ -2638,6 +2657,9 @@ model CourseModule {
   courseId          String
   title             String
   sortOrder         Int      @default(0)
+  /// For a class week: the italic line under the title, and its stage (Belong, Believe, Walk, Go).
+  subtitle          String?
+  stage             String?
   /// Optional single checkpoint question gating entry into the next module.
   /// checkCorrectIndex is never sent to members before they submit, same as ExamQuestion.
   checkQuestion     String?
@@ -2651,17 +2673,209 @@ model CourseModule {
 }
 
 model CourseLesson {
-  id        String  @id
-  tenantId  String
-  moduleId  String
-  title     String
-  duration  String
-  videoUrl  String?
-  sortOrder Int     @default(0)
+  id                 String             @id
+  tenantId           String
+  moduleId           String
+  title              String
+  duration           String
+  videoUrl           String?
+  sortOrder          Int                @default(0)
+  /// Class lessons: every lesson has the same anatomy.
+  slug               String?
+  description        String?
+  /// "By the end, you can..."
+  outcome            String?
+  summary            String?
+  reflectionPrompt   String?
+  /// [{ "ref": "Genesis 49:26", "text": "..." }]
+  scriptures         Json               @default("[]")
+  actionStep         String?
+  actionVerification ActionVerification @default(SELF)
 
-  Module CourseModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  Module    CourseModule       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  QuizItems LessonQuizItem[]
+  Progress  LessonProgress[]
+  Actions   ActionCompletion[]
 
   @@index([moduleId])
+}
+
+enum MembershipStatus {
+  IN_TRAINING
+  FULL
+}
+
+enum EnrollmentStatus {
+  /// Registered, but not yet eligible or their cohort has not started.
+  WAITING
+  ACTIVE
+  COMPLETED
+}
+
+enum ActionVerification {
+  SELF
+  LEADER
+}
+
+enum MembershipApprovalStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
+/// A quiz question on a class lesson. correctIndex never leaves the server; grading is in NestJS.
+model LessonQuizItem {
+  id           String   @id
+  tenantId     String
+  lessonId     String
+  prompt       String
+  options      String[]
+  correctIndex Int
+  sortOrder    Int      @default(0)
+
+  Lesson CourseLesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+/// One run of a class: a start date, its in-person sessions and its facilitators.
+model ClassCohort {
+  id          String   @id
+  tenantId    String
+  courseId    String
+  name        String
+  startsOn    DateTime @db.Date
+  /// OPEN takes new learners; CLOSED does not.
+  status      String   @default("OPEN")
+  /// In-person sessions a learner must attend to complete (0: not required).
+  minSessions Int      @default(0) @db.SmallInt
+  createdAt   DateTime @default(now())
+
+  Course       Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  Sessions     CohortSession[]
+  Facilitators CohortFacilitator[]
+  Enrollments  CourseEnrollment[]
+
+  @@index([tenantId, courseId, startsOn])
+}
+
+model CohortSession {
+  id         String   @id
+  tenantId   String
+  cohortId   String
+  title      String
+  weekNumber Int?     @db.SmallInt
+  startsAt   DateTime
+  location   String?
+
+  Cohort     ClassCohort         @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  Attendance SessionAttendance[]
+
+  @@index([cohortId, startsAt])
+}
+
+model SessionAttendance {
+  id         String   @id
+  tenantId   String
+  sessionId  String
+  memberId   String
+  markedById String?
+  markedAt   DateTime @default(now())
+
+  Session CohortSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  Member  Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, memberId])
+  @@index([memberId])
+}
+
+model CohortFacilitator {
+  id       String @id
+  tenantId String
+  cohortId String
+  memberId String
+
+  Cohort ClassCohort @relation(fields: [cohortId], references: [id], onDelete: Cascade)
+  Member Member      @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([cohortId, memberId])
+  @@index([memberId])
+}
+
+/// A learner's progress through one lesson. The reflection is private to the learner.
+model LessonProgress {
+  id           String    @id
+  tenantId     String
+  enrollmentId String
+  lessonId     String
+  videoDoneAt  DateTime?
+  quizScorePct Int?      @db.SmallInt
+  quizPassedAt DateTime?
+  quizAttempts Int       @default(0) @db.SmallInt
+  reflection   String?
+  reflectionAt DateTime?
+  completedAt  DateTime?
+  updatedAt    DateTime  @default(now()) @updatedAt
+
+  Enrollment CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  Lesson     CourseLesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+}
+
+/// A lesson's action step, done by the learner and, when the lesson asks, verified by a leader.
+model ActionCompletion {
+  id           String    @id
+  tenantId     String
+  enrollmentId String
+  lessonId     String
+  doneAt       DateTime  @default(now())
+  note         String?
+  verifiedById String?
+  verifiedAt   DateTime?
+
+  Enrollment CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  Lesson     CourseLesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
+}
+
+/// "Ready for membership": made when a member completes the Membership Class. Only a
+/// Pastor or Admin confirming it makes them a full member; completion never does.
+model MembershipApproval {
+  id           String                   @id
+  tenantId     String
+  memberId     String
+  courseId     String
+  enrollmentId String                   @unique
+  status       MembershipApprovalStatus @default(PENDING)
+  createdAt    DateTime                 @default(now())
+  decidedAt    DateTime?
+  decidedById  String?
+  note         String?
+
+  Member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  Course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+}
+
+/// Every change to a member's membership status, with who made it and why.
+model MembershipEvent {
+  id             String   @id
+  tenantId       String
+  memberId       String
+  fromStatus     String?
+  toStatus       String
+  /// CREATED, APPROVAL, EXCEPTION or BACKFILL.
+  method         String
+  reason         String?
+  actorProfileId String?
+  createdAt      DateTime @default(now())
+
+  Member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, createdAt])
 }
 
 /// Options + correctIndex are never sent to members before they submit — the
@@ -2681,24 +2895,33 @@ model ExamQuestion {
 }
 
 model CourseEnrollment {
-  id               String    @id
-  tenantId         String
-  courseId         String
-  memberId         String
-  enrolledAt       DateTime  @default(now())
-  completed        Boolean   @default(false)
-  completedAt      DateTime?
-  lastScorePct     Int?
-  attempts         Int       @default(0)
+  id                String           @id
+  tenantId          String
+  courseId          String
+  memberId          String
+  enrolledAt        DateTime         @default(now())
+  completed         Boolean          @default(false)
+  completedAt       DateTime?
+  lastScorePct      Int?
+  attempts          Int              @default(0)
   /// CourseLesson ids the member has watched to completion (YouTube "ended" event).
-  watchedLessonIds String[]  @default([])
+  watchedLessonIds  String[]         @default([])
   /// CourseModule ids whose checkpoint question has been answered correctly.
-  passedModuleIds  String[]  @default([])
+  passedModuleIds   String[]         @default([])
+  /// Class enrollments: the cohort, where they stand, and when they last did anything.
+  cohortId          String?
+  status            EnrollmentStatus @default(ACTIVE)
+  lastActivityAt    DateTime?
+  stalledNotifiedAt DateTime?
 
-  Course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  Member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  Course   Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  Member   Member             @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  Cohort   ClassCohort?       @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+  Progress LessonProgress[]
+  Actions  ActionCompletion[]
 
   @@unique([courseId, memberId])
+  @@index([cohortId])
   @@index([tenantId])
   @@index([memberId])
 }

@@ -21,7 +21,7 @@ export class CourseEnrollmentService {
   }
 
   async enroll(actor: AuthUser, courseId: string) {
-    const course = await this.prisma.course.findFirst({ where: { tenantId: this.tenantId, id: courseId } });
+    const course = await this.prisma.course.findFirst({ where: { tenantId: this.tenantId, id: courseId, isClass: false } });
     if (!course) throw new NotFoundException('Course not found');
     const memberId = await this.shared.resolveMemberId(actor);
 
