@@ -5,6 +5,7 @@ import { serverApi } from "@/lib/api/server";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/session-constants";
 import { ClassTheme, EmphasisHeading } from "@/components/classes/theme";
 import { CLASS_PATHWAY, MEMBERSHIP_WEEKS } from "@/components/classes/membership-content";
+import CurriculumTabs from "@/components/classes/CurriculumTabs";
 
 export const metadata = {
   title: "Membership Class | Everlasting Hills Church",
@@ -239,60 +240,49 @@ export default async function MembershipClassPage() {
 
       {/* 6. Curriculum */}
       <section className="bg-[var(--color-blush)] px-4 py-20 sm:py-28 text-[var(--color-ink)]">
-        <div className="mx-auto max-w-[800px]">
-          <EmphasisHeading before="The" emphasis="curriculum" className="text-4xl sm:text-5xl" />
-          <div className="mt-10 space-y-4">
-            {MEMBERSHIP_WEEKS.map((w) => (
-              <details key={w.number} className="group rounded-[16px] border border-[var(--color-pink-border)] bg-white p-6" open={w.number === 1}>
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 [&::-webkit-details-marker]:hidden">
-                  <span>
-                    <span className="cls-eyebrow text-[var(--color-crimson)]">Week {w.number}</span>
-                    <span className="cls-display mt-1 block text-[28px] sm:text-[32px]">{w.title}</span>
-                    <span className="mt-1 block italic text-black/60">{w.subtitle}</span>
-                    <span className="cls-chip mt-3">{w.lessons.length} lessons</span>
-                  </span>
-                  <ChevronDown className="mt-2 h-5 w-5 flex-none transition-transform duration-[400ms] group-open:rotate-180" aria-hidden />
-                </summary>
-                <ol className="mt-6 divide-y divide-[var(--color-pink-border)]">
-                  {w.lessons.map(([title, desc], i) => (
-                    <li key={title} className="flex gap-4 py-4">
-                      <span className="cls-display w-6 flex-none text-xl text-[var(--color-crimson)]">{i + 1}</span>
-                      <span>
-                        <span className="block font-semibold">{title}</span>
-                        <span className="block text-black/60">{desc}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            ))}
+        <div className="mx-auto max-w-[1200px]">
+          <EmphasisHeading before="The" emphasis="curriculum" className="text-5xl sm:text-6xl" />
+          <p className="mt-4 max-w-xl text-lg text-black/65">Four weeks, five lessons each. Pick a week to see what you will cover.</p>
+          <div className="mt-10">
+            <CurriculumTabs />
           </div>
         </div>
       </section>
 
       {/* 7. How it works */}
-      <section className="bg-white px-4 py-20 sm:py-28 text-[var(--color-ink)]">
-        <div className="mx-auto max-w-[1200px]">
-          <EmphasisHeading before="How it" emphasis="works" className="text-4xl sm:text-5xl" />
-          <dl className="mt-10 grid gap-6 sm:grid-cols-2">
-            {[
-              [MapPin, "Format", "Weekly in-person sessions, with online lessons to watch before or after each one."],
-              [Clock, "Duration", "4 weeks, after the Sunday service. Your facilitator confirms the time for your cohort."],
-              [BookOpen, "Each lesson includes", "A short video, key scriptures, a summary, a reflection question, a short quiz and one action step."],
-              [Users, "Cohorts", "New classes begin every month."],
-              [Check, "Completion", "Finish all lessons and attend the sessions to be recognised as a member of EHC."],
-            ].map(([Icon, term, desc]) => {
-              const I = Icon as typeof MapPin;
-              return (
-                <div key={term as string} className="flex gap-4">
-                  <I className="mt-1 h-5 w-5 flex-none text-[var(--color-burgundy)]" aria-hidden />
-                  <div>
-                    <dt className="font-semibold">{term as string}</dt>
-                    <dd className="mt-1 text-black/65">{desc as string}</dd>
-                  </div>
+      <section id="how-it-works" className="bg-white px-4 py-20 sm:py-28 text-[var(--color-ink)]">
+        <div className="mx-auto grid max-w-[1200px] gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
+          <div>
+            <EmphasisHeading before="How it" emphasis="works" className="text-5xl sm:text-6xl" />
+            <span aria-hidden="true" className="mt-6 block h-1 w-14 rounded-full bg-[var(--color-burgundy)]" />
+          </div>
+          <dl className="divide-y divide-[var(--color-pink-border)] overflow-hidden rounded-[24px] border border-[var(--color-pink-border)]">
+            <div className="grid gap-2 px-6 py-7 sm:grid-cols-[9rem_1fr] sm:gap-8 sm:px-8">
+              <dt className="cls-display text-2xl text-[var(--color-burgundy)]">Format</dt>
+              <dd className="text-lg leading-relaxed text-black/70">
+                Each week, a recorded class video is posted on your member dashboard. Watch it to the end and write a
+                short summary of what you learnt. Then join us for a 45-minute session after the Sunday service.
+              </dd>
+            </div>
+            <div className="grid gap-2 px-6 py-7 sm:grid-cols-[9rem_1fr] sm:gap-8 sm:px-8">
+              <dt className="cls-display text-2xl text-[var(--color-burgundy)]">Duration</dt>
+              <dd>
+                <p className="text-lg leading-relaxed text-black/70">Four weeks, recurring.</p>
+                <div aria-hidden="true" className="mt-4 grid max-w-sm grid-cols-4 gap-2">
+                  {MEMBERSHIP_WEEKS.map((w) => (
+                    <span key={w.number} className="rounded-full bg-[var(--color-chip)] py-1.5 text-center text-xs font-semibold tabular-nums text-[var(--color-burgundy)]">
+                      Week {w.number}
+                    </span>
+                  ))}
                 </div>
-              );
-            })}
+              </dd>
+            </div>
+            <div className="grid gap-2 px-6 py-7 sm:grid-cols-[9rem_1fr] sm:gap-8 sm:px-8">
+              <dt className="cls-display text-2xl text-[var(--color-burgundy)]">Completion</dt>
+              <dd className="text-lg leading-relaxed text-black/70">
+                Watch all the videos, submit your summaries and attend the sessions to be recognised as a member of EHC.
+              </dd>
+            </div>
           </dl>
         </div>
       </section>
