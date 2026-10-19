@@ -229,6 +229,24 @@ export default async function MembershipClassPage() {
         </div>
       </section>
 
+      {/* 6b. A call to start, between the outline and the details */}
+      <section className="cls-glow cls-on-ink px-4 py-16 sm:py-20">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
+          <div className="max-w-2xl">
+            <EmphasisHeading before="Ready to take your" emphasis="place?" className="text-4xl sm:text-5xl lg:text-6xl" />
+            <p className="mt-4 text-lg text-white/65">Start the class, or see where you stand first.</p>
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-none">
+            <Link href={action.href} className="cls-btn cls-btn-primary">
+              {status?.enrollment ? action.label : "Start the Class"}
+            </Link>
+            <a href="#eligibility" className="cls-btn cls-btn-glass">
+              Check Eligibility
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* 7. How it works */}
       <HowItWorks />
 

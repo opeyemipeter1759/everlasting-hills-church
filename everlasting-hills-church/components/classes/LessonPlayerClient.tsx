@@ -13,7 +13,8 @@ import {
 } from "@/lib/api/classes";
 import { showToast } from "@/components/ui/toast/toast";
 import { ClassTheme } from "./theme";
-import { ClassError, ClassLoading, ProgressBar, errorText, youTubeEmbed } from "./shared";
+import { ClassError, ClassLoading, ProgressBar, errorText, youTubeId } from "./shared";
+import LessonVideo from "./LessonVideo";
 
 export default function LessonPlayerClient({ slug, lesson }: { slug: string; lesson: string }) {
   const { data, isLoading, error, refetch } = useLesson(slug, lesson);
@@ -30,6 +31,9 @@ export default function LessonPlayerClient({ slug, lesson }: { slug: string; les
   }
   return <LessonView view={data} slug={slug} lessonRef={lesson} />;
 }
+
+/** The least a learner must write about a lesson before it counts. Mirrors the backend rule. */
+const MIN_SUMMARY = 50;
 
 const card =
   "rounded-[20px] border border-[var(--color-pink-border)] bg-white dark:border-white/10 dark:bg-white/[0.04]";
@@ -72,7 +76,9 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
   const base = `/dashboard/classes/${slug}`;
   const markVideo = useMarkVideo(slug, lessonRef);
   const saveReflection = useSaveReflection(slug, lessonRef);
-  const embed = youTubeEmbed(lesson.videoUrl);
+  const videoId = youTubeId(lesson.videoUrl);
+  const [playerFailed, setPlayerFailed] = useState(false);
+  const summaryLocked = !!lesson.videoUrl && !progress.videoDone;
 
   const [reflection, setReflection] = useState(progress.reflection);
   useEffect(() => setReflection(progress.reflection), [progress.reflection]);
@@ -94,7 +100,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
   // What this lesson asks of the learner, in the order it is laid out.
   const steps = [
     lesson.videoUrl && { id: "watch", label: "Watch the video", done: progress.videoDone },
-    lesson.reflectionPrompt && { id: "summary", label: "Write your summary", done: !!progress.reflection },
+    { id: "summary", label: "Write your summary", done: !!progress.reflection },
     lesson.quiz.length > 0 && { id: "quiz", label: "Pass the quiz", done: progress.quizPassed },
   ].filter(Boolean) as { id: string; label: string; done: boolean }[];
   const doneCount = steps.filter((s) => s.done).length;
@@ -177,17 +183,14 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
         <div className="min-w-0 space-y-6">
           {lesson.videoUrl && (
             <section id="watch" className="cls-glow cls-on-ink scroll-mt-24 rounded-[24px] p-2 sm:p-3">
-              {embed ? (
-                <div className="aspect-video overflow-hidden rounded-[18px] bg-black">
-                  <iframe
-                    src={embed}
-                    title={lesson.title}
-                    className="h-full w-full"
-                    allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    loading="lazy"
-                  />
-                </div>
+              {videoId && !playerFailed ? (
+                <LessonVideo
+                  videoId={videoId}
+                  title={lesson.title}
+                  watched={progress.videoDone}
+                  onFinished={() => run(markVideo.mutateAsync(undefined))}
+                  onUnavailable={() => setPlayerFailed(true)}
+                />
               ) : (
                 <div className="flex aspect-video items-center justify-center rounded-[18px] bg-black/40">
                   <a href={lesson.videoUrl} target="_blank" rel="noopener noreferrer" className="cls-btn cls-btn-glass">
@@ -196,20 +199,25 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
                 </div>
               )}
               <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-4">
-                <p className="text-sm text-white/65">Recorded class, {lesson.duration}</p>
+                <p className="text-sm text-white/65">
+                  Recorded class, {lesson.duration}.{" "}
+                  {!progress.videoDone && (videoId && !playerFailed ? "Watch to the end. You can go back, but not skip ahead." : "")}
+                </p>
                 {progress.videoDone ? (
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)]">
                     <CheckCircle2 className="h-4 w-4" aria-hidden /> You have watched this
                   </span>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => run(markVideo.mutateAsync(undefined))}
-                    disabled={markVideo.isPending}
-                    className="cls-btn cls-btn-primary !px-5 !py-2.5 !text-sm"
-                  >
-                    I have watched it
-                  </button>
+                  (!videoId || playerFailed) && (
+                    <button
+                      type="button"
+                      onClick={() => run(markVideo.mutateAsync(undefined))}
+                      disabled={markVideo.isPending}
+                      className="cls-btn cls-btn-primary !px-5 !py-2.5 !text-sm"
+                    >
+                      I have watched it
+                    </button>
+                  )
                 )}
               </div>
             </section>
@@ -241,38 +249,44 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
             </Part>
           )}
 
-          {lesson.reflectionPrompt && (
-            <Part
-              id="summary"
-              title="Your summary"
-              hint="Write a short summary of what you learnt. Only you can see it."
-              done={!!progress.reflection}
-            >
-              <label htmlFor="reflection" className={`cls-display block text-xl !leading-snug ${ink}`}>
-                {lesson.reflectionPrompt}
-              </label>
-              <textarea
-                id="reflection"
-                value={reflection}
-                onChange={(e) => setReflection(e.target.value)}
-                rows={6}
-                maxLength={4000}
-                placeholder="In your own words..."
-                className="mt-4 w-full rounded-[14px] border border-[var(--color-pink-border)] bg-white p-4 text-base leading-relaxed text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-burgundy)]/40 dark:border-white/15 dark:bg-white/[0.04] dark:text-white"
-              />
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <p className="text-xs tabular-nums text-black/45 dark:text-white/45">{reflection.length} / 4000</p>
-                <button
-                  type="button"
-                  onClick={() => run(saveReflection.mutateAsync(reflection), "Summary saved")}
-                  disabled={saveReflection.isPending || !reflection.trim() || reflection === progress.reflection}
-                  className="cls-btn cls-btn-primary !px-5 !py-2.5 !text-sm"
-                >
-                  {saveReflection.isPending ? "Saving..." : "Save summary"}
-                </button>
-              </div>
-            </Part>
-          )}
+          <Part
+            id="summary"
+            title="Your summary"
+            hint={`Write a short summary of what you learnt, at least ${MIN_SUMMARY} characters. Only you can see it.`}
+            done={!!progress.reflection}
+          >
+            <label htmlFor="reflection" className={`cls-display block text-xl !leading-snug ${ink}`}>
+              {lesson.reflectionPrompt || "What did you learn from this lesson?"}
+            </label>
+            <textarea
+              id="reflection"
+              value={reflection}
+              onChange={(e) => setReflection(e.target.value)}
+              rows={6}
+              maxLength={4000}
+              disabled={summaryLocked}
+              placeholder={summaryLocked ? "Watch the video to the end to unlock this." : "In your own words..."}
+              className="mt-4 w-full rounded-[14px] border border-[var(--color-pink-border)] bg-white p-4 text-base leading-relaxed text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-burgundy)]/40 disabled:cursor-not-allowed disabled:bg-[var(--color-blush)] dark:border-white/15 dark:bg-white/[0.04] dark:text-white dark:disabled:bg-white/[0.02]"
+            />
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <p
+                className={`text-xs tabular-nums ${
+                  reflection.trim().length >= MIN_SUMMARY ? "text-[var(--color-burgundy)] dark:text-[var(--color-gold)]" : "text-black/50 dark:text-white/50"
+                }`}
+                aria-live="polite"
+              >
+                {reflection.trim().length} / {MIN_SUMMARY} characters
+              </p>
+              <button
+                type="button"
+                onClick={() => run(saveReflection.mutateAsync(reflection), "Summary saved")}
+                disabled={summaryLocked || saveReflection.isPending || reflection.trim().length < MIN_SUMMARY || reflection.trim() === progress.reflection}
+                className="cls-btn cls-btn-primary !px-5 !py-2.5 !text-sm"
+              >
+                {saveReflection.isPending ? "Saving..." : "Save summary"}
+              </button>
+            </div>
+          </Part>
 
           {lesson.quiz.length > 0 && <QuizBlock view={view} slug={slug} lessonRef={lessonRef} onCompleted={celebrate} />}
 

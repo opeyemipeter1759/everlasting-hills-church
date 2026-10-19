@@ -1,4 +1,4 @@
-import { chooseCohort, classComplete, eligibility, gradeQuiz, isStalled, lessonComplete } from './class-rules';
+import { chooseCohort, classComplete, eligibility, gradeQuiz, isStalled, lessonComplete, summaryLongEnough, MIN_SUMMARY_CHARS } from './class-rules';
 
 const day = 24 * 60 * 60 * 1000;
 const now = new Date('2026-10-14T12:00:00Z');
@@ -77,5 +77,14 @@ describe('isStalled', () => {
     expect(isStalled(at(-22), at(-40), now)).toBe(true);
     expect(isStalled(at(-10), at(-40), now)).toBe(false);
     expect(isStalled(null, at(-25), now)).toBe(true);
+  });
+});
+
+describe('summaryLongEnough', () => {
+  it('needs the minimum number of characters once trimmed', () => {
+    expect(summaryLongEnough('a'.repeat(MIN_SUMMARY_CHARS))).toBe(true);
+    expect(summaryLongEnough('a'.repeat(MIN_SUMMARY_CHARS - 1))).toBe(false);
+    expect(summaryLongEnough(`   ${'a'.repeat(MIN_SUMMARY_CHARS - 1)}   `)).toBe(false);
+    expect(summaryLongEnough(null)).toBe(false);
   });
 });

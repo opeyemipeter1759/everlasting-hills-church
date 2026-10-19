@@ -48,8 +48,8 @@ export function formatDate(iso: string | null | undefined, withTime = false): st
   });
 }
 
-/** A YouTube watch, share or embed link as an embeddable URL; null for anything else. */
-export function youTubeEmbed(url: string | null | undefined): string | null {
+/** The video id in a YouTube watch, share, shorts, live or embed link; null for anything else. */
+export function youTubeId(url: string | null | undefined): string | null {
   if (!url) return null;
   try {
     const u = new URL(url);
@@ -58,7 +58,7 @@ export function youTubeEmbed(url: string | null | undefined): string | null {
     else if (u.hostname.endsWith("youtube.com")) {
       id = u.searchParams.get("v") ?? (u.pathname.match(/\/(embed|shorts|live)\/([^/?]+)/)?.[2] ?? null);
     }
-    return id && /^[\w-]{6,}$/.test(id) ? `https://www.youtube-nocookie.com/embed/${id}?rel=0` : null;
+    return id && /^[\w-]{6,}$/.test(id) ? id : null;
   } catch {
     return null;
   }

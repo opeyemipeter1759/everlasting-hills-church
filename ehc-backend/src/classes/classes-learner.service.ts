@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
 import { MembershipService } from './membership.service';
-import { chooseCohort, classComplete, eligibility, gradeQuiz, lessonComplete } from './class-rules';
+import { chooseCohort, classComplete, eligibility, gradeQuiz, lessonComplete, MIN_SUMMARY_CHARS, summaryLongEnough } from './class-rules';
 
 export type LessonStatus = 'locked' | 'not_started' | 'in_progress' | 'done';
 
@@ -46,7 +46,8 @@ function requirements(l: LoadedLesson) {
   return {
     hasVideo: !!l.videoUrl?.trim(),
     quizCount: l._count.QuizItems,
-    hasReflection: !!l.reflectionPrompt?.trim(),
+    // Every lesson asks for the learner's own summary, whether or not it has a prompt.
+    hasReflection: true,
     // Action steps are retired: no lesson waits on one, whatever text an older lesson still carries.
     hasAction: false,
   };
@@ -532,12 +533,19 @@ export class ClassesLearnerService {
   async saveReflection(actor: AuthUser, slug: string, lessonRef: string, text: string) {
     const ctx = await this.openLesson(actor, slug, lessonRef);
     const body = text.trim();
+    if (!summaryLongEnough(body)) {
+      throw new BadRequestException(`Write at least ${MIN_SUMMARY_CHARS} characters about what you learnt.`);
+    }
+    // The summary follows the video: a lesson with a video is summarised once it has been watched.
+    if (ctx.entry.lesson.videoUrl?.trim()) {
+      const progress = await this.prisma.lessonProgress.findUnique({
+        where: { enrollmentId_lessonId: { enrollmentId: ctx.enrollment.id, lessonId: ctx.entry.lesson.id } },
+        select: { videoDoneAt: true },
+      });
+      if (!progress?.videoDoneAt) throw new BadRequestException('Watch the video to the end first, then write your summary.');
+    }
     const now = new Date();
-    const completed = await this.touch(
-      ctx,
-      { reflection: body || null, reflectionAt: body ? now : null },
-      { reflection: body || null, reflectionAt: body ? now : null },
-    );
+    const completed = await this.touch(ctx, { reflection: body, reflectionAt: now }, { reflection: body, reflectionAt: now });
     return { saved: true, completed };
   }
 
