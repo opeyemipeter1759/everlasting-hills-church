@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Crown, Heart, Zap, Users, ArrowLeft, ArrowRight } from "lucide-react";
 import ScrollReveal from "@/components/home/ScrollReveal";
+import HillRidge from "@/components/marketing/HillRidge";
 import type { Metadata } from "next";
 import { getStructuredContent } from "@/lib/cms-page";
 
@@ -261,7 +262,7 @@ export default async function MinistryDetailPage({
       {/* ════════════════════════════════════════════════════════════════
           1. HERO — split-screen, dark
       ════════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden py-24 md:py-32 bg-church-dark text-white">
+      <section className="relative overflow-hidden pt-24 pb-36 md:pt-32 md:pb-44 bg-church-dark text-white">
         {/* Background image */}
         <div className="pointer-events-none absolute inset-0 z-0">
           <Image
@@ -380,6 +381,7 @@ export default async function MinistryDetailPage({
             </ScrollReveal>
           </div>
         </div>
+        <HillRidge fill="#FFF4F6" />
       </section>
 
       {/* ════════════════════════════════════════════════════════════════
