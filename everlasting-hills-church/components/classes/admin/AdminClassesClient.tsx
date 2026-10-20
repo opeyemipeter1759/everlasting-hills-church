@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAdminClasses } from "@/lib/api/classes";
 import { ClassTheme } from "../theme";
 import { ClassError, ClassLoading } from "../shared";
+import ApplicationsTab from "./ApplicationsTab";
 import ApprovalsTab from "./ApprovalsTab";
 import CohortsTab from "./CohortsTab";
 import ContentTab from "./ContentTab";
 import StalledTab from "./StalledTab";
 
 const TABS = [
+  ["applications", "Applications"],
   ["approvals", "Ready for membership"],
   ["cohorts", "Cohorts"],
   ["content", "Lessons"],
@@ -21,7 +23,7 @@ type Tab = (typeof TABS)[number][0];
 export default function AdminClassesClient() {
   const router = useRouter();
   const params = useSearchParams();
-  const tab = (TABS.find(([t]) => t === params.get("tab"))?.[0] ?? "approvals") as Tab;
+  const tab = (TABS.find(([t]) => t === params.get("tab"))?.[0] ?? "applications") as Tab;
   const { data: classes, isLoading, error, refetch } = useAdminClasses();
   const [courseId, setCourseId] = useState<string>("");
 
@@ -61,8 +63,8 @@ export default function AdminClassesClient() {
             )}
             {current && (
               <p className="text-sm text-black/60 dark:text-white/60">
-                {current.title}: {current.lessons} lessons · {current.cohorts} cohort{current.cohorts === 1 ? "" : "s"} · {current.learners.active} active,{" "}
-                {current.learners.waiting} waiting, {current.learners.completed} completed
+                {current.title}: {current.lessons} lessons · {current.cohorts} cohort{current.cohorts === 1 ? "" : "s"} · {current.learners.pending} awaiting approval,{" "}
+                {current.learners.active} active, {current.learners.waiting} waiting, {current.learners.completed} completed
               </p>
             )}
           </div>
@@ -87,6 +89,7 @@ export default function AdminClassesClient() {
           </div>
 
           <div className="mt-6">
+            {tab === "applications" && <ApplicationsTab />}
             {tab === "approvals" && <ApprovalsTab />}
             {tab === "cohorts" && courseId && <CohortsTab courseId={courseId} />}
             {tab === "content" && courseId && <ContentTab courseId={courseId} />}

@@ -7,13 +7,6 @@
 export const QUIZ_PASS_PCT = 60;
 export const STALLED_AFTER_DAYS = 21;
 
-/** A learner's summary of a lesson must be at least this many characters (spaces trimmed at the ends). */
-export const MIN_SUMMARY_CHARS = 50;
-
-export function summaryLongEnough(text: string | null | undefined): boolean {
-  return (text ?? '').trim().length >= MIN_SUMMARY_CHARS;
-}
-
 export interface Eligibility {
   required: number;
   attended: number;

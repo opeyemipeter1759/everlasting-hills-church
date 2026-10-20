@@ -20,7 +20,7 @@ const PORTAL = "/dashboard/classes/membership";
 interface ClassStatus {
   eligibility: { required: number; attended: number; eligible: boolean; remaining: number };
   canEnroll: boolean;
-  enrollment: { status: "WAITING" | "ACTIVE" | "COMPLETED"; progressPct: number; currentWeek: number; next: { week: number; slug: string } | null } | null;
+  enrollment: { status: "PENDING" | "WAITING" | "ACTIVE" | "COMPLETED" | "DECLINED"; progressPct: number; currentWeek: number; next: { week: number; slug: string } | null } | null;
 }
 
 /** The signed-in visitor's place in the class, or null for everyone else. Display only. */
@@ -34,12 +34,14 @@ async function loadStatus(): Promise<ClassStatus | null> {
 }
 
 function primaryAction(status: ClassStatus | null) {
-  if (!status) return { href: `/login?next=${encodeURIComponent(PORTAL)}`, label: "Start the Class" };
+  if (!status) return { href: `/login?next=${encodeURIComponent(PORTAL)}`, label: "Apply to join" };
   const e = status.enrollment;
   if (e?.status === "COMPLETED") return { href: `${PORTAL}/certificate`, label: "See your certificate" };
   if (e?.status === "ACTIVE" && e.next) return { href: `${PORTAL}/${e.next.week}/${e.next.slug}`, label: "Continue" };
+  if (e?.status === "PENDING") return { href: PORTAL, label: "Application sent" };
+  if (e?.status === "DECLINED") return { href: PORTAL, label: "Apply again" };
   if (e) return { href: PORTAL, label: "Open the class" };
-  return { href: PORTAL, label: "Start the Class" };
+  return { href: PORTAL, label: "Apply to join" };
 }
 
 const GAINS = [
@@ -82,13 +84,19 @@ export default async function MembershipClassPage() {
             {status?.enrollment ? (
               <>
                 <p className="cls-eyebrow text-white/60">Week {status.enrollment.currentWeek} of 4</p>
-                <p className="cls-display mt-2 text-5xl">{status.enrollment.progressPct}%</p>
+                <p className="cls-display mt-2 text-3xl">
+                  {status.enrollment.status === "COMPLETED" ? "Planted." : status.enrollment.status === "ACTIVE" ? "Being planted." : "On your way."}
+                </p>
                 <div className="cls-bar mt-4" aria-hidden>
                   <span style={{ width: `${status.enrollment.progressPct}%` }} />
                 </div>
                 <p className="mt-4 text-sm text-white/65">
-                  {status.enrollment.status === "WAITING"
-                    ? "You are registered. Your class opens once you have attended four Sundays."
+                  {status.enrollment.status === "PENDING"
+                    ? "Your application is waiting for approval."
+                    : status.enrollment.status === "DECLINED"
+                      ? "Your application was not approved. You can apply again."
+                      : status.enrollment.status === "WAITING"
+                    ? "You are approved. Your class opens once you have attended four Sundays."
                     : status.enrollment.status === "COMPLETED"
                       ? "You have finished the class."
                       : "Pick up where you left off."}
@@ -157,15 +165,15 @@ export default async function MembershipClassPage() {
             {el ? (
               <>
                 <p className="cls-display mt-3 text-3xl">
-                  {el.eligible ? "You're eligible: start now." : `Keep attending: ${el.attended} of ${el.required} weeks complete.`}
+                  {el.eligible ? "You're eligible to apply." : `Keep attending: ${el.attended} of ${el.required} weeks complete.`}
                 </p>
                 <div className="cls-bar mt-5" aria-hidden>
                   <span style={{ width: `${el.required ? Math.min(100, (el.attended / el.required) * 100) : 100}%` }} />
                 </div>
                 <p className="mt-4 text-black/60">
                   {el.eligible
-                    ? "Your attendance shows you are ready. Register and we will place you in the current cohort."
-                    : "You can register now. We will place you in the next cohort that starts after your fourth Sunday."}
+                    ? "Your attendance shows you are ready. Apply, and a Super Admin, Pastor or Admin Head will review your application."
+                    : "You can apply now. Your class opens once you are approved and have attended four Sundays."}
                 </p>
               </>
             ) : (
@@ -234,11 +242,11 @@ export default async function MembershipClassPage() {
         <div className="mx-auto flex max-w-[1200px] flex-col gap-8 lg:flex-row lg:items-center lg:justify-between lg:gap-16">
           <div className="max-w-2xl">
             <EmphasisHeading before="Ready to take your" emphasis="place?" className="text-4xl sm:text-5xl lg:text-6xl" />
-            <p className="mt-4 text-lg text-white/65">Start the class, or see where you stand first.</p>
+            <p className="mt-4 text-lg text-white/65">Apply to join the class, or see where you stand first.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-none">
             <Link href={action.href} className="cls-btn cls-btn-primary">
-              {status?.enrollment ? action.label : "Start the Class"}
+              {status?.enrollment ? action.label : "Apply to join"}
             </Link>
             <a href="#eligibility" className="cls-btn cls-btn-glass">
               Check Eligibility
@@ -277,7 +285,7 @@ export default async function MembershipClassPage() {
         <div className="mx-auto max-w-[800px]">
           <EmphasisHeading before="Your place in the house is" emphasis="waiting." className="text-4xl sm:text-6xl" />
           <Link href={action.href} className="cls-btn cls-btn-primary mt-10">
-            {status?.enrollment ? action.label : "Start the Membership Class"}
+            {status?.enrollment ? action.label : "Apply to join the Membership Class"}
           </Link>
           <p className="mt-8 italic text-white/60">Planted by God, Preserved in Prayer.</p>
         </div>

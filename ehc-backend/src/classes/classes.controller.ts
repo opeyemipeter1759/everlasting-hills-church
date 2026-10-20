@@ -6,7 +6,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { ClassesLearnerService } from './classes-learner.service';
 import { ClassesAdminService } from './classes-admin.service';
-import { QuizAnswersDto, ReflectionDto } from './dto/classes.dto';
+import { ClassWatchService } from './class-watch.service';
+import { HeartbeatDto, QuizAnswersDto, StartWatchDto, SummaryDto } from './dto/classes.dto';
 
 /**
  * The church's classes, for the signed-in learner: the Membership Class and the
@@ -20,6 +21,7 @@ export class ClassesController {
   constructor(
     private readonly learner: ClassesLearnerService,
     private readonly admin: ClassesAdminService,
+    private readonly watch: ClassWatchService,
   ) {}
 
   @Get()
@@ -69,10 +71,24 @@ export class ClassesController {
     return this.learner.lesson(actor, slug, lesson);
   }
 
-  @Post(':slug/lessons/:lesson/video')
-  @ApiOperation({ summary: 'Mark the lesson video watched' })
-  video(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Param('lesson') lesson: string) {
-    return this.learner.markVideo(actor, slug, lesson);
+  @Post(':slug/lessons/:lesson/watch-sessions')
+  @ApiOperation({ summary: 'Start watching the lesson video. The server, not the browser, decides when it counts as watched.' })
+  @ApiBody({ type: StartWatchDto })
+  startWatching(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Param('lesson') lesson: string, @Body() body: StartWatchDto) {
+    return this.watch.start(actor, slug, lesson, body?.position);
+  }
+
+  @Put(':slug/lessons/:lesson/watch-sessions/:sessionId/heartbeat')
+  @ApiOperation({ summary: 'Report the player position while watching' })
+  @ApiBody({ type: HeartbeatDto })
+  heartbeat(
+    @CurrentUser() actor: AuthUser,
+    @Param('slug') slug: string,
+    @Param('lesson') lesson: string,
+    @Param('sessionId') sessionId: string,
+    @Body() body: HeartbeatDto,
+  ) {
+    return this.watch.heartbeat(actor, slug, lesson, sessionId, body.position);
   }
 
   @Post(':slug/lessons/:lesson/quiz')
@@ -82,10 +98,10 @@ export class ClassesController {
     return this.learner.submitQuiz(actor, slug, lesson, body.answers);
   }
 
-  @Put(':slug/lessons/:lesson/reflection')
-  @ApiOperation({ summary: 'Save my private answer to the reflection question' })
-  @ApiBody({ type: ReflectionDto })
-  reflection(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Param('lesson') lesson: string, @Body() body: ReflectionDto) {
-    return this.learner.saveReflection(actor, slug, lesson, body.text);
+  @Post(':slug/lessons/:lesson/summary')
+  @ApiOperation({ summary: 'Save my private summary of the lesson. 409 until the video has been watched.' })
+  @ApiBody({ type: SummaryDto })
+  summary(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Param('lesson') lesson: string, @Body() body: SummaryDto) {
+    return this.learner.saveSummary(actor, slug, lesson, body.text);
   }
 }

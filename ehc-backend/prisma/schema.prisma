@@ -932,23 +932,23 @@ enum FinanceEntryKind {
 /// free text rather than an enum so a new fund doesn't need a migration.
 /// Expenses share the same shape with their own free-text category.
 model FinanceEntry {
-  id          String           @id
-  tenantId    String
-  kind        FinanceEntryKind
-  category    String
+  id           String           @id
+  tenantId     String
+  kind         FinanceEntryKind
+  category     String
   /// Short optional title, e.g. "Youth Conference 2026" for a PROGRAM entry.
-  label       String?
+  label        String?
   /// Naira, whole amount.
-  amount      Int
+  amount       Int
   /// The date this income/expense is attributed to — what buckets it into a
   /// week/month, independent of when it was typed in.
-  date        DateTime
-  note        String?
+  date         DateTime
+  note         String?
   recordedById String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  Tenant      Tenant           @relation(fields: [tenantId], references: [id])
-  RecordedBy  Profile?         @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  Tenant       Tenant           @relation(fields: [tenantId], references: [id])
+  RecordedBy   Profile?         @relation(fields: [recordedById], references: [id], onDelete: SetNull)
 
   @@index([tenantId, kind, date])
   @@index([tenantId, category])
@@ -2691,11 +2691,15 @@ model CourseLesson {
   scriptures         Json               @default("[]")
   actionStep         String?
   actionVerification ActionVerification @default(SELF)
+  /// Length of the video in seconds. Set by the server (from the video host) or an admin, never by a
+  /// learner's browser: the watch rules measure every learner against it. Null until known.
+  durationSeconds    Int?
 
-  Module    CourseModule       @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  QuizItems LessonQuizItem[]
-  Progress  LessonProgress[]
-  Actions   ActionCompletion[]
+  Module        CourseModule         @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  QuizItems     LessonQuizItem[]
+  Progress      LessonProgress[]
+  Actions       ActionCompletion[]
+  WatchSessions LessonWatchSession[]
 
   @@index([moduleId])
 }
@@ -2706,10 +2710,14 @@ enum MembershipStatus {
 }
 
 enum EnrollmentStatus {
-  /// Registered, but not yet eligible or their cohort has not started.
+  /// Applied, waiting for a Super Admin, Pastor or Admin Head to approve.
+  PENDING
+  /// Approved, but not yet eligible or their cohort has not started.
   WAITING
   ACTIVE
   COMPLETED
+  /// The application was not approved; the member may apply again.
+  DECLINED
 }
 
 enum ActionVerification {
@@ -2804,23 +2812,50 @@ model CohortFacilitator {
 
 /// A learner's progress through one lesson. The reflection is private to the learner.
 model LessonProgress {
-  id           String    @id
-  tenantId     String
-  enrollmentId String
-  lessonId     String
-  videoDoneAt  DateTime?
-  quizScorePct Int?      @db.SmallInt
-  quizPassedAt DateTime?
-  quizAttempts Int       @default(0) @db.SmallInt
-  reflection   String?
-  reflectionAt DateTime?
-  completedAt  DateTime?
-  updatedAt    DateTime  @default(now()) @updatedAt
+  id                   String    @id
+  tenantId             String
+  enrollmentId         String
+  lessonId             String
+  /// Set only by the server, once the watch rules are met (see class-watch.service). Never by a client.
+  videoDoneAt          DateTime?
+  /// Watching the server has seen, across every sitting: the furthest second reached and the seconds credited.
+  watchMaxPosition     Int       @default(0)
+  watchSeconds         Int       @default(0)
+  watchLastHeartbeatAt DateTime?
+  quizScorePct         Int?      @db.SmallInt
+  quizPassedAt         DateTime?
+  quizAttempts         Int       @default(0) @db.SmallInt
+  reflection           String?
+  reflectionAt         DateTime?
+  completedAt          DateTime?
+  updatedAt            DateTime  @default(now()) @updatedAt
 
   Enrollment CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
   Lesson     CourseLesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([enrollmentId, lessonId])
+}
+
+/// One sitting of watching a lesson video. The browser reports its position; the server credits at most the
+/// wall-clock time that has passed, so watching cannot be claimed faster than it can be done.
+model LessonWatchSession {
+  id                 String   @id
+  tenantId           String
+  enrollmentId       String
+  lessonId           String
+  startedAt          DateTime @default(now())
+  lastHeartbeatAt    DateTime @default(now())
+  /// Where the player last reported it was, to tell playing on from a jump.
+  lastPosition       Int      @default(0)
+  maxPosition        Int      @default(0)
+  accumulatedSeconds Int      @default(0)
+
+  Enrollment CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  Lesson     CourseLesson     @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([enrollmentId, lessonId])
+  @@index([tenantId])
+  @@index([lastHeartbeatAt])
 }
 
 /// A lesson's action step, done by the learner and, when the lesson asks, verified by a leader.
@@ -2913,12 +2948,17 @@ model CourseEnrollment {
   status            EnrollmentStatus @default(ACTIVE)
   lastActivityAt    DateTime?
   stalledNotifiedAt DateTime?
+  /// Class applications: when an approver decided, who, and what they said.
+  decidedAt         DateTime?
+  decidedById       String?
+  decisionNote      String?
 
-  Course   Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  Member   Member             @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  Cohort   ClassCohort?       @relation(fields: [cohortId], references: [id], onDelete: SetNull)
-  Progress LessonProgress[]
-  Actions  ActionCompletion[]
+  Course        Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  Member        Member               @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  Cohort        ClassCohort?         @relation(fields: [cohortId], references: [id], onDelete: SetNull)
+  Progress      LessonProgress[]
+  Actions       ActionCompletion[]
+  WatchSessions LessonWatchSession[]
 
   @@unique([courseId, memberId])
   @@index([cohortId])

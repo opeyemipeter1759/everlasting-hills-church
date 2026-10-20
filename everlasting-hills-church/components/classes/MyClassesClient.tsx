@@ -1,101 +1,113 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Award, Lock, Users } from "lucide-react";
-import { useClasses, useFacilitating } from "@/lib/api/classes";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, Users } from "lucide-react";
+import { useClasses, useFacilitating, type ClassListItem, type MembershipStatus } from "@/lib/api/classes";
 import { ClassTheme, EmphasisHeading } from "./theme";
-import { ClassError, ClassLoading, ProgressBar, formatDate } from "./shared";
+import Arches from "./Arches";
+import { ClassError, ClassLoading, formatDate } from "./shared";
+
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+/** Where the learner stands in one class, in a few quiet words. */
+function standing(c: ClassListItem, membership: MembershipStatus): { text: string; tone: "done" | "active" | "waiting" | "closed" } {
+  const e = c.enrollment;
+  if (e?.status === "COMPLETED") return { text: `Complete, ${formatDate(e.completedAt)}`, tone: "done" };
+  if (e?.status === "ACTIVE") return { text: e.completedLessons === 0 ? "Ready to begin" : `${e.completedLessons} of ${c.totalLessons} lessons complete`, tone: "active" };
+  if (e?.status === "WAITING") return { text: "Approved, opens soon", tone: "waiting" };
+  if (e?.status === "PENDING") return { text: "Application sent", tone: "waiting" };
+  if (e?.status === "DECLINED") return { text: "Not approved this time. You can apply again.", tone: "waiting" };
+  if (c.requiresFullMembership && membership !== "FULL") return { text: "Opens to full members", tone: "closed" };
+  if (!c.prerequisiteMet) return { text: "Opens after the class before it", tone: "closed" };
+  return { text: c.eligibility.eligible ? "You can apply" : `${c.eligibility.attended} of ${c.eligibility.required} Sundays so far`, tone: "waiting" };
+}
 
 export default function MyClassesClient() {
+  const reduceMotion = useReducedMotion();
   const { data, isLoading, error, refetch } = useClasses();
   const { data: facilitating } = useFacilitating();
 
   return (
-    <ClassTheme className="mx-auto max-w-[1200px] px-4 py-8 sm:py-10">
-      <p className="cls-eyebrow text-[var(--color-burgundy)] dark:text-[var(--color-gold)]">Classes</p>
-      <EmphasisHeading as="h1" before="Grow in the" emphasis="house." className="mt-2 text-4xl sm:text-5xl text-[var(--color-ink)] dark:text-white" />
-      {data && (
-        <p className="mt-3 text-black/60 dark:text-white/60">
-          {data.membershipStatus === "FULL"
-            ? "You are a full member of Everlasting Hills Church."
-            : "You are a member in training. The Membership Class is your next step."}
-        </p>
-      )}
+    <ClassTheme className="mx-auto max-w-[1000px] px-4 py-8 sm:py-12">
+      <header className="relative">
+        <Arches className="absolute -top-6 right-0 hidden h-28 w-auto text-[var(--color-burgundy)] sm:block" />
+        <EmphasisHeading as="h1" before="Grow in the" emphasis="house." className="text-[40px] leading-[1.02] text-[var(--color-ink)] dark:text-white sm:text-6xl" />
+        {data && (
+          <p className="mt-4 max-w-xl text-lg text-black/60 dark:text-white/60">
+            {data.membershipStatus === "FULL"
+              ? "You are a full member of Everlasting Hills Church. Keep growing."
+              : "You are a member in training. The Membership Class is your next step."}
+          </p>
+        )}
+      </header>
 
       {isLoading && <ClassLoading />}
       {error && <div className="mt-8"><ClassError error={error} onRetry={() => refetch()} /></div>}
-
-      {data && data.classes.length === 0 && (
-        <p className="mt-10 text-black/60 dark:text-white/60">No classes are open yet. Check back soon.</p>
-      )}
+      {data && data.classes.length === 0 && <p className="mt-10 text-black/60 dark:text-white/60">No classes are open yet. Check back soon.</p>}
 
       {data && data.classes.length > 0 && (
-        <ul className="mt-8 grid gap-4 md:grid-cols-2">
-          {data.classes.map((c) => {
-            const e = c.enrollment;
-            const locked = !e && (!c.prerequisiteMet || (c.requiresFullMembership && data.membershipStatus !== "FULL"));
+        <ol className="mt-10 border-t border-[var(--color-pink-border)] dark:border-white/10">
+          {data.classes.map((c, i) => {
+            const s = standing(c, data.membershipStatus);
+            const progress = c.enrollment?.status === "ACTIVE" ? c.enrollment.progressPct : null;
             return (
-              <li key={c.slug}>
+              <motion.li
+                key={c.slug}
+                initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: EASE, delay: i * 0.06 }}
+                className="border-b border-[var(--color-pink-border)] dark:border-white/10"
+              >
                 <Link
                   href={`/dashboard/classes/${c.slug}`}
-                  className="group block h-full rounded-[20px] border border-[var(--color-pink-border)] bg-white p-6 transition-shadow hover:shadow-lg dark:border-white/10 dark:bg-white/[0.04]"
+                  className="group grid gap-3 py-7 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-burgundy)] sm:grid-cols-[1fr_auto] sm:items-center sm:gap-8"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="cls-display text-2xl text-[var(--color-ink)] dark:text-white">{c.title}</p>
-                      <p className="mt-1 text-sm text-black/60 dark:text-white/60">{c.tagline}</p>
-                    </div>
-                    {e?.status === "COMPLETED" ? (
-                      <Award className="h-6 w-6 flex-none text-[var(--color-gold)]" aria-label="Completed" />
-                    ) : locked ? (
-                      <Lock className="h-5 w-5 flex-none text-black/30 dark:text-white/30" aria-label="Not open to you yet" />
-                    ) : (
-                      <ArrowRight className="h-5 w-5 flex-none text-[var(--color-burgundy)] transition-transform group-hover:translate-x-1" aria-hidden />
+                  <span className="min-w-0">
+                    <span className={`cls-display block text-[28px] leading-tight sm:text-4xl ${s.tone === "closed" ? "text-black/50 dark:text-white/50" : "text-[var(--color-ink)] dark:text-white"}`}>
+                      {c.title}
+                    </span>
+                    {c.tagline && <span className="mt-1 block text-black/60 dark:text-white/60">{c.tagline}</span>}
+                    {progress !== null && (
+                      <span className="mt-4 block h-1 max-w-sm overflow-hidden rounded-full bg-[var(--color-pink-border)] dark:bg-white/10" aria-hidden="true">
+                        <span className="block h-full rounded-full bg-[var(--color-gold)]" style={{ width: `${progress}%` }} />
+                      </span>
                     )}
-                  </div>
-                  <div className="mt-5">
-                    {e ? (
-                      <>
-                        <div className="mb-2 flex justify-between text-sm text-black/60 dark:text-white/60">
-                          <span>
-                            {e.status === "WAITING" ? "Registered, opens soon" : e.status === "COMPLETED" ? `Completed ${formatDate(e.completedAt)}` : `${e.completedLessons} of ${c.totalLessons} lessons`}
-                          </span>
-                          <span>{e.progressPct}%</span>
-                        </div>
-                        <ProgressBar pct={e.progressPct} label={`${c.title} progress`} />
-                      </>
-                    ) : (
-                      <p className="text-sm text-black/60 dark:text-white/60">
-                        {locked
-                          ? c.requiresFullMembership && data.membershipStatus !== "FULL"
-                            ? "For full members."
-                            : "Opens after the class before it."
-                          : c.eligibility.eligible
-                            ? `${c.duration}. You can start now.`
-                            : `${c.eligibility.attended} of ${c.eligibility.required} Sundays attended.`}
-                      </p>
-                    )}
-                  </div>
+                  </span>
+                  <span className="flex items-center gap-3">
+                    <span
+                      className={`rounded-full px-3 py-1 text-sm ${
+                        s.tone === "done"
+                          ? "bg-[var(--color-chip)] font-semibold text-[var(--color-burgundy)] dark:bg-white/10 dark:text-[var(--color-gold)]"
+                          : s.tone === "active"
+                            ? "bg-[var(--color-burgundy)] text-white"
+                            : "bg-black/[0.04] text-black/60 dark:bg-white/10 dark:text-white/65"
+                      }`}
+                    >
+                      {s.text}
+                    </span>
+                    <ArrowRight className="h-5 w-5 flex-none text-[var(--color-burgundy)] transition-transform group-hover:translate-x-1 dark:text-white/70" aria-hidden />
+                  </span>
                 </Link>
-              </li>
+              </motion.li>
             );
           })}
-        </ul>
+        </ol>
       )}
 
       {facilitating && facilitating.length > 0 && (
-        <section className="mt-12">
+        <section className="mt-14">
           <h2 className="cls-display text-2xl text-[var(--color-ink)] dark:text-white">Cohorts you facilitate</h2>
           <ul className="mt-4 grid gap-3 md:grid-cols-2">
             {facilitating.map((c) => (
               <li key={c.id}>
                 <Link
                   href={`/dashboard/classes/facilitate/${c.id}`}
-                  className="flex items-center justify-between gap-3 rounded-[16px] border border-[var(--color-pink-border)] bg-white p-5 dark:border-white/10 dark:bg-white/[0.04]"
+                  className="flex items-center justify-between gap-3 rounded-[16px] border border-[var(--color-pink-border)] bg-white p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-burgundy)] dark:border-white/10 dark:bg-white/[0.04]"
                 >
                   <span>
                     <span className="block font-semibold text-[var(--color-ink)] dark:text-white">{c.Course.title}: {c.name}</span>
-                    <span className="block text-sm text-black/60 dark:text-white/60">Starts {formatDate(c.startsOn)}</span>
+                    <span className="block text-sm text-black/60 dark:text-white/60">Began {formatDate(c.startsOn)}</span>
                   </span>
                   <span className="cls-chip"><Users className="h-3.5 w-3.5" aria-hidden />{c._count.Enrollments}</span>
                 </Link>

@@ -1,16 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Lock, PlayCircle, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, PlayCircle, X } from "lucide-react";
 import {
   useLesson,
-  useMarkVideo,
-  useSaveReflection,
+  useSaveSummary,
+  useStartWatch,
   useSubmitQuiz,
+  useWatchHeartbeat,
   type LessonView,
   type QuizResult,
 } from "@/lib/api/classes";
+import { SUMMARY_MAX_CHARS, SUMMARY_MIN_CHARS, normalizeSummary, summaryProblem } from "@/lib/classes/summary-rules";
 import { showToast } from "@/components/ui/toast/toast";
 import { ClassTheme } from "./theme";
 import { ClassError, ClassLoading, ProgressBar, errorText, youTubeId } from "./shared";
@@ -31,9 +33,6 @@ export default function LessonPlayerClient({ slug, lesson }: { slug: string; les
   }
   return <LessonView view={data} slug={slug} lessonRef={lesson} />;
 }
-
-/** The least a learner must write about a lesson before it counts. Mirrors the backend rule. */
-const MIN_SUMMARY = 50;
 
 const card =
   "rounded-[20px] border border-[var(--color-pink-border)] bg-white dark:border-white/10 dark:bg-white/[0.04]";
@@ -72,16 +71,61 @@ function Part({
 }
 
 function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string; lessonRef: string }) {
-  const { lesson, progress } = view;
+  const { lesson, progress, watch } = view;
   const base = `/dashboard/classes/${slug}`;
-  const markVideo = useMarkVideo(slug, lessonRef);
-  const saveReflection = useSaveReflection(slug, lessonRef);
+  const startWatch = useStartWatch(slug, lessonRef);
+  const heartbeat = useWatchHeartbeat(slug, lessonRef);
+  const saveSummary = useSaveSummary(slug, lessonRef);
+  const sessionId = useRef<string | null>(null);
+  /** Opens a sitting with the server. Heartbeats go to it; it is reopened if the server says it is gone. */
+  async function openSession(position: number) {
+    try {
+      const r = await startWatch.mutateAsync(position);
+      sessionId.current = r.sessionId;
+    } catch (err) {
+      sessionId.current = null;
+      showToast.error(errorText(err));
+    }
+  }
+  async function report(position: number, maxWatched: number) {
+    if (!sessionId.current) await openSession(position);
+    if (!sessionId.current) return;
+    try {
+      await heartbeat.mutateAsync({ sessionId: sessionId.current, position, maxWatched });
+    } catch {
+      // The sitting was closed or refused: the next report opens a new one.
+      sessionId.current = null;
+    }
+  }
   const videoId = youTubeId(lesson.videoUrl);
   const [playerFailed, setPlayerFailed] = useState(false);
-  const summaryLocked = !!lesson.videoUrl && !progress.videoDone;
+  const summaryLocked = watch.required && !progress.videoDone;
 
+  // The summary is kept on this device as it is written, so a dropped connection never loses it.
+  const draftKey = `ehc-summary-draft:${lesson.id}`;
   const [reflection, setReflection] = useState(progress.reflection);
-  useEffect(() => setReflection(progress.reflection), [progress.reflection]);
+  useEffect(() => {
+    if (progress.reflection) {
+      setReflection(progress.reflection);
+      return;
+    }
+    try {
+      const draft = window.localStorage.getItem(draftKey);
+      if (draft) setReflection(draft);
+    } catch {
+      /* private mode or storage blocked: the page works without it */
+    }
+  }, [progress.reflection, draftKey]);
+  const normalizedLength = normalizeSummary(reflection).length;
+  const summaryOk = summaryProblem(reflection) === null;
+  function onSummaryChange(value: string) {
+    setReflection(value);
+    try {
+      window.localStorage.setItem(draftKey, value);
+    } catch {
+      /* ignore */
+    }
+  }
 
   const celebrate = (completed: boolean) => {
     if (completed && !progress.completed) showToast.success("Lesson complete. Well done.");
@@ -169,7 +213,7 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
                 {progress.completed ? (
                   <ArrowRight className="mt-0.5 h-4 w-4 flex-none text-[var(--color-burgundy)] dark:text-[var(--color-gold)]" aria-hidden />
                 ) : (
-                  <Lock className="mt-0.5 h-4 w-4 flex-none" aria-hidden />
+                  <span aria-hidden="true" className="mt-1.5 h-2 w-2 flex-none rounded-full border border-current" />
                 )}
                 <span>
                   {progress.completed ? "Up next: " : "Finish this lesson to open "}
@@ -181,43 +225,33 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
         </aside>
 
         <div className="min-w-0 space-y-6">
-          {lesson.videoUrl && (
+          {watch.required && (
             <section id="watch" className="cls-glow cls-on-ink scroll-mt-24 rounded-[24px] p-2 sm:p-3">
-              {videoId && !playerFailed ? (
+              {videoId && watch.ready && !playerFailed ? (
                 <LessonVideo
                   videoId={videoId}
                   title={lesson.title}
+                  durationHint={watch.durationSeconds}
                   watched={progress.videoDone}
-                  onFinished={() => run(markVideo.mutateAsync(undefined))}
+                  resumeAt={watch.maxPosition}
+                  onStart={(position) => void openSession(position)}
+                  onBeat={(position, maxWatched) => void report(position, maxWatched)}
                   onUnavailable={() => setPlayerFailed(true)}
                 />
               ) : (
-                <div className="flex aspect-video items-center justify-center rounded-[18px] bg-black/40">
-                  <a href={lesson.videoUrl} target="_blank" rel="noopener noreferrer" className="cls-btn cls-btn-glass">
-                    <PlayCircle className="h-5 w-5" aria-hidden /> Watch the video
-                  </a>
+                <div className="flex aspect-video items-center justify-center rounded-[18px] bg-black/40 px-6 text-center text-white/75">
+                  {watch.ready ? "This video cannot be played here. Please tell the church office." : "The video for this lesson is not ready yet. Please check back soon."}
                 </div>
               )}
               <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-4">
                 <p className="text-sm text-white/65">
                   Recorded class, {lesson.duration}.{" "}
-                  {!progress.videoDone && (videoId && !playerFailed ? "Watch to the end. You can go back, but not skip ahead." : "")}
+                  {!progress.videoDone && watch.ready && !playerFailed ? "Watch to the end. You can go back, but not skip ahead." : ""}
                 </p>
-                {progress.videoDone ? (
+                {progress.videoDone && (
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-gold)]">
                     <CheckCircle2 className="h-4 w-4" aria-hidden /> You have watched this
                   </span>
-                ) : (
-                  (!videoId || playerFailed) && (
-                    <button
-                      type="button"
-                      onClick={() => run(markVideo.mutateAsync(undefined))}
-                      disabled={markVideo.isPending}
-                      className="cls-btn cls-btn-primary !px-5 !py-2.5 !text-sm"
-                    >
-                      I have watched it
-                    </button>
-                  )
                 )}
               </div>
             </section>
@@ -252,38 +286,58 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
           <Part
             id="summary"
             title="Your summary"
-            hint={`Write a short summary of what you learnt, at least ${MIN_SUMMARY} characters. Only you can see it.`}
+            hint={
+              summaryLocked
+                ? "Your summary opens when the video ends."
+                : `Write a short summary of what you learnt, at least ${SUMMARY_MIN_CHARS} characters. Only you can see it.`
+            }
             done={!!progress.reflection}
           >
             <label htmlFor="reflection" className={`cls-display block text-xl !leading-snug ${ink}`}>
-              {lesson.reflectionPrompt || "What did you learn from this lesson?"}
+              {lesson.summaryPrompt}
             </label>
             <textarea
               id="reflection"
               value={reflection}
-              onChange={(e) => setReflection(e.target.value)}
-              rows={6}
-              maxLength={4000}
+              onChange={(e) => onSummaryChange(e.target.value)}
+              rows={8}
+              maxLength={SUMMARY_MAX_CHARS + 500}
               disabled={summaryLocked}
               placeholder={summaryLocked ? "Watch the video to the end to unlock this." : "In your own words..."}
               className="mt-4 w-full rounded-[14px] border border-[var(--color-pink-border)] bg-white p-4 text-base leading-relaxed text-[var(--color-ink)] focus:outline-none focus:ring-2 focus:ring-[var(--color-burgundy)]/40 disabled:cursor-not-allowed disabled:bg-[var(--color-blush)] dark:border-white/15 dark:bg-white/[0.04] dark:text-white dark:disabled:bg-white/[0.02]"
             />
             <div className="mt-3 flex items-center justify-between gap-3">
-              <p
-                className={`text-xs tabular-nums ${
-                  reflection.trim().length >= MIN_SUMMARY ? "text-[var(--color-burgundy)] dark:text-[var(--color-gold)]" : "text-black/50 dark:text-white/50"
-                }`}
-                aria-live="polite"
-              >
-                {reflection.trim().length} / {MIN_SUMMARY} characters
+              <p className="flex items-center gap-1.5 text-xs tabular-nums text-black/50 dark:text-white/50" aria-live="polite">
+                {normalizedLength >= SUMMARY_MIN_CHARS ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-[var(--color-gold)]" aria-hidden /> {normalizedLength} characters
+                  </>
+                ) : (
+                  <>
+                    {normalizedLength} of {SUMMARY_MIN_CHARS}
+                  </>
+                )}
               </p>
               <button
                 type="button"
-                onClick={() => run(saveReflection.mutateAsync(reflection), "Summary saved")}
-                disabled={summaryLocked || saveReflection.isPending || reflection.trim().length < MIN_SUMMARY || reflection.trim() === progress.reflection}
+                onClick={async () => {
+                  try {
+                    const r = await saveSummary.mutateAsync(reflection.trim());
+                    showToast.success("Summary saved");
+                    try {
+                      window.localStorage.removeItem(draftKey);
+                    } catch {
+                      /* ignore */
+                    }
+                    celebrate(r.completed);
+                  } catch (err) {
+                    showToast.error(errorText(err));
+                  }
+                }}
+                disabled={summaryLocked || saveSummary.isPending || !summaryOk || reflection.trim() === progress.reflection}
                 className="cls-btn cls-btn-primary !px-5 !py-2.5 !text-sm"
               >
-                {saveReflection.isPending ? "Saving..." : "Save summary"}
+                {saveSummary.isPending ? "Saving..." : "Save summary"}
               </button>
             </div>
           </Part>
@@ -304,8 +358,8 @@ function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string;
                   {view.next.title} <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
               ) : (
-                <span className="inline-flex items-center gap-2 text-sm text-black/50 dark:text-white/50">
-                  <Lock className="h-4 w-4" aria-hidden /> Finish this lesson to open the next
+                <span className="rounded-full bg-black/[0.04] px-3 py-1 text-sm text-black/55 dark:bg-white/10 dark:text-white/60">
+                  The next lesson opens when this one is complete
                 </span>
               )
             ) : (

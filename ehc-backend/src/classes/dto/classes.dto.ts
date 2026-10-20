@@ -8,6 +8,7 @@ import {
   IsDateString,
   IsIn,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
@@ -24,11 +25,36 @@ export class QuizAnswersDto {
   answers!: (number | null)[];
 }
 
-export class ReflectionDto {
-  @ApiProperty({ description: 'Your private answer to the reflection question' })
+/** The body is capped so a huge payload is refused early; the summary rules (300 to 3,000 characters) are applied in the service. */
+export class SummaryDto {
+  @ApiProperty({ description: 'Your private summary of what you learnt' })
   @IsString()
-  @MaxLength(4000)
+  @MaxLength(8000)
   text!: string;
+}
+
+export class StartWatchDto {
+  @ApiPropertyOptional({ description: 'Where the player will resume, in seconds. Never past what the server has seen watched.' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(86400)
+  position?: number;
+}
+
+export class HeartbeatDto {
+  @ApiProperty({ description: 'Where the player is now, in seconds' })
+  @IsNumber()
+  @Min(0)
+  @Max(86400)
+  position!: number;
+
+  @ApiPropertyOptional({ description: 'The furthest the player thinks it has played. Advisory: the server never credits from it.' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(86400)
+  maxWatched?: number;
 }
 
 export class ScriptureDto {
@@ -40,6 +66,12 @@ export class LessonContentDto {
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(160) title?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(400) description?: string | null;
   @ApiPropertyOptional({ example: '10 min' }) @IsOptional() @IsString() @MaxLength(40) duration?: string;
+  @ApiPropertyOptional({ description: 'Video length in seconds. Looked up from the video host when the link changes; set it here if that fails.' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(43200)
+  durationSeconds?: number | null;
   @ApiPropertyOptional({ description: '"By the end, you can..."' }) @IsOptional() @IsString() @MaxLength(300) outcome?: string | null;
   @ApiPropertyOptional({ description: 'YouTube (unlisted) link' }) @IsOptional() @IsString() @MaxLength(400) videoUrl?: string | null;
   @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(3000) summary?: string | null;

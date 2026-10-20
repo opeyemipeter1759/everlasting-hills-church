@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Printer } from "lucide-react";
 import { useCertificate } from "@/lib/api/classes";
 import { ClassTheme } from "./theme";
+import Arches from "./Arches";
 import { ClassError, ClassLoading, formatDate } from "./shared";
 
 export default function CertificateClient({ slug }: { slug: string }) {
@@ -33,8 +34,9 @@ export default function CertificateClient({ slug }: { slug: string }) {
         </button>
       </div>
 
-      <article className="cls-glow cls-on-ink relative overflow-hidden rounded-[20px] px-6 py-14 text-center sm:px-14 sm:py-20 print:rounded-none">
+      <article className="cls-glow cls-on-ink relative [&>*:not(svg)]:relative overflow-hidden rounded-[20px] px-6 py-14 text-center sm:px-14 sm:py-20 print:rounded-none">
         <div className="pointer-events-none absolute inset-4 rounded-[14px] border border-[var(--color-gold)]/40" aria-hidden />
+        <Arches className="absolute bottom-0 left-1/2 h-1/2 w-auto -translate-x-1/2 text-white" />
         <p className="cls-eyebrow text-[var(--color-gold)]">Everlasting Hills Church</p>
         <p className="cls-display mt-6 text-2xl text-white/70">This certifies that</p>
         <h1 className="cls-display mt-3 text-4xl sm:text-6xl">{data.name}</h1>

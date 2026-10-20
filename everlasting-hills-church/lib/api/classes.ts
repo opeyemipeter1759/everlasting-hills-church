@@ -6,7 +6,8 @@ import { api } from "@/lib/api/request";
 // ── Learner ──────────────────────────────────────────────────────────────────
 
 export type MembershipStatus = "IN_TRAINING" | "FULL";
-export type EnrollmentStatus = "WAITING" | "ACTIVE" | "COMPLETED";
+/** PENDING: applied, waiting for approval. DECLINED: not approved (they may apply again). */
+export type EnrollmentStatus = "PENDING" | "WAITING" | "ACTIVE" | "COMPLETED" | "DECLINED";
 export type LessonStatus = "locked" | "not_started" | "in_progress" | "done";
 
 export interface Eligibility {
@@ -72,6 +73,8 @@ export interface ClassHome {
   enrollment: {
     status: EnrollmentStatus;
     enrolledAt: string;
+    decisionNote: string | null;
+    decidedAt: string | null;
     completedAt: string | null;
     completedLessons: number;
     totalLessons: number;
@@ -105,10 +108,13 @@ export interface LessonView {
     description: string | null;
     duration: string;
     outcome: string | null;
+    durationSeconds: number | null;
     videoUrl: string | null;
     scriptures: Scripture[];
     summary: string | null;
     reflectionPrompt: string | null;
+    /** What the summary box asks: the lesson's own question, or the default one. */
+    summaryPrompt: string;
     /** Options only. The correct answers never reach the browser. */
     quiz: { id: string; prompt: string; options: string[] }[];
   };
@@ -121,8 +127,32 @@ export interface LessonView {
     reflection: string;
     completed: boolean;
   };
+  /** What the server has seen of the video being watched. It alone decides when a video counts as watched. */
+  watch: {
+    required: boolean;
+    ready: boolean;
+    durationSeconds: number | null;
+    maxPosition: number;
+    watchedSeconds: number;
+    watched: boolean;
+  };
   previous: LessonRef | null;
   next: LessonRef | null;
+}
+
+export interface WatchStart {
+  sessionId: string | null;
+  durationSeconds: number;
+  maxPosition: number;
+  watchedSeconds: number;
+  watched: boolean;
+}
+
+export interface WatchHeartbeatResult {
+  watched: boolean;
+  maxPosition: number;
+  watchedSeconds: number;
+  completed: boolean;
 }
 
 export interface QuizResult {
@@ -196,8 +226,25 @@ function useLessonMutation<TBody, TResult>(slug: string, lesson: string, send: (
   });
 }
 
-export function useMarkVideo(slug: string, lesson: string) {
-  return useLessonMutation(slug, lesson, () => api.post<{ completed: boolean }>(`/classes/${slug}/lessons/${lesson}/video`));
+/** Opens a sitting of watching. Nothing is marked watched by the browser: only the server's heartbeat answers say so. */
+export function useStartWatch(slug: string, lesson: string) {
+  return useMutation({
+    mutationFn: (position: number) => api.post<WatchStart>(`/classes/${slug}/lessons/${lesson}/watch-sessions`, { position }),
+  });
+}
+
+export function useWatchHeartbeat(slug: string, lesson: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ sessionId, position, maxWatched }: { sessionId: string; position: number; maxWatched: number }) =>
+      api.put<WatchHeartbeatResult>(`/classes/${slug}/lessons/${lesson}/watch-sessions/${sessionId}/heartbeat`, { position, maxWatched }),
+    onSuccess: (r) => {
+      if (!r.watched) return;
+      qc.invalidateQueries({ queryKey: keys.lesson(slug, lesson) });
+      qc.invalidateQueries({ queryKey: keys.home(slug) });
+      qc.invalidateQueries({ queryKey: keys.list });
+    },
+  });
 }
 
 export function useSubmitQuiz(slug: string, lesson: string) {
@@ -206,9 +253,9 @@ export function useSubmitQuiz(slug: string, lesson: string) {
   );
 }
 
-export function useSaveReflection(slug: string, lesson: string) {
+export function useSaveSummary(slug: string, lesson: string) {
   return useLessonMutation(slug, lesson, (text: string) =>
-    api.put<{ completed: boolean }>(`/classes/${slug}/lessons/${lesson}/reflection`, { text }),
+    api.post<{ completed: boolean }>(`/classes/${slug}/lessons/${lesson}/summary`, { text }),
   );
 }
 
@@ -232,7 +279,7 @@ export interface AdminClass {
   requiresFullMembership: boolean;
   lessons: number;
   cohorts: number;
-  learners: { waiting: number; active: number; completed: number };
+  learners: { pending: number; waiting: number; active: number; completed: number };
 }
 
 export interface QuizItem {
@@ -252,6 +299,7 @@ export interface AdminLesson {
   videoUrl: string | null;
   summary: string | null;
   reflectionPrompt: string | null;
+  durationSeconds: number | null;
   scriptures: Scripture[] | null;
   QuizItems: QuizItem[];
 }
@@ -322,6 +370,17 @@ export interface Approval {
   Member: PersonRef & { email: string | null; membershipStatus: MembershipStatus };
 }
 
+export interface Application {
+  id: string;
+  status: EnrollmentStatus;
+  enrolledAt: string;
+  decidedAt: string | null;
+  decisionNote: string | null;
+  Course: { title: string; slug: string };
+  Member: PersonRef & { email: string | null; membershipStatus: MembershipStatus };
+  eligibility: Eligibility;
+}
+
 export interface MemberMembership {
   membershipStatus: MembershipStatus;
   membershipConfirmedAt: string | null;
@@ -336,6 +395,7 @@ const admin = {
   roster: (id: string) => ["class-admin", "roster", id] as const,
   stalled: ["class-admin", "stalled"] as const,
   approvals: (status: string) => ["class-admin", "approvals", status] as const,
+  applications: (status: string) => ["class-admin", "applications", status] as const,
   membership: (memberId: string) => ["class-admin", "membership", memberId] as const,
 };
 
@@ -446,6 +506,22 @@ export function useStalled() {
 
 export function useApprovals(status: "PENDING" | "CONFIRMED" | "DECLINED") {
   return useQuery({ queryKey: admin.approvals(status), queryFn: () => api.get<Approval[]>("/class-admin/approvals", { status }) });
+}
+
+export function useApplications(status: "PENDING" | "APPROVED" | "DECLINED") {
+  return useQuery({ queryKey: admin.applications(status), queryFn: () => api.get<Application[]>("/class-admin/applications", { status }) });
+}
+
+export function useDecideApplication() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, approve, note }: { id: string; approve: boolean; note?: string }) =>
+      api.post(`/class-admin/applications/${id}/${approve ? "approve" : "decline"}`, { note }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["class-admin", "applications"] });
+      qc.invalidateQueries({ queryKey: admin.classes });
+    },
+  });
 }
 
 export function useDecideApproval() {

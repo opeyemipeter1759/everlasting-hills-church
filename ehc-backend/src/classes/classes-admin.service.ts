@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { ActionVerification, EnrollmentStatus, Prisma } from '@prisma/client';
@@ -10,6 +10,7 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { isStaff } from '../auth/policy/staff';
 import { ClassesLearnerService } from './classes-learner.service';
 import { isStalled } from './class-rules';
+import { VIDEO_SOURCE, type VideoSource } from './video-source';
 
 export interface LessonContentInput {
   title?: string;
@@ -17,6 +18,7 @@ export interface LessonContentInput {
   duration?: string;
   outcome?: string | null;
   videoUrl?: string | null;
+  durationSeconds?: number | null;
   summary?: string | null;
   reflectionPrompt?: string | null;
   scriptures?: { ref: string; text?: string }[];
@@ -44,6 +46,7 @@ export class ClassesAdminService {
     private readonly prisma: PrismaService,
     private readonly inbox: InboxService,
     private readonly learner: ClassesLearnerService,
+    @Inject(VIDEO_SOURCE) private readonly video: VideoSource,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -89,6 +92,7 @@ export class ClassesAdminService {
       lessons: Modules.reduce((n, m) => n + m._count.Lessons, 0),
       cohorts: _count.Cohorts,
       learners: {
+        pending: Enrollments.filter((e) => e.status === EnrollmentStatus.PENDING).length,
         waiting: Enrollments.filter((e) => e.status === EnrollmentStatus.WAITING).length,
         active: Enrollments.filter((e) => e.status === EnrollmentStatus.ACTIVE).length,
         completed: Enrollments.filter((e) => e.status === EnrollmentStatus.COMPLETED).length,
@@ -122,6 +126,7 @@ export class ClassesAdminService {
                 duration: true,
                 outcome: true,
                 videoUrl: true,
+                durationSeconds: true,
                 summary: true,
                 reflectionPrompt: true,
                 scriptures: true,
@@ -141,7 +146,7 @@ export class ClassesAdminService {
   private async lessonOrThrow(lessonId: string) {
     const lesson = await this.prisma.courseLesson.findFirst({
       where: { id: lessonId, tenantId: this.tenantId, Module: { Course: { isClass: true } } },
-      select: { id: true },
+      select: { id: true, videoUrl: true, durationSeconds: true },
     });
     if (!lesson) throw new NotFoundException('Lesson not found');
     return lesson;
@@ -149,16 +154,26 @@ export class ClassesAdminService {
 
   async updateLesson(actor: AuthUser, lessonId: string, input: LessonContentInput) {
     this.assertStaff(actor);
-    await this.lessonOrThrow(lessonId);
+    const existing = await this.lessonOrThrow(lessonId);
     const scriptures = input.scriptures
       ?.map((s) => ({ ref: s.ref.trim(), ...(s.text?.trim() ? { text: s.text.trim() } : {}) }))
       .filter((s) => s.ref);
     if (input.videoUrl && !/^https:\/\//i.test(input.videoUrl.trim())) {
       throw new BadRequestException('The video link must start with https://');
     }
+    // The watch rules measure against the video's length, which comes from the video host or an admin, never from a learner.
+    let durationSeconds: number | null | undefined;
+    if (input.durationSeconds !== undefined) {
+      durationSeconds = input.durationSeconds;
+    } else if (input.videoUrl !== undefined) {
+      const url = nullable(input.videoUrl);
+      if (!url) durationSeconds = null;
+      else if (url !== existing.videoUrl?.trim() || !existing.durationSeconds) durationSeconds = await this.video.durationSeconds(url);
+    }
     return this.prisma.courseLesson.update({
       where: { id: lessonId },
       data: {
+        ...(durationSeconds !== undefined ? { durationSeconds } : {}),
         ...(input.title?.trim() ? { title: input.title.trim() } : {}),
         ...(input.duration?.trim() ? { duration: input.duration.trim() } : {}),
         description: nullable(input.description),
@@ -170,7 +185,7 @@ export class ClassesAdminService {
         ...(input.actionVerification ? { actionVerification: input.actionVerification } : {}),
         ...(scriptures ? { scriptures: scriptures as unknown as Prisma.InputJsonValue } : {}),
       },
-      select: { id: true },
+      select: { id: true, durationSeconds: true },
     });
   }
 
@@ -231,7 +246,7 @@ export class ClassesAdminService {
     });
     // Learners who registered with nowhere to go are placed as soon as a cohort exists.
     await this.prisma.courseEnrollment.updateMany({
-      where: { courseId, cohortId: null, status: { not: EnrollmentStatus.COMPLETED } },
+      where: { courseId, cohortId: null, status: { in: [EnrollmentStatus.WAITING, EnrollmentStatus.ACTIVE] } },
       data: { cohortId: cohort.id },
     });
     return cohort;
@@ -425,8 +440,17 @@ export class ClassesAdminService {
         cohortId: input.cohortId ?? null,
         status: EnrollmentStatus.ACTIVE,
         lastActivityAt: new Date(),
+        decidedAt: new Date(),
+        decidedById: actor.profileId,
+        decisionNote: `Added by exception: ${input.reason.trim()}`,
       },
-      update: { status: EnrollmentStatus.ACTIVE, ...(input.cohortId ? { cohortId: input.cohortId } : {}) },
+      update: {
+        status: EnrollmentStatus.ACTIVE,
+        decidedAt: new Date(),
+        decidedById: actor.profileId,
+        decisionNote: `Added by exception: ${input.reason.trim()}`,
+        ...(input.cohortId ? { cohortId: input.cohortId } : {}),
+      },
       select: { id: true },
     });
     await this.prisma.membershipEvent.create({

@@ -64,3 +64,16 @@ export const CLASS_PATHWAY = [
   { title: "Discipleship Class", line: "Growing as a disciple who makes disciples" },
   { title: "Foundation School", line: "Training for workers, including the culture of the house" },
 ] as const;
+
+/**
+ * One anchor verse per week, set on the class home (KJV). Keyed by class slug, then week number.
+ * The pastors may change these; a class with none simply shows no verse.
+ */
+export const WEEK_VERSES: Record<string, Record<number, { ref: string; text: string }>> = {
+  membership: {
+    1: { ref: "Psalm 92:13", text: "Those that be planted in the house of the LORD shall flourish in the courts of our God." },
+    2: { ref: "John 20:31", text: "But these are written, that ye might believe that Jesus is the Christ, the Son of God; and that believing ye might have life through his name." },
+    3: { ref: "Colossians 2:6", text: "As ye have therefore received Christ Jesus the Lord, so walk ye in him." },
+    4: { ref: "Matthew 28:19", text: "Go ye therefore, and teach all nations, baptizing them in the name of the Father, and of the Son, and of the Holy Ghost." },
+  },
+};

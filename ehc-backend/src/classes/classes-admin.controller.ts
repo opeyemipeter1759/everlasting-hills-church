@@ -5,6 +5,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { ClassesAdminService } from './classes-admin.service';
+import { ClassApplicationsService } from './class-applications.service';
 import { MembershipService } from './membership.service';
 import {
   CohortDto,
@@ -34,6 +35,7 @@ export class ClassesAdminController {
   constructor(
     private readonly admin: ClassesAdminService,
     private readonly membership: MembershipService,
+    private readonly applicationsService: ClassApplicationsService,
   ) {}
 
   @Get('classes')
@@ -142,6 +144,29 @@ export class ClassesAdminController {
   @ApiOperation({ summary: 'Learners with no progress for three weeks (staff)' })
   stalled(@CurrentUser() actor: AuthUser) {
     return this.admin.stalled(actor);
+  }
+
+  @Get('applications')
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({ summary: 'Applications to join a class (Super Admin, Pastor or Admin Head)' })
+  @ApiQuery({ name: 'status', required: false, enum: ['PENDING', 'APPROVED', 'DECLINED'] })
+  applications(@CurrentUser() actor: AuthUser, @Query('status') status?: string) {
+    const s = (['PENDING', 'APPROVED', 'DECLINED'] as const).find((x) => x === status) ?? 'PENDING';
+    return this.applicationsService.list(actor, s);
+  }
+
+  @Post('applications/:id/approve')
+  @ApiOperation({ summary: 'Approve an application to join a class' })
+  @ApiBody({ type: DecisionDto })
+  approveApplication(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: DecisionDto) {
+    return this.applicationsService.decide(actor, id, true, body.note);
+  }
+
+  @Post('applications/:id/decline')
+  @ApiOperation({ summary: 'Decline an application to join a class, with a note the member sees' })
+  @ApiBody({ type: DecisionDto })
+  declineApplication(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: DecisionDto) {
+    return this.applicationsService.decide(actor, id, false, body.note);
   }
 
   @Get('approvals')

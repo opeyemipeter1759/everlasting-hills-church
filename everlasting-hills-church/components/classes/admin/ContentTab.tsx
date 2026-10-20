@@ -97,6 +97,7 @@ function LessonEditor({ lesson, courseId }: { lesson: AdminLesson; courseId: str
     duration: lesson.duration,
     outcome: lesson.outcome ?? "",
     videoUrl: lesson.videoUrl ?? "",
+    durationSeconds: lesson.durationSeconds ? String(lesson.durationSeconds) : "",
     scriptures: scripturesToText(lesson.scriptures),
     summary: lesson.summary ?? "",
     reflectionPrompt: lesson.reflectionPrompt ?? "",
@@ -113,6 +114,7 @@ function LessonEditor({ lesson, courseId }: { lesson: AdminLesson; courseId: str
         duration: f.duration,
         outcome: f.outcome,
         videoUrl: f.videoUrl,
+        durationSeconds: f.durationSeconds.trim() ? Number(f.durationSeconds) : undefined,
         scriptures: textToScriptures(f.scriptures),
         summary: f.summary,
         reflectionPrompt: f.reflectionPrompt,
@@ -141,6 +143,11 @@ function LessonEditor({ lesson, courseId }: { lesson: AdminLesson; courseId: str
         {field("Short description", null, <input className={input} value={f.description} onChange={set("description")} maxLength={400} />)}
         {field("Outcome", '"By the end, you can..."', <input className={input} value={f.outcome} onChange={set("outcome")} maxLength={300} />)}
         {field("Video link", "YouTube (unlisted is fine). Must start with https://", <input className={input} type="url" value={f.videoUrl} onChange={set("videoUrl")} maxLength={400} placeholder="https://youtu.be/..." />)}
+        {field(
+          "Video length in seconds",
+          "Found automatically when you save a new video link. Learners cannot be credited for watching until this is known, so fill it in if it is blank after saving.",
+          <input className={input} type="number" min={1} max={43200} value={f.durationSeconds} onChange={set("durationSeconds")} placeholder="e.g. 754" />,
+        )}
         {field(
           "Key scriptures",
           "One per line. Add the text after a bar to let learners expand it: John 3:16 | For God so loved...",

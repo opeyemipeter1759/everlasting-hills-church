@@ -16,6 +16,17 @@ if (dsn) {
     dsn,
     environment: process.env.NODE_ENV ?? 'development',
     tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 0),
+    sendDefaultPii: false,
+    // Members write prayer requests, testimonies and lesson summaries. An error report is for finding the bug,
+    // so it never carries what a request contained: not the body, not the cookies, not the query string.
+    beforeSend(event) {
+      if (event.request) {
+        delete event.request.data;
+        delete event.request.cookies;
+        delete event.request.query_string;
+      }
+      return event;
+    },
   });
   // eslint-disable-next-line no-console
   console.log('[sentry] error monitoring enabled');
