@@ -47,6 +47,11 @@ const nextConfig = {
     ],
   },
 
+  // Keep old bookmarks/search results working after the beliefs → cultures rename.
+  async redirects() {
+    return [{ source: "/beliefs", destination: "/cultures", permanent: true }];
+  },
+
   // Don't generate browser source maps for production — smaller bundle, faster cold start.
   productionBrowserSourceMaps: false,
 

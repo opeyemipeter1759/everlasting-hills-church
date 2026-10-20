@@ -25,7 +25,7 @@ const navLinks: NavLink[] = [
     href: "/about",
     children: [
       { label: "About Us", href: "/about" },
-      { label: "Beliefs", href: "/beliefs" },
+      { label: "Our Culture", href: "/cultures" },
     ],
   },
   { label: "Sermons", href: "/sermons" },
