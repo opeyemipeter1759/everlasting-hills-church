@@ -50,7 +50,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
     title: "Our church",
     links: [
       { label: "About", href: "/about" },
-      { label: "What We Believe", href: "/beliefs" },
+      { label: "Our Culture", href: "/cultures" },
       { label: "Ministries", href: "/ministries" },
       { label: "Sermons", href: "/sermons" },
       { label: "Articles", href: "/articles" },

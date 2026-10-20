@@ -86,7 +86,7 @@ export interface AuditEntry {
 }
 
 const CMS_KEY = ["cms"] as const;
-// A page key can contain "/" (e.g. "about/beliefs"). Some hosting front ends —
+// A page key can contain "/" (e.g. "about/cultures"). Some hosting front ends —
 // Cloud Run's included — normalize a %2F-encoded slash back into a literal "/"
 // before the request reaches the backend, splitting one :key segment into
 // several and breaking route matching. Substituting "~" first means there's no
