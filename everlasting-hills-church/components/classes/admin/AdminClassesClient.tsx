@@ -32,6 +32,7 @@ export default function AdminClassesClient() {
   }, [classes, courseId]);
 
   const current = classes?.find((c) => c.id === courseId);
+  const pendingApplications = (classes ?? []).reduce((n, c) => n + c.learners.pending, 0);
 
   return (
     <ClassTheme className="mx-auto max-w-[1200px] px-4 py-8">
@@ -84,12 +85,17 @@ export default function AdminClassesClient() {
                 }`}
               >
                 {label}
+                {key === "applications" && pendingApplications > 0 && (
+                  <span className="ml-2 rounded-full bg-[var(--color-burgundy)] px-1.5 py-0.5 text-xs text-white" aria-label={`${pendingApplications} waiting`}>
+                    {pendingApplications}
+                  </span>
+                )}
               </button>
             ))}
           </div>
 
           <div className="mt-6">
-            {tab === "applications" && <ApplicationsTab />}
+            {tab === "applications" && <ApplicationsTab courseSlug={classes.length > 1 ? current?.slug : undefined} />}
             {tab === "approvals" && <ApprovalsTab />}
             {tab === "cohorts" && courseId && <CohortsTab courseId={courseId} />}
             {tab === "content" && courseId && <ContentTab courseId={courseId} />}
