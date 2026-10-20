@@ -71,7 +71,8 @@ function Part({
 }
 
 function LessonView({ view, slug, lessonRef }: { view: LessonView; slug: string; lessonRef: string }) {
-  const { lesson, progress, watch } = view;
+  const { lesson, progress } = view;
+  const watch = view.watch ?? { required: !!lesson.videoUrl, ready: false, durationSeconds: null, maxPosition: 0, watchedSeconds: 0, watched: false };
   const base = `/dashboard/classes/${slug}`;
   const startWatch = useStartWatch(slug, lessonRef);
   const heartbeat = useWatchHeartbeat(slug, lessonRef);

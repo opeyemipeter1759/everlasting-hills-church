@@ -2930,28 +2930,30 @@ model ExamQuestion {
 }
 
 model CourseEnrollment {
-  id                String           @id
-  tenantId          String
-  courseId          String
-  memberId          String
-  enrolledAt        DateTime         @default(now())
-  completed         Boolean          @default(false)
-  completedAt       DateTime?
-  lastScorePct      Int?
-  attempts          Int              @default(0)
+  id                 String           @id
+  tenantId           String
+  courseId           String
+  memberId           String
+  enrolledAt         DateTime         @default(now())
+  completed          Boolean          @default(false)
+  completedAt        DateTime?
+  lastScorePct       Int?
+  attempts           Int              @default(0)
   /// CourseLesson ids the member has watched to completion (YouTube "ended" event).
-  watchedLessonIds  String[]         @default([])
+  watchedLessonIds   String[]         @default([])
   /// CourseModule ids whose checkpoint question has been answered correctly.
-  passedModuleIds   String[]         @default([])
+  passedModuleIds    String[]         @default([])
   /// Class enrollments: the cohort, where they stand, and when they last did anything.
-  cohortId          String?
-  status            EnrollmentStatus @default(ACTIVE)
-  lastActivityAt    DateTime?
-  stalledNotifiedAt DateTime?
+  cohortId           String?
+  status             EnrollmentStatus @default(ACTIVE)
+  lastActivityAt     DateTime?
+  stalledNotifiedAt  DateTime?
   /// Class applications: when an approver decided, who, and what they said.
-  decidedAt         DateTime?
-  decidedById       String?
-  decisionNote      String?
+  decidedAt          DateTime?
+  decidedById        String?
+  decisionNote       String?
+  /// What the member wrote on the application form, for the approvers. Member data: never logged.
+  applicationAnswers Json?
 
   Course        Course               @relation(fields: [courseId], references: [id], onDelete: Cascade)
   Member        Member               @relation(fields: [memberId], references: [id], onDelete: Cascade)

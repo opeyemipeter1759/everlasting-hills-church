@@ -18,6 +18,39 @@ import {
   ValidateNested,
 } from 'class-validator';
 
+/** The application form for joining a class. */
+export class ApplyDto {
+  @ApiProperty({ description: 'Why you want to join this class' })
+  @IsString()
+  @MinLength(20)
+  @MaxLength(1000)
+  reason!: string;
+
+  @ApiProperty({ enum: ['under_1_month', '1_to_3_months', '3_to_12_months', 'over_1_year'] })
+  @IsIn(['under_1_month', '1_to_3_months', '3_to_12_months', 'over_1_year'])
+  attendingFor!: 'under_1_month' | '1_to_3_months' | '3_to_12_months' | 'over_1_year';
+
+  @ApiProperty({ enum: ['yes', 'not_sure'] })
+  @IsIn(['yes', 'not_sure'])
+  bornAgain!: 'yes' | 'not_sure';
+
+  @ApiPropertyOptional({ description: 'Your Home Cell, if you are in one' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  homeCell?: string;
+
+  @ApiPropertyOptional({ description: 'Anything the pastors should know' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  notes?: string;
+
+  @ApiProperty({ description: 'I commit to attending the sessions and completing every lesson' })
+  @IsBoolean()
+  commitment!: boolean;
+}
+
 export class QuizAnswersDto {
   @ApiProperty({ type: [Number], description: 'The chosen option index for each question, in order (null to skip)' })
   @IsArray()

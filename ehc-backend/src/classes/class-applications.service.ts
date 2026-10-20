@@ -54,6 +54,7 @@ export class ClassApplicationsService {
         enrolledAt: true,
         decidedAt: true,
         decisionNote: true,
+        applicationAnswers: true,
         Course: { select: { title: true, slug: true, eligibilitySundays: true } },
         Member: { select: { id: true, firstName: true, lastName: true, photoUrl: true, email: true, membershipStatus: true, creditedSundays: true } },
       },

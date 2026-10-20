@@ -4,12 +4,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CalendarClock, Check, ChevronDown, MapPin } from "lucide-react";
-import { useClassHome, useEnroll, type ClassHome, type LessonStatus } from "@/lib/api/classes";
-import { showToast } from "@/components/ui/toast/toast";
+import { useClassHome, type ClassHome, type LessonStatus } from "@/lib/api/classes";
 import { ClassTheme } from "./theme";
 import Arches from "./Arches";
 import { WEEK_VERSES } from "./membership-content";
-import { ClassError, ClassLoading, errorText, formatDate } from "./shared";
+import { ClassError, ClassLoading, formatDate } from "./shared";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -36,7 +35,6 @@ export default function ClassHomeClient({ slug }: { slug: string }) {
  */
 function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
   const reduceMotion = useReducedMotion();
-  const enroll = useEnroll(slug);
   const e = home.enrollment;
   const base = `/dashboard/classes/${slug}`;
   const weeks = home.class.weeks;
@@ -44,15 +42,6 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
   const firstOpen = weeks.find((_, i) => states[i] === "open")?.number ?? (e?.currentWeek ?? 1);
   const [openWeek, setOpenWeek] = useState<number>(firstOpen);
   const verses = WEEK_VERSES[slug] ?? {};
-
-  async function apply() {
-    try {
-      const next = await enroll.mutateAsync();
-      showToast.success(next.enrollment?.status === "PENDING" ? "Application sent. A pastor or admin will review it." : "Done.");
-    } catch (err) {
-      showToast.error(errorText(err, "Could not send your application"));
-    }
-  }
 
   return (
     <ClassTheme className="pb-16">
@@ -71,7 +60,7 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
             <h1 className="cls-display mt-3 text-[40px] leading-[1.02] sm:text-6xl">{home.class.title}</h1>
             {home.class.description && <p className="mt-4 max-w-xl text-lg text-white/65">{home.class.description}</p>}
           </div>
-          <StatusPanel home={home} base={base} onApply={apply} applying={enroll.isPending} />
+          <StatusPanel home={home} base={base} />
         </div>
       </motion.section>
 
@@ -207,7 +196,7 @@ function ClassHomeView({ home, slug }: { home: ClassHome; slug: string }) {
 }
 
 /** Where the learner stands, in words. No large numbers, no points. */
-function StatusPanel({ home, base, onApply, applying }: { home: ClassHome; base: string; onApply: () => void; applying: boolean }) {
+function StatusPanel({ home, base }: { home: ClassHome; base: string }) {
   const e = home.enrollment;
   const el = home.eligibility;
   const panel = "cls-glass rounded-[20px] p-6";
@@ -227,9 +216,9 @@ function StatusPanel({ home, base, onApply, applying }: { home: ClassHome; base:
         <p className="text-sm text-white/60">Not approved this time</p>
         <p className="mt-2 text-white/80">{e.decisionNote || "The church office will be in touch about your next step."}</p>
         {home.canEnroll && (
-          <button type="button" onClick={onApply} disabled={applying} className="cls-btn cls-btn-primary mt-5 w-full sm:w-auto">
-            {applying ? "Sending..." : "Apply again"}
-          </button>
+          <Link href={`${base}/apply`} className="cls-btn cls-btn-primary mt-5 w-full sm:w-auto">
+            Apply again
+          </Link>
         )}
       </div>
     );
@@ -291,9 +280,9 @@ function StatusPanel({ home, base, onApply, applying }: { home: ClassHome; base:
               ? "A Super Admin, Pastor or Admin Head reviews every application."
               : "You can apply now. The class opens once you are approved and have attended enough Sundays."}
           </p>
-          <button type="button" onClick={onApply} disabled={applying} className="cls-btn cls-btn-primary mt-5 w-full sm:w-auto">
-            {applying ? "Sending..." : "Apply to join"}
-          </button>
+          <Link href={`${base}/apply`} className="cls-btn cls-btn-primary mt-5 w-full sm:w-auto">
+            Enrol
+          </Link>
         </>
       )}
     </div>

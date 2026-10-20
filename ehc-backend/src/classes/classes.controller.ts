@@ -7,7 +7,7 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { ClassesLearnerService } from './classes-learner.service';
 import { ClassesAdminService } from './classes-admin.service';
 import { ClassWatchService } from './class-watch.service';
-import { HeartbeatDto, QuizAnswersDto, StartWatchDto, SummaryDto } from './dto/classes.dto';
+import { ApplyDto, HeartbeatDto, QuizAnswersDto, StartWatchDto, SummaryDto } from './dto/classes.dto';
 
 /**
  * The church's classes, for the signed-in learner: the Membership Class and the
@@ -54,8 +54,8 @@ export class ClassesController {
 
   @Post(':slug/enroll')
   @ApiOperation({ summary: 'Enroll in a class: placed in the current cohort if eligible, otherwise the next one after eligibility' })
-  enroll(@CurrentUser() actor: AuthUser, @Param('slug') slug: string) {
-    return this.learner.enroll(actor, slug);
+  enroll(@CurrentUser() actor: AuthUser, @Param('slug') slug: string, @Body() body: ApplyDto) {
+    return this.learner.enroll(actor, slug, body);
   }
 
   @Get(':slug/certificate')

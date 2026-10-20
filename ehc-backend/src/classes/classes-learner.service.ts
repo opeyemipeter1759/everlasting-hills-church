@@ -10,6 +10,7 @@ import { CLASS_APPROVER_ROLES } from '../auth/policy/staff';
 import { MembershipService } from './membership.service';
 import { chooseCohort, classComplete, eligibility, gradeQuiz, lessonComplete } from './class-rules';
 import { DEFAULT_SUMMARY_PROMPT, summarySchema } from './summary-rules';
+import type { ApplyDto } from './dto/classes.dto';
 
 export type LessonStatus = 'locked' | 'not_started' | 'in_progress' | 'done';
 
@@ -353,7 +354,7 @@ export class ClassesLearnerService {
    * for a Super Admin, Pastor or Admin Head (see ClassApplicationsService), who
    * are told. A declined member may apply again.
    */
-  async enroll(actor: AuthUser, slug: string) {
+  async enroll(actor: AuthUser, slug: string, form: ApplyDto) {
     const memberId = this.memberIdOf(actor);
     const { course } = await this.loadClass(slug);
     const existing = await this.prisma.courseEnrollment.findUnique({
@@ -372,15 +373,24 @@ export class ClassesLearnerService {
       });
       if (!done) throw new ForbiddenException(`Finish ${course.Prerequisite?.title ?? 'the class before this one'} first.`);
     }
+    if (!form?.commitment) throw new BadRequestException('Please confirm you will attend the sessions and complete every lesson.');
+    const applicationAnswers = {
+      reason: form.reason.trim(),
+      attendingFor: form.attendingFor,
+      bornAgain: form.bornAgain,
+      homeCell: form.homeCell?.trim() || null,
+      notes: form.notes?.trim() || null,
+      commitment: true,
+    };
     const now = new Date();
     if (existing) {
       await this.prisma.courseEnrollment.update({
         where: { id: existing.id },
-        data: { status: EnrollmentStatus.PENDING, enrolledAt: now, lastActivityAt: now, decidedAt: null, decidedById: null, decisionNote: null },
+        data: { status: EnrollmentStatus.PENDING, enrolledAt: now, lastActivityAt: now, decidedAt: null, decidedById: null, decisionNote: null, applicationAnswers },
       });
     } else {
       await this.prisma.courseEnrollment.create({
-        data: { id: randomUUID(), tenantId: this.tenantId, courseId: course.id, memberId, status: EnrollmentStatus.PENDING, lastActivityAt: now },
+        data: { id: randomUUID(), tenantId: this.tenantId, courseId: course.id, memberId, status: EnrollmentStatus.PENDING, lastActivityAt: now, applicationAnswers },
       });
     }
     await this.tellApprovers(memberId, course.title);

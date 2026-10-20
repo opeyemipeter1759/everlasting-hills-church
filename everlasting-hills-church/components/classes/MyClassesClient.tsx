@@ -23,6 +23,14 @@ function standing(c: ClassListItem, membership: MembershipStatus): { text: strin
   return { text: c.eligibility.eligible ? "You can apply" : `${c.eligibility.attended} of ${c.eligibility.required} Sundays so far`, tone: "waiting" };
 }
 
+/** A class this member can apply to now: not in it, not waiting on a decision, and nothing standing in the way. */
+function canApply(c: ClassListItem, membership: MembershipStatus): boolean {
+  const e = c.enrollment;
+  if (e && e.status !== "DECLINED") return false;
+  if (c.requiresFullMembership && membership !== "FULL") return false;
+  return c.prerequisiteMet;
+}
+
 export default function MyClassesClient() {
   const reduceMotion = useReducedMotion();
   const { data, isLoading, error, refetch } = useClasses();
@@ -89,6 +97,13 @@ export default function MyClassesClient() {
                     <ArrowRight className="h-5 w-5 flex-none text-[var(--color-burgundy)] transition-transform group-hover:translate-x-1 dark:text-white/70" aria-hidden />
                   </span>
                 </Link>
+                {canApply(c, data.membershipStatus) && (
+                  <div className="-mt-3 pb-7">
+                    <Link href={`/dashboard/classes/${c.slug}/apply`} className="cls-btn cls-btn-primary !px-6 !py-2.5 !text-sm">
+                      {c.enrollment?.status === "DECLINED" ? "Apply again" : "Enrol"}
+                    </Link>
+                  </div>
+                )}
               </motion.li>
             );
           })}

@@ -199,10 +199,20 @@ export function useClassHome(slug: string) {
   return useQuery({ queryKey: keys.home(slug), queryFn: () => api.get<ClassHome>(`/classes/${slug}`) });
 }
 
+/** The application form for joining a class. */
+export interface ApplicationForm {
+  reason: string;
+  attendingFor: "under_1_month" | "1_to_3_months" | "3_to_12_months" | "over_1_year";
+  bornAgain: "yes" | "not_sure";
+  homeCell?: string;
+  notes?: string;
+  commitment: boolean;
+}
+
 export function useEnroll(slug: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post<ClassHome>(`/classes/${slug}/enroll`),
+    mutationFn: (form: ApplicationForm) => api.post<ClassHome>(`/classes/${slug}/enroll`, form),
     onSuccess: (home) => {
       qc.setQueryData(keys.home(slug), home);
       qc.invalidateQueries({ queryKey: keys.list });
@@ -376,6 +386,7 @@ export interface Application {
   enrolledAt: string;
   decidedAt: string | null;
   decisionNote: string | null;
+  applicationAnswers: (Omit<ApplicationForm, "homeCell" | "notes"> & { homeCell: string | null; notes: string | null }) | null;
   Course: { title: string; slug: string };
   Member: PersonRef & { email: string | null; membershipStatus: MembershipStatus };
   eligibility: Eligibility;

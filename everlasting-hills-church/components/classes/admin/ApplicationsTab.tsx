@@ -8,6 +8,12 @@ import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { ClassError, ClassLoading, errorText, formatDate } from "../shared";
 
 type Filter = "PENDING" | "APPROVED" | "DECLINED";
+const ATTENDING_LABEL: Record<string, string> = {
+  under_1_month: "less than a month",
+  "1_to_3_months": "1 to 3 months",
+  "3_to_12_months": "3 to 12 months",
+  over_1_year: "more than a year",
+};
 const LABEL: Record<Filter, string> = { PENDING: "Waiting", APPROVED: "Approved", DECLINED: "Declined" };
 
 /**
@@ -74,6 +80,17 @@ export default function ApplicationsTab() {
                   {filter === "PENDING" ? "Applied" : "Decided"} for {a.Course.title} on {formatDate(filter === "PENDING" ? a.enrolledAt : a.decidedAt ?? a.enrolledAt)}
                   {a.decisionNote ? `: "${a.decisionNote}"` : ""}
                 </span>
+                {a.applicationAnswers && (
+                  <span className="mt-3 block space-y-1 rounded-[12px] bg-[var(--color-blush)] p-3 text-sm text-black/75 dark:bg-white/[0.06] dark:text-white/75">
+                    <span className="block">&ldquo;{a.applicationAnswers.reason}&rdquo;</span>
+                    <span className="block text-black/55 dark:text-white/55">
+                      Worshipping with us: {ATTENDING_LABEL[a.applicationAnswers.attendingFor] ?? a.applicationAnswers.attendingFor}. Given their life to Jesus:{" "}
+                      {a.applicationAnswers.bornAgain === "yes" ? "yes" : "not sure yet"}.
+                      {a.applicationAnswers.homeCell ? ` Home Cell: ${a.applicationAnswers.homeCell}.` : ""}
+                    </span>
+                    {a.applicationAnswers.notes && <span className="block text-black/55 dark:text-white/55">Notes: {a.applicationAnswers.notes}</span>}
+                  </span>
+                )}
                 <span className="mt-1 block text-sm text-black/60 dark:text-white/60">
                   {a.eligibility.required > 0
                     ? `${a.eligibility.attended} of ${a.eligibility.required} Sundays attended${a.eligibility.eligible ? "" : `, ${a.eligibility.remaining} to go`}`

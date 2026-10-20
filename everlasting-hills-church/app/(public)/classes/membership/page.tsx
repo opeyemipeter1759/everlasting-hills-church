@@ -34,14 +34,14 @@ async function loadStatus(): Promise<ClassStatus | null> {
 }
 
 function primaryAction(status: ClassStatus | null) {
-  if (!status) return { href: `/login?next=${encodeURIComponent(PORTAL)}`, label: "Apply to join" };
+  if (!status) return { href: `/login?next=${encodeURIComponent(`${PORTAL}/apply`)}`, label: "Apply to join" };
   const e = status.enrollment;
   if (e?.status === "COMPLETED") return { href: `${PORTAL}/certificate`, label: "See your certificate" };
   if (e?.status === "ACTIVE" && e.next) return { href: `${PORTAL}/${e.next.week}/${e.next.slug}`, label: "Continue" };
   if (e?.status === "PENDING") return { href: PORTAL, label: "Application sent" };
-  if (e?.status === "DECLINED") return { href: PORTAL, label: "Apply again" };
+  if (e?.status === "DECLINED") return { href: `${PORTAL}/apply`, label: "Apply again" };
   if (e) return { href: PORTAL, label: "Open the class" };
-  return { href: PORTAL, label: "Apply to join" };
+  return { href: `${PORTAL}/apply`, label: "Apply to join" };
 }
 
 const GAINS = [
