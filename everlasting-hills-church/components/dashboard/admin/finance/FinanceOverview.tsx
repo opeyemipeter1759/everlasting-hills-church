@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Info, Loader2, Pencil, Plus, RefreshCw, Trash2, Wallet } from "lucide-react";
+import { Download, Info, Loader2, Paperclip, Pencil, Plus, RefreshCw, Trash2, Wallet } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
@@ -62,8 +62,16 @@ function financeCsv(data: FinanceSummary, entries: FinanceEntry[]): string {
     ...data.services.map((s) => [s.name, watDateStr(s.scheduledAt), s.tithe, s.offering]),
     [],
     ["Income & expense entries"],
-    ["Type", "Category", "Label", "Amount (NGN)", "Date", "Note"],
-    ...entries.map((e) => [e.kind === "INCOME" ? "Income" : "Expense", e.category, e.label, e.amount, e.date.slice(0, 10), e.note]),
+    ["Type", "Category", "Label", "Amount (NGN)", "Date", "Note", "Receipt"],
+    ...entries.map((e) => [
+      e.kind === "INCOME" ? "Income" : "Expense",
+      e.category,
+      e.label,
+      e.amount,
+      e.date.slice(0, 10),
+      e.note,
+      e.receiptUrl ?? "",
+    ]),
     [],
     ["Totals"],
     ["Tithe", data.titheTotal],
@@ -205,8 +213,7 @@ export default function FinanceOverview() {
           </p>
           <p>
             <span className="font-bold">2.</span> For anything else — Building fund, Rent, Giving, Special Offering, or an expense —
-            use <span className="font-semibold">Add income</span> / <span className="font-semibold">Add expense</span> in{" "}
-            <span className="font-semibold">Step 2</span>, any day it happens.
+            use <span className="font-semibold">Add entry</span> in <span className="font-semibold">Step 2</span>, any day it happens.
           </p>
           <p className="text-gray-500 dark:text-white/50">You can record daily, weekly, or in one go — totals below always reflect everything entered for the period you&apos;re viewing.</p>
         </div>
@@ -408,22 +415,13 @@ export default function FinanceOverview() {
                       </h2>
                       <p className="text-xs text-gray-400">Building, Rent, Giving, Special Offering, or any expense — not tithe/offering.</p>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEntryModal({ open: true, entry: null, defaultKind: "INCOME" })}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-[#87102C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#6E0C24]"
-                      >
-                        <Plus size={13} /> Add income
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setEntryModal({ open: true, entry: null, defaultKind: "EXPENSE" })}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-600 hover:bg-gray-50 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
-                      >
-                        <Plus size={13} /> Add expense
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEntryModal({ open: true, entry: null, defaultKind: "INCOME" })}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-[#87102C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#6E0C24]"
+                    >
+                      <Plus size={13} /> Add entry
+                    </button>
                   </div>
 
                   {entries.isLoading ? (
@@ -460,6 +458,7 @@ export default function FinanceOverview() {
       )}
 
       <FinanceEntryModal
+        key={entryModal.entry?.id ?? `new-${entryModal.defaultKind}`}
         open={entryModal.open}
         onClose={() => setEntryModal((s) => ({ ...s, open: false }))}
         entry={entryModal.entry}
@@ -512,7 +511,20 @@ function EntryGroupList({
             {g.items.map((e) => (
               <li key={e.id} className="flex items-center gap-3 px-3.5 py-2.5">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-gray-800 dark:text-white/80">{e.label || "—"}</p>
+                  <p className="flex items-center gap-1.5 truncate text-sm text-gray-800 dark:text-white/80">
+                    {e.label || "—"}
+                    {e.receiptUrl && (
+                      <a
+                        href={e.receiptUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label="View receipt"
+                        className="shrink-0 text-gray-400 hover:text-[#87102C] dark:hover:text-[#e8768a]"
+                      >
+                        <Paperclip size={12} />
+                      </a>
+                    )}
+                  </p>
                   <p className="text-xs text-gray-400">{shortDate(e.date)}{e.note ? ` · ${e.note}` : ""}</p>
                 </div>
                 <span className="shrink-0 text-sm font-semibold tabular-nums text-gray-900 dark:text-white">{formatNaira(e.amount)}</span>

@@ -42,6 +42,7 @@ import { InboxModule } from './inbox/inbox.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { BooksModule } from './books/books.module';
 import { FinanceModule } from './finance/finance.module';
+import { PrayerWatchModule } from './prayer-watch/prayer-watch.module';
 import { BookCollectionsModule } from './book-collections/book-collections.module';
 import { EmailsModule } from './emails/emails.module';
 import { CommunityModule } from './community/community.module';
@@ -157,6 +158,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     BookCollectionsModule,
     BooksModule,
     FinanceModule,
+    PrayerWatchModule,
     EmailsModule,
     CommunityModule,
     HomeCellModule,

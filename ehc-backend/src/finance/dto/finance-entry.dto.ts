@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsDateString, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from 'class-validator';
 
 const KINDS = ['INCOME', 'EXPENSE'] as const;
 
@@ -35,6 +35,12 @@ export class CreateFinanceEntryDto {
   @IsString()
   @MaxLength(500)
   note?: string;
+
+  @ApiPropertyOptional({ description: 'URL of an uploaded receipt photo or PDF, from /uploads/document' })
+  @IsOptional()
+  @IsUrl({ protocols: ['https'], require_protocol: true })
+  @MaxLength(1000)
+  receiptUrl?: string;
 }
 
 export class UpdateFinanceEntryDto {
@@ -68,4 +74,10 @@ export class UpdateFinanceEntryDto {
   @IsString()
   @MaxLength(500)
   note?: string;
+
+  @ApiPropertyOptional({ description: 'URL of an uploaded receipt, or null to remove it', nullable: true })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  receiptUrl?: string | null;
 }

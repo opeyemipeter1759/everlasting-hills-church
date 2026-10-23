@@ -34,6 +34,7 @@ export interface FinanceEntry {
   amount: number;
   date: string;
   note: string | null;
+  receiptUrl: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,9 +46,13 @@ export interface CreateFinanceEntryInput {
   amount: number;
   date: string;
   note?: string;
+  receiptUrl?: string;
 }
 
-export type UpdateFinanceEntryInput = Partial<Omit<CreateFinanceEntryInput, "kind">>;
+export type UpdateFinanceEntryInput = Partial<Omit<CreateFinanceEntryInput, "kind" | "receiptUrl">> & {
+  /** null clears an attached receipt */
+  receiptUrl?: string | null;
+};
 
 export interface FinanceSummary {
   range: { from: string; to: string };

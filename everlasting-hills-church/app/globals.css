@@ -353,3 +353,17 @@ iframe {
 @media (prefers-reduced-motion: reduce) {
   .ehc-class *, .ehc-class *::before, .ehc-class *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Chrome forces a light background on autofill-recognized fields (name/phone/
+   email) regardless of the input's own background-color. The box-shadow
+   trick is the standard way to override it since -webkit-autofill ignores
+   plain background declarations. Used on the dark Prayer Watch form. */
+.pw-input:-webkit-autofill,
+.pw-input:-webkit-autofill:hover,
+.pw-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  caret-color: #fff;
+  box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.04) inset;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.04) inset;
+  transition: background-color 9999s ease-in-out 0s;
+}

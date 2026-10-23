@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import FormModal, { btnGhost, btnPrimary, fieldCls } from "@/components/ui/overlay/FormModal";
-import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
+import ExpenseReceiptUpload from "@/components/dashboard/unit-lead/ExpenseReceiptUpload";
 import {
   useCreateFinanceEntry,
   useUpdateFinanceEntry,
@@ -44,20 +44,11 @@ export default function FinanceEntryModal({
   const [amount, setAmount] = useState(entry ? String(entry.amount) : "");
   const [date, setDate] = useState(entry ? entry.date.slice(0, 10) : todayIso());
   const [note, setNote] = useState(entry?.note ?? "");
+  const [receiptUrl, setReceiptUrl] = useState(entry?.receiptUrl ?? "");
 
   const create = useCreateFinanceEntry();
   const update = useUpdateFinanceEntry();
   const pending = create.isPending || update.isPending;
-
-  useEffect(() => {
-    if (!open) return;
-    setKind(entry?.kind ?? defaultKind ?? "INCOME");
-    setCategory(entry?.category ?? "");
-    setLabel(entry?.label ?? "");
-    setAmount(entry ? String(entry.amount) : "");
-    setDate(entry ? entry.date.slice(0, 10) : todayIso());
-    setNote(entry?.note ?? "");
-  }, [open, entry, defaultKind]);
 
   async function submit() {
     const amountNum = Number(amount);
@@ -72,7 +63,14 @@ export default function FinanceEntryModal({
       if (isEdit && entry) {
         await update.mutateAsync({
           id: entry.id,
-          data: { category: category.trim(), label: label.trim() || undefined, amount: amountNum, date, note: note.trim() || undefined },
+          data: {
+            category: category.trim(),
+            label: label.trim() || undefined,
+            amount: amountNum,
+            date,
+            note: note.trim() || undefined,
+            receiptUrl: receiptUrl.trim() || null,
+          },
         });
         showToast.success("Entry updated");
       } else {
@@ -83,6 +81,7 @@ export default function FinanceEntryModal({
           amount: amountNum,
           date,
           note: note.trim() || undefined,
+          receiptUrl: receiptUrl.trim() || undefined,
         });
         showToast.success(`${kind === "INCOME" ? "Income" : "Expense"} recorded`);
       }
@@ -112,9 +111,24 @@ export default function FinanceEntryModal({
     >
       <div className="space-y-3.5">
         {!isEdit && (
-          <div>
-            <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">Type</label>
-            <Select aria-label="Type" value={kind} onChange={(next) => setKind(next as FinanceEntryKind)} className={fieldCls} options={KIND_OPTIONS} />
+          <div className="grid grid-cols-2 gap-2">
+            {KIND_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setKind(opt.value)}
+                aria-pressed={kind === opt.value}
+                className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
+                  kind === opt.value
+                    ? opt.value === "INCOME"
+                      ? "border-emerald-600 bg-emerald-600 text-white"
+                      : "border-rose-600 bg-rose-600 text-white"
+                    : "border-[#E7CDD3] text-gray-600 hover:bg-[#FFF4F6] dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         )}
 
@@ -177,6 +191,11 @@ export default function FinanceEntryModal({
         <div>
           <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">Note (optional)</label>
           <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} className={fieldCls} />
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-white/50">Receipt (optional)</label>
+          <ExpenseReceiptUpload url={receiptUrl} onChange={setReceiptUrl} disabled={pending} />
         </div>
       </div>
     </FormModal>

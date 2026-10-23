@@ -152,6 +152,7 @@ import {
   HandCoins,
   HandHeart,
   UsersRound,
+  MoonStar,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -203,6 +204,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
+      { label: "Prayer Watch",  href: "/dashboard/admin/prayer-watch",  icon: MoonStar,      minRole: "ADMIN" },
       { label: "Finance",       href: "/dashboard/admin/finance",       icon: DollarSign,    minRole: "FINANCE_HEAD" },
       { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },

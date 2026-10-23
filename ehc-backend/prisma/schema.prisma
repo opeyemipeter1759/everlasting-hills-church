@@ -944,6 +944,8 @@ model FinanceEntry {
   /// week/month, independent of when it was typed in.
   date         DateTime
   note         String?
+  /// Uploaded via /uploads/document — a photo or PDF of the receipt, if attached.
+  receiptUrl   String?
   recordedById String?
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
@@ -972,6 +974,75 @@ model ServiceOffering {
   RecordedBy   Profile? @relation(fields: [recordedById], references: [id], onDelete: SetNull)
 
   @@index([tenantId, recordedAt])
+}
+
+enum PrayerSignupStatus {
+  CONFIRMED
+  REMOVED
+}
+
+/// An overnight prayer watch — one per event. Members sign up for a 2-hour
+/// slot within it via a public, no-login form.
+model PrayerWatch {
+  id        String       @id
+  tenantId  String
+  title     String
+  watchDate DateTime
+  createdAt DateTime     @default(now())
+  Tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  Slots     PrayerSlot[]
+
+  @@index([tenantId, watchDate])
+}
+
+/// A 2-hour window within a PrayerWatch. Times are stored as "HH:mm" strings
+/// (not a SQL time column) since the only consumer is the frontend display —
+/// crossing midnight is handled there, not in the database.
+model PrayerSlot {
+  id        String         @id
+  tenantId  String
+  watchId   String
+  label     String
+  startTime String
+  endTime   String
+  /// Spots available in this slot.
+  capacity  Int            @default(1)
+  /// Display order, 0-based.
+  position  Int
+  /// The sign-up chosen to lead this slot, if any — must be one of this
+  /// slot's own sign-ups (enforced in the service, not the DB).
+  leaderId  String?
+  Tenant    Tenant         @relation(fields: [tenantId], references: [id])
+  Watch     PrayerWatch    @relation(fields: [watchId], references: [id], onDelete: Cascade)
+  Signups   PrayerSignup[] @relation("SlotSignups")
+  Leader    PrayerSignup?  @relation("SlotLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+
+  @@index([watchId, position])
+}
+
+/// A member's sign-up for one slot. Capacity and "one active signup per phone
+/// per watch" are both enforced in the service layer inside a serializable
+/// transaction — not a DB trigger — consistent with how the rest of this app
+/// enforces invariants.
+model PrayerSignup {
+  id           String              @id
+  tenantId     String
+  slotId       String
+  /// Denormalized from the slot for a simple "one signup per phone per watch" check.
+  watchId      String
+  fullName     String
+  phone        String
+  email        String
+  /// True = worker/serves in a unit or department, false = member only.
+  isWorker     Boolean
+  status       PrayerSignupStatus  @default(CONFIRMED)
+  createdAt    DateTime            @default(now())
+  Tenant       Tenant              @relation(fields: [tenantId], references: [id])
+  Slot         PrayerSlot          @relation("SlotSignups", fields: [slotId], references: [id], onDelete: Cascade)
+  LeaderOfSlot PrayerSlot[]        @relation("SlotLeader")
+
+  @@index([slotId, status])
+  @@index([watchId, phone])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -1315,6 +1386,9 @@ model Tenant {
   FinanceHeadAssignment    FinanceHeadAssignment[]
   FinanceEntry             FinanceEntry[]
   ServiceOffering          ServiceOffering[]
+  PrayerWatch              PrayerWatch[]
+  PrayerSlot               PrayerSlot[]
+  PrayerSignup             PrayerSignup[]
   SiteSettings             SiteSettings[]
   Testimonial              Testimonial[]
   Unit                     Unit[]

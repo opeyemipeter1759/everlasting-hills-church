@@ -108,6 +108,7 @@ export class FinanceService {
         amount: dto.amount,
         date: new Date(`${dto.date}T12:00:00`), // noon — avoids a timezone rollover pushing the entry into the wrong day
         note: dto.note?.trim() || null,
+        receiptUrl: dto.receiptUrl || null,
         recordedById: actorId,
       },
     });
@@ -135,6 +136,7 @@ export class FinanceService {
         ...(dto.amount !== undefined && { amount: dto.amount }),
         ...(dto.date !== undefined && { date: new Date(`${dto.date}T12:00:00`) }),
         ...(dto.note !== undefined && { note: dto.note.trim() || null }),
+        ...(dto.receiptUrl !== undefined && { receiptUrl: dto.receiptUrl || null }),
       },
     });
     if (result.count === 0) throw new NotFoundException('Entry not found');
