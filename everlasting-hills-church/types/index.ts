@@ -227,6 +227,8 @@ export type EventSection =
       endDate: string;
       /** When the one meal is taken on ordinary days, e.g. "3pm". */
       mealTime: string;
+      /** From startDate on, the one meal is breakfast, eaten before this time, with nothing more until the next morning. */
+      breakfast?: { startDate: string; before: string };
       dryFasts: { startDate: string; endDate: string; breakTime: string }[];
       note?: string;
       morningTime?: string;

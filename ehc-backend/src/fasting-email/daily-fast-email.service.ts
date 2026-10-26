@@ -21,7 +21,9 @@ function sundayNote(sunday: ReturnType<typeof fastDay>): string | undefined {
   if (!sunday) return undefined;
   if (sunday.kind === 'dry' && sunday.breakTime) return `Tomorrow (Sunday) is the last day of the dry fast: break it at ${sunday.breakTime}.`;
   if (sunday.kind === 'dry') return 'Tomorrow (Sunday) is a dry fast day: no food, but drink water to stay hydrated.';
-  return `Tomorrow (Sunday): one meal, from ${sunday.mealTime}.`;
+  return sunday.breakfast
+    ? `Tomorrow (Sunday): one meal, breakfast before ${sunday.mealTime}.`
+    : `Tomorrow (Sunday): one meal, from ${sunday.mealTime}.`;
 }
 
 /** 0 = Sunday … 6 = Saturday, for a Lagos calendar date. */
@@ -166,6 +168,7 @@ export class DailyFastEmailService {
       totalDays: info.totalDays,
       kind: info.kind,
       mealTime: info.mealTime,
+      breakfast: info.breakfast,
       dryDay: info.dryDay,
       dryLength: info.dryLength,
       breakTime: info.breakTime,

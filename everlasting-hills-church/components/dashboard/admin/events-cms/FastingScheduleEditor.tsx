@@ -53,6 +53,15 @@ export default function FastingScheduleEditor({ section, index, update }: { sect
         </Field>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Breakfast instead, from (optional)" htmlFor={id("bfast-start")}>
+          <input id={id("bfast-start")} type="date" value={c.breakfast?.startDate ?? ""} onChange={(e) => set({ breakfast: e.target.value ? { startDate: e.target.value, before: c.breakfast?.before ?? "12pm" } : undefined })} className={inputCls} />
+        </Field>
+        <Field label="Breakfast before" htmlFor={id("bfast-before")}>
+          <input id={id("bfast-before")} disabled={!c.breakfast} value={c.breakfast?.before ?? ""} onChange={(e) => c.breakfast && set({ breakfast: { ...c.breakfast, before: e.target.value } })} placeholder="12pm" className={inputCls} />
+        </Field>
+      </div>
+
       <div>
         <p className="mb-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400">Dry-fast weekends</p>
         <div className="space-y-2">

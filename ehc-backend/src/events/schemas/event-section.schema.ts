@@ -43,6 +43,8 @@ const fastingSchedule = z
     endDate: isoDate,
     /** When the one meal is taken on ordinary days, e.g. "3pm". */
     mealTime: text(20),
+    /** From startDate on, the one meal is breakfast, eaten before this time, with nothing more until the next morning. */
+    breakfast: z.object({ startDate: isoDate, before: text(20) }).optional(),
     dryFasts: z
       .array(z.object({ startDate: isoDate, endDate: isoDate, breakTime: text(40) }))
       .max(12)

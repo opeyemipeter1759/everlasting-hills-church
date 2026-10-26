@@ -9,6 +9,8 @@ export interface FastingRules {
   startDate: string;
   endDate: string;
   mealTime: string;
+  /** From startDate on, the one meal is breakfast, eaten before `before`. */
+  breakfast?: { startDate: string; before: string };
   dryFasts: { startDate: string; endDate: string; breakTime: string }[];
   morningTime?: string;
   eveningTime?: string;
@@ -34,6 +36,8 @@ export interface FastDayInfo {
   morning: string | null;
   evening: string | null;
   mealTime: string;
+  /** The meal is breakfast, eaten before mealTime, and nothing more until the next morning. */
+  breakfast?: boolean;
 }
 
 const DAY_MS = 86_400_000;
@@ -56,6 +60,7 @@ export function fastDay(rules: FastingRules, date: string): FastDayInfo | null {
   const weekday = new Date(toTime(date)).getUTCDay();
   const dry = rules.dryFasts.find((d) => date >= d.startDate && date <= d.endDate);
   const next = rules.dryFasts.find((d) => d.startDate === addDays(date, 1));
+  const breakfast = rules.breakfast && date >= rules.breakfast.startDate ? rules.breakfast : undefined;
   return {
     date,
     weekday,
@@ -76,6 +81,7 @@ export function fastDay(rules: FastingRules, date: string): FastDayInfo | null {
         ? `${rules.morningTime} morning prayer`
         : null,
     evening: rules.eveningTime && !rules.noEveningDays.includes(weekday) ? `${rules.eveningTime} evening prayer` : null,
-    mealTime: rules.mealTime,
+    mealTime: breakfast?.before ?? rules.mealTime,
+    ...(breakfast && { breakfast: true }),
   };
 }

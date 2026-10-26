@@ -48,6 +48,14 @@ describe("a day of Furnace '26, as the schedule sets it out", () => {
   it('Day 30 is the closing day', () => {
     expect(fastDay(FURNACE, '2026-10-31')).toMatchObject({ dayNumber: 30, isLast: true, kind: 'meal' });
   });
+
+  it('from Day 25 the meal is breakfast before 12pm; earlier days keep 3pm', () => {
+    const rules = { ...FURNACE, breakfast: { startDate: '2026-10-26', before: '12pm' } };
+    expect(fastDay(rules, '2026-10-26')).toMatchObject({ dayNumber: 25, mealTime: '12pm', breakfast: true });
+    expect(fastDay(rules, '2026-10-22')).toMatchObject({ mealTime: '3pm' });
+    expect(fastDay(rules, '2026-10-22')?.breakfast).toBeUndefined();
+    expect(fastDay(rules, '2026-10-25')).toMatchObject({ kind: 'dry', breakTime: '3pm' });
+  });
 });
 
 describe('dates', () => {

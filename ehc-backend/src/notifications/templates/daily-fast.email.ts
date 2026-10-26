@@ -17,6 +17,8 @@ export interface DailyFastDay {
   totalDays: number;
   kind: 'meal' | 'dry';
   mealTime: string;
+  /** The meal is breakfast, eaten before mealTime, and nothing more until the next morning. */
+  breakfast?: boolean;
   dryDay?: number;
   dryLength?: number;
   breakTime?: string;
@@ -46,8 +48,8 @@ interface Args {
 export function fastHeadline(d: DailyFastDay): string {
   if (d.kind === 'dry' && d.breakTime) return `break your fast at ${d.breakTime}`;
   if (d.kind === 'dry') return `dry fast, day ${d.dryDay} of ${d.dryLength}`;
-  if (d.lastMealBefore) return `one meal at ${d.mealTime}, then the dry fast begins`;
-  return `one meal today, from ${d.mealTime}`;
+  if (d.lastMealBefore) return d.breakfast ? `breakfast before ${d.mealTime}, then the dry fast begins` : `one meal at ${d.mealTime}, then the dry fast begins`;
+  return d.breakfast ? `one meal today, breakfast before ${d.mealTime}` : `one meal today, from ${d.mealTime}`;
 }
 
 function fastLines(d: DailyFastDay): string[] {
@@ -65,9 +67,9 @@ function todayLines(d: DailyFastDay): string[] {
     return [`Dry fast, day ${d.dryDay} of ${d.dryLength}: no food today.`, 'You may drink water to stay hydrated.'];
   }
   const lines = [
-    `One meal today, from ${d.mealTime}.`,
+    d.breakfast ? `One meal today: breakfast, before ${d.mealTime}.` : `One meal today, from ${d.mealTime}.`,
     // Tomorrow is a dry day before a dry fast, so there's no "until tomorrow's meal".
-    `Eat once, and that is your meal for the day${d.lastMealBefore ? '' : `: nothing else until ${d.mealTime} tomorrow morning`}. No snacks, no second plate, and no splitting your meal into portions to eat later.`,
+    `Eat once, and that is your meal for the day${d.lastMealBefore ? '' : `: nothing else until ${d.breakfast ? 'tomorrow morning' : `${d.mealTime} tomorrow`}`}. No snacks, no second plate, and no splitting your meal into portions to eat later.`,
   ];
   if (d.lastMealBefore) {
     lines.push(

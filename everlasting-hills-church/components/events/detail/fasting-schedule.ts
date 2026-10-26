@@ -40,6 +40,8 @@ export interface FastDay {
   /** 1 on the first day of the fast. */
   dayNumber: number;
   kind: "meal" | "dry";
+  /** The meal day's line, e.g. "from 3pm" or "breakfast before 12pm". */
+  meal: string;
   /** For dry days: which day of that dry fast, and how long it is. */
   dryDay?: number;
   dryLength?: number;
@@ -89,6 +91,7 @@ export function planFast(c: FastingContent): FastingPlan {
       weekday,
       dayNumber: i + 1,
       kind: dry ? "dry" : "meal",
+      meal: c.breakfast && date >= c.breakfast.startDate ? `breakfast before ${c.breakfast.before}` : `from ${c.mealTime}`,
       ...(dry && {
         dryDay: Math.round((t - toTime(dry.startDate)) / DAY_MS) + 1,
         dryLength,

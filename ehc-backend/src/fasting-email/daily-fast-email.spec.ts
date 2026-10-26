@@ -139,10 +139,10 @@ describe('what the email says', () => {
     dayNumber: 3,
     totalDays: 30,
     kind: 'dry',
-    mealTime: '12pm',
+    mealTime: '3pm',
     dryDay: 2,
     dryLength: 2,
-    breakTime: '12pm',
+    breakTime: '3pm',
     isFirst: false,
     isLast: false,
     morning: 'Sunday service',
@@ -183,6 +183,13 @@ describe('what the email says', () => {
     const mail = build(day({ kind: 'meal', dryDay: undefined, dryLength: undefined, breakTime: undefined }));
     expect(mail.subject).toBe('Furnace 2026 · Day 3 of 30: one meal today, from 3pm');
     expect(mail.text).toContain('nothing else until 3pm tomorrow. No snacks, no second plate');
+  });
+
+  it('once the meal is breakfast, says to eat it before the time and nothing more until morning', () => {
+    const mail = build(day({ kind: 'meal', mealTime: '12pm', breakfast: true, dryDay: undefined, dryLength: undefined, breakTime: undefined }));
+    expect(mail.subject).toBe('Furnace 2026 · Day 3 of 30: one meal today, breakfast before 12pm');
+    expect(mail.text).toContain('One meal today: breakfast, before 12pm.');
+    expect(mail.text).toContain('nothing else until tomorrow morning. No snacks, no second plate');
   });
 
   it('allows water on a dry fast day, to stay hydrated', () => {

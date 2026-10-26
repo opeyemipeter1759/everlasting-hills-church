@@ -34,7 +34,7 @@ export default function FastingScheduleSection({ section }: { section: Section }
         {/* The headline numbers. */}
         <dl className="mt-12 grid grid-cols-2 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] lg:grid-cols-4">
           <Fact label="Duration" value={`${plan.totalDays} Days`} note={dateSpan(c.startDate, c.endDate, true)} />
-          <Fact label="Daily fast" value="One meal a day" note={`From ${c.mealTime} daily`} />
+          <Fact label="Daily fast" value="One meal a day" note={c.breakfast ? `Breakfast before ${c.breakfast.before} from ${shortDate(c.breakfast.startDate)} (was from ${c.mealTime})` : `From ${c.mealTime} daily`} />
           {plan.weekends.length > 0 && (
             <Fact label="Dry fast" value={`${plan.dryDays} Days`} note={`${plan.weekends.length === 4 ? "Four" : plan.weekends.length} weekends: ${plan.weekends.map((w) => w.days).join(", ")}`} />
           )}
@@ -45,7 +45,7 @@ export default function FastingScheduleSection({ section }: { section: Section }
           <div className="mt-16">
             <SubHeading eyebrow="The weekends" title={`${plan.dryDays} days of dry fasting`} />
             <p className="mt-3 max-w-3xl text-sm leading-6 text-white/60">
-              Each dry fast starts after your {c.mealTime} meal the day before
+              Each dry fast starts after your meal the day before
               {breaking ? ` and ends at ${breakTimes[0]} on ${LONG_WEEKDAYS[breakDays[0]]}` : ""}.
             </p>
             <ol className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -82,7 +82,7 @@ export default function FastingScheduleSection({ section }: { section: Section }
         <div className="mt-16">
           <SubHeading eyebrow="Day by day" title={month} />
           <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-white/70">
-            <Legend swatch="border border-[#F59E0B] text-[#FCD34D]" label={`One meal a day, from ${c.mealTime}`} />
+            <Legend swatch="border border-[#F59E0B] text-[#FCD34D]" label="One meal a day" />
             {plan.weekends.length > 0 && <Legend swatch="bg-[#DC2626]" label="Dry fast" />}
             {plan.weekends.length > 0 && <Legend swatch="bg-[#FACC15]" label="Dry fast breaks" />}
           </ul>
@@ -110,7 +110,7 @@ export default function FastingScheduleSection({ section }: { section: Section }
                         <span className={`text-xl font-black ${cell.inFast ? "text-white" : "text-white/25"}`}>{cell.dayOfMonth}</span>
                         {cell.day && <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Day {cell.day.dayNumber}</span>}
                       </div>
-                      {cell.day && <DayDetail day={cell.day} mealTime={c.mealTime} />}
+                      {cell.day && <DayDetail day={cell.day} />}
                     </div>
                   ) : (
                     <div key={ci} />
@@ -130,7 +130,7 @@ export default function FastingScheduleSection({ section }: { section: Section }
                   <p className="text-[9px] font-bold uppercase tracking-wider text-white/40">Day {d.dayNumber}</p>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <DayDetail day={d} mealTime={c.mealTime} />
+                  <DayDetail day={d} />
                 </div>
               </li>
             ))}
@@ -193,7 +193,7 @@ export default function FastingScheduleSection({ section }: { section: Section }
 }
 
 /** What a day holds: the fast, the break, and when prayer meets. */
-function DayDetail({ day, mealTime }: { day: FastDay; mealTime: string }) {
+function DayDetail({ day }: { day: FastDay }) {
   return (
     <div className="mt-1.5 space-y-1 text-[11px] leading-snug">
       {day.kind === "dry" ? (
@@ -201,7 +201,7 @@ function DayDetail({ day, mealTime }: { day: FastDay; mealTime: string }) {
           Dry fast {day.dryDay} of {day.dryLength}
         </p>
       ) : (
-        <p className="inline-block rounded border border-[#F59E0B] px-1.5 py-0.5 font-bold text-[#FCD34D]">One meal, {mealTime}</p>
+        <p className="inline-block rounded border border-[#F59E0B] px-1.5 py-0.5 font-bold text-[#FCD34D]">One meal, {day.meal}</p>
       )}
       {day.breakTime && <p className="block w-fit rounded bg-[#FACC15] px-1.5 py-0.5 font-bold text-[#1C0709]">Break {day.breakTime}</p>}
       {day.isFirst && <p className="font-semibold text-[#FDBA74]">Day 1 begins</p>}
