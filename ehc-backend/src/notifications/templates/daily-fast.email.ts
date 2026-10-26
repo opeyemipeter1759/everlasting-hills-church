@@ -67,7 +67,7 @@ function todayLines(d: DailyFastDay): string[] {
   const lines = [
     `One meal today, from ${d.mealTime}.`,
     // Tomorrow is a dry day before a dry fast, so there's no "until tomorrow's meal".
-    `Eat once, and that is your meal for the day${d.lastMealBefore ? '' : `: nothing else until ${d.mealTime} tomorrow`}. No snacks, no second plate, and no splitting your meal into portions to eat later.`,
+    `Eat once, and that is your meal for the day${d.lastMealBefore ? '' : `: nothing else until ${d.mealTime} tomorrow morning`}. No snacks, no second plate, and no splitting your meal into portions to eat later.`,
   ];
   if (d.lastMealBefore) {
     lines.push(
