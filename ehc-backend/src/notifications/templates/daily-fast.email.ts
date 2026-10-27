@@ -28,7 +28,6 @@ export interface DailyFastDay {
   morning: string | null;
   evening: string | null;
   liveUrl: string;
-  /** Over the recaps. Default "Yesterday's sessions"; Monday's covers the weekend. */
   recapHeading?: string;
   /** On a Saturday: what Sunday holds, since no email goes out on Sunday. */
   tomorrowNote?: string;
