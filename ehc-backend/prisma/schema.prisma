@@ -1005,8 +1005,9 @@ model PrayerSlot {
   label        String
   startTime    String
   endTime      String
-  /// Spots available in this slot.
-  capacity     Int            @default(1)
+  /// Spots available in this slot. Many people pray the same hour together —
+  /// this is a generous ceiling, not a real scarcity limit.
+  capacity     Int            @default(100)
   /// Display order, 0-based.
   position     Int
   /// The sign-up chosen to lead this slot, if any — must be one of this

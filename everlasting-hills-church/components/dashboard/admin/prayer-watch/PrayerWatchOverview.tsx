@@ -17,8 +17,6 @@ import {
   type SignupListRow,
 } from "@/lib/api/prayer-watch";
 
-const GOLD = "#B8860B";
-
 function csvCell(value: string | number | null) {
   let text = value == null ? "" : String(value);
   if (/^[=+\-@]/.test(text)) text = `'${text}`;
@@ -186,21 +184,17 @@ export default function PrayerWatchOverview() {
             <p className="mb-3 text-sm text-gray-400">People of His watch, hour by hour.</p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {data.slots.map((s) => {
-                const filled = Math.min(1, s.capacity ? (s.capacity - s.spotsLeft) / s.capacity : 0);
                 return (
                   <div key={s.id} className="overflow-hidden rounded-xl border border-gray-200 dark:border-white/10">
                     <div className="flex items-center justify-between px-4 py-2.5">
                       <span className="text-sm font-semibold tabular-nums text-[#1A1210] dark:text-white">
                         {s.startTime}–{s.endTime}
                       </span>
-                      <span className={`text-xs font-semibold ${s.spotsLeft <= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400"}`}>
-                        {s.signups.length}/{s.capacity}
+                      <span className="text-xs font-semibold text-gray-400">
+                        {s.signups.length} {s.signups.length === 1 ? "person" : "people"}
                       </span>
                     </div>
-                    <div className="h-1 bg-gray-100 dark:bg-white/5">
-                      <div className="h-full transition-all duration-500" style={{ width: `${filled * 100}%`, backgroundColor: GOLD }} />
-                    </div>
-                    <div className="space-y-1.5 px-4 py-3">
+                    <div className="space-y-1.5 border-t border-gray-100 px-4 py-3 dark:border-white/5">
                       {s.signups.length === 0 ? (
                         <p className="text-xs text-gray-400">No one yet.</p>
                       ) : (

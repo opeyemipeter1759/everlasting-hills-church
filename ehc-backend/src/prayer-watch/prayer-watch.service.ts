@@ -18,11 +18,15 @@ import {
 import { slotDateTime } from './prayer-watch.util';
 
 /** The watch's default shape when none exists yet for this tenant. */
+/** Capacity is generous on purpose — many people pray the same hour together,
+ * it isn't a scarce resource like a serving roster slot. */
+const DEFAULT_SLOT_CAPACITY = 100;
+
 const DEFAULT_SLOTS = [
-  { label: 'First Watch', startTime: '22:00', endTime: '00:00', position: 0 },
-  { label: 'Second Watch', startTime: '00:00', endTime: '02:00', position: 1 },
-  { label: 'Third Watch', startTime: '02:00', endTime: '04:00', position: 2 },
-  { label: 'Fourth Watch', startTime: '04:00', endTime: '06:00', position: 3 },
+  { label: 'First Watch', startTime: '22:00', endTime: '00:00', position: 0, capacity: DEFAULT_SLOT_CAPACITY },
+  { label: 'Second Watch', startTime: '00:00', endTime: '02:00', position: 1, capacity: DEFAULT_SLOT_CAPACITY },
+  { label: 'Third Watch', startTime: '02:00', endTime: '04:00', position: 2, capacity: DEFAULT_SLOT_CAPACITY },
+  { label: 'Fourth Watch', startTime: '04:00', endTime: '06:00', position: 3, capacity: DEFAULT_SLOT_CAPACITY },
 ];
 
 /** A warm, specific confirmation — names the hour back to them so it feels
