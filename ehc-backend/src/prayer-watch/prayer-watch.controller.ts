@@ -1,13 +1,17 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
+import type { Response } from 'express';
 import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import type { AuthUser } from '../auth/types/auth-user';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import {
   AdminCreatePrayerSignupDto,
   CreatePrayerSignupDto,
+  CreatePrayerWatchReflectionDto,
   MovePrayerSignupDto,
   SetSlotLeaderDto,
   UpdatePrayerWatchDto,
@@ -34,8 +38,62 @@ export class PrayerWatchController {
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Sign up for a slot — public, no session required' })
-  signup(@Body() body: CreatePrayerSignupDto) {
-    return this.prayerWatch.createSignup(body);
+  signup(@Body() body: CreatePrayerSignupDto, @CurrentUser() user?: AuthUser) {
+    return this.prayerWatch.createSignup(body, user?.profileId ?? null);
+  }
+
+  // ── Self-service (authenticated member, own sign-up only) ──────────────────
+
+  @Get('mine')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'My own sign-up for the current watch, if any' })
+  getMine(@CurrentUser() user: AuthUser) {
+    return this.prayerWatch.getMySignup(user.profileId!);
+  }
+
+  @Get('mine/history')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Past watches I have kept, with any reflection I left' })
+  getMyHistory(@CurrentUser() user: AuthUser) {
+    return this.prayerWatch.getMyHistory(user.profileId!);
+  }
+
+  @Delete('mine/:id')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Cancel my own sign-up' })
+  cancelMine(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.cancelMySignup(id, user.profileId!);
+  }
+
+  @Patch('mine/:id/move')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Move my own sign-up to another hour' })
+  moveMine(@Param('id') id: string, @Body() body: MovePrayerSignupDto, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.moveMySignup(id, user.profileId!, body);
+  }
+
+  @Get('mine/:id.ics')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Download my chosen hour as .ics' })
+  async myIcs(@Param('id') id: string, @CurrentUser() user: AuthUser, @Res() res: Response) {
+    const { filename, body } = await this.prayerWatch.buildSignupIcs(id, user.profileId!);
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(body);
+  }
+
+  @Post('mine/:id/reflections')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Log what I sensed God say during my watch hour, once it has passed — a new dated entry each time' })
+  addReflection(@Param('id') id: string, @Body() body: CreatePrayerWatchReflectionDto, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.addReflection(id, user.profileId!, body);
+  }
+
+  @Get('slots/:slotId/companions')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'First names of others on the same watch hour' })
+  getCompanions(@Param('slotId') slotId: string, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.getSlotCompanions(slotId, user.profileId);
   }
 
   @Get('admin')
@@ -44,6 +102,22 @@ export class PrayerWatchController {
   @ApiOperation({ summary: 'Full watch with names per slot (Admin Head+)' })
   getAdmin() {
     return this.prayerWatch.getAdminView();
+  }
+
+  @Get('admin/reflections')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'What members sensed God say during their watch hour (Admin Head+)' })
+  getReflections() {
+    return this.prayerWatch.listReflections();
+  }
+
+  @Delete('admin/reflections/:id')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Remove a reflection entry (Admin Head+)' })
+  removeReflection(@Param('id') id: string) {
+    return this.prayerWatch.removeReflection(id);
   }
 
   @Get('admin/signups')

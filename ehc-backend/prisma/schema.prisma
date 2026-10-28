@@ -999,23 +999,25 @@ model PrayerWatch {
 /// (not a SQL time column) since the only consumer is the frontend display —
 /// crossing midnight is handled there, not in the database.
 model PrayerSlot {
-  id        String         @id
-  tenantId  String
-  watchId   String
-  label     String
-  startTime String
-  endTime   String
+  id           String         @id
+  tenantId     String
+  watchId      String
+  label        String
+  startTime    String
+  endTime      String
   /// Spots available in this slot.
-  capacity  Int            @default(1)
+  capacity     Int            @default(1)
   /// Display order, 0-based.
-  position  Int
+  position     Int
   /// The sign-up chosen to lead this slot, if any — must be one of this
   /// slot's own sign-ups (enforced in the service, not the DB).
-  leaderId  String?
-  Tenant    Tenant         @relation(fields: [tenantId], references: [id])
-  Watch     PrayerWatch    @relation(fields: [watchId], references: [id], onDelete: Cascade)
-  Signups   PrayerSignup[] @relation("SlotSignups")
-  Leader    PrayerSignup?  @relation("SlotLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  leaderId     String?
+  /// This slot's WhatsApp group — shared with a signer only after they confirm.
+  whatsappLink String?
+  Tenant       Tenant         @relation(fields: [tenantId], references: [id])
+  Watch        PrayerWatch    @relation(fields: [watchId], references: [id], onDelete: Cascade)
+  Signups      PrayerSignup[] @relation("SlotSignups")
+  Leader       PrayerSignup?  @relation("SlotLeader", fields: [leaderId], references: [id], onDelete: SetNull)
 
   @@index([watchId, position])
 }
@@ -1025,7 +1027,7 @@ model PrayerSlot {
 /// transaction — not a DB trigger — consistent with how the rest of this app
 /// enforces invariants.
 model PrayerSignup {
-  id           String              @id
+  id           String                  @id
   tenantId     String
   slotId       String
   /// Denormalized from the slot for a simple "one signup per phone per watch" check.
@@ -1035,14 +1037,37 @@ model PrayerSignup {
   email        String
   /// True = worker/serves in a unit or department, false = member only.
   isWorker     Boolean
-  status       PrayerSignupStatus  @default(CONFIRMED)
-  createdAt    DateTime            @default(now())
-  Tenant       Tenant              @relation(fields: [tenantId], references: [id])
-  Slot         PrayerSlot          @relation("SlotSignups", fields: [slotId], references: [id], onDelete: Cascade)
-  LeaderOfSlot PrayerSlot[]        @relation("SlotLeader")
+  status       PrayerSignupStatus      @default(CONFIRMED)
+  /// The authenticated member who submitted this, when known — an audit/
+  /// self-service reference, not a DB relation (same pattern as
+  /// MembershipEvent.actorProfileId). Lets the signer manage their own
+  /// sign-up without re-matching on phone number.
+  profileId    String?
+  createdAt    DateTime                @default(now())
+  Tenant       Tenant                  @relation(fields: [tenantId], references: [id])
+  Slot         PrayerSlot              @relation("SlotSignups", fields: [slotId], references: [id], onDelete: Cascade)
+  LeaderOfSlot PrayerSlot[]            @relation("SlotLeader")
+  Reflections  PrayerWatchReflection[]
 
   @@index([slotId, status])
   @@index([watchId, phone])
+  @@index([profileId])
+}
+
+/// A dated entry a member can leave once their prayer watch hour has passed —
+/// what they sensed God say. The watch is ongoing, not a one-off, so a member
+/// may leave several of these over time against the same kept hour; each one
+/// keeps its own date rather than overwriting the last.
+model PrayerWatchReflection {
+  id        String       @id
+  tenantId  String
+  signupId  String
+  profileId String?
+  body      String
+  createdAt DateTime     @default(now())
+  Signup    PrayerSignup @relation(fields: [signupId], references: [id], onDelete: Cascade)
+
+  @@index([signupId, createdAt])
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -2462,25 +2487,27 @@ model PushSubscription {
 /// midnight (22:00 to 06:00); the dispatcher handles that case.
 /// Tenant-scoped in the service layer; RLS deny-all backstop.
 model NotificationPreference {
-  id                String   @id
-  tenantId          String
-  userId            String   @unique // Profile.id
-  serviceStarting   Boolean  @default(true)
-  serviceReminder   Boolean  @default(true)
-  servingReminder   Boolean  @default(true)
+  id                  String   @id
+  tenantId            String
+  userId              String   @unique // Profile.id
+  serviceStarting     Boolean  @default(true)
+  serviceReminder     Boolean  @default(true)
+  servingReminder     Boolean  @default(true)
   /// Opt-in only. Never default this to true.
-  prayerMeeting     Boolean  @default(false)
-  announcements     Boolean  @default(true)
-  unitAnnouncements Boolean  @default(true)
-  newSermon         Boolean  @default(true)
-  milestones        Boolean  @default(true)
-  quietStart        String? // "HH:MM", DB CHECK-guarded
-  quietEnd          String? // "HH:MM", DB CHECK-guarded
-  timezone          String   @default("Africa/Lagos")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @default(now()) @updatedAt
-  Tenant            Tenant   @relation(fields: [tenantId], references: [id])
-  User              Profile  @relation("NotificationPreferenceUser", fields: [userId], references: [id], onDelete: Cascade)
+  prayerMeeting       Boolean  @default(false)
+  /// Default true: this only fires for a watch hour the member themself chose.
+  prayerWatchReminder Boolean  @default(true)
+  announcements       Boolean  @default(true)
+  unitAnnouncements   Boolean  @default(true)
+  newSermon           Boolean  @default(true)
+  milestones          Boolean  @default(true)
+  quietStart          String? // "HH:MM", DB CHECK-guarded
+  quietEnd            String? // "HH:MM", DB CHECK-guarded
+  timezone            String   @default("Africa/Lagos")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @default(now()) @updatedAt
+  Tenant              Tenant   @relation(fields: [tenantId], references: [id])
+  User                Profile  @relation("NotificationPreferenceUser", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }

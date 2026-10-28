@@ -262,6 +262,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
       { label: "Family",      href: "/dashboard/family",          icon: UsersRound,          minRole: "MEMBER" },
       { label: "Bible Plan",          href: "/dashboard/reading",            icon: BookMarked,          minRole: "MEMBER" },
+      { label: "Prayer Watch",        href: "/dashboard/prayer-watch",       icon: MoonStar,            minRole: "MEMBER" },
       { label: "Articles",            href: "/dashboard/articles",           icon: Newspaper,           minRole: "MEMBER" },
       { label: "Books",                href: "/dashboard/books",             icon: Library,             minRole: "MEMBER" },
       { label: "My Classes",          href: "/dashboard/classes",            icon: School,              minRole: "MEMBER" },

@@ -7,6 +7,7 @@ export const PUSH_CATEGORIES = [
   'serviceReminder',
   'servingReminder',
   'prayerMeeting',
+  'prayerWatchReminder',
   'announcements',
   'unitAnnouncements',
   'newSermon',
@@ -27,6 +28,9 @@ export const DEFAULT_PREFERENCES: Record<PushCategory, boolean> = {
   serviceReminder: true,
   servingReminder: true,
   prayerMeeting: false,
+  // Unlike prayerMeeting, this only fires for an hour the member themself
+  // chose and committed to — default on.
+  prayerWatchReminder: true,
   announcements: true,
   unitAnnouncements: true,
   newSermon: true,
@@ -44,6 +48,10 @@ export const DEFAULT_PREFERENCES: Record<PushCategory, boolean> = {
  */
 export const QUIET_HOURS_EXEMPT: ReadonlySet<PushCategory> = new Set<PushCategory>([
   'serviceStarting',
+  // A watch hour can itself sit inside quiet hours (the watch runs 10pm–6am) —
+  // suppressing this would mean the reminder never arrives for the exact
+  // hours it exists to cover.
+  'prayerWatchReminder',
 ]);
 
 export interface PushPayload {

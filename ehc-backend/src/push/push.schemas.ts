@@ -39,6 +39,7 @@ export const updatePreferencesSchema = z
     serviceReminder: z.boolean().optional(),
     servingReminder: z.boolean().optional(),
     prayerMeeting: z.boolean().optional(),
+    prayerWatchReminder: z.boolean().optional(),
     announcements: z.boolean().optional(),
     unitAnnouncements: z.boolean().optional(),
     newSermon: z.boolean().optional(),

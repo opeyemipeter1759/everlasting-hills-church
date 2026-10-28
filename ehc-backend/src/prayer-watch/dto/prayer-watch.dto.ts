@@ -71,11 +71,22 @@ class SlotSettingDto {
   @IsNotEmpty()
   id!: string;
 
-  @ApiProperty({ example: 1 })
+  @ApiPropertyOptional({ example: 1 })
+  @IsOptional()
   @IsInt()
   @Min(1)
   @Max(100)
-  capacity!: number;
+  capacity?: number;
+
+  @ApiPropertyOptional({
+    example: 'https://chat.whatsapp.com/abc123',
+    description: 'This slot\'s WhatsApp group — shared with a signer only after they confirm. Send an empty string to clear it.',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  whatsappLink?: string;
 }
 
 export class UpdatePrayerWatchDto {
@@ -100,6 +111,14 @@ export class UpdatePrayerWatchDto {
   @ValidateNested({ each: true })
   @Type(() => SlotSettingDto)
   slots?: SlotSettingDto[];
+}
+
+export class CreatePrayerWatchReflectionDto {
+  @ApiProperty({ example: "I sensed the Lord confirm the word about an open door — I'm holding on to it." })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
+  body!: string;
 }
 
 const REMOVAL_STATUS = ['REMOVED'] as const;

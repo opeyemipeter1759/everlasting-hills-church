@@ -20,6 +20,7 @@ export const JOB_NAMES = [
   'push-service-reminder',
   'push-serving-reminder',
   'push-prayer-meeting',
+  'push-prayer-watch-reminder',
   'sermon-digest',
   'fasting-recaps',
   'daily-fast-email',
@@ -103,6 +104,8 @@ export class JobsRunnerService {
         return this.pushTriggers.servingReminders();
       case 'push-prayer-meeting':
         return this.pushTriggers.prayerMeetingReminders();
+      case 'push-prayer-watch-reminder':
+        return this.pushTriggers.prayerWatchReminders();
       case 'sermon-digest':
         return this.sermonDigest.run().then(() => undefined);
       case 'fasting-recaps':

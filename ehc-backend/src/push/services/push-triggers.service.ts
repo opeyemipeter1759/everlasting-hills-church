@@ -8,6 +8,7 @@ import { PushDispatchService } from './push-dispatch.service';
 import { localMinutes } from './quiet-hours.util';
 import { stripMarkdown } from '../../common/markdown.util';
 import { localCalendarDate, ruleOccursOn } from '../../calendar/services/recurrence.util';
+import { slotDateTime } from '../../prayer-watch/prayer-watch.util';
 import {
   PushEvents,
   type AnnouncementPublishedPayload,
@@ -251,6 +252,55 @@ export class PushTriggersService {
             actions: gathering.joinUrl
               ? [{ action: 'join', title: 'Join', url: gathering.joinUrl }]
               : undefined,
+          },
+        );
+        fired += 1;
+      }
+      return fired;
+    });
+  }
+
+  /**
+   * Prayer Watch reminder, 30 minutes before a member's own chosen hour.
+   *
+   * Runs every 5 minutes and catches each slot exactly once, in the 25–30
+   * minute window before its start. Scoped to each slot's own confirmed
+   * sign-ups (by profileId), not a church-wide send — this is "your hour is
+   * starting," not a general notice.
+   */
+  @Cron('*/5 * * * *', { name: 'push-prayer-watch-reminder' })
+  async prayerWatchReminders() {
+    await this.safely('prayer-watch-reminder', async () => {
+      const watch = await this.prisma.prayerWatch.findFirst({
+        where: { tenantId: this.defaultTenantId },
+        orderBy: { watchDate: 'desc' },
+        include: { Slots: true },
+      });
+      if (!watch) return 0;
+
+      const now = new Date();
+      let fired = 0;
+
+      for (const slot of watch.Slots) {
+        const start = slotDateTime(watch.watchDate, slot.startTime);
+        const minutesUntil = (start.getTime() - now.getTime()) / 60_000;
+        if (minutesUntil < 25 || minutesUntil >= 30) continue;
+
+        const signups = await this.prisma.prayerSignup.findMany({
+          where: { tenantId: this.defaultTenantId, slotId: slot.id, status: 'CONFIRMED', profileId: { not: null } },
+          select: { profileId: true },
+        });
+        const userIds = signups.map((s) => s.profileId).filter((id): id is string => Boolean(id));
+        if (userIds.length === 0) continue;
+
+        await this.dispatch.dispatch(
+          'prayerWatchReminder',
+          { tenantId: this.defaultTenantId, userIds },
+          {
+            title: 'Your Prayer Watch hour starts in 30 minutes',
+            body: `${slot.startTime}–${slot.endTime}. Come ready to seek His face.`,
+            url: '/dashboard/prayer-watch',
+            tag: `prayer-watch-reminder-${slot.id}`,
           },
         );
         fired += 1;

@@ -1,11 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Loader2, Printer, RefreshCw, Trash2 } from "lucide-react";
+import { Download, Loader2, MessageCircle, Printer, RefreshCw, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
-import { useAdminPrayerWatch, usePrayerSignupList, useRemovePrayerSignup, useSetSlotLeader, type SignupListRow } from "@/lib/api/prayer-watch";
+import {
+  useAdminPrayerWatch,
+  useAdminReflections,
+  usePrayerSignupList,
+  useRemoveAdminReflection,
+  useRemovePrayerSignup,
+  useSetSlotLeader,
+  useSetSlotWhatsappLink,
+  type AdminReflection,
+  type SignupListRow,
+} from "@/lib/api/prayer-watch";
 
 const GOLD = "#B8860B";
 
@@ -35,11 +45,17 @@ function downloadCsv(rows: SignupListRow[], watchTitle: string) {
 export default function PrayerWatchOverview() {
   const watch = useAdminPrayerWatch();
   const signupList = usePrayerSignupList();
+  const reflections = useAdminReflections();
   const removeSignup = useRemovePrayerSignup();
+  const removeReflection = useRemoveAdminReflection();
   const setLeader = useSetSlotLeader();
+  const setWhatsappLink = useSetSlotWhatsappLink();
 
   const [search, setSearch] = useState("");
   const [removing, setRemoving] = useState<SignupListRow | null>(null);
+  const [removingReflection, setRemovingReflection] = useState<AdminReflection | null>(null);
+  const [linkDrafts, setLinkDrafts] = useState<Record<string, string>>({});
+  const [savingSlotId, setSavingSlotId] = useState<string | null>(null);
 
   const data = watch.data;
 
@@ -63,12 +79,46 @@ export default function PrayerWatchOverview() {
     }
   }
 
+  async function confirmRemoveReflection() {
+    if (!removingReflection) return;
+    try {
+      await removeReflection.mutateAsync(removingReflection.id);
+      showToast.success("Removed");
+      setRemovingReflection(null);
+    } catch (err) {
+      showToast.error(userMessageForError(err, "Couldn't remove this"));
+    }
+  }
+
   async function handleSetLeader(slotId: string, signupId: string | null) {
     try {
       await setLeader.mutateAsync({ slotId, signupId });
       showToast.success(signupId ? "Watch leader set" : "Watch leader cleared");
     } catch (err) {
       showToast.error(userMessageForError(err, "Couldn't update the watch leader"));
+    }
+  }
+
+  function linkDraftFor(slotId: string, saved: string | null) {
+    return linkDrafts[slotId] ?? saved ?? "";
+  }
+
+  async function handleSaveWhatsappLink(slotId: string, saved: string | null) {
+    const draft = linkDraftFor(slotId, saved).trim();
+    if (draft === (saved ?? "")) return;
+    setSavingSlotId(slotId);
+    try {
+      await setWhatsappLink.mutateAsync({ slotId, whatsappLink: draft });
+      showToast.success(draft ? "WhatsApp group saved" : "WhatsApp group cleared");
+      setLinkDrafts((prev) => {
+        const next = { ...prev };
+        delete next[slotId];
+        return next;
+      });
+    } catch (err) {
+      showToast.error(userMessageForError(err, "Couldn't save that link"));
+    } finally {
+      setSavingSlotId(null);
     }
   }
 
@@ -185,6 +235,17 @@ export default function PrayerWatchOverview() {
                         })
                       )}
                     </div>
+                    <div className="flex items-center gap-1.5 border-t border-gray-100 px-4 py-2.5 print:hidden dark:border-white/5">
+                      <MessageCircle size={13} className="shrink-0 text-gray-400" aria-hidden="true" />
+                      <input
+                        value={linkDraftFor(s.id, s.whatsappLink)}
+                        onChange={(e) => setLinkDrafts((prev) => ({ ...prev, [s.id]: e.target.value }))}
+                        onBlur={() => handleSaveWhatsappLink(s.id, s.whatsappLink)}
+                        placeholder="WhatsApp group link"
+                        className="min-w-0 flex-1 bg-transparent text-xs text-gray-600 outline-none placeholder:text-gray-300 dark:text-white/65 dark:placeholder:text-white/20"
+                      />
+                      {savingSlotId === s.id && <Loader2 size={12} className="shrink-0 animate-spin text-gray-400" />}
+                    </div>
                   </div>
                 );
               })}
@@ -262,6 +323,46 @@ export default function PrayerWatchOverview() {
             )}
           </section>
 
+          {/* What members sensed God say once their hour passed — a running
+              record, not tied to any one watch. */}
+          <section className="print:hidden">
+            <h2 className="text-base font-bold text-[#1A1210] dark:text-white">What members heard from God</h2>
+            <p className="mb-3 text-sm text-gray-400">Shared after their watch hour — what they sensed Him say.</p>
+
+            {reflections.isLoading ? (
+              <div className="space-y-1.5">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="h-20 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5" />
+                ))}
+              </div>
+            ) : (reflections.data ?? []).length === 0 ? (
+              <p className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-sm text-gray-500 dark:border-white/10 dark:text-white/50">
+                Nothing shared yet.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {reflections.data!.map((r) => (
+                  <div key={r.id} className="flex items-start justify-between gap-3 rounded-xl border border-[#E7CDD3]/60 bg-[#FFF4F6]/50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                    <div className="min-w-0">
+                      <p className="text-sm leading-relaxed text-[#6E0C24] dark:text-white/80">&ldquo;{r.body}&rdquo;</p>
+                      <p className="mt-2 text-xs text-gray-500 dark:text-white/45">
+                        {r.fullName} · {new Date(r.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setRemovingReflection(r)}
+                      aria-label={`Remove this entry from ${r.fullName}`}
+                      className="shrink-0 rounded-lg p-1.5 text-gray-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
           <ConfirmDialog
             open={!!removing}
             title="Remove this sign-up?"
@@ -271,6 +372,17 @@ export default function PrayerWatchOverview() {
             loading={removeSignup.isPending}
             onConfirm={confirmRemove}
             onCancel={() => setRemoving(null)}
+          />
+
+          <ConfirmDialog
+            open={!!removingReflection}
+            title="Remove this entry?"
+            description={removingReflection ? `This word from ${removingReflection.fullName} will be removed.` : ""}
+            confirmLabel="Yes, remove"
+            tone="danger"
+            loading={removeReflection.isPending}
+            onConfirm={confirmRemoveReflection}
+            onCancel={() => setRemovingReflection(null)}
           />
         </>
       )}
