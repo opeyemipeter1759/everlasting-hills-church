@@ -365,6 +365,10 @@ iframe {
   --color-void: #0A0E1F;
   --color-dawn: #C97A3E;
   --color-flame: #E7B454;
+  /* EHC's own house colour — the one action colour everywhere else on the
+     site (classes, admin). Used here for the primary action; gold stays for
+     honour/scripture, matching that same convention. */
+  --color-burgundy: #87102C;
   --color-paper: #FBF7EF;
   --color-paper-line: #E6DBC4;
   --ease-pw: cubic-bezier(0.22, 1, 0.36, 1);
@@ -388,8 +392,8 @@ iframe {
 }
 .pw-theme .pw-btn:focus-visible { outline: 2px solid var(--color-flame); outline-offset: 3px; }
 .pw-theme .pw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.pw-theme .pw-btn-primary { background: var(--color-flame); color: #2B1B06; }
-.pw-theme .pw-btn-primary:hover:not(:disabled) { background: #D9A144; transform: translateY(-1px); }
+.pw-theme .pw-btn-primary { background: var(--color-burgundy); color: #fff; }
+.pw-theme .pw-btn-primary:hover:not(:disabled) { background: #6E0C24; transform: translateY(-1px); }
 .pw-theme .pw-btn-glass { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.22); }
 .pw-theme .pw-btn-glass:hover { background: rgba(255, 255, 255, 0.16); }
 .pw-theme .pw-btn-outline { border: 1px solid var(--color-ink); color: var(--color-ink); background: transparent; }
@@ -397,7 +401,7 @@ iframe {
 .pw-theme .pw-chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 12px; font-weight: 600; }
 .pw-theme .pw-reveal { animation: pw-rise 800ms var(--ease-pw) both; }
 @keyframes pw-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-.pw-theme .pw-kenburns { animation: pw-kenburns 26s ease-in-out infinite alternate; transform-origin: 48% 22%; }
+.pw-theme .pw-kenburns { animation: pw-kenburns 26s ease-in-out infinite alternate; transform-origin: 28% 32%; }
 @keyframes pw-kenburns { from { transform: scale(1.02); } to { transform: scale(1.11); } }
 
 /* The four watch cards: colour is the schedule, not decoration. */

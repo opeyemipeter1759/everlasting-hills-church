@@ -18,12 +18,12 @@ export default function PrayerWatchPage() {
         <section className="pw-ink relative isolate flex min-h-[620px] items-end overflow-hidden pb-16 pt-28 sm:min-h-[720px] sm:pb-20 sm:pt-36">
           <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
             <Image
-              src="/images/church_congregation_2_1779193607195.png"
+              src="/HeroImages/IMG_5684.jpg"
               alt=""
               fill
               priority
               sizes="100vw"
-              className="pw-kenburns object-cover object-[48%_22%]"
+              className="pw-kenburns object-cover object-[28%_32%]"
             />
             <div
               className="absolute inset-0"
@@ -31,7 +31,7 @@ export default function PrayerWatchPage() {
             />
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(110deg, rgba(79,46,94,0.55) 0%, rgba(10,14,31,0.25) 50%, transparent 78%)" }}
+              style={{ background: "linear-gradient(110deg, rgba(135,16,44,0.5) 0%, rgba(10,14,31,0.25) 50%, transparent 78%)" }}
             />
           </div>
           <div className="pw-sky pw-reveal absolute inset-x-0 top-0 h-2" aria-hidden="true" />
