@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarPlus, Loader2, MessageCircle, Users } from "lucide-react";
+import { CalendarPlus, Clock3, Loader2, MessageCircle, Send, Users } from "lucide-react";
 import { fraunces } from "@/lib/fonts/prayer-watch";
 import { userMessageForError } from "@/lib/api/user-message";
 import {
@@ -310,6 +310,22 @@ export default function PrayerWatchScreen() {
         </div>
       ) : watch.isError ? (
         <p className="mt-8 text-sm text-red-600 dark:text-red-400">Could not load the watch schedule. Please refresh.</p>
+      ) : mine.data && mine.data.signup.status === "PENDING" ? (
+        <div className="mt-8">
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-center xs:p-6 dark:border-white/10 dark:bg-white/[0.03]">
+            <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-white/50">
+              <Clock3 size={13} aria-hidden="true" />
+              Awaiting approval
+            </p>
+            <h2 style={serif} className="mt-2 text-2xl font-medium text-[#111] dark:text-white xs:text-3xl sm:text-4xl">
+              {mine.data.slot.startTime}–{mine.data.slot.endTime}
+            </h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-white/45">{mine.data.slot.label}</p>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-gray-500 dark:text-white/50">
+              An admin reviews every sign-up before it&apos;s confirmed. We&apos;ll email you as soon as it is.
+            </p>
+          </div>
+        </div>
       ) : mine.data ? (
         <div className="mt-8">
           <div className="rounded-2xl border border-[#87102C]/25 bg-[#FFF4F6] p-5 text-center xs:p-6 dark:border-[#FFB3C1]/25 dark:bg-[#FFB3C1]/10">
@@ -321,6 +337,17 @@ export default function PrayerWatchScreen() {
             <Companions slotId={mine.data.slot.id} />
 
             <div className="mt-5 flex flex-col items-stretch gap-2 xs:flex-row xs:flex-wrap xs:items-center xs:justify-center">
+              {mine.data.telegramLink && (
+                <a
+                  href={mine.data.telegramLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#26A5E4] px-4 text-sm font-bold text-white transition-colors hover:bg-[#1E8FC7] xs:w-auto"
+                >
+                  <Send size={16} aria-hidden="true" />
+                  Join the Telegram channel
+                </a>
+              )}
               {mine.data.slot.whatsappLink && (
                 <a
                   href={mine.data.slot.whatsappLink}

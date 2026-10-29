@@ -977,17 +977,22 @@ model ServiceOffering {
 }
 
 enum PrayerSignupStatus {
+  /// Submitted, waiting for an admin to approve — every sign-up starts here.
+  PENDING
   CONFIRMED
   REMOVED
 }
 
 /// An overnight prayer watch — one per event. Members sign up for a 2-hour
-/// slot within it via a public, no-login form.
+/// slot within it via a public, no-login form; an admin approves each one.
 model PrayerWatch {
   id        String       @id
   tenantId  String
   title     String
   watchDate DateTime
+  /// The central Telegram channel where the prayer itself happens, shared by
+  /// every slot. Shown to a signer only once their sign-up is CONFIRMED.
+  telegramLink String?
   createdAt DateTime     @default(now())
   Tenant    Tenant       @relation(fields: [tenantId], references: [id])
   Slots     PrayerSlot[]
@@ -1040,13 +1045,17 @@ model PrayerSignup {
   email                String
   /// True = worker/serves in a unit or department, false = member only.
   isWorker             Boolean
-  status               PrayerSignupStatus          @default(CONFIRMED)
+  status               PrayerSignupStatus          @default(PENDING)
   /// The authenticated member who submitted this, when known — an audit/
   /// self-service reference, not a DB relation (same pattern as
   /// MembershipEvent.actorProfileId). Lets the signer manage their own
   /// sign-up without re-matching on phone number.
   profileId            String?
   createdAt            DateTime                    @default(now())
+  /// When an admin approved or declined this sign-up, and who — mirrors
+  /// PrayerFamilyChangeRequest's decidedAt/decidedById.
+  decidedAt            DateTime?
+  decidedById          String?
   Tenant               Tenant                      @relation(fields: [tenantId], references: [id])
   Slot                 PrayerSlot                  @relation("SlotSignups", fields: [slotId], references: [id], onDelete: Cascade)
   LeaderOfSlot         PrayerSlot[]                @relation("SlotLeader")

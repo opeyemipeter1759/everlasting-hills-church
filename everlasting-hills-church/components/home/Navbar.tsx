@@ -33,6 +33,7 @@ const navLinks: NavLink[] = [
   { label: "Events", href: "/events" },
   { label: "Ministries", href: "/ministries" },
   { label: "Home Cell", href: "/home-cell" },
+  { label: "Prayer Watch", href: "/prayer-watch" },
   { label: "Visit", href: "/visit" },
   { label: "Give", href: "/give" },
   { label: "Pledge", href: "/pledge" },

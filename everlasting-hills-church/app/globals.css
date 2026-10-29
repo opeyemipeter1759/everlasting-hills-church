@@ -354,6 +354,63 @@ iframe {
   .ehc-class *, .ehc-class *::before, .ehc-class *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 
+/* Prayer Watch: the four night-prayer slots. Each watch is coloured by the
+   real sky at that hour — dusk, deep indigo, the void before dawn, first
+   light — so colour carries the schedule itself rather than decorating it.
+   One gold "flame" is the thread of continuity across all four. */
+.pw-theme {
+  --color-ink: #150E22;
+  --color-dusk: #4F2E5E;
+  --color-deep: #232C52;
+  --color-void: #0A0E1F;
+  --color-dawn: #C97A3E;
+  --color-flame: #E7B454;
+  --color-paper: #FBF7EF;
+  --color-paper-line: #E6DBC4;
+  --ease-pw: cubic-bezier(0.22, 1, 0.36, 1);
+  font-family: var(--font-pw-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+.pw-theme .pw-display { font-family: var(--font-pw-display), Georgia, serif; font-weight: 500; letter-spacing: -0.01em; line-height: 1.04; }
+.pw-theme .pw-ink { background: var(--color-ink); color: #fff; }
+.pw-theme .pw-sky {
+  background: linear-gradient(90deg, var(--color-dusk) 0%, var(--color-deep) 38%, var(--color-void) 62%, var(--color-dawn) 100%);
+}
+.pw-theme .pw-glass {
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+.pw-theme .pw-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  border-radius: 999px; padding: 0.8rem 1.5rem; font-weight: 600; font-size: 15px;
+  transition: transform 350ms var(--ease-pw), background-color 200ms var(--ease-pw), opacity 200ms;
+}
+.pw-theme .pw-btn:focus-visible { outline: 2px solid var(--color-flame); outline-offset: 3px; }
+.pw-theme .pw-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pw-theme .pw-btn-primary { background: var(--color-flame); color: #2B1B06; }
+.pw-theme .pw-btn-primary:hover:not(:disabled) { background: #D9A144; transform: translateY(-1px); }
+.pw-theme .pw-btn-glass { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.22); }
+.pw-theme .pw-btn-glass:hover { background: rgba(255, 255, 255, 0.16); }
+.pw-theme .pw-btn-outline { border: 1px solid var(--color-ink); color: var(--color-ink); background: transparent; }
+.pw-theme .pw-btn-outline:hover { background: rgba(21, 14, 34, 0.06); }
+.pw-theme .pw-chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 12px; font-weight: 600; }
+.pw-theme .pw-reveal { animation: pw-rise 800ms var(--ease-pw) both; }
+@keyframes pw-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* The four watch cards: colour is the schedule, not decoration. */
+.pw-theme [data-watch] { color: #fff; }
+.pw-theme [data-watch="1"] { background: var(--color-dusk); }
+.pw-theme [data-watch="2"] { background: var(--color-deep); }
+.pw-theme [data-watch="3"] { background: var(--color-void); }
+.pw-theme [data-watch="4"] { background: var(--color-dawn); color: var(--color-ink); }
+.pw-theme [data-watch="4"] .pw-watch-sub { color: rgba(21, 14, 34, 0.65); }
+.pw-theme [data-watch] .pw-watch-sub { color: rgba(255, 255, 255, 0.68); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pw-theme *, .pw-theme *::before, .pw-theme *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
 /* Chrome forces a light background on autofill-recognized fields (name/phone/
    email) regardless of the input's own background-color. The box-shadow
    trick is the standard way to override it since -webkit-autofill ignores

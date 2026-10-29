@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, Loader2, MessageCircle, Printer, RefreshCw, Trash2 } from "lucide-react";
+import { CheckCircle2, Clock3, Download, Loader2, MessageCircle, Printer, RefreshCw, Send, Trash2, XCircle } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
@@ -9,12 +9,15 @@ import {
   useAdminPrayerWatch,
   useAdminReflections,
   useDecideFamilyChange,
+  useDecideSignup,
   useFamilyChangeRequests,
+  usePendingSignups,
   usePrayerSignupList,
   useRemoveAdminReflection,
   useRemovePrayerSignup,
   useSetSlotLeader,
   useSetSlotWhatsappLink,
+  useSetTelegramLink,
   type AdminReflection,
   type SignupListRow,
 } from "@/lib/api/prayer-watch";
@@ -45,13 +48,16 @@ function downloadCsv(rows: SignupListRow[], watchTitle: string) {
 export default function PrayerWatchOverview() {
   const watch = useAdminPrayerWatch();
   const signupList = usePrayerSignupList();
+  const pendingSignups = usePendingSignups();
   const reflections = useAdminReflections();
   const removeSignup = useRemovePrayerSignup();
   const removeReflection = useRemoveAdminReflection();
   const familyChangeRequests = useFamilyChangeRequests();
   const decideFamilyChange = useDecideFamilyChange();
+  const decideSignup = useDecideSignup();
   const setLeader = useSetSlotLeader();
   const setWhatsappLink = useSetSlotWhatsappLink();
+  const setTelegramLink = useSetTelegramLink();
 
   const [search, setSearch] = useState("");
   const [removing, setRemoving] = useState<SignupListRow | null>(null);
@@ -59,6 +65,9 @@ export default function PrayerWatchOverview() {
   const [linkDrafts, setLinkDrafts] = useState<Record<string, string>>({});
   const [savingSlotId, setSavingSlotId] = useState<string | null>(null);
   const [decidingId, setDecidingId] = useState<string | null>(null);
+  const [decidingSignupId, setDecidingSignupId] = useState<string | null>(null);
+  const [telegramDraft, setTelegramDraft] = useState<string | null>(null);
+  const [savingTelegram, setSavingTelegram] = useState(false);
 
   const data = watch.data;
 
@@ -137,6 +146,33 @@ export default function PrayerWatchOverview() {
     }
   }
 
+  async function handleDecideSignup(id: string, approve: boolean) {
+    setDecidingSignupId(id);
+    try {
+      await decideSignup.mutateAsync({ id, approve });
+      showToast.success(approve ? "Sign-up confirmed" : "Sign-up declined");
+    } catch (err) {
+      showToast.error(userMessageForError(err, "Couldn't decide this sign-up"));
+    } finally {
+      setDecidingSignupId(null);
+    }
+  }
+
+  async function handleSaveTelegramLink() {
+    const draft = (telegramDraft ?? data?.telegramLink ?? "").trim();
+    if (draft === (data?.telegramLink ?? "")) return;
+    setSavingTelegram(true);
+    try {
+      await setTelegramLink.mutateAsync(draft);
+      showToast.success(draft ? "Telegram channel saved" : "Telegram channel cleared");
+      setTelegramDraft(null);
+    } catch (err) {
+      showToast.error(userMessageForError(err, "Couldn't save that link"));
+    } finally {
+      setSavingTelegram(false);
+    }
+  }
+
   return (
     <div className="space-y-8 px-5 print:px-0">
       <header className="flex flex-wrap items-start justify-between gap-3 print:hidden">
@@ -194,6 +230,67 @@ export default function PrayerWatchOverview() {
         </div>
       ) : (
         <>
+          {/* The central Telegram channel — shared by every slot, shown to a
+              signer only once their sign-up is confirmed. */}
+          <section className="print:hidden">
+            <h2 className="text-base font-bold text-[#1A1210] dark:text-white">Central Telegram channel</h2>
+            <p className="mb-3 text-sm text-gray-400">Where the prayer itself happens. Every confirmed signer gets this link.</p>
+            <div className="flex max-w-xl items-center gap-2 rounded-xl border border-gray-200 p-3 dark:border-white/10">
+              <Send size={15} className="shrink-0 text-gray-400" aria-hidden="true" />
+              <input
+                value={telegramDraft ?? data.telegramLink ?? ""}
+                onChange={(e) => setTelegramDraft(e.target.value)}
+                onBlur={handleSaveTelegramLink}
+                placeholder="https://t.me/..."
+                className="min-w-0 flex-1 bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-300 dark:text-white/80 dark:placeholder:text-white/20"
+              />
+              {savingTelegram && <Loader2 size={14} className="shrink-0 animate-spin text-gray-400" />}
+            </div>
+          </section>
+
+          {/* Sign-ups waiting on a decision — nothing is confirmed until an admin approves it. */}
+          {pendingSignups.data && pendingSignups.data.length > 0 && (
+            <section className="print:hidden">
+              <h2 className="text-base font-bold text-[#1A1210] dark:text-white">Pending sign-ups</h2>
+              <p className="mb-3 text-sm text-gray-400">Approving confirms them and reveals the WhatsApp/Telegram links; declining tells them why.</p>
+              <div className="space-y-2">
+                {pendingSignups.data.map((s) => (
+                  <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-white">
+                        <Clock3 size={13} className="shrink-0 text-gray-400" aria-hidden="true" />
+                        {s.fullName} — {s.slotTime} ({s.slotLabel})
+                      </p>
+                      <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">
+                        {s.phone} · {s.isWorker ? "Worker" : "Member"}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDecideSignup(s.id, true)}
+                        disabled={decidingSignupId === s.id}
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[#87102C] px-3 text-xs font-semibold text-white disabled:opacity-50"
+                      >
+                        <CheckCircle2 size={13} aria-hidden="true" />
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDecideSignup(s.id, false)}
+                        disabled={decidingSignupId === s.id}
+                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-xs font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70"
+                      >
+                        <XCircle size={13} aria-hidden="true" />
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Requests to change Prayer Watchmen Family — reviewed, not instant. */}
           {familyChangeRequests.data && familyChangeRequests.data.length > 0 && (
             <section className="print:hidden">

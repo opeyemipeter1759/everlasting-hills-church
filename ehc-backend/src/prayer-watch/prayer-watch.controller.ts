@@ -13,6 +13,7 @@ import {
   CreatePrayerSignupDto,
   CreatePrayerWatchReflectionDto,
   DecideFamilyChangeDto,
+  DecideSignupDto,
   MovePrayerSignupDto,
   RequestFamilyChangeDto,
   SetSlotLeaderDto,
@@ -145,6 +146,30 @@ export class PrayerWatchController {
   @ApiOperation({ summary: 'Flat, searchable sign-up list (Admin Head+)' })
   listSignups() {
     return this.prayerWatch.listSignups();
+  }
+
+  @Get('admin/signups/pending')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Sign-ups waiting for approval (Admin Head+)' })
+  listPendingSignups() {
+    return this.prayerWatch.listPendingSignups();
+  }
+
+  @Post('admin/signups/:id/approve')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Approve a sign-up — confirms it and reveals the WhatsApp/Telegram links (Admin Head+)' })
+  approveSignup(@Param('id') id: string, @Body() body: DecideSignupDto, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.decideSignup(user.profileId!, id, true, body);
+  }
+
+  @Post('admin/signups/:id/decline')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Decline a sign-up, with a note the person sees (Admin Head+)' })
+  declineSignup(@Param('id') id: string, @Body() body: DecideSignupDto, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.decideSignup(user.profileId!, id, false, body);
   }
 
   @Post('admin/signups')

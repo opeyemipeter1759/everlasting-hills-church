@@ -21,6 +21,8 @@ export interface PublicWatch {
   slots: PublicSlot[];
 }
 
+export type SignupStatus = "PENDING" | "CONFIRMED" | "REMOVED";
+
 export interface AdminSignup {
   id: string;
   fullName: string;
@@ -46,7 +48,21 @@ export interface AdminWatch {
   id: string;
   title: string;
   watchDate: string;
+  /** The central Telegram channel where the prayer itself happens. */
+  telegramLink: string | null;
   slots: AdminSlot[];
+}
+
+export interface PendingSignup {
+  id: string;
+  fullName: string;
+  phone: string;
+  email: string | null;
+  isWorker: boolean;
+  createdAt: string;
+  slotId: string;
+  slotLabel: string;
+  slotTime: string;
 }
 
 export interface SignupListRow {
@@ -82,6 +98,7 @@ export interface MySignup {
   phone: string;
   email: string;
   isWorker: boolean;
+  status: SignupStatus;
   createdAt: string;
 }
 
@@ -91,6 +108,7 @@ export interface MySlot {
   startTime: string;
   endTime: string;
   capacity: number;
+  /** Null until the sign-up is confirmed. */
   whatsappLink: string | null;
 }
 
@@ -106,6 +124,8 @@ export interface PendingFamilyChangeRequest {
 export interface MySignupView {
   signup: MySignup;
   slot: MySlot;
+  /** The central Telegram channel where the prayer happens. Null until confirmed. */
+  telegramLink: string | null;
   pendingFamilyChangeRequest: PendingFamilyChangeRequest | null;
 }
 
@@ -179,10 +199,13 @@ export function useSubmitPrayerSignup() {
 
 // ── Mine (self-service) ─────────────────────────────────────────────────────
 
-export function useMyPrayerSignup() {
+/** Needs auth — pass `enabled: false` on a page a signed-out visitor can reach (this defaults to
+ *  true since every existing caller lives inside the authenticated dashboard). */
+export function useMyPrayerSignup(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: [...PRAYER_WATCH_KEY, "mine"],
     queryFn: () => api.get<MySignupView | null>("/prayer-watch/mine"),
+    enabled: options.enabled ?? true,
   });
 }
 
@@ -239,6 +262,31 @@ export function usePrayerSignupList() {
   return useQuery({
     queryKey: [...PRAYER_WATCH_KEY, "admin", "signups"],
     queryFn: () => api.get<SignupListRow[]>("/prayer-watch/admin/signups"),
+  });
+}
+
+export function usePendingSignups() {
+  return useQuery({
+    queryKey: [...PRAYER_WATCH_KEY, "admin", "signups", "pending"],
+    queryFn: () => api.get<PendingSignup[]>("/prayer-watch/admin/signups/pending"),
+  });
+}
+
+export function useDecideSignup() {
+  const invalidate = useInvalidatePrayerWatch();
+  return useMutation({
+    mutationFn: ({ id, approve, note }: { id: string; approve: boolean; note?: string }) =>
+      api.post(`/prayer-watch/admin/signups/${id}/${approve ? "approve" : "decline"}`, { note }),
+    onSuccess: invalidate,
+  });
+}
+
+/** An empty string clears the central Telegram channel. */
+export function useSetTelegramLink() {
+  const invalidate = useInvalidatePrayerWatch();
+  return useMutation({
+    mutationFn: (telegramLink: string) => api.patch<AdminWatch>("/prayer-watch/admin", { telegramLink }),
+    onSuccess: invalidate,
   });
 }
 

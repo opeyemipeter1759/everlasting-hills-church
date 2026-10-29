@@ -103,6 +103,15 @@ export class UpdatePrayerWatchDto {
   @Matches(/^\d{4}-\d{2}-\d{2}$/)
   watchDate?: string;
 
+  @ApiPropertyOptional({
+    example: 'https://t.me/+abc123',
+    description: 'The central Telegram channel where the prayer itself happens, shown once a sign-up is confirmed. Send an empty string to clear it.',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  telegramLink?: string;
+
   @ApiPropertyOptional({ type: [SlotSettingDto] })
   @IsOptional()
   @IsArray()
@@ -111,6 +120,14 @@ export class UpdatePrayerWatchDto {
   @ValidateNested({ each: true })
   @Type(() => SlotSettingDto)
   slots?: SlotSettingDto[];
+}
+
+export class DecideSignupDto {
+  @ApiPropertyOptional({ example: 'Please join from a quieter hour next time.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  note?: string;
 }
 
 export class CreatePrayerWatchReflectionDto {

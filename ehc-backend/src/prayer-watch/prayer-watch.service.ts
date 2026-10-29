@@ -1,17 +1,22 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma, type PrayerSignup, type PrayerSlot } from '@prisma/client';
+import { Prisma, PrayerSignupStatus, type PrayerSignup, type PrayerSlot } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import { NotificationEvents } from '../notifications/notification-events';
 import { IcsBuilderService } from '../calendar/services/ics-builder.service';
+import { buildPrayerWatchFamilyChangeDecidedEmail } from '../notifications/templates/prayer-watch-family-change-decided.email';
+import { buildPrayerWatchSignupApprovedEmail } from '../notifications/templates/prayer-watch-signup-approved.email';
+import { buildPrayerWatchSignupDeclinedEmail } from '../notifications/templates/prayer-watch-signup-declined.email';
+import { buildPrayerWatchSignupPendingEmail } from '../notifications/templates/prayer-watch-signup-pending.email';
 import {
   AdminCreatePrayerSignupDto,
   CreatePrayerSignupDto,
   CreatePrayerWatchReflectionDto,
   DecideFamilyChangeDto,
+  DecideSignupDto,
   MovePrayerSignupDto,
   RequestFamilyChangeDto,
   SetSlotLeaderDto,
@@ -31,55 +36,13 @@ const DEFAULT_SLOTS = [
   { label: 'Fourth Watch', startTime: '04:00', endTime: '06:00', position: 3, capacity: DEFAULT_SLOT_CAPACITY },
 ];
 
-/** A warm, specific confirmation — names the hour back to them so it feels
- * like a real commitment, not a generic "thanks for signing up" receipt. */
-function buildSignupConfirmationText(fullName: string, startTime: string, endTime: string, whatsappLink: string | null): string {
-  const firstName = fullName.trim().split(/\s+/)[0] || 'Friend';
-  return [
-    `Dear ${firstName},`,
-    '',
-    `You're in. Your hour on the Prayer Watch is ${startTime}–${endTime}.`,
-    '',
-    "That hour is yours to carry before the Lord. While you watch, others are holding the hours before and after you, so together the whole night is covered in prayer — your watch matters to the whole.",
-    '',
-    "Come ready. Set an alarm if you need to, keep your heart expectant, and watch unto prayer. He meets those who seek Him in the night.",
-    ...(whatsappLink
-      ? ['', `Join the WhatsApp group for your hour so you can watch alongside the others praying with you: ${whatsappLink}`]
-      : []),
-    '',
-    'See you on the watch,',
-    'Everlasting Hills Church',
-  ].join('\n');
-}
-
-function buildFamilyChangeDecisionText(fullName: string, toStart: string, toEnd: string, approved: boolean, note?: string): string {
-  const firstName = fullName.trim().split(/\s+/)[0] || 'Friend';
-  if (approved) {
-    return [
-      `Dear ${firstName},`,
-      '',
-      `Your request has been approved. Your Prayer Watchmen Family is now ${toStart}–${toEnd}.`,
-      '',
-      'Stay connected with your new family — they are who you now walk this altar of prayer with.',
-      '',
-      'Everlasting Hills Church',
-    ].join('\n');
-  }
-  return [
-    `Dear ${firstName},`,
-    '',
-    `Your request to move to ${toStart}–${toEnd} was not approved this time.`,
-    ...(note ? ['', note] : []),
-    '',
-    'You remain in your current Prayer Watchmen Family. You are welcome to request again.',
-    '',
-    'Everlasting Hills Church',
-  ].join('\n');
-}
+/** Sign-ups and change requests the member may have left open at ("PENDING"/"CONFIRMED"). */
+const ACTIVE_SIGNUP_STATUSES: PrayerSignupStatus[] = [PrayerSignupStatus.PENDING, PrayerSignupStatus.CONFIRMED];
 
 @Injectable()
 export class PrayerWatchService {
   private readonly tenantId: string;
+  private readonly appUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -88,6 +51,12 @@ export class PrayerWatchService {
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    this.appUrl = (config.get('FRONTEND_URL', { infer: true }) ?? 'https://www.everlastinghills.church').replace(/\/$/, '');
+  }
+
+  /** Where every Prayer Watch email's call to action points. */
+  private get pageUrl(): string {
+    return `${this.appUrl}/dashboard/prayer-watch`;
   }
 
   /** The single active watch for this tenant — created with default slots on first access. */
@@ -154,10 +123,14 @@ export class PrayerWatchService {
 
           const phone = dto.phone.trim();
           const existingByPhone = await tx.prayerSignup.findFirst({
-            where: { tenantId: this.tenantId, watchId: slot.watchId, phone, status: 'CONFIRMED' },
+            where: { tenantId: this.tenantId, watchId: slot.watchId, phone, status: { in: ACTIVE_SIGNUP_STATUSES } },
           });
           if (existingByPhone) {
-            throw new ConflictException('This phone number already has an active sign-up for this watch.');
+            throw new ConflictException(
+              existingByPhone.status === PrayerSignupStatus.PENDING
+                ? 'This phone number already has a sign-up waiting for approval for this watch.'
+                : 'This phone number already has an active sign-up for this watch.',
+            );
           }
 
           const confirmedCount = await tx.prayerSignup.count({ where: { slotId: slot.id, status: 'CONFIRMED' } });
@@ -176,6 +149,7 @@ export class PrayerWatchService {
               email: dto.email.trim(),
               isWorker: dto.isWorker,
               profileId,
+              status: PrayerSignupStatus.PENDING,
             },
           });
 
@@ -196,12 +170,17 @@ export class PrayerWatchService {
 
     // Fire-and-forget — same pattern as every other public-form confirmation
     // in this app (see FormsEmailDispatchService). Never blocks the response.
-    this.events.emit(NotificationEvents.SendEmail, {
-      to: result.signup.email,
-      subject: `Your Prayer Watch hour: ${result.slot.startTime}–${result.slot.endTime}`,
-      text: buildSignupConfirmationText(result.signup.fullName, result.slot.startTime, result.slot.endTime, result.slot.whatsappLink),
-      tag: 'prayer-watch-signup',
-    });
+    // Every sign-up now waits for an admin, so this says "received", not "you're in".
+    this.events.emit(
+      NotificationEvents.SendEmail,
+      buildPrayerWatchSignupPendingEmail({
+        to: result.signup.email,
+        fullName: result.signup.fullName,
+        slotLabel: result.slot.label,
+        slotTime: `${result.slot.startTime}–${result.slot.endTime}`,
+        url: this.pageUrl,
+      }),
+    );
 
     return result;
   }
@@ -217,24 +196,29 @@ export class PrayerWatchService {
     return signup;
   }
 
-  /** The member's own confirmed sign-up for the current watch, if any, plus any pending request to change it. */
+  /** The member's own sign-up for the current watch, if any (pending or confirmed), plus any pending request to change it. */
   async getMySignup(profileId: string) {
     const watch = await this.getOrCreateWatch();
     const signup = await this.prisma.prayerSignup.findFirst({
-      where: { tenantId: this.tenantId, watchId: watch.id, profileId, status: 'CONFIRMED' },
+      where: { tenantId: this.tenantId, watchId: watch.id, profileId, status: { in: ACTIVE_SIGNUP_STATUSES } },
     });
     if (!signup) return null;
     const slot = watch.Slots.find((s) => s.id === signup.slotId);
     if (!slot) return null;
 
-    const pending = await this.prisma.prayerFamilyChangeRequest.findFirst({
-      where: { signupId: signup.id, status: 'PENDING' },
-      include: { ToSlot: true },
-    });
+    const confirmed = signup.status === PrayerSignupStatus.CONFIRMED;
+    const pending = confirmed
+      ? await this.prisma.prayerFamilyChangeRequest.findFirst({
+          where: { signupId: signup.id, status: 'PENDING' },
+          include: { ToSlot: true },
+        })
+      : null;
 
     return {
       signup: this.toSignupSummary(signup),
-      slot: this.toConfirmedSlot(slot),
+      // Links are withheld until confirmed — nothing to join yet.
+      slot: { id: slot.id, label: slot.label, startTime: slot.startTime, endTime: slot.endTime, capacity: slot.capacity, whatsappLink: confirmed ? slot.whatsappLink : null },
+      telegramLink: confirmed ? watch.telegramLink : null,
       pendingFamilyChangeRequest: pending
         ? {
             id: pending.id,
@@ -357,11 +341,7 @@ export class PrayerWatchService {
   }
 
   private toSignupSummary(s: PrayerSignup) {
-    return { id: s.id, fullName: s.fullName, phone: s.phone, email: s.email, isWorker: s.isWorker, createdAt: s.createdAt.toISOString() };
-  }
-
-  private toConfirmedSlot(s: PrayerSlot) {
-    return { id: s.id, label: s.label, startTime: s.startTime, endTime: s.endTime, capacity: s.capacity, whatsappLink: s.whatsappLink };
+    return { id: s.id, fullName: s.fullName, phone: s.phone, email: s.email, isWorker: s.isWorker, status: s.status, createdAt: s.createdAt.toISOString() };
   }
 
   // ── Admin ─────────────────────────────────────────────────────────────────
@@ -382,6 +362,7 @@ export class PrayerWatchService {
       id: watch.id,
       title: watch.title,
       watchDate: watch.watchDate.toISOString().slice(0, 10),
+      telegramLink: watch.telegramLink,
       slots: watch.Slots.map((s) => {
         const slotSignups = (bySlot.get(s.id) ?? []).filter((x) => x.status === 'CONFIRMED');
         return {
@@ -430,6 +411,62 @@ export class PrayerWatchService {
         slotTime: slot ? `${slot.startTime}–${slot.endTime}` : '',
       };
     });
+  }
+
+  /** Sign-ups waiting on an admin, oldest first so no one is left at the bottom. */
+  async listPendingSignups() {
+    const watch = await this.getOrCreateWatch();
+    const slotById = new Map(watch.Slots.map((s) => [s.id, s]));
+    const signups = await this.prisma.prayerSignup.findMany({
+      where: { watchId: watch.id, status: 'PENDING' },
+      orderBy: { createdAt: 'asc' },
+    });
+    return signups.map((s) => {
+      const slot = slotById.get(s.slotId);
+      return {
+        id: s.id,
+        fullName: s.fullName,
+        phone: s.phone,
+        email: s.email,
+        isWorker: s.isWorker,
+        createdAt: s.createdAt.toISOString(),
+        slotId: s.slotId,
+        slotLabel: slot?.label ?? '',
+        slotTime: slot ? `${slot.startTime}–${slot.endTime}` : '',
+      };
+    });
+  }
+
+  /** Approving confirms the sign-up and reveals the WhatsApp + Telegram links; declining just tells them why. Either way, they're emailed. */
+  async decideSignup(actorProfileId: string, id: string, approve: boolean, dto: DecideSignupDto) {
+    const signup = await this.prisma.prayerSignup.findFirst({
+      where: { id, tenantId: this.tenantId, status: 'PENDING' },
+      include: { Slot: { include: { Watch: true } } },
+    });
+    if (!signup) throw new NotFoundException('Sign-up not found, or already decided');
+
+    await this.prisma.prayerSignup.update({
+      where: { id },
+      data: { status: approve ? PrayerSignupStatus.CONFIRMED : PrayerSignupStatus.REMOVED, decidedAt: new Date(), decidedById: actorProfileId },
+    });
+
+    const slotTime = `${signup.Slot.startTime}–${signup.Slot.endTime}`;
+    this.events.emit(
+      NotificationEvents.SendEmail,
+      approve
+        ? buildPrayerWatchSignupApprovedEmail({
+            to: signup.email,
+            fullName: signup.fullName,
+            slotLabel: signup.Slot.label,
+            slotTime,
+            whatsappLink: signup.Slot.whatsappLink,
+            telegramLink: signup.Slot.Watch.telegramLink,
+            url: this.pageUrl,
+          })
+        : buildPrayerWatchSignupDeclinedEmail({ to: signup.email, fullName: signup.fullName, note: dto.note?.trim() || null, url: this.pageUrl }),
+    );
+
+    return { id, status: approve ? 'CONFIRMED' : 'REMOVED' };
   }
 
   /** What members sensed God say during their watch hour — across every watch, newest first. */
@@ -499,12 +536,18 @@ export class PrayerWatchService {
       data: { status: approve ? 'APPROVED' : 'DECLINED', decidedAt: new Date(), decidedById: actorProfileId },
     });
 
-    this.events.emit(NotificationEvents.SendEmail, {
-      to: request.Signup.email,
-      subject: approve ? 'Your Prayer Watchmen Family has changed' : 'About your request to change Prayer Watchmen Family',
-      text: buildFamilyChangeDecisionText(request.Signup.fullName, request.ToSlot.startTime, request.ToSlot.endTime, approve, dto.note),
-      tag: 'prayer-watch-family-change-decision',
-    });
+    this.events.emit(
+      NotificationEvents.SendEmail,
+      buildPrayerWatchFamilyChangeDecidedEmail({
+        to: request.Signup.email,
+        fullName: request.Signup.fullName,
+        toSlotLabel: request.ToSlot.label,
+        toSlotTime: `${request.ToSlot.startTime}–${request.ToSlot.endTime}`,
+        approved: approve,
+        note: dto.note,
+        url: this.pageUrl,
+      }),
+    );
 
     return { id, status: approve ? 'APPROVED' : 'DECLINED' };
   }
@@ -566,12 +609,13 @@ export class PrayerWatchService {
     const watch = await this.getOrCreateWatch();
 
     await this.prisma.$transaction(async (tx) => {
-      if (dto.title !== undefined || dto.watchDate !== undefined) {
+      if (dto.title !== undefined || dto.watchDate !== undefined || dto.telegramLink !== undefined) {
         await tx.prayerWatch.update({
           where: { id: watch.id },
           data: {
             ...(dto.title !== undefined && { title: dto.title.trim() }),
             ...(dto.watchDate !== undefined && { watchDate: new Date(dto.watchDate) }),
+            ...(dto.telegramLink !== undefined && { telegramLink: dto.telegramLink.trim() || null }),
           },
         });
       }
