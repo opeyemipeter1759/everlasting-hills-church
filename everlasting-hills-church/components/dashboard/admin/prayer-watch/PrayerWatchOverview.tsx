@@ -8,6 +8,8 @@ import { userMessageForError } from "@/lib/api/user-message";
 import {
   useAdminPrayerWatch,
   useAdminReflections,
+  useDecideFamilyChange,
+  useFamilyChangeRequests,
   usePrayerSignupList,
   useRemoveAdminReflection,
   useRemovePrayerSignup,
@@ -46,6 +48,8 @@ export default function PrayerWatchOverview() {
   const reflections = useAdminReflections();
   const removeSignup = useRemovePrayerSignup();
   const removeReflection = useRemoveAdminReflection();
+  const familyChangeRequests = useFamilyChangeRequests();
+  const decideFamilyChange = useDecideFamilyChange();
   const setLeader = useSetSlotLeader();
   const setWhatsappLink = useSetSlotWhatsappLink();
 
@@ -54,6 +58,7 @@ export default function PrayerWatchOverview() {
   const [removingReflection, setRemovingReflection] = useState<AdminReflection | null>(null);
   const [linkDrafts, setLinkDrafts] = useState<Record<string, string>>({});
   const [savingSlotId, setSavingSlotId] = useState<string | null>(null);
+  const [decidingId, setDecidingId] = useState<string | null>(null);
 
   const data = watch.data;
 
@@ -85,6 +90,18 @@ export default function PrayerWatchOverview() {
       setRemovingReflection(null);
     } catch (err) {
       showToast.error(userMessageForError(err, "Couldn't remove this"));
+    }
+  }
+
+  async function handleDecideFamilyChange(id: string, approve: boolean) {
+    setDecidingId(id);
+    try {
+      await decideFamilyChange.mutateAsync({ id, approve });
+      showToast.success(approve ? "Request approved" : "Request declined");
+    } catch (err) {
+      showToast.error(userMessageForError(err, "Couldn't decide this request"));
+    } finally {
+      setDecidingId(null);
     }
   }
 
@@ -177,6 +194,44 @@ export default function PrayerWatchOverview() {
         </div>
       ) : (
         <>
+          {/* Requests to change Prayer Watchmen Family — reviewed, not instant. */}
+          {familyChangeRequests.data && familyChangeRequests.data.length > 0 && (
+            <section className="print:hidden">
+              <h2 className="text-base font-bold text-[#1A1210] dark:text-white">Prayer Watchmen Family change requests</h2>
+              <p className="mb-3 text-sm text-gray-400">Approving moves their sign-up; declining leaves them where they are.</p>
+              <div className="space-y-2">
+                {familyChangeRequests.data.map((r) => (
+                  <div key={r.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {r.fullName}: {r.fromSlotTime} ({r.fromSlotLabel}) → {r.toSlotTime} ({r.toSlotLabel})
+                      </p>
+                      {r.reason && <p className="mt-1 text-xs text-gray-500 dark:text-white/50">&ldquo;{r.reason}&rdquo;</p>}
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDecideFamilyChange(r.id, true)}
+                        disabled={decidingId === r.id}
+                        className="inline-flex min-h-9 items-center rounded-lg bg-[#87102C] px-3 text-xs font-semibold text-white disabled:opacity-50"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDecideFamilyChange(r.id, false)}
+                        disabled={decidingId === r.id}
+                        className="inline-flex min-h-9 items-center rounded-lg border border-gray-200 px-3 text-xs font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70"
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* The timeline — four connected blocks, filled proportionally, with names
               and a crown to pick that slot's watch leader from its own sign-ups. */}
           <section>
@@ -235,7 +290,7 @@ export default function PrayerWatchOverview() {
                         value={linkDraftFor(s.id, s.whatsappLink)}
                         onChange={(e) => setLinkDrafts((prev) => ({ ...prev, [s.id]: e.target.value }))}
                         onBlur={() => handleSaveWhatsappLink(s.id, s.whatsappLink)}
-                        placeholder="WhatsApp group link"
+                        placeholder="Prayer Watchmen Family WhatsApp link"
                         className="min-w-0 flex-1 bg-transparent text-xs text-gray-600 outline-none placeholder:text-gray-300 dark:text-white/65 dark:placeholder:text-white/20"
                       />
                       {savingSlotId === s.id && <Loader2 size={12} className="shrink-0 animate-spin text-gray-400" />}

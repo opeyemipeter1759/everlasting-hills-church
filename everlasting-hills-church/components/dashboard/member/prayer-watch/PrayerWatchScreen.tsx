@@ -5,15 +5,13 @@ import Link from "next/link";
 import { CalendarPlus, Loader2, MessageCircle, Users } from "lucide-react";
 import { fraunces } from "@/lib/fonts/prayer-watch";
 import { userMessageForError } from "@/lib/api/user-message";
-import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import {
   myPrayerWatchIcsHref,
   useAddReflection,
-  useCancelMySignup,
-  useMoveMySignup,
   useMyPrayerHistory,
   useMyPrayerSignup,
   usePublicPrayerWatch,
+  useRequestFamilyChange,
   useSlotCompanions,
   useSubmitPrayerSignup,
   type PastWatch,
@@ -193,8 +191,7 @@ export default function PrayerWatchScreen() {
   const submit = useSubmitPrayerSignup();
   const me = useMe();
   const mine = useMyPrayerSignup();
-  const cancelMine = useCancelMySignup();
-  const moveMine = useMoveMySignup();
+  const requestChange = useRequestFamilyChange();
   const history = useMyPrayerHistory();
   const profile = me.data?.member;
 
@@ -215,9 +212,9 @@ export default function PrayerWatchScreen() {
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [prefilled, setPrefilled] = useState(false);
-  const [changingHour, setChangingHour] = useState(false);
-  const [newSlotId, setNewSlotId] = useState("");
-  const [cancelling, setCancelling] = useState(false);
+  const [requestingChange, setRequestingChange] = useState(false);
+  const [requestSlotId, setRequestSlotId] = useState("");
+  const [requestReason, setRequestReason] = useState("");
 
   useEffect(() => {
     if (prefilled || !profile) return;
@@ -248,25 +245,16 @@ export default function PrayerWatchScreen() {
     }
   }
 
-  async function handleMove(toSlotId: string) {
-    if (!mine.data) return;
+  async function handleRequestChange() {
+    if (!mine.data || !requestSlotId) return;
     setError(null);
     try {
-      await moveMine.mutateAsync({ id: mine.data.signup.id, slotId: toSlotId });
-      setChangingHour(false);
+      await requestChange.mutateAsync({ id: mine.data.signup.id, toSlotId: requestSlotId, reason: requestReason.trim() || undefined });
+      setRequestingChange(false);
+      setRequestSlotId("");
+      setRequestReason("");
     } catch (err) {
-      setError(userMessageForError(err, "Couldn't move your sign-up. Please try again."));
-    }
-  }
-
-  async function handleCancel() {
-    if (!mine.data) return;
-    try {
-      await cancelMine.mutateAsync(mine.data.signup.id);
-      setCancelling(false);
-    } catch (err) {
-      setError(userMessageForError(err, "Couldn't cancel your sign-up. Please try again."));
-      setCancelling(false);
+      setError(userMessageForError(err, "Couldn't send your request. Please try again."));
     }
   }
 
@@ -278,18 +266,41 @@ export default function PrayerWatchScreen() {
         {watch.data?.title ?? "Prayer Watch"}
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-white/60">
-        Our thirty days of fasting are ending, and heaven did not stay silent — purification, boldness, an open door, a
-        season of increase that will not be interrupted. This watch is how we hold that ground: choose an hour below,
-        and keep it fully until every word spoken over this house is fulfilled.
+        Monday to Saturday, 10 PM to 6 AM, Everlasting Hills keeps an unbroken watch of prayer — eight hours, split into
+        four two-hour watches. Sundays are kept for our corporate service. Every member is expected to commit to at
+        least one two-hour watch daily.
       </p>
 
       <div className="mt-5 rounded-2xl border border-[#E7CDD3]/60 bg-[#FFF4F6]/50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
         <p style={serif} className="text-sm italic leading-relaxed text-[#6E0C24] dark:text-[#FFB3C1] sm:text-base">
-          &ldquo;And give Him no rest until He establishes and confirms Jerusalem{" "}
-          <span className="not-italic">[the city of security and peace]</span> and makes it a praise in the earth.&rdquo;
+          &ldquo;I have set watchmen upon thy walls, O Jerusalem, which shall never hold their peace day nor night:
+          ye that make mention of the LORD, keep not silence, and give Him no rest, till He establish, and till He
+          make Jerusalem a praise in the earth.&rdquo;
         </p>
-        <p className="mt-2 text-xs font-medium text-[#87102C]/70 dark:text-[#FFB3C1]/70">Isaiah 62:7, Amplified</p>
+        <p className="mt-2 text-xs font-medium text-[#87102C]/70 dark:text-[#FFB3C1]/70">Isaiah 62:6–7, KJV</p>
       </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+          <p className="text-sm font-semibold text-[#111] dark:text-white">Prayer Watch</p>
+          <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-white/50">
+            The two-hour window itself — where you join the others praying that hour on Telegram.
+          </p>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+          <p className="text-sm font-semibold text-[#111] dark:text-white">Prayer Watchmen Family</p>
+          <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-white/50">
+            The WhatsApp community of everyone on your watch hour — your committed prayer family for fellowship,
+            encouragement, and accountability, not just the two hours.
+          </p>
+        </div>
+      </div>
+
+      <p className="mt-4 text-xs leading-relaxed text-gray-500 dark:text-white/45">
+        Life happens — if your usual hour doesn&apos;t work on a given day, you&apos;re free to pray along with any
+        other active watch on Telegram. Your Prayer Watchmen Family stays the same either way. The hour you choose
+        below becomes that family.
+      </p>
 
       {watch.isLoading || me.isLoading || mine.isLoading ? (
         <div className="mt-8 space-y-2">
@@ -318,7 +329,7 @@ export default function PrayerWatchScreen() {
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-bold text-white transition-colors hover:bg-[#1FBD59] xs:w-auto"
                 >
                   <MessageCircle size={16} aria-hidden="true" />
-                  Join WhatsApp group
+                  Join your Prayer Watchmen Family
                 </a>
               )}
               <a
@@ -330,38 +341,57 @@ export default function PrayerWatchScreen() {
               </a>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setChangingHour((v) => !v);
-                  setNewSlotId("");
-                }}
-                className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-gray-500 hover:text-[#87102C] dark:text-white/45 dark:hover:text-[#FFB3C1]"
-              >
-                {changingHour ? "Never mind" : "Change my hour"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setCancelling(true)}
-                className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-gray-500 hover:text-red-600 dark:text-white/45 dark:hover:text-red-400"
-              >
-                Cancel my sign-up
-              </button>
-            </div>
+            {mine.data.pendingFamilyChangeRequest ? (
+              <p className="mt-4 text-xs font-medium text-gray-500 dark:text-white/45">
+                Request pending: move to {mine.data.pendingFamilyChangeRequest.toSlotTime} (
+                {mine.data.pendingFamilyChangeRequest.toSlotLabel}) — awaiting admin review.
+              </p>
+            ) : (
+              <div className="mt-4 flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRequestingChange((v) => !v);
+                    setRequestSlotId("");
+                    setRequestReason("");
+                  }}
+                  className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-gray-500 hover:text-[#87102C] dark:text-white/45 dark:hover:text-[#FFB3C1]"
+                >
+                  {requestingChange ? "Never mind" : "Request to change my Prayer Watchmen Family"}
+                </button>
+              </div>
+            )}
           </div>
 
-          {changingHour && watch.data && (
-            <div className="mt-4">
+          {requestingChange && watch.data && (
+            <div className="mt-4 space-y-3">
               <WatchHourPicker
                 slots={watch.data.slots.filter((s) => s.id !== mine.data!.slot.id)}
-                value={newSlotId}
-                onChange={(id) => {
-                  setNewSlotId(id);
-                  handleMove(id);
-                }}
-                disabled={moveMine.isPending}
+                value={requestSlotId}
+                onChange={setRequestSlotId}
+                disabled={requestChange.isPending}
               />
+              {requestSlotId && (
+                <div className="space-y-2 rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
+                  <label className="block text-xs font-medium text-gray-500 dark:text-white/45">Why are you changing? (optional)</label>
+                  <textarea
+                    value={requestReason}
+                    onChange={(e) => setRequestReason(e.target.value)}
+                    placeholder="e.g. my work shift changed"
+                    rows={2}
+                    className={`${fieldCls} resize-none`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRequestChange}
+                    disabled={requestChange.isPending}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#87102C] px-4 text-sm font-bold text-white disabled:opacity-50"
+                  >
+                    {requestChange.isPending && <Loader2 size={15} className="animate-spin" />}
+                    Send request
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -440,17 +470,6 @@ export default function PrayerWatchScreen() {
           </div>
         </div>
       )}
-
-      <ConfirmDialog
-        open={cancelling}
-        title="Cancel your sign-up?"
-        description={mine.data ? `You'll give up your ${mine.data.slot.startTime}–${mine.data.slot.endTime} hour. You can sign up for another any time.` : ""}
-        confirmLabel="Yes, cancel"
-        tone="danger"
-        loading={cancelMine.isPending}
-        onConfirm={handleCancel}
-        onCancel={() => setCancelling(false)}
-      />
     </div>
   );
 }

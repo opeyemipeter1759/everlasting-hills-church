@@ -999,26 +999,28 @@ model PrayerWatch {
 /// (not a SQL time column) since the only consumer is the frontend display —
 /// crossing midnight is handled there, not in the database.
 model PrayerSlot {
-  id           String         @id
-  tenantId     String
-  watchId      String
-  label        String
-  startTime    String
-  endTime      String
+  id                           String                      @id
+  tenantId                     String
+  watchId                      String
+  label                        String
+  startTime                    String
+  endTime                      String
   /// Spots available in this slot. Many people pray the same hour together —
   /// this is a generous ceiling, not a real scarcity limit.
-  capacity     Int            @default(100)
+  capacity                     Int                         @default(100)
   /// Display order, 0-based.
-  position     Int
+  position                     Int
   /// The sign-up chosen to lead this slot, if any — must be one of this
   /// slot's own sign-ups (enforced in the service, not the DB).
-  leaderId     String?
-  /// This slot's WhatsApp group — shared with a signer only after they confirm.
-  whatsappLink String?
-  Tenant       Tenant         @relation(fields: [tenantId], references: [id])
-  Watch        PrayerWatch    @relation(fields: [watchId], references: [id], onDelete: Cascade)
-  Signups      PrayerSignup[] @relation("SlotSignups")
-  Leader       PrayerSignup?  @relation("SlotLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  leaderId                     String?
+  /// This watch's Prayer Watchmen Family WhatsApp group — shared with a
+  /// signer only after they confirm.
+  whatsappLink                 String?
+  Tenant                       Tenant                      @relation(fields: [tenantId], references: [id])
+  Watch                        PrayerWatch                 @relation(fields: [watchId], references: [id], onDelete: Cascade)
+  Signups                      PrayerSignup[]              @relation("SlotSignups")
+  Leader                       PrayerSignup?               @relation("SlotLeader", fields: [leaderId], references: [id], onDelete: SetNull)
+  IncomingFamilyChangeRequests PrayerFamilyChangeRequest[]
 
   @@index([watchId, position])
 }
@@ -1028,31 +1030,59 @@ model PrayerSlot {
 /// transaction — not a DB trigger — consistent with how the rest of this app
 /// enforces invariants.
 model PrayerSignup {
-  id           String                  @id
-  tenantId     String
-  slotId       String
+  id                   String                      @id
+  tenantId             String
+  slotId               String
   /// Denormalized from the slot for a simple "one signup per phone per watch" check.
-  watchId      String
-  fullName     String
-  phone        String
-  email        String
+  watchId              String
+  fullName             String
+  phone                String
+  email                String
   /// True = worker/serves in a unit or department, false = member only.
-  isWorker     Boolean
-  status       PrayerSignupStatus      @default(CONFIRMED)
+  isWorker             Boolean
+  status               PrayerSignupStatus          @default(CONFIRMED)
   /// The authenticated member who submitted this, when known — an audit/
   /// self-service reference, not a DB relation (same pattern as
   /// MembershipEvent.actorProfileId). Lets the signer manage their own
   /// sign-up without re-matching on phone number.
-  profileId    String?
-  createdAt    DateTime                @default(now())
-  Tenant       Tenant                  @relation(fields: [tenantId], references: [id])
-  Slot         PrayerSlot              @relation("SlotSignups", fields: [slotId], references: [id], onDelete: Cascade)
-  LeaderOfSlot PrayerSlot[]            @relation("SlotLeader")
-  Reflections  PrayerWatchReflection[]
+  profileId            String?
+  createdAt            DateTime                    @default(now())
+  Tenant               Tenant                      @relation(fields: [tenantId], references: [id])
+  Slot                 PrayerSlot                  @relation("SlotSignups", fields: [slotId], references: [id], onDelete: Cascade)
+  LeaderOfSlot         PrayerSlot[]                @relation("SlotLeader")
+  Reflections          PrayerWatchReflection[]
+  FamilyChangeRequests PrayerFamilyChangeRequest[]
 
   @@index([slotId, status])
   @@index([watchId, phone])
   @@index([profileId])
+}
+
+enum PrayerFamilyChangeStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+/// A member's request to move to a different Prayer Watchmen Family (a
+/// different watch hour, permanently) — reviewed by an admin rather than
+/// instant, since members are expected to stay committed to one family and
+/// only move it deliberately.
+model PrayerFamilyChangeRequest {
+  id          String                   @id
+  tenantId    String
+  signupId    String
+  toSlotId    String
+  reason      String?
+  status      PrayerFamilyChangeStatus @default(PENDING)
+  createdAt   DateTime                 @default(now())
+  decidedAt   DateTime?
+  decidedById String?
+  Signup      PrayerSignup             @relation(fields: [signupId], references: [id], onDelete: Cascade)
+  ToSlot      PrayerSlot               @relation(fields: [toSlotId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([signupId, status])
 }
 
 /// A dated entry a member can leave once their prayer watch hour has passed —

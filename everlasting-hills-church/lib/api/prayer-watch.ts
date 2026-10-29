@@ -94,6 +94,34 @@ export interface MySlot {
   whatsappLink: string | null;
 }
 
+export interface PendingFamilyChangeRequest {
+  id: string;
+  toSlotId: string;
+  toSlotLabel: string;
+  toSlotTime: string;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface MySignupView {
+  signup: MySignup;
+  slot: MySlot;
+  pendingFamilyChangeRequest: PendingFamilyChangeRequest | null;
+}
+
+export interface AdminFamilyChangeRequest {
+  id: string;
+  status: "PENDING" | "APPROVED" | "DECLINED";
+  fullName: string;
+  fromSlotLabel: string;
+  fromSlotTime: string;
+  toSlotLabel: string;
+  toSlotTime: string;
+  reason: string | null;
+  createdAt: string;
+  decidedAt: string | null;
+}
+
 export interface SlotCompanions {
   count: number;
   firstNames: string[];
@@ -154,7 +182,7 @@ export function useSubmitPrayerSignup() {
 export function useMyPrayerSignup() {
   return useQuery({
     queryKey: [...PRAYER_WATCH_KEY, "mine"],
-    queryFn: () => api.get<{ signup: MySignup; slot: MySlot } | null>("/prayer-watch/mine"),
+    queryFn: () => api.get<MySignupView | null>("/prayer-watch/mine"),
   });
 }
 
@@ -173,19 +201,12 @@ export function useSlotCompanions(slotId: string | null) {
   });
 }
 
-export function useCancelMySignup() {
+/** Submits a request to change Prayer Watchmen Family — reviewed by an admin, not applied instantly. */
+export function useRequestFamilyChange() {
   const invalidate = useInvalidatePrayerWatch();
   return useMutation({
-    mutationFn: (id: string) => api.delete(`/prayer-watch/mine/${id}`),
-    onSuccess: invalidate,
-  });
-}
-
-export function useMoveMySignup() {
-  const invalidate = useInvalidatePrayerWatch();
-  return useMutation({
-    mutationFn: ({ id, slotId }: { id: string; slotId: string }) =>
-      api.patch<{ signup: MySignup; slot: MySlot }>(`/prayer-watch/mine/${id}/move`, { slotId }),
+    mutationFn: ({ id, toSlotId, reason }: { id: string; toSlotId: string; reason?: string }) =>
+      api.post<PendingFamilyChangeRequest>(`/prayer-watch/mine/${id}/family-change-request`, { toSlotId, reason }),
     onSuccess: invalidate,
   });
 }
@@ -232,6 +253,22 @@ export function useRemoveAdminReflection() {
   const invalidate = useInvalidatePrayerWatch();
   return useMutation({
     mutationFn: (id: string) => api.delete(`/prayer-watch/admin/reflections/${id}`),
+    onSuccess: invalidate,
+  });
+}
+
+export function useFamilyChangeRequests(filter: "PENDING" | "DECIDED" = "PENDING") {
+  return useQuery({
+    queryKey: [...PRAYER_WATCH_KEY, "admin", "family-change-requests", filter],
+    queryFn: () => api.get<AdminFamilyChangeRequest[]>(`/prayer-watch/admin/family-change-requests?status=${filter}`),
+  });
+}
+
+export function useDecideFamilyChange() {
+  const invalidate = useInvalidatePrayerWatch();
+  return useMutation({
+    mutationFn: ({ id, approve, note }: { id: string; approve: boolean; note?: string }) =>
+      api.post(`/prayer-watch/admin/family-change-requests/${id}/${approve ? "approve" : "decline"}`, { note }),
     onSuccess: invalidate,
   });
 }

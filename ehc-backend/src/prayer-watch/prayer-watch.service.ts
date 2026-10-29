@@ -11,7 +11,9 @@ import {
   AdminCreatePrayerSignupDto,
   CreatePrayerSignupDto,
   CreatePrayerWatchReflectionDto,
+  DecideFamilyChangeDto,
   MovePrayerSignupDto,
+  RequestFamilyChangeDto,
   SetSlotLeaderDto,
   UpdatePrayerWatchDto,
 } from './dto/prayer-watch.dto';
@@ -46,6 +48,31 @@ function buildSignupConfirmationText(fullName: string, startTime: string, endTim
       : []),
     '',
     'See you on the watch,',
+    'Everlasting Hills Church',
+  ].join('\n');
+}
+
+function buildFamilyChangeDecisionText(fullName: string, toStart: string, toEnd: string, approved: boolean, note?: string): string {
+  const firstName = fullName.trim().split(/\s+/)[0] || 'Friend';
+  if (approved) {
+    return [
+      `Dear ${firstName},`,
+      '',
+      `Your request has been approved. Your Prayer Watchmen Family is now ${toStart}–${toEnd}.`,
+      '',
+      'Stay connected with your new family — they are who you now walk this altar of prayer with.',
+      '',
+      'Everlasting Hills Church',
+    ].join('\n');
+  }
+  return [
+    `Dear ${firstName},`,
+    '',
+    `Your request to move to ${toStart}–${toEnd} was not approved this time.`,
+    ...(note ? ['', note] : []),
+    '',
+    'You remain in your current Prayer Watchmen Family. You are welcome to request again.',
+    '',
     'Everlasting Hills Church',
   ].join('\n');
 }
@@ -190,7 +217,7 @@ export class PrayerWatchService {
     return signup;
   }
 
-  /** The member's own confirmed sign-up for the current watch, if any. */
+  /** The member's own confirmed sign-up for the current watch, if any, plus any pending request to change it. */
   async getMySignup(profileId: string) {
     const watch = await this.getOrCreateWatch();
     const signup = await this.prisma.prayerSignup.findFirst({
@@ -199,22 +226,60 @@ export class PrayerWatchService {
     if (!signup) return null;
     const slot = watch.Slots.find((s) => s.id === signup.slotId);
     if (!slot) return null;
-    return { signup: this.toSignupSummary(signup), slot: this.toConfirmedSlot(slot) };
+
+    const pending = await this.prisma.prayerFamilyChangeRequest.findFirst({
+      where: { signupId: signup.id, status: 'PENDING' },
+      include: { ToSlot: true },
+    });
+
+    return {
+      signup: this.toSignupSummary(signup),
+      slot: this.toConfirmedSlot(slot),
+      pendingFamilyChangeRequest: pending
+        ? {
+            id: pending.id,
+            toSlotId: pending.toSlotId,
+            toSlotLabel: pending.ToSlot.label,
+            toSlotTime: `${pending.ToSlot.startTime}–${pending.ToSlot.endTime}`,
+            reason: pending.reason,
+            createdAt: pending.createdAt.toISOString(),
+          }
+        : null,
+    };
   }
 
-  async cancelMySignup(id: string, profileId: string) {
+  /**
+   * Requests a move to a different Prayer Watchmen Family — reviewed by an
+   * admin rather than applied immediately, since members are expected to
+   * stay committed to one family and only change it deliberately.
+   */
+  async requestFamilyChange(id: string, profileId: string, dto: RequestFamilyChangeDto) {
     const signup = await this.loadOwnSignup(id, profileId);
-    await this.prisma.prayerSignup.update({ where: { id: signup.id }, data: { status: 'REMOVED' } });
-    return { id, removed: true };
-  }
+    if (dto.toSlotId === signup.slotId) {
+      throw new ConflictException("That's already your Prayer Watchmen Family.");
+    }
 
-  async moveMySignup(id: string, profileId: string, dto: MovePrayerSignupDto) {
-    await this.loadOwnSignup(id, profileId);
-    const updated = await this.moveSignup(id, dto);
-    const watch = await this.getOrCreateWatch();
-    const slot = watch.Slots.find((s) => s.id === updated.slotId);
-    if (!slot) throw new NotFoundException('Slot not found');
-    return { signup: this.toSignupSummary(updated), slot: this.toConfirmedSlot(slot) };
+    const toSlot = await this.prisma.prayerSlot.findFirst({ where: { id: dto.toSlotId, tenantId: this.tenantId, watchId: signup.watchId } });
+    if (!toSlot) throw new NotFoundException('Slot not found');
+
+    const existingPending = await this.prisma.prayerFamilyChangeRequest.findFirst({
+      where: { signupId: signup.id, status: 'PENDING' },
+    });
+    if (existingPending) {
+      throw new ConflictException('You already have a pending request to change your Prayer Watchmen Family.');
+    }
+
+    const request = await this.prisma.prayerFamilyChangeRequest.create({
+      data: { id: randomUUID(), tenantId: this.tenantId, signupId: signup.id, toSlotId: toSlot.id, reason: dto.reason?.trim() || null },
+    });
+    return {
+      id: request.id,
+      toSlotId: toSlot.id,
+      toSlotLabel: toSlot.label,
+      toSlotTime: `${toSlot.startTime}–${toSlot.endTime}`,
+      reason: request.reason,
+      createdAt: request.createdAt.toISOString(),
+    };
   }
 
   /** First names only, for the shared-vigil feel — never phone/email. */
@@ -390,6 +455,58 @@ export class PrayerWatchService {
     const result = await this.prisma.prayerWatchReflection.deleteMany({ where: { id, tenantId: this.tenantId } });
     if (result.count === 0) throw new NotFoundException('Reflection not found');
     return { id, removed: true };
+  }
+
+  /** Requests to change Prayer Watchmen Family, newest first. */
+  async listFamilyChangeRequests(filter: 'PENDING' | 'DECIDED' = 'PENDING') {
+    const requests = await this.prisma.prayerFamilyChangeRequest.findMany({
+      where: {
+        tenantId: this.tenantId,
+        ...(filter === 'PENDING' ? { status: 'PENDING' } : { status: { in: ['APPROVED', 'DECLINED'] } }),
+      },
+      include: { Signup: { include: { Slot: true } }, ToSlot: true },
+      orderBy: filter === 'PENDING' ? { createdAt: 'asc' } : { decidedAt: 'desc' },
+    });
+    return requests.map((r) => ({
+      id: r.id,
+      status: r.status,
+      fullName: r.Signup.fullName,
+      fromSlotLabel: r.Signup.Slot.label,
+      fromSlotTime: `${r.Signup.Slot.startTime}–${r.Signup.Slot.endTime}`,
+      toSlotLabel: r.ToSlot.label,
+      toSlotTime: `${r.ToSlot.startTime}–${r.ToSlot.endTime}`,
+      reason: r.reason,
+      createdAt: r.createdAt.toISOString(),
+      decidedAt: r.decidedAt?.toISOString() ?? null,
+    }));
+  }
+
+  /** Approving actually performs the move; declining just records why. Either way, the member is emailed. */
+  async decideFamilyChange(actorProfileId: string, id: string, approve: boolean, dto: DecideFamilyChangeDto) {
+    const request = await this.prisma.prayerFamilyChangeRequest.findFirst({
+      where: { id, tenantId: this.tenantId },
+      include: { Signup: true, ToSlot: true },
+    });
+    if (!request) throw new NotFoundException('Request not found');
+    if (request.status !== 'PENDING') throw new ConflictException('That request has already been decided');
+
+    if (approve) {
+      await this.moveSignup(request.signupId, { slotId: request.toSlotId });
+    }
+
+    await this.prisma.prayerFamilyChangeRequest.update({
+      where: { id },
+      data: { status: approve ? 'APPROVED' : 'DECLINED', decidedAt: new Date(), decidedById: actorProfileId },
+    });
+
+    this.events.emit(NotificationEvents.SendEmail, {
+      to: request.Signup.email,
+      subject: approve ? 'Your Prayer Watchmen Family has changed' : 'About your request to change Prayer Watchmen Family',
+      text: buildFamilyChangeDecisionText(request.Signup.fullName, request.ToSlot.startTime, request.ToSlot.endTime, approve, dto.note),
+      tag: 'prayer-watch-family-change-decision',
+    });
+
+    return { id, status: approve ? 'APPROVED' : 'DECLINED' };
   }
 
   async removeSignup(id: string) {

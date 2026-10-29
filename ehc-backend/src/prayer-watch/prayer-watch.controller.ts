@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Role } from '@prisma/client';
@@ -12,7 +12,9 @@ import {
   AdminCreatePrayerSignupDto,
   CreatePrayerSignupDto,
   CreatePrayerWatchReflectionDto,
+  DecideFamilyChangeDto,
   MovePrayerSignupDto,
+  RequestFamilyChangeDto,
   SetSlotLeaderDto,
   UpdatePrayerWatchDto,
 } from './dto/prayer-watch.dto';
@@ -58,18 +60,11 @@ export class PrayerWatchController {
     return this.prayerWatch.getMyHistory(user.profileId!);
   }
 
-  @Delete('mine/:id')
+  @Post('mine/:id/family-change-request')
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Cancel my own sign-up' })
-  cancelMine(@Param('id') id: string, @CurrentUser() user: AuthUser) {
-    return this.prayerWatch.cancelMySignup(id, user.profileId!);
-  }
-
-  @Patch('mine/:id/move')
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Move my own sign-up to another hour' })
-  moveMine(@Param('id') id: string, @Body() body: MovePrayerSignupDto, @CurrentUser() user: AuthUser) {
-    return this.prayerWatch.moveMySignup(id, user.profileId!, body);
+  @ApiOperation({ summary: 'Request to move to a different Prayer Watchmen Family — reviewed by an admin' })
+  requestFamilyChange(@Param('id') id: string, @Body() body: RequestFamilyChangeDto, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.requestFamilyChange(id, user.profileId!, body);
   }
 
   @Get('mine/:id.ics')
@@ -118,6 +113,30 @@ export class PrayerWatchController {
   @ApiOperation({ summary: 'Remove a reflection entry (Admin Head+)' })
   removeReflection(@Param('id') id: string) {
     return this.prayerWatch.removeReflection(id);
+  }
+
+  @Get('admin/family-change-requests')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Requests to change Prayer Watchmen Family (Admin Head+)' })
+  listFamilyChangeRequests(@Query('status') status?: string) {
+    return this.prayerWatch.listFamilyChangeRequests(status === 'DECIDED' ? 'DECIDED' : 'PENDING');
+  }
+
+  @Post('admin/family-change-requests/:id/approve')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Approve a Prayer Watchmen Family change request — moves the sign-up (Admin Head+)' })
+  approveFamilyChange(@Param('id') id: string, @Body() body: DecideFamilyChangeDto, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.decideFamilyChange(user.profileId!, id, true, body);
+  }
+
+  @Post('admin/family-change-requests/:id/decline')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Decline a Prayer Watchmen Family change request (Admin Head+)' })
+  declineFamilyChange(@Param('id') id: string, @Body() body: DecideFamilyChangeDto, @CurrentUser() user: AuthUser) {
+    return this.prayerWatch.decideFamilyChange(user.profileId!, id, false, body);
   }
 
   @Get('admin/signups')

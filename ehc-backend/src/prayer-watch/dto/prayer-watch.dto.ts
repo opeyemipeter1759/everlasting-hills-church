@@ -121,6 +121,27 @@ export class CreatePrayerWatchReflectionDto {
   body!: string;
 }
 
+export class RequestFamilyChangeDto {
+  @ApiProperty({ example: 'slot-id', description: 'The Prayer Watchmen Family (watch hour) being requested' })
+  @IsString()
+  @IsNotEmpty()
+  toSlotId!: string;
+
+  @ApiPropertyOptional({ example: 'My work shift changed, this hour fits better now.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
+}
+
+export class DecideFamilyChangeDto {
+  @ApiPropertyOptional({ example: 'That hour is full right now — try again once there is room.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  note?: string;
+}
+
 const REMOVAL_STATUS = ['REMOVED'] as const;
 
 export class UpdatePrayerSignupStatusDto {
