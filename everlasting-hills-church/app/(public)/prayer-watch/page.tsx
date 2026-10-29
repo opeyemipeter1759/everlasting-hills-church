@@ -15,7 +15,7 @@ export default function PrayerWatchPage() {
       <main>
         {/* 1. Hero — a real moment of worship behind the watch's own night colours,
             slow-panning rather than static so the image feels kept, not stock. */}
-        <section className="pw-ink relative isolate flex min-h-[560px] items-end overflow-hidden pb-16 pt-28 sm:min-h-[640px] sm:pb-20 sm:pt-36">
+        <section className="pw-ink relative isolate flex min-h-[480px] items-end overflow-hidden pb-16 pt-28 sm:min-h-[640px] sm:pb-20 sm:pt-36">
           <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
             <Image
               src="/images/prayer-watch/worship-mic-2.jpg"
@@ -23,7 +23,7 @@ export default function PrayerWatchPage() {
               fill
               priority
               sizes="100vw"
-              className="pw-kenburns object-contain object-[47%_38%]"
+              className="pw-kenburns object-cover object-[47%_30%]"
             />
             <div
               className="absolute inset-0"
