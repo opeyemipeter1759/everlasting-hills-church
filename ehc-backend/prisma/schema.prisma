@@ -2548,6 +2548,10 @@ model NotificationPreference {
   unitAnnouncements   Boolean  @default(true)
   newSermon           Boolean  @default(true)
   milestones          Boolean  @default(true)
+  /// Admin/staff-facing, not member-facing: a Prayer Watch sign-up is waiting
+  /// on their review. Default true since staff opted into the role, not the
+  /// notification.
+  prayerWatchPendingApproval Boolean @default(true)
   quietStart          String? // "HH:MM", DB CHECK-guarded
   quietEnd            String? // "HH:MM", DB CHECK-guarded
   timezone            String   @default("Africa/Lagos")

@@ -1,12 +1,13 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma, PrayerSignupStatus, type PrayerSignup, type PrayerSlot } from '@prisma/client';
+import { Prisma, PrayerSignupStatus, Role, type PrayerSignup, type PrayerSlot } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import { NotificationEvents } from '../notifications/notification-events';
 import { IcsBuilderService } from '../calendar/services/ics-builder.service';
+import { PushDispatchService } from '../push/services/push-dispatch.service';
 import { buildPrayerWatchFamilyChangeDecidedEmail } from '../notifications/templates/prayer-watch-family-change-decided.email';
 import { buildPrayerWatchSignupApprovedEmail } from '../notifications/templates/prayer-watch-signup-approved.email';
 import { buildPrayerWatchSignupDeclinedEmail } from '../notifications/templates/prayer-watch-signup-declined.email';
@@ -39,8 +40,14 @@ const DEFAULT_SLOTS = [
 /** Sign-ups and change requests the member may have left open at ("PENDING"/"CONFIRMED"). */
 const ACTIVE_SIGNUP_STATUSES: PrayerSignupStatus[] = [PrayerSignupStatus.PENDING, PrayerSignupStatus.CONFIRMED];
 
+/** Same tier the admin routes themselves require (@Roles(Role.ADMIN_HEAD), which the
+ * hierarchy also admits ADMIN/PASTOR/SUPER_ADMIN into) — whoever can decide a
+ * sign-up is who gets told one is waiting. */
+const APPROVER_ROLES: Role[] = [Role.ADMIN_HEAD, Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN];
+
 @Injectable()
 export class PrayerWatchService {
+  private readonly logger = new Logger(PrayerWatchService.name);
   private readonly tenantId: string;
   private readonly appUrl: string;
 
@@ -48,6 +55,7 @@ export class PrayerWatchService {
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
     private readonly ics: IcsBuilderService,
+    private readonly pushDispatch: PushDispatchService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -57,6 +65,16 @@ export class PrayerWatchService {
   /** Where every Prayer Watch email's call to action points. */
   private get pageUrl(): string {
     return `${this.appUrl}/dashboard/prayer-watch`;
+  }
+
+  /** Profile ids of everyone who can act on a sign-up (same tier the admin routes require). */
+  private async getApproverProfileIds(): Promise<string[]> {
+    const grants = await this.prisma.roleGrant.findMany({
+      where: { tenantId: this.tenantId, role: { in: APPROVER_ROLES }, endedAt: null },
+      select: { userId: true },
+      distinct: ['userId'],
+    });
+    return grants.map((g) => g.userId);
   }
 
   /** The single active watch for this tenant — created with default slots on first access. */
@@ -182,7 +200,31 @@ export class PrayerWatchService {
       }),
     );
 
+    // Same fire-and-forget treatment as the email above — the sign-up has
+    // already been committed, so a push failure here must never roll it back
+    // or surface to the applicant.
+    this.notifyApproversOfPendingSignup(result.signup, result.slot).catch((err) =>
+      this.logger.error(`Failed to notify approvers of pending sign-up ${result.signup.id}: ${(err as Error).message}`),
+    );
+
     return result;
+  }
+
+  /** Pushes everyone who can decide a sign-up, so the queue doesn't sit unseen until someone happens to open the dashboard. */
+  private async notifyApproversOfPendingSignup(signup: PrayerSignup, slot: PrayerSlot) {
+    const approverIds = await this.getApproverProfileIds();
+    if (approverIds.length === 0) return;
+
+    await this.pushDispatch.dispatch(
+      'prayerWatchPendingApproval',
+      { userIds: approverIds, tenantId: this.tenantId },
+      {
+        title: 'Prayer Watch sign-up pending',
+        body: `${signup.fullName} applied for the ${slot.label} (${slot.startTime}–${slot.endTime}).`,
+        url: '/dashboard/admin/prayer-watch',
+        tag: 'prayer-watch-pending',
+      },
+    );
   }
 
   // ── Self-service (authenticated member, own sign-up only) ──────────────────

@@ -12,6 +12,9 @@ export const PUSH_CATEGORIES = [
   'unitAnnouncements',
   'newSermon',
   'milestones',
+  // Admin/staff-facing, not member-facing: fires on the reviewer side of the
+  // Prayer Watch approval queue, not the applicant side.
+  'prayerWatchPendingApproval',
 ] as const;
 
 export type PushCategory = (typeof PUSH_CATEGORIES)[number];
@@ -35,6 +38,7 @@ export const DEFAULT_PREFERENCES: Record<PushCategory, boolean> = {
   unitAnnouncements: true,
   newSermon: true,
   milestones: true,
+  prayerWatchPendingApproval: true,
 };
 
 /**

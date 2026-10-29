@@ -27,15 +27,21 @@ function setup() {
       update: jest.fn().mockResolvedValue({}),
     },
     prayerFamilyChangeRequest: { findFirst: jest.fn().mockResolvedValue(null) },
+    roleGrant: { findMany: jest.fn().mockResolvedValue([]) },
     // Transaction callback form: just runs the callback against `prisma` itself,
     // since every mocked method above is already set up for it.
     $transaction: jest.fn((arg: unknown) => (typeof arg === 'function' ? arg(prisma) : Promise.resolve(arg))),
   };
   const events = { emit: jest.fn() };
   const ics = {};
-  const svc = new PrayerWatchService(prisma as never, events as never, ics as never, { get: () => 't1' } as never);
-  return { svc, prisma, events };
+  const pushDispatch = { dispatch: jest.fn().mockResolvedValue(undefined) };
+  const svc = new PrayerWatchService(prisma as never, events as never, ics as never, pushDispatch as never, { get: () => 't1' } as never);
+  return { svc, prisma, events, pushDispatch };
 }
+
+/** Lets the fire-and-forget approver-notification chain (two awaited mock
+ * promises) settle before assertions run. */
+const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 describe('PrayerWatchService.createSignup', () => {
   const dto = { slotId: 's1', fullName: 'Ada Lovelace', phone: '0800', email: 'ada@x.com', isWorker: false };
@@ -58,6 +64,25 @@ describe('PrayerWatchService.createSignup', () => {
     const { svc, prisma } = setup();
     prisma.prayerSignup.count.mockResolvedValue(100);
     await expect(svc.createSignup(dto)).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('pushes everyone who can approve a sign-up (ADMIN_HEAD and above)', async () => {
+    const { svc, prisma, pushDispatch } = setup();
+    prisma.roleGrant.findMany.mockResolvedValue([{ userId: 'admin1' }, { userId: 'pastor1' }]);
+    await svc.createSignup(dto);
+    await flush();
+    expect(pushDispatch.dispatch).toHaveBeenCalledWith(
+      'prayerWatchPendingApproval',
+      { userIds: ['admin1', 'pastor1'], tenantId: 't1' },
+      expect.objectContaining({ body: expect.stringContaining('Ada Lovelace') }),
+    );
+  });
+
+  it('skips the push entirely when nobody holds an approver role', async () => {
+    const { svc, pushDispatch } = setup();
+    await svc.createSignup(dto);
+    await flush();
+    expect(pushDispatch.dispatch).not.toHaveBeenCalled();
   });
 });
 
