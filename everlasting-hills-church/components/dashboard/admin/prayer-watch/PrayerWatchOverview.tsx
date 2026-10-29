@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ArrowRightLeft, CheckCircle2, Clock3, Download, Loader2, MessageCircle, Printer, RefreshCw, Send, Trash2, XCircle } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
 import {
@@ -316,20 +317,16 @@ export default function PrayerWatchOverview() {
 
                     {offeringId === s.id && (
                       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3 dark:border-white/10">
-                        <select
+                        <Select
+                          aria-label="Offer a different watch"
                           value={offerSlotId}
-                          onChange={(e) => setOfferSlotId(e.target.value)}
-                          className="min-h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm dark:border-white/15 dark:bg-white/[0.04] dark:text-white"
-                        >
-                          <option value="">Choose a watch…</option>
-                          {(data?.slots ?? [])
+                          onChange={setOfferSlotId}
+                          placeholder="Choose a watch…"
+                          className="min-h-9 w-56 rounded-lg border border-gray-200 bg-white px-2.5 text-sm dark:border-white/15 dark:bg-white/[0.04] dark:text-white"
+                          options={(data?.slots ?? [])
                             .filter((slot) => slot.id !== s.slotId)
-                            .map((slot) => (
-                              <option key={slot.id} value={slot.id}>
-                                {slot.label} ({slot.startTime}–{slot.endTime})
-                              </option>
-                            ))}
-                        </select>
+                            .map((slot) => ({ value: slot.id, label: `${slot.label} (${slot.startTime}–${slot.endTime})` }))}
+                        />
                         <button
                           type="button"
                           disabled={!offerSlotId || decidingSignupId === s.id}
