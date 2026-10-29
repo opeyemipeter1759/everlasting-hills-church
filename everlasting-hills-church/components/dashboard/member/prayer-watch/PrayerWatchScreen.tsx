@@ -24,59 +24,32 @@ const serif = { fontFamily: "var(--font-fraunces), serif" };
 const fieldCls =
   "min-h-11 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-[#111] placeholder:text-gray-400 outline-none transition-colors focus:border-[#87102C]/50 focus:ring-1 focus:ring-[#87102C]/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:border-[#FFB3C1]/50 dark:focus:ring-[#FFB3C1]/20";
 
-/** A ring that fills as a watch hour fills — stands in for a literal "spots left" count. */
-function OccupancyRing({ filled, full }: { filled: number; full: boolean }) {
-  const r = 14;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg width="34" height="34" viewBox="0 0 34 34" className="-rotate-90 dark:hidden" aria-hidden="true">
-      <circle cx="17" cy="17" r={r} fill="none" stroke="#e5e7eb" strokeWidth="2.5" />
-      <circle
-        cx="17"
-        cy="17"
-        r={r}
-        fill="none"
-        stroke={full ? "#C9A3AC" : "#87102C"}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeDasharray={c}
-        strokeDashoffset={c * (1 - filled)}
-        className="transition-all duration-700 ease-out"
-      />
-    </svg>
-  );
-}
+/** Each watch hour takes its colour from the real sky at that time — dusk,
+ * deep indigo, the void before dawn, first light — so colour carries the
+ * schedule itself instead of decorating four otherwise-identical rows. */
+const WATCH_COLORS = [
+  { bg: "#4F2E5E", text: "#fff", sub: "rgba(255,255,255,0.7)", bar: "rgba(255,255,255,0.25)" },
+  { bg: "#232C52", text: "#fff", sub: "rgba(255,255,255,0.7)", bar: "rgba(255,255,255,0.25)" },
+  { bg: "#0A0E1F", text: "#fff", sub: "rgba(255,255,255,0.7)", bar: "rgba(255,255,255,0.25)" },
+  { bg: "#C97A3E", text: "#150E22", sub: "rgba(21,14,34,0.62)", bar: "rgba(21,14,34,0.18)" },
+] as const;
+const SKY_GRADIENT = `linear-gradient(90deg, ${WATCH_COLORS[0].bg}, ${WATCH_COLORS[1].bg} 38%, ${WATCH_COLORS[2].bg} 62%, ${WATCH_COLORS[3].bg})`;
 
-function OccupancyRingDark({ filled, full }: { filled: number; full: boolean }) {
-  const r = 14;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg width="34" height="34" viewBox="0 0 34 34" className="hidden -rotate-90 dark:block" aria-hidden="true">
-      <circle cx="17" cy="17" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2.5" />
-      <circle
-        cx="17"
-        cy="17"
-        r={r}
-        fill="none"
-        stroke={full ? "rgba(255,179,193,0.35)" : "#FFB3C1"}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeDasharray={c}
-        strokeDashoffset={c * (1 - filled)}
-        className="transition-all duration-700 ease-out"
-      />
-    </svg>
-  );
+function watchColorFor(slots: PublicSlot[] | undefined, slotId: string | undefined) {
+  if (!slots || !slotId) return null;
+  const i = slots.findIndex((s) => s.id === slotId);
+  return i === -1 ? null : WATCH_COLORS[i % WATCH_COLORS.length];
 }
 
 /** The watch hours themselves are the picker — no separate dropdown duplicating the same choice. */
 function WatchHourPicker({ slots, value, onChange, disabled }: { slots: PublicSlot[]; value: string; onChange: (id: string) => void; disabled?: boolean }) {
   return (
-    <div role="radiogroup" aria-label="Prayer watch hour" className="space-y-2">
-      {slots.map((s) => {
+    <div role="radiogroup" aria-label="Prayer watch hour" className="grid gap-3 xs:grid-cols-2">
+      {slots.map((s, i) => {
         const full = s.spotsLeft <= 0;
         const filled = Math.min(1, Math.max(0, (s.capacity - s.spotsLeft) / s.capacity));
         const selected = s.id === value;
+        const c = WATCH_COLORS[i % WATCH_COLORS.length];
         return (
           <button
             key={s.id}
@@ -85,28 +58,30 @@ function WatchHourPicker({ slots, value, onChange, disabled }: { slots: PublicSl
             aria-checked={selected}
             disabled={full || disabled}
             onClick={() => onChange(s.id)}
-            className={`flex w-full items-center gap-4 rounded-xl border px-4 py-3 text-left transition-colors ${
+            style={full ? undefined : { background: c.bg, color: c.text }}
+            className={`flex min-h-[112px] flex-col justify-between rounded-2xl p-4 text-left transition-all ${
               full
-                ? "cursor-not-allowed border-gray-100 bg-gray-50 dark:border-white/5 dark:bg-white/[0.02]"
+                ? "cursor-not-allowed border border-dashed border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/[0.02]"
                 : selected
-                  ? "border-[#87102C] bg-[#FFF4F6] dark:border-[#FFB3C1] dark:bg-[#FFB3C1]/10"
-                  : "border-gray-200 bg-white hover:border-[#87102C]/40 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-[#FFB3C1]/30"
+                  ? "ring-2 ring-[#E7B454] ring-offset-2 ring-offset-white dark:ring-offset-[#0b0712]"
+                  : "opacity-[0.92] hover:opacity-100"
             }`}
           >
-            <span className="shrink-0">
-              <OccupancyRing filled={filled} full={full} />
-              <OccupancyRingDark filled={filled} full={full} />
+            <span style={serif} className={`block text-xl font-medium tabular-nums sm:text-2xl ${full ? "text-gray-400 dark:text-white/30" : ""}`}>
+              {s.startTime}
+              <span className="mx-1 opacity-50">–</span>
+              {s.endTime}
             </span>
-            <span className="min-w-0">
-              <span style={serif} className={`block text-lg font-medium tabular-nums sm:text-xl ${full ? "text-gray-400 dark:text-white/30" : "text-[#111] dark:text-white"}`}>
-                {s.startTime}
-                <span className="mx-1 text-gray-400 dark:text-white/30">–</span>
-                {s.endTime}
-              </span>
-              <span className="mt-0.5 block text-xs font-medium text-gray-500 dark:text-white/45">
+            <span>
+              <span className="block text-xs font-semibold" style={full ? undefined : { color: c.sub }}>
                 {s.label}
-                {full && <span className="text-[#87102C]/70 dark:text-[#FFB3C1]/70"> · Full</span>}
+                {full && <span className="text-gray-400 dark:text-white/40"> · Full</span>}
               </span>
+              {!full && (
+                <span className="mt-2 block h-1 overflow-hidden rounded-full" style={{ background: c.bar }}>
+                  <span className="block h-full rounded-full bg-white/80" style={{ width: `${filled * 100}%` }} />
+                </span>
+              )}
             </span>
           </button>
         );
@@ -116,14 +91,14 @@ function WatchHourPicker({ slots, value, onChange, disabled }: { slots: PublicSl
 }
 
 /** "N others are on this hour" — the shared-vigil nudge, never names beyond first names. */
-function Companions({ slotId }: { slotId: string | null }) {
+function Companions({ slotId, className = "justify-start text-gray-500 dark:text-white/45" }: { slotId: string | null; className?: string }) {
   const companions = useSlotCompanions(slotId);
   if (!slotId || companions.isLoading || !companions.data || companions.data.count === 0) return null;
   const { count, firstNames } = companions.data;
   const shown = firstNames.slice(0, 3).join(", ");
   const rest = count - Math.min(3, firstNames.length);
   return (
-    <p className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 dark:text-white/45">
+    <p className={`mt-2 flex items-center gap-1.5 text-xs ${className}`}>
       <Users size={13} className="shrink-0" aria-hidden="true" />
       {shown}
       {rest > 0 ? ` and ${rest} other${rest === 1 ? "" : "s"}` : ""} already on this hour.
@@ -262,7 +237,8 @@ export default function PrayerWatchScreen() {
 
   return (
     <div className={`${fraunces.variable} mx-auto max-w-2xl py-6 sm:py-8`}>
-      <h1 style={serif} className="text-2xl font-medium text-[#111] dark:text-white xs:text-3xl sm:text-4xl">
+      <span aria-hidden="true" className="block h-1.5 w-16 rounded-full" style={{ background: SKY_GRADIENT }} />
+      <h1 style={serif} className="mt-4 text-2xl font-medium text-[#111] dark:text-white xs:text-3xl sm:text-4xl">
         {watch.data?.title ?? "Prayer Watch"}
       </h1>
       <p className="mt-3 text-sm leading-relaxed text-gray-600 dark:text-white/60">
@@ -271,7 +247,8 @@ export default function PrayerWatchScreen() {
         least one two-hour watch daily.
       </p>
 
-      <div className="mt-5 rounded-2xl border border-[#E7CDD3]/60 bg-[#FFF4F6]/50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+      <div className="relative mt-5 overflow-hidden rounded-2xl border border-[#E7CDD3]/60 bg-[#FFF4F6]/50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
+        <span aria-hidden="true" className="absolute inset-x-0 top-0 h-[3px]" style={{ background: SKY_GRADIENT }} />
         <p style={serif} className="text-sm italic leading-relaxed text-[#6E0C24] dark:text-[#FFB3C1] sm:text-base">
           &ldquo;I have set watchmen upon thy walls, O Jerusalem, which shall never hold their peace day nor night:
           ye that make mention of the LORD, keep not silence, and give Him no rest, till He establish, and till He
@@ -282,13 +259,15 @@ export default function PrayerWatchScreen() {
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
-          <p className="text-sm font-semibold text-[#111] dark:text-white">Prayer Watch</p>
+          <Clock3 size={16} className="text-[#C97A3E]" aria-hidden="true" />
+          <p className="mt-2 text-sm font-semibold text-[#111] dark:text-white">Prayer Watch</p>
           <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-white/50">
             The two-hour window itself — where you join the others praying that hour on Telegram.
           </p>
         </div>
         <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/[0.03]">
-          <p className="text-sm font-semibold text-[#111] dark:text-white">Prayer Watchmen Family</p>
+          <Users size={16} className="text-[#C97A3E]" aria-hidden="true" />
+          <p className="mt-2 text-sm font-semibold text-[#111] dark:text-white">Prayer Watchmen Family</p>
           <p className="mt-1 text-xs leading-relaxed text-gray-500 dark:text-white/50">
             The WhatsApp community of everyone on your watch hour — your committed prayer family for fellowship,
             encouragement, and accountability, not just the two hours.
@@ -312,29 +291,35 @@ export default function PrayerWatchScreen() {
         <p className="mt-8 text-sm text-red-600 dark:text-red-400">Could not load the watch schedule. Please refresh.</p>
       ) : mine.data && mine.data.signup.status === "PENDING" ? (
         <div className="mt-8">
-          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-center xs:p-6 dark:border-white/10 dark:bg-white/[0.03]">
-            <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-white/50">
+          <div
+            className="relative overflow-hidden rounded-2xl p-5 text-center xs:p-6"
+            style={{ background: watchColorFor(watch.data?.slots, mine.data.slot.id)?.bg ?? "#150E22", color: watchColorFor(watch.data?.slots, mine.data.slot.id)?.text ?? "#fff" }}
+          >
+            <p className="inline-flex items-center gap-1.5 text-xs font-semibold opacity-70">
               <Clock3 size={13} aria-hidden="true" />
               Awaiting approval
             </p>
-            <h2 style={serif} className="mt-2 text-2xl font-medium text-[#111] dark:text-white xs:text-3xl sm:text-4xl">
+            <h2 style={serif} className="mt-2 text-2xl font-medium xs:text-3xl sm:text-4xl">
               {mine.data.slot.startTime}–{mine.data.slot.endTime}
             </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-white/45">{mine.data.slot.label}</p>
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-gray-500 dark:text-white/50">
+            <p className="mt-1 text-sm opacity-70">{mine.data.slot.label}</p>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed opacity-80">
               An admin reviews every sign-up before it&apos;s confirmed. We&apos;ll email you as soon as it is.
             </p>
           </div>
         </div>
       ) : mine.data ? (
         <div className="mt-8">
-          <div className="rounded-2xl border border-[#87102C]/25 bg-[#FFF4F6] p-5 text-center xs:p-6 dark:border-[#FFB3C1]/25 dark:bg-[#FFB3C1]/10">
-            <p className="text-xs font-semibold text-[#87102C] dark:text-[#FFB3C1]">You&apos;re on the watch</p>
-            <h2 style={serif} className="mt-2 text-2xl font-medium text-[#111] dark:text-white xs:text-3xl sm:text-4xl">
+          <div
+            className="relative overflow-hidden rounded-2xl p-5 text-center xs:p-6"
+            style={{ background: watchColorFor(watch.data?.slots, mine.data.slot.id)?.bg ?? "#150E22", color: watchColorFor(watch.data?.slots, mine.data.slot.id)?.text ?? "#fff" }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wide opacity-70">You&apos;re on the watch</p>
+            <h2 style={serif} className="mt-2 text-2xl font-medium xs:text-3xl sm:text-4xl">
               {mine.data.slot.startTime}–{mine.data.slot.endTime}
             </h2>
-            <p className="mt-1 text-sm text-gray-500 dark:text-white/45">{mine.data.slot.label}</p>
-            <Companions slotId={mine.data.slot.id} />
+            <p className="mt-1 text-sm opacity-70">{mine.data.slot.label}</p>
+            <Companions slotId={mine.data.slot.id} className="justify-center opacity-70" />
 
             <div className="mt-5 flex flex-col items-stretch gap-2 xs:flex-row xs:flex-wrap xs:items-center xs:justify-center">
               {mine.data.telegramLink && (
@@ -361,7 +346,7 @@ export default function PrayerWatchScreen() {
               )}
               <a
                 href={myPrayerWatchIcsHref(mine.data.signup.id)}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#87102C]/30 px-4 text-sm font-semibold text-[#87102C] transition-colors hover:bg-white dark:border-[#FFB3C1]/30 dark:text-[#FFB3C1] dark:hover:bg-white/5 xs:w-auto"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-current px-4 text-sm font-semibold opacity-80 transition-colors hover:bg-white/10 hover:opacity-100 xs:w-auto"
               >
                 <CalendarPlus size={16} aria-hidden="true" />
                 Add to calendar
@@ -369,7 +354,7 @@ export default function PrayerWatchScreen() {
             </div>
 
             {mine.data.pendingFamilyChangeRequest ? (
-              <p className="mt-4 text-xs font-medium text-gray-500 dark:text-white/45">
+              <p className="mt-4 text-xs font-medium opacity-70">
                 Request pending: move to {mine.data.pendingFamilyChangeRequest.toSlotTime} (
                 {mine.data.pendingFamilyChangeRequest.toSlotLabel}) — awaiting admin review.
               </p>
@@ -382,7 +367,7 @@ export default function PrayerWatchScreen() {
                     setRequestSlotId("");
                     setRequestReason("");
                   }}
-                  className="inline-flex min-h-11 items-center px-2 text-xs font-semibold text-gray-500 hover:text-[#87102C] dark:text-white/45 dark:hover:text-[#FFB3C1]"
+                  className="inline-flex min-h-11 items-center px-2 text-xs font-semibold underline opacity-70 transition-opacity hover:opacity-100"
                 >
                   {requestingChange ? "Never mind" : "Request to change my Prayer Watchmen Family"}
                 </button>
