@@ -128,6 +128,11 @@ export class DecideSignupDto {
   @IsString()
   @MaxLength(500)
   note?: string;
+
+  @ApiPropertyOptional({ example: 'slot-id', description: 'Approve into a different watch than the one applied for, instead of a flat decline' })
+  @IsOptional()
+  @IsString()
+  slotId?: string;
 }
 
 export class CreatePrayerWatchReflectionDto {

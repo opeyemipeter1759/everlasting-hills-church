@@ -437,7 +437,40 @@ export class PrayerWatchService {
     });
   }
 
-  /** Approving confirms the sign-up and reveals the WhatsApp + Telegram links; declining just tells them why. Either way, they're emailed. */
+  /** Sign-ups the admin declined, newest decision first — so the reason is never lost once the person is told. */
+  async listDeclinedSignups() {
+    const watch = await this.getOrCreateWatch();
+    const slotById = new Map(watch.Slots.map((s) => [s.id, s]));
+    const signups = await this.prisma.prayerSignup.findMany({
+      where: { watchId: watch.id, status: 'DECLINED' },
+      orderBy: { decidedAt: 'desc' },
+    });
+    return signups.map((s) => {
+      const slot = slotById.get(s.slotId);
+      return {
+        id: s.id,
+        fullName: s.fullName,
+        phone: s.phone,
+        email: s.email,
+        isWorker: s.isWorker,
+        createdAt: s.createdAt.toISOString(),
+        decidedAt: s.decidedAt?.toISOString() ?? null,
+        decisionNote: s.decisionNote,
+        slotId: s.slotId,
+        slotLabel: slot?.label ?? '',
+        slotTime: slot ? `${slot.startTime}–${slot.endTime}` : '',
+      };
+    });
+  }
+
+  /**
+   * Approving confirms the sign-up and reveals the WhatsApp + Telegram links.
+   * Passing a different `slotId` than the one they applied for is the third
+   * option alongside a flat approve/decline: offer them a different watch
+   * instead of turning them away outright (capacity allowing). Declining
+   * keeps the reason on record, not just the fact that it happened. Either
+   * way, they're emailed.
+   */
   async decideSignup(actorProfileId: string, id: string, approve: boolean, dto: DecideSignupDto) {
     const signup = await this.prisma.prayerSignup.findFirst({
       where: { id, tenantId: this.tenantId, status: 'PENDING' },
@@ -445,28 +478,44 @@ export class PrayerWatchService {
     });
     if (!signup) throw new NotFoundException('Sign-up not found, or already decided');
 
+    let targetSlot = signup.Slot;
+    if (approve && dto.slotId && dto.slotId !== signup.slotId) {
+      const offered = await this.prisma.prayerSlot.findFirst({ where: { id: dto.slotId, tenantId: this.tenantId, watchId: signup.watchId } });
+      if (!offered) throw new NotFoundException('That watch is not available');
+      const confirmedCount = await this.prisma.prayerSignup.count({ where: { slotId: offered.id, status: 'CONFIRMED' } });
+      if (confirmedCount >= offered.capacity) throw new ConflictException('That watch is full — choose another.');
+      targetSlot = { ...targetSlot, ...offered };
+    }
+
+    const note = dto.note?.trim() || null;
     await this.prisma.prayerSignup.update({
       where: { id },
-      data: { status: approve ? PrayerSignupStatus.CONFIRMED : PrayerSignupStatus.REMOVED, decidedAt: new Date(), decidedById: actorProfileId },
+      data: {
+        status: approve ? PrayerSignupStatus.CONFIRMED : PrayerSignupStatus.DECLINED,
+        decidedAt: new Date(),
+        decidedById: actorProfileId,
+        decisionNote: note,
+        ...(approve && targetSlot.id !== signup.slotId ? { slotId: targetSlot.id } : {}),
+      },
     });
 
-    const slotTime = `${signup.Slot.startTime}–${signup.Slot.endTime}`;
     this.events.emit(
       NotificationEvents.SendEmail,
       approve
         ? buildPrayerWatchSignupApprovedEmail({
             to: signup.email,
             fullName: signup.fullName,
-            slotLabel: signup.Slot.label,
-            slotTime,
-            whatsappLink: signup.Slot.whatsappLink,
+            slotLabel: targetSlot.label,
+            slotTime: `${targetSlot.startTime}–${targetSlot.endTime}`,
+            whatsappLink: targetSlot.whatsappLink,
             telegramLink: signup.Slot.Watch.telegramLink,
+            note: targetSlot.id !== signup.slotId ? (note ?? `You asked for the ${signup.Slot.label}; we've placed you on the ${targetSlot.label} instead.`) : note,
             url: this.pageUrl,
           })
-        : buildPrayerWatchSignupDeclinedEmail({ to: signup.email, fullName: signup.fullName, note: dto.note?.trim() || null, url: this.pageUrl }),
+        : buildPrayerWatchSignupDeclinedEmail({ to: signup.email, fullName: signup.fullName, note, url: this.pageUrl }),
     );
 
-    return { id, status: approve ? 'CONFIRMED' : 'REMOVED' };
+    return { id, status: approve ? 'CONFIRMED' : 'DECLINED', slotId: targetSlot.id };
   }
 
   /** What members sensed God say during their watch hour — across every watch, newest first. */

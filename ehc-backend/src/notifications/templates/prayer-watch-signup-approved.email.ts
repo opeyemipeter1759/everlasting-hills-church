@@ -8,11 +8,13 @@ interface Args {
   slotTime: string;
   whatsappLink: string | null;
   telegramLink: string | null;
+  /** Shown when set — e.g. offering a different watch than the one applied for. */
+  note?: string | null;
   url: string;
 }
 
 /** "You're in. Your hour is confirmed — here's where to show up." */
-export function buildPrayerWatchSignupApprovedEmail({ to, fullName, slotLabel, slotTime, whatsappLink, telegramLink, url }: Args): SendEmailPayload {
+export function buildPrayerWatchSignupApprovedEmail({ to, fullName, slotLabel, slotTime, whatsappLink, telegramLink, note, url }: Args): SendEmailPayload {
   const links = [
     telegramLink ? `Join the Telegram channel where the prayer happens: ${telegramLink}` : null,
     whatsappLink ? `Join your Prayer Watchmen Family on WhatsApp: ${whatsappLink}` : null,
@@ -22,6 +24,7 @@ export function buildPrayerWatchSignupApprovedEmail({ to, fullName, slotLabel, s
     greetingText(fullName),
     '',
     `You're in. Your hour on the Prayer Watch is confirmed: ${slotLabel} (${slotTime}).`,
+    ...(note ? ['', note] : []),
     '',
     "That hour is yours to carry before the Lord. While you watch, others are holding the hours before and after you, so together the whole night is covered in prayer.",
     ...(links.length ? ['', ...links] : []),
@@ -33,6 +36,7 @@ export function buildPrayerWatchSignupApprovedEmail({ to, fullName, slotLabel, s
   const bodyHtml = `
     ${greetingHtml(fullName)}
     <p style="margin:0 0 16px">You're in. Your hour on the Prayer Watch is confirmed: <strong>${escapeHtml(slotLabel)}</strong> (${escapeHtml(slotTime)}).</p>
+    ${note ? `<p style="margin:0 0 16px">${escapeHtml(note)}</p>` : ''}
     <p style="margin:0 0 16px">That hour is yours to carry before the Lord. While you watch, others are holding the hours before and after you, so together the whole night is covered in prayer.</p>
     ${links.length ? `<ul style="margin:0 0 16px;padding-left:20px">${links.map((l) => `<li style="margin-bottom:6px">${escapeHtml(l)}</li>`).join('')}</ul>` : ''}
     <p style="margin:0">See you on the watch.</p>

@@ -21,7 +21,7 @@ export interface PublicWatch {
   slots: PublicSlot[];
 }
 
-export type SignupStatus = "PENDING" | "CONFIRMED" | "REMOVED";
+export type SignupStatus = "PENDING" | "CONFIRMED" | "DECLINED" | "REMOVED";
 
 export interface AdminSignup {
   id: string;
@@ -60,6 +60,20 @@ export interface PendingSignup {
   email: string | null;
   isWorker: boolean;
   createdAt: string;
+  slotId: string;
+  slotLabel: string;
+  slotTime: string;
+}
+
+export interface DeclinedSignup {
+  id: string;
+  fullName: string;
+  phone: string;
+  email: string | null;
+  isWorker: boolean;
+  createdAt: string;
+  decidedAt: string | null;
+  decisionNote: string | null;
   slotId: string;
   slotLabel: string;
   slotTime: string;
@@ -272,12 +286,31 @@ export function usePendingSignups() {
   });
 }
 
+export function useDeclinedSignups() {
+  return useQuery({
+    queryKey: [...PRAYER_WATCH_KEY, "admin", "signups", "declined"],
+    queryFn: () => api.get<DeclinedSignup[]>("/prayer-watch/admin/signups/declined"),
+  });
+}
+
+/** `slotId` offers a different watch than the one applied for instead of a flat approve — ignored when declining. */
 export function useDecideSignup() {
-  const invalidate = useInvalidatePrayerWatch();
+  const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, approve, note }: { id: string; approve: boolean; note?: string }) =>
-      api.post(`/prayer-watch/admin/signups/${id}/${approve ? "approve" : "decline"}`, { note }),
-    onSuccess: invalidate,
+    mutationFn: ({ id, approve, note, slotId }: { id: string; approve: boolean; note?: string; slotId?: string }) =>
+      api.post(`/prayer-watch/admin/signups/${id}/${approve ? "approve" : "decline"}`, { note, slotId }),
+    onSuccess: async () => {
+      // Belt and suspenders: invalidate (so any other mounted view refetches
+      // too) and explicitly refetch the three lists this screen shows right
+      // now, so the queue visibly updates the moment a decision lands.
+      await qc.invalidateQueries({ queryKey: PRAYER_WATCH_KEY });
+      await Promise.all([
+        qc.refetchQueries({ queryKey: [...PRAYER_WATCH_KEY, "admin", "signups", "pending"] }),
+        qc.refetchQueries({ queryKey: [...PRAYER_WATCH_KEY, "admin", "signups", "declined"] }),
+        qc.refetchQueries({ queryKey: [...PRAYER_WATCH_KEY, "admin", "signups"] }),
+        qc.refetchQueries({ queryKey: [...PRAYER_WATCH_KEY, "admin"] }),
+      ]);
+    },
   });
 }
 

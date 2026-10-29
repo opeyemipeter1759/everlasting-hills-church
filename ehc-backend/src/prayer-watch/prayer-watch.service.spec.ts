@@ -8,6 +8,7 @@ const watch = {
   telegramLink: 'https://t.me/central',
   Slots: [
     { id: 's1', watchId: 'w1', label: 'First Watch', startTime: '22:00', endTime: '00:00', capacity: 100, whatsappLink: 'https://chat.whatsapp.com/first' },
+    { id: 's2', watchId: 'w1', label: 'Second Watch', startTime: '00:00', endTime: '02:00', capacity: 100, whatsappLink: 'https://chat.whatsapp.com/second' },
   ],
 };
 
@@ -63,15 +64,17 @@ describe('PrayerWatchService.createSignup', () => {
 describe('PrayerWatchService.decideSignup', () => {
   const pendingSignup = {
     id: 'sg1',
+    slotId: 's1',
+    watchId: 'w1',
     fullName: 'Ada Lovelace',
     email: 'ada@x.com',
-    Slot: { label: 'First Watch', startTime: '22:00', endTime: '00:00', whatsappLink: 'https://chat.whatsapp.com/first', Watch: { telegramLink: 'https://t.me/central' } },
+    Slot: { id: 's1', label: 'First Watch', startTime: '22:00', endTime: '00:00', capacity: 100, whatsappLink: 'https://chat.whatsapp.com/first', Watch: { telegramLink: 'https://t.me/central' } },
   };
 
   it('confirms the sign-up and emails the WhatsApp + Telegram links on approval', async () => {
     const { svc, prisma, events } = setup();
     prisma.prayerSignup.findFirst.mockResolvedValue(pendingSignup);
-    await expect(svc.decideSignup('admin-1', 'sg1', true, {})).resolves.toEqual({ id: 'sg1', status: 'CONFIRMED' });
+    await expect(svc.decideSignup('admin-1', 'sg1', true, {})).resolves.toEqual({ id: 'sg1', status: 'CONFIRMED', slotId: 's1' });
     expect(prisma.prayerSignup.update).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'sg1' }, data: expect.objectContaining({ status: 'CONFIRMED', decidedById: 'admin-1' }) }),
     );
@@ -81,18 +84,55 @@ describe('PrayerWatchService.decideSignup', () => {
     expect(payload.text).toContain('https://chat.whatsapp.com/first');
   });
 
-  it('removes the sign-up and emails why on decline', async () => {
+  it('declines the sign-up, keeps the reason on record, and emails why', async () => {
     const { svc, prisma, events } = setup();
     prisma.prayerSignup.findFirst.mockResolvedValue(pendingSignup);
-    await expect(svc.decideSignup('admin-1', 'sg1', false, { note: 'Try a quieter hour' })).resolves.toEqual({ id: 'sg1', status: 'REMOVED' });
-    expect(prisma.prayerSignup.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ status: 'REMOVED' }) }));
+    await expect(svc.decideSignup('admin-1', 'sg1', false, { note: 'Try a quieter hour' })).resolves.toEqual({ id: 'sg1', status: 'DECLINED', slotId: 's1' });
+    expect(prisma.prayerSignup.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'DECLINED', decisionNote: 'Try a quieter hour' }) }),
+    );
     expect(events.emit).toHaveBeenCalledWith('notification.email.send', expect.objectContaining({ tag: 'prayer-watch-signup-declined' }));
+  });
+
+  it('offers a different watch instead of a flat decline, moving the slot and saying so', async () => {
+    const { svc, prisma, events } = setup();
+    prisma.prayerSignup.findFirst.mockResolvedValue(pendingSignup);
+    prisma.prayerSlot.findFirst.mockResolvedValue(watch.Slots[1]);
+    await expect(svc.decideSignup('admin-1', 'sg1', true, { slotId: 's2' })).resolves.toEqual({ id: 'sg1', status: 'CONFIRMED', slotId: 's2' });
+    expect(prisma.prayerSignup.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ status: 'CONFIRMED', slotId: 's2' }) }),
+    );
+    const [, payload] = events.emit.mock.calls[0];
+    expect(payload).toMatchObject({ tag: 'prayer-watch-signup-approved' });
+    expect(payload.text).toContain('Second Watch');
+    expect(payload.text).toContain("asked for the First Watch");
+  });
+
+  it('refuses to offer a watch that is already full', async () => {
+    const { svc, prisma } = setup();
+    prisma.prayerSignup.findFirst.mockResolvedValue(pendingSignup);
+    prisma.prayerSlot.findFirst.mockResolvedValue(watch.Slots[1]);
+    prisma.prayerSignup.count.mockResolvedValue(100);
+    await expect(svc.decideSignup('admin-1', 'sg1', true, { slotId: 's2' })).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('404s once already decided', async () => {
     const { svc, prisma } = setup();
     prisma.prayerSignup.findFirst.mockResolvedValue(null);
     await expect(svc.decideSignup('admin-1', 'sg1', true, {})).rejects.toBeInstanceOf(NotFoundException);
+  });
+});
+
+describe('PrayerWatchService.listDeclinedSignups', () => {
+  it('lists declined sign-ups with the reason, newest decision first', async () => {
+    const { svc, prisma } = setup();
+    prisma.prayerSignup.findMany = jest.fn().mockResolvedValue([
+      { id: 'sg1', slotId: 's1', fullName: 'Ada', phone: '0800', email: 'a@x.com', isWorker: false, createdAt: new Date(), decidedAt: new Date(), decisionNote: 'Try again next cycle' },
+    ]);
+    const res = await svc.listDeclinedSignups();
+    expect(res).toEqual([
+      expect.objectContaining({ id: 'sg1', decisionNote: 'Try again next cycle', slotLabel: 'First Watch' }),
+    ]);
   });
 });
 

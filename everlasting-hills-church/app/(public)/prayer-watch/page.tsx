@@ -95,7 +95,8 @@ export default function PrayerWatchPage() {
               <div>
                 <h2 className="pw-display text-4xl sm:text-5xl">Pick your watch</h2>
                 <p className="mt-3 max-w-xl text-black/65">
-                  No account needed to sign up. If you're signed in already, we'll use your profile details.
+                  Here's what's open right now. Sign up from your dashboard, where you can also track your
+                  application.
                 </p>
               </div>
             </div>

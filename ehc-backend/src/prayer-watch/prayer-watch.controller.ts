@@ -156,6 +156,14 @@ export class PrayerWatchController {
     return this.prayerWatch.listPendingSignups();
   }
 
+  @Get('admin/signups/declined')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Sign-ups the admin declined, with why (Admin Head+)' })
+  listDeclinedSignups() {
+    return this.prayerWatch.listDeclinedSignups();
+  }
+
   @Post('admin/signups/:id/approve')
   @Roles(Role.ADMIN_HEAD)
   @ApiBearerAuth('access-token')

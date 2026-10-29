@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Clock3, Send, MessageCircle } from "lucide-react";
-import { useMe } from "@/lib/api";
 import { useIsLoggedIn } from "@/components/home/NavUserBadge";
-import { userMessageForError } from "@/lib/api/user-message";
-import { showToast } from "@/components/ui/toast/toast";
-import { usePublicPrayerWatch, useMyPrayerSignup, useSubmitPrayerSignup, type PublicSlot } from "@/lib/api/prayer-watch";
-import { PWLoading, PWError, errorText } from "./shared";
+import { usePublicPrayerWatch, useMyPrayerSignup, type PublicSlot } from "@/lib/api/prayer-watch";
+import { PWLoading, PWError } from "./shared";
 
-const fieldCls =
-  "min-h-11 w-full rounded-lg border border-[var(--color-paper-line)] bg-white px-3 py-2 text-sm text-[var(--color-ink)] placeholder:text-black/35 outline-none transition-colors focus:border-black/30";
+const DASHBOARD_PATH = "/dashboard/prayer-watch";
 
 function timeRange(s: PublicSlot) {
   const fmt = (t: string) => {
@@ -22,54 +17,21 @@ function timeRange(s: PublicSlot) {
   return `${fmt(s.startTime)} – ${fmt(s.endTime)}`;
 }
 
+/**
+ * Shows the schedule and lets a visitor see what's open, but the sign-up
+ * itself happens in the member dashboard — one canonical place to apply,
+ * manage a pending application, and later request a change or add a
+ * reflection, rather than a second form duplicated here.
+ */
 export default function PublicSignupWidget() {
   const isLoggedIn = useIsLoggedIn();
   const watch = usePublicPrayerWatch();
-  const me = useMe({ enabled: isLoggedIn === true });
   const mine = useMyPrayerSignup({ enabled: isLoggedIn === true });
-  const submit = useSubmitPrayerSignup();
-  const profile = me.data?.member;
-
-  const [slotId, setSlotId] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [isWorker, setIsWorker] = useState(false);
-  const [agreed, setAgreed] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [prefilled, setPrefilled] = useState(false);
-
-  const knownName = useMemo(() => [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim(), [profile]);
-
-  useEffect(() => {
-    if (prefilled || !profile) return;
-    setFullName(knownName);
-    setEmail(profile.email ?? "");
-    setPhone(profile.phone ?? "");
-    setIsWorker(Boolean(profile.units?.length));
-    setPrefilled(true);
-  }, [profile, knownName, prefilled]);
 
   if (watch.isLoading) return <PWLoading />;
   if (watch.isError) return <PWError error={watch.error} onRetry={() => watch.refetch()} />;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    if (!slotId) return setError("Choose a watch hour.");
-    if (!fullName.trim() || !phone.trim() || !email.trim()) return setError("Please fill in your name, phone and email.");
-    if (!agreed) return setError("Please confirm you'll be committed to this watch hour.");
-
-    try {
-      await submit.mutateAsync({ slotId, fullName: fullName.trim(), phone: phone.trim(), email: email.trim(), isWorker });
-      showToast.success("Sign-up received — an admin will confirm it shortly.");
-    } catch (err) {
-      setError(userMessageForError(err, "Couldn't complete your sign-up. Please try again."));
-      watch.refetch();
-    }
-  }
-
-  // Signed in with an existing sign-up: show status, not the form again.
+  // Signed in with an existing sign-up: show status, not a redundant prompt.
   if (isLoggedIn === true && mine.data) {
     const { signup, slot, telegramLink } = mine.data;
     if (signup.status === "PENDING") {
@@ -102,68 +64,45 @@ export default function PublicSignupWidget() {
           )}
         </div>
         <p className="mt-6 text-sm text-white/55">
-          <Link href="/dashboard/prayer-watch" className="underline hover:text-white">Manage your Prayer Watch</Link>, including reflections and requesting a change.
+          <Link href={DASHBOARD_PATH} className="underline hover:text-white">Manage your Prayer Watch</Link>, including reflections and requesting a change.
         </p>
       </div>
     );
   }
 
   const watches = watch.data?.slots ?? [];
+  const ctaHref = isLoggedIn === true ? DASHBOARD_PATH : `/login?next=${encodeURIComponent(DASHBOARD_PATH)}`;
+  const ctaLabel = isLoggedIn === true ? "Sign up in your dashboard" : "Sign in to sign up";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-8">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {watches.map((s) => {
+        {watches.map((s, i) => {
           const full = s.spotsLeft <= 0;
-          const selected = s.id === slotId;
           return (
-            <button
+            <div
               key={s.id}
-              type="button"
-              data-watch={watches.indexOf(s) + 1}
-              disabled={full}
-              onClick={() => setSlotId(s.id)}
-              aria-pressed={selected}
-              className={`flex flex-col justify-between rounded-[20px] p-5 text-left transition-opacity min-h-[140px] ${
-                full ? "cursor-not-allowed opacity-40" : selected ? "ring-2 ring-[var(--color-flame)] ring-offset-2 ring-offset-[var(--color-paper)]" : ""
-              }`}
+              data-watch={i + 1}
+              className={`flex min-h-[140px] flex-col justify-between rounded-[20px] p-5 ${full ? "opacity-40" : ""}`}
             >
               <span className="text-sm font-semibold opacity-80">{timeRange(s)}</span>
               <span className="pw-display mt-2 text-xl">{s.label}</span>
               {full && <span className="mt-1 text-xs font-semibold opacity-80">Full</span>}
-            </button>
+            </div>
           );
         })}
       </div>
 
-      {prefilled && (!fullName.trim() || !phone.trim() || !email.trim()) && (
-        <p className="text-sm text-black/55">
-          A few details are missing from your profile. Fill them in below, or{" "}
-          <Link href="/dashboard/profile" className="font-semibold underline">update your profile</Link> first.
+      <div className="text-center">
+        <Link href={ctaHref} className="pw-btn pw-btn-primary">
+          {ctaLabel}
+        </Link>
+        <p className="mt-3 text-sm text-black/55">
+          {isLoggedIn === true
+            ? "Pick your hour and apply from your dashboard."
+            : "Sign in (or create an account) to pick your hour — that's also where you'll see whether it's been approved."}
         </p>
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" className={fieldCls} />
-        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className={fieldCls} />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className={`${fieldCls} sm:col-span-2`} />
       </div>
-
-      <label className="flex items-start gap-2.5 text-sm text-black/70">
-        <input type="checkbox" checked={isWorker} onChange={(e) => setIsWorker(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
-        I serve in a unit or department at EHC
-      </label>
-
-      <label className="flex items-start gap-2.5 text-sm text-black/70">
-        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 shrink-0" />
-        I agree to be committed to this prayer watch hour
-      </label>
-
-      {error && <p className="text-sm text-red-600">{error}</p>}
-
-      <button type="submit" disabled={submit.isPending} className="pw-btn pw-btn-primary w-full">
-        {submit.isPending ? "Signing up…" : "Sign up for this watch"}
-      </button>
-    </form>
+    </div>
   );
 }

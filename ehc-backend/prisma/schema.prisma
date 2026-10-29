@@ -980,6 +980,10 @@ enum PrayerSignupStatus {
   /// Submitted, waiting for an admin to approve — every sign-up starts here.
   PENDING
   CONFIRMED
+  /// The admin declined the application itself (tracked, with decisionNote).
+  /// Distinct from REMOVED, which is an admin pulling an already-CONFIRMED
+  /// sign-up off the roster later.
+  DECLINED
   REMOVED
 }
 
@@ -1056,6 +1060,9 @@ model PrayerSignup {
   /// PrayerFamilyChangeRequest's decidedAt/decidedById.
   decidedAt            DateTime?
   decidedById          String?
+  /// Why — shown to the person declined, and kept here so admins can track
+  /// past decline reasons instead of just the fact that it happened.
+  decisionNote         String?
   Tenant               Tenant                      @relation(fields: [tenantId], references: [id])
   Slot                 PrayerSlot                  @relation("SlotSignups", fields: [slotId], references: [id], onDelete: Cascade)
   LeaderOfSlot         PrayerSlot[]                @relation("SlotLeader")

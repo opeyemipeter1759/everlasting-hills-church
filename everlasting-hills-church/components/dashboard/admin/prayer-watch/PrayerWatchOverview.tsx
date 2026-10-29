@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, Clock3, Download, Loader2, MessageCircle, Printer, RefreshCw, Send, Trash2, XCircle } from "lucide-react";
+import { ArrowRightLeft, CheckCircle2, Clock3, Download, Loader2, MessageCircle, Printer, RefreshCw, Send, Trash2, XCircle } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
 import {
   useAdminPrayerWatch,
   useAdminReflections,
+  useDeclinedSignups,
   useDecideFamilyChange,
   useDecideSignup,
   useFamilyChangeRequests,
@@ -21,6 +22,11 @@ import {
   type AdminReflection,
   type SignupListRow,
 } from "@/lib/api/prayer-watch";
+
+function formatDecidedAt(iso: string | null) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
 
 function csvCell(value: string | number | null) {
   let text = value == null ? "" : String(value);
@@ -49,6 +55,7 @@ export default function PrayerWatchOverview() {
   const watch = useAdminPrayerWatch();
   const signupList = usePrayerSignupList();
   const pendingSignups = usePendingSignups();
+  const declinedSignups = useDeclinedSignups();
   const reflections = useAdminReflections();
   const removeSignup = useRemovePrayerSignup();
   const removeReflection = useRemoveAdminReflection();
@@ -66,6 +73,8 @@ export default function PrayerWatchOverview() {
   const [savingSlotId, setSavingSlotId] = useState<string | null>(null);
   const [decidingId, setDecidingId] = useState<string | null>(null);
   const [decidingSignupId, setDecidingSignupId] = useState<string | null>(null);
+  const [offeringId, setOfferingId] = useState<string | null>(null);
+  const [offerSlotId, setOfferSlotId] = useState("");
   const [telegramDraft, setTelegramDraft] = useState<string | null>(null);
   const [savingTelegram, setSavingTelegram] = useState(false);
 
@@ -146,11 +155,13 @@ export default function PrayerWatchOverview() {
     }
   }
 
-  async function handleDecideSignup(id: string, approve: boolean) {
+  async function handleDecideSignup(id: string, approve: boolean, slotId?: string) {
     setDecidingSignupId(id);
     try {
-      await decideSignup.mutateAsync({ id, approve });
-      showToast.success(approve ? "Sign-up confirmed" : "Sign-up declined");
+      await decideSignup.mutateAsync({ id, approve, slotId });
+      showToast.success(slotId ? "Confirmed into the watch you offered them" : approve ? "Sign-up confirmed" : "Sign-up declined");
+      setOfferingId(null);
+      setOfferSlotId("");
     } catch (err) {
       showToast.error(userMessageForError(err, "Couldn't decide this sign-up"));
     } finally {
@@ -252,39 +263,83 @@ export default function PrayerWatchOverview() {
           {pendingSignups.data && pendingSignups.data.length > 0 && (
             <section className="print:hidden">
               <h2 className="text-base font-bold text-[#1A1210] dark:text-white">Pending sign-ups</h2>
-              <p className="mb-3 text-sm text-gray-400">Approving confirms them and reveals the WhatsApp/Telegram links; declining tells them why.</p>
+              <p className="mb-3 text-sm text-gray-400">
+                Approve confirms them where they applied; offer a different watch confirms them somewhere else instead; decline tells them why.
+              </p>
               <div className="space-y-2">
                 {pendingSignups.data.map((s) => (
-                  <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-200 p-4 dark:border-white/10">
-                    <div className="min-w-0">
-                      <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-white">
-                        <Clock3 size={13} className="shrink-0 text-gray-400" aria-hidden="true" />
-                        {s.fullName} — {s.slotTime} ({s.slotLabel})
-                      </p>
-                      <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">
-                        {s.phone} · {s.isWorker ? "Worker" : "Member"}
-                      </p>
+                  <div key={s.id} className="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-white">
+                          <Clock3 size={13} className="shrink-0 text-gray-400" aria-hidden="true" />
+                          {s.fullName} — {s.slotTime} ({s.slotLabel})
+                        </p>
+                        <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">
+                          {s.phone} · {s.isWorker ? "Worker" : "Member"}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleDecideSignup(s.id, true)}
+                          disabled={decidingSignupId === s.id}
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[#87102C] px-3 text-xs font-semibold text-white disabled:opacity-50"
+                        >
+                          <CheckCircle2 size={13} aria-hidden="true" />
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const opening = offeringId !== s.id;
+                            setOfferingId(opening ? s.id : null);
+                            setOfferSlotId("");
+                          }}
+                          disabled={decidingSignupId === s.id}
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-xs font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70"
+                        >
+                          <ArrowRightLeft size={13} aria-hidden="true" />
+                          Offer a different watch
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDecideSignup(s.id, false)}
+                          disabled={decidingSignupId === s.id}
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-xs font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70"
+                        >
+                          <XCircle size={13} aria-hidden="true" />
+                          Decline
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleDecideSignup(s.id, true)}
-                        disabled={decidingSignupId === s.id}
-                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[#87102C] px-3 text-xs font-semibold text-white disabled:opacity-50"
-                      >
-                        <CheckCircle2 size={13} aria-hidden="true" />
-                        Approve
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDecideSignup(s.id, false)}
-                        disabled={decidingSignupId === s.id}
-                        className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-xs font-semibold text-gray-600 disabled:opacity-50 dark:border-white/10 dark:text-white/70"
-                      >
-                        <XCircle size={13} aria-hidden="true" />
-                        Decline
-                      </button>
-                    </div>
+
+                    {offeringId === s.id && (
+                      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3 dark:border-white/10">
+                        <select
+                          value={offerSlotId}
+                          onChange={(e) => setOfferSlotId(e.target.value)}
+                          className="min-h-9 rounded-lg border border-gray-200 bg-white px-2 text-sm dark:border-white/15 dark:bg-white/[0.04] dark:text-white"
+                        >
+                          <option value="">Choose a watch…</option>
+                          {(data?.slots ?? [])
+                            .filter((slot) => slot.id !== s.slotId)
+                            .map((slot) => (
+                              <option key={slot.id} value={slot.id}>
+                                {slot.label} ({slot.startTime}–{slot.endTime})
+                              </option>
+                            ))}
+                        </select>
+                        <button
+                          type="button"
+                          disabled={!offerSlotId || decidingSignupId === s.id}
+                          onClick={() => handleDecideSignup(s.id, true, offerSlotId)}
+                          className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-[#87102C] px-3 text-xs font-semibold text-white disabled:opacity-50"
+                        >
+                          Confirm into this watch
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -398,11 +453,14 @@ export default function PrayerWatchOverview() {
             </div>
           </section>
 
-          {/* Sign-up table — searchable, slot shown as plain text (the hour they
+          {/* Approved table — searchable, slot shown as plain text (the hour they
               chose), not an editable control. */}
           <section className="print:hidden">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-base font-bold text-[#1A1210] dark:text-white">Sign-ups</h2>
+              <h2 className="text-base font-bold text-[#1A1210] dark:text-white">
+                Approved
+                {signupList.data && <span className="ml-2 text-sm font-normal text-gray-400">({signupList.data.length})</span>}
+              </h2>
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -419,7 +477,7 @@ export default function PrayerWatchOverview() {
               </div>
             ) : filteredSignups.length === 0 ? (
               <p className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-sm text-gray-500 dark:border-white/10 dark:text-white/50">
-                No sign-ups {search ? "match that search" : "yet"}.
+                No approved sign-ups {search ? "match that search" : "yet"}.
               </p>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
@@ -465,6 +523,42 @@ export default function PrayerWatchOverview() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </section>
+
+          {/* Declined sign-ups, kept with the reason — so "why did we say no to
+              this person" is answerable later, not just "someone was declined". */}
+          <section className="print:hidden">
+            <h2 className="text-base font-bold text-[#1A1210] dark:text-white">
+              Declined
+              {declinedSignups.data && <span className="ml-2 text-sm font-normal text-gray-400">({declinedSignups.data.length})</span>}
+            </h2>
+            <p className="mb-3 text-sm text-gray-400">Tracked with the reason given, so it isn&apos;t just &ldquo;someone was declined&rdquo;.</p>
+
+            {declinedSignups.isLoading ? (
+              <div className="space-y-1.5">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="h-16 animate-pulse rounded-xl bg-gray-100 dark:bg-white/5" />
+                ))}
+              </div>
+            ) : (declinedSignups.data ?? []).length === 0 ? (
+              <p className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-sm text-gray-500 dark:border-white/10 dark:text-white/50">
+                No declined sign-ups.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {declinedSignups.data!.map((s) => (
+                  <div key={s.id} className="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {s.fullName} — {s.slotTime} ({s.slotLabel})
+                    </p>
+                    <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">
+                      {s.phone} · Declined {formatDecidedAt(s.decidedAt)}
+                    </p>
+                    {s.decisionNote && <p className="mt-1.5 text-xs italic text-gray-500 dark:text-white/50">&ldquo;{s.decisionNote}&rdquo;</p>}
+                  </div>
+                ))}
               </div>
             )}
           </section>
