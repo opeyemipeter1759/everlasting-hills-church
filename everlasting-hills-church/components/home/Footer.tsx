@@ -61,6 +61,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
     links: [
       { label: "Plan a Visit", href: "/visit" },
       { label: "Home Cell", href: "/connect/home-cell" },
+      { label: "Prayer Watch", href: "/prayer-watch" },
       { label: "Give", href: "/give" },
       { label: "Project Pledge", href: "/pledge" },
       { label: "Contact", href: "/contact" },
