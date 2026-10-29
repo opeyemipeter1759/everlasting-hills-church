@@ -23,7 +23,7 @@ export default function PrayerWatchPage() {
               fill
               priority
               sizes="100vw"
-              className="pw-kenburns object-cover object-[47%_30%]"
+              className="pw-kenburns block object-cover object-[47%_30%] sm:hidden"
             />
             <div
               className="absolute inset-0"
