@@ -401,8 +401,8 @@ iframe {
 .pw-theme .pw-chip { display: inline-flex; align-items: center; gap: 0.3rem; border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 12px; font-weight: 600; }
 .pw-theme .pw-reveal { animation: pw-rise 800ms var(--ease-pw) both; }
 @keyframes pw-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
-.pw-theme .pw-kenburns { animation: pw-kenburns 26s ease-in-out infinite alternate; transform-origin: 28% 32%; }
-@keyframes pw-kenburns { from { transform: scale(1.02); } to { transform: scale(1.11); } }
+.pw-theme .pw-kenburns { animation: pw-kenburns 26s ease-in-out infinite alternate; transform-origin: 47% 38%; }
+@keyframes pw-kenburns { from { transform: scale(1.01); } to { transform: scale(1.06); } }
 
 /* The four watch cards: colour is the schedule, not decoration. */
 .pw-theme [data-watch] { color: #fff; }

@@ -13,17 +13,17 @@ export default function PrayerWatchPage() {
   return (
     <PrayerWatchTheme>
       <main>
-        {/* 1. Hero — a quiet moment of prayer behind the watch's own night colours,
+        {/* 1. Hero — a real moment of worship behind the watch's own night colours,
             slow-panning rather than static so the image feels kept, not stock. */}
-        <section className="pw-ink relative isolate flex min-h-[620px] items-end overflow-hidden pb-16 pt-28 sm:min-h-[720px] sm:pb-20 sm:pt-36">
+        <section className="pw-ink relative isolate flex min-h-[560px] items-end overflow-hidden pb-16 pt-28 sm:min-h-[640px] sm:pb-20 sm:pt-36">
           <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
             <Image
-              src="/HeroImages/IMG_5684.jpg"
+              src="/images/prayer-watch/worship-mic-2.jpg"
               alt=""
               fill
               priority
               sizes="100vw"
-              className="pw-kenburns object-cover object-[28%_32%]"
+              className="pw-kenburns object-cover object-[47%_38%]"
             />
             <div
               className="absolute inset-0"
@@ -55,7 +55,16 @@ export default function PrayerWatchPage() {
         <section className="px-5 py-20 sm:px-8 sm:py-28">
           <div className="mx-auto grid max-w-[1100px] gap-10 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-20">
             <div className="lg:sticky lg:top-28 lg:self-start">
-              <h2 className="pw-display text-4xl sm:text-5xl">The schedule</h2>
+              <div className="relative aspect-square w-full max-w-[320px] overflow-hidden rounded-[20px]">
+                <Image
+                  src="/images/prayer-watch/worship-eyes-closed.jpg"
+                  alt="An EHC member in worship, eyes closed"
+                  fill
+                  sizes="(min-width: 1024px) 320px, 60vw"
+                  className="object-cover object-center"
+                />
+              </div>
+              <h2 className="pw-display mt-6 text-4xl sm:text-5xl">The schedule</h2>
               <span aria-hidden="true" className="mt-6 block h-1 w-14 rounded-full" style={{ background: "var(--color-flame)" }} />
             </div>
             <div className="max-w-[680px] space-y-6 text-lg leading-[1.7] text-black/70">
@@ -126,9 +135,22 @@ export default function PrayerWatchPage() {
           </div>
         </section>
 
-        {/* 5. Closing */}
-        <section className="pw-ink px-5 py-24 text-center sm:py-32">
-          <div className="mx-auto max-w-[700px]">
+        {/* 5. Closing — bookends the hero with a different real moment of worship. */}
+        <section className="pw-ink relative isolate overflow-hidden px-5 py-24 text-center sm:py-32">
+          <div className="absolute inset-0 -z-10" aria-hidden="true">
+            <Image
+              src="/images/prayer-watch/worship-mic-1.jpg"
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover object-[47%_36%]"
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(180deg, rgba(21,14,34,0.55) 0%, rgba(21,14,34,0.85) 55%, #150E22 100%)" }}
+            />
+          </div>
+          <div className="relative mx-auto max-w-[700px]">
             <h2 className="pw-display text-4xl sm:text-5xl">The house is never silent.</h2>
             <p className="mt-4 text-white/65">
               Every watch, every night, someone from EHC is before God on behalf of the rest of us.
