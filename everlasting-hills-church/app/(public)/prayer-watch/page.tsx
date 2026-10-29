@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Moon, Users, Clock3 } from "lucide-react";
 import { PrayerWatchTheme } from "@/components/pray-watch/theme";
@@ -12,10 +13,29 @@ export default function PrayerWatchPage() {
   return (
     <PrayerWatchTheme>
       <main>
-        {/* 1. Hero */}
-        <section className="pw-ink relative overflow-hidden pb-20 pt-28 sm:pt-36">
+        {/* 1. Hero — a quiet moment of prayer behind the watch's own night colours,
+            slow-panning rather than static so the image feels kept, not stock. */}
+        <section className="pw-ink relative isolate flex min-h-[620px] items-end overflow-hidden pb-16 pt-28 sm:min-h-[720px] sm:pb-20 sm:pt-36">
+          <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
+            <Image
+              src="/images/church_congregation_2_1779193607195.png"
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="pw-kenburns object-cover object-[48%_22%]"
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(180deg, rgba(21,14,34,0.35) 0%, rgba(21,14,34,0.55) 45%, rgba(21,14,34,0.94) 88%, #150E22 100%)" }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(110deg, rgba(79,46,94,0.55) 0%, rgba(10,14,31,0.25) 50%, transparent 78%)" }}
+            />
+          </div>
           <div className="pw-sky pw-reveal absolute inset-x-0 top-0 h-2" aria-hidden="true" />
-          <div className="mx-auto max-w-[800px] px-5 sm:px-8">
+          <div className="relative mx-auto max-w-[800px] px-5 sm:px-8">
             <p className="pw-reveal text-sm font-semibold text-white/60">Isaiah 62:6-7</p>
             <h1 className="pw-reveal pw-display mt-4 text-[40px] leading-[1.05] sm:text-[56px]">
               A watch kept every night, so the house is never silent.
