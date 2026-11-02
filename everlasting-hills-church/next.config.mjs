@@ -47,11 +47,21 @@ const nextConfig = {
     ],
   },
 
-  // Keep old bookmarks/search results working after the beliefs → cultures rename.
-  // TODO: restore the apex → www redirect once the www domain mapping's
-  // certificate is issued (Ready=True), so cookies don't split between hosts.
+  // Keep one canonical host so session cookies and sign-in state don't split
+  // between the apex and www origins. /api is excluded: redirecting a fetch
+  // to another origin makes the browser report it as a CORS failure.
+  // Temporary (307) until www is proven — browsers cache permanent redirects.
   async redirects() {
-    return [{ source: "/beliefs", destination: "/cultures", permanent: true }];
+    return [
+      {
+        source: "/:path((?!api(?:/|$)).*)",
+        has: [{ type: "host", value: "everlastinghills.church" }],
+        destination: "https://www.everlastinghills.church/:path",
+        permanent: false,
+      },
+      // Keep old bookmarks/search results working after the beliefs → cultures rename.
+      { source: "/beliefs", destination: "/cultures", permanent: true },
+    ];
   },
 
   // Don't generate browser source maps for production — smaller bundle, faster cold start.
