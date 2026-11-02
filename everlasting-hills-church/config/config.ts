@@ -152,8 +152,8 @@ import {
   HandCoins,
   HandHeart,
   UsersRound,
-  MoonStar,
   CalendarHeart,
+  Clock,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -205,7 +205,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
-      { label: "Prayer Watch",  href: "/dashboard/admin/prayer-watch",  icon: MoonStar,      minRole: "ADMIN" },
+      { label: "Prayer Watch",  href: "/dashboard/admin/prayer-watch",  icon: Clock,      minRole: "ADMIN" },
       { label: "Finance",       href: "/dashboard/admin/finance",       icon: DollarSign,    minRole: "FINANCE_HEAD" },
       { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },
@@ -264,7 +264,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Sermons",      href: "/dashboard/sermon",          icon: BookOpen,            minRole: "MEMBER" },
       { label: "Family",      href: "/dashboard/family",          icon: UsersRound,          minRole: "MEMBER" },
       { label: "Bible Plan",          href: "/dashboard/reading",            icon: BookMarked,          minRole: "MEMBER" },
-      { label: "Prayer Watch",        href: "/dashboard/prayer-watch",       icon: MoonStar,            minRole: "MEMBER" },
+      { label: "Prayer Watch",        href: "/dashboard/prayer-watch",       icon: Clock,            minRole: "MEMBER" },
       { label: "Articles",            href: "/dashboard/articles",           icon: Newspaper,           minRole: "MEMBER" },
       { label: "Books",                href: "/dashboard/books",             icon: Library,             minRole: "MEMBER" },
       { label: "My Classes",          href: "/dashboard/classes",            icon: School,              minRole: "MEMBER" },
