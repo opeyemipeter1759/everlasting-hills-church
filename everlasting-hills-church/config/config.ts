@@ -6,7 +6,7 @@ export const CHURCH = {
   lng: 3.9470,
   youtubeUrl: "https://youtube.com/@everlastinghillschurch?si=3ftJeVz2a6F7Hu3g",
   phone: "+234 706 872 7719",
-  email: "hello@everlastinghills.org",
+  email: "info@everlastinghills.org",
   whatsappUrl: "https://wa.me/2347068727719",
 };
 

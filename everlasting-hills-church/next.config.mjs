@@ -47,9 +47,18 @@ const nextConfig = {
     ],
   },
 
-  // Keep old bookmarks/search results working after the beliefs → cultures rename.
+  // Keep one canonical host so session cookies and sign-in state don't split
+  // between the apex and www origins.
   async redirects() {
-    return [{ source: "/beliefs", destination: "/cultures", permanent: true }];
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "everlastinghills.church" }],
+        destination: "https://www.everlastinghills.church/:path*",
+        permanent: true,
+      },
+      { source: "/beliefs", destination: "/cultures", permanent: true },
+    ];
   },
 
   // Don't generate browser source maps for production — smaller bundle, faster cold start.
