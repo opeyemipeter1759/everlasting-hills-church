@@ -121,9 +121,9 @@ export default function FinanceEntryModal({
                 className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors ${
                   kind === opt.value
                     ? opt.value === "INCOME"
-                      ? "border-emerald-600 bg-emerald-600 text-white"
-                      : "border-rose-600 bg-rose-600 text-white"
-                    : "border-[#E7CDD3] text-gray-600 hover:bg-[#FFF4F6] dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
+                      ? "border-[#2F6B4F] bg-[#2F6B4F] text-white"
+                      : "border-[#9C3B30] bg-[#9C3B30] text-white"
+                    : "border-[#E4D6C7] text-gray-600 hover:bg-[#FBF6EF] dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
                 }`}
               >
                 {opt.label}
@@ -155,7 +155,7 @@ export default function FinanceEntryModal({
                   className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${
                     category === c
                       ? "border-[#87102C] bg-[#87102C] text-white"
-                      : "border-[#E7CDD3] text-gray-600 hover:bg-[#FFF4F6] dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
+                      : "border-[#E4D6C7] text-gray-600 hover:bg-[#FBF6EF] dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
                   }`}
                 >
                   {c}

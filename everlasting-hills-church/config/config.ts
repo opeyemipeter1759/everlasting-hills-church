@@ -69,10 +69,10 @@ const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER"]);
 
 export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
   // Finance visibility does NOT follow the normal "any church-wide role passes
-  // a lateral gate" rule — Admin/Admin Head are deliberately excluded from
-  // finance data. Only Pastor, Finance Head, and Super Admin get through.
+  // a lateral gate" rule — only Pastor and Finance Head get through; even
+  // Admin, Admin Head, and Super Admin are deliberately excluded.
   if (minRole === "FINANCE_HEAD") {
-    return userRole === "FINANCE_HEAD" || userRole === "PASTOR" || userRole === "SUPER_ADMIN";
+    return userRole === "FINANCE_HEAD" || userRole === "PASTOR";
   }
   if (LATERAL_ROLES.has(minRole)) {
     return userRole === minRole || CHURCH_WIDE_ROLES.has(userRole);

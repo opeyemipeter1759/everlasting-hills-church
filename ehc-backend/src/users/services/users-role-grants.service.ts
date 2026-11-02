@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { Role } from '@prisma/client';
@@ -21,6 +21,12 @@ export class UsersRoleGrantsService {
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
+
+  private assertCanGrantFinanceHead(actor: AuthUser) {
+    if (actor.role !== Role.PASTOR && actor.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Only Pastor or Super Admin may assign or remove the Finance Head role');
+    }
   }
 
   private async assertTargetInTenant(profileId: string) {
@@ -109,11 +115,16 @@ export class UsersRoleGrantsService {
 
   /** Assign Finance Head — global, unscoped, same shape as Head Usher. Grants
    * visibility into the finance module (see FinanceRolesGuard), not any
-   * admin-hierarchy capability. History-preserving. */
+   * admin-hierarchy capability. History-preserving.
+   *
+   * Deliberately NOT gated by the generic level check: FINANCE_HEAD sits at
+   * level 3, so Admin/Admin Head (level 6) would otherwise qualify to grant
+   * it — including to themselves — which would let them read finance data
+   * despite FinanceRolesGuard excluding them. Only Pastor or Super Admin may
+   * assign/remove this role, mirroring who may see the data it unlocks. */
   async assignFinanceHead(actor: AuthUser, profileId: string) {
     await this.assertTargetInTenant(profileId);
-    this.auth.assertCanActOn(actor, Role.FINANCE_HEAD);
-    this.auth.assertCanActOn(actor, await this.auth.targetPrimaryRole(profileId));
+    this.assertCanGrantFinanceHead(actor);
 
     const existing = await this.prisma.financeHeadAssignment.findFirst({
       where: { userId: profileId, endedAt: null },
@@ -131,8 +142,7 @@ export class UsersRoleGrantsService {
 
   async removeFinanceHead(actor: AuthUser, profileId: string) {
     await this.assertTargetInTenant(profileId);
-    this.auth.assertCanActOn(actor, Role.FINANCE_HEAD);
-    this.auth.assertCanActOn(actor, await this.auth.targetPrimaryRole(profileId));
+    this.assertCanGrantFinanceHead(actor);
 
     await this.prisma.financeHeadAssignment.updateMany({
       where: { userId: profileId, endedAt: null },

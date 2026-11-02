@@ -73,8 +73,12 @@ export function assignableRoles(actorRole: Role | null | undefined): Role[] {
   const actorLevel = ROLE_LEVELS[actorRole];
   const roles = (Object.keys(ROLE_LEVELS) as Role[]).filter(
     // ADMIN is legacy (merged into ADMIN_HEAD) — never offered for new assignment.
-    (r) => ROLE_LEVELS[r] < actorLevel && r !== 'VISITOR' && r !== Role.ADMIN,
+    // FINANCE_HEAD is excluded from the generic level check — see below; granting
+    // it is restricted to Pastor/Super Admin regardless of level, matching
+    // UsersRoleGrantsService.assertCanGrantFinanceHead and FinanceRolesGuard.
+    (r) => ROLE_LEVELS[r] < actorLevel && r !== 'VISITOR' && r !== Role.ADMIN && r !== Role.FINANCE_HEAD,
   );
+  if (actorRole === Role.PASTOR || actorRole === Role.SUPER_ADMIN) roles.push(Role.FINANCE_HEAD);
   // Mirror the canActOnRole peer exception: a Super Admin may also grant Super Admin.
   if (actorRole === Role.SUPER_ADMIN) roles.push(Role.SUPER_ADMIN);
   return roles;

@@ -62,18 +62,16 @@ export default function ServiceOfferingRow({
 
   return (
     <div
-      className={`flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 ${
-        service.recorded
-          ? "border-gray-200 dark:border-white/10"
-          : "border-amber-300/70 bg-amber-50/50 dark:border-amber-500/30 dark:bg-amber-500/[0.06]"
+      className={`flex flex-wrap items-center gap-3 border-b border-[#E4D6C7] py-3 pl-3 last:border-0 dark:border-white/10 ${
+        !service.recorded && !dirty ? "border-l-2 border-l-[#B9862E]" : "border-l-2 border-l-transparent"
       }`}
     >
       <div className="min-w-[150px] flex-1">
-        <p className="text-sm font-semibold text-gray-900 dark:text-white">{dayLabel(service.scheduledAt)}</p>
-        <p className="text-xs text-gray-400">{service.name}</p>
+        <p className="text-sm font-semibold text-[#2B2420] dark:text-white">{dayLabel(service.scheduledAt)}</p>
+        <p className="text-xs text-[#8A7F72] dark:text-white/45">{service.name}</p>
       </div>
 
-      <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-white/50">
+      <label className="flex items-center gap-1.5 text-xs font-medium text-[#8A7F72] dark:text-white/45">
         Tithe
         <input
           type="number"
@@ -81,11 +79,11 @@ export default function ServiceOfferingRow({
           value={tithe}
           onChange={(e) => setTithe(e.target.value)}
           placeholder="0"
-          className={`w-28 rounded-lg border border-[#E7CDD3] dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 ${numberInputCls}`}
+          className={`w-28 rounded-lg border border-[#E4D6C7] dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 text-sm text-[#2B2420] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 ${numberInputCls}`}
         />
       </label>
 
-      <label className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-white/50">
+      <label className="flex items-center gap-1.5 text-xs font-medium text-[#8A7F72] dark:text-white/45">
         Offering
         <input
           type="number"
@@ -93,7 +91,7 @@ export default function ServiceOfferingRow({
           value={offering}
           onChange={(e) => setOffering(e.target.value)}
           placeholder="0"
-          className={`w-28 rounded-lg border border-[#E7CDD3] dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 ${numberInputCls}`}
+          className={`w-28 rounded-lg border border-[#E4D6C7] dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-1.5 text-sm text-[#2B2420] dark:text-white focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 ${numberInputCls}`}
         />
       </label>
 
@@ -109,11 +107,11 @@ export default function ServiceOfferingRow({
             Save
           </button>
         ) : service.recorded ? (
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            <Check size={13} /> Saved
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#2F6B4F] dark:text-emerald-400">
+            <Check size={13} /> Recorded
           </span>
         ) : (
-          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Not recorded yet</span>
+          <span className="text-xs font-medium text-[#8A6420] dark:text-amber-400">Not recorded yet</span>
         )}
 
         {service.recorded && !dirty && (
@@ -121,7 +119,7 @@ export default function ServiceOfferingRow({
             type="button"
             onClick={() => setConfirmDelete(true)}
             aria-label={`Delete recorded offering for ${service.name}`}
-            className="rounded-lg p-1.5 text-gray-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+            className="rounded-lg p-1.5 text-[#C9BBAC] hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
           >
             <Trash2 size={14} />
           </button>
