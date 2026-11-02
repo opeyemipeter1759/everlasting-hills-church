@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -7,8 +8,10 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { Throttle } from '@nestjs/throttler';
 import {
   AddDelegateDto,
+  ApproveDto,
   CreateBlockDto,
   CreateRequestDto,
+  SetMeetingLinkDto,
   CreateSessionTypeDto,
   DecisionNoteDto,
   ProposeTimeDto,
@@ -69,6 +72,15 @@ export class OneOnOneController {
     return this.requests.acceptProposal(user, id);
   }
 
+  @Get('requests/:id/calendar.ics')
+  @ApiOperation({ summary: 'An approved session as a calendar file' })
+  async ics(@CurrentUser() user: AuthUser, @Param('id') id: string, @Res() res: Response) {
+    const { filename, body } = await this.requests.icsForMember(user, id);
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(body);
+  }
+
   // ── Pastors and delegates ─────────────────────────────────────────────────
 
   @Get('manage/hosts/:hostId/requests')
@@ -78,9 +90,15 @@ export class OneOnOneController {
   }
 
   @Post('manage/hosts/:hostId/requests/:id/approve')
-  @ApiOperation({ summary: 'Approve a request' })
-  approve(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: DecisionNoteDto) {
+  @ApiOperation({ summary: 'Approve a request, optionally with a Google Meet or Zoom link' })
+  approve(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: ApproveDto) {
     return this.requests.approve(user, hostId, id, body);
+  }
+
+  @Post('manage/hosts/:hostId/requests/:id/link')
+  @ApiOperation({ summary: 'Add or change the meeting link on an upcoming session' })
+  setLink(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: SetMeetingLinkDto) {
+    return this.requests.setMeetingLink(user, hostId, id, body);
   }
 
   @Post('manage/hosts/:hostId/requests/:id/decline')

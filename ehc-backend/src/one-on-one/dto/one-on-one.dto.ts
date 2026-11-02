@@ -11,9 +11,13 @@ import {
   IsOptional,
   IsString,
   Matches,
+  IsEmail,
+  IsUrl,
+  ValidateIf,
   Max,
   MaxLength,
   Min,
+  MinLength,
   ValidateNested,
 } from 'class-validator';
 
@@ -27,6 +31,20 @@ export class UpdateHostSettingsDto {
   @IsNotEmpty()
   @MaxLength(80)
   displayName?: string;
+
+  @ApiPropertyOptional({ example: 'pastor-faith', description: 'Public share link: /talk-to-a-pastor/<slug>' })
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  @MaxLength(60)
+  slug?: string;
+
+  @ApiPropertyOptional({ example: 'https://zoom.us/j/1234567890', description: 'Standing Google Meet or Zoom room; empty clears it' })
+  @IsOptional()
+  @ValidateIf((o: UpdateHostSettingsDto) => Boolean(o.defaultMeetingLink))
+  @IsUrl({ protocols: ['https'], require_protocol: true }, { message: 'Use a full https:// meeting link' })
+  @MaxLength(500)
+  defaultMeetingLink?: string;
 
   @ApiPropertyOptional({ example: 'Pastor' })
   @IsOptional()
@@ -225,12 +243,76 @@ export class CreateRequestDto {
   note?: string;
 }
 
+export const FOUND_VIA = ['YouTube', 'Telegram', 'Facebook', 'Instagram', 'A friend', 'Other'] as const;
+
+/** A visitor's request: no account, so who they are comes with it. */
+export class CreateVisitorRequestDto extends CreateRequestDto {
+  @ApiProperty({ example: 'Daniel Mensah' })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(120)
+  fullName!: string;
+
+  @ApiProperty({ example: 'daniel@example.com' })
+  @IsEmail()
+  @MaxLength(254)
+  email!: string;
+
+  @ApiProperty({ example: '+233 24 123 4567', description: 'WhatsApp or phone' })
+  @IsString()
+  @MinLength(6)
+  @MaxLength(40)
+  phone!: string;
+
+  @ApiProperty({ example: 'Accra, Ghana' })
+  @IsString()
+  @MinLength(2)
+  @MaxLength(120)
+  location!: string;
+
+  @ApiProperty({ enum: FOUND_VIA })
+  @IsIn(FOUND_VIA)
+  foundVia!: (typeof FOUND_VIA)[number];
+
+  @ApiProperty({ example: false, description: 'In person is only offered to visitors in or near Ibadan' })
+  @IsBoolean()
+  inIbadan!: boolean;
+
+  @ApiPropertyOptional({ example: 'Africa/Accra' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(64)
+  timezone?: string;
+
+  @ApiPropertyOptional({ description: 'Left empty by people; bots fill it' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  website?: string;
+}
+
 export class DecisionNoteDto {
   @ApiPropertyOptional({ example: 'Looking forward to it.' })
   @IsOptional()
   @IsString()
   @MaxLength(600)
   note?: string;
+}
+
+export class ApproveDto extends DecisionNoteDto {
+  @ApiPropertyOptional({ example: 'https://meet.google.com/abc-defg-hij', description: 'Google Meet or Zoom link for an online session' })
+  @IsOptional()
+  @ValidateIf((o: ApproveDto) => Boolean(o.meetLink))
+  @IsUrl({ protocols: ['https'], require_protocol: true }, { message: 'Use a full https:// meeting link' })
+  @MaxLength(500)
+  meetLink?: string;
+}
+
+export class SetMeetingLinkDto {
+  @ApiProperty({ example: 'https://zoom.us/j/1234567890' })
+  @IsUrl({ protocols: ['https'], require_protocol: true }, { message: 'Use a full https:// meeting link' })
+  @MaxLength(500)
+  meetLink!: string;
 }
 
 export class ProposeTimeDto extends DecisionNoteDto {

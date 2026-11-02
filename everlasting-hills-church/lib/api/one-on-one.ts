@@ -31,6 +31,10 @@ export interface SessionType {
 export interface HostDetail {
   id: string;
   displayName: string;
+  slug: string | null;
+  defaultMeetingLink: string | null;
+  googleConnected: boolean;
+  notesEnabled: boolean;
   title: string | null;
   bio: string | null;
   active: boolean;
@@ -51,6 +55,8 @@ export type HostSettingsInput = Partial<
   Pick<
     HostDetail,
     | "displayName"
+    | "slug"
+    | "defaultMeetingLink"
     | "title"
     | "bio"
     | "active"
@@ -76,6 +82,7 @@ export interface PersonResult {
 
 export interface HostSummary {
   id: string;
+  slug: string | null;
   displayName: string;
   title: string | null;
   bio: string | null;
@@ -231,7 +238,19 @@ function useDecision<TInput extends { id: string }>(hostId: string, action: stri
   });
 }
 
-export const useApproveRequest = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "approve");
+export const useApproveRequest = (hostId: string) => useDecision<{ id: string; note?: string; meetLink?: string }>(hostId, "approve");
+export const useSetMeetingLink = (hostId: string) => useDecision<{ id: string; meetLink: string }>(hostId, "link");
+
+/** The download goes through the same-origin API proxy, so the session cookie comes with it. */
+export function sessionIcsHref(id: string): string {
+  return `/api/backend/one-on-one/requests/${id}/calendar.ics`;
+}
+
+/** Public share link for a pastor. */
+export function shareUrl(slug: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://www.everlastinghills.church";
+  return `${origin}/talk-to-a-pastor/${slug}`;
+}
 export const useDeclineRequest = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "decline");
 export const useProposeTime = (hostId: string) => useDecision<{ id: string; startsAt: string; note?: string }>(hostId, "propose");
 export const useCancelApproved = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "cancel");

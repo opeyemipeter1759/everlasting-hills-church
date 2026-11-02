@@ -45,7 +45,9 @@ function row(overrides: Record<string, unknown> = {}) {
     meetLink: null,
     cancelledBy: null,
     createdAt: new Date('2026-11-02T10:00:00.000Z'),
-    Host: { displayName: 'Pastor Faith' },
+    Host: { displayName: 'Pastor Faith', profileId: 'pastor-faith', defaultMeetingLink: 'https://zoom.us/j/standing' },
+    googleEventId: null,
+    requesterTimezone: null,
     CoHost: null,
     SessionType: { name: 'Counsel & prayer', durationMinutes: 60 },
     ...overrides,
@@ -63,17 +65,34 @@ function setup(opts: { cipherOn?: boolean; open?: boolean; slots?: string[] } = 
     },
     pastorSessionType: { findFirst: jest.fn().mockResolvedValue({ id: 'st1', hostId: 'h1', jointWithHostId: null }) },
     member: { findFirst: jest.fn().mockResolvedValue({ firstName: 'Ada', lastName: 'Obi', email: 'ada@x.com', phone: null }) },
+    visitor: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
     $transaction: jest.fn((fn: (tx: unknown) => unknown) => fn(prisma)),
   };
   const slots = (opts.slots ?? [START]).map((s) => ({ startsAt: s, endsAt: new Date(new Date(s).getTime() + 3_600_000).toISOString() }));
   const oneOnOne = {
     computeOpenSlots: jest.fn().mockResolvedValue([{ date: '2026-11-12', slots }]),
+    externalBusyFor: jest.fn().mockResolvedValue([]),
     assertCanManage: jest.fn().mockResolvedValue({ host: { id: 'h1' }, isOwner: true }),
   };
   const notify = { toRequester: jest.fn(), toHostSide: jest.fn() };
   const cipher = { isConfigured: opts.cipherOn ?? true, encrypt: (s: string) => `enc:${s}`, decrypt: (s: string) => s.replace('enc:', '') };
-  const svc = new OneOnOneRequestsService(prisma as never, oneOnOne as never, notify as never, cipher as never, { get: () => 't1' } as never);
-  return { svc, prisma, oneOnOne, notify };
+  const calendar = {
+    createEvent: jest.fn().mockResolvedValue({ eventId: 'g1', meetLink: 'https://meet.google.com/auto' }),
+    deleteEvent: jest.fn().mockResolvedValue(undefined),
+  };
+  const links = { bookingIdFrom: (t: string) => (t === 'good.sig' ? 'b1' : null) };
+  const ics = {};
+  const svc = new OneOnOneRequestsService(
+    prisma as never,
+    oneOnOne as never,
+    notify as never,
+    cipher as never,
+    calendar as never,
+    links as never,
+    ics as never,
+    { get: () => 't1' } as never,
+  );
+  return { svc, prisma, oneOnOne, notify, calendar };
 }
 
 const dto = { hostId: 'h1', sessionTypeId: 'st1', startsAt: START, format: 'IN_PERSON' as const, topic: 'Counsel' as const, note: 'Private' };
@@ -167,5 +186,84 @@ describe('pastor decisions', () => {
     const asDelegate = await svc.listForHost(member, 'h1');
     expect(asDelegate.waiting[0].note).toBeNull();
     expect(asDelegate.waiting[0].hasNote).toBe(true);
+  });
+});
+
+describe('meeting links on approval', () => {
+  const future = new Date(Date.now() + 5 * 86_400_000);
+  function online(overrides: Record<string, unknown> = {}) {
+    const s = setup();
+    const r = row({ format: 'GOOGLE_MEET', startsAt: future, endsAt: new Date(future.getTime() + 3_600_000), ...overrides });
+    s.prisma.pastoralBooking.findFirst.mockResolvedValue(r);
+    s.prisma.pastoralBooking.findUniqueOrThrow.mockResolvedValue(r);
+    return s;
+  }
+  const linkWritten = (prisma: ReturnType<typeof setup>['prisma']) =>
+    prisma.pastoralBooking.update.mock.calls.map((c) => c[0].data).find((d) => 'meetLink' in d)?.meetLink;
+
+  it('uses a pasted Google Meet or Zoom link, and skips creating a Meet', async () => {
+    const { svc, prisma, calendar } = online();
+    await svc.approve(pastor, 'h1', 'b1', { meetLink: 'https://zoom.us/j/999' });
+    expect(calendar.createEvent).toHaveBeenCalledWith(expect.objectContaining({ withMeet: false }));
+    expect(linkWritten(prisma)).toBe('https://zoom.us/j/999');
+  });
+
+  it('falls back to a Meet created in Google, then to the pastor’s standing link', async () => {
+    const auto = online();
+    await auto.svc.approve(pastor, 'h1', 'b1', {});
+    expect(linkWritten(auto.prisma)).toBe('https://meet.google.com/auto');
+
+    const standing = online();
+    standing.calendar.createEvent.mockResolvedValue(null);
+    await standing.svc.approve(pastor, 'h1', 'b1', {});
+    expect(linkWritten(standing.prisma)).toBe('https://zoom.us/j/standing');
+  });
+
+  it('gives in-person sessions no link', async () => {
+    const { svc, prisma } = online({ format: 'IN_PERSON' });
+    await svc.approve(pastor, 'h1', 'b1', { meetLink: 'https://zoom.us/j/999' });
+    expect(linkWritten(prisma)).toBeNull();
+  });
+});
+
+describe('visitor requests', () => {
+  const visitorDto = {
+    ...dto,
+    note: undefined,
+    format: 'GOOGLE_MEET' as const,
+    fullName: 'Daniel Mensah',
+    email: 'Daniel@Example.com',
+    phone: '+233 24 123 4567',
+    location: 'Accra, Ghana',
+    foundVia: 'YouTube' as const,
+    inIbadan: false,
+  };
+
+  it('holds the time unconfirmed and emails a confirmation link', async () => {
+    const { svc, prisma, oneOnOne, notify } = setup();
+    await svc.createVisitorRequest(visitorDto);
+    const data = prisma.pastoralBooking.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({ status: 'HOLD', requesterType: 'VISITOR', requesterEmail: 'daniel@example.com' });
+    expect(data.holdExpiresAt.getTime()).toBeGreaterThan(Date.now() + 29 * 60_000);
+    expect(oneOnOne.computeOpenSlots).toHaveBeenCalledWith('h1', 'st1', '2026-11-12', '2026-11-12', expect.objectContaining({ audience: 'VISITOR' }));
+    expect(prisma.visitor.create).toHaveBeenCalled();
+    expect(notify.toRequester).toHaveBeenCalledWith(expect.anything(), 'VERIFY');
+    expect(notify.toHostSide).not.toHaveBeenCalled();
+  });
+
+  it('offers in person only to people in or near Ibadan', async () => {
+    const { svc } = setup();
+    await expect(svc.createVisitorRequest({ ...visitorDto, format: 'IN_PERSON' })).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('quietly drops submissions that fill the hidden spam field', async () => {
+    const { svc, prisma } = setup();
+    await svc.createVisitorRequest({ ...visitorDto, website: 'http://spam' });
+    expect(prisma.pastoralBooking.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a tampered private link', async () => {
+    const { svc } = setup();
+    await expect(svc.getByToken('b1.forged')).rejects.toThrow(/isn’t valid/);
   });
 });

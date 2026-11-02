@@ -7,6 +7,7 @@ import { DailyFastEmailService } from '../fasting-email/daily-fast-email.service
 import { FastingPushService } from '../fasting-email/fasting-push.service';
 import { FastingRecapsService } from '../fasting-email/fasting-recaps.service';
 import { ClassesAdminService } from '../classes/classes-admin.service';
+import { OneOnOneSweepService } from '../one-on-one/one-on-one-sweep.service';
 
 /** Names match the @Cron({ name }) options so logs and Cloud Scheduler agree. */
 export const JOB_NAMES = [
@@ -26,6 +27,7 @@ export const JOB_NAMES = [
   'daily-fast-email',
   'fasting-push',
   'class-stalled-learners',
+  'one-on-one-sweep',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -57,6 +59,7 @@ export class JobsRunnerService {
     private readonly dailyFastEmail: DailyFastEmailService,
     private readonly fastingPush: FastingPushService,
     private readonly classes: ClassesAdminService,
+    private readonly oneOnOneSweep: OneOnOneSweepService,
   ) {}
 
   isJob(name: string): name is JobName {
@@ -116,6 +119,8 @@ export class JobsRunnerService {
         return this.fastingPush.run().then(() => undefined);
       case 'class-stalled-learners':
         return this.classes.notifyStalled().then(() => undefined);
+      case 'one-on-one-sweep':
+        return this.oneOnOneSweep.run().then(() => undefined);
     }
   }
 }

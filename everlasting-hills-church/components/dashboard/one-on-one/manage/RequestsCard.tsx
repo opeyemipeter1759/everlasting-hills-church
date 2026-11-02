@@ -9,6 +9,7 @@ import {
   useHostRequests,
   usePreviewSlots,
   useProposeTime,
+  useSetMeetingLink,
   type HostDetail,
   type HostRequest,
 } from "@/lib/api/one-on-one";
@@ -17,7 +18,7 @@ import { errorText } from "@/components/pray-watch/shared";
 import { FORMAT_LABEL, formatWhenLong } from "../member/parts";
 import { Section, addDays, btnGhost, btnPrimary, formatDay, formatTime, input, lagosToday, muted } from "./ui";
 
-type Mode = { kind: "approve" | "decline" | "propose" | "cancel"; id: string } | null;
+type Mode = { kind: "approve" | "decline" | "propose" | "cancel" | "link"; id: string } | null;
 
 function RequesterLine({ r }: { r: HostRequest }) {
   return (
@@ -110,26 +111,36 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
   const decline = useDeclineRequest(host.id);
   const propose = useProposeTime(host.id);
   const cancel = useCancelApproved(host.id);
+  const setLink = useSetMeetingLink(host.id);
   const [mode, setMode] = useState<Mode>(null);
   const [note, setNote] = useState("");
   const [proposedAt, setProposedAt] = useState("");
+  const [meetLink, setMeetLink] = useState("");
 
-  const open = (kind: NonNullable<Mode>["kind"], id: string) => {
-    setMode({ kind, id });
+  const open = (kind: NonNullable<Mode>["kind"], r: HostRequest) => {
+    setMode({ kind, id: r.id });
     setNote("");
     setProposedAt("");
+    setMeetLink(kind === "link" ? (r.meetLink ?? "") : "");
   };
 
   async function submit(r: HostRequest) {
     if (!mode) return;
     const body = { id: r.id, note: note.trim() || undefined };
     try {
-      if (mode.kind === "approve") await approve.mutateAsync(body);
+      if (mode.kind === "approve") await approve.mutateAsync({ ...body, meetLink: meetLink.trim() || undefined });
       if (mode.kind === "decline") await decline.mutateAsync(body);
       if (mode.kind === "cancel") await cancel.mutateAsync(body);
       if (mode.kind === "propose") await propose.mutateAsync({ ...body, startsAt: proposedAt });
+      if (mode.kind === "link") await setLink.mutateAsync({ id: r.id, meetLink: meetLink.trim() });
       showToast.success(
-        { approve: `Approved. ${r.requesterName} has been told.`, decline: "Declined", cancel: "Session cancelled", propose: `New time sent to ${r.requesterName}` }[mode.kind],
+        {
+          approve: `Approved. ${r.requesterName} has been told.`,
+          decline: "Declined",
+          cancel: "Session cancelled",
+          propose: `New time sent to ${r.requesterName}`,
+          link: `Link sent to ${r.requesterName}`,
+        }[mode.kind],
       );
       setMode(null);
     } catch (err) {
@@ -137,7 +148,13 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
     }
   }
 
-  const busy = approve.isPending || decline.isPending || propose.isPending || cancel.isPending;
+  const busy = approve.isPending || decline.isPending || propose.isPending || cancel.isPending || setLink.isPending;
+  const online = (r: HostRequest) => r.format === "GOOGLE_MEET";
+  const linkHint = host.googleConnected
+    ? "Leave empty and Google will create a Meet link."
+    : host.defaultMeetingLink
+      ? "Leave empty to use your standing room."
+      : "Paste a Google Meet or Zoom link, or add one later.";
   const data = requests.data;
 
   const actionPanel = (r: HostRequest) => {
@@ -147,16 +164,40 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
       decline: { title: "Let them know why (optional)", button: "Decline", placeholder: "I'm away that week. Please pick another time." },
       propose: { title: "A note with the new time (optional)", button: "Send new time", placeholder: "That time is taken. Would this work?" },
       cancel: { title: "Tell them why", button: "Cancel session", placeholder: "Something urgent has come up." },
+      link: { title: "", button: "Send link", placeholder: "" },
     }[mode.kind];
+    const showLink = mode.kind === "link" || (mode.kind === "approve" && online(r));
     return (
       <div className="flex flex-col gap-3 rounded-xl bg-[#FFE8ED]/40 p-3.5 dark:bg-white/[0.04]">
         {mode.kind === "propose" && <ProposePicker hostId={host.id} request={r} value={proposedAt} onChange={setProposedAt} />}
-        <label className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-[#5A4A4D] dark:text-white/60">{labels.title}</span>
-          <textarea id={`decision-note-${r.id}`} rows={2} maxLength={600} className={`${input} resize-y`} placeholder={labels.placeholder} value={note} onChange={(e) => setNote(e.target.value)} />
-        </label>
+        {showLink && (
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-[#5A4A4D] dark:text-white/60">Google Meet or Zoom link{mode.kind === "approve" && " (optional)"}</span>
+            <input
+              id={`meet-link-${r.id}`}
+              type="url"
+              className={input}
+              placeholder="https://meet.google.com/… or https://zoom.us/j/…"
+              value={meetLink}
+              maxLength={500}
+              onChange={(e) => setMeetLink(e.target.value)}
+            />
+            {mode.kind === "approve" && <span className={`text-xs ${muted}`}>{linkHint}</span>}
+          </label>
+        )}
+        {mode.kind !== "link" && (
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-[#5A4A4D] dark:text-white/60">{labels.title}</span>
+            <textarea id={`decision-note-${r.id}`} rows={2} maxLength={600} className={`${input} resize-y`} placeholder={labels.placeholder} value={note} onChange={(e) => setNote(e.target.value)} />
+          </label>
+        )}
         <div className="flex flex-wrap gap-2">
-          <button type="button" className={btnPrimary} disabled={busy || (mode.kind === "propose" && !proposedAt)} onClick={() => submit(r)}>
+          <button
+            type="button"
+            className={btnPrimary}
+            disabled={busy || (mode.kind === "propose" && !proposedAt) || (mode.kind === "link" && !/^https:\/\/\S+$/.test(meetLink.trim()))}
+            onClick={() => submit(r)}
+          >
             {labels.button}
           </button>
           <button type="button" className={btnGhost} onClick={() => setMode(null)} disabled={busy}>
@@ -195,15 +236,15 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
                     actionPanel(r)
                   ) : (
                     <div className="flex flex-wrap gap-2">
-                      <button type="button" className={btnPrimary} onClick={() => open("approve", r.id)}>
+                      <button type="button" className={btnPrimary} onClick={() => open("approve", r)}>
                         Approve
                       </button>
                       {r.hostId === host.id && (
-                        <button type="button" className={btnGhost} onClick={() => open("propose", r.id)}>
+                        <button type="button" className={btnGhost} onClick={() => open("propose", r)}>
                           Suggest another time
                         </button>
                       )}
-                      <button type="button" className={btnGhost} onClick={() => open("decline", r.id)}>
+                      <button type="button" className={btnGhost} onClick={() => open("decline", r)}>
                         Decline
                       </button>
                     </div>
@@ -240,12 +281,27 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
                     <RequesterLine r={r} />
                     <Details r={r} />
                     <PrivateNote r={r} />
+                    {online(r) &&
+                      (r.meetLink ? (
+                        <a href={r.meetLink} target="_blank" rel="noopener noreferrer" className="self-start break-all text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
+                          {r.meetLink}
+                        </a>
+                      ) : (
+                        <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">No meeting link yet. Add one so they can join.</p>
+                      ))}
                     {mode?.id === r.id ? (
                       actionPanel(r)
                     ) : (
-                      <button type="button" className={`${btnGhost} self-start px-2.5 py-1 text-xs`} onClick={() => open("cancel", r.id)}>
-                        Cancel session
-                      </button>
+                      <div className="flex flex-wrap gap-2">
+                        {online(r) && (
+                          <button type="button" className={`${btnGhost} px-2.5 py-1 text-xs`} onClick={() => open("link", r)}>
+                            {r.meetLink ? "Change link" : "Add link"}
+                          </button>
+                        )}
+                        <button type="button" className={`${btnGhost} px-2.5 py-1 text-xs`} onClick={() => open("cancel", r)}>
+                          Cancel session
+                        </button>
+                      </div>
                     )}
                   </li>
                 ))}

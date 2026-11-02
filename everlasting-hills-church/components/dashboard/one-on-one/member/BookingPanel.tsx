@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSlots, type HostSummary } from "@/lib/api/one-on-one";
+import { usePublicSlots } from "@/lib/api/one-on-one-public";
 import { btnPrimary, durationLabel, formatTime, lagosToday } from "../manage/ui";
-import { Portrait } from "./parts";
+import { Portrait, dualTime } from "./parts";
 
 type Slot = { startsAt: string; endsAt: string };
 
@@ -48,12 +49,19 @@ export default function BookingPanel({
   sessionTypeId,
   onBack,
   onNext,
+  audience = "member",
+  timeZone,
+  backLabel = "All pastors",
 }: {
   host: HostSummary;
   hostIndex: number;
   sessionTypeId: string;
   onBack: () => void;
   onNext: (slot: Slot) => void;
+  audience?: "member" | "visitor";
+  /** Visitors see times in their own zone alongside Lagos. */
+  timeZone?: string;
+  backLabel?: string;
 }) {
   const today = lagosToday();
   const firstMonth = monthOf(today);
@@ -62,7 +70,10 @@ export default function BookingPanel({
 
   const [month, setMonth] = useState(() => monthOf(host.nextOpening ? new Date(host.nextOpening).toISOString().slice(0, 10) : today));
   const from = month === firstMonth ? today : `${month}-01`;
-  const slots = useSlots(host.id, sessionTypeId, from, monthEnd(month));
+  const memberSlots = useSlots(audience === "member" ? host.id : null, sessionTypeId, from, monthEnd(month));
+  const visitorSlots = usePublicSlots(audience === "visitor" ? host.id : null, sessionTypeId, from, monthEnd(month));
+  const slots = audience === "visitor" ? visitorSlots : memberSlots;
+  const showTime = (iso: string) => (timeZone ? dualTime(iso, timeZone) : formatTime(iso));
   const byDate = useMemo(() => new Map((slots.data ?? []).map((d) => [d.date, d.slots])), [slots.data]);
 
   const [date, setDate] = useState<string | null>(null);
@@ -80,7 +91,7 @@ export default function BookingPanel({
     <div className="grid overflow-hidden rounded-2xl border border-[#E7CDD3]/60 bg-white dark:border-white/[0.09] dark:bg-white/[0.05] lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.25fr)_minmax(0,0.8fr)]">
       <div className="flex flex-col gap-4 p-6">
         <button type="button" onClick={onBack} className="inline-flex items-center gap-1 self-start text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
-          <ArrowLeft size={14} /> All pastors
+          <ArrowLeft size={14} /> {backLabel}
         </button>
         <Portrait name={host.displayName} index={hostIndex} />
         <div>
@@ -94,7 +105,9 @@ export default function BookingPanel({
           </div>
           <div>
             <dt className="text-xs font-semibold text-[#7A6A6F] dark:text-white/50">Where</dt>
-            <dd className="font-semibold text-[#111] dark:text-white">Church office, Google Meet or phone</dd>
+            <dd className="font-semibold text-[#111] dark:text-white">
+              {audience === "visitor" ? "Video call or phone, wherever you are" : "Church office, video call or phone"}
+            </dd>
           </div>
           <div>
             <dt className="text-xs font-semibold text-[#7A6A6F] dark:text-white/50">Approval</dt>
@@ -160,7 +173,7 @@ export default function BookingPanel({
           })}
         </div>
         <p className="mt-4 text-xs text-[#7A6A6F] dark:text-white/50">
-          {slots.isLoading ? "Finding open times…" : slots.isError ? "Couldn’t load open times." : byDate.size === 0 ? "No open times this month. Try the next one." : "Times are in West Africa Time (Lagos)."}
+          {slots.isLoading ? "Finding open times…" : slots.isError ? "Couldn’t load open times." : byDate.size === 0 ? "No open times this month. Try the next one." : timeZone && timeZone !== "Africa/Lagos" ? "Times show your time first, then Lagos time." : "Times are in West Africa Time (Lagos)."}
         </p>
       </div>
 
@@ -172,7 +185,7 @@ export default function BookingPanel({
               picked?.startsAt === s.startsAt ? (
                 <div key={s.startsAt} className="grid grid-cols-2 gap-2">
                   <span className="flex items-center justify-center rounded-xl bg-[#3B2A2E] py-2.5 text-[15px] font-bold tabular-nums text-white dark:bg-white/20">
-                    {formatTime(s.startsAt)}
+                    {showTime(s.startsAt)}
                   </span>
                   <button type="button" className={btnPrimary} onClick={() => onNext(s)}>
                     Next
@@ -185,7 +198,7 @@ export default function BookingPanel({
                   onClick={() => setPicked(s)}
                   className="rounded-xl border-[1.5px] border-[#87102C] py-2.5 text-[15px] font-bold tabular-nums text-[#87102C] transition hover:bg-[#FFE8ED] dark:border-[#FFB3C1]/70 dark:text-[#FFB3C1] dark:hover:bg-white/[0.06]"
                 >
-                  {formatTime(s.startsAt)}
+                  {showTime(s.startsAt)}
                 </button>
               ),
             )}

@@ -10,7 +10,7 @@ import { formatWhenLong } from "./parts";
 
 const FORMATS: { value: MeetingFormat; label: string; hint: string }[] = [
   { value: "IN_PERSON", label: "In person", hint: "Church office, Ibadan" },
-  { value: "GOOGLE_MEET", label: "Google Meet", hint: "Video call, link sent later" },
+  { value: "GOOGLE_MEET", label: "Video call", hint: "Google Meet or Zoom, link sent on approval" },
   { value: "PHONE", label: "Phone call", hint: "The pastor calls you" },
 ];
 

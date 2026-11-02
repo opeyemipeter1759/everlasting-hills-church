@@ -1,10 +1,11 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PastoralBookingStatus, Prisma, Role, type PastorHost } from '@prisma/client';
+import { PastoralBookingStatus, PastoralRequesterType, Prisma, Role, type PastorHost } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import { GoogleTokenCipherService } from '../calendar/services/google-token-cipher.service';
+import { OneOnOneCalendarService } from './one-on-one-calendar.service';
 import type { AuthUser } from '../auth/types/auth-user';
 import { meetsRole } from '../auth/guards/roles.guard';
 import {
@@ -16,7 +17,26 @@ import {
   UpdateHostSettingsDto,
   UpdateSessionTypeDto,
 } from './dto/one-on-one.dto';
-import { addDaysToKey, computeSlots, localDateKey, parseHhmm, type BusyInterval, type WeeklyWindow } from './slot-engine';
+import { addDaysToKey, computeSlots, localDateKey, parseHhmm, wallTime, type BusyInterval, type WeeklyWindow } from './slot-engine';
+
+export type Audience = 'MEMBER' | 'VISITOR';
+
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}
+
+/** Monday of the Lagos week a local date falls in, as "YYYY-MM-DD". */
+function weekOf(date: string): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return addDaysToKey(date, -((day + 6) % 7));
+}
 
 type Db = PrismaService | Prisma.TransactionClient;
 
@@ -67,6 +87,7 @@ export class OneOnOneService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly cipher: GoogleTokenCipherService,
+    private readonly calendar: OneOnOneCalendarService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -146,13 +167,17 @@ export class OneOnOneService {
     const name = member ? `${member.firstName} ${member.lastName}`.trim() : user.email;
     const position = await this.prisma.pastorHost.count({ where: { tenantId: this.tenantId } });
     const hostId = randomUUID();
+    const displayName = `Pastor ${name}`;
+    let slug = slugify(displayName) || `pastor-${hostId.slice(0, 6)}`;
+    if (await this.prisma.pastorHost.findFirst({ where: { tenantId: this.tenantId, slug } })) slug = `${slug}-${hostId.slice(0, 6)}`;
 
     await this.prisma.pastorHost.create({
       data: {
         id: hostId,
         tenantId: this.tenantId,
         profileId: user.profileId,
-        displayName: `Pastor ${name}`,
+        displayName,
+        slug,
         title: user.effectiveRoles?.includes(Role.SUPER_ADMIN) ? 'Senior Pastor' : 'Pastor',
         position,
         SessionTypes: {
@@ -178,6 +203,10 @@ export class OneOnOneService {
     return {
       id: host.id,
       displayName: host.displayName,
+      slug: host.slug,
+      defaultMeetingLink: host.defaultMeetingLink,
+      googleConnected: await this.calendar.isConnected(host.profileId),
+      notesEnabled: this.notesEnabled,
       title: host.title,
       bio: host.bio,
       active: host.active,
@@ -212,15 +241,27 @@ export class OneOnOneService {
 
   async updateSettings(user: AuthUser, hostId: string, dto: UpdateHostSettingsDto) {
     await this.assertCanManage(user, hostId);
-    await this.prisma.pastorHost.update({
-      where: { id: hostId },
-      data: {
-        ...dto,
-        ...(dto.displayName !== undefined && { displayName: dto.displayName.trim() }),
-        ...(dto.title !== undefined && { title: dto.title.trim() || null }),
-        ...(dto.bio !== undefined && { bio: dto.bio.trim() || null }),
-      },
-    });
+    const slug = dto.slug !== undefined ? slugify(dto.slug) : undefined;
+    if (slug !== undefined && !SLUG.test(slug)) throw new BadRequestException('Use letters, numbers and dashes for the link');
+    if (slug === 'request') throw new BadRequestException('That link name is reserved. Try another.');
+    try {
+      await this.prisma.pastorHost.update({
+        where: { id: hostId },
+        data: {
+          ...dto,
+          ...(slug !== undefined && { slug }),
+          ...(dto.displayName !== undefined && { displayName: dto.displayName.trim() }),
+          ...(dto.title !== undefined && { title: dto.title.trim() || null }),
+          ...(dto.bio !== undefined && { bio: dto.bio.trim() || null }),
+          ...(dto.defaultMeetingLink !== undefined && { defaultMeetingLink: dto.defaultMeetingLink.trim() || null }),
+        },
+      });
+    } catch (err) {
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+        throw new ConflictException('That link is already taken. Try another.');
+      }
+      throw err;
+    }
     return this.getHostDetail(user, hostId);
   }
 
@@ -360,10 +401,11 @@ export class OneOnOneService {
     return this.getHostDetail(user, hostId);
   }
 
+
   // ── Open times ────────────────────────────────────────────────────────────
 
-  /** Pastors members can request time with, each with their session types and next opening. */
-  async listHosts(audience: 'MEMBER' | 'VISITOR' = 'MEMBER') {
+  /** Pastors taking requests from this audience, each with their session types, share link and next opening. */
+  async listHosts(audience: Audience = 'MEMBER') {
     const hosts = await this.prisma.pastorHost.findMany({
       where: { tenantId: this.tenantId, active: true, ...(audience === 'VISITOR' && { visitorsAllowed: true }) },
       include: {
@@ -381,10 +423,11 @@ export class OneOnOneService {
         .filter((h) => h.SessionTypes.length > 0)
         .map(async (h) => {
           const first = h.SessionTypes[0];
-          const days = await this.computeOpenSlots(h.id, first.id, today, addDaysToKey(today, h.horizonDays));
+          const days = await this.computeOpenSlots(h.id, first.id, today, addDaysToKey(today, Math.min(h.horizonDays, MAX_RANGE_DAYS)), { audience });
           const next = days[0]?.slots[0] ?? null;
           return {
             id: h.id,
+            slug: h.slug,
             displayName: h.displayName,
             title: h.title,
             bio: h.bio,
@@ -402,12 +445,12 @@ export class OneOnOneService {
     );
   }
 
-  async getSlots(hostId: string, query: SlotsQueryDto): Promise<SlotDay[]> {
+  async getSlots(hostId: string, query: SlotsQueryDto, audience: Audience = 'MEMBER'): Promise<SlotDay[]> {
     if (query.to < query.from) throw new BadRequestException('"to" is before "from"');
     if (addDaysToKey(query.from, MAX_RANGE_DAYS) < query.to) throw new BadRequestException('Ask for at most two months at a time');
     const host = await this.loadHost(hostId);
-    if (!host.active) throw new NotFoundException('Pastor not found');
-    return this.computeOpenSlots(hostId, query.sessionTypeId, query.from, query.to);
+    if (!host.active || (audience === 'VISITOR' && !host.visitorsAllowed)) throw new NotFoundException('Pastor not found');
+    return this.computeOpenSlots(hostId, query.sessionTypeId, query.from, query.to, { audience });
   }
 
   /** The pastor's own preview of what members will see. */
@@ -417,21 +460,35 @@ export class OneOnOneService {
     return this.computeOpenSlots(hostId, query.sessionTypeId, query.from, query.to);
   }
 
+  /** Busy times from the Google Calendars of everyone hosting this session type. */
+  async externalBusyFor(hostId: string, sessionTypeId: string, from: string, to: string): Promise<BusyInterval[]> {
+    const type = await this.prisma.pastorSessionType.findFirst({ where: { id: sessionTypeId, hostId } });
+    const hostIds = type?.jointWithHostId ? [hostId, type.jointWithHostId] : [hostId];
+    const hosts = await this.prisma.pastorHost.findMany({ where: { id: { in: hostIds } }, select: { profileId: true } });
+    const start = wallTime(from, 0);
+    const end = wallTime(addDaysToKey(to, 1), 0);
+    const all = await Promise.all(hosts.map((h) => this.calendar.busy(h.profileId, start, end)));
+    return all.flat();
+  }
+
   /**
    * Open times for a session type. Pass a transaction client to re-check a
-   * time atomically before saving, and `excludeBookingId` when moving a
-   * request so its own current time doesn't count against it.
+   * time atomically before saving, `excludeBookingId` when moving a request so
+   * its own current time doesn't count against it, and `externalBusy` to reuse
+   * Google busy times fetched outside the transaction.
    */
   async computeOpenSlots(
     hostId: string,
     sessionTypeId: string,
     from: string,
     to: string,
-    opts: { db?: Db; excludeBookingId?: string } = {},
+    opts: { db?: Db; excludeBookingId?: string; externalBusy?: BusyInterval[]; audience?: Audience } = {},
   ): Promise<SlotDay[]> {
     const db = opts.db ?? this.prisma;
+    const audience = opts.audience ?? 'MEMBER';
     const type = await db.pastorSessionType.findFirst({ where: { id: sessionTypeId, hostId, active: true } });
     if (!type) throw new NotFoundException('Session type not found');
+    if (audience === 'VISITOR' && (!type.visitorsCanBook || type.jointWithHostId)) throw new NotFoundException('Session type not found');
 
     const hostIds = type.jointWithHostId ? [hostId, type.jointWithHostId] : [hostId];
     const hosts: HostWithRules[] = await db.pastorHost.findMany({
@@ -444,12 +501,13 @@ export class OneOnOneService {
       .map((h) => h.Rules.map((r) => ({ weekday: r.weekday, startTime: r.startTime, endTime: r.endTime })))
       .reduce((acc, next) => intersectWindows(acc, next));
     const now = new Date();
-    const { busy, sessionsPerDay } = await this.loadBusy(db, hostIds, from, to, now, opts.excludeBookingId);
+    const { busy, sessionsPerDay, visitorsPerWeek } = await this.loadBusy(db, hostIds, from, to, now, opts.excludeBookingId);
+    const external = opts.externalBusy ?? (await this.externalBusyFor(hostId, sessionTypeId, from, to));
 
     const days = computeSlots({
       rules,
       blockedDates: hosts.flatMap((h) => h.Blocks.map((b) => b.date.toISOString().slice(0, 10))),
-      busy,
+      busy: [...busy, ...external],
       sessionsPerDay,
       durationMinutes: type.durationMinutes,
       bufferMinutes: Math.max(...hosts.map((h) => h.bufferMinutes)),
@@ -461,28 +519,49 @@ export class OneOnOneService {
       now,
     });
 
-    return Object.entries(days).map(([date, slots]) => ({
-      date,
-      slots: slots.map((s) => ({ startsAt: s.startsAt.toISOString(), endsAt: s.endsAt.toISOString() })),
-    }));
+    // A pastor caps how many visitor sessions they take a week; a full week shows no times to visitors.
+    const visitorCap = hosts[0].visitorWeeklyCap;
+    return Object.entries(days)
+      .filter(([date]) => audience !== 'VISITOR' || (visitorsPerWeek[weekOf(date)] ?? 0) < visitorCap)
+      .map(([date, slots]) => ({
+        date,
+        slots: slots.map((s) => ({ startsAt: s.startsAt.toISOString(), endsAt: s.endsAt.toISOString() })),
+      }));
   }
 
-  /** Time already taken by sessions involving any of these pastors, and how many each day holds. */
+  /** Time already taken by sessions involving any of these pastors, how many each day holds, and visitor sessions per week. */
   private async loadBusy(db: Db, hostIds: string[], from: string, to: string, now: Date, excludeBookingId?: string) {
+    const rangeStart = new Date(`${addDaysToKey(weekOf(from), -1)}T00:00:00.000Z`);
+    const rangeEnd = new Date(`${addDaysToKey(to, 8)}T00:00:00.000Z`);
     const bookings = await db.pastoralBooking.findMany({
       where: {
         tenantId: this.tenantId,
         status: { in: ACTIVE_STATUSES },
         ...(excludeBookingId && { id: { not: excludeBookingId } }),
-        OR: [{ hostId: { in: hostIds } }, { coHostId: { in: hostIds } }],
-        startsAt: { lt: new Date(`${addDaysToKey(to, 2)}T00:00:00.000Z`) },
-        endsAt: { gt: new Date(`${addDaysToKey(from, -1)}T00:00:00.000Z`) },
+        AND: [
+          { OR: [{ hostId: { in: hostIds } }, { coHostId: { in: hostIds } }] },
+          {
+            OR: [
+              { startsAt: { lt: rangeEnd }, endsAt: { gt: rangeStart } },
+              { proposedStartsAt: { lt: rangeEnd }, proposedEndsAt: { gt: rangeStart } },
+            ],
+          },
+        ],
       },
-      select: { status: true, startsAt: true, endsAt: true, holdExpiresAt: true, proposedStartsAt: true, proposedEndsAt: true },
+      select: {
+        status: true,
+        requesterType: true,
+        startsAt: true,
+        endsAt: true,
+        holdExpiresAt: true,
+        proposedStartsAt: true,
+        proposedEndsAt: true,
+      },
     });
 
     const busy: BusyInterval[] = [];
     const sessionsPerDay: Record<string, number> = {};
+    const visitorsPerWeek: Record<string, number> = {};
     for (const b of bookings) {
       if (b.status === PastoralBookingStatus.HOLD && (!b.holdExpiresAt || b.holdExpiresAt <= now)) continue;
       const interval =
@@ -490,9 +569,13 @@ export class OneOnOneService {
           ? { start: b.proposedStartsAt, end: b.proposedEndsAt }
           : { start: b.startsAt, end: b.endsAt };
       busy.push(interval);
-      const key = localDateKey(interval.start);
-      sessionsPerDay[key] = (sessionsPerDay[key] ?? 0) + 1;
+      const day = localDateKey(interval.start);
+      sessionsPerDay[day] = (sessionsPerDay[day] ?? 0) + 1;
+      if (b.requesterType === PastoralRequesterType.VISITOR) {
+        const week = weekOf(day);
+        visitorsPerWeek[week] = (visitorsPerWeek[week] ?? 0) + 1;
+      }
     }
-    return { busy, sessionsPerDay };
+    return { busy, sessionsPerDay, visitorsPerWeek };
   }
 }

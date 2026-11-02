@@ -12,6 +12,8 @@ import SessionTypesCard from "./SessionTypesCard";
 import DelegatesCard from "./DelegatesCard";
 import PreviewCard from "./PreviewCard";
 import RequestsCard from "./RequestsCard";
+import ShareCard from "./ShareCard";
+import ConnectPersonalGoogleCalendarCard from "@/components/dashboard/calendar/ConnectPersonalGoogleCalendarCard";
 import { btnPrimary, muted } from "./ui";
 
 const ACCESS_NOTE: Record<HostAccess, string | null> = {
@@ -141,6 +143,16 @@ export default function ManageOneOnOneScreen() {
             <PreviewCard host={detail.data} />
           </div>
           <div className="flex min-w-0 flex-col gap-5">
+            <ShareCard host={detail.data} />
+            {current?.access === "OWNER" ? (
+              <ConnectPersonalGoogleCalendarCard />
+            ) : (
+              <p className={`rounded-2xl border border-[#E7CDD3]/60 bg-white px-5 py-4 text-sm dark:border-white/[0.09] dark:bg-white/[0.05] ${muted}`}>
+                {detail.data.googleConnected
+                  ? `${detail.data.displayName}'s Google Calendar is connected: busy times are hidden and approved sessions go into it.`
+                  : `${detail.data.displayName} hasn't connected Google Calendar yet. They can do it from this page when signed in as themselves.`}
+              </p>
+            )}
             <ProfileRulesCard host={detail.data} />
             <SessionTypesCard host={detail.data} otherHosts={otherHosts} />
             <DelegatesCard host={detail.data} />

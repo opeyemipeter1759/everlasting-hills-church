@@ -25,11 +25,16 @@ const HORIZON_OPTIONS = [
 ];
 const VISITOR_CAP_OPTIONS = [1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `Up to ${n} a week` }));
 
-type Form = Omit<Required<HostSettingsInput>, "title" | "bio"> & { title: string; bio: string };
+type Form = Omit<Required<HostSettingsInput>, "title" | "bio" | "slug" | "defaultMeetingLink"> & {
+  title: string;
+  bio: string;
+  defaultMeetingLink: string;
+};
 
 function pick(host: HostDetail): Form {
   return {
     displayName: host.displayName,
+    defaultMeetingLink: host.defaultMeetingLink ?? "",
     title: host.title ?? "",
     bio: host.bio ?? "",
     active: host.active,
@@ -88,6 +93,22 @@ export default function ProfileRulesCard({ host }: { host: HostDetail }) {
             value={form.bio}
             onChange={(e) => set("bio", e.target.value)}
           />
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className={label}>Your Google Meet or Zoom room (optional)</span>
+          <input
+            id="host-meeting-link"
+            type="url"
+            className={input}
+            placeholder="https://zoom.us/j/1234567890"
+            value={form.defaultMeetingLink}
+            maxLength={500}
+            onChange={(e) => set("defaultMeetingLink", e.target.value)}
+          />
+          <span className={`text-xs ${muted}`}>
+            Used for video calls when you don’t paste a link on approval and Google can’t create one. You can still set a different link per session.
+          </span>
         </label>
 
         <div className="grid gap-4 sm:grid-cols-2">

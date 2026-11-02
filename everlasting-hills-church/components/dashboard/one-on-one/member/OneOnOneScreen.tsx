@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import Loader from "@/components/ui/feedback/Loader";
 import { useHosts, useManageContext, useMyRequests, type HostSummary } from "@/lib/api/one-on-one";
 import { errorText } from "@/components/pray-watch/shared";
@@ -22,7 +23,7 @@ function nextOpeningLabel(iso: string | null): string {
   return `Next opening ${day}, ${formatTime(iso)}`;
 }
 
-function HostCard({ host, index, onChoose }: { host: HostSummary; index: number; onChoose: (typeId: string) => void }) {
+export function HostCard({ host, index, onChoose }: { host: HostSummary; index: number; onChoose: (typeId: string) => void }) {
   const joint = host.sessionTypes.some((t) => t.joint);
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-[#E7CDD3]/60 bg-white p-6 shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:border-white/[0.09] dark:bg-white/[0.05] dark:shadow-none">
@@ -62,9 +63,20 @@ export default function OneOnOneScreen() {
   const mine = useMyRequests();
   const manage = useManageContext();
   const [step, setStep] = useState<Step>({ kind: "pick" });
+  const searchParams = useSearchParams();
+  const wanted = searchParams.get("host");
+  const [usedLink, setUsedLink] = useState(false);
 
   const requests = mine.data ?? [];
   const open = requests.find((r) => isOpen(r));
+
+  // Arriving from a pastor's share link goes straight to their calendar.
+  useEffect(() => {
+    if (usedLink || !wanted || !hosts.data || !mine.data) return;
+    setUsedLink(true);
+    const host = hosts.data.find((h) => h.slug === wanted || h.id === wanted);
+    if (host && !open && host.sessionTypes[0]) setStep({ kind: "time", hostId: host.id, typeId: host.sessionTypes[0].id });
+  }, [usedLink, wanted, hosts.data, mine.data, open]);
   const history = requests.filter((r) => r !== open);
   const canManage = (manage.data?.hosts.length ?? 0) > 0 || manage.data?.canSetUp;
 

@@ -41,6 +41,8 @@ JOBS=(
   "daily-fast-email|0 5 * * *|5am email to everyone during a church fast: the day, when to break it, yesterday's recap"
   "daily-fast-email-retry|20 5 * * *|Finishes any daily fast email the 5am run ran out of time for (never sends twice)|daily-fast-email"
   "fasting-push|*/5 * * * *|Push during a church fast: 2 hours before each session, and when it goes live on YouTube"
+  "push-prayer-watch-reminder|*/5 * * * *|Push: your Prayer Watch hour starts in 30 minutes"
+  "one-on-one-sweep|*/10 * * * *|One-on-One: release expired holds, lapse unanswered requests, nudge pastors, send reminders"
 )
 
 for spec in "${JOBS[@]}"; do

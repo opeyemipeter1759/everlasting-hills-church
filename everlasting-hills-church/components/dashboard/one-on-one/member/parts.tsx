@@ -31,16 +31,33 @@ export function Portrait({ name, index, size = "md" }: { name: string; index: nu
 
 export const FORMAT_LABEL: Record<MeetingFormat, string> = {
   IN_PERSON: "In person, church office",
-  GOOGLE_MEET: "Google Meet",
+  GOOGLE_MEET: "Video call (Google Meet or Zoom)",
   PHONE: "Phone call",
 };
 
 const LAGOS = "Africa/Lagos";
 
-export function formatWhenLong(startIso: string, endIso: string): string {
-  const day = new Intl.DateTimeFormat("en-GB", { timeZone: LAGOS, weekday: "long", day: "numeric", month: "long" }).format(new Date(startIso));
-  const t = (iso: string) => new Intl.DateTimeFormat("en-GB", { timeZone: LAGOS, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+export function formatWhenLong(startIso: string, endIso: string, timeZone: string = LAGOS): string {
+  const day = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "long", day: "numeric", month: "long" }).format(new Date(startIso));
+  const t = (iso: string) => new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
   return `${day}, ${t(startIso)}–${t(endIso)}`;
+}
+
+/** The viewer's own time zone, e.g. "Africa/Accra", or Lagos if the browser won't say. */
+export function browserTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || LAGOS;
+  } catch {
+    return LAGOS;
+  }
+}
+
+/** "15:30 your time · 16:30 Lagos", or just the Lagos time when they match. */
+export function dualTime(iso: string, timeZone: string): string {
+  const t = (tz: string) => new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+  const own = t(timeZone);
+  const lagos = t(LAGOS);
+  return own === lagos ? lagos : `${own} · ${lagos} Lagos`;
 }
 
 export function pastorsOf(r: { hostName: string; coHostName: string | null }): string {

@@ -3928,6 +3928,11 @@ model PastorHost {
   tenantId         String
   profileId        String
   displayName      String
+  /// The pastor's public share link: /talk-to-a-pastor/<slug>.
+  slug             String?
+  /// A standing Google Meet or Zoom room, used for online sessions when no
+  /// link is pasted on approval and Google can't create one.
+  defaultMeetingLink String?
   title            String?
   bio              String?
   active           Boolean                  @default(true)
@@ -3950,6 +3955,7 @@ model PastorHost {
   CoHostBookings   PastoralBooking[]        @relation("PastoralBookingCoHost")
 
   @@unique([tenantId, profileId])
+  @@unique([tenantId, slug])
 }
 
 /// What can be requested from a host. `jointWithHostId` set = a session with

@@ -39,7 +39,8 @@ function setup() {
     $transaction: jest.fn(),
   };
   const cipher = { isConfigured: true };
-  const svc = new OneOnOneService(prisma as never, cipher as never, { get: () => 't1' } as never);
+  const calendar = { isConnected: jest.fn().mockResolvedValue(false), busy: jest.fn().mockResolvedValue([]) };
+  const svc = new OneOnOneService(prisma as never, cipher as never, calendar as never, { get: () => 't1' } as never);
   return { svc, prisma };
 }
 
