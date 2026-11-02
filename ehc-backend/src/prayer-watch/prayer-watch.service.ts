@@ -707,6 +707,7 @@ export class PrayerWatchService {
           fullName: newLeader.fullName,
           slotLabel: slot.label,
           slotTime: `${slot.startTime}–${slot.endTime}`,
+          whatsappLink: slot.whatsappLink,
           url: this.pageUrl,
         }),
       );
