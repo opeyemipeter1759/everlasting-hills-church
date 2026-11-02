@@ -43,6 +43,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
 import { BooksModule } from './books/books.module';
 import { FinanceModule } from './finance/finance.module';
 import { PrayerWatchModule } from './prayer-watch/prayer-watch.module';
+import { OneOnOneModule } from './one-on-one/one-on-one.module';
 import { BookCollectionsModule } from './book-collections/book-collections.module';
 import { EmailsModule } from './emails/emails.module';
 import { CommunityModule } from './community/community.module';
@@ -159,6 +160,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     BooksModule,
     FinanceModule,
     PrayerWatchModule,
+    OneOnOneModule,
     EmailsModule,
     CommunityModule,
     HomeCellModule,

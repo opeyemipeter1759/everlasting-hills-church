@@ -153,6 +153,7 @@ import {
   HandHeart,
   UsersRound,
   MoonStar,
+  CalendarHeart,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -247,6 +248,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Follow-ups",        href: "/dashboard/pastor/follow-ups",         icon: PhoneForwarded, minRole: "PASTOR" },
       { label: "Giving",            href: "/dashboard/giving",             icon: DollarSign,     minRole: "PASTOR" },
      */  { label: "Reports",           href: "/dashboard/pastor/reports",            icon: FileText,       minRole: "PASTOR" },
+      { label: "One-on-One",        href: "/dashboard/one-on-one/manage",         icon: CalendarHeart,  minRole: "PASTOR" },
     ],
   },
   {
