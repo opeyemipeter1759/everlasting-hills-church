@@ -1,16 +1,17 @@
-import { DM_Serif_Display, Instrument_Sans } from "next/font/google";
+import localFont from "next/font/local";
 
-const dmSerifDisplay = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
+const dmSerifDisplay = localFont({
+  src: [
+    { path: "../../fonts/dm-serif-display.woff2", weight: "400", style: "normal" },
+    { path: "../../fonts/dm-serif-display-italic.woff2", weight: "400", style: "italic" },
+  ],
   variable: "--wf-serif",
   display: "swap",
 });
 
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+const instrumentSans = localFont({
+  src: "../../fonts/instrument-sans.woff2",
+  weight: "400 700",
   variable: "--wf-sans",
   display: "swap",
 });

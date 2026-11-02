@@ -1,11 +1,12 @@
-import { Fraunces } from "next/font/google";
+import localFont from "next/font/local";
 
 /** The night-watch theme's display serif — set apart from the rest of the
  * site's Playfair Display so this feature reads as its own moment. */
-export const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
+export const fraunces = localFont({
+  src: [
+    { path: "../../app/fonts/fraunces.woff2", weight: "400 600", style: "normal" },
+    { path: "../../app/fonts/fraunces-italic.woff2", weight: "400 600", style: "italic" },
+  ],
   variable: "--font-fraunces",
   display: "swap",
 });

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import { Inter, Plus_Jakarta_Sans, Playfair_Display, Space_Grotesk, Dancing_Script } from "next/font/google";
+import localFont from "next/font/local";
 import { QueryProvider } from "@/lib/api/QueryProvider";
 import NavigationProgress from "@/components/ui/navigation/NavigationProgress";
 import { ToastProvider } from "@/lib/api/ToastProvider";
@@ -9,11 +9,20 @@ import { SermonPlayerProvider } from "@/context/SermonPlayerContext";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import BirthdayCelebration from "@/components/celebrations/BirthdayCelebration";
 
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--nf-inter", display: "swap" });
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--nf-jakarta", display: "swap" });
-const playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "700"], style: ["normal", "italic"], variable: "--nf-playfair", display: "swap" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], weight: ["300", "400", "500", "600", "700"], variable: "--nf-space-grotesk", display: "swap" });
-const dancingScript = Dancing_Script({ subsets: ["latin"], weight: ["600", "700"], variable: "--nf-dancing", display: "swap" });
+// Self-hosted (latin variable fonts from Google Fonts): next/font/google
+// fetches at build time and crashes on Google's extensionless font URLs.
+const inter = localFont({ src: "./fonts/inter.woff2", weight: "400 700", variable: "--nf-inter", display: "swap" });
+const jakarta = localFont({ src: "./fonts/plus-jakarta-sans.woff2", weight: "400 800", variable: "--nf-jakarta", display: "swap" });
+const playfair = localFont({
+  src: [
+    { path: "./fonts/playfair-display.woff2", weight: "400 700", style: "normal" },
+    { path: "./fonts/playfair-display-italic.woff2", weight: "400 700", style: "italic" },
+  ],
+  variable: "--nf-playfair",
+  display: "swap",
+});
+const spaceGrotesk = localFont({ src: "./fonts/space-grotesk.woff2", weight: "300 700", variable: "--nf-space-grotesk", display: "swap" });
+const dancingScript = localFont({ src: "./fonts/dancing-script.woff2", weight: "600 700", variable: "--nf-dancing", display: "swap" });
 const FONT_VARIABLES = `${inter.variable} ${jakarta.variable} ${playfair.variable} ${spaceGrotesk.variable} ${dancingScript.variable}`;
 
 export const metadata: Metadata = {

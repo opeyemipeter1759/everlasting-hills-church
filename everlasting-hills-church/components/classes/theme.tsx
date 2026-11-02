@@ -1,16 +1,18 @@
-import { DM_Serif_Display, Instrument_Sans } from "next/font/google";
+import localFont from "next/font/local";
 
 /** The class pages' type: DM Serif Display for headlines, Instrument Sans for everything else. */
-export const classDisplay = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
+export const classDisplay = localFont({
+  src: [
+    { path: "../../app/fonts/dm-serif-display.woff2", weight: "400", style: "normal" },
+    { path: "../../app/fonts/dm-serif-display-italic.woff2", weight: "400", style: "italic" },
+  ],
   variable: "--font-display",
   display: "swap",
 });
 
-export const classSans = Instrument_Sans({
-  subsets: ["latin"],
+export const classSans = localFont({
+  src: "../../app/fonts/instrument-sans.woff2",
+  weight: "400 700",
   variable: "--font-sans-class",
   display: "swap",
 });
