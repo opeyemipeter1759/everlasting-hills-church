@@ -9,6 +9,7 @@ import { NotificationEvents } from '../notifications/notification-events';
 import { IcsBuilderService } from '../calendar/services/ics-builder.service';
 import { PushDispatchService } from '../push/services/push-dispatch.service';
 import { buildPrayerWatchFamilyChangeDecidedEmail } from '../notifications/templates/prayer-watch-family-change-decided.email';
+import { buildPrayerWatchLeaderAssignedEmail } from '../notifications/templates/prayer-watch-leader-assigned.email';
 import { buildPrayerWatchSignupApprovedEmail } from '../notifications/templates/prayer-watch-signup-approved.email';
 import { buildPrayerWatchSignupDeclinedEmail } from '../notifications/templates/prayer-watch-signup-declined.email';
 import { buildPrayerWatchSignupPendingEmail } from '../notifications/templates/prayer-watch-signup-pending.email';
@@ -679,20 +680,38 @@ export class PrayerWatchService {
     }
   }
 
-  /** The leader must be one of that slot's own sign-ups — not an arbitrary person. */
+  /** The leader must be one of that slot's own sign-ups — not an arbitrary person.
+   * A newly-named leader (not a clear, and not a no-op re-pick) is emailed —
+   * they're the one the others on that hour are now looking to. */
   async setSlotLeader(slotId: string, dto: SetSlotLeaderDto) {
     const slot = await this.prisma.prayerSlot.findFirst({ where: { id: slotId, tenantId: this.tenantId } });
     if (!slot) throw new NotFoundException('Slot not found');
 
     const signupId = dto.signupId ?? null;
+    let newLeader: PrayerSignup | null = null;
     if (signupId) {
-      const signup = await this.prisma.prayerSignup.findFirst({
+      newLeader = await this.prisma.prayerSignup.findFirst({
         where: { id: signupId, tenantId: this.tenantId, slotId, status: 'CONFIRMED' },
       });
-      if (!signup) throw new NotFoundException("That sign-up isn't in this slot");
+      if (!newLeader) throw new NotFoundException("That sign-up isn't in this slot");
     }
 
+    const isNewAssignment = Boolean(signupId) && signupId !== slot.leaderId;
     await this.prisma.prayerSlot.update({ where: { id: slotId }, data: { leaderId: signupId } });
+
+    if (isNewAssignment && newLeader) {
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildPrayerWatchLeaderAssignedEmail({
+          to: newLeader.email,
+          fullName: newLeader.fullName,
+          slotLabel: slot.label,
+          slotTime: `${slot.startTime}–${slot.endTime}`,
+          url: this.pageUrl,
+        }),
+      );
+    }
+
     return this.getAdminView();
   }
 

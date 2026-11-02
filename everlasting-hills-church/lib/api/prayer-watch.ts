@@ -362,6 +362,16 @@ export function useRemovePrayerSignup() {
   });
 }
 
+/** Moves an already-approved sign-up to a different watch hour (capacity allowing). */
+export function useMoveSignup() {
+  const invalidate = useInvalidatePrayerWatch();
+  return useMutation({
+    mutationFn: ({ id, slotId }: { id: string; slotId: string }) =>
+      api.patch(`/prayer-watch/admin/signups/${id}/move`, { slotId }),
+    onSuccess: invalidate,
+  });
+}
+
 /** signupId must be one of that slot's own sign-ups; null clears the leader. */
 export function useSetSlotLeader() {
   const invalidate = useInvalidatePrayerWatch();

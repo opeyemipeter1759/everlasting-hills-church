@@ -13,6 +13,7 @@ import {
   useDecideFamilyChange,
   useDecideSignup,
   useFamilyChangeRequests,
+  useMoveSignup,
   usePendingSignups,
   usePrayerSignupList,
   useRemoveAdminReflection,
@@ -66,6 +67,7 @@ export default function PrayerWatchOverview() {
   const setLeader = useSetSlotLeader();
   const setWhatsappLink = useSetSlotWhatsappLink();
   const setTelegramLink = useSetTelegramLink();
+  const moveSignup = useMoveSignup();
 
   const [search, setSearch] = useState("");
   const [removing, setRemoving] = useState<SignupListRow | null>(null);
@@ -78,6 +80,8 @@ export default function PrayerWatchOverview() {
   const [offerSlotId, setOfferSlotId] = useState("");
   const [telegramDraft, setTelegramDraft] = useState<string | null>(null);
   const [savingTelegram, setSavingTelegram] = useState(false);
+  const [reassigningId, setReassigningId] = useState<string | null>(null);
+  const [reassignSlotId, setReassignSlotId] = useState("");
 
   const data = watch.data;
 
@@ -167,6 +171,18 @@ export default function PrayerWatchOverview() {
       showToast.error(userMessageForError(err, "Couldn't decide this sign-up"));
     } finally {
       setDecidingSignupId(null);
+    }
+  }
+
+  async function handleReassign(id: string) {
+    if (!reassignSlotId) return;
+    try {
+      await moveSignup.mutateAsync({ id, slotId: reassignSlotId });
+      showToast.success("Moved to the new watch hour");
+      setReassigningId(null);
+      setReassignSlotId("");
+    } catch (err) {
+      showToast.error(userMessageForError(err, "Couldn't move this sign-up"));
     }
   }
 
@@ -402,11 +418,14 @@ export default function PrayerWatchOverview() {
                       {s.signups.length === 0 ? (
                         <p className="text-xs text-gray-400">No one yet.</p>
                       ) : (
-                        s.signups.map((p) => {
+                        s.signups.map((p, i) => {
                           const isLeader = p.id === s.leaderId;
                           return (
                             <div key={p.id} className="flex items-center justify-between gap-2">
-                              <p className="min-w-0 truncate text-sm text-gray-700 dark:text-white/75">{p.fullName}</p>
+                              <p className="min-w-0 truncate text-sm text-gray-700 dark:text-white/75">
+                                <span className="mr-1.5 tabular-nums text-gray-400 dark:text-white/35">{i + 1}.</span>
+                                {p.fullName}
+                              </p>
                               {isLeader ? (
                                 <button
                                   type="button"
@@ -450,8 +469,9 @@ export default function PrayerWatchOverview() {
             </div>
           </section>
 
-          {/* Approved table — searchable, slot shown as plain text (the hour they
-              chose), not an editable control. */}
+          {/* Approved table — searchable, numbered, with a reassign control on
+              the slot column so an already-approved person can be moved to a
+              different watch hour (capacity allowing). */}
           <section className="print:hidden">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-base font-bold text-[#1A1210] dark:text-white">
@@ -478,21 +498,23 @@ export default function PrayerWatchOverview() {
               </p>
             ) : (
               <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
-                <table className="w-full min-w-[640px] text-left text-sm">
+                <table className="w-full min-w-[720px] text-left text-sm">
                   <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:bg-white/5 dark:text-white/50">
                     <tr>
+                      <th className="px-4 py-3">#</th>
                       <th className="px-4 py-3">Name</th>
                       <th className="px-4 py-3">Phone</th>
                       <th className="px-4 py-3">Worker/Member</th>
-                      <th className="px-4 py-3">Slot</th>
+                      <th className="px-4 py-3">Slot (click to move)</th>
                       <th className="px-4 py-3">
                         <span className="sr-only">Actions</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                    {filteredSignups.map((r) => (
+                    {filteredSignups.map((r, i) => (
                       <tr key={r.id} className="align-top text-gray-700 dark:text-white/80">
+                        <td className="px-4 py-3 tabular-nums text-gray-400 dark:text-white/40">{i + 1}</td>
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
                           <span className="flex items-center gap-2">
                             {r.fullName}
@@ -505,7 +527,53 @@ export default function PrayerWatchOverview() {
                         </td>
                         <td className="px-4 py-3">{r.phone}</td>
                         <td className="px-4 py-3">{r.isWorker ? "Worker" : "Member"}</td>
-                        <td className="px-4 py-3 tabular-nums text-gray-500 dark:text-white/55">{r.slotTime}</td>
+                        <td className="px-4 py-3">
+                          {reassigningId === r.id ? (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <Select
+                                aria-label={`Move ${r.fullName} to a different watch`}
+                                value={reassignSlotId}
+                                onChange={setReassignSlotId}
+                                placeholder="Choose a watch…"
+                                className="min-h-8 w-48 rounded-lg border border-gray-200 bg-white px-2 text-xs dark:border-white/15 dark:bg-white/[0.04] dark:text-white"
+                                options={(data?.slots ?? [])
+                                  .filter((slot) => slot.id !== r.slotId)
+                                  .map((slot) => ({ value: slot.id, label: `${slot.label} (${slot.startTime}–${slot.endTime})` }))}
+                              />
+                              <button
+                                type="button"
+                                disabled={!reassignSlotId || moveSignup.isPending}
+                                onClick={() => handleReassign(r.id)}
+                                className="inline-flex min-h-8 items-center rounded-lg bg-[#87102C] px-2.5 text-xs font-semibold text-white disabled:opacity-50"
+                              >
+                                {moveSignup.isPending ? <Loader2 size={12} className="animate-spin" /> : "Move"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReassigningId(null);
+                                  setReassignSlotId("");
+                                }}
+                                className="inline-flex min-h-8 items-center rounded-lg border border-gray-200 px-2.5 text-xs font-semibold text-gray-500 dark:border-white/10 dark:text-white/60"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReassigningId(r.id);
+                                setReassignSlotId("");
+                              }}
+                              title="Move to a different watch hour"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2 py-1 tabular-nums text-gray-600 hover:border-[#87102C] hover:text-[#87102C] dark:border-white/15 dark:text-white/65 dark:hover:border-[#e8768a] dark:hover:text-[#e8768a]"
+                            >
+                              {r.slotTime}
+                              <ArrowRightLeft size={12} aria-hidden="true" />
+                            </button>
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-right">
                           <button
                             type="button"
