@@ -31,8 +31,14 @@ const navLinks: NavLink[] = [
   { label: "Sermons", href: "/sermons" },
   { label: "Articles", href: "/articles" },
   { label: "Events", href: "/events" },
-  { label: "Ministries", href: "/ministries" },
-  { label: "Home Cell", href: "/home-cell" },
+  {
+    label: "Ministries",
+    href: "/ministries",
+    children: [
+      { label: "All Ministries", href: "/ministries" },
+      { label: "Home Cell", href: "/home-cell" },
+    ],
+  },
   { label: "Prayer Watch", href: "/prayer-watch" },
   { label: "Visit", href: "/visit" },
   { label: "Give", href: "/give" },
@@ -51,9 +57,9 @@ const LIGHT_PAGES = ["/articles"];
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [aboutOpen, setAboutOpen] = useState(false);
-  const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
-  const aboutRef = useRef<HTMLDivElement>(null);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileOpenDropdown, setMobileOpenDropdown] = useState<string | null>(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const isLoggedIn = useIsLoggedIn(); // null on first paint (hydration-safe), then true/false
   const pathname = usePathname();
   const darkHero = !LIGHT_PAGES.some((path) => pathname === path || pathname?.startsWith(`${path}/`));
@@ -73,14 +79,16 @@ export default function Navbar() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Close the About dropdown on an outside click, Escape, or navigation.
+  // Close the open dropdown (About or Ministries) on an outside click, Escape, or navigation.
   useEffect(() => {
-    if (!aboutOpen) return;
+    if (!openDropdown) return;
+    const activeDropdown = openDropdown;
     function onPointerDown(e: PointerEvent) {
-      if (aboutRef.current && !aboutRef.current.contains(e.target as Node)) setAboutOpen(false);
+      const el = dropdownRefs.current[activeDropdown];
+      if (el && !el.contains(e.target as Node)) setOpenDropdown(null);
     }
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setAboutOpen(false);
+      if (e.key === "Escape") setOpenDropdown(null);
     }
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -88,12 +96,12 @@ export default function Navbar() {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [aboutOpen]);
+  }, [openDropdown]);
 
   useEffect(() => {
-    setAboutOpen(false);
+    setOpenDropdown(null);
     setMenuOpen(false);
-    setMobileAboutOpen(false);
+    setMobileOpenDropdown(null);
   }, [pathname]);
 
   return (
@@ -140,12 +148,18 @@ export default function Navbar() {
             <nav className="hidden lg:flex items-center gap-6">
               {effectiveNavLinks.map((link) =>
                 link.children ? (
-                  <div key={link.href} ref={aboutRef} className="relative">
+                  <div
+                    key={link.href}
+                    ref={(el) => {
+                      dropdownRefs.current[link.href] = el;
+                    }}
+                    className="relative"
+                  >
                     <button
                       type="button"
-                      onClick={() => setAboutOpen((o) => !o)}
+                      onClick={() => setOpenDropdown((o) => (o === link.href ? null : link.href))}
                       aria-haspopup="menu"
-                      aria-expanded={aboutOpen}
+                      aria-expanded={openDropdown === link.href}
                       className={`flex items-center gap-1 text-[13px] font-medium transition-colors duration-200 hover:text-burgundy whitespace-nowrap ${
                         scrolled || !darkHero ? "text-[#333]" : "text-white/90"
                       }`}
@@ -153,11 +167,11 @@ export default function Navbar() {
                       {link.label}
                       <ChevronDown
                         size={14}
-                        className={`transition-transform duration-200 ${aboutOpen ? "rotate-180" : ""}`}
+                        className={`transition-transform duration-200 ${openDropdown === link.href ? "rotate-180" : ""}`}
                       />
                     </button>
                     <AnimatePresence>
-                      {aboutOpen && (
+                      {openDropdown === link.href && (
                         <motion.div
                           initial={{ opacity: 0, y: -6 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -171,7 +185,7 @@ export default function Navbar() {
                               key={child.href}
                               href={child.href}
                               role="menuitem"
-                              onClick={() => setAboutOpen(false)}
+                              onClick={() => setOpenDropdown(null)}
                               className="block px-4 py-2.5 text-[13px] font-medium text-[#333] hover:bg-brand-blush hover:text-burgundy transition-colors"
                             >
                               {child.label}
@@ -246,18 +260,18 @@ export default function Navbar() {
                   <div key={link.href} className="border-b border-brand-rose/50 last:border-0">
                     <button
                       type="button"
-                      onClick={() => setMobileAboutOpen((o) => !o)}
-                      aria-expanded={mobileAboutOpen}
+                      onClick={() => setMobileOpenDropdown((o) => (o === link.href ? null : link.href))}
+                      aria-expanded={mobileOpenDropdown === link.href}
                       className="flex w-full items-center justify-between py-3.5 text-[15px] font-medium text-[#222] hover:text-burgundy transition-colors"
                     >
                       {link.label}
                       <ChevronDown
                         size={16}
-                        className={`transition-transform duration-200 ${mobileAboutOpen ? "rotate-180" : ""}`}
+                        className={`transition-transform duration-200 ${mobileOpenDropdown === link.href ? "rotate-180" : ""}`}
                       />
                     </button>
                     <AnimatePresence initial={false}>
-                      {mobileAboutOpen && (
+                      {mobileOpenDropdown === link.href && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
