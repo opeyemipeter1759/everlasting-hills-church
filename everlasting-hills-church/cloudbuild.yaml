@@ -1,19 +1,14 @@
 steps:
+  # Public build-time values come from .env.production in this folder. The
+  # YouTube browser key is the exception: it is kept out of git and passed in
+  # from the trigger's _NEXT_PUBLIC_YOUTUBE_API_KEY substitution.
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
       - 'europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/everlasting-hills-church-git'
       - '--build-arg'
-      - 'NEXT_PUBLIC_API_BASE_URL=${_NEXT_PUBLIC_API_BASE_URL}'
-      - '--build-arg'
-      - 'NEXT_PUBLIC_SUPABASE_URL=${_NEXT_PUBLIC_SUPABASE_URL}'
-      - '--build-arg'
-      - 'NEXT_PUBLIC_SUPABASE_ANON_KEY=${_NEXT_PUBLIC_SUPABASE_ANON_KEY}'
-      - '--build-arg'
       - 'NEXT_PUBLIC_YOUTUBE_API_KEY=${_NEXT_PUBLIC_YOUTUBE_API_KEY}'
-      - '--build-arg'
-      - 'NEXT_PUBLIC_YOUTUBE_CHANNEL_ID=${_NEXT_PUBLIC_YOUTUBE_CHANNEL_ID}'
       - '.'
     dir: 'everlasting-hills-church'
 
@@ -28,7 +23,7 @@ steps:
       - 'everlasting-hills-church-git'
       - '--image=europe-west1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/everlasting-hills-church-git'
       - '--region=europe-west1'
-      - '--port=3000'
+      - '--port=8080'
       - '--allow-unauthenticated'
       # --update, not --set: --set-env-vars replaces the service's whole env on
       # every deploy, wiping secrets configured once in the console
