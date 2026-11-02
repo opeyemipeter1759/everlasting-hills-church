@@ -216,17 +216,6 @@ ALTER TABLE "PastoralBooking" ADD CONSTRAINT "PastoralBooking_memberProfileId_fk
 
 -- AddForeignKey
 ALTER TABLE "PastoralBooking" ADD CONSTRAINT "PastoralBooking_visitorId_fkey" FOREIGN KEY ("visitorId") REFERENCES "Visitor"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-┌─────────────────────────────────────────────────────────┐
-│  Update available 6.19.3 -> 8.0.0-rc.29                 │
-│                                                         │
-│  This is a major update - please follow the guide at    │
-│  https://pris.ly/d/major-version-upgrade                │
-│                                                         │
-│  Run the following to update                            │
-│    npm i --save-dev prisma@latest                       │
-│    npm i @prisma/client@latest                          │
-└─────────────────────────────────────────────────────────┘
-
 
 -- Rollback notes (manual, only if this migration must be undone):
 --   DROP TABLE "PastoralBooking", "PastorDelegate", "PastorAvailabilityBlock",
