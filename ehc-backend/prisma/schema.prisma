@@ -843,6 +843,9 @@ model Profile {
   PushSubscription              PushSubscription[]         @relation("PushSubscriptionUser")
   NotificationPreference        NotificationPreference?    @relation("NotificationPreferenceUser")
   GoogleCalendarConnection      GoogleCalendarConnection[] @relation("GoogleCalendarConnectionUser")
+  PastorHost                    PastorHost[]               @relation("PastorHostProfile")
+  PastorDelegations             PastorDelegate[]           @relation("PastorDelegateProfile")
+  PastoralBookings              PastoralBooking[]          @relation("PastoralBookingMember")
 }
 
 /// Explicit global granted role (PASTOR, ADMIN, SUPER_ADMIN). History-preserving:
@@ -1491,6 +1494,12 @@ model Tenant {
   followUpNoteReads        FollowUpNoteRead[]
   sermonDigests            SermonDigest[]
   SalvationDecision        SalvationDecision[]
+  PastorHost               PastorHost[]
+  PastorSessionType        PastorSessionType[]
+  PastorAvailabilityRule   PastorAvailabilityRule[]
+  PastorAvailabilityBlock  PastorAvailabilityBlock[]
+  PastorDelegate           PastorDelegate[]
+  PastoralBooking          PastoralBooking[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -2118,6 +2127,7 @@ model Visitor {
   Tenant              Tenant          @relation(fields: [tenantId], references: [id])
   Service             Service?        @relation(fields: [serviceId], references: [id])
   FollowUpEntry       FollowUpEntry[]
+  PastoralBooking     PastoralBooking[]
 
   @@index([tenantId, convertedAt])
   @@index([tenantId, serviceId])
@@ -3878,4 +3888,183 @@ model PushNoticeLog {
   createdAt DateTime @default(now())
 
   @@unique([tenantId, key])
+}
+
+// ── Pastoral One-on-One ─────────────────────────────────────────────────────
+
+/// HOLD: a visitor's request whose email is not confirmed yet (holds the time
+/// until holdExpiresAt). PENDING: waiting for the pastor. PROPOSED: the pastor
+/// suggested proposedStartsAt instead. LAPSED: never answered, time released.
+enum PastoralBookingStatus {
+  HOLD
+  PENDING
+  PROPOSED
+  APPROVED
+  DECLINED
+  CANCELLED
+  LAPSED
+  COMPLETED
+}
+
+enum PastoralRequesterType {
+  MEMBER
+  VISITOR
+}
+
+enum PastoralMeetingFormat {
+  IN_PERSON
+  GOOGLE_MEET
+  PHONE
+}
+
+/// A pastor who takes one-on-one sessions. A row here, not a role, makes
+/// someone a host: Pastor Opeyemi is SUPER_ADMIN, not PASTOR.
+model PastorHost {
+  id               String                   @id
+  tenantId         String
+  profileId        String
+  displayName      String
+  title            String?
+  bio              String?
+  active           Boolean                  @default(true)
+  position         Int                      @default(0)
+  bufferMinutes    Int                      @default(30)
+  dailyCap         Int                      @default(3)
+  minNoticeHours   Int                      @default(48)
+  horizonDays      Int                      @default(28)
+  visitorsAllowed  Boolean                  @default(true)
+  visitorWeeklyCap Int                      @default(2)
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  Tenant           Tenant                   @relation(fields: [tenantId], references: [id])
+  Profile          Profile                  @relation("PastorHostProfile", fields: [profileId], references: [id], onDelete: Cascade)
+  SessionTypes     PastorSessionType[]
+  Rules            PastorAvailabilityRule[]
+  Blocks           PastorAvailabilityBlock[]
+  Delegates        PastorDelegate[]
+  Bookings         PastoralBooking[]        @relation("PastoralBookingHost")
+  CoHostBookings   PastoralBooking[]        @relation("PastoralBookingCoHost")
+
+  @@unique([tenantId, profileId])
+}
+
+/// What can be requested from a host. `jointWithHostId` set = a session with
+/// both pastors, offered only when both are free.
+model PastorSessionType {
+  id              String            @id
+  tenantId        String
+  hostId          String
+  jointWithHostId String?
+  name            String
+  description     String?
+  durationMinutes Int
+  visitorsCanBook Boolean           @default(false)
+  active          Boolean           @default(true)
+  position        Int               @default(0)
+  createdAt       DateTime          @default(now())
+  Tenant          Tenant            @relation(fields: [tenantId], references: [id])
+  Host            PastorHost        @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  Bookings        PastoralBooking[]
+
+  @@index([hostId])
+}
+
+/// Weekly hours in church local time (Africa/Lagos). weekday: 0 = Sunday.
+model PastorAvailabilityRule {
+  id        String     @id
+  tenantId  String
+  hostId    String
+  weekday   Int
+  startTime String // "HH:MM"
+  endTime   String // "HH:MM"
+  Tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  Host      PastorHost @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@index([hostId])
+}
+
+/// A whole day off (travel, conference). Partial-day busy time comes from the
+/// pastor's Google Calendar instead.
+model PastorAvailabilityBlock {
+  id       String     @id
+  tenantId String
+  hostId   String
+  date     DateTime   @db.Date
+  note     String?
+  Tenant   Tenant     @relation(fields: [tenantId], references: [id])
+  Host     PastorHost @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  @@unique([hostId, date])
+}
+
+/// Someone (e.g. a secretary) a pastor has appointed to manage their requests
+/// and hours. Never sees requesters' private notes.
+model PastorDelegate {
+  id                String     @id
+  tenantId          String
+  hostId            String
+  delegateProfileId String
+  appointedById     String
+  createdAt         DateTime   @default(now())
+  Tenant            Tenant     @relation(fields: [tenantId], references: [id])
+  Host              PastorHost @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  Delegate          Profile    @relation("PastorDelegateProfile", fields: [delegateProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([hostId, delegateProfileId])
+  @@index([delegateProfileId])
+}
+
+model PastoralBooking {
+  id                    String                @id
+  tenantId              String
+  hostId                String
+  coHostId              String?
+  sessionTypeId         String
+  requesterType         PastoralRequesterType
+  memberProfileId       String?
+  visitorId             String?
+  requesterName         String
+  requesterEmail        String
+  requesterPhone        String?
+  requesterLocation     String?
+  requesterTimezone     String?
+  foundVia              String?
+  startsAt              DateTime
+  endsAt                DateTime
+  status                PastoralBookingStatus @default(PENDING)
+  holdExpiresAt         DateTime?
+  format                PastoralMeetingFormat
+  topic                 String
+  /// AES-256-GCM, readable by the host pastor only.
+  noteEncrypted         String?
+  proposedStartsAt      DateTime?
+  proposedEndsAt        DateTime?
+  decisionNote          String?
+  decidedAt             DateTime?
+  decidedById           String?
+  cancelledAt           DateTime?
+  cancelledBy           String? // "REQUESTER" | "HOST"
+  cancelReason          String?
+  emailVerifiedAt       DateTime?
+  verifyTokenHash       String?
+  manageTokenHash       String?
+  googleEventId         String?
+  meetLink              String?
+  pendingNudgeSentAt    DateTime?
+  reminderDaySentAt     DateTime?
+  reminderHourSentAt    DateTime?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  Tenant                Tenant                @relation(fields: [tenantId], references: [id])
+  Host                  PastorHost            @relation("PastoralBookingHost", fields: [hostId], references: [id])
+  CoHost                PastorHost?           @relation("PastoralBookingCoHost", fields: [coHostId], references: [id])
+  SessionType           PastorSessionType     @relation(fields: [sessionTypeId], references: [id])
+  Member                Profile?              @relation("PastoralBookingMember", fields: [memberProfileId], references: [id])
+  Visitor               Visitor?              @relation(fields: [visitorId], references: [id])
+
+  @@index([hostId, startsAt])
+  @@index([coHostId, startsAt])
+  @@index([memberProfileId])
+  @@index([requesterEmail])
+  @@index([status])
 }
