@@ -4,23 +4,31 @@ import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
+import { Throttle } from '@nestjs/throttler';
 import {
   AddDelegateDto,
   CreateBlockDto,
+  CreateRequestDto,
   CreateSessionTypeDto,
+  DecisionNoteDto,
+  ProposeTimeDto,
   ReplaceRulesDto,
   SlotsQueryDto,
   UpdateHostSettingsDto,
   UpdateSessionTypeDto,
 } from './dto/one-on-one.dto';
 import { OneOnOneService } from './one-on-one.service';
+import { OneOnOneRequestsService } from './one-on-one-requests.service';
 
 /** One-on-one sessions with the pastors. Management routes are authorized per pastor (owner, delegate or Super Admin) in the service. */
 @ApiTags('one-on-one')
 @ApiBearerAuth('access-token')
 @Controller('one-on-one')
 export class OneOnOneController {
-  constructor(private readonly oneOnOne: OneOnOneService) {}
+  constructor(
+    private readonly oneOnOne: OneOnOneService,
+    private readonly requests: OneOnOneRequestsService,
+  ) {}
 
   // ── Members ───────────────────────────────────────────────────────────────
 
@@ -36,7 +44,62 @@ export class OneOnOneController {
     return this.oneOnOne.getSlots(hostId, query);
   }
 
+  @Post('requests')
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Request a session at one of the open times; held while the pastor decides' })
+  createRequest(@CurrentUser() user: AuthUser, @Body() body: CreateRequestDto) {
+    return this.requests.createMemberRequest(user, body);
+  }
+
+  @Get('requests/mine')
+  @ApiOperation({ summary: 'My requests and sessions, newest first' })
+  listMine(@CurrentUser() user: AuthUser) {
+    return this.requests.listMine(user);
+  }
+
+  @Post('requests/:id/cancel')
+  @ApiOperation({ summary: 'Withdraw a request, or cancel an approved session up to 24 hours before' })
+  cancelMine(@CurrentUser() user: AuthUser, @Param('id') id: string, @Body() body: DecisionNoteDto) {
+    return this.requests.cancelMine(user, id, body);
+  }
+
+  @Post('requests/:id/accept-proposal')
+  @ApiOperation({ summary: 'Accept the time the pastor suggested' })
+  acceptProposal(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.requests.acceptProposal(user, id);
+  }
+
   // ── Pastors and delegates ─────────────────────────────────────────────────
+
+  @Get('manage/hosts/:hostId/requests')
+  @ApiOperation({ summary: 'Waiting, suggested, upcoming and recent sessions for a pastor' })
+  listForHost(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string) {
+    return this.requests.listForHost(user, hostId);
+  }
+
+  @Post('manage/hosts/:hostId/requests/:id/approve')
+  @ApiOperation({ summary: 'Approve a request' })
+  approve(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: DecisionNoteDto) {
+    return this.requests.approve(user, hostId, id, body);
+  }
+
+  @Post('manage/hosts/:hostId/requests/:id/decline')
+  @ApiOperation({ summary: 'Decline a request, with an optional note' })
+  decline(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: DecisionNoteDto) {
+    return this.requests.decline(user, hostId, id, body);
+  }
+
+  @Post('manage/hosts/:hostId/requests/:id/propose')
+  @ApiOperation({ summary: 'Suggest a different open time' })
+  propose(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: ProposeTimeDto) {
+    return this.requests.propose(user, hostId, id, body);
+  }
+
+  @Post('manage/hosts/:hostId/requests/:id/cancel')
+  @ApiOperation({ summary: 'Cancel an approved session' })
+  cancelApproved(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: DecisionNoteDto) {
+    return this.requests.cancelApproved(user, hostId, id, body);
+  }
 
   @Get('manage/context')
   @ApiOperation({ summary: 'Pastors I can manage, and whether I can set myself up as one' })

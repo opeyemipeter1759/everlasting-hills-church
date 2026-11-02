@@ -81,6 +81,65 @@ export interface HostSummary {
   bio: string | null;
   sessionTypes: { id: string; name: string; description: string | null; durationMinutes: number; joint: boolean }[];
   nextOpening: string | null;
+  notesEnabled: boolean;
+}
+
+export type RequestStatus = "HOLD" | "PENDING" | "PROPOSED" | "APPROVED" | "DECLINED" | "CANCELLED" | "LAPSED" | "COMPLETED";
+export type MeetingFormat = "IN_PERSON" | "GOOGLE_MEET" | "PHONE";
+
+export const SESSION_TOPICS = ["Counsel", "Prayer", "Marriage & family", "Career & direction", "Spiritual growth", "Something else"] as const;
+export type SessionTopic = (typeof SESSION_TOPICS)[number];
+
+export interface SessionRequest {
+  id: string;
+  status: RequestStatus;
+  hostId: string;
+  hostName: string;
+  coHostName: string | null;
+  sessionTypeId: string;
+  sessionTypeName: string;
+  durationMinutes: number;
+  startsAt: string;
+  endsAt: string;
+  proposedStartsAt: string | null;
+  proposedEndsAt: string | null;
+  format: MeetingFormat;
+  topic: string;
+  decisionNote: string | null;
+  meetLink: string | null;
+  cancelledBy: "REQUESTER" | "HOST" | null;
+  createdAt: string;
+}
+
+export interface MyRequest extends SessionRequest {
+  canCancel: boolean;
+}
+
+export interface HostRequest extends SessionRequest {
+  requesterType: "MEMBER" | "VISITOR";
+  requesterName: string;
+  requesterEmail: string;
+  requesterPhone: string | null;
+  requesterLocation: string | null;
+  foundVia: string | null;
+  hasNote: boolean;
+  note: string | null;
+}
+
+export interface HostRequests {
+  waiting: HostRequest[];
+  awaitingRequester: HostRequest[];
+  upcoming: HostRequest[];
+  recent: HostRequest[];
+}
+
+export interface CreateRequestInput {
+  hostId: string;
+  sessionTypeId: string;
+  startsAt: string;
+  format: MeetingFormat;
+  topic: SessionTopic;
+  note?: string;
 }
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
@@ -96,6 +155,86 @@ export function useHosts() {
     queryFn: () => api.get<HostSummary[]>("/one-on-one/hosts"),
   });
 }
+
+export function useSlots(hostId: string | null, sessionTypeId: string | null, from: string, to: string) {
+  return useQuery({
+    queryKey: [...KEY, "slots", hostId, sessionTypeId, from, to],
+    queryFn: () => api.get<SlotDay[]>(`/one-on-one/hosts/${hostId}/slots`, { sessionTypeId, from, to }),
+    enabled: Boolean(hostId && sessionTypeId),
+  });
+}
+
+const MINE_KEY = [...KEY, "mine"] as const;
+
+export function useMyRequests() {
+  return useQuery({
+    queryKey: MINE_KEY,
+    queryFn: () => api.get<MyRequest[]>("/one-on-one/requests/mine"),
+  });
+}
+
+/** After any change to a request, the list, open times and pastor cards may all have moved. */
+function useInvalidateMine() {
+  const qc = useQueryClient();
+  return () => {
+    qc.invalidateQueries({ queryKey: MINE_KEY });
+    qc.invalidateQueries({ queryKey: [...KEY, "slots"] });
+    qc.invalidateQueries({ queryKey: [...KEY, "hosts"] });
+  };
+}
+
+export function useCreateRequest() {
+  const invalidate = useInvalidateMine();
+  return useMutation({
+    mutationFn: (input: CreateRequestInput) => api.post<MyRequest>("/one-on-one/requests", input),
+    onSuccess: invalidate,
+  });
+}
+
+export function useCancelMyRequest() {
+  const invalidate = useInvalidateMine();
+  return useMutation({
+    mutationFn: (id: string) => api.post<MyRequest>(`/one-on-one/requests/${id}/cancel`, {}),
+    onSuccess: invalidate,
+  });
+}
+
+export function useAcceptProposal() {
+  const invalidate = useInvalidateMine();
+  return useMutation({
+    mutationFn: (id: string) => api.post<MyRequest>(`/one-on-one/requests/${id}/accept-proposal`),
+    onSuccess: invalidate,
+  });
+}
+
+// ── Pastor and delegate decisions ────────────────────────────────────────────
+
+const hostRequestsKey = (hostId: string) => [...KEY, "manage", "requests", hostId] as const;
+
+export function useHostRequests(hostId: string | null) {
+  return useQuery({
+    queryKey: hostRequestsKey(hostId ?? ""),
+    queryFn: () => api.get<HostRequests>(`/one-on-one/manage/hosts/${hostId}/requests`),
+    enabled: Boolean(hostId),
+    refetchInterval: 60_000,
+  });
+}
+
+function useDecision<TInput extends { id: string }>(hostId: string, action: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }: TInput) => api.post<SessionRequest>(`/one-on-one/manage/hosts/${hostId}/requests/${id}/${action}`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: hostRequestsKey(hostId) });
+      qc.invalidateQueries({ queryKey: [...KEY, "manage", "preview", hostId] });
+    },
+  });
+}
+
+export const useApproveRequest = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "approve");
+export const useDeclineRequest = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "decline");
+export const useProposeTime = (hostId: string) => useDecision<{ id: string; startsAt: string; note?: string }>(hostId, "propose");
+export const useCancelApproved = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "cancel");
 
 // ── Manage ───────────────────────────────────────────────────────────────────
 

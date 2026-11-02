@@ -19,6 +19,7 @@ import { PledgeAppeal } from "./PledgeAppeal";
 import { PushOptInCard } from "./PushOptInCard";
 import { EvangelismTallyCard } from "./EvangelismTallyCard";
 import { PrayerWatchCard } from "./PrayerWatchCard";
+import { OneOnOneCard } from "./OneOnOneCard";
 import { SpouseRequestsInbox } from "@/components/dashboard/settings/SpouseLink";
 import LatestSermonSummary from "@/components/sermon-digest/LatestSermonSummary";
 
@@ -95,6 +96,8 @@ export default function MemberHome(props: MemberHomePropsOptional) {
       <EvangelismTallyCard />
 
       <PrayerWatchCard />
+
+      <OneOnOneCard />
 
       {/* Side by side from lg up: the reading and the day's word are read together. */}
         <TodayReadingCard />

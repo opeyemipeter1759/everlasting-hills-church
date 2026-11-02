@@ -2562,6 +2562,10 @@ model NotificationPreference {
   /// on their review. Default true since staff opted into the role, not the
   /// notification.
   prayerWatchPendingApproval Boolean @default(true)
+  /// One-on-One: decisions on a session the person requested.
+  pastoralSessionUpdates     Boolean @default(true)
+  /// One-on-One: new requests and changes, for pastors and their delegates.
+  pastoralRequests           Boolean @default(true)
   quietStart          String? // "HH:MM", DB CHECK-guarded
   quietEnd            String? // "HH:MM", DB CHECK-guarded
   timezone            String   @default("Africa/Lagos")

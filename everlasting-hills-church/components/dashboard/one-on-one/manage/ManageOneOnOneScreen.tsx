@@ -11,6 +11,7 @@ import ProfileRulesCard from "./ProfileRulesCard";
 import SessionTypesCard from "./SessionTypesCard";
 import DelegatesCard from "./DelegatesCard";
 import PreviewCard from "./PreviewCard";
+import RequestsCard from "./RequestsCard";
 import { btnPrimary, muted } from "./ui";
 
 const ACCESS_NOTE: Record<HostAccess, string | null> = {
@@ -134,6 +135,7 @@ export default function ManageOneOnOneScreen() {
       ) : (
         <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
           <div className="flex min-w-0 flex-col gap-5">
+            <RequestsCard host={detail.data} />
             <WeeklyHoursCard host={detail.data} />
             <DaysOffCard host={detail.data} />
             <PreviewCard host={detail.data} />

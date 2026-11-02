@@ -1,0 +1,171 @@
+import { BadRequestException, ConflictException } from '@nestjs/common';
+import { Role } from '@prisma/client';
+import type { AuthUser } from '../auth/types/auth-user';
+import { OneOnOneRequestsService } from './one-on-one-requests.service';
+
+const START = '2026-11-12T12:00:00.000Z';
+const END = '2026-11-12T13:00:00.000Z';
+
+const member: AuthUser = {
+  userId: 'u1',
+  email: 'ada@x.com',
+  role: Role.MEMBER,
+  effectiveRoles: [Role.MEMBER],
+  unitLeadOf: [],
+  hodOf: [],
+  headUsher: false,
+  profileId: 'member-1',
+  memberId: 'm1',
+  tenantId: 't1',
+};
+const pastor: AuthUser = { ...member, userId: 'u2', profileId: 'pastor-faith', effectiveRoles: [Role.MEMBER, Role.PASTOR] };
+
+function row(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'b1',
+    hostId: 'h1',
+    coHostId: null,
+    sessionTypeId: 'st1',
+    memberProfileId: 'member-1',
+    requesterType: 'MEMBER',
+    requesterName: 'Ada Obi',
+    requesterEmail: 'ada@x.com',
+    requesterPhone: null,
+    requesterLocation: null,
+    foundVia: null,
+    startsAt: new Date(START),
+    endsAt: new Date(END),
+    proposedStartsAt: null,
+    proposedEndsAt: null,
+    status: 'PENDING',
+    format: 'IN_PERSON',
+    topic: 'Counsel',
+    noteEncrypted: 'enc:secret',
+    decisionNote: null,
+    meetLink: null,
+    cancelledBy: null,
+    createdAt: new Date('2026-11-02T10:00:00.000Z'),
+    Host: { displayName: 'Pastor Faith' },
+    CoHost: null,
+    SessionType: { name: 'Counsel & prayer', durationMinutes: 60 },
+    ...overrides,
+  };
+}
+
+function setup(opts: { cipherOn?: boolean; open?: boolean; slots?: string[] } = {}) {
+  const prisma = {
+    pastoralBooking: {
+      findFirst: jest.fn().mockResolvedValue(opts.open ? row() : null),
+      findMany: jest.fn().mockResolvedValue([]),
+      findUniqueOrThrow: jest.fn().mockResolvedValue(row()),
+      create: jest.fn(),
+      update: jest.fn(({ data }) => Promise.resolve(row(data))),
+    },
+    pastorSessionType: { findFirst: jest.fn().mockResolvedValue({ id: 'st1', hostId: 'h1', jointWithHostId: null }) },
+    member: { findFirst: jest.fn().mockResolvedValue({ firstName: 'Ada', lastName: 'Obi', email: 'ada@x.com', phone: null }) },
+    $transaction: jest.fn((fn: (tx: unknown) => unknown) => fn(prisma)),
+  };
+  const slots = (opts.slots ?? [START]).map((s) => ({ startsAt: s, endsAt: new Date(new Date(s).getTime() + 3_600_000).toISOString() }));
+  const oneOnOne = {
+    computeOpenSlots: jest.fn().mockResolvedValue([{ date: '2026-11-12', slots }]),
+    assertCanManage: jest.fn().mockResolvedValue({ host: { id: 'h1' }, isOwner: true }),
+  };
+  const notify = { toRequester: jest.fn(), toHostSide: jest.fn() };
+  const cipher = { isConfigured: opts.cipherOn ?? true, encrypt: (s: string) => `enc:${s}`, decrypt: (s: string) => s.replace('enc:', '') };
+  const svc = new OneOnOneRequestsService(prisma as never, oneOnOne as never, notify as never, cipher as never, { get: () => 't1' } as never);
+  return { svc, prisma, oneOnOne, notify };
+}
+
+const dto = { hostId: 'h1', sessionTypeId: 'st1', startsAt: START, format: 'IN_PERSON' as const, topic: 'Counsel' as const, note: 'Private' };
+
+describe('createMemberRequest', () => {
+  it('holds the time as PENDING, encrypts the note, and tells both sides', async () => {
+    const { svc, prisma, notify } = setup();
+    await svc.createMemberRequest(member, dto);
+    const data = prisma.pastoralBooking.create.mock.calls[0][0].data;
+    expect(data).toMatchObject({ status: 'PENDING', memberProfileId: 'member-1', noteEncrypted: 'enc:Private', endsAt: new Date(END) });
+    expect(notify.toRequester).toHaveBeenCalledWith(expect.anything(), 'RECEIVED');
+    expect(notify.toHostSide).toHaveBeenCalledWith(expect.anything(), 'NEW');
+  });
+
+  it('refuses a time that is no longer open', async () => {
+    const { svc, prisma } = setup({ slots: ['2026-11-12T13:30:00.000Z'] });
+    await expect(svc.createMemberRequest(member, dto)).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.pastoralBooking.create).not.toHaveBeenCalled();
+  });
+
+  it('allows one open request or session per member', async () => {
+    const { svc } = setup({ open: true });
+    await expect(svc.createMemberRequest(member, dto)).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('never stores a note in plain text when encryption is off', async () => {
+    const { svc } = setup({ cipherOn: false });
+    await expect(svc.createMemberRequest(member, dto)).rejects.toBeInstanceOf(BadRequestException);
+    const { svc: svc2, prisma } = setup({ cipherOn: false });
+    await svc2.createMemberRequest(member, { ...dto, note: undefined });
+    expect(prisma.pastoralBooking.create.mock.calls[0][0].data.noteEncrypted).toBeNull();
+  });
+});
+
+describe('member changes', () => {
+  it('lets a member withdraw a pending request', async () => {
+    const { svc, prisma, notify } = setup({ open: true });
+    await svc.cancelMine(member, 'b1', {});
+    expect(prisma.pastoralBooking.update.mock.calls[0][0].data).toMatchObject({ status: 'CANCELLED', cancelledBy: 'REQUESTER' });
+    expect(notify.toHostSide).toHaveBeenCalledWith(expect.anything(), 'WITHDRAWN');
+  });
+
+  it('stops self-cancelling an approved session inside 24 hours', async () => {
+    const { svc, prisma } = setup();
+    const soon = new Date(Date.now() + 3 * 3_600_000);
+    prisma.pastoralBooking.findFirst.mockResolvedValue(row({ status: 'APPROVED', startsAt: soon }));
+    await expect(svc.cancelMine(member, 'b1', {})).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('books the suggested time when the member accepts it', async () => {
+    const { svc, prisma } = setup();
+    const proposedStartsAt = new Date(Date.now() + 5 * 24 * 3_600_000);
+    const proposedEndsAt = new Date(proposedStartsAt.getTime() + 3_600_000);
+    prisma.pastoralBooking.findFirst.mockResolvedValue(row({ status: 'PROPOSED', proposedStartsAt, proposedEndsAt }));
+    await svc.acceptProposal(member, 'b1');
+    expect(prisma.pastoralBooking.update.mock.calls[0][0].data).toMatchObject({
+      status: 'APPROVED',
+      startsAt: proposedStartsAt,
+      endsAt: proposedEndsAt,
+      proposedStartsAt: null,
+    });
+  });
+});
+
+describe('pastor decisions', () => {
+  it('suggests another time, checking it while ignoring the request’s own slot', async () => {
+    const later = '2026-11-12T14:00:00.000Z';
+    const { svc, prisma, oneOnOne, notify } = setup({ open: true, slots: [later] });
+    prisma.pastoralBooking.findFirst.mockResolvedValue(row({ startsAt: new Date(Date.now() + 9 * 24 * 3_600_000) }));
+    await svc.propose(pastor, 'h1', 'b1', { startsAt: later });
+    expect(oneOnOne.computeOpenSlots).toHaveBeenCalledWith('h1', 'st1', '2026-11-12', '2026-11-12', expect.objectContaining({ excludeBookingId: 'b1' }));
+    expect(prisma.pastoralBooking.update.mock.calls[0][0].data).toMatchObject({ status: 'PROPOSED', proposedStartsAt: new Date(later) });
+    expect(notify.toRequester).toHaveBeenCalledWith(expect.anything(), 'PROPOSED', null);
+  });
+
+  it('will not approve a request twice', async () => {
+    const { svc, prisma } = setup();
+    prisma.pastoralBooking.findFirst.mockResolvedValue(row({ status: 'APPROVED', startsAt: new Date(Date.now() + 86_400_000) }));
+    await expect(svc.approve(pastor, 'h1', 'b1', {})).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('shows the private note to the pastor but not to a delegate', async () => {
+    const future = new Date(Date.now() + 5 * 86_400_000);
+    const { svc, prisma, oneOnOne } = setup();
+    prisma.pastoralBooking.findMany.mockResolvedValue([row({ startsAt: future, endsAt: new Date(future.getTime() + 3_600_000) })]);
+
+    const asPastor = await svc.listForHost(pastor, 'h1');
+    expect(asPastor.waiting[0].note).toBe('secret');
+
+    oneOnOne.assertCanManage.mockResolvedValue({ host: { id: 'h1' }, isOwner: false });
+    const asDelegate = await svc.listForHost(member, 'h1');
+    expect(asDelegate.waiting[0].note).toBeNull();
+    expect(asDelegate.waiting[0].hasNote).toBe(true);
+  });
+});

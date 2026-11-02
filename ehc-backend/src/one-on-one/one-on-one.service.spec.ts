@@ -23,7 +23,7 @@ function user(profileId: string, roles: Role[] = [Role.MEMBER]): AuthUser {
 function setup() {
   const prisma = {
     pastorHost: {
-      findFirst: jest.fn(({ where }) => (where.id === 'h1' || where.profileId === 'pastor-faith' ? HOST : null)),
+      findFirst: jest.fn(({ where }): typeof HOST | null => (where.id === 'h1' || where.profileId === 'pastor-faith' ? HOST : null)),
       findFirstOrThrow: jest.fn().mockResolvedValue({ ...HOST, Rules: [], Blocks: [], SessionTypes: [], Delegates: [] }),
       findMany: jest.fn().mockResolvedValue([HOST]),
       update: jest.fn(),
@@ -38,7 +38,8 @@ function setup() {
     profile: { findFirst: jest.fn().mockResolvedValue({ id: 'someone' }) },
     $transaction: jest.fn(),
   };
-  const svc = new OneOnOneService(prisma as never, { get: () => 't1' } as never);
+  const cipher = { isConfigured: true };
+  const svc = new OneOnOneService(prisma as never, cipher as never, { get: () => 't1' } as never);
   return { svc, prisma };
 }
 
@@ -74,7 +75,7 @@ describe('OneOnOneService access', () => {
 
   it('offers setup to a Pastor or Super Admin without a host row, not to members', async () => {
     const { svc, prisma } = setup();
-    prisma.pastorHost.findFirst.mockResolvedValue(null);
+    prisma.pastorHost.findFirst.mockImplementation(() => null);
     expect((await svc.getManageContext(user('pastor-ope', [Role.MEMBER, Role.SUPER_ADMIN]))).canSetUp).toBe(true);
     expect((await svc.getManageContext(user('a-member'))).canSetUp).toBe(false);
   });

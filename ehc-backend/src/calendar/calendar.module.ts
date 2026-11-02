@@ -42,6 +42,6 @@ import { IcsBuilderService } from './services/ics-builder.service';
     GoogleCalendarEventsService,
     GoogleCalendarSyncService,
   ],
-  exports: [CalendarTokenService, IcsBuilderService, GoogleCalendarSyncService],
+  exports: [CalendarTokenService, IcsBuilderService, GoogleCalendarSyncService, GoogleTokenCipherService],
 })
 export class CalendarModule {}

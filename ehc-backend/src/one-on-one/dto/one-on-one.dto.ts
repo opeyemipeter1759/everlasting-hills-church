@@ -4,7 +4,9 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
+  IsISO8601,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -188,6 +190,53 @@ export class AddDelegateDto {
   @IsString()
   @IsNotEmpty()
   profileId!: string;
+}
+
+export const SESSION_TOPICS = ['Counsel', 'Prayer', 'Marriage & family', 'Career & direction', 'Spiritual growth', 'Something else'] as const;
+export const MEETING_FORMATS = ['IN_PERSON', 'GOOGLE_MEET', 'PHONE'] as const;
+
+export class CreateRequestDto {
+  @ApiProperty({ example: 'host-id' })
+  @IsString()
+  @IsNotEmpty()
+  hostId!: string;
+
+  @ApiProperty({ example: 'session-type-id' })
+  @IsString()
+  @IsNotEmpty()
+  sessionTypeId!: string;
+
+  @ApiProperty({ example: '2026-11-12T12:00:00.000Z', description: 'One of the start times from /slots' })
+  @IsISO8601()
+  startsAt!: string;
+
+  @ApiProperty({ enum: MEETING_FORMATS })
+  @IsIn(MEETING_FORMATS)
+  format!: (typeof MEETING_FORMATS)[number];
+
+  @ApiProperty({ enum: SESSION_TOPICS })
+  @IsIn(SESSION_TOPICS)
+  topic!: (typeof SESSION_TOPICS)[number];
+
+  @ApiPropertyOptional({ description: 'Private to the pastor; stored encrypted' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1500)
+  note?: string;
+}
+
+export class DecisionNoteDto {
+  @ApiPropertyOptional({ example: 'Looking forward to it.' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(600)
+  note?: string;
+}
+
+export class ProposeTimeDto extends DecisionNoteDto {
+  @ApiProperty({ example: '2026-11-17T09:00:00.000Z' })
+  @IsISO8601()
+  startsAt!: string;
 }
 
 export class SlotsQueryDto {

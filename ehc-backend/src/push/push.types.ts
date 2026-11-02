@@ -15,6 +15,10 @@ export const PUSH_CATEGORIES = [
   // Admin/staff-facing, not member-facing: fires on the reviewer side of the
   // Prayer Watch approval queue, not the applicant side.
   'prayerWatchPendingApproval',
+  // One-on-One: the requester hears about decisions on their own session; the
+  // pastor and their delegates hear about new requests and changes.
+  'pastoralSessionUpdates',
+  'pastoralRequests',
 ] as const;
 
 export type PushCategory = (typeof PUSH_CATEGORIES)[number];
@@ -39,6 +43,8 @@ export const DEFAULT_PREFERENCES: Record<PushCategory, boolean> = {
   newSermon: true,
   milestones: true,
   prayerWatchPendingApproval: true,
+  pastoralSessionUpdates: true,
+  pastoralRequests: true,
 };
 
 /**
