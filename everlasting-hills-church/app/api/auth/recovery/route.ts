@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySupabaseJwt } from "@/lib/auth/verify-jwt";
 import { ACCESS_TOKEN_COOKIE } from "@/lib/auth/session-constants";
 import { clearSessionCookies } from "@/lib/auth/server-session";
+import { isUnsafeCrossSiteRequest } from "@/lib/api/csrf";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,7 @@ export const dynamic = "force-dynamic";
  * persisted in localStorage or a JavaScript-readable cookie.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
+  if (isUnsafeCrossSiteRequest(request.headers, request.nextUrl.origin)) {
     return NextResponse.json({ error: { message: "Cross-site request rejected" } }, { status: 403 });
   }
 

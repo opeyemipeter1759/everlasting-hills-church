@@ -10,11 +10,12 @@ import { POST } from "./route";
 describe("password recovery cookie exchange", () => {
   it("clears a previous user's refresh cookie before setting recovery access", async () => {
     verifyJwtMock.mockResolvedValue({ sub: "recovery-user", exp: 2_000_000_000, iat: 1 });
-    const request = new NextRequest("https://church.test/api/auth/recovery", {
+    const request = new NextRequest("https://internal.example/api/auth/recovery", {
       method: "POST",
       headers: {
         "content-type": "application/json",
         origin: "https://church.test",
+        "sec-fetch-site": "same-origin",
         cookie: `${REFRESH_TOKEN_COOKIE}=previous-user-secret`,
       },
       body: JSON.stringify({ accessToken: "recovery.jwt.value" }),
@@ -30,4 +31,3 @@ describe("password recovery cookie exchange", () => {
     expect(setCookie).toContain("HttpOnly");
   });
 });
-

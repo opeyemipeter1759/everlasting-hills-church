@@ -14,6 +14,7 @@ import {
   LOGOUT_PENDING_COOKIE,
   REFRESH_TOKEN_COOKIE,
 } from "@/lib/auth/session-constants";
+import { isUnsafeCrossSiteRequest } from "@/lib/api/csrf";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -36,14 +37,6 @@ const SAFE_RESPONSE_HEADERS = new Set([
 function backendUrl(request: NextRequest, path: string[]): string {
   const encodedPath = path.map((segment) => encodeURIComponent(segment)).join("/");
   return `${getBackendBaseUrl()}/${encodedPath}${request.nextUrl.search}`;
-}
-
-function isUnsafeCrossSiteRequest(request: NextRequest): boolean {
-  if (["GET", "HEAD", "OPTIONS"].includes(request.method)) return false;
-  const fetchSite = request.headers.get("sec-fetch-site");
-  if (fetchSite === "cross-site") return true;
-  const origin = request.headers.get("origin");
-  return Boolean(origin && origin !== request.nextUrl.origin);
 }
 
 function forwardHeaders(request: NextRequest, accessToken?: string | null): Headers {
@@ -148,7 +141,10 @@ function jsonProxyResponse(upstream: Response, value: unknown): NextResponse {
 }
 
 async function proxy(request: NextRequest, context: RouteContext): Promise<NextResponse> {
-  if (isUnsafeCrossSiteRequest(request)) {
+  if (
+    !["GET", "HEAD", "OPTIONS"].includes(request.method) &&
+    isUnsafeCrossSiteRequest(request.headers, request.nextUrl.origin)
+  ) {
     return NextResponse.json(
       { error: { statusCode: 403, code: "CSRF_REJECTED", message: "Cross-site request rejected" } },
       { status: 403 },
