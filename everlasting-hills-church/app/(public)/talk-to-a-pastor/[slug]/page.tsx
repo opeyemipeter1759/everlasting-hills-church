@@ -26,7 +26,7 @@ export default function PastorBookingPage({ params }: { params: { slug: string }
         heading={`Sit down with ${name}.`}
         lead="Choose a session below and pick a time that suits you. Nothing is booked until the pastor approves it."
       />
-      <div className="mx-auto max-w-[1100px] px-5 py-12 sm:px-8 sm:py-16">
+      <div id="talk-flow" className="mx-auto max-w-[1100px] scroll-mt-20 px-5 py-12 sm:px-8 sm:py-16">
         <VisitorFlow slug={params.slug} />
       </div>
     </main>

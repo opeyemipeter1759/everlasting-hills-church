@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -112,7 +112,8 @@ export default function OneOnOneScreen() {
   }
 
   const requests = mine.data ?? [];
-  const open = requests.find((r) => isOpen(r));
+  // Members can hold several sessions at once: everything still in play, soonest first.
+  const openOnes = requests.filter((r) => isOpen(r)).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
 
   // A pastor's share link shows just their sessions; a session's link opens its calendar.
   useEffect(() => {
@@ -122,15 +123,29 @@ export default function OneOnOneScreen() {
     if (!host) return;
     setFocusHostId(host.id);
     const type = wantedSession ? host.sessionTypes.find((t) => t.slug === wantedSession) : undefined;
-    if (type && !open) setStep({ kind: "time", hostId: host.id, typeId: type.id });
-  }, [usedLink, wanted, wantedSession, hosts.data, mine.data, open]);
-  const history = requests.filter((r) => r !== open);
+    if (type) setStep({ kind: "time", hostId: host.id, typeId: type.id });
+  }, [usedLink, wanted, wantedSession, hosts.data, mine.data]);
+
+  // Each step change brings the new step into view, gently unless motion is reduced.
+  const topRef = useRef<HTMLDivElement>(null);
+  const firstStep = useRef(true);
+  useEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    topRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }, [step.kind]);
+
+  const history = requests.filter((r) => !isOpen(r));
   const canManage = (manage.data?.hosts.length ?? 0) > 0 || manage.data?.canSetUp;
 
   const hostList = hosts.data ?? [];
   const hostIndex = (id: string) => Math.max(0, hostList.findIndex((h) => h.id === id));
   const findHost = (id: string) => hostList.find((h) => h.id === id);
 
+  const isLoadingOrError = hosts.isLoading || mine.isLoading || hosts.isError || mine.isError;
   let main: React.ReactNode;
   if (hosts.isLoading || mine.isLoading) {
     main = (
@@ -140,13 +155,6 @@ export default function OneOnOneScreen() {
     );
   } else if (hosts.isError || mine.isError) {
     main = <p className="text-sm font-semibold text-red-700 dark:text-red-300">{errorText(hosts.error ?? mine.error, "Couldn’t load One-on-One.")}</p>;
-  } else if (open && step.kind === "pick") {
-    main = (
-      <div className="flex max-w-xl flex-col gap-3">
-        <AppointmentCard request={open} onPickAnother={() => setStep({ kind: "time", hostId: open.hostId, typeId: open.sessionTypeId })} />
-        <p className="text-sm text-[#7A6A6F] dark:text-white/55">You can request another session once this one has happened.</p>
-      </div>
-    );
   } else if (step.kind === "time" && findHost(step.hostId)) {
     const host = findHost(step.hostId)!;
     main = (
@@ -205,7 +213,7 @@ export default function OneOnOneScreen() {
   }
 
   return (
-    <div className="flex max-w-full flex-col gap-8">
+    <div ref={topRef} className="flex max-w-full scroll-mt-24 flex-col gap-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl font-bold text-[#111] dark:text-white sm:text-4xl">Book time with a pastor</h1>
@@ -217,6 +225,23 @@ export default function OneOnOneScreen() {
           </Link>
         )}
       </header>
+
+      {openOnes.length > 0 && step.kind === "pick" && (
+        <section aria-labelledby="upcoming-title" className="flex flex-col gap-3">
+          <h2 id="upcoming-title" className="text-sm font-bold text-[#111] dark:text-white">
+            Your upcoming sessions
+          </h2>
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            {openOnes.map((r) => (
+              <AppointmentCard key={r.id} request={r} onPickAnother={() => setStep({ kind: "time", hostId: r.hostId, typeId: r.sessionTypeId })} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {openOnes.length > 0 && step.kind === "pick" && !isLoadingOrError && (
+        <h2 className="-mb-4 text-sm font-bold text-[#111] dark:text-white">Book another session</h2>
+      )}
 
       {main}
 

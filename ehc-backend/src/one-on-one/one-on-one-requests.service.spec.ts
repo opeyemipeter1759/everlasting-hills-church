@@ -113,9 +113,15 @@ describe('createMemberRequest', () => {
     expect(prisma.pastoralBooking.create).not.toHaveBeenCalled();
   });
 
-  it('allows one open request or session per member', async () => {
-    const { svc } = setup({ open: true });
-    await expect(svc.createMemberRequest(member, dto)).rejects.toBeInstanceOf(ConflictException);
+  it('lets a member hold several sessions, but not two at the same time', async () => {
+    const clashing = setup({ open: true });
+    await expect(clashing.svc.createMemberRequest(member, dto)).rejects.toThrow(/already have a session requested at that time/);
+
+    const free = setup();
+    await free.svc.createMemberRequest(member, dto);
+    const where = free.prisma.pastoralBooking.findFirst.mock.calls[0][0].where;
+    expect(where).toMatchObject({ memberProfileId: 'member-1', endsAt: { gt: new Date(START) } });
+    expect(free.prisma.pastoralBooking.create).toHaveBeenCalled();
   });
 
   it('never stores a note in plain text when encryption is off', async () => {

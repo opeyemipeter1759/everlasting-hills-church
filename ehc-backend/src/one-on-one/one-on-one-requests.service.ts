@@ -187,13 +187,6 @@ export class OneOnOneRequestsService {
     if (!user.profileId) throw new ForbiddenException('No profile');
     const noteEncrypted = this.encryptNote(dto.note?.trim() || null);
 
-    const open = await this.prisma.pastoralBooking.findFirst({
-      where: { tenantId: this.tenantId, memberProfileId: user.profileId, status: { in: OPEN_STATUSES }, endsAt: { gt: new Date() } },
-    });
-    if (open) {
-      throw new ConflictException('You already have a session requested or booked. You can request another once it has happened, or withdraw it first.');
-    }
-
     const type = await this.prisma.pastorSessionType.findFirst({
       where: { id: dto.sessionTypeId, hostId: dto.hostId, active: true, Host: { active: true, tenantId: this.tenantId } },
     });
@@ -205,6 +198,19 @@ export class OneOnOneRequestsService {
       select: { firstName: true, lastName: true, email: true, phone: true },
     });
     const startsAt = new Date(dto.startsAt);
+
+    // Members may hold several sessions at once, just never two at the same time.
+    const clash = await this.prisma.pastoralBooking.findFirst({
+      where: {
+        tenantId: this.tenantId,
+        memberProfileId: user.profileId,
+        status: { in: OPEN_STATUSES },
+        startsAt: { lt: new Date(startsAt.getTime() + type.durationMinutes * 60_000) },
+        endsAt: { gt: startsAt },
+      },
+    });
+    if (clash) throw new ConflictException('You already have a session requested at that time. Pick another time.');
+
     const id = randomUUID();
     await this.withFreshSlot({ hostId: dto.hostId, sessionTypeId: type.id, startsAt }, (tx, endsAt) =>
       tx.pastoralBooking.create({

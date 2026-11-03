@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSlots, type HostSummary } from "@/lib/api/one-on-one";
 import { usePublicSlots } from "@/lib/api/one-on-one-public";
@@ -10,6 +11,11 @@ import { Portrait, dualTime } from "./parts";
 type Slot = { startsAt: string; endsAt: string };
 
 const DOW = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/** Each time slides up into place, one after another. */
+function timeItem(reduce: boolean | null) {
+  return { hidden: { opacity: 0, y: reduce ? 0 : 8 }, shown: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } } };
+}
 
 function monthOf(date: string): string {
   return date.slice(0, 7);
@@ -81,6 +87,16 @@ export default function BookingPanel({
 
   const [date, setDate] = useState<string | null>(null);
   const [picked, setPicked] = useState<Slot | null>(null);
+  const reduceMotion = useReducedMotion();
+  const timesRef = useRef<HTMLDivElement>(null);
+
+  /** Choosing a day moves you on to its times; on a phone that means gliding down to them. */
+  function pickDate(cell: string) {
+    setDate(cell);
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      requestAnimationFrame(() => timesRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }));
+    }
+  }
 
   useEffect(() => {
     if (!slots.data) return;
@@ -155,14 +171,17 @@ export default function BookingPanel({
             const selected = cell === date;
             const isToday = cell === today;
             return (
-              <button
+              <motion.button
                 key={cell}
                 type="button"
                 disabled={!open}
                 aria-pressed={selected}
                 aria-label={`${dayTitle(cell)}${open ? ", has open times" : ""}`}
-                onClick={() => setDate(cell)}
-                className={`mx-auto flex aspect-square w-full max-w-[44px] items-center justify-center rounded-full text-sm transition ${
+                onClick={() => pickDate(cell)}
+                whileTap={open && !reduceMotion ? { scale: 0.86 } : undefined}
+                animate={selected && !reduceMotion ? { scale: [1, 1.12, 1] } : { scale: 1 }}
+                transition={{ duration: 0.28, ease: "easeOut" }}
+                className={`mx-auto flex aspect-square w-full max-w-[44px] items-center justify-center rounded-full text-sm transition-colors ${
                   selected
                     ? "bg-[#87102C] font-bold text-white"
                     : open
@@ -171,7 +190,7 @@ export default function BookingPanel({
                 }`}
               >
                 {Number(cell.slice(8))}
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -180,35 +199,59 @@ export default function BookingPanel({
         </p>
       </div>
 
-      <div className="flex flex-col gap-2.5 border-t border-[#E7CDD3]/60 p-6 dark:border-white/[0.07] lg:border-l lg:border-t-0">
-        {date ? (
-          <>
-            <p className="mb-1 text-[15px] font-bold text-[#111] dark:text-white">{dayTitle(date)}</p>
-            {daySlots.map((s) =>
-              picked?.startsAt === s.startsAt ? (
-                <div key={s.startsAt} className="grid grid-cols-2 gap-2">
-                  <span className="flex items-center justify-center rounded-xl bg-[#3B2A2E] py-2.5 text-[15px] font-bold tabular-nums text-white dark:bg-white/20">
-                    {showTime(s.startsAt)}
-                  </span>
-                  <button type="button" className={btnPrimary} onClick={() => onNext(s)}>
-                    Next
-                  </button>
-                </div>
-              ) : (
-                <button
-                  key={s.startsAt}
-                  type="button"
-                  onClick={() => setPicked(s)}
-                  className="rounded-xl border-[1.5px] border-[#87102C] py-2.5 text-[15px] font-bold tabular-nums text-[#87102C] transition hover:bg-[#FFE8ED] dark:border-[#FFB3C1]/70 dark:text-[#FFB3C1] dark:hover:bg-white/[0.06]"
-                >
-                  {showTime(s.startsAt)}
-                </button>
-              ),
-            )}
-          </>
-        ) : (
-          <p className="text-sm text-[#7A6A6F] dark:text-white/50">Pick a highlighted day to see its times.</p>
-        )}
+      <div ref={timesRef} className="flex scroll-mt-24 flex-col gap-2.5 border-t border-[#E7CDD3]/60 p-6 dark:border-white/[0.07] lg:border-l lg:border-t-0">
+        <AnimatePresence mode="wait" initial={false}>
+          {date ? (
+            <motion.div
+              key={date}
+              className="flex flex-col gap-2.5"
+              initial="hidden"
+              animate="shown"
+              exit="hidden"
+              variants={{
+                hidden: { opacity: 0, y: reduceMotion ? 0 : 10 },
+                shown: { opacity: 1, y: 0, transition: { duration: 0.22, ease: "easeOut", staggerChildren: reduceMotion ? 0 : 0.045 } },
+              }}
+            >
+              <motion.p variants={timeItem(reduceMotion)} className="mb-1 text-[15px] font-bold text-[#111] dark:text-white">
+                {dayTitle(date)}
+              </motion.p>
+              {daySlots.map((s) => (
+                <motion.div key={s.startsAt} variants={timeItem(reduceMotion)} layout={!reduceMotion}>
+                  {picked?.startsAt === s.startsAt ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <span className="flex items-center justify-center rounded-xl bg-[#3B2A2E] py-2.5 text-[15px] font-bold tabular-nums text-white dark:bg-white/20">
+                        {showTime(s.startsAt)}
+                      </span>
+                      <motion.button
+                        type="button"
+                        className={btnPrimary}
+                        onClick={() => onNext(s)}
+                        initial={reduceMotion ? false : { opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        autoFocus
+                      >
+                        Next
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <motion.button
+                      type="button"
+                      onClick={() => setPicked(s)}
+                      whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+                      className="w-full rounded-xl border-[1.5px] border-[#87102C] py-2.5 text-[15px] font-bold tabular-nums text-[#87102C] transition-colors hover:bg-[#FFE8ED] dark:border-[#FFB3C1]/70 dark:text-[#FFB3C1] dark:hover:bg-white/[0.06]"
+                    >
+                      {showTime(s.startsAt)}
+                    </motion.button>
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <p className="text-sm text-[#7A6A6F] dark:text-white/50">Pick a highlighted day to see its times.</p>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

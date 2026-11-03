@@ -25,7 +25,7 @@ export default function SessionBookingPage({ params }: { params: { slug: string;
         heading={titleFromSlug(params.session)}
         lead="Pick a time that suits you. Nothing is booked until the pastor approves it, and you’ll get an email either way."
       />
-      <div className="mx-auto max-w-[1100px] px-5 py-12 sm:px-8 sm:py-16">
+      <div id="talk-flow" className="mx-auto max-w-[1100px] scroll-mt-20 px-5 py-12 sm:px-8 sm:py-16">
         <VisitorFlow slug={params.slug} sessionSlug={params.session} />
       </div>
     </main>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MailCheck } from "lucide-react";
@@ -42,6 +42,17 @@ export default function VisitorFlow({ slug, sessionSlug }: { slug?: string; sess
   const [step, setStep] = useState<Step>({ kind: "pick" });
   const [timeZone, setTimeZone] = useState("Africa/Lagos");
   useEffect(() => setTimeZone(browserTimeZone()), []);
+
+  // Each step change brings the new step into view, gently unless motion is reduced.
+  const firstStep = useRef(true);
+  useEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("talk-flow")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }, [step.kind]);
 
   useEffect(() => {
     if (!loggedIn) return;

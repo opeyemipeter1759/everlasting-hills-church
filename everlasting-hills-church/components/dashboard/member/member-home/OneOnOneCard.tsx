@@ -10,7 +10,9 @@ import { card, cardTitle, hdrBdr, iconBg, iconCl, kicker, linkCl, muted } from "
 export function OneOnOneCard() {
   const { data, isLoading, isError } = useMyRequests();
   if (isLoading || isError) return null;
-  const next = (data ?? []).find((r) => isOpen(r));
+  const open = (data ?? []).filter((r) => isOpen(r)).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+  const next = open[0];
+  const more = open.length - 1;
 
   return (
     <section className={card} aria-label="One-on-One">
@@ -33,6 +35,7 @@ export function OneOnOneCard() {
             <p className={`text-sm ${muted}`}>
               With {pastorsOf(next)} · {FORMAT_LABEL[next.format]}
             </p>
+            {more > 0 && <p className={`text-xs ${muted}`}>and {more === 1 ? "1 more session" : `${more} more sessions`} coming up</p>}
             <Link href="/dashboard/one-on-one" className={`${linkCl} mt-2`}>
               {next.status === "PROPOSED" ? "Answer the suggested time →" : "View session →"}
             </Link>

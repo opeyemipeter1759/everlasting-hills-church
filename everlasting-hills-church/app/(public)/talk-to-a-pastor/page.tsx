@@ -14,7 +14,7 @@ export default function TalkToAPastorPage() {
         heading="You don’t have to carry it alone."
         lead="If a message has stirred something in you and you’d like to talk it through, request a private session with one of our pastors, by video call or phone, wherever you are."
       />
-      <div className="mx-auto max-w-[1100px] px-5 py-12 sm:px-8 sm:py-16">
+      <div id="talk-flow" className="mx-auto max-w-[1100px] scroll-mt-20 px-5 py-12 sm:px-8 sm:py-16">
         <VisitorFlow />
       </div>
     </main>
