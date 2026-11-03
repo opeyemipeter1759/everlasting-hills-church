@@ -181,7 +181,7 @@ export class OneOnOneService {
         title: user.effectiveRoles?.includes(Role.SUPER_ADMIN) ? 'Senior Pastor' : 'Pastor',
         position,
         SessionTypes: {
-          create: DEFAULT_SESSION_TYPES.map((t) => ({ id: randomUUID(), tenantId: this.tenantId, ...t })),
+          create: DEFAULT_SESSION_TYPES.map((t) => ({ id: randomUUID(), tenantId: this.tenantId, slug: slugify(t.name), ...t })),
         },
       },
     });
@@ -195,7 +195,7 @@ export class OneOnOneService {
       include: {
         Rules: { orderBy: [{ weekday: 'asc' }, { startTime: 'asc' }] },
         Blocks: { where: { date: { gte: new Date(`${localDateKey(new Date())}T00:00:00.000Z`) } }, orderBy: { date: 'asc' } },
-        SessionTypes: { orderBy: { position: 'asc' } },
+        SessionTypes: { where: { archivedAt: null }, orderBy: { position: 'asc' } },
         Delegates: { include: { Delegate: { include: { Member: { select: { firstName: true, lastName: true, email: true } } } } } },
       },
     });
@@ -205,6 +205,8 @@ export class OneOnOneService {
       displayName: host.displayName,
       slug: host.slug,
       defaultMeetingLink: host.defaultMeetingLink,
+      publicIntake: host.publicIntake,
+      canSetPublicIntake: this.isSuperAdmin(user),
       googleConnected: await this.calendar.isConnected(host.profileId),
       notesEnabled: this.notesEnabled,
       title: host.title,
@@ -221,10 +223,12 @@ export class OneOnOneService {
       blocks: host.Blocks.map((b) => ({ id: b.id, date: b.date.toISOString().slice(0, 10), note: b.note })),
       sessionTypes: host.SessionTypes.map((t) => ({
         id: t.id,
+        slug: t.slug,
         name: t.name,
         description: t.description,
         durationMinutes: t.durationMinutes,
         visitorsCanBook: t.visitorsCanBook,
+        askTopic: t.askTopic,
         jointWithHostId: t.jointWithHostId,
         active: t.active,
       })),
@@ -239,8 +243,19 @@ export class OneOnOneService {
 
   // ── Manage: settings, hours, days off, session types ──────────────────────
 
-  async updateSettings(user: AuthUser, hostId: string, dto: UpdateHostSettingsDto) {
+  async updateSettings(user: AuthUser, hostId: string, input: UpdateHostSettingsDto) {
     await this.assertCanManage(user, hostId);
+    const { publicIntake, ...dto } = input;
+    if (publicIntake !== undefined) {
+      if (!this.isSuperAdmin(user)) throw new ForbiddenException('Only the Super Admin chooses who receives public requests');
+      // One pastor receives the nameless page's requests at a time.
+      await this.prisma.$transaction([
+        ...(publicIntake
+          ? [this.prisma.pastorHost.updateMany({ where: { tenantId: this.tenantId, id: { not: hostId } }, data: { publicIntake: false } })]
+          : []),
+        this.prisma.pastorHost.update({ where: { id: hostId }, data: { publicIntake } }),
+      ]);
+    }
     const slug = dto.slug !== undefined ? slugify(dto.slug) : undefined;
     if (slug !== undefined && !SLUG.test(slug)) throw new BadRequestException('Use letters, numbers and dashes for the link');
     if (slug === 'request') throw new BadRequestException('That link name is reserved. Try another.');
@@ -320,15 +335,20 @@ export class OneOnOneService {
       await this.loadHost(dto.jointWithHostId);
     }
     const position = await this.prisma.pastorSessionType.count({ where: { hostId } });
+    const id = randomUUID();
+    let slug = slugify(dto.name) || `session-${id.slice(0, 6)}`;
+    if (await this.prisma.pastorSessionType.findFirst({ where: { hostId, slug } })) slug = `${slug}-${id.slice(0, 6)}`;
     await this.prisma.pastorSessionType.create({
       data: {
-        id: randomUUID(),
+        id,
         tenantId: this.tenantId,
         hostId,
+        slug,
         name: dto.name.trim(),
         description: dto.description?.trim() || null,
         durationMinutes: dto.durationMinutes,
         visitorsCanBook: dto.visitorsCanBook ?? false,
+        askTopic: dto.askTopic ?? true,
         jointWithHostId: dto.jointWithHostId ?? null,
         position,
       },
@@ -347,6 +367,33 @@ export class OneOnOneService {
       },
     });
     if (result.count === 0) throw new NotFoundException('Session type not found');
+    return this.getHostDetail(user, hostId);
+  }
+
+  /**
+   * Deletes a session type. One that has ever been requested is archived
+   * instead: hidden everywhere, but its past sessions keep their history.
+   */
+  async deleteSessionType(user: AuthUser, hostId: string, typeId: string) {
+    await this.assertCanManage(user, hostId);
+    const type = await this.prisma.pastorSessionType.findFirst({ where: { id: typeId, hostId, archivedAt: null } });
+    if (!type) throw new NotFoundException('Session type not found');
+
+    const open = await this.prisma.pastoralBooking.count({
+      where: { sessionTypeId: typeId, status: { in: ACTIVE_STATUSES }, endsAt: { gt: new Date() } },
+    });
+    if (open > 0) {
+      throw new ConflictException(
+        `${open === 1 ? 'One request or session is' : `${open} requests or sessions are`} still open for this session type. Decide or cancel ${open === 1 ? 'it' : 'them'} first, or just switch it off.`,
+      );
+    }
+
+    const used = await this.prisma.pastoralBooking.count({ where: { sessionTypeId: typeId } });
+    if (used > 0) {
+      await this.prisma.pastorSessionType.update({ where: { id: typeId }, data: { archivedAt: new Date(), active: false } });
+    } else {
+      await this.prisma.pastorSessionType.delete({ where: { id: typeId } });
+    }
     return this.getHostDetail(user, hostId);
   }
 
@@ -410,7 +457,7 @@ export class OneOnOneService {
       where: { tenantId: this.tenantId, active: true, ...(audience === 'VISITOR' && { visitorsAllowed: true }) },
       include: {
         SessionTypes: {
-          where: { active: true, ...(audience === 'VISITOR' && { visitorsCanBook: true, jointWithHostId: null }) },
+          where: { active: true, archivedAt: null, ...(audience === 'VISITOR' && { visitorsCanBook: true, jointWithHostId: null }) },
           orderBy: { position: 'asc' },
         },
       },
@@ -433,16 +480,34 @@ export class OneOnOneService {
             bio: h.bio,
             sessionTypes: h.SessionTypes.map((t) => ({
               id: t.id,
+              slug: t.slug,
               name: t.name,
               description: t.description,
               durationMinutes: t.durationMinutes,
               joint: Boolean(t.jointWithHostId),
+              askTopic: t.askTopic,
             })),
             nextOpening: next?.startsAt ?? null,
             notesEnabled: this.notesEnabled,
           };
         }),
     );
+  }
+
+  /**
+   * What the general public page offers: the receiving pastor's visitor
+   * sessions and open times, with nothing that names them. Null when no one
+   * is receiving public requests.
+   */
+  async getPublicIntake() {
+    const intake = await this.prisma.pastorHost.findFirst({
+      where: { tenantId: this.tenantId, publicIntake: true, active: true, visitorsAllowed: true },
+      select: { id: true },
+    });
+    if (!intake) return null;
+    const host = (await this.listHosts('VISITOR')).find((h) => h.id === intake.id);
+    if (!host) return null;
+    return { ...host, displayName: 'One of our pastors', slug: null, title: null, bio: null };
   }
 
   async getSlots(hostId: string, query: SlotsQueryDto, audience: Audience = 'MEMBER'): Promise<SlotDay[]> {

@@ -24,7 +24,7 @@ export default function PastorBookingPage({ params }: { params: { slug: string }
     <main className="bg-[#FBF7F8] dark:bg-[#130A0D]">
       <TalkHero
         heading={`Sit down with ${name}.`}
-        lead="Pick a time that suits you for a private session to talk, pray and receive counsel. Nothing is booked until the pastor approves it."
+        lead="Choose a session below and pick a time that suits you. Nothing is booked until the pastor approves it."
       />
       <div className="mx-auto max-w-[1100px] px-5 py-12 sm:px-8 sm:py-16">
         <VisitorFlow slug={params.slug} />

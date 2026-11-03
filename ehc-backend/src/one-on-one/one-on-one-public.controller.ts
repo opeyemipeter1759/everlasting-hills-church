@@ -26,6 +26,12 @@ export class OneOnOnePublicController {
     return this.oneOnOne.listHosts('VISITOR');
   }
 
+  @Get('intake')
+  @ApiOperation({ summary: 'The general page’s sessions and times; names no pastor (null when not taking requests)' })
+  async intake() {
+    return (await this.oneOnOne.getPublicIntake()) ?? { unavailable: true };
+  }
+
   @Get('hosts/:hostId/slots')
   @ApiOperation({ summary: 'Open times a visitor can request (max two months)' })
   getSlots(@Param('hostId') hostId: string, @Query() query: SlotsQueryDto) {

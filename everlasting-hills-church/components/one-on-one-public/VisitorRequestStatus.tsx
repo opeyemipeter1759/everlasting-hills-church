@@ -64,7 +64,7 @@ export default function VisitorRequestStatus({ token }: { token: string }) {
           disabled={confirm.isPending}
           onClick={async () => {
             try {
-              await confirm.mutateAsync();
+              await confirm.mutateAsync(undefined);
               showToast.success("Request sent");
             } catch (err) {
               showToast.error(errorText(err, "Couldn't confirm. Please try again."));
@@ -103,23 +103,25 @@ export default function VisitorRequestStatus({ token }: { token: string }) {
         busy={cancel.isPending || accept.isPending}
         onAccept={async () => {
           try {
-            await accept.mutateAsync();
+            await accept.mutateAsync(undefined);
             showToast.success("Booked. See you then.");
           } catch (err) {
             showToast.error(errorText(err, "Couldn't accept that time."));
           }
         }}
-        onCancel={async () => {
+        onCancel={async (reason) => {
           try {
-            await cancel.mutateAsync();
+            await cancel.mutateAsync(reason);
             showToast.success(r.status === "APPROVED" ? "Session cancelled" : "Request withdrawn");
+            return true;
           } catch (err) {
             showToast.error(errorText(err, "Couldn't cancel."));
+            return false;
           }
         }}
         onPickAnother={async () => {
           try {
-            await cancel.mutateAsync();
+            await cancel.mutateAsync("Asked for a different time than the one suggested.");
             window.location.assign("/talk-to-a-pastor");
           } catch (err) {
             showToast.error(errorText(err, "Couldn't release that time."));

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import Loader from "@/components/ui/feedback/Loader";
 import { useHosts, useManageContext, useMyRequests, type HostSummary } from "@/lib/api/one-on-one";
 import { errorText } from "@/components/pray-watch/shared";
@@ -10,6 +11,7 @@ import { btnGhost, durationLabel, formatTime } from "../manage/ui";
 import AppointmentCard from "./AppointmentCard";
 import BookingPanel from "./BookingPanel";
 import RequestForm from "./RequestForm";
+import HostProfile from "./HostProfile";
 import { Portrait, StatusPill, formatWhenLong, isOpen, pastorsOf } from "./parts";
 
 type Step =
@@ -23,15 +25,42 @@ function nextOpeningLabel(iso: string | null): string {
   return `Next opening ${day}, ${formatTime(iso)}`;
 }
 
-export function HostCard({ host, index, onChoose }: { host: HostSummary; index: number; onChoose: (typeId: string) => void }) {
+export function HostCard({
+  host,
+  index,
+  onChoose,
+  onOpen,
+  anonymous = false,
+}: {
+  host: HostSummary;
+  index: number;
+  onChoose: (typeId: string) => void;
+  /** Opens the pastor's own page; the portrait and name become a link to it. */
+  onOpen?: () => void;
+  /** The nameless public page: no portrait. */
+  anonymous?: boolean;
+}) {
   const joint = host.sessionTypes.some((t) => t.joint);
+  const heading = (
+    <>
+      {!anonymous && <Portrait name={host.displayName} index={index} size="lg" />}
+      <span className="mt-4 block">
+        <span className="block font-serif text-[22px] font-bold leading-tight text-[#111] group-hover:text-[#87102C] dark:text-white dark:group-hover:text-[#FFB3C1]">
+          {host.displayName}
+        </span>
+        {host.title && <span className="block text-sm text-[#7A6A6F] dark:text-white/55">{host.title}</span>}
+      </span>
+    </>
+  );
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-[#E7CDD3]/60 bg-white p-6 shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:border-white/[0.09] dark:bg-white/[0.05] dark:shadow-none">
-      <Portrait name={host.displayName} index={index} size="lg" />
-      <div>
-        <h2 className="font-serif text-[22px] font-bold leading-tight text-[#111] dark:text-white">{host.displayName}</h2>
-        {host.title && <p className="text-sm text-[#7A6A6F] dark:text-white/55">{host.title}</p>}
-      </div>
+      {onOpen ? (
+        <button type="button" onClick={onOpen} className="group self-start text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#87102C]" aria-label={`Open ${host.displayName}'s page`}>
+          {heading}
+        </button>
+      ) : (
+        <div>{heading}</div>
+      )}
       {host.bio && <p className="text-sm text-[#7A6A6F] dark:text-white/60">{host.bio}</p>}
       <div className="flex flex-col gap-2">
         {host.sessionTypes.map((t) => (
@@ -54,6 +83,11 @@ export function HostCard({ host, index, onChoose }: { host: HostSummary; index: 
         {nextOpeningLabel(host.nextOpening)}
         {joint && host.nextOpening && <span className="sr-only">, for one-on-one sessions</span>}
       </p>
+      {onOpen && (
+        <button type="button" onClick={onOpen} className="self-start text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
+          View profile and all sessions
+        </button>
+      )}
     </article>
   );
 }
@@ -65,18 +99,31 @@ export default function OneOnOneScreen() {
   const [step, setStep] = useState<Step>({ kind: "pick" });
   const searchParams = useSearchParams();
   const wanted = searchParams.get("host");
+  const wantedSession = searchParams.get("session");
   const [usedLink, setUsedLink] = useState(false);
+  const [focusHostId, setFocusHostId] = useState<string | null>(null);
+  const router = useRouter();
+
+  /** Opens a pastor's page (or closes it), keeping the address shareable. */
+  function openHost(host: HostSummary | null) {
+    setFocusHostId(host?.id ?? null);
+    setStep({ kind: "pick" });
+    router.replace(host?.slug ? `/dashboard/one-on-one?host=${encodeURIComponent(host.slug)}` : "/dashboard/one-on-one", { scroll: false });
+  }
 
   const requests = mine.data ?? [];
   const open = requests.find((r) => isOpen(r));
 
-  // Arriving from a pastor's share link goes straight to their calendar.
+  // A pastor's share link shows just their sessions; a session's link opens its calendar.
   useEffect(() => {
     if (usedLink || !wanted || !hosts.data || !mine.data) return;
     setUsedLink(true);
     const host = hosts.data.find((h) => h.slug === wanted || h.id === wanted);
-    if (host && !open && host.sessionTypes[0]) setStep({ kind: "time", hostId: host.id, typeId: host.sessionTypes[0].id });
-  }, [usedLink, wanted, hosts.data, mine.data, open]);
+    if (!host) return;
+    setFocusHostId(host.id);
+    const type = wantedSession ? host.sessionTypes.find((t) => t.slug === wantedSession) : undefined;
+    if (type && !open) setStep({ kind: "time", hostId: host.id, typeId: type.id });
+  }, [usedLink, wanted, wantedSession, hosts.data, mine.data, open]);
   const history = requests.filter((r) => r !== open);
   const canManage = (manage.data?.hosts.length ?? 0) > 0 || manage.data?.canSetUp;
 
@@ -107,6 +154,7 @@ export default function OneOnOneScreen() {
         host={host}
         hostIndex={hostIndex(host.id)}
         sessionTypeId={step.typeId}
+        backLabel={focusHostId ? "All sessions" : "All pastors"}
         onBack={() => setStep({ kind: "pick" })}
         onNext={(slot) => setStep({ kind: "details", hostId: host.id, typeId: step.typeId, slot })}
       />
@@ -128,11 +176,29 @@ export default function OneOnOneScreen() {
         The pastors aren’t taking one-on-one requests right now. Please check back soon.
       </p>
     );
+  } else if (focusHostId && findHost(focusHostId)) {
+    const host = findHost(focusHostId)!;
+    main = (
+      <div className="flex flex-col gap-4">
+        {hostList.length > 1 && (
+          <button type="button" onClick={() => openHost(null)} className="inline-flex items-center gap-1 self-start text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
+            <ArrowLeft size={14} /> All pastors
+          </button>
+        )}
+        <HostProfile host={host} index={hostIndex(host.id)} onChoose={(typeId) => setStep({ kind: "time", hostId: host.id, typeId })} />
+      </div>
+    );
   } else {
     main = (
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {hostList.map((h, i) => (
-          <HostCard key={h.id} host={h} index={i} onChoose={(typeId) => setStep({ kind: "time", hostId: h.id, typeId })} />
+        {hostList.map((h) => (
+          <HostCard
+            key={h.id}
+            host={h}
+            index={hostIndex(h.id)}
+            onOpen={() => openHost(h)}
+            onChoose={(typeId) => setStep({ kind: "time", hostId: h.id, typeId })}
+          />
         ))}
       </div>
     );

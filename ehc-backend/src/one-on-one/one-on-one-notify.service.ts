@@ -26,8 +26,10 @@ export interface NotifyBooking {
   proposedStartsAt: Date | null;
   proposedEndsAt: Date | null;
   format: PastoralMeetingFormat;
-  topic: string;
+  topic: string | null;
   meetLink: string | null;
+  /** From the nameless public page and not yet taken up by a named pastor. */
+  anonymous?: boolean;
 }
 
 export type RequesterEvent =
@@ -41,7 +43,7 @@ export type RequesterEvent =
   | 'LINK_UPDATED'
   | 'REMINDER_DAY'
   | 'REMINDER_HOUR';
-export type HostEvent = 'NEW' | 'ACCEPTED_PROPOSAL' | 'WITHDRAWN' | 'NUDGE' | 'REMINDER_DAY';
+export type HostEvent = 'NEW' | 'ASSIGNED' | 'ACCEPTED_PROPOSAL' | 'WITHDRAWN' | 'NUDGE' | 'REMINDER_DAY';
 
 const LAGOS = 'Africa/Lagos';
 
@@ -127,7 +129,7 @@ export class OneOnOneNotifyService {
     return people;
   }
 
-  async toHostSide(b: NotifyBooking, event: HostEvent): Promise<void> {
+  async toHostSide(b: NotifyBooking, event: HostEvent, note?: string | null): Promise<void> {
     try {
       const people = await this.hostSide([b.hostId, ...(b.coHostId ? [b.coHostId] : [])]);
       const when = formatWhen(b.startsAt, b.endsAt);
@@ -150,6 +152,12 @@ export class OneOnOneNotifyService {
           heading: 'Request withdrawn',
           line: `${b.requesterName} has withdrawn. The time is free again.`,
           push: `${b.requesterName} withdrew their request for ${when}.`,
+        },
+        ASSIGNED: {
+          subject: `A request passed to you: ${b.requesterName}, ${when}`,
+          heading: 'A request for you',
+          line: `${who}’s request has been passed to you. Approve it, suggest another time, or decline.`,
+          push: `${b.requesterName}'s request for ${when} has been passed to you.`,
         },
         NUDGE: {
           subject: `Still waiting: ${b.requesterName}'s request for ${when}`,
@@ -180,9 +188,10 @@ export class OneOnOneNotifyService {
               ['Session', b.typeName],
               ['When', when],
               ['How', FORMAT_LABEL[b.format]],
-              ['About', b.topic],
+              ...(b.topic ? ([['About', b.topic]] as [string, string][]) : []),
               ...(b.meetLink ? ([['Meet link', b.meetLink]] as [string, string][]) : []),
             ],
+            quote: note ? { label: event === 'WITHDRAWN' ? `${firstName(b.requesterName)}'s reason` : 'A note with it', text: note } : null,
             cta: { label: 'Open One-on-One', href: this.links.manageUrl },
             tag: `pastoral-host-${event.toLowerCase()}`,
           }),
@@ -201,7 +210,8 @@ export class OneOnOneNotifyService {
 
   async toRequester(b: NotifyBooking, event: RequesterEvent, note?: string | null): Promise<void> {
     try {
-      const pastors = this.pastorsLabel(b);
+      const pastors = b.anonymous ? 'one of our pastors' : this.pastorsLabel(b);
+      const Pastors = pastors.charAt(0).toUpperCase() + pastors.slice(1);
       const tz = b.requesterTimezone;
       const when = formatWhenFor(b.startsAt, b.endsAt, tz);
       const proposedWhen = b.proposedStartsAt && b.proposedEndsAt ? formatWhenFor(b.proposedStartsAt, b.proposedEndsAt, tz) : when;
@@ -237,27 +247,27 @@ export class OneOnOneNotifyService {
         APPROVED: {
           subject: `Approved: your session with ${pastors}`,
           heading: 'Your session is approved',
-          paragraphs: [`${pastors} will see you then. We’ll remind you the day before and an hour before.`],
+          paragraphs: [`${Pastors} will see you then. We’ll remind you the day before and an hour before.`],
           details: [['When', when], ...(b.meetLink ? ([['Meet link', b.meetLink]] as [string, string][]) : [])],
-          push: `${pastors} approved your session on ${when}.`,
+          push: `${Pastors} approved your session on ${when}.`,
         },
         PROPOSED: {
-          subject: `${pastors} suggested a different time`,
+          subject: `${Pastors} suggested a different time`,
           heading: 'A different time',
-          paragraphs: [`${pastors} can’t make the time you asked for and suggested another. Accept it, or pick a different time.`],
+          paragraphs: [`${Pastors} can’t make the time you asked for and suggested another. Accept it, or pick a different time.`],
           details: [
             ['Suggested', proposedWhen],
             ['You asked for', when],
           ],
-          push: `${pastors} suggested ${proposedWhen}.`,
+          push: `${Pastors} suggested ${proposedWhen}.`,
           cta: 'Answer',
         },
         DECLINED: {
           subject: `About your request to meet ${pastors}`,
           heading: 'Request not approved',
-          paragraphs: [`${pastors} isn’t able to take this session. You’re welcome to request another time.`],
+          paragraphs: [`${Pastors} isn’t able to take this session. You’re welcome to request another time.`],
           details: [['You asked for', when]],
-          push: `${pastors} couldn’t take your session on ${when}.`,
+          push: `${Pastors} couldn’t take your session on ${when}.`,
         },
         CANCELLED_BY_HOST: {
           subject: `Your session with ${pastors} has been cancelled`,
@@ -310,7 +320,7 @@ export class OneOnOneNotifyService {
           subject: copy.subject,
           heading: copy.heading,
           paragraphs: copy.paragraphs,
-          details: [['With', pastors], ['Session', b.typeName], ...copy.details, ['How', FORMAT_LABEL[b.format]]],
+          details: [['With', Pastors], ['Session', b.typeName], ...copy.details, ['How', FORMAT_LABEL[b.format]]],
           quote: note ? { label: `A note from ${pastors}`, text: note } : null,
           cta: { label: copy.cta ?? viewLabel, href },
           tag: `pastoral-requester-${event.toLowerCase()}`,

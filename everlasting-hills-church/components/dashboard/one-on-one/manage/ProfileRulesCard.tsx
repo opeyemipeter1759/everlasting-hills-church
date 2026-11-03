@@ -25,7 +25,7 @@ const HORIZON_OPTIONS = [
 ];
 const VISITOR_CAP_OPTIONS = [1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: `Up to ${n} a week` }));
 
-type Form = Omit<Required<HostSettingsInput>, "title" | "bio" | "slug" | "defaultMeetingLink"> & {
+type Form = Omit<Required<HostSettingsInput>, "title" | "bio" | "slug" | "defaultMeetingLink" | "publicIntake"> & {
   title: string;
   bio: string;
   defaultMeetingLink: string;
@@ -84,7 +84,7 @@ export default function ProfileRulesCard({ host }: { host: HostDetail }) {
           </label>
         </div>
         <label className="flex flex-col gap-1.5">
-          <span className={label}>What you’re best placed to help with</span>
+          <span className={label}>A short intro for your page</span>
           <textarea
             id="host-bio"
             className={`${input} min-h-[80px] resize-y`}
@@ -153,6 +153,32 @@ export default function ProfileRulesCard({ host }: { host: HostDetail }) {
           </div>
           <Toggle id="host-active" checked={form.active} onChange={(v) => set("active", v)} label="Taking requests" />
         </div>
+
+        {host.canSetPublicIntake && (
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-[#E7CDD3]/70 p-4 dark:border-white/10">
+            <div>
+              <p className="text-sm font-semibold text-[#111] dark:text-white">Receive requests from the public page</p>
+              <p className={`text-xs ${muted}`}>
+                The general “Talk to a pastor” page names no one. Its requests come to {host.displayName}, who passes each one to a pastor. Only one
+                pastor receives them at a time.
+              </p>
+            </div>
+            <Toggle
+              id="host-public-intake"
+              checked={host.publicIntake}
+              disabled={update.isPending}
+              label="Receive requests from the public page"
+              onChange={async (v) => {
+                try {
+                  await update.mutateAsync({ publicIntake: v });
+                  showToast.success(v ? `Public requests now come to ${host.displayName}` : "Public page requests switched off");
+                } catch (err) {
+                  showToast.error(errorText(err, "Couldn't change that."));
+                }
+              }}
+            />
+          </div>
+        )}
 
         <div className="flex justify-end">
           <button type="submit" className={btnPrimary} disabled={!dirty || update.isPending}>

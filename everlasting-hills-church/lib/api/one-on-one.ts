@@ -20,10 +20,12 @@ export interface WeeklyWindow {
 
 export interface SessionType {
   id: string;
+  slug: string | null;
   name: string;
   description: string | null;
   durationMinutes: number;
   visitorsCanBook: boolean;
+  askTopic: boolean;
   jointWithHostId: string | null;
   active: boolean;
 }
@@ -33,6 +35,9 @@ export interface HostDetail {
   displayName: string;
   slug: string | null;
   defaultMeetingLink: string | null;
+  /** Receives the requests made on the general public page, where no pastor is named. */
+  publicIntake: boolean;
+  canSetPublicIntake: boolean;
   googleConnected: boolean;
   notesEnabled: boolean;
   title: string | null;
@@ -57,6 +62,7 @@ export type HostSettingsInput = Partial<
     | "displayName"
     | "slug"
     | "defaultMeetingLink"
+    | "publicIntake"
     | "title"
     | "bio"
     | "active"
@@ -86,7 +92,7 @@ export interface HostSummary {
   displayName: string;
   title: string | null;
   bio: string | null;
-  sessionTypes: { id: string; name: string; description: string | null; durationMinutes: number; joint: boolean }[];
+  sessionTypes: { id: string; slug: string | null; name: string; description: string | null; durationMinutes: number; joint: boolean; askTopic: boolean }[];
   nextOpening: string | null;
   notesEnabled: boolean;
 }
@@ -111,7 +117,7 @@ export interface SessionRequest {
   proposedStartsAt: string | null;
   proposedEndsAt: string | null;
   format: MeetingFormat;
-  topic: string;
+  topic: string | null;
   decisionNote: string | null;
   meetLink: string | null;
   cancelledBy: "REQUESTER" | "HOST" | null;
@@ -130,6 +136,10 @@ export interface HostRequest extends SessionRequest {
   requesterLocation: string | null;
   foundVia: string | null;
   hasNote: boolean;
+  /** Made on the nameless public page. */
+  viaPublicPage: boolean;
+  /** Passed on from another pastor. */
+  assigned: boolean;
   note: string | null;
 }
 
@@ -145,7 +155,7 @@ export interface CreateRequestInput {
   sessionTypeId: string;
   startsAt: string;
   format: MeetingFormat;
-  topic: SessionTopic;
+  topic?: SessionTopic;
   note?: string;
 }
 
@@ -201,7 +211,7 @@ export function useCreateRequest() {
 export function useCancelMyRequest() {
   const invalidate = useInvalidateMine();
   return useMutation({
-    mutationFn: (id: string) => api.post<MyRequest>(`/one-on-one/requests/${id}/cancel`, {}),
+    mutationFn: ({ id, reason }: { id: string; reason: string }) => api.post<MyRequest>(`/one-on-one/requests/${id}/cancel`, { note: reason }),
     onSuccess: invalidate,
   });
 }
@@ -246,10 +256,12 @@ export function sessionIcsHref(id: string): string {
   return `/api/backend/one-on-one/requests/${id}/calendar.ics`;
 }
 
-/** Public share link for a pastor. */
-export function shareUrl(slug: string): string {
+export const useAssignRequest = (hostId: string) => useDecision<{ id: string; toHostId: string; note?: string }>(hostId, "assign");
+
+/** Public share link for a pastor's list of sessions, or straight to one of them. */
+export function shareUrl(slug: string, sessionSlug?: string | null): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://www.everlastinghills.church";
-  return `${origin}/talk-to-a-pastor/${slug}`;
+  return `${origin}/talk-to-a-pastor/${slug}${sessionSlug ? `/${sessionSlug}` : ""}`;
 }
 export const useDeclineRequest = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "decline");
 export const useProposeTime = (hostId: string) => useDecision<{ id: string; startsAt: string; note?: string }>(hostId, "propose");
@@ -325,6 +337,10 @@ export function useUpdateSessionType(hostId: string) {
   return useHostMutation(hostId, ({ id, ...input }: Partial<SessionType> & { id: string }) =>
     api.patch<HostDetail>(`/one-on-one/manage/hosts/${hostId}/session-types/${id}`, input),
   );
+}
+
+export function useDeleteSessionType(hostId: string) {
+  return useHostMutation(hostId, (id: string) => api.delete<HostDetail>(`/one-on-one/manage/hosts/${hostId}/session-types/${id}`));
 }
 
 export function useAddDelegate(hostId: string) {

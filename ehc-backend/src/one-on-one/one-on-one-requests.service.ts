@@ -9,6 +9,7 @@ import { GoogleTokenCipherService } from '../calendar/services/google-token-ciph
 import { IcsBuilderService } from '../calendar/services/ics-builder.service';
 import {
   ApproveDto,
+  AssignRequestDto,
   CreateRequestDto,
   CreateVisitorRequestDto,
   DecisionNoteDto,
@@ -83,6 +84,7 @@ export class OneOnOneRequestsService {
       format: b.format,
       topic: b.topic,
       meetLink: b.status === PastoralBookingStatus.APPROVED ? b.meetLink : null,
+      anonymous: b.anonymousIntake,
     };
   }
 
@@ -109,8 +111,10 @@ export class OneOnOneRequestsService {
     };
   }
 
+  /** What the person who asked sees. A request from the nameless page names no one until a pastor takes it up. */
   private requesterView(b: BookingRow) {
-    return { ...this.base(b), canCancel: this.canRequesterCancel(b) };
+    const view = { ...this.base(b), canCancel: this.canRequesterCancel(b) };
+    return b.anonymousIntake ? { ...view, hostName: 'One of our pastors', coHostName: null } : view;
   }
 
   private canRequesterCancel(b: BookingRow, now = new Date()): boolean {
@@ -170,6 +174,13 @@ export class OneOnOneRequestsService {
     return this.cipher.encrypt(note);
   }
 
+  /** A topic is required unless the session type has switched the question off, in which case none is kept. */
+  private topicFor(askTopic: boolean, topic?: string): string | null {
+    if (!askTopic) return null;
+    if (!topic) throw new BadRequestException('Choose what you’d like to talk about.');
+    return topic;
+  }
+
   // ── Members ───────────────────────────────────────────────────────────────
 
   async createMemberRequest(user: AuthUser, dto: CreateRequestDto) {
@@ -187,6 +198,7 @@ export class OneOnOneRequestsService {
       where: { id: dto.sessionTypeId, hostId: dto.hostId, active: true, Host: { active: true, tenantId: this.tenantId } },
     });
     if (!type) throw new NotFoundException('Session type not found');
+    const topic = this.topicFor(type.askTopic, dto.topic);
 
     const member = await this.prisma.member.findFirst({
       where: { profileId: user.profileId },
@@ -211,7 +223,7 @@ export class OneOnOneRequestsService {
           endsAt,
           status: PastoralBookingStatus.PENDING,
           format: dto.format,
-          topic: dto.topic,
+          topic,
           noteEncrypted,
         },
       }),
@@ -291,10 +303,12 @@ export class OneOnOneRequestsService {
         active: true,
         visitorsCanBook: true,
         jointWithHostId: null,
-        Host: { active: true, visitorsAllowed: true, tenantId: this.tenantId },
+        Host: { active: true, visitorsAllowed: true, tenantId: this.tenantId, ...(dto.viaIntake && { publicIntake: true }) },
       },
     });
     if (!type) throw new NotFoundException('Session type not found');
+    const topic = this.topicFor(type.askTopic, dto.topic);
+    const anonymousIntake = Boolean(dto.viaIntake);
 
     const fullName = dto.fullName.trim();
     const visitorId = await this.upsertVisitor({ fullName, email, phone: dto.phone.trim(), foundVia: dto.foundVia, inIbadan: dto.inIbadan });
@@ -318,9 +332,10 @@ export class OneOnOneRequestsService {
           startsAt,
           endsAt,
           status: PastoralBookingStatus.HOLD,
+          anonymousIntake,
           holdExpiresAt: new Date(Date.now() + VISITOR_HOLD_MINUTES * 60_000),
           format: dto.format,
-          topic: dto.topic,
+          topic,
           noteEncrypted,
         },
       }),
@@ -420,7 +435,10 @@ export class OneOnOneRequestsService {
 
   // ── Requester actions, shared by members and visitors ────────────────────
 
+  /** The requester must say why: the pastor reads it in the email that tells them the time is free. */
   private async cancelByRequester(b: BookingRow, reason?: string) {
+    const why = reason?.trim() ?? '';
+    if (why.length < 3) throw new BadRequestException('Please let the pastor know why you’re cancelling.');
     if (!this.canRequesterCancel(b)) {
       throw new ConflictException(
         b.status === PastoralBookingStatus.APPROVED
@@ -430,11 +448,11 @@ export class OneOnOneRequestsService {
     }
     const updated = await this.prisma.pastoralBooking.update({
       where: { id: b.id },
-      data: { status: PastoralBookingStatus.CANCELLED, cancelledAt: new Date(), cancelledBy: 'REQUESTER', cancelReason: reason?.trim() || null },
+      data: { status: PastoralBookingStatus.CANCELLED, cancelledAt: new Date(), cancelledBy: 'REQUESTER', cancelReason: why },
       include: BOOKING_INCLUDE,
     });
     if (b.googleEventId) void this.calendar.deleteEvent(b.Host.profileId, b.googleEventId);
-    void this.notify.toHostSide(this.toNotify(updated), 'WITHDRAWN');
+    void this.notify.toHostSide(this.toNotify(updated), 'WITHDRAWN', why);
     return this.requesterView(updated);
   }
 
@@ -468,7 +486,7 @@ export class OneOnOneRequestsService {
       summary: `One-on-One: ${b.requesterName}`,
       description: [
         `${b.SessionType.name}, requested through the church website.`,
-        `About: ${b.topic}`,
+        b.topic ? `About: ${b.topic}` : null,
         `How: ${{ IN_PERSON: 'In person, church office', GOOGLE_MEET: 'Video call', PHONE: 'Phone call' }[b.format]}`,
         b.requesterPhone ? `Phone: ${b.requesterPhone}` : null,
         pastedLink ? `Meeting link: ${pastedLink}` : null,
@@ -494,7 +512,7 @@ export class OneOnOneRequestsService {
     this.ics.addEvent(cal, {
       uid: `pastoral-session-${b.id}@everlastinghills`,
       summary: `One-on-One with ${pastors}`,
-      description: [b.SessionType.name, `About: ${b.topic}`, b.meetLink ? `Join: ${b.meetLink}` : null].filter(Boolean).join('\n'),
+      description: [b.SessionType.name, b.topic ? `About: ${b.topic}` : null, b.meetLink ? `Join: ${b.meetLink}` : null].filter(Boolean).join('\n'),
       location: b.format === PastoralMeetingFormat.IN_PERSON ? 'Everlasting Hills Church office, Ibadan' : (b.meetLink ?? undefined),
       url: b.meetLink ?? undefined,
       start: b.startsAt,
@@ -530,6 +548,8 @@ export class OneOnOneRequestsService {
       requesterLocation: b.requesterLocation,
       foundVia: b.foundVia,
       hasNote: Boolean(b.noteEncrypted),
+      viaPublicPage: b.anonymousIntake,
+      assigned: Boolean(b.assignedAt),
       note: isOwner && b.hostId === hostId ? this.decryptNote(b) : null,
     });
 
@@ -564,7 +584,7 @@ export class OneOnOneRequestsService {
     const note = dto.note?.trim() || null;
     await this.prisma.pastoralBooking.update({
       where: { id },
-      data: { status: PastoralBookingStatus.APPROVED, decidedAt: new Date(), decidedById: user.profileId, decisionNote: note },
+      data: { status: PastoralBookingStatus.APPROVED, decidedAt: new Date(), decidedById: user.profileId, decisionNote: note, anonymousIntake: false },
     });
     await this.attachCalendarEvent(await this.reload(id), dto.meetLink?.trim() || null);
     const updated = await this.reload(id);
@@ -581,6 +601,58 @@ export class OneOnOneRequestsService {
     const updated = await this.prisma.pastoralBooking.update({ where: { id }, data: { meetLink: dto.meetLink.trim() }, include: BOOKING_INCLUDE });
     void this.notify.toRequester(this.toNotify(updated), 'LINK_UPDATED');
     return this.base(updated);
+  }
+
+  /**
+   * Passes a waiting request to another pastor, typically from the one who
+   * receives the nameless public page. It keeps its time; if that time doesn't
+   * suit them, they suggest another. Their side is told, with a warning when
+   * the time falls outside their hours.
+   */
+  async assign(user: AuthUser, hostId: string, id: string, dto: AssignRequestDto) {
+    const b = await this.loadForHost(user, hostId, id);
+    if (b.status !== PastoralBookingStatus.PENDING) throw new ConflictException('Only a request that is still waiting can be passed on.');
+    if (dto.toHostId === b.hostId) throw new BadRequestException('It’s already with that pastor.');
+
+    const target = await this.prisma.pastorHost.findFirst({
+      where: { id: dto.toHostId, tenantId: this.tenantId, active: true },
+      include: { SessionTypes: { where: { active: true, archivedAt: null, jointWithHostId: null }, orderBy: { position: 'asc' } } },
+    });
+    if (!target) throw new NotFoundException('That pastor isn’t taking One-on-One sessions.');
+
+    const duration = b.SessionType.durationMinutes;
+    const type =
+      target.SessionTypes.find((t) => t.durationMinutes === duration && (b.requesterType !== PastoralRequesterType.VISITOR || t.visitorsCanBook)) ??
+      target.SessionTypes.find((t) => t.durationMinutes === duration) ??
+      target.SessionTypes[0];
+    if (!type) throw new BadRequestException(`${target.displayName} has no session types switched on yet.`);
+
+    const date = localDateKey(b.startsAt);
+    const open = await this.oneOnOne.computeOpenSlots(target.id, type.id, date, date, { excludeBookingId: b.id });
+    const fits = open.some((d) => d.slots.some((s) => s.startsAt === b.startsAt.toISOString()));
+
+    const updated = await this.prisma.pastoralBooking.update({
+      where: { id },
+      data: {
+        hostId: target.id,
+        coHostId: null,
+        sessionTypeId: type.id,
+        endsAt: new Date(b.startsAt.getTime() + type.durationMinutes * 60_000),
+        assignedById: user.profileId,
+        assignedAt: new Date(),
+        pendingNudgeSentAt: null,
+      },
+      include: BOOKING_INCLUDE,
+    });
+
+    const note = [
+      dto.note?.trim(),
+      fits ? null : 'This time is outside your hours or clashes with something else, so please suggest another time.',
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+    void this.notify.toHostSide(this.toNotify(updated), 'ASSIGNED', note || null);
+    return { ...this.base(updated), fits };
   }
 
   async decline(user: AuthUser, hostId: string, id: string, dto: DecisionNoteDto) {
@@ -619,6 +691,7 @@ export class OneOnOneRequestsService {
           where: { id },
           data: {
             status: PastoralBookingStatus.PROPOSED,
+            anonymousIntake: false,
             proposedStartsAt: startsAt,
             proposedEndsAt: endsAt,
             decidedAt: new Date(),

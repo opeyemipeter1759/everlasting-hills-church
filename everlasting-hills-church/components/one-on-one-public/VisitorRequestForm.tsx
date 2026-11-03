@@ -22,6 +22,7 @@ export default function VisitorRequestForm({
   timeZone,
   onBack,
   onSent,
+  viaIntake = false,
 }: {
   host: HostSummary;
   sessionTypeId: string;
@@ -29,6 +30,8 @@ export default function VisitorRequestForm({
   timeZone: string;
   onBack: () => void;
   onSent: (email: string) => void;
+  /** Made on the general page, where no pastor is named. */
+  viaIntake?: boolean;
 }) {
   const create = useCreateVisitorRequest();
   const [fullName, setFullName] = useState("");
@@ -43,17 +46,19 @@ export default function VisitorRequestForm({
   const [website, setWebsite] = useState("");
   const [error, setError] = useState<string | null>(null);
   const type = host.sessionTypes.find((t) => t.id === sessionTypeId);
+  const askTopic = type?.askTopic ?? true;
+  const pastorName = viaIntake ? "the pastor" : host.displayName;
 
   const formats: { value: MeetingFormat; label: string; hint: string }[] = [
     { value: "GOOGLE_MEET", label: "Video call", hint: "Google Meet or Zoom" },
     { value: "PHONE", label: "Phone or WhatsApp call", hint: "The pastor calls you" },
     ...(inIbadan ? [{ value: "IN_PERSON" as const, label: "In person", hint: "Church office, Ibadan" }] : []),
   ];
-  const ready = fullName.trim() && email.trim() && phone.trim() && location.trim() && foundVia && topic;
+  const ready = fullName.trim() && email.trim() && phone.trim() && location.trim() && foundVia && (!askTopic || topic);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!ready || !foundVia || !topic) return;
+    if (!ready || !foundVia || (askTopic && !topic)) return;
     setError(null);
     try {
       await create.mutateAsync({
@@ -61,7 +66,7 @@ export default function VisitorRequestForm({
         sessionTypeId,
         startsAt: slot.startsAt,
         format: format === "IN_PERSON" && !inIbadan ? "GOOGLE_MEET" : format,
-        topic,
+        topic: askTopic && topic ? topic : undefined,
         note: host.notesEnabled ? note.trim() || undefined : undefined,
         fullName: fullName.trim(),
         email: email.trim(),
@@ -71,6 +76,7 @@ export default function VisitorRequestForm({
         inIbadan,
         timezone: timeZone,
         website: website || undefined,
+        viaIntake,
       });
       onSent(email.trim());
     } catch (err) {
@@ -85,7 +91,7 @@ export default function VisitorRequestForm({
           <ArrowLeft size={14} /> Change time
         </button>
         <p className="text-sm tabular-nums text-[#7A6A6F] dark:text-white/55">
-          {formatWhenLong(slot.startsAt, slot.endsAt, timeZone)} your time · {type?.name} · {host.displayName}
+          {formatWhenLong(slot.startsAt, slot.endsAt, timeZone)} your time · {type?.name} · {pastorName}
         </p>
         <h2 className="font-serif text-2xl font-bold text-[#111] dark:text-white">A little about you</h2>
       </div>
@@ -134,6 +140,7 @@ export default function VisitorRequestForm({
         </div>
       </fieldset>
 
+      {askTopic && (
       <fieldset>
         <legend className="mb-2.5 text-sm font-bold text-[#111] dark:text-white">What would you like to talk about?</legend>
         <div className="flex flex-wrap gap-2">
@@ -144,13 +151,14 @@ export default function VisitorRequestForm({
           ))}
         </div>
       </fieldset>
+      )}
 
       {host.notesEnabled && (
         <label className="flex flex-col gap-2">
-          <span className="text-sm font-bold text-[#111] dark:text-white">Anything you’d like {host.displayName} to know beforehand (optional)</span>
+          <span className="text-sm font-bold text-[#111] dark:text-white">{askTopic ? `Anything you’d like ${pastorName} to know beforehand (optional)` : `What would you like ${pastorName} to be aware of ahead of the session? (optional)`}</span>
           <textarea id="v-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={1500} rows={4} className={`${input} resize-y`} />
           <span className="flex items-center gap-1.5 text-xs text-[#7A6A6F] dark:text-white/50">
-            <Lock size={12} aria-hidden="true" /> Only {host.displayName} can read this. It’s stored encrypted.
+            <Lock size={12} aria-hidden="true" /> {viaIntake ? "Only the pastors handling your request can read this." : `Only ${pastorName} can read this.`} It’s stored encrypted.
           </span>
         </label>
       )}
@@ -185,7 +193,7 @@ export default function VisitorRequestForm({
         <button type="submit" className={`${btnPrimary} self-start`} disabled={!ready || create.isPending}>
           {create.isPending ? "Sending…" : "Send request"}
         </button>
-        <span className="text-xs text-[#7A6A6F] dark:text-white/50">We’ll email you a link to confirm. Nothing is booked until {host.displayName} approves it.</span>
+        <span className="text-xs text-[#7A6A6F] dark:text-white/50">We’ll email you a link to confirm. Nothing is booked until {pastorName} approves it.</span>
       </div>
     </form>
   );

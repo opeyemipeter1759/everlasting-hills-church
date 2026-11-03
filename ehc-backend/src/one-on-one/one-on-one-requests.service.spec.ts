@@ -63,7 +63,7 @@ function setup(opts: { cipherOn?: boolean; open?: boolean; slots?: string[] } = 
       create: jest.fn(),
       update: jest.fn(({ data }) => Promise.resolve(row(data))),
     },
-    pastorSessionType: { findFirst: jest.fn().mockResolvedValue({ id: 'st1', hostId: 'h1', jointWithHostId: null }) },
+    pastorSessionType: { findFirst: jest.fn().mockResolvedValue({ id: 'st1', hostId: 'h1', jointWithHostId: null, askTopic: true }) },
     member: { findFirst: jest.fn().mockResolvedValue({ firstName: 'Ada', lastName: 'Obi', email: 'ada@x.com', phone: null }) },
     visitor: { findFirst: jest.fn().mockResolvedValue(null), create: jest.fn(), update: jest.fn() },
     $transaction: jest.fn((fn: (tx: unknown) => unknown) => fn(prisma)),
@@ -130,16 +130,16 @@ describe('createMemberRequest', () => {
 describe('member changes', () => {
   it('lets a member withdraw a pending request', async () => {
     const { svc, prisma, notify } = setup({ open: true });
-    await svc.cancelMine(member, 'b1', {});
+    await svc.cancelMine(member, 'b1', { note: 'Something came up at work' });
     expect(prisma.pastoralBooking.update.mock.calls[0][0].data).toMatchObject({ status: 'CANCELLED', cancelledBy: 'REQUESTER' });
-    expect(notify.toHostSide).toHaveBeenCalledWith(expect.anything(), 'WITHDRAWN');
+    expect(notify.toHostSide).toHaveBeenCalledWith(expect.anything(), 'WITHDRAWN', 'Something came up at work');
   });
 
   it('stops self-cancelling an approved session inside 24 hours', async () => {
     const { svc, prisma } = setup();
     const soon = new Date(Date.now() + 3 * 3_600_000);
     prisma.pastoralBooking.findFirst.mockResolvedValue(row({ status: 'APPROVED', startsAt: soon }));
-    await expect(svc.cancelMine(member, 'b1', {})).rejects.toBeInstanceOf(ConflictException);
+    await expect(svc.cancelMine(member, 'b1', { note: 'Travelling' })).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('books the suggested time when the member accepts it', async () => {
@@ -265,5 +265,63 @@ describe('visitor requests', () => {
   it('rejects a tampered private link', async () => {
     const { svc } = setup();
     await expect(svc.getByToken('b1.forged')).rejects.toThrow(/isn’t valid/);
+  });
+});
+
+describe('session types that skip the topic question', () => {
+  it('requires a topic when the session type asks for one', async () => {
+    const { svc } = setup();
+    await expect(svc.createMemberRequest(member, { ...dto, topic: undefined })).rejects.toThrow(/talk about/);
+  });
+
+  it('keeps no topic, and needs none, when the question is switched off', async () => {
+    const { svc, prisma } = setup();
+    prisma.pastorSessionType.findFirst.mockResolvedValue({ id: 'st1', hostId: 'h1', jointWithHostId: null, askTopic: false });
+    await svc.createMemberRequest(member, { ...dto, topic: undefined, note: 'I want to talk about the next cohort' });
+    const data = prisma.pastoralBooking.create.mock.calls[0][0].data;
+    expect(data.topic).toBeNull();
+    expect(data.noteEncrypted).toBe('enc:I want to talk about the next cohort');
+  });
+});
+
+describe('cancelling needs a reason', () => {
+  it('refuses to cancel without one, and passes it to the pastor', async () => {
+    const { svc, notify } = setup({ open: true });
+    await expect(svc.cancelMine(member, 'b1', {})).rejects.toThrow(/know why/);
+    await svc.cancelMine(member, 'b1', { note: 'My mum is unwell' });
+    expect(notify.toHostSide).toHaveBeenCalledWith(expect.anything(), 'WITHDRAWN', 'My mum is unwell');
+  });
+});
+
+describe('passing a request to another pastor', () => {
+  const future = new Date(Date.now() + 6 * 86_400_000);
+  function assignSetup(slots: string[]) {
+    const s = setup();
+    const r = row({ startsAt: future, endsAt: new Date(future.getTime() + 3_600_000), requesterType: 'VISITOR', anonymousIntake: true });
+    s.prisma.pastoralBooking.findFirst.mockResolvedValue(r);
+    (s.prisma as Record<string, unknown>).pastorHost = {
+      findFirst: jest.fn().mockResolvedValue({
+        id: 'h2',
+        displayName: 'Pastor Faith',
+        SessionTypes: [{ id: 'f60', durationMinutes: 60, visitorsCanBook: true }],
+      }),
+    };
+    s.oneOnOne.computeOpenSlots.mockResolvedValue([{ date: 'x', slots: slots.map((st) => ({ startsAt: st, endsAt: st })) }]);
+    return s;
+  }
+
+  it('moves it to the chosen pastor, keeping the time, and tells their side', async () => {
+    const { svc, prisma, notify } = assignSetup([future.toISOString()]);
+    const result = await svc.assign(pastor, 'h1', 'b1', { toHostId: 'h2' });
+    expect(prisma.pastoralBooking.update.mock.calls[0][0].data).toMatchObject({ hostId: 'h2', sessionTypeId: 'f60', assignedById: 'pastor-faith' });
+    expect(result.fits).toBe(true);
+    expect(notify.toHostSide).toHaveBeenCalledWith(expect.anything(), 'ASSIGNED', null);
+  });
+
+  it('warns the new pastor when the time is outside their hours', async () => {
+    const { svc, notify } = assignSetup([]);
+    const result = await svc.assign(pastor, 'h1', 'b1', { toHostId: 'h2', note: 'Can you take this one?' });
+    expect(result.fits).toBe(false);
+    expect(notify.toHostSide.mock.calls[0][2]).toMatch(/Can you take this one\?[\s\S]*suggest another time/);
   });
 });

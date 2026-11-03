@@ -52,6 +52,7 @@ export default function BookingPanel({
   audience = "member",
   timeZone,
   backLabel = "All pastors",
+  anonymous = false,
 }: {
   host: HostSummary;
   hostIndex: number;
@@ -62,6 +63,8 @@ export default function BookingPanel({
   /** Visitors see times in their own zone alongside Lagos. */
   timeZone?: string;
   backLabel?: string;
+  /** The nameless public page: no portrait, no pastor named. */
+  anonymous?: boolean;
 }) {
   const today = lagosToday();
   const firstMonth = monthOf(today);
@@ -93,7 +96,7 @@ export default function BookingPanel({
         <button type="button" onClick={onBack} className="inline-flex items-center gap-1 self-start text-sm font-semibold text-[#87102C] hover:underline dark:text-[#FFB3C1]">
           <ArrowLeft size={14} /> {backLabel}
         </button>
-        <Portrait name={host.displayName} index={hostIndex} />
+        {!anonymous && <Portrait name={host.displayName} index={hostIndex} />}
         <div>
           <p className="text-sm text-[#7A6A6F] dark:text-white/55">{host.displayName}</p>
           <h2 className="font-serif text-2xl font-bold text-[#111] dark:text-white">{type?.name}</h2>
@@ -111,7 +114,7 @@ export default function BookingPanel({
           </div>
           <div>
             <dt className="text-xs font-semibold text-[#7A6A6F] dark:text-white/50">Approval</dt>
-            <dd className="font-semibold text-[#111] dark:text-white">{host.displayName} approves every request</dd>
+            <dd className="font-semibold text-[#111] dark:text-white">{anonymous ? "A pastor approves every request" : `${host.displayName} approves every request`}</dd>
           </div>
         </dl>
       </div>

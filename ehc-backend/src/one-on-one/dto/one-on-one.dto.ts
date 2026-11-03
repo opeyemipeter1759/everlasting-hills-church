@@ -98,6 +98,11 @@ export class UpdateHostSettingsDto {
   @Max(20)
   visitorWeeklyCap?: number;
 
+  @ApiPropertyOptional({ example: true, description: 'Receive the nameless public page’s requests (Super Admin only; one pastor at a time)' })
+  @IsOptional()
+  @IsBoolean()
+  publicIntake?: boolean;
+
   @ApiPropertyOptional({ example: true, description: 'false hides this pastor from members and visitors' })
   @IsOptional()
   @IsBoolean()
@@ -165,6 +170,11 @@ export class CreateSessionTypeDto {
   @IsBoolean()
   visitorsCanBook?: boolean;
 
+  @ApiPropertyOptional({ example: true, description: "Ask what they would like to talk about; off keeps only the note" })
+  @IsOptional()
+  @IsBoolean()
+  askTopic?: boolean;
+
   @ApiPropertyOptional({ example: 'host-id', description: 'Offer this session with both pastors together' })
   @IsOptional()
   @IsString()
@@ -196,6 +206,11 @@ export class UpdateSessionTypeDto {
   @IsOptional()
   @IsBoolean()
   visitorsCanBook?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: "Ask what they would like to talk about; off keeps only the note" })
+  @IsOptional()
+  @IsBoolean()
+  askTopic?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -232,9 +247,10 @@ export class CreateRequestDto {
   @IsIn(MEETING_FORMATS)
   format!: (typeof MEETING_FORMATS)[number];
 
-  @ApiProperty({ enum: SESSION_TOPICS })
+  @ApiPropertyOptional({ enum: SESSION_TOPICS, description: 'Required unless the session type has askTopic off' })
+  @IsOptional()
   @IsIn(SESSION_TOPICS)
-  topic!: (typeof SESSION_TOPICS)[number];
+  topic?: (typeof SESSION_TOPICS)[number];
 
   @ApiPropertyOptional({ description: 'Private to the pastor; stored encrypted' })
   @IsOptional()
@@ -284,6 +300,11 @@ export class CreateVisitorRequestDto extends CreateRequestDto {
   @MaxLength(64)
   timezone?: string;
 
+  @ApiPropertyOptional({ example: true, description: 'Made on the general page, where no pastor is named' })
+  @IsOptional()
+  @IsBoolean()
+  viaIntake?: boolean;
+
   @ApiPropertyOptional({ description: 'Left empty by people; bots fill it' })
   @IsOptional()
   @IsString()
@@ -306,6 +327,13 @@ export class ApproveDto extends DecisionNoteDto {
   @IsUrl({ protocols: ['https'], require_protocol: true }, { message: 'Use a full https:// meeting link' })
   @MaxLength(500)
   meetLink?: string;
+}
+
+export class AssignRequestDto extends DecisionNoteDto {
+  @ApiProperty({ example: 'host-id', description: 'The pastor to pass this request to' })
+  @IsString()
+  @IsNotEmpty()
+  toHostId!: string;
 }
 
 export class SetMeetingLinkDto {

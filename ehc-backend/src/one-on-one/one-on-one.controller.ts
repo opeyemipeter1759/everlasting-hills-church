@@ -9,6 +9,7 @@ import { Throttle } from '@nestjs/throttler';
 import {
   AddDelegateDto,
   ApproveDto,
+  AssignRequestDto,
   CreateBlockDto,
   CreateRequestDto,
   SetMeetingLinkDto,
@@ -93,6 +94,12 @@ export class OneOnOneController {
   @ApiOperation({ summary: 'Approve a request, optionally with a Google Meet or Zoom link' })
   approve(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: ApproveDto) {
     return this.requests.approve(user, hostId, id, body);
+  }
+
+  @Post('manage/hosts/:hostId/requests/:id/assign')
+  @ApiOperation({ summary: 'Pass a waiting request to another pastor' })
+  assign(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('id') id: string, @Body() body: AssignRequestDto) {
+    return this.requests.assign(user, hostId, id, body);
   }
 
   @Post('manage/hosts/:hostId/requests/:id/link')
@@ -183,6 +190,12 @@ export class OneOnOneController {
     @Body() body: UpdateSessionTypeDto,
   ) {
     return this.oneOnOne.updateSessionType(user, hostId, typeId, body);
+  }
+
+  @Delete('manage/hosts/:hostId/session-types/:typeId')
+  @ApiOperation({ summary: 'Delete a session type (archived instead if it has ever been requested)' })
+  deleteSessionType(@CurrentUser() user: AuthUser, @Param('hostId') hostId: string, @Param('typeId') typeId: string) {
+    return this.oneOnOne.deleteSessionType(user, hostId, typeId);
   }
 
   @Get('manage/hosts/:hostId/preview')

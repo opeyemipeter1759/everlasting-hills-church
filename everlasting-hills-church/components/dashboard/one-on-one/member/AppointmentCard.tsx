@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { CalendarPlus, Video } from "lucide-react";
 import { sessionIcsHref, useAcceptProposal, useCancelMyRequest, type MyRequest } from "@/lib/api/one-on-one";
-import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import { errorText } from "@/components/pray-watch/shared";
-import { btnGhost, btnPrimary } from "../manage/ui";
+import { btnGhost, btnPrimary, input } from "../manage/ui";
 import { FORMAT_LABEL, StatusPill, formatWhenLong, pastorsOf } from "./parts";
 
 interface ViewProps {
@@ -16,13 +15,15 @@ interface ViewProps {
   icsHref: string;
   busy: boolean;
   onAccept: () => Promise<void>;
-  onCancel: () => Promise<void>;
+  /** Resolves true once cancelled, so the reason box can close. */
+  onCancel: (reason: string) => Promise<boolean>;
   onPickAnother: () => Promise<void>;
 }
 
 /** The appointment card itself, shared by the member dashboard and a visitor's private link. */
 export function AppointmentView({ request: r, timeZone, icsHref, busy, onAccept, onCancel, onPickAnother }: ViewProps) {
-  const [confirming, setConfirming] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [reason, setReason] = useState("");
   const approved = r.status === "APPROVED";
   const proposed = r.status === "PROPOSED" && r.proposedStartsAt && r.proposedEndsAt;
   const online = r.format === "GOOGLE_MEET";
@@ -53,8 +54,12 @@ export function AppointmentView({ request: r, timeZone, icsHref, busy, onAccept,
         )}
         <dt className="font-semibold text-[#7A6A6F] dark:text-white/50">Where</dt>
         <dd className="font-bold text-[#111] dark:text-white">{FORMAT_LABEL[r.format]}</dd>
-        <dt className="font-semibold text-[#7A6A6F] dark:text-white/50">About</dt>
-        <dd className="font-bold text-[#111] dark:text-white">{r.topic}</dd>
+        {r.topic && (
+          <>
+            <dt className="font-semibold text-[#7A6A6F] dark:text-white/50">About</dt>
+            <dd className="font-bold text-[#111] dark:text-white">{r.topic}</dd>
+          </>
+        )}
         {approved && online && (
           <>
             <dt className="font-semibold text-[#7A6A6F] dark:text-white/50">Join</dt>
@@ -78,51 +83,73 @@ export function AppointmentView({ request: r, timeZone, icsHref, busy, onAccept,
         </blockquote>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        {proposed && (
-          <>
-            <button type="button" className={btnPrimary} onClick={onAccept} disabled={busy}>
-              Accept this time
+      {cancelling ? (
+        <form
+          className="flex flex-col gap-2.5 rounded-xl bg-[#FFE8ED]/40 p-4 dark:bg-white/[0.04]"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (await onCancel(reason.trim())) {
+              setCancelling(false);
+              setReason("");
+            }
+          }}
+        >
+          <label htmlFor={`cancel-reason-${r.id}`} className="text-sm font-bold text-[#111] dark:text-white">
+            Please let {pastorsOf(r)} know why
+          </label>
+          <textarea
+            id={`cancel-reason-${r.id}`}
+            rows={3}
+            maxLength={600}
+            required
+            autoFocus
+            className={`${input} resize-y`}
+            placeholder="Something has come up at work that day."
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <div className="flex flex-wrap gap-2">
+            <button type="submit" className={btnPrimary} disabled={busy || reason.trim().length < 3}>
+              {approved ? "Cancel session" : "Withdraw request"}
             </button>
-            <button type="button" className={btnGhost} onClick={onPickAnother} disabled={busy}>
-              Pick a different time
+            <button type="button" className={btnGhost} onClick={() => setCancelling(false)} disabled={busy}>
+              {approved ? "Keep the session" : "Keep the request"}
             </button>
-          </>
-        )}
-        {approved && online && r.meetLink && (
-          <a href={r.meetLink} target="_blank" rel="noopener noreferrer" className={btnPrimary}>
-            <Video size={15} /> Join the call
-          </a>
-        )}
-        {approved && (
-          <a href={icsHref} className={btnGhost}>
-            <CalendarPlus size={15} /> Add to my calendar
-          </a>
-        )}
-        {r.canCancel && !proposed && (
-          <button type="button" className={btnGhost} onClick={() => setConfirming(true)}>
-            {approved ? "Cancel session" : "Withdraw request"}
-          </button>
-        )}
-      </div>
+          </div>
+        </form>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {proposed && (
+            <>
+              <button type="button" className={btnPrimary} onClick={onAccept} disabled={busy}>
+                Accept this time
+              </button>
+              <button type="button" className={btnGhost} onClick={onPickAnother} disabled={busy}>
+                Pick a different time
+              </button>
+            </>
+          )}
+          {approved && online && r.meetLink && (
+            <a href={r.meetLink} target="_blank" rel="noopener noreferrer" className={btnPrimary}>
+              <Video size={15} /> Join the call
+            </a>
+          )}
+          {approved && (
+            <a href={icsHref} className={btnGhost}>
+              <CalendarPlus size={15} /> Add to my calendar
+            </a>
+          )}
+          {r.canCancel && !proposed && (
+            <button type="button" className={btnGhost} onClick={() => setCancelling(true)}>
+              {approved ? "Cancel session" : "Withdraw request"}
+            </button>
+          )}
+        </div>
+      )}
       <p className="text-xs text-[#7A6A6F] dark:text-white/50">
         {r.status === "PENDING" && "The time is held for you. We'll email you as soon as there's an answer."}
         {approved && (r.canCancel ? "We'll remind you the day before and an hour before." : "Less than a day to go. To change anything now, contact the church office.")}
       </p>
-
-      <ConfirmDialog
-        open={confirming}
-        title={approved ? "Cancel this session?" : "Withdraw this request?"}
-        description={approved ? `${pastorsOf(r)} will be told, and the time will be freed for someone else.` : "The time will be released for someone else."}
-        confirmLabel={approved ? "Cancel session" : "Withdraw"}
-        tone="danger"
-        loading={busy}
-        onConfirm={async () => {
-          await onCancel();
-          setConfirming(false);
-        }}
-        onCancel={() => setConfirming(false)}
-      />
     </article>
   );
 }
@@ -145,17 +172,19 @@ export default function AppointmentCard({ request, onPickAnother }: { request: M
           showToast.error(errorText(err, "Couldn't accept that time."));
         }
       }}
-      onCancel={async () => {
+      onCancel={async (reason) => {
         try {
-          await cancel.mutateAsync(request.id);
+          await cancel.mutateAsync({ id: request.id, reason });
           showToast.success(request.status === "APPROVED" ? "Session cancelled" : "Request withdrawn");
+          return true;
         } catch (err) {
           showToast.error(errorText(err, "Couldn't cancel."));
+          return false;
         }
       }}
       onPickAnother={async () => {
         try {
-          await cancel.mutateAsync(request.id);
+          await cancel.mutateAsync({ id: request.id, reason: "Asked for a different time than the one suggested." });
           onPickAnother();
         } catch (err) {
           showToast.error(errorText(err, "Couldn't release that time."));

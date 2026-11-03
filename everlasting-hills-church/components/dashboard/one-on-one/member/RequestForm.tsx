@@ -32,17 +32,18 @@ export default function RequestForm({
   const [note, setNote] = useState("");
   const [format, setFormat] = useState<MeetingFormat>("IN_PERSON");
   const type = host.sessionTypes.find((t) => t.id === sessionTypeId);
+  const askTopic = type?.askTopic ?? true;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!topic) return;
+    if (askTopic && !topic) return;
     try {
       await create.mutateAsync({
         hostId: host.id,
         sessionTypeId,
         startsAt: slot.startsAt,
         format,
-        topic,
+        topic: askTopic && topic ? topic : undefined,
         note: host.notesEnabled ? note.trim() || undefined : undefined,
       });
       showToast.success("Request sent");
@@ -67,6 +68,7 @@ export default function RequestForm({
         <h2 className="font-serif text-2xl font-bold text-[#111] dark:text-white">A little about the session</h2>
       </div>
 
+      {askTopic && (
       <fieldset className="flex flex-col gap-2.5">
         <legend className="mb-2.5 text-sm font-bold text-[#111] dark:text-white">What would you like to talk about?</legend>
         <div className="flex flex-wrap gap-2">
@@ -87,10 +89,11 @@ export default function RequestForm({
           ))}
         </div>
       </fieldset>
+      )}
 
       {host.notesEnabled && (
         <label className="flex flex-col gap-2">
-          <span className="text-sm font-bold text-[#111] dark:text-white">Anything you’d like {host.displayName} to know beforehand (optional)</span>
+          <span className="text-sm font-bold text-[#111] dark:text-white">{askTopic ? `Anything you’d like ${host.displayName} to know beforehand (optional)` : `What would you like ${host.displayName} to be aware of ahead of the session? (optional)`}</span>
           <textarea
             id="request-note"
             value={note}
@@ -128,10 +131,10 @@ export default function RequestForm({
       </fieldset>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button type="submit" className={btnPrimary} disabled={!topic || create.isPending}>
+        <button type="submit" className={btnPrimary} disabled={(askTopic && !topic) || create.isPending}>
           {create.isPending ? "Sending…" : "Send request"}
         </button>
-        {!topic && <span className="text-xs text-[#7A6A6F] dark:text-white/50">Choose a topic to continue.</span>}
+        {askTopic && !topic && <span className="text-xs text-[#7A6A6F] dark:text-white/50">Choose a topic to continue.</span>}
       </div>
     </form>
   );

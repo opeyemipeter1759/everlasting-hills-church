@@ -3947,6 +3947,9 @@ model PastorHost {
   horizonDays      Int                      @default(28)
   visitorsAllowed  Boolean                  @default(true)
   visitorWeeklyCap Int                      @default(2)
+  /// Receives the requests made on the general /talk-to-a-pastor page, where
+  /// no pastor is named, and assigns them on. At most one per tenant.
+  publicIntake     Boolean                  @default(false)
   createdAt        DateTime                 @default(now())
   updatedAt        DateTime                 @updatedAt
   Tenant           Tenant                   @relation(fields: [tenantId], references: [id])
@@ -3970,8 +3973,16 @@ model PastorSessionType {
   hostId          String
   jointWithHostId String?
   name            String
+  /// The session's own share link: /talk-to-a-pastor/<host slug>/<slug>.
+  /// Kept when the session is renamed, so shared links keep working.
+  slug            String?
+  /// Set when a session type with past requests is deleted: hidden, kept for history.
+  archivedAt      DateTime?
   description     String?
   durationMinutes Int
+  /// Off for custom sessions (e.g. a cohort's own one-on-ones): the form
+  /// skips "What would you like to talk about?" and keeps only the note.
+  askTopic        Boolean           @default(true)
   visitorsCanBook Boolean           @default(false)
   active          Boolean           @default(true)
   position        Int               @default(0)
@@ -3980,6 +3991,7 @@ model PastorSessionType {
   Host            PastorHost        @relation(fields: [hostId], references: [id], onDelete: Cascade)
   Bookings        PastoralBooking[]
 
+  @@unique([hostId, slug])
   @@index([hostId])
 }
 
@@ -4046,9 +4058,16 @@ model PastoralBooking {
   startsAt              DateTime
   endsAt                DateTime
   status                PastoralBookingStatus @default(PENDING)
+  /// Made on the nameless public page: the requester sees "one of our pastors"
+  /// until it is approved, a new time is suggested, or it is assigned.
+  anonymousIntake       Boolean               @default(false)
+  /// Who passed this request to its current pastor, and when.
+  assignedById          String?
+  assignedAt            DateTime?
   holdExpiresAt         DateTime?
   format                PastoralMeetingFormat
-  topic                 String
+  /// Null when the session type doesn't ask for one.
+  topic                 String?
   /// AES-256-GCM, readable by the host pastor only.
   noteEncrypted         String?
   proposedStartsAt      DateTime?

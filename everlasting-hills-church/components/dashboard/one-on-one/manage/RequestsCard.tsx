@@ -10,23 +10,30 @@ import {
   usePreviewSlots,
   useProposeTime,
   useSetMeetingLink,
+  useAssignRequest,
+  useHosts,
   type HostDetail,
   type HostRequest,
 } from "@/lib/api/one-on-one";
+import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast/toast";
 import { errorText } from "@/components/pray-watch/shared";
 import { FORMAT_LABEL, formatWhenLong } from "../member/parts";
 import { Section, addDays, btnGhost, btnPrimary, formatDay, formatTime, input, lagosToday, muted } from "./ui";
 
-type Mode = { kind: "approve" | "decline" | "propose" | "cancel" | "link"; id: string } | null;
+type Mode = { kind: "approve" | "decline" | "propose" | "cancel" | "link" | "assign"; id: string } | null;
+
+const badge = "rounded-full px-2 py-0.5 text-[11px] font-bold";
 
 function RequesterLine({ r }: { r: HostRequest }) {
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
       <span className="font-bold text-[#111] dark:text-white">{r.requesterName}</span>
-      {r.requesterType === "VISITOR" && (
-        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-400/15 dark:text-amber-200">Visitor</span>
+      {r.requesterType === "VISITOR" && <span className={`${badge} bg-amber-100 text-amber-800 dark:bg-amber-400/15 dark:text-amber-200`}>Visitor</span>}
+      {r.viaPublicPage && !r.assigned && (
+        <span className={`${badge} bg-[#FFE8ED] text-[#87102C] dark:bg-[#87102C]/25 dark:text-[#FFB3C1]`}>From the public page</span>
       )}
+      {r.assigned && <span className={`${badge} bg-sky-100 text-sky-800 dark:bg-sky-400/15 dark:text-sky-200`}>Passed to you</span>}
     </div>
   );
 }
@@ -37,7 +44,7 @@ function Details({ r }: { r: HostRequest }) {
     <div className="flex flex-col gap-1 text-[13px] text-[#7A6A6F] dark:text-white/55">
       <span className="tabular-nums">{formatWhenLong(r.startsAt, r.endsAt)}</span>
       <span>
-        {r.sessionTypeName} · {FORMAT_LABEL[r.format]} · {r.topic}
+        {[r.sessionTypeName, FORMAT_LABEL[r.format], r.topic].filter(Boolean).join(" · ")}
         {r.coHostName && ` · with ${r.coHostName}`}
       </span>
       {(r.requesterLocation || r.foundVia) && <span>{[r.requesterLocation, r.foundVia && `Found us via ${r.foundVia}`].filter(Boolean).join(" · ")}</span>}
@@ -112,16 +119,21 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
   const propose = useProposeTime(host.id);
   const cancel = useCancelApproved(host.id);
   const setLink = useSetMeetingLink(host.id);
+  const assign = useAssignRequest(host.id);
+  const pastors = useHosts();
   const [mode, setMode] = useState<Mode>(null);
   const [note, setNote] = useState("");
   const [proposedAt, setProposedAt] = useState("");
   const [meetLink, setMeetLink] = useState("");
+  const [assignTo, setAssignTo] = useState("");
+  const others = (pastors.data ?? []).filter((p) => p.id !== host.id);
 
   const open = (kind: NonNullable<Mode>["kind"], r: HostRequest) => {
     setMode({ kind, id: r.id });
     setNote("");
     setProposedAt("");
     setMeetLink(kind === "link" ? (r.meetLink ?? "") : "");
+    setAssignTo("");
   };
 
   async function submit(r: HostRequest) {
@@ -133,6 +145,8 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
       if (mode.kind === "cancel") await cancel.mutateAsync(body);
       if (mode.kind === "propose") await propose.mutateAsync({ ...body, startsAt: proposedAt });
       if (mode.kind === "link") await setLink.mutateAsync({ id: r.id, meetLink: meetLink.trim() });
+      if (mode.kind === "assign") await assign.mutateAsync({ ...body, toHostId: assignTo });
+      const target = others.find((p) => p.id === assignTo)?.displayName ?? "them";
       showToast.success(
         {
           approve: `Approved. ${r.requesterName} has been told.`,
@@ -140,6 +154,7 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
           cancel: "Session cancelled",
           propose: `New time sent to ${r.requesterName}`,
           link: `Link sent to ${r.requesterName}`,
+          assign: `Passed to ${target}. They've been told.`,
         }[mode.kind],
       );
       setMode(null);
@@ -148,7 +163,7 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
     }
   }
 
-  const busy = approve.isPending || decline.isPending || propose.isPending || cancel.isPending || setLink.isPending;
+  const busy = approve.isPending || decline.isPending || propose.isPending || cancel.isPending || setLink.isPending || assign.isPending;
   const online = (r: HostRequest) => r.format === "GOOGLE_MEET";
   const linkHint = host.googleConnected
     ? "Leave empty and Google will create a Meet link."
@@ -165,11 +180,27 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
       propose: { title: "A note with the new time (optional)", button: "Send new time", placeholder: "That time is taken. Would this work?" },
       cancel: { title: "Tell them why", button: "Cancel session", placeholder: "Something urgent has come up." },
       link: { title: "", button: "Send link", placeholder: "" },
+      assign: { title: "A note for them (optional)", button: "Pass it on", placeholder: "Could you take this one? She asked about her marriage." },
     }[mode.kind];
     const showLink = mode.kind === "link" || (mode.kind === "approve" && online(r));
     return (
       <div className="flex flex-col gap-3 rounded-xl bg-[#FFE8ED]/40 p-3.5 dark:bg-white/[0.04]">
         {mode.kind === "propose" && <ProposePicker hostId={host.id} request={r} value={proposedAt} onChange={setProposedAt} />}
+        {mode.kind === "assign" && (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs font-semibold text-[#5A4A4D] dark:text-white/60" id={`lbl-assign-${r.id}`}>
+              Pass to
+            </span>
+            <Select
+              aria-labelledby={`lbl-assign-${r.id}`}
+              value={assignTo}
+              onChange={setAssignTo}
+              placeholder="Choose a pastor"
+              options={others.map((p) => ({ value: p.id, label: p.displayName }))}
+            />
+            <span className={`text-xs ${muted}`}>It keeps this time. If it doesn’t suit them, they’ll suggest another.</span>
+          </div>
+        )}
         {showLink && (
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold text-[#5A4A4D] dark:text-white/60">Google Meet or Zoom link{mode.kind === "approve" && " (optional)"}</span>
@@ -195,7 +226,12 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
           <button
             type="button"
             className={btnPrimary}
-            disabled={busy || (mode.kind === "propose" && !proposedAt) || (mode.kind === "link" && !/^https:\/\/\S+$/.test(meetLink.trim()))}
+            disabled={
+              busy ||
+              (mode.kind === "propose" && !proposedAt) ||
+              (mode.kind === "link" && !/^https:\/\/\S+$/.test(meetLink.trim())) ||
+              (mode.kind === "assign" && !assignTo)
+            }
             onClick={() => submit(r)}
           >
             {labels.button}
@@ -242,6 +278,11 @@ export default function RequestsCard({ host }: { host: HostDetail }) {
                       {r.hostId === host.id && (
                         <button type="button" className={btnGhost} onClick={() => open("propose", r)}>
                           Suggest another time
+                        </button>
+                      )}
+                      {others.length > 0 && (
+                        <button type="button" className={btnGhost} onClick={() => open("assign", r)}>
+                          Pass to another pastor
                         </button>
                       )}
                       <button type="button" className={btnGhost} onClick={() => open("decline", r)}>

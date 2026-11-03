@@ -53,7 +53,8 @@ export default function ShareCard({ host }: { host: HostDetail }) {
   return (
     <Section icon={Link2} eyebrow="Share" title="Your booking link">
       <p className={`mb-3 text-sm ${muted}`}>
-        Anyone with this link can request a session with {host.displayName}: visitors who find the messages online, and members, who are taken to their dashboard.
+        This link opens {host.displayName}’s own page: a short intro, then every session on offer. Members who open it are taken to their dashboard.
+        Each session also has its own link, under Session types.
         {!host.visitorsAllowed && " Visitors can’t request time right now; switch it on under booking rules."}
       </p>
 

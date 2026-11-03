@@ -18,6 +18,8 @@ export interface VisitorRequestInput extends CreateRequestInput {
   inIbadan: boolean;
   timezone?: string;
   website?: string;
+  /** Made on the general page, where no pastor is named. */
+  viaIntake?: boolean;
 }
 
 export interface VisitorRequestView extends MyRequest {
@@ -32,6 +34,17 @@ export function usePublicHosts() {
   return useQuery({
     queryKey: [...KEY, "hosts"],
     queryFn: () => api.get<HostSummary[]>("/public/one-on-one/hosts"),
+  });
+}
+
+/** The general page's sessions and times, with no pastor named. */
+export function usePublicIntake() {
+  return useQuery({
+    queryKey: [...KEY, "intake"],
+    queryFn: async () => {
+      const data = await api.get<HostSummary | { unavailable: true }>("/public/one-on-one/intake");
+      return "unavailable" in data ? null : data;
+    },
   });
 }
 
@@ -64,7 +77,8 @@ export function useVisitorRequest(token: string) {
 function useTokenAction(token: string, action: "confirm" | "cancel" | "accept-proposal") {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.post<VisitorRequestView>(`/public/one-on-one/requests/${encodeURIComponent(token)}/${action}`, {}),
+    mutationFn: (reason?: string) =>
+      api.post<VisitorRequestView>(`/public/one-on-one/requests/${encodeURIComponent(token)}/${action}`, reason ? { note: reason } : {}),
     onSuccess: (data) => qc.setQueryData(requestKey(token), data),
   });
 }
