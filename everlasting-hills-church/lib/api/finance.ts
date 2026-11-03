@@ -6,6 +6,7 @@ import { api } from "@/lib/api/request";
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export type FinanceEntryKind = "INCOME" | "EXPENSE";
+export type FinanceEntryFrequency = "ONE_TIME" | "DAILY" | "WEEKLY" | "MONTHLY";
 
 export interface ServiceWithOffering {
   id: string;
@@ -33,6 +34,7 @@ export interface FinanceEntry {
   label: string | null;
   amount: number;
   date: string;
+  frequency: FinanceEntryFrequency;
   note: string | null;
   receiptUrl: string | null;
   createdAt: string;
@@ -45,6 +47,7 @@ export interface CreateFinanceEntryInput {
   label?: string;
   amount: number;
   date: string;
+  frequency?: FinanceEntryFrequency;
   note?: string;
   receiptUrl?: string;
 }
@@ -167,5 +170,13 @@ export function useMonthlyFinanceSummary(year: number, month: number) {
     queryKey: [...FINANCE_KEY, "summary", "monthly", year, month],
     queryFn: () => api.get<FinanceSummary>("/finance/summary/monthly", { year, month }),
     enabled: Boolean(year && month),
+  });
+}
+
+export function useAllTimeFinanceSummary(enabled = true) {
+  return useQuery({
+    queryKey: [...FINANCE_KEY, "summary", "all"],
+    queryFn: () => api.get<FinanceSummary>("/finance/summary/all"),
+    enabled,
   });
 }

@@ -107,6 +107,7 @@ export class FinanceService {
         label: dto.label?.trim() || null,
         amount: dto.amount,
         date: new Date(`${dto.date}T12:00:00`), // noon — avoids a timezone rollover pushing the entry into the wrong day
+        frequency: dto.frequency ?? 'ONE_TIME',
         note: dto.note?.trim() || null,
         receiptUrl: dto.receiptUrl || null,
         recordedById: actorId,
@@ -135,6 +136,7 @@ export class FinanceService {
         ...(dto.label !== undefined && { label: dto.label.trim() || null }),
         ...(dto.amount !== undefined && { amount: dto.amount }),
         ...(dto.date !== undefined && { date: new Date(`${dto.date}T12:00:00`) }),
+        ...(dto.frequency !== undefined && { frequency: dto.frequency }),
         ...(dto.note !== undefined && { note: dto.note.trim() || null }),
         ...(dto.receiptUrl !== undefined && { receiptUrl: dto.receiptUrl || null }),
       },
@@ -216,5 +218,10 @@ export class FinanceService {
   async getMonthlySummary(year: number, month: number) {
     const { from, to } = monthRange(year, month);
     return this.summarize(from, to);
+  }
+
+  /** Lifetime totals — no date bound at either end. */
+  async getAllTimeSummary() {
+    return this.summarize(new Date(0), new Date('2999-12-31T23:59:59Z'));
   }
 }

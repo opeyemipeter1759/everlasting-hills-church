@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from 'class-validator';
 
 const KINDS = ['INCOME', 'EXPENSE'] as const;
+const FREQUENCIES = ['ONE_TIME', 'DAILY', 'WEEKLY', 'MONTHLY'] as const;
 
 export class CreateFinanceEntryDto {
   @ApiProperty({ enum: KINDS, example: 'INCOME' })
@@ -29,6 +30,11 @@ export class CreateFinanceEntryDto {
   @ApiProperty({ example: '2026-10-15', description: 'The date this income/expense is attributed to' })
   @IsDateString()
   date!: string;
+
+  @ApiPropertyOptional({ enum: FREQUENCIES, example: 'ONE_TIME', description: 'How often this income/expense happens — defaults to ONE_TIME' })
+  @IsOptional()
+  @IsIn(FREQUENCIES)
+  frequency?: (typeof FREQUENCIES)[number];
 
   @ApiPropertyOptional({ example: 'Paid via bank transfer' })
   @IsOptional()
@@ -68,6 +74,11 @@ export class UpdateFinanceEntryDto {
   @IsOptional()
   @IsDateString()
   date?: string;
+
+  @ApiPropertyOptional({ enum: FREQUENCIES, example: 'ONE_TIME' })
+  @IsOptional()
+  @IsIn(FREQUENCIES)
+  frequency?: (typeof FREQUENCIES)[number];
 
   @ApiPropertyOptional({ example: 'Paid via bank transfer' })
   @IsOptional()

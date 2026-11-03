@@ -89,4 +89,10 @@ export class FinanceController {
   monthlySummary(@Query('year') year: string, @Query('month') month: string) {
     return this.finance.getMonthlySummary(Number(year), Number(month));
   }
+
+  @Get('summary/all')
+  @ApiOperation({ summary: 'Lifetime totals — every service and entry on record' })
+  allTimeSummary() {
+    return this.finance.getAllTimeSummary();
+  }
 }

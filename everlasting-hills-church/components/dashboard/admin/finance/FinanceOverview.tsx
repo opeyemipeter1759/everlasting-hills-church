@@ -1,34 +1,41 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Download, Loader2, Paperclip, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Download, Loader2, Paperclip, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
+import { api } from "@/lib/api/request";
 import { userMessageForError } from "@/lib/api/user-message";
 import {
   formatNaira,
+  useAllTimeFinanceSummary,
   useDailyFinanceSummary,
   useDeleteFinanceEntry,
   useFinanceEntries,
   useMonthlyFinanceSummary,
   useWeeklyFinanceSummary,
   type FinanceEntry,
-  type FinanceEntryKind,
+  type FinanceEntryFrequency,
   type FinanceSummary,
 } from "@/lib/api/finance";
-import ServiceOfferingRow from "./ServiceOfferingRow";
-import FinanceEntryModal from "./FinanceEntryModal";
+import FinanceEntryForm from "./FinanceEntryForm";
 
-type Period = "daily" | "weekly" | "monthly";
+type Period = "daily" | "weekly" | "monthly" | "all";
 
-const PERIOD_LABELS: Record<Period, string> = { daily: "Daily", weekly: "Weekly", monthly: "Monthly" };
+const PERIOD_LABELS: Record<Period, string> = { daily: "Today", weekly: "This week", monthly: "This month", all: "All" };
+const FREQUENCY_LABELS: Record<FinanceEntryFrequency, string> = {
+  ONE_TIME: "One-time",
+  DAILY: "Daily",
+  WEEKLY: "Weekly",
+  MONTHLY: "Monthly",
+};
+const SHEET_COLUMNS = ["A", "B", "C", "D", "E", "F", "G"];
 
 const MONTH_LABELS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
 
-// A hairline ledger rule, used in place of card borders throughout.
 const RULE = "border-[#E4D6C7] dark:border-white/10";
 const INK = "text-[#2B2420] dark:text-white";
 const SUBINK = "text-[#8A7F72] dark:text-white/45";
@@ -46,10 +53,6 @@ function todayIso(): string {
 const shortDate = (date: string) =>
   new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(date));
 
-// For a UTC scheduledAt instant, the WAT (Nigeria) calendar date — a WAT
-// Sunday service is stored at ~23:00 UTC the day before.
-const watDateStr = (isoUtc: string) => new Date(new Date(isoUtc).getTime() + WAT_OFFSET_MS).toISOString().slice(0, 10);
-
 function csvCell(value: string | number | null) {
   let text = value == null ? "" : String(value);
   // A cell starting with = or @ is a formula to a spreadsheet.
@@ -59,16 +62,13 @@ function csvCell(value: string | number | null) {
 
 function financeCsv(data: FinanceSummary, entries: FinanceEntry[]): string {
   const rows: (string | number | null)[][] = [
-    ["Tithe & offering by service"],
-    ["Service", "Date", "Tithe (NGN)", "Offering (NGN)"],
-    ...data.services.map((s) => [s.name, watDateStr(s.scheduledAt), s.tithe, s.offering]),
-    [],
     ["Income & expense entries"],
-    ["Type", "Category", "Label", "Amount (NGN)", "Date", "Note", "Receipt"],
+    ["Type", "Category", "Label", "Frequency", "Amount (NGN)", "Date", "Note", "Receipt"],
     ...entries.map((e) => [
       e.kind === "INCOME" ? "Income" : "Expense",
       e.category,
       e.label,
+      FREQUENCY_LABELS[e.frequency],
       e.amount,
       e.date.slice(0, 10),
       e.note,
@@ -76,10 +76,7 @@ function financeCsv(data: FinanceSummary, entries: FinanceEntry[]): string {
     ]),
     [],
     ["Totals"],
-    ["Tithe", data.titheTotal],
-    ["Offering", data.offeringTotal],
-    ["Other income", data.incomeTotal],
-    ["Grand income", data.grandIncomeTotal],
+    ["Income", data.grandIncomeTotal],
     ["Expenses", data.expenseTotal],
     ["Net total", data.netTotal],
   ];
@@ -97,15 +94,6 @@ function downloadFinanceCsv(data: FinanceSummary, entries: FinanceEntry[], perio
   window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
-/** Entries grouped under each category the summary already totaled, newest first within a group. */
-function groupEntries(categories: { category: string; amount: number }[], entries: FinanceEntry[], kind: FinanceEntryKind) {
-  return categories.map((c) => ({
-    category: c.category,
-    total: c.amount,
-    items: entries.filter((e) => e.kind === kind && e.category === c.category).sort((a, b) => b.date.localeCompare(a.date)),
-  }));
-}
-
 export default function FinanceOverview() {
   const [period, setPeriod] = useState<Period>("weekly");
   const [dailyDate, setDailyDate] = useState(todayIso());
@@ -114,17 +102,21 @@ export default function FinanceOverview() {
   const [monthlyYear, setMonthlyYear] = useState(watNow.getUTCFullYear());
   const [monthlyMonth, setMonthlyMonth] = useState(watNow.getUTCMonth() + 1);
 
-  const [entryModal, setEntryModal] = useState<{ open: boolean; entry: FinanceEntry | null; defaultKind: FinanceEntryKind }>({
-    open: false,
-    entry: null,
-    defaultKind: "INCOME",
-  });
+  const [editingEntry, setEditingEntry] = useState<FinanceEntry | null>(null);
   const [removing, setRemoving] = useState<FinanceEntry | null>(null);
+  const [search, setSearch] = useState("");
+
+  // Exports a chosen month's sheet independent of whatever period is on
+  // screen — fetched on demand, not tied to the page's own period state.
+  const [exportMonth, setExportMonth] = useState(watNow.getUTCMonth() + 1);
+  const [exportYear, setExportYear] = useState(watNow.getUTCFullYear());
+  const [exporting, setExporting] = useState(false);
 
   const daily = useDailyFinanceSummary(period === "daily" ? dailyDate : "");
   const weekly = useWeeklyFinanceSummary(period === "weekly" ? weeklyDate : "");
   const monthly = useMonthlyFinanceSummary(period === "monthly" ? monthlyYear : 0, period === "monthly" ? monthlyMonth : 0);
-  const summary = period === "daily" ? daily : period === "weekly" ? weekly : monthly;
+  const allTime = useAllTimeFinanceSummary(period === "all");
+  const summary = period === "daily" ? daily : period === "weekly" ? weekly : period === "monthly" ? monthly : allTime;
 
   const range = summary.data?.range;
   const entries = useFinanceEntries(range ? { from: range.from, to: range.to } : {});
@@ -136,6 +128,7 @@ export default function FinanceOverview() {
   };
 
   const periodLabel = useMemo(() => {
+    if (period === "all") return "All time";
     if (period === "monthly") return `${MONTH_LABELS[monthlyMonth - 1]} ${monthlyYear}`;
     if (!range) return "";
     if (period === "daily") return shortDate(range.from);
@@ -147,48 +140,90 @@ export default function FinanceOverview() {
     try {
       await deleteEntry.mutateAsync(removing.id);
       showToast.success("Entry deleted");
+      if (editingEntry?.id === removing.id) setEditingEntry(null);
       setRemoving(null);
     } catch (err) {
       showToast.error(userMessageForError(err, "Couldn't delete this entry"));
     }
   }
 
-  const data = summary.data;
-  const incomeGroups = data ? groupEntries(data.incomeByCategory, entries.data ?? [], "INCOME") : [];
-  const expenseGroups = data ? groupEntries(data.expenseByCategory, entries.data ?? [], "EXPENSE") : [];
+  /** Exports whichever month is picked, regardless of the period currently on screen. */
+  async function handleExportMonth() {
+    setExporting(true);
+    try {
+      const monthSummary = await api.get<FinanceSummary>("/finance/summary/monthly", { year: exportYear, month: exportMonth });
+      const monthEntries = await api.get<FinanceEntry[]>("/finance/entries", { from: monthSummary.range.from, to: monthSummary.range.to });
+      downloadFinanceCsv(monthSummary, monthEntries, `${MONTH_LABELS[exportMonth - 1]} ${exportYear}`);
+    } catch (err) {
+      showToast.error(userMessageForError(err, "Couldn't export that month"));
+    } finally {
+      setExporting(false);
+    }
+  }
 
-  const ledgerStats = data
+  const data = summary.data;
+
+  const sheetRows = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const rows = entries.data ?? [];
+    if (!term) return rows;
+    return rows.filter(
+      (e) =>
+        e.category.toLowerCase().includes(term) ||
+        (e.label ?? "").toLowerCase().includes(term) ||
+        (e.note ?? "").toLowerCase().includes(term),
+    );
+  }, [entries.data, search]);
+
+  const sheetIncomeTotal = sheetRows.filter((e) => e.kind === "INCOME").reduce((sum, e) => sum + e.amount, 0);
+  const sheetExpenseTotal = sheetRows.filter((e) => e.kind === "EXPENSE").reduce((sum, e) => sum + e.amount, 0);
+
+  const titheOfferingTotal = data
+    ? data.incomeByCategory
+        .filter((c) => ["tithe", "offering"].includes(c.category.trim().toLowerCase()))
+        .reduce((sum, c) => sum + c.amount, 0)
+    : 0;
+
+  const statCards = data
     ? [
-        { label: "Tithe", value: data.titheTotal },
-        { label: "Offering", value: data.offeringTotal },
-        { label: "Other income", value: data.incomeTotal },
-        { label: "Expenses", value: data.expenseTotal },
+        { label: "Income", value: data.grandIncomeTotal, hint: "All income sources" },
+        { label: "Expenses", value: data.expenseTotal, hint: "Fuel, welfare, maintenance" },
+        { label: "Net", value: data.netTotal, hint: "Income minus expenses", highlight: true },
+        { label: "Tithe & offering", value: titheOfferingTotal, hint: "Recorded through Record entry" },
       ]
     : [];
 
   return (
-    <div className="space-y-5 px-5">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-6 px-5">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="font-serif text-[28px] font-semibold text-[#2B2420] dark:text-white">Finance Ledger</h1>
-          <p className={`mt-1 max-w-xl text-sm ${SUBINK}`}>Visible only to the Pastor and Finance Head.</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#B9862E]">Everlasting Hills · Finance</p>
+          <h1 className={`mt-1 font-serif text-3xl font-semibold sm:text-[34px] ${INK}`}>Ledger</h1>
+          <p className={`mt-1 max-w-xl text-sm ${SUBINK}`}>
+            Choose income or expense, pick a category, enter the amount, save.
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => data && downloadFinanceCsv(data, entries.data ?? [], periodLabel || period)}
-            disabled={!data}
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#87102C] px-3.5 text-sm font-semibold text-white hover:bg-[#6f0d24] disabled:opacity-50"
-          >
-            <Download size={15} aria-hidden="true" />
-            Export CSV
-          </button>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className={`inline-flex flex-wrap items-center gap-1 rounded-full border ${RULE} bg-white p-1 dark:bg-white/[0.02]`}>
+            {(["daily", "weekly", "monthly", "all"] as Period[]).map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setPeriod(p)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  period === p ? "bg-[#B9862E] text-[#2B2420]" : `${SUBINK} hover:text-[#2B2420] dark:hover:text-white`
+                }`}
+              >
+                {PERIOD_LABELS[p]}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={refresh}
             disabled={summary.isFetching || entries.isFetching}
             aria-label="Refresh"
-            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-[#E4D6C7] text-[#5b5047] hover:bg-[#FBF6EF] disabled:opacity-60 dark:border-white/10 dark:text-white/70 dark:hover:bg-white/5"
+            className={`inline-flex min-h-10 min-w-10 items-center justify-center rounded-xl border ${RULE} text-[#5b5047] hover:bg-[#FBF6EF] disabled:opacity-60 dark:text-white/70 dark:hover:bg-white/5`}
           >
             {summary.isFetching || entries.isFetching ? (
               <Loader2 size={15} className="animate-spin" aria-hidden="true" />
@@ -199,195 +234,231 @@ export default function FinanceOverview() {
         </div>
       </header>
 
-      {/* The open ledger page */}
-      <div className="rounded-[26px] border border-[#E4D6C7] bg-[#FBF6EF] p-4 sm:p-7 dark:border-white/10 dark:bg-white/[0.02]">
-        <ol className={`space-y-1 border-l-2 border-[#87102C]/40 pl-4 text-sm leading-relaxed ${SUBINK} list-decimal marker:text-[#87102C]/50`}>
-          <li>After each Sunday or Wednesday service, count and record its tithe &amp; offering under Record the service below.</li>
-          <li>
-            For anything else — Building fund, Rent, Giving, a Special Offering, or an expense — use <span className={`font-semibold ${INK}`}>Add entry</span>, any day it happens.
-          </li>
-        </ol>
-
-        <div className="mt-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#E4D6C7] pb-3 dark:border-white/10">
-          <div className="flex items-center gap-5">
-            {(["daily", "weekly", "monthly"] as Period[]).map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setPeriod(p)}
-                className={`-mb-[13px] border-b-2 pb-3 text-[15px] font-medium transition-colors ${
-                  period === p
-                    ? "border-[#87102C] text-[#87102C] dark:border-[#FFB3C1] dark:text-[#FFB3C1]"
-                    : `border-transparent ${SUBINK} hover:text-[#2B2420] dark:hover:text-white`
-                }`}
+      {period !== "all" && (
+        <div className="flex flex-wrap items-center gap-2">
+          {period === "daily" ? (
+            <input
+              type="date"
+              value={dailyDate}
+              onChange={(e) => setDailyDate(e.target.value)}
+              className={`min-h-10 rounded-xl border ${RULE} bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:bg-white/5 dark:text-white`}
+            />
+          ) : period === "weekly" ? (
+            <input
+              type="date"
+              value={weeklyDate}
+              onChange={(e) => setWeeklyDate(e.target.value)}
+              className={`min-h-10 rounded-xl border ${RULE} bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:bg-white/5 dark:text-white`}
+            />
+          ) : (
+            <div className="flex items-center gap-2">
+              <select
+                value={monthlyMonth}
+                onChange={(e) => setMonthlyMonth(Number(e.target.value))}
+                className={`min-h-10 rounded-xl border ${RULE} bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:bg-white/5 dark:text-white`}
               >
-                {PERIOD_LABELS[p]}
-              </button>
-            ))}
-          </div>
+                {MONTH_LABELS.map((m, i) => (
+                  <option key={m} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                value={monthlyYear}
+                onChange={(e) => setMonthlyYear(Number(e.target.value))}
+                className={`min-h-10 w-24 rounded-xl border ${RULE} bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:bg-white/5 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+              />
+            </div>
+          )}
+          {periodLabel && (
+            <p className={`text-sm ${SUBINK}`}>
+              {period === "weekly" ? "Week of " : ""}
+              {periodLabel}
+            </p>
+          )}
+        </div>
+      )}
 
-          <div className="flex items-center gap-2">
-            {period === "daily" ? (
-              <input
-                type="date"
-                value={dailyDate}
-                onChange={(e) => setDailyDate(e.target.value)}
-                className="min-h-10 rounded-xl border border-[#E4D6C7] bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:border-white/10 dark:bg-white/5 dark:text-white"
-              />
-            ) : period === "weekly" ? (
-              <input
-                type="date"
-                value={weeklyDate}
-                onChange={(e) => setWeeklyDate(e.target.value)}
-                className="min-h-10 rounded-xl border border-[#E4D6C7] bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:border-white/10 dark:bg-white/5 dark:text-white"
-              />
-            ) : (
-              <div className="flex items-center gap-2">
-                <select
-                  value={monthlyMonth}
-                  onChange={(e) => setMonthlyMonth(Number(e.target.value))}
-                  className="min-h-10 rounded-xl border border-[#E4D6C7] bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:border-white/10 dark:bg-white/5 dark:text-white"
+      {summary.isLoading ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className={`h-24 animate-pulse rounded-2xl border ${RULE} bg-[#E4D6C7]/20 dark:bg-white/5`} />
+          ))}
+        </div>
+      ) : summary.isError ? (
+        <div role="alert" className={`rounded-2xl border border-red-200 p-5 text-sm ${INK} dark:border-red-900`}>
+          Finance data could not load.{" "}
+          <button type="button" onClick={() => summary.refetch()} className="min-h-11 font-semibold underline">
+            Try again
+          </button>
+        </div>
+      ) : (
+        data && (
+          <>
+            {/* Stat cards */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {statCards.map((s) => (
+                <div
+                  key={s.label}
+                  className={`rounded-2xl border p-4 ${s.highlight ? "border-[#B9862E] bg-[#B9862E]/5" : `${RULE} bg-white dark:bg-white/[0.02]`}`}
                 >
-                  {MONTH_LABELS.map((m, i) => (
-                    <option key={m} value={i + 1}>{m}</option>
-                  ))}
-                </select>
+                  <p className={`text-[11px] font-bold uppercase tracking-wider ${SUBINK}`}>{s.label}</p>
+                  <p className={`mt-1.5 font-serif text-2xl font-semibold tabular-nums sm:text-[28px] ${s.highlight ? "text-[#8A6420] dark:text-amber-300" : INK}`}>
+                    {formatNaira(s.value)}
+                  </p>
+                  <p className={`mt-1 text-xs ${SUBINK}`}>{s.hint}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Record entry — Tithe, Offering, and everything else: Building, Rent, Giving, Special offering, expenses. */}
+            <FinanceEntryForm entry={editingEntry} onDoneEditing={() => setEditingEntry(null)} />
+
+            {/* Sheet — every entry in this period, laid out like a spreadsheet. */}
+            <section className={`rounded-2xl border ${RULE} bg-white p-4 sm:p-6 dark:bg-white/[0.02]`}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className={`text-[15px] font-semibold ${INK}`}>Sheet</h2>
+                  <p className={`mt-0.5 text-xs ${SUBINK}`}>Every entry in this period, laid out like a spreadsheet.</p>
+                </div>
                 <input
-                  type="number"
-                  value={monthlyYear}
-                  onChange={(e) => setMonthlyYear(Number(e.target.value))}
-                  className="min-h-10 w-24 rounded-xl border border-[#E4D6C7] bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:border-white/10 dark:bg-white/5 dark:text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search category or note"
+                  className={`min-h-10 w-full max-w-[220px] rounded-xl border ${RULE} bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:bg-white/5 dark:text-white`}
                 />
               </div>
-            )}
-          </div>
-        </div>
 
-        {periodLabel && (
-          <p className={`mt-3 text-sm ${SUBINK}`}>
-            {period === "weekly" ? "Week of " : ""}
-            {periodLabel}
-          </p>
-        )}
-
-        {summary.isLoading ? (
-          <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <div key={index} className="h-14 w-28 animate-pulse rounded-lg bg-[#E4D6C7]/40 dark:bg-white/5" />
-            ))}
-          </div>
-        ) : summary.isError ? (
-          <div role="alert" className={`mt-6 rounded-2xl border border-red-200 p-5 text-sm ${INK} dark:border-red-900`}>
-            Finance data could not load.{" "}
-            <button type="button" onClick={() => summary.refetch()} className="min-h-11 font-semibold underline">
-              Try again
-            </button>
-          </div>
-        ) : (
-          data && (
-            <>
-              {/* Totals strip */}
-              <div className="mt-6 flex flex-wrap items-baseline gap-x-8 gap-y-4 divide-x divide-[#E4D6C7] dark:divide-white/10">
-                {ledgerStats.map((s, i) => (
-                  <div key={s.label} className={i > 0 ? "pl-8" : ""}>
-                    <p className={`text-xs ${SUBINK}`}>{s.label}</p>
-                    <p className={`font-serif text-2xl font-semibold tabular-nums ${INK}`}>{formatNaira(s.value)}</p>
-                  </div>
-                ))}
-                <div className="pl-8">
-                  <p className={`text-xs ${SUBINK}`}>Net</p>
-                  <p className="inline-flex items-baseline gap-1 rounded-full border border-[#B9862E]/50 bg-[#B9862E]/10 px-3 py-1 font-serif text-2xl font-semibold tabular-nums text-[#8A6420] dark:text-amber-300">
-                    {formatNaira(data.netTotal)}
-                  </p>
+              <div className={`mt-3 flex flex-col gap-2 border-t ${RULE} pt-3 sm:flex-row sm:flex-wrap sm:items-center`}>
+                <span className={`text-xs font-semibold ${SUBINK}`}>Export a specific month:</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={exportMonth}
+                    onChange={(e) => setExportMonth(Number(e.target.value))}
+                    className={`min-h-10 flex-1 basis-[9.5rem] rounded-lg border ${RULE} bg-white px-2.5 text-xs outline-none focus:border-[#87102C] dark:bg-white/5 dark:text-white sm:min-h-9 sm:flex-none sm:basis-auto`}
+                  >
+                    {MONTH_LABELS.map((m, i) => (
+                      <option key={m} value={i + 1}>{m}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    value={exportYear}
+                    onChange={(e) => setExportYear(Number(e.target.value))}
+                    className={`min-h-10 w-24 shrink-0 rounded-lg border ${RULE} bg-white px-2.5 text-xs outline-none focus:border-[#87102C] dark:bg-white/5 dark:text-white sm:min-h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleExportMonth}
+                    disabled={exporting}
+                    className={`inline-flex min-h-10 flex-1 shrink-0 items-center justify-center gap-1.5 rounded-lg border ${RULE} px-3 text-xs font-semibold ${INK} hover:bg-[#FBF6EF] disabled:opacity-60 dark:hover:bg-white/5 sm:min-h-9 sm:flex-none`}
+                  >
+                    {exporting ? <Loader2 size={12} className="animate-spin" aria-hidden="true" /> : <Download size={12} aria-hidden="true" />}
+                    Export
+                  </button>
                 </div>
               </div>
 
-              {period !== "monthly" && (
-                <section className="mt-8">
-                  <h2 className={`text-[15px] font-semibold ${INK}`}>Record the service</h2>
-                  {data.services.length === 0 ? (
-                    <p className={`mt-3 text-sm ${SUBINK}`}>No service in this period.</p>
-                  ) : (
-                    <div className="mt-2">
-                      {data.services.map((s) => (
-                        <ServiceOfferingRow key={s.id} service={s} />
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )}
-
-              {period === "monthly" ? (
-                <section className="mt-9">
-                  <h2 className={`text-[15px] font-semibold ${INK}`}>Other income &amp; expenses</h2>
-                  <p className={`mt-0.5 text-xs ${SUBINK}`}>Everything beyond tithe &amp; offering, by category — Building, Rent, Giving, utilities, and the rest.</p>
-                  <div className="mt-4 grid gap-8 sm:grid-cols-2">
-                    <CategoryLedger title="Income" icon={ArrowDownLeft} tone={CREDIT} categories={data.incomeByCategory} />
-                    <CategoryLedger title="Expenses" icon={ArrowUpRight} tone={DEBIT} categories={data.expenseByCategory} />
-                  </div>
-                </section>
+              {entries.isLoading ? (
+                <div className="mt-4 space-y-1.5">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className={`h-10 animate-pulse rounded-lg ${RULE} border bg-[#E4D6C7]/20 dark:bg-white/5`} />
+                  ))}
+                </div>
+              ) : sheetRows.length === 0 ? (
+                <p className={`mt-4 rounded-xl border border-dashed ${RULE} px-4 py-6 text-center text-sm ${SUBINK}`}>
+                  No entries match this view yet.
+                </p>
               ) : (
-                <section className="mt-9">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h2 className={`text-[15px] font-semibold ${INK}`}>Other income &amp; expenses</h2>
-                      <p className={`mt-0.5 text-xs ${SUBINK}`}>Everything beyond tithe &amp; offering — Building, Rent, Giving, utilities, and the rest.</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setEntryModal({ open: true, entry: null, defaultKind: "INCOME" })}
-                      className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#87102C] px-3.5 py-2 text-xs font-bold text-white hover:bg-[#6E0C24]"
-                    >
-                      <Plus size={13} /> Add entry
-                    </button>
-                  </div>
-
-                  {entries.isLoading ? (
-                    <div className="mt-4 space-y-2">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="h-10 animate-pulse rounded-lg bg-[#E4D6C7]/30 dark:bg-white/5" />
+                <div className={`mt-4 overflow-x-auto rounded-xl border ${RULE}`}>
+                  <table className="w-full min-w-[760px] text-left text-sm">
+                    <thead>
+                      <tr className={`border-b ${RULE} text-[10px] font-semibold uppercase tracking-wide text-gray-300 dark:text-white/15`}>
+                        {SHEET_COLUMNS.map((letter) => (
+                          <th key={letter} className="px-4 py-1 font-normal">{letter}</th>
+                        ))}
+                        <th className="px-4 py-1" />
+                      </tr>
+                      <tr className={`border-b ${RULE} text-xs font-semibold uppercase tracking-wide ${SUBINK}`}>
+                        <th className="px-4 py-2.5">#</th>
+                        <th className="px-4 py-2.5">Date</th>
+                        <th className="px-4 py-2.5">Type</th>
+                        <th className="px-4 py-2.5">Category</th>
+                        <th className="px-4 py-2.5">Frequency</th>
+                        <th className="px-4 py-2.5">Amount (₦)</th>
+                        <th className="px-4 py-2.5">Note</th>
+                        <th className="px-4 py-2.5"><span className="sr-only">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody className={`divide-y divide-[#E4D6C7] dark:divide-white/10`}>
+                      <tr className={`${INK} font-semibold`}>
+                        <td className="px-4 py-2.5" colSpan={5}>Income total</td>
+                        <td className={`px-4 py-2.5 tabular-nums ${CREDIT}`}>{formatNaira(sheetIncomeTotal)}</td>
+                        <td className="px-4 py-2.5" colSpan={2} />
+                      </tr>
+                      <tr className={`${INK} font-semibold`}>
+                        <td className="px-4 py-2.5" colSpan={5}>Expense total</td>
+                        <td className={`px-4 py-2.5 tabular-nums ${DEBIT}`}>{formatNaira(sheetExpenseTotal)}</td>
+                        <td className="px-4 py-2.5" colSpan={2} />
+                      </tr>
+                      {sheetRows.map((e, i) => (
+                        <tr key={e.id} className="align-top text-gray-700 dark:text-white/80">
+                          <td className={`px-4 py-2.5 tabular-nums ${SUBINK}`}>{i + 1}</td>
+                          <td className="px-4 py-2.5 tabular-nums">{shortDate(e.date)}</td>
+                          <td className={`px-4 py-2.5 font-semibold ${e.kind === "INCOME" ? CREDIT : DEBIT}`}>
+                            {e.kind === "INCOME" ? "Income" : "Expense"}
+                          </td>
+                          <td className={`px-4 py-2.5 font-medium ${INK}`}>
+                            <span className="flex items-center gap-1.5">
+                              {e.category}
+                              {e.receiptUrl && (
+                                <a
+                                  href={e.receiptUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  aria-label="View receipt"
+                                  className={`shrink-0 ${SUBINK} hover:text-[#87102C] dark:hover:text-[#e8768a]`}
+                                >
+                                  <Paperclip size={12} />
+                                </a>
+                              )}
+                            </span>
+                            {e.label && <span className={`block text-xs ${SUBINK}`}>{e.label}</span>}
+                          </td>
+                          <td className={`px-4 py-2.5 ${SUBINK}`}>{FREQUENCY_LABELS[e.frequency]}</td>
+                          <td className={`px-4 py-2.5 font-semibold tabular-nums ${e.kind === "INCOME" ? CREDIT : DEBIT}`}>
+                            {e.kind === "INCOME" ? "+" : "–"}{formatNaira(e.amount)}
+                          </td>
+                          <td className={`px-4 py-2.5 ${SUBINK}`}>{e.note || "—"}</td>
+                          <td className="px-4 py-2.5 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setEditingEntry(e)}
+                                aria-label={`Edit ${e.category} entry`}
+                                className="rounded-lg p-1.5 text-[#C9BBAC] hover:bg-[#FBF6EF] hover:text-[#5b5047] dark:hover:bg-white/5"
+                              >
+                                <Pencil size={14} />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setRemoving(e)}
+                                aria-label={`Delete ${e.category} entry`}
+                                className="rounded-lg p-1.5 text-[#C9BBAC] hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
                       ))}
-                    </div>
-                  ) : incomeGroups.length === 0 && expenseGroups.length === 0 ? (
-                    <div className={`mt-4 rounded-xl border border-dashed ${RULE} px-4 py-6 text-center text-sm ${SUBINK}`}>
-                      No income or expenses recorded for this period yet — use <span className={`font-semibold ${INK}`}>Add entry</span> above.
-                    </div>
-                  ) : (
-                    <div className="mt-4 grid gap-8 lg:grid-cols-2">
-                      <EntryGroupList
-                        title="Income"
-                        icon={ArrowDownLeft}
-                        tone={CREDIT}
-                        sign="+"
-                        groups={incomeGroups}
-                        onEdit={(e) => setEntryModal({ open: true, entry: e, defaultKind: e.kind })}
-                        onDelete={setRemoving}
-                      />
-                      <EntryGroupList
-                        title="Expenses"
-                        icon={ArrowUpRight}
-                        tone={DEBIT}
-                        sign="–"
-                        groups={expenseGroups}
-                        onEdit={(e) => setEntryModal({ open: true, entry: e, defaultKind: e.kind })}
-                        onDelete={setRemoving}
-                      />
-                    </div>
-                  )}
-                </section>
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </>
-          )
-        )}
-      </div>
-
-      <FinanceEntryModal
-        key={entryModal.entry?.id ?? `new-${entryModal.defaultKind}`}
-        open={entryModal.open}
-        onClose={() => setEntryModal((s) => ({ ...s, open: false }))}
-        entry={entryModal.entry}
-        defaultKind={entryModal.defaultKind}
-      />
+            </section>
+          </>
+        )
+      )}
 
       <ConfirmDialog
         open={!!removing}
@@ -399,132 +470,6 @@ export default function FinanceOverview() {
         onConfirm={confirmRemove}
         onCancel={() => setRemoving(null)}
       />
-    </div>
-  );
-}
-
-function ColumnHeading({ title, icon: Icon, tone }: { title: string; icon: typeof ArrowDownLeft; tone: string }) {
-  return (
-    <div className="flex items-center gap-2 border-b border-[#E4D6C7] pb-2 dark:border-white/10">
-      <span className={`flex h-6 w-6 items-center justify-center rounded-full bg-current/10 ${tone}`}>
-        <Icon size={13} className={tone} aria-hidden="true" />
-      </span>
-      <span className={`text-sm font-semibold ${INK}`}>{title}</span>
-    </div>
-  );
-}
-
-/** A plain category → total breakdown, used for Monthly (where entries aren't itemized). */
-function CategoryLedger({
-  title,
-  icon,
-  tone,
-  categories,
-}: {
-  title: string;
-  icon: typeof ArrowDownLeft;
-  tone: string;
-  categories: { category: string; amount: number }[];
-}) {
-  return (
-    <div>
-      <ColumnHeading title={title} icon={icon} tone={tone} />
-      {categories.length === 0 ? (
-        <p className={`mt-3 text-sm ${SUBINK}`}>None recorded.</p>
-      ) : (
-        <ul className="mt-1 divide-y divide-[#E4D6C7] dark:divide-white/10">
-          {categories.map((c) => (
-            <li key={c.category} className="flex items-baseline justify-between gap-3 py-2.5 text-sm">
-              <span className={INK}>{c.category}</span>
-              <span className={`rounded-full bg-current/10 px-2.5 py-0.5 font-semibold tabular-nums ${tone}`}>
-                {formatNaira(c.amount)}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function EntryGroupList({
-  title,
-  icon,
-  tone,
-  sign,
-  groups,
-  onEdit,
-  onDelete,
-}: {
-  title: string;
-  icon: typeof ArrowDownLeft;
-  tone: string;
-  sign: "+" | "–";
-  groups: { category: string; total: number; items: FinanceEntry[] }[];
-  onEdit: (entry: FinanceEntry) => void;
-  onDelete: (entry: FinanceEntry) => void;
-}) {
-  return (
-    <div>
-      <ColumnHeading title={title} icon={icon} tone={tone} />
-      {groups.length === 0 ? (
-        <p className={`mt-3 text-sm ${SUBINK}`}>None recorded yet.</p>
-      ) : (
-        <div className="mt-3 space-y-5">
-          {groups.map((g) => (
-            <div key={g.category}>
-              <div className="flex items-baseline justify-between gap-3">
-                <span className={`text-sm font-semibold ${INK}`}>{g.category}</span>
-                <span className={`rounded-full bg-current/10 px-2.5 py-0.5 text-sm font-semibold tabular-nums ${tone}`}>
-                  {sign}{formatNaira(g.total)}
-                </span>
-              </div>
-              <ul className="mt-1 divide-y divide-[#E4D6C7] dark:divide-white/10">
-                {g.items.map((e) => (
-                  <li key={e.id} className="flex items-center gap-3 py-2.5">
-                    <div className="min-w-0 flex-1">
-                      <p className={`flex items-center gap-1.5 truncate text-sm ${INK}`}>
-                        {e.label || "—"}
-                        {e.receiptUrl && (
-                          <a
-                            href={e.receiptUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            aria-label="View receipt"
-                            className={`shrink-0 ${SUBINK} hover:text-[#87102C] dark:hover:text-[#e8768a]`}
-                          >
-                            <Paperclip size={12} />
-                          </a>
-                        )}
-                      </p>
-                      <p className={`text-xs ${SUBINK}`}>{shortDate(e.date)}{e.note ? ` · ${e.note}` : ""}</p>
-                    </div>
-                    <span className={`shrink-0 text-sm font-medium tabular-nums ${tone}`}>
-                      {sign}{formatNaira(e.amount)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => onEdit(e)}
-                      aria-label={`Edit ${e.category} entry`}
-                      className="shrink-0 rounded-lg p-1.5 text-[#C9BBAC] hover:bg-[#FBF6EF] hover:text-[#5b5047] dark:hover:bg-white/5"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(e)}
-                      aria-label={`Delete ${e.category} entry`}
-                      className="shrink-0 rounded-lg p-1.5 text-[#C9BBAC] hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

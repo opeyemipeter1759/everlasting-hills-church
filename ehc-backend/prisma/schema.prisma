@@ -929,13 +929,24 @@ enum FinanceEntryKind {
   EXPENSE
 }
 
+/// How often the thing this entry records actually happens — a label the
+/// finance head attaches to the entry itself, not a recurrence engine (no
+/// entry is auto-created from this). ONE_TIME is the default for anything
+/// that isn't a recurring cost/income.
+enum FinanceEntryFrequency {
+  ONE_TIME
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
 /// What entered or left the church's accounts for the period, outside of
 /// per-service tithe/offering (see ServiceOffering). Income categories the
 /// finance head uses in practice: Building, Program, Rent, Giving — kept as
 /// free text rather than an enum so a new fund doesn't need a migration.
 /// Expenses share the same shape with their own free-text category.
 model FinanceEntry {
-  id           String           @id
+  id           String                 @id
   tenantId     String
   kind         FinanceEntryKind
   category     String
@@ -946,14 +957,15 @@ model FinanceEntry {
   /// The date this income/expense is attributed to — what buckets it into a
   /// week/month, independent of when it was typed in.
   date         DateTime
+  frequency    FinanceEntryFrequency @default(ONE_TIME)
   note         String?
   /// Uploaded via /uploads/document — a photo or PDF of the receipt, if attached.
   receiptUrl   String?
   recordedById String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  Tenant       Tenant           @relation(fields: [tenantId], references: [id])
-  RecordedBy   Profile?         @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  Tenant       Tenant                 @relation(fields: [tenantId], references: [id])
+  RecordedBy   Profile?               @relation(fields: [recordedById], references: [id], onDelete: SetNull)
 
   @@index([tenantId, kind, date])
   @@index([tenantId, category])
