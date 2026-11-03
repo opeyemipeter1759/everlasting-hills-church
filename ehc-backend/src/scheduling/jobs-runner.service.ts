@@ -8,6 +8,7 @@ import { FastingPushService } from '../fasting-email/fasting-push.service';
 import { FastingRecapsService } from '../fasting-email/fasting-recaps.service';
 import { ClassesAdminService } from '../classes/classes-admin.service';
 import { OneOnOneSweepService } from '../one-on-one/one-on-one-sweep.service';
+import { PrayerWatchService } from '../prayer-watch/prayer-watch.service';
 
 /** Names match the @Cron({ name }) options so logs and Cloud Scheduler agree. */
 export const JOB_NAMES = [
@@ -28,6 +29,7 @@ export const JOB_NAMES = [
   'fasting-push',
   'class-stalled-learners',
   'one-on-one-sweep',
+  'prayer-watch-leader-terms',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -60,6 +62,7 @@ export class JobsRunnerService {
     private readonly fastingPush: FastingPushService,
     private readonly classes: ClassesAdminService,
     private readonly oneOnOneSweep: OneOnOneSweepService,
+    private readonly prayerWatch: PrayerWatchService,
   ) {}
 
   isJob(name: string): name is JobName {
@@ -121,6 +124,8 @@ export class JobsRunnerService {
         return this.classes.notifyStalled().then(() => undefined);
       case 'one-on-one-sweep':
         return this.oneOnOneSweep.run().then(() => undefined);
+      case 'prayer-watch-leader-terms':
+        return this.prayerWatch.notifyEndedLeaderTerms().then(() => undefined);
     }
   }
 }

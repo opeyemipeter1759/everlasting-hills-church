@@ -1,6 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Cron } from '@nestjs/schedule';
 import { Prisma, PrayerSignupStatus, Role, type PrayerSignup, type PrayerSlot } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -10,6 +11,7 @@ import { IcsBuilderService } from '../calendar/services/ics-builder.service';
 import { PushDispatchService } from '../push/services/push-dispatch.service';
 import { buildPrayerWatchFamilyChangeDecidedEmail } from '../notifications/templates/prayer-watch-family-change-decided.email';
 import { buildPrayerWatchLeaderAssignedEmail } from '../notifications/templates/prayer-watch-leader-assigned.email';
+import { buildPrayerWatchLeaderTermEndedEmail } from '../notifications/templates/prayer-watch-leader-term-ended.email';
 import { buildPrayerWatchSignupApprovedEmail } from '../notifications/templates/prayer-watch-signup-approved.email';
 import { buildPrayerWatchSignupDeclinedEmail } from '../notifications/templates/prayer-watch-signup-declined.email';
 import { buildPrayerWatchSignupPendingEmail } from '../notifications/templates/prayer-watch-signup-pending.email';
@@ -45,6 +47,25 @@ const ACTIVE_SIGNUP_STATUSES: PrayerSignupStatus[] = [PrayerSignupStatus.PENDING
  * hierarchy also admits ADMIN/PASTOR/SUPER_ADMIN into) — whoever can decide a
  * sign-up is who gets told one is waiting. */
 const APPROVER_ROLES: Role[] = [Role.ADMIN_HEAD, Role.ADMIN, Role.PASTOR, Role.SUPER_ADMIN];
+
+/** How long a watch leader serves before the admins are asked to choose the next one. */
+const LEADER_TERM_MONTHS = 3;
+
+/** Same day of the month, n months on; clamps to the month's last day (31 Nov → 28 Feb). */
+export function addMonths(from: Date, months: number): Date {
+  const d = new Date(from);
+  const day = d.getUTCDate();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + months);
+  const last = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, last));
+  return d;
+}
+
+/** "February 2027", in church local time. */
+export function monthLabel(date: Date): string {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Lagos', month: 'long', year: 'numeric' }).format(date);
+}
 
 @Injectable()
 export class PrayerWatchService {
@@ -209,6 +230,73 @@ export class PrayerWatchService {
     );
 
     return result;
+  }
+
+  @Cron('0 8 * * *', { name: 'prayer-watch-leader-terms', timeZone: 'Africa/Lagos' })
+  async scheduledLeaderTerms(): Promise<void> {
+    try {
+      await this.notifyEndedLeaderTerms();
+    } catch (err) {
+      this.logger.error(`prayer-watch-leader-terms failed: ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * Tells the Prayer Watch admins, once, when a leader's three months are up,
+   * so they choose who leads next. One email per admin covering every watch
+   * that ended, rather than one per watch.
+   */
+  async notifyEndedLeaderTerms(now = new Date()): Promise<{ notified: number }> {
+    const due = await this.prisma.prayerSlot.findMany({
+      where: { tenantId: this.tenantId, leaderId: { not: null }, leaderTermEndsAt: { lte: now }, leaderTermEndNotifiedAt: null },
+      include: { Leader: { select: { fullName: true } } },
+      orderBy: { position: 'asc' },
+    });
+
+    const ended: { slotLabel: string; slotTime: string; leaderName: string }[] = [];
+    for (const s of due) {
+      const claimed = await this.prisma.prayerSlot.updateMany({
+        where: { id: s.id, leaderTermEndNotifiedAt: null },
+        data: { leaderTermEndNotifiedAt: now },
+      });
+      if (claimed.count === 1) {
+        ended.push({ slotLabel: s.label, slotTime: `${s.startTime}–${s.endTime}`, leaderName: s.Leader?.fullName ?? 'the current leader' });
+      }
+    }
+    if (ended.length === 0) return { notified: 0 };
+
+    const admins = await this.prisma.roleGrant.findMany({
+      where: { tenantId: this.tenantId, role: { in: APPROVER_ROLES }, endedAt: null },
+      select: { userId: true, User: { select: { Member: { select: { firstName: true, lastName: true, email: true } } } } },
+      distinct: ['userId'],
+    });
+    const url = `${this.appUrl}/dashboard/admin/prayer-watch`;
+    for (const a of admins) {
+      const m = a.User.Member;
+      if (!m?.email) continue;
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildPrayerWatchLeaderTermEndedEmail({ to: m.email, fullName: `${m.firstName} ${m.lastName}`.trim(), ended, url }),
+      );
+    }
+
+    await this.pushDispatch
+      .dispatch(
+        'prayerWatchPendingApproval',
+        { userIds: admins.map((a) => a.userId), tenantId: this.tenantId },
+        {
+          title: 'Time to choose a watch leader',
+          body:
+            ended.length === 1
+              ? `${ended[0].leaderName}'s three months leading the ${ended[0].slotLabel} are up.`
+              : `${ended.length} watch leaders have finished their three months.`,
+          url: '/dashboard/admin/prayer-watch',
+          tag: 'prayer-watch-leader-terms',
+        },
+      )
+      .catch((err: Error) => this.logger.warn(`Leader-term push failed: ${err.message}`));
+
+    return { notified: ended.length };
   }
 
   /** Pushes everyone who can decide a sign-up, so the queue doesn't sit unseen until someone happens to open the dashboard. */
@@ -416,6 +504,7 @@ export class PrayerWatchService {
           capacity: s.capacity,
           spotsLeft: Math.max(0, s.capacity - slotSignups.length),
           leaderId: s.leaderId,
+          leaderTermEndsAt: s.leaderTermEndsAt?.toISOString() ?? null,
           whatsappLink: s.whatsappLink,
           signups: slotSignups.map((x) => ({
             id: x.id,
@@ -697,9 +786,18 @@ export class PrayerWatchService {
     }
 
     const isNewAssignment = Boolean(signupId) && signupId !== slot.leaderId;
-    await this.prisma.prayerSlot.update({ where: { id: slotId }, data: { leaderId: signupId } });
+    // A new leader starts a fresh three-month term; re-picking the same leader leaves theirs alone.
+    const termEndsAt = isNewAssignment ? addMonths(new Date(), LEADER_TERM_MONTHS) : null;
+    await this.prisma.prayerSlot.update({
+      where: { id: slotId },
+      data: {
+        leaderId: signupId,
+        ...(isNewAssignment && { leaderTermEndsAt: termEndsAt, leaderTermEndNotifiedAt: null }),
+        ...(!signupId && { leaderTermEndsAt: null, leaderTermEndNotifiedAt: null }),
+      },
+    });
 
-    if (isNewAssignment && newLeader) {
+    if (isNewAssignment && newLeader && termEndsAt) {
       this.events.emit(
         NotificationEvents.SendEmail,
         buildPrayerWatchLeaderAssignedEmail({
@@ -708,6 +806,7 @@ export class PrayerWatchService {
           slotLabel: slot.label,
           slotTime: `${slot.startTime}–${slot.endTime}`,
           whatsappLink: slot.whatsappLink,
+          termEndsMonth: monthLabel(termEndsAt),
           url: this.pageUrl,
         }),
       );

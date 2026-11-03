@@ -414,6 +414,19 @@ export default function PrayerWatchOverview() {
                         {s.signups.length} {s.signups.length === 1 ? "person" : "people"}
                       </span>
                     </div>
+                    {s.leaderId && s.leaderTermEndsAt && (
+                      <p
+                        className={`border-t px-4 py-1.5 text-[11px] font-semibold print:hidden ${
+                          new Date(s.leaderTermEndsAt) <= new Date()
+                            ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200"
+                            : "border-gray-100 text-gray-400 dark:border-white/5 dark:text-white/40"
+                        }`}
+                      >
+                        {new Date(s.leaderTermEndsAt) <= new Date()
+                          ? "Leader’s three months are up. Choose who leads next."
+                          : `Leader until ${new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Lagos", day: "numeric", month: "long", year: "numeric" }).format(new Date(s.leaderTermEndsAt))}`}
+                      </p>
+                    )}
                     <div className="space-y-1.5 border-t border-gray-100 px-4 py-3 dark:border-white/5">
                       {s.signups.length === 0 ? (
                         <p className="text-xs text-gray-400">No one yet.</p>

@@ -1025,6 +1025,10 @@ model PrayerSlot {
   /// The sign-up chosen to lead this slot, if any — must be one of this
   /// slot's own sign-ups (enforced in the service, not the DB).
   leaderId                     String?
+  /// A leader serves three months; this is when the current term ends.
+  leaderTermEndsAt             DateTime?
+  /// Set once the admins have been told the term is over, so they're told once.
+  leaderTermEndNotifiedAt      DateTime?
   /// This watch's Prayer Watchmen Family WhatsApp group — shared with a
   /// signer only after they confirm.
   whatsappLink                 String?

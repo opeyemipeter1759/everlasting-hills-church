@@ -7,5 +7,6 @@ import { PrayerWatchService } from './prayer-watch.service';
   imports: [CalendarModule],
   controllers: [PrayerWatchController],
   providers: [PrayerWatchService],
+  exports: [PrayerWatchService],
 })
 export class PrayerWatchModule {}

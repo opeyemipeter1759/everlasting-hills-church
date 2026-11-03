@@ -40,6 +40,8 @@ export interface AdminSlot {
   capacity: number;
   spotsLeft: number;
   leaderId: string | null;
+  /** When the current leader's three-month term ends. */
+  leaderTermEndsAt: string | null;
   whatsappLink: string | null;
   signups: AdminSignup[];
 }

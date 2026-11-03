@@ -185,3 +185,60 @@ describe('PrayerWatchService.getMySignup', () => {
     expect(res?.telegramLink).toBe('https://t.me/central');
   });
 });
+
+describe('Prayer Watch leader terms', () => {
+  // Imported here so this block stays self-contained.
+  const { addMonths, monthLabel, PrayerWatchService: Svc } = require('./prayer-watch.service');
+
+  function termSetup() {
+    const slot = { id: 's3', tenantId: 't1', label: 'Third Watch', startTime: '02:00', endTime: '04:00', leaderId: null, whatsappLink: 'https://chat.whatsapp.com/third', position: 2 };
+    const prisma = {
+      prayerSlot: {
+        findFirst: jest.fn().mockResolvedValue(slot),
+        update: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      prayerSignup: { findFirst: jest.fn().mockResolvedValue({ id: 'sg9', email: 'tolu@x.com', fullName: 'Tolu Ade' }), findMany: jest.fn().mockResolvedValue([]) },
+      prayerWatch: { findFirst: jest.fn().mockResolvedValue({ id: 'w1', title: 'Prayer Watch', watchDate: new Date('2026-11-01'), telegramLink: null, Slots: [] }) },
+      roleGrant: {
+        findMany: jest.fn().mockResolvedValue([{ userId: 'admin1', User: { Member: { firstName: 'Kemi', lastName: 'A', email: 'kemi@x.com' } } }]),
+      },
+    };
+    const events = { emit: jest.fn() };
+    const push = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    const svc = new Svc(prisma as never, events as never, {} as never, push as never, { get: () => 't1' } as never);
+    return { svc, prisma, events, push, slot };
+  }
+
+  it('adds calendar months, clamping to the end of shorter months', () => {
+    expect(addMonths(new Date('2026-11-03T10:00:00Z'), 3).toISOString().slice(0, 10)).toBe('2027-02-03');
+    expect(addMonths(new Date('2026-11-30T10:00:00Z'), 3).toISOString().slice(0, 10)).toBe('2027-02-28');
+    expect(monthLabel(new Date('2027-02-03T10:00:00Z'))).toBe('February 2027');
+  });
+
+  it('starts a three-month term for a new leader and names the end month in the email', async () => {
+    const { svc, prisma, events } = termSetup();
+    await svc.setSlotLeader('s3', { signupId: 'sg9' });
+    const data = prisma.prayerSlot.update.mock.calls[0][0].data;
+    expect(data.leaderId).toBe('sg9');
+    const months = (data.leaderTermEndsAt.getUTCFullYear() - new Date().getUTCFullYear()) * 12 + data.leaderTermEndsAt.getUTCMonth() - new Date().getUTCMonth();
+    expect(months).toBe(3);
+    const email = events.emit.mock.calls[0][1];
+    expect(email.text).toContain(`until ${monthLabel(data.leaderTermEndsAt)}`);
+    expect(email.text).toContain('real family');
+  });
+
+  it('tells the admins once when a term is up', async () => {
+    const { svc, prisma, events, push, slot } = termSetup();
+    prisma.prayerSlot.findMany.mockResolvedValue([{ ...slot, leaderId: 'sg9', Leader: { fullName: 'Tolu Ade' } }]);
+    expect(await svc.notifyEndedLeaderTerms()).toEqual({ notified: 1 });
+    expect(events.emit.mock.calls[0][1]).toMatchObject({ to: 'kemi@x.com', tag: 'prayer-watch-leader-term-ended' });
+    expect(push.dispatch).toHaveBeenCalled();
+
+    prisma.prayerSlot.updateMany.mockResolvedValue({ count: 0 });
+    events.emit.mockClear();
+    expect(await svc.notifyEndedLeaderTerms()).toEqual({ notified: 0 });
+    expect(events.emit).not.toHaveBeenCalled();
+  });
+});
