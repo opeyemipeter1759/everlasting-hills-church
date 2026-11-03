@@ -38,7 +38,7 @@ export function buildPrayerWatchLeaderAssignedEmail({ to, fullName, slotLabel, s
     ...steps.map((s, i) => `${i + 1}. ${s}`),
     '',
     ...family.flatMap((p) => [p, '']),
-    'If you have any questions, talk to the Prayer Watch admin or the church office.',
+    'If you have any questions, please reach out to the church admins.',
     '',
     'God bless you,',
     'Everlasting Hills Church',
@@ -54,7 +54,7 @@ export function buildPrayerWatchLeaderAssignedEmail({ to, fullName, slotLabel, s
       ${steps.map((s) => `<li style="margin:0 0 8px">${escapeHtml(s)}</li>`).join('')}
     </ol>
     ${family.map((p) => `<p style="margin:0 0 16px">${escapeHtml(p)}</p>`).join('')}
-    <p style="margin:0 0 16px">If you have any questions, talk to the Prayer Watch admin or the church office.</p>
+    <p style="margin:0 0 16px">If you have any questions, please reach out to the church admins.</p>
     <p style="margin:0">God bless you,<br>Everlasting Hills Church</p>
   `;
 
