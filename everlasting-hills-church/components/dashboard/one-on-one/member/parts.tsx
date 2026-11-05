@@ -35,6 +35,11 @@ export const FORMAT_LABEL: Record<MeetingFormat, string> = {
   PHONE: "Phone call",
 };
 
+/** How the session happens, or a plain note that the pastor hasn't decided yet. */
+export function formatText(format: MeetingFormat | null): string {
+  return format ? FORMAT_LABEL[format] : "To be confirmed by the pastor";
+}
+
 const LAGOS = "Africa/Lagos";
 
 export function formatWhenLong(startIso: string, endIso: string, timeZone: string = LAGOS): string {

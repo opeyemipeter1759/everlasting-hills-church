@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { CalendarHeart } from "lucide-react";
 import { useMyRequests } from "@/lib/api/one-on-one";
-import { FORMAT_LABEL, formatWhenLong, isOpen, pastorsOf, StatusPill } from "@/components/dashboard/one-on-one/member/parts";
+import { formatText, formatWhenLong, isOpen, pastorsOf, StatusPill } from "@/components/dashboard/one-on-one/member/parts";
 import { card, cardTitle, hdrBdr, iconBg, iconCl, kicker, linkCl, muted } from "./tokens";
 
 /** The member's next one-on-one session, or an invitation to request one. */
@@ -33,7 +33,8 @@ export function OneOnOneCard() {
               {formatWhenLong(next.proposedStartsAt ?? next.startsAt, next.proposedEndsAt ?? next.endsAt)}
             </p>
             <p className={`text-sm ${muted}`}>
-              With {pastorsOf(next)} · {FORMAT_LABEL[next.format]}
+              With {pastorsOf(next)}
+              {next.format && ` · ${formatText(next.format)}`}
             </p>
             {more > 0 && <p className={`text-xs ${muted}`}>and {more === 1 ? "1 more session" : `${more} more sessions`} coming up</p>}
             <Link href="/dashboard/one-on-one" className={`${linkCl} mt-2`}>

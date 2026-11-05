@@ -2,17 +2,11 @@
 
 import { useState } from "react";
 import { ArrowLeft, Lock } from "lucide-react";
-import { SESSION_TOPICS, useCreateRequest, type HostSummary, type MeetingFormat, type SessionTopic } from "@/lib/api/one-on-one";
+import { SESSION_TOPICS, useCreateRequest, type HostSummary, type SessionTopic } from "@/lib/api/one-on-one";
 import { showToast } from "@/components/ui/toast/toast";
 import { errorText } from "@/components/pray-watch/shared";
 import { btnPrimary } from "../manage/ui";
 import { formatWhenLong } from "./parts";
-
-const FORMATS: { value: MeetingFormat; label: string; hint: string }[] = [
-  { value: "IN_PERSON", label: "In person", hint: "Church office, Ibadan" },
-  { value: "GOOGLE_MEET", label: "Video call", hint: "Google Meet or Zoom, link sent on approval" },
-  { value: "PHONE", label: "Phone call", hint: "The pastor calls you" },
-];
 
 export default function RequestForm({
   host,
@@ -30,7 +24,6 @@ export default function RequestForm({
   const create = useCreateRequest();
   const [topic, setTopic] = useState<SessionTopic | null>(null);
   const [note, setNote] = useState("");
-  const [format, setFormat] = useState<MeetingFormat>("IN_PERSON");
   const type = host.sessionTypes.find((t) => t.id === sessionTypeId);
   const askTopic = type?.askTopic ?? true;
 
@@ -42,7 +35,6 @@ export default function RequestForm({
         hostId: host.id,
         sessionTypeId,
         startsAt: slot.startsAt,
-        format,
         topic: askTopic && topic ? topic : undefined,
         note: host.notesEnabled ? note.trim() || undefined : undefined,
       });
@@ -108,27 +100,9 @@ export default function RequestForm({
         </label>
       )}
 
-      <fieldset>
-        <legend className="mb-2.5 text-sm font-bold text-[#111] dark:text-white">How would you like to meet?</legend>
-        <div className="grid gap-2 sm:grid-cols-3">
-          {FORMATS.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              aria-pressed={format === f.value}
-              onClick={() => setFormat(f.value)}
-              className={`rounded-xl border px-3 py-2.5 text-center text-sm font-semibold transition ${
-                format === f.value
-                  ? "border-[#87102C] bg-[#FFE8ED] text-[#87102C] dark:bg-[#87102C]/30 dark:text-[#FFB3C1]"
-                  : "border-[#E7CDD3] text-[#3B2A2E] hover:bg-[#FFE8ED]/50 dark:border-white/10 dark:text-white/80"
-              }`}
-            >
-              {f.label}
-              <span className="block text-xs font-medium text-[#7A6A6F] dark:text-white/50">{f.hint}</span>
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      <p className="rounded-xl bg-[#FDF3F5] px-4 py-3 text-sm text-[#3B2A2E] dark:bg-white/[0.05] dark:text-white/75">
+        {host.displayName} will confirm whether you’ll meet in person, on a video call or by phone when approving your request.
+      </p>
 
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" className={btnPrimary} disabled={(askTopic && !topic) || create.isPending}>

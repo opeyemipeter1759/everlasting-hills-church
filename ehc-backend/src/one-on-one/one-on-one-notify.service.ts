@@ -25,7 +25,10 @@ export interface NotifyBooking {
   endsAt: Date;
   proposedStartsAt: Date | null;
   proposedEndsAt: Date | null;
-  format: PastoralMeetingFormat;
+  /** Null until the pastor decides how to meet. */
+  format: PastoralMeetingFormat | null;
+  hostSlug?: string | null;
+  sessionSlug?: string | null;
   topic: string | null;
   meetLink: string | null;
   /** From the nameless public page and not yet taken up by a named pastor. */
@@ -108,6 +111,18 @@ export class OneOnOneNotifyService {
     return b.requesterType === 'VISITOR' ? this.links.visitorUrl(b.id) : this.links.memberUrl;
   }
 
+  /** Straight back to the same session's calendar, to pick a new time. */
+  rescheduleUrl(b: NotifyBooking): string {
+    const site = this.links.siteUrl;
+    if (b.requesterType === 'VISITOR') {
+      if (b.anonymous || !b.hostSlug) return `${site}/talk-to-a-pastor`;
+      return `${site}/talk-to-a-pastor/${b.hostSlug}${b.sessionSlug ? `/${b.sessionSlug}` : ''}`;
+    }
+    if (!b.hostSlug) return this.links.memberUrl;
+    const q = new URLSearchParams({ host: b.hostSlug, ...(b.sessionSlug && { session: b.sessionSlug }) });
+    return `${this.links.memberUrl}?${q.toString()}`;
+  }
+
   /** The pastor(s) on a session and everyone they've delegated to, once each. */
   private async hostSide(hostIds: string[]) {
     const hosts = await this.prisma.pastorHost.findMany({
@@ -187,7 +202,7 @@ export class OneOnOneNotifyService {
               ['With', this.pastorsLabel(b)],
               ['Session', b.typeName],
               ['When', when],
-              ['How', FORMAT_LABEL[b.format]],
+              ...(b.format ? ([['How', FORMAT_LABEL[b.format]]] as [string, string][]) : []),
               ...(b.topic ? ([['About', b.topic]] as [string, string][]) : []),
               ...(b.meetLink ? ([['Meet link', b.meetLink]] as [string, string][]) : []),
             ],
@@ -268,13 +283,18 @@ export class OneOnOneNotifyService {
           paragraphs: [`${Pastors} isn’t able to take this session. You’re welcome to request another time.`],
           details: [['You asked for', when]],
           push: `${Pastors} couldn’t take your session on ${when}.`,
+          cta: 'Pick a new time',
         },
         CANCELLED_BY_HOST: {
           subject: `Your session with ${pastors} has been cancelled`,
           heading: 'Session cancelled',
-          paragraphs: [`Your session with ${pastors} has had to be cancelled. You’re welcome to request another time.`],
+          paragraphs: [
+            `We’re sorry, your session with ${pastors} has had to be cancelled.`,
+            'We’d still love to see you. Use the button below to pick a new time that works for you.',
+          ],
           details: [['Was', when]],
-          push: `Your session on ${when} has been cancelled.`,
+          push: `Your session on ${when} has been cancelled. Tap to pick a new time.`,
+          cta: 'Pick a new time',
         },
         LAPSED: {
           subject: `About your request to meet ${pastors}`,
@@ -285,7 +305,7 @@ export class OneOnOneNotifyService {
           ],
           details: [['You asked for', when]],
           push: `Your request for ${when} couldn’t be answered in time. Please pick another time.`,
-          cta: visitor ? 'Pick another time' : undefined,
+          cta: 'Pick a new time',
         },
         LINK_UPDATED: {
           subject: `Meeting link for your session with ${pastors}`,
@@ -311,7 +331,9 @@ export class OneOnOneNotifyService {
       };
       const copy = all[event];
 
-      const href = event === 'LAPSED' && visitor ? `${this.links.siteUrl}/talk-to-a-pastor` : url;
+      // A cancelled, declined or lapsed request goes straight back to the same session's calendar.
+      const rebook = event === 'LAPSED' || event === 'DECLINED' || event === 'CANCELLED_BY_HOST';
+      const href = rebook ? this.rescheduleUrl(b) : url;
       this.events.emit(
         NotificationEvents.SendEmail,
         buildPastoralSessionEmail({
@@ -320,7 +342,7 @@ export class OneOnOneNotifyService {
           subject: copy.subject,
           heading: copy.heading,
           paragraphs: copy.paragraphs,
-          details: [['With', Pastors], ['Session', b.typeName], ...copy.details, ['How', FORMAT_LABEL[b.format]]],
+          details: [['With', Pastors], ['Session', b.typeName], ...copy.details, ...(b.format ? ([['How', FORMAT_LABEL[b.format]]] as [string, string][]) : [])],
           quote: note ? { label: `A note from ${pastors}`, text: note } : null,
           cta: { label: copy.cta ?? viewLabel, href },
           tag: `pastoral-requester-${event.toLowerCase()}`,
@@ -331,7 +353,7 @@ export class OneOnOneNotifyService {
         await this.push.dispatch(
           'pastoralSessionUpdates',
           { userIds: [b.memberProfileId], tenantId: this.tenantId },
-          { title: copy.heading, body: copy.push, url: '/dashboard/one-on-one', tag: `pastoral-${b.id}` },
+          { title: copy.heading, body: copy.push, url: rebook ? new URL(href).pathname + new URL(href).search : '/dashboard/one-on-one', tag: `pastoral-${b.id}` },
         );
       }
     } catch (err) {

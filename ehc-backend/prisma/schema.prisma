@@ -4077,7 +4077,8 @@ model PastoralBooking {
   assignedById          String?
   assignedAt            DateTime?
   holdExpiresAt         DateTime?
-  format                PastoralMeetingFormat
+  /// Decided by the pastor when approving or suggesting a time; null until then.
+  format                PastoralMeetingFormat?
   /// Null when the session type doesn't ask for one.
   topic                 String?
   /// AES-256-GCM, readable by the host pastor only.

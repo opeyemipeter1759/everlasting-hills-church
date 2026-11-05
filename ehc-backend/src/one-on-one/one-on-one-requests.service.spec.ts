@@ -168,7 +168,7 @@ describe('pastor decisions', () => {
     const later = '2026-11-12T14:00:00.000Z';
     const { svc, prisma, oneOnOne, notify } = setup({ open: true, slots: [later] });
     prisma.pastoralBooking.findFirst.mockResolvedValue(row({ startsAt: new Date(Date.now() + 9 * 24 * 3_600_000) }));
-    await svc.propose(pastor, 'h1', 'b1', { startsAt: later });
+    await svc.propose(pastor, 'h1', 'b1', { startsAt: later, format: 'PHONE' });
     expect(oneOnOne.computeOpenSlots).toHaveBeenCalledWith('h1', 'st1', '2026-11-12', '2026-11-12', expect.objectContaining({ excludeBookingId: 'b1' }));
     expect(prisma.pastoralBooking.update.mock.calls[0][0].data).toMatchObject({ status: 'PROPOSED', proposedStartsAt: new Date(later) });
     expect(notify.toRequester).toHaveBeenCalledWith(expect.anything(), 'PROPOSED', null);
@@ -177,7 +177,7 @@ describe('pastor decisions', () => {
   it('will not approve a request twice', async () => {
     const { svc, prisma } = setup();
     prisma.pastoralBooking.findFirst.mockResolvedValue(row({ status: 'APPROVED', startsAt: new Date(Date.now() + 86_400_000) }));
-    await expect(svc.approve(pastor, 'h1', 'b1', {})).rejects.toBeInstanceOf(ConflictException);
+    await expect(svc.approve(pastor, 'h1', 'b1', { format: 'IN_PERSON' })).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('shows the private note to the pastor but not to a delegate', async () => {
@@ -209,25 +209,25 @@ describe('meeting links on approval', () => {
 
   it('uses a pasted Google Meet or Zoom link, and skips creating a Meet', async () => {
     const { svc, prisma, calendar } = online();
-    await svc.approve(pastor, 'h1', 'b1', { meetLink: 'https://zoom.us/j/999' });
+    await svc.approve(pastor, 'h1', 'b1', { format: 'GOOGLE_MEET', meetLink: 'https://zoom.us/j/999' });
     expect(calendar.createEvent).toHaveBeenCalledWith(expect.objectContaining({ withMeet: false }));
     expect(linkWritten(prisma)).toBe('https://zoom.us/j/999');
   });
 
   it('falls back to a Meet created in Google, then to the pastor’s standing link', async () => {
     const auto = online();
-    await auto.svc.approve(pastor, 'h1', 'b1', {});
+    await auto.svc.approve(pastor, 'h1', 'b1', { format: 'GOOGLE_MEET' });
     expect(linkWritten(auto.prisma)).toBe('https://meet.google.com/auto');
 
     const standing = online();
     standing.calendar.createEvent.mockResolvedValue(null);
-    await standing.svc.approve(pastor, 'h1', 'b1', {});
+    await standing.svc.approve(pastor, 'h1', 'b1', { format: 'GOOGLE_MEET' });
     expect(linkWritten(standing.prisma)).toBe('https://zoom.us/j/standing');
   });
 
   it('gives in-person sessions no link', async () => {
     const { svc, prisma } = online({ format: 'IN_PERSON' });
-    await svc.approve(pastor, 'h1', 'b1', { meetLink: 'https://zoom.us/j/999' });
+    await svc.approve(pastor, 'h1', 'b1', { format: 'IN_PERSON', meetLink: 'https://zoom.us/j/999' });
     expect(linkWritten(prisma)).toBeNull();
   });
 });
@@ -257,9 +257,10 @@ describe('visitor requests', () => {
     expect(notify.toHostSide).not.toHaveBeenCalled();
   });
 
-  it('offers in person only to people in or near Ibadan', async () => {
-    const { svc } = setup();
-    await expect(svc.createVisitorRequest({ ...visitorDto, format: 'IN_PERSON' })).rejects.toBeInstanceOf(BadRequestException);
+  it('leaves how to meet for the pastor to decide', async () => {
+    const { svc, prisma } = setup();
+    await svc.createVisitorRequest({ ...visitorDto, format: 'IN_PERSON' });
+    expect(prisma.pastoralBooking.create.mock.calls[0][0].data.format).toBeNull();
   });
 
   it('quietly drops submissions that fill the hidden spam field', async () => {
@@ -329,5 +330,18 @@ describe('passing a request to another pastor', () => {
     const result = await svc.assign(pastor, 'h1', 'b1', { toHostId: 'h2', note: 'Can you take this one?' });
     expect(result.fits).toBe(false);
     expect(notify.toHostSide.mock.calls[0][2]).toMatch(/Can you take this one\?[\s\S]*suggest another time/);
+  });
+});
+
+describe('the pastor decides how to meet', () => {
+  it('saves a new request with no format, and records the one chosen on approval', async () => {
+    const { svc, prisma } = setup();
+    await svc.createMemberRequest(member, { ...dto, format: 'IN_PERSON' });
+    expect(prisma.pastoralBooking.create.mock.calls[0][0].data.format).toBeNull();
+
+    const s = setup();
+    s.prisma.pastoralBooking.findFirst.mockResolvedValue(row({ format: null, startsAt: new Date(Date.now() + 86_400_000) }));
+    await s.svc.approve(pastor, 'h1', 'b1', { format: 'PHONE' });
+    expect(s.prisma.pastoralBooking.update.mock.calls[0][0].data).toMatchObject({ status: 'APPROVED', format: 'PHONE' });
   });
 });

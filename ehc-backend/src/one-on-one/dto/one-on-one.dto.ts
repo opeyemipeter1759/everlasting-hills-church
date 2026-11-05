@@ -243,9 +243,10 @@ export class CreateRequestDto {
   @IsISO8601()
   startsAt!: string;
 
-  @ApiProperty({ enum: MEETING_FORMATS })
+  @ApiPropertyOptional({ enum: MEETING_FORMATS, description: "Ignored: the pastor decides how to meet when approving" })
+  @IsOptional()
   @IsIn(MEETING_FORMATS)
-  format!: (typeof MEETING_FORMATS)[number];
+  format?: (typeof MEETING_FORMATS)[number];
 
   @ApiPropertyOptional({ enum: SESSION_TOPICS, description: 'Required unless the session type has askTopic off' })
   @IsOptional()
@@ -290,9 +291,10 @@ export class CreateVisitorRequestDto extends CreateRequestDto {
   @IsIn(FOUND_VIA)
   foundVia!: (typeof FOUND_VIA)[number];
 
-  @ApiProperty({ example: false, description: 'In person is only offered to visitors in or near Ibadan' })
+  @ApiPropertyOptional({ example: false, description: "Helps the pastor decide whether to meet in person" })
+  @IsOptional()
   @IsBoolean()
-  inIbadan!: boolean;
+  inIbadan?: boolean;
 
   @ApiPropertyOptional({ example: 'Africa/Accra' })
   @IsOptional()
@@ -321,6 +323,10 @@ export class DecisionNoteDto {
 }
 
 export class ApproveDto extends DecisionNoteDto {
+  @ApiProperty({ enum: MEETING_FORMATS, description: "How the session happens; the pastor decides" })
+  @IsIn(MEETING_FORMATS)
+  format!: (typeof MEETING_FORMATS)[number];
+
   @ApiPropertyOptional({ example: 'https://meet.google.com/abc-defg-hij', description: 'Google Meet or Zoom link for an online session' })
   @IsOptional()
   @ValidateIf((o: ApproveDto) => Boolean(o.meetLink))
@@ -344,6 +350,10 @@ export class SetMeetingLinkDto {
 }
 
 export class ProposeTimeDto extends DecisionNoteDto {
+  @ApiProperty({ enum: MEETING_FORMATS, description: "How the session happens; the pastor decides" })
+  @IsIn(MEETING_FORMATS)
+  format!: (typeof MEETING_FORMATS)[number];
+
   @ApiProperty({ example: '2026-11-17T09:00:00.000Z' })
   @IsISO8601()
   startsAt!: string;

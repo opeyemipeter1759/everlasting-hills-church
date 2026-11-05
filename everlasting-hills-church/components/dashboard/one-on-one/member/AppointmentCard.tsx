@@ -6,7 +6,7 @@ import { sessionIcsHref, useAcceptProposal, useCancelMyRequest, type MyRequest }
 import { showToast } from "@/components/ui/toast/toast";
 import { errorText } from "@/components/pray-watch/shared";
 import { btnGhost, btnPrimary, input } from "../manage/ui";
-import { FORMAT_LABEL, StatusPill, formatWhenLong, pastorsOf } from "./parts";
+import { StatusPill, formatText, formatWhenLong, pastorsOf } from "./parts";
 
 interface ViewProps {
   request: MyRequest;
@@ -53,7 +53,7 @@ export function AppointmentView({ request: r, timeZone, icsHref, busy, onAccept,
           </>
         )}
         <dt className="font-semibold text-[#7A6A6F] dark:text-white/50">Where</dt>
-        <dd className="font-bold text-[#111] dark:text-white">{FORMAT_LABEL[r.format]}</dd>
+        <dd className="font-bold text-[#111] dark:text-white">{formatText(r.format)}</dd>
         {r.topic && (
           <>
             <dt className="font-semibold text-[#7A6A6F] dark:text-white/50">About</dt>

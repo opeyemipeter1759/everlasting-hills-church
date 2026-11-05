@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ArrowLeft, Lock } from "lucide-react";
-import { SESSION_TOPICS, type HostSummary, type MeetingFormat, type SessionTopic } from "@/lib/api/one-on-one";
+import { SESSION_TOPICS, type HostSummary, type SessionTopic } from "@/lib/api/one-on-one";
 import { FOUND_VIA, useCreateVisitorRequest, type FoundVia } from "@/lib/api/one-on-one-public";
 import { errorText } from "@/components/pray-watch/shared";
 import { btnPrimary, input } from "@/components/dashboard/one-on-one/manage/ui";
@@ -39,21 +39,14 @@ export default function VisitorRequestForm({
   const [phone, setPhone] = useState("");
   const [location, setLocation] = useState("");
   const [foundVia, setFoundVia] = useState<FoundVia | null>(null);
-  const [inIbadan, setInIbadan] = useState(false);
   const [topic, setTopic] = useState<SessionTopic | null>(null);
   const [note, setNote] = useState("");
-  const [format, setFormat] = useState<MeetingFormat>("GOOGLE_MEET");
   const [website, setWebsite] = useState("");
   const [error, setError] = useState<string | null>(null);
   const type = host.sessionTypes.find((t) => t.id === sessionTypeId);
   const askTopic = type?.askTopic ?? true;
   const pastorName = viaIntake ? "the pastor" : host.displayName;
 
-  const formats: { value: MeetingFormat; label: string; hint: string }[] = [
-    { value: "GOOGLE_MEET", label: "Video call", hint: "Google Meet or Zoom" },
-    { value: "PHONE", label: "Phone or WhatsApp call", hint: "The pastor calls you" },
-    ...(inIbadan ? [{ value: "IN_PERSON" as const, label: "In person", hint: "Church office, Ibadan" }] : []),
-  ];
   const ready = fullName.trim() && email.trim() && phone.trim() && location.trim() && foundVia && (!askTopic || topic);
 
   async function onSubmit(e: React.FormEvent) {
@@ -65,7 +58,6 @@ export default function VisitorRequestForm({
         hostId: host.id,
         sessionTypeId,
         startsAt: slot.startsAt,
-        format: format === "IN_PERSON" && !inIbadan ? "GOOGLE_MEET" : format,
         topic: askTopic && topic ? topic : undefined,
         note: host.notesEnabled ? note.trim() || undefined : undefined,
         fullName: fullName.trim(),
@@ -73,7 +65,6 @@ export default function VisitorRequestForm({
         phone: phone.trim(),
         location: location.trim(),
         foundVia,
-        inIbadan,
         timezone: timeZone,
         website: website || undefined,
         viaIntake,
@@ -115,20 +106,6 @@ export default function VisitorRequestForm({
         </label>
       </div>
 
-      <label className="flex items-center gap-2.5 text-sm text-[#111] dark:text-white/85">
-        <input
-          id="v-ibadan"
-          type="checkbox"
-          checked={inIbadan}
-          onChange={(e) => {
-            setInIbadan(e.target.checked);
-            if (!e.target.checked && format === "IN_PERSON") setFormat("GOOGLE_MEET");
-          }}
-          className="h-4 w-4 accent-[#87102C]"
-        />
-        I live in or near Ibadan
-      </label>
-
       <fieldset>
         <legend className="mb-2.5 text-sm font-bold text-[#111] dark:text-white">How did you find us?</legend>
         <div className="flex flex-wrap gap-2">
@@ -163,17 +140,9 @@ export default function VisitorRequestForm({
         </label>
       )}
 
-      <fieldset>
-        <legend className="mb-2.5 text-sm font-bold text-[#111] dark:text-white">How would you like to meet?</legend>
-        <div className={`grid gap-2 ${formats.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-          {formats.map((f) => (
-            <button key={f.value} type="button" aria-pressed={format === f.value} onClick={() => setFormat(f.value)} className={`rounded-xl text-center ${chip(format === f.value)}`}>
-              {f.label}
-              <span className="block text-xs font-medium text-[#7A6A6F] dark:text-white/50">{f.hint}</span>
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      <p className="rounded-xl bg-[#FDF3F5] px-4 py-3 text-sm text-[#3B2A2E] dark:bg-white/[0.05] dark:text-white/75">
+        Wherever you are, {pastorName} will let you know whether you’ll meet by video call, by phone, or in person if you’re near Ibadan.
+      </p>
 
       {/* Left empty by people; bots that fill every field give themselves away. */}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">

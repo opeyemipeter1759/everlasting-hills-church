@@ -35,9 +35,9 @@ const OPEN_STATUSES: PastoralBookingStatus[] = [
 ];
 
 const BOOKING_INCLUDE = {
-  Host: { select: { displayName: true, profileId: true, defaultMeetingLink: true } },
+  Host: { select: { displayName: true, profileId: true, defaultMeetingLink: true, slug: true } },
   CoHost: { select: { displayName: true } },
-  SessionType: { select: { name: true, durationMinutes: true } },
+  SessionType: { select: { name: true, durationMinutes: true, slug: true } },
 } satisfies Prisma.PastoralBookingInclude;
 
 export type BookingRow = Prisma.PastoralBookingGetPayload<{ include: typeof BOOKING_INCLUDE }>;
@@ -85,6 +85,8 @@ export class OneOnOneRequestsService {
       topic: b.topic,
       meetLink: b.status === PastoralBookingStatus.APPROVED ? b.meetLink : null,
       anonymous: b.anonymousIntake,
+      hostSlug: b.Host.slug,
+      sessionSlug: b.SessionType.slug,
     };
   }
 
@@ -228,7 +230,7 @@ export class OneOnOneRequestsService {
           startsAt,
           endsAt,
           status: PastoralBookingStatus.PENDING,
-          format: dto.format,
+          format: null,
           topic,
           noteEncrypted,
         },
@@ -280,9 +282,6 @@ export class OneOnOneRequestsService {
   async createVisitorRequest(dto: CreateVisitorRequestDto) {
     if (dto.website) return { status: 'HOLD' as const };
     const email = dto.email.trim().toLowerCase();
-    if (dto.format === PastoralMeetingFormat.IN_PERSON && !dto.inIbadan) {
-      throw new BadRequestException('In-person sessions are for people in or near Ibadan. Choose a video or phone call.');
-    }
     const noteEncrypted = this.encryptNote(dto.note?.trim() || null);
 
     const open = await this.prisma.pastoralBooking.findFirst({
@@ -340,7 +339,7 @@ export class OneOnOneRequestsService {
           status: PastoralBookingStatus.HOLD,
           anonymousIntake,
           holdExpiresAt: new Date(Date.now() + VISITOR_HOLD_MINUTES * 60_000),
-          format: dto.format,
+          format: null,
           topic,
           noteEncrypted,
         },
@@ -353,7 +352,7 @@ export class OneOnOneRequestsService {
   }
 
   /** Keeps visitors on the church's records alongside first-timers, matched by email. */
-  private async upsertVisitor(v: { fullName: string; email: string; phone: string; foundVia: string; inIbadan: boolean }): Promise<string> {
+  private async upsertVisitor(v: { fullName: string; email: string; phone: string; foundVia: string; inIbadan?: boolean }): Promise<string> {
     const existing = await this.prisma.visitor.findFirst({
       where: { tenantId: this.tenantId, email: { equals: v.email, mode: 'insensitive' } },
       select: { id: true },
@@ -493,7 +492,7 @@ export class OneOnOneRequestsService {
       description: [
         `${b.SessionType.name}, requested through the church website.`,
         b.topic ? `About: ${b.topic}` : null,
-        `How: ${{ IN_PERSON: 'In person, church office', GOOGLE_MEET: 'Video call', PHONE: 'Phone call' }[b.format]}`,
+        b.format ? `How: ${{ IN_PERSON: 'In person, church office', GOOGLE_MEET: 'Video call', PHONE: 'Phone call' }[b.format]}` : null,
         b.requesterPhone ? `Phone: ${b.requesterPhone}` : null,
         pastedLink ? `Meeting link: ${pastedLink}` : null,
       ]
@@ -538,7 +537,7 @@ export class OneOnOneRequestsService {
         tenantId: this.tenantId,
         OR: [{ hostId }, { coHostId: hostId }],
         status: { not: PastoralBookingStatus.HOLD },
-        startsAt: { gte: new Date(now.getTime() - 30 * 24 * 3_600_000) },
+        startsAt: { gte: new Date(now.getTime() - 60 * 24 * 3_600_000) },
       },
       include: BOOKING_INCLUDE,
       orderBy: { startsAt: 'asc' },
@@ -557,17 +556,31 @@ export class OneOnOneRequestsService {
       viaPublicPage: b.anonymousIntake,
       assigned: Boolean(b.assignedAt),
       note: isOwner && b.hostId === hostId ? this.decryptNote(b) : null,
+      cancelReason: b.cancelReason,
+      cancelledAt: b.cancelledAt?.toISOString() ?? null,
     });
 
     const live = (b: BookingRow) => b.status === PastoralBookingStatus.APPROVED && b.endsAt > now;
+    const newestFirst = (a: BookingRow, b: BookingRow) => b.startsAt.getTime() - a.startsAt.getTime();
     return {
       waiting: rows.filter((b) => b.status === PastoralBookingStatus.PENDING && b.startsAt > now).map(view),
       awaitingRequester: rows.filter((b) => b.status === PastoralBookingStatus.PROPOSED).map(view),
       upcoming: rows.filter(live).map(view),
-      recent: rows
-        .filter((b) => !live(b) && b.status !== PastoralBookingStatus.PENDING && b.status !== PastoralBookingStatus.PROPOSED)
-        .reverse()
-        .slice(0, 15)
+      cancelled: rows
+        .filter((b) => b.status === PastoralBookingStatus.CANCELLED)
+        .sort((a, b) => (b.cancelledAt?.getTime() ?? 0) - (a.cancelledAt?.getTime() ?? 0))
+        .slice(0, 30)
+        .map(view),
+      past: rows
+        .filter(
+          (b) =>
+            b.status === PastoralBookingStatus.COMPLETED ||
+            b.status === PastoralBookingStatus.DECLINED ||
+            b.status === PastoralBookingStatus.LAPSED ||
+            (b.status === PastoralBookingStatus.APPROVED && b.endsAt <= now),
+        )
+        .sort(newestFirst)
+        .slice(0, 30)
         .map(view),
     };
   }
@@ -590,7 +603,7 @@ export class OneOnOneRequestsService {
     const note = dto.note?.trim() || null;
     await this.prisma.pastoralBooking.update({
       where: { id },
-      data: { status: PastoralBookingStatus.APPROVED, decidedAt: new Date(), decidedById: user.profileId, decisionNote: note, anonymousIntake: false },
+      data: { status: PastoralBookingStatus.APPROVED, format: dto.format, decidedAt: new Date(), decidedById: user.profileId, decisionNote: note, anonymousIntake: false },
     });
     await this.attachCalendarEvent(await this.reload(id), dto.meetLink?.trim() || null);
     const updated = await this.reload(id);
@@ -698,6 +711,7 @@ export class OneOnOneRequestsService {
           data: {
             status: PastoralBookingStatus.PROPOSED,
             anonymousIntake: false,
+            format: dto.format,
             proposedStartsAt: startsAt,
             proposedEndsAt: endsAt,
             decidedAt: new Date(),

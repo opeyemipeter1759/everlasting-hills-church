@@ -116,7 +116,8 @@ export interface SessionRequest {
   endsAt: string;
   proposedStartsAt: string | null;
   proposedEndsAt: string | null;
-  format: MeetingFormat;
+  /** Null until the pastor decides how to meet. */
+  format: MeetingFormat | null;
   topic: string | null;
   decisionNote: string | null;
   meetLink: string | null;
@@ -141,20 +142,23 @@ export interface HostRequest extends SessionRequest {
   /** Passed on from another pastor. */
   assigned: boolean;
   note: string | null;
+  cancelReason: string | null;
+  cancelledAt: string | null;
 }
 
 export interface HostRequests {
   waiting: HostRequest[];
   awaitingRequester: HostRequest[];
   upcoming: HostRequest[];
-  recent: HostRequest[];
+  cancelled: HostRequest[];
+  past: HostRequest[];
 }
 
 export interface CreateRequestInput {
   hostId: string;
   sessionTypeId: string;
   startsAt: string;
-  format: MeetingFormat;
+  format?: MeetingFormat;
   topic?: SessionTopic;
   note?: string;
 }
@@ -248,7 +252,8 @@ function useDecision<TInput extends { id: string }>(hostId: string, action: stri
   });
 }
 
-export const useApproveRequest = (hostId: string) => useDecision<{ id: string; note?: string; meetLink?: string }>(hostId, "approve");
+export const useApproveRequest = (hostId: string) =>
+  useDecision<{ id: string; format: MeetingFormat; note?: string; meetLink?: string }>(hostId, "approve");
 export const useSetMeetingLink = (hostId: string) => useDecision<{ id: string; meetLink: string }>(hostId, "link");
 
 /** The download goes through the same-origin API proxy, so the session cookie comes with it. */
@@ -264,7 +269,8 @@ export function shareUrl(slug: string, sessionSlug?: string | null): string {
   return `${origin}/talk-to-a-pastor/${slug}${sessionSlug ? `/${sessionSlug}` : ""}`;
 }
 export const useDeclineRequest = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "decline");
-export const useProposeTime = (hostId: string) => useDecision<{ id: string; startsAt: string; note?: string }>(hostId, "propose");
+export const useProposeTime = (hostId: string) =>
+  useDecision<{ id: string; startsAt: string; format: MeetingFormat; note?: string }>(hostId, "propose");
 export const useCancelApproved = (hostId: string) => useDecision<{ id: string; note?: string }>(hostId, "cancel");
 
 // ── Manage ───────────────────────────────────────────────────────────────────

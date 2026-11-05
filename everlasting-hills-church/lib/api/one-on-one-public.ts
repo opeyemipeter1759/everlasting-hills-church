@@ -15,7 +15,7 @@ export interface VisitorRequestInput extends CreateRequestInput {
   phone: string;
   location: string;
   foundVia: FoundVia;
-  inIbadan: boolean;
+  inIbadan?: boolean;
   timezone?: string;
   website?: string;
   /** Made on the general page, where no pastor is named. */
