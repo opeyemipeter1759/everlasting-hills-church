@@ -19,11 +19,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # NEXT_PUBLIC_ values come from .env.production, which Next.js reads at build
 # time and inlines into the browser bundle. Server-only values are never baked
-# in: they are set on the Cloud Run service and read at runtime.
-# The YouTube browser key stays out of git: Cloud Build passes it in from the
-# trigger's _NEXT_PUBLIC_YOUTUBE_API_KEY substitution (see cloudbuild.yaml).
-ARG NEXT_PUBLIC_YOUTUBE_API_KEY
-ENV NEXT_PUBLIC_YOUTUBE_API_KEY=$NEXT_PUBLIC_YOUTUBE_API_KEY
+# in: they are set on the Cloud Run service and read at runtime (the YouTube
+# key included: /api/youtube-videos reads it per request).
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
