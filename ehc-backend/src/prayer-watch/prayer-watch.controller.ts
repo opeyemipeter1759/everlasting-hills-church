@@ -20,12 +20,16 @@ import {
   UpdatePrayerWatchDto,
 } from './dto/prayer-watch.dto';
 import { PrayerWatchService } from './prayer-watch.service';
+import { PrayerWatchStatsService } from './prayer-watch-stats.service';
 
 /** Public sign-up + admin management for the overnight prayer watch. */
 @ApiTags('prayer-watch')
 @Controller('prayer-watch')
 export class PrayerWatchController {
-  constructor(private readonly prayerWatch: PrayerWatchService) {}
+  constructor(
+    private readonly prayerWatch: PrayerWatchService,
+    private readonly stats: PrayerWatchStatsService,
+  ) {}
 
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
@@ -90,6 +94,14 @@ export class PrayerWatchController {
   @ApiOperation({ summary: 'First names of others on the same watch hour' })
   getCompanions(@Param('slotId') slotId: string, @CurrentUser() user: AuthUser) {
     return this.prayerWatch.getSlotCompanions(slotId, user.profileId);
+  }
+
+  @Get('admin/overview')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Dashboard overview: totals, coverage per watch, weekly joins, what needs attention (Admin Head+)' })
+  getOverview() {
+    return this.stats.overview();
   }
 
   @Get('admin')
