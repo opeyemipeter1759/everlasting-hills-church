@@ -54,15 +54,16 @@ for spec in "${JOBS[@]}"; do
     --location "$REGION" --project "$PROJECT"
     --schedule "$cron" --time-zone "$TZ_NAME"
     --uri "$BASE_URL/jobs/${path:-$name}" --http-method POST
-    --headers "X-Cron-Secret=$SECRET,Content-Type=application/json"
     --attempt-deadline 300s
     --max-retry-attempts 2 --min-backoff 30s --max-backoff 300s
     --description "$desc"
   )
+  headers="X-Cron-Secret=$SECRET,Content-Type=application/json"
+  # `update http` takes --update-headers; only `create http` takes --headers.
   if gcloud scheduler jobs describe "$job" --location "$REGION" --project "$PROJECT" >/dev/null 2>&1; then
-    gcloud scheduler jobs update http "$job" "${common[@]}" --quiet >/dev/null && echo "updated  $job  ($cron $TZ_NAME)"
+    gcloud scheduler jobs update http "$job" "${common[@]}" --update-headers "$headers" --quiet >/dev/null && echo "updated  $job  ($cron $TZ_NAME)"
   else
-    gcloud scheduler jobs create http "$job" "${common[@]}" --quiet >/dev/null && echo "created  $job  ($cron $TZ_NAME)"
+    gcloud scheduler jobs create http "$job" "${common[@]}" --headers "$headers" --quiet >/dev/null && echo "created  $job  ($cron $TZ_NAME)"
   fi
 done
 
