@@ -1,0 +1,4 @@
+#!/bin/sh
+# Frontend files must stay within 150 lines (see everlasting-hills-church/scripts/file-length).
+cd "$(git rev-parse --show-toplevel)/everlasting-hills-church" || exit 1
+node scripts/file-length/check.mjs

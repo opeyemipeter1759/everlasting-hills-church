@@ -55,6 +55,11 @@ export const envSchema = z.object({
   CMS_PREVIEW_SECRET: z.string().min(32),
   CMS_REVALIDATE_SECRET: z.string().min(32),
 
+  // Extra article reviewers, by sign-in email, comma-separated. They can review
+  // and approve member articles like the content department's HOD, without a
+  // role or department post. Edit this and restart to add or remove someone.
+  ARTICLE_REVIEWER_EMAILS: z.string().optional(),
+
   THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(100),
 

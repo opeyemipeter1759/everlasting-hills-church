@@ -32,6 +32,16 @@ const OVERSEEING_ROLES: Role[] = [
   Role.SUPER_ADMIN,
 ];
 
+/** "a@x.org, B@y.org" → {"a@x.org", "b@y.org"}. */
+export function parseReviewerEmails(raw: string | undefined): Set<string> {
+  return new Set(
+    (raw ?? '')
+      .split(',')
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean),
+  );
+}
+
 /** Told of every submission alongside the head of comms. */
 const ADMIN_REVIEWERS: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
 
@@ -39,7 +49,8 @@ const ADMIN_REVIEWERS: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
  * Review of member articles before the church reads them.
  *
  * A member writes and submits; the HOD of the department that owns the Content
- * Writing Team approves it or sends it back with a note. Reviewers' own pieces
+ * Writing Team (or anyone named in ARTICLE_REVIEWER_EMAILS) approves it or
+ * sends it back with a note. Reviewers' own pieces
  * publish directly — review exists to have a second pair of eyes on a piece,
  * and a reviewer's eyes are the ones it would have gone to anyway.
  */
@@ -47,6 +58,8 @@ const ADMIN_REVIEWERS: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
 export class ArticleReviewService {
   private readonly logger = new Logger(ArticleReviewService.name);
   private readonly tenantId: string;
+  /** People named in ARTICLE_REVIEWER_EMAILS, lower-cased. */
+  private readonly reviewerEmails: Set<string>;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -54,6 +67,9 @@ export class ArticleReviewService {
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+    this.reviewerEmails = parseReviewerEmails(
+      config.get('ARTICLE_REVIEWER_EMAILS', { infer: true }),
+    );
   }
 
   /** The department that owns the Content Writing Team, or null if there is none. */
@@ -82,6 +98,8 @@ export class ArticleReviewService {
       )
     )
       return true;
+    if (actor.email && this.reviewerEmails.has(actor.email.toLowerCase()))
+      return true;
     if (!actor.hodOf?.length) return false;
     const departmentId = await this.contentDepartmentId();
     return departmentId !== null && actor.hodOf.includes(departmentId);
@@ -90,7 +108,7 @@ export class ArticleReviewService {
   private async assertCanReview(actor: AuthUser) {
     if (!(await this.canReview(actor))) {
       throw new ForbiddenException(
-        'Only the head of the content department, a pastor or an admin can review articles',
+        'Only the head of the content department, a named reviewer, a pastor or an admin can review articles',
       );
     }
   }
@@ -273,7 +291,11 @@ export class ArticleReviewService {
         },
         select: { userId: true },
       });
-      reviewerIds = [...reviewerIds, ...grants.map((g) => g.userId)];
+      reviewerIds = [
+        ...reviewerIds,
+        ...grants.map((g) => g.userId),
+        ...(await this.namedReviewerIds()),
+      ];
 
       const recipients = Array.from(new Set(reviewerIds)).filter(
         (pid) => pid !== article.authorId,
@@ -297,6 +319,21 @@ export class ArticleReviewService {
       );
       return 0;
     }
+  }
+
+  /** Profiles of the people in ARTICLE_REVIEWER_EMAILS, found by their member email. */
+  private async namedReviewerIds(): Promise<string[]> {
+    if (this.reviewerEmails.size === 0) return [];
+    const members = await this.prisma.member.findMany({
+      where: {
+        tenantId: this.tenantId,
+        OR: [...this.reviewerEmails].map((email) => ({
+          email: { equals: email, mode: 'insensitive' as const },
+        })),
+      },
+      select: { profileId: true },
+    });
+    return members.map((m) => m.profileId);
   }
 
   private assertReviewable(
