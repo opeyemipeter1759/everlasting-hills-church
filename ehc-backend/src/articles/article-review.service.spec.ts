@@ -44,6 +44,8 @@ function makeService({
   hods = [] as { userId: string }[],
   grants = [{ userId: 'pastor-1' }],
   inboxFails = false,
+  reviewerEmails = undefined as string | undefined,
+  namedMembers = [] as { profileId: string }[],
 } = {}) {
   const prisma = {
     unit: {
@@ -60,6 +62,7 @@ function makeService({
     departmentHead: { findMany: jest.fn(async () => heads) },
     departmentHod: { findMany: jest.fn(async () => hods) },
     roleGrant: { findMany: jest.fn(async () => grants) },
+    member: { findMany: jest.fn(async () => namedMembers) },
   };
   const inbox = {
     createMany: jest.fn(async (items: unknown[]) => {
@@ -70,7 +73,11 @@ function makeService({
   const service = new ArticleReviewService(
     prisma as never,
     inbox as never,
-    { get: jest.fn().mockReturnValue('tenant-1') } as never,
+    {
+      get: jest.fn((key: string) =>
+        key === 'ARTICLE_REVIEWER_EMAILS' ? reviewerEmails : 'tenant-1',
+      ),
+    } as never,
   );
   return { service, prisma, inbox };
 }
@@ -302,5 +309,30 @@ describe('telling reviewers a piece is waiting', () => {
     await expect(
       service.notifyReviewers({ title: 'A word', authorId: 'author-1' }),
     ).resolves.toBe(0);
+  });
+});
+
+describe('reviewers named by email (ARTICLE_REVIEWER_EMAILS)', () => {
+  const named = { ...MEMBER, profileId: 'named-1', email: 'Moyo@Example.com' } as AuthUser;
+
+  it('lets a listed member review, whatever the case of the email', async () => {
+    const { service } = makeService({ reviewerEmails: ' moyo@example.com , other@x.org' });
+    expect(await service.canReview(named)).toBe(true);
+  });
+
+  it('does not let anyone else in', async () => {
+    const { service } = makeService({ reviewerEmails: 'other@x.org' });
+    expect(await service.canReview(named)).toBe(false);
+    expect(await makeService().service.canReview(named)).toBe(false);
+  });
+
+  it('tells them when a piece is waiting', async () => {
+    const { service, inbox } = makeService({
+      reviewerEmails: 'moyo@example.com',
+      namedMembers: [{ profileId: 'named-1' }],
+    });
+    await service.notifyReviewers({ title: 'A word', authorId: 'author-1' });
+    const recipients = (inbox.createMany.mock.calls[0][0] as { profileId: string }[]).map((r) => r.profileId);
+    expect(recipients).toContain('named-1');
   });
 });

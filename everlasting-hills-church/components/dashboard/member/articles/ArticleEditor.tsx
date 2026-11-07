@@ -1,5 +1,4 @@
 "use client";
-
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useArticle } from "@/lib/api/articles";
@@ -18,17 +17,10 @@ import { useCoverUpload } from "./editor/useCoverUpload";
 
 export { BODY_MAX, BODY_MIN, SUBTITLE_MAX, TITLE_MAX, TITLE_MIN, validateArticle } from "./editor/article-form";
 
-/**
- * The writing screen, as Medium's: nothing on the page but the title, a
- * subtitle, an optional cover and the story. A copy is kept on this device as
- * you type, so a dropped connection or a closed tab never loses the words.
- * Submitting sends it to the head of comms or an admin for approval.
- */
 export default function ArticleEditor() {
   const params = useSearchParams();
   const editingSlug = params.get("slug");
   const { data: existing, isLoading, error: loadError } = useArticle(editingSlug ?? undefined);
-  // Pre-filled from "Write about this" on the reading screen.
   const label = params.get("label");
   const prefill: Scripture | null = label
     ? { label, startVerseId: Number(params.get("start")) || undefined, endVerseId: Number(params.get("end")) || undefined }
