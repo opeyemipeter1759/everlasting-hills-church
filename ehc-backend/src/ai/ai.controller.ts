@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Type } from 'class-transformer';
 import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
-import { WRITING_ACTIONS, WRITING_TEXT_MAX, type WritingAction } from './writing-assist';
+import { WRITING_ACTIONS, WRITING_TEXT_MAX, type WritingAction } from './writing-prompts';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AiService } from './ai.service';

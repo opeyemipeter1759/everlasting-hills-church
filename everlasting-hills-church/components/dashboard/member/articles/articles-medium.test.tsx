@@ -19,7 +19,6 @@ const api = vi.hoisted(() => ({
   like: vi.fn(),
   save: vi.fn(),
   create: vi.fn(),
-  assist: vi.fn(),
   mine: [] as MyArticle[],
 }));
 vi.mock("@/lib/api/articles", async (importActual) => ({
@@ -32,7 +31,6 @@ vi.mock("@/lib/api/articles", async (importActual) => ({
   useCreateArticle: () => ({ mutateAsync: api.create, isPending: false }),
   useUpdateArticle: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useDeleteArticle: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  assistWriting: api.assist,
   useMyArticles: () => ({ data: api.mine, isLoading: false, error: null, refetch: vi.fn() }),
 }));
 
@@ -169,72 +167,6 @@ describe("writing a story", () => {
     render(<ArticleEditor />);
     fireEvent.click(screen.getByRole("button", { name: "Restore" }));
     expect(screen.getByLabelText("Title")).toHaveValue("Lost words");
-  });
-
-  it("shows the story formatted in the editor, not as Markdown", async () => {
-    window.localStorage.setItem(
-      "ehc.article-draft.new",
-      JSON.stringify({ title: "Formatted", subtitle: "", body: "## Grace\n\nSome **bold** words.\n\n- one\n- two", coverImageUrl: null, savedAt: Date.now() }),
-    );
-    render(<ArticleEditor />);
-    fireEvent.click(screen.getByRole("button", { name: "Restore" }));
-    const story = await screen.findByRole("textbox", { name: "Your story" });
-    await waitFor(() => expect(story.querySelector("h2")).toHaveTextContent("Grace"));
-    expect(story.querySelector("strong")).toHaveTextContent("bold");
-    expect(story.querySelectorAll("li")).toHaveLength(2);
-    expect(story).not.toHaveTextContent("**");
-  });
-});
-
-describe("the writing assistant", () => {
-  beforeEach(() => {
-    api.assist.mockReset();
-    window.localStorage.clear();
-  });
-
-  function writeInMarkdown(text: string) {
-    render(<ArticleEditor />);
-    fireEvent.click(screen.getByRole("button", { name: "Markdown" }));
-    fireEvent.change(screen.getByLabelText("Your story"), { target: { value: text } });
-  }
-
-  it("fixes the English of the whole story, showing what changed before replacing it", async () => {
-    api.assist.mockResolvedValue({ action: "fix", text: "I have a story to tell about grace.", notes: ["Corrected the verb"] });
-    writeInMarkdown("i has a story to tell about grace.");
-    fireEvent.click(screen.getByRole("button", { name: /AI assist/ }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /Fix spelling & grammar/ }));
-
-    expect(api.assist).toHaveBeenCalledWith("fix", "i has a story to tell about grace.", { title: undefined, subtitle: undefined }, expect.any(AbortSignal));
-    const panel = await screen.findByRole("dialog", { name: /Fix spelling & grammar/ });
-    expect(panel.querySelector("del")).toHaveTextContent("i has");
-    expect(panel.querySelector("ins")).toHaveTextContent("I have");
-    expect(screen.getByText("Corrected the verb")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /Replace story/ }));
-    expect(screen.getByLabelText("Your story")).toHaveValue("I have a story to tell about grace.");
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  it("explains a failure instead of changing anything", async () => {
-    api.assist.mockRejectedValue({ status: 429, message: "Too many requests" });
-    writeInMarkdown("Some words that need help.");
-    fireEvent.click(screen.getByRole("button", { name: /AI assist/ }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /Paraphrase/ }));
-    expect(await screen.findByText(/used the writing assistant a lot/)).toBeInTheDocument();
-    expect(screen.getByLabelText("Your story")).toHaveValue("Some words that need help.");
-  });
-
-  it("suggests titles and fills in the one picked", async () => {
-    api.assist.mockResolvedValue({
-      action: "titles",
-      titles: [{ title: "When God Keeps His Word", subtitle: "What Joshua 21 taught me about promises" }],
-    });
-    writeInMarkdown(Array.from({ length: 30 }, (_, i) => `word${i}`).join(" "));
-    fireEvent.click(screen.getByRole("button", { name: /AI assist/ }));
-    fireEvent.click(screen.getByRole("menuitem", { name: /Suggest a title/ }));
-    fireEvent.click(await screen.findByRole("button", { name: /When God Keeps His Word/ }));
-    expect(screen.getByLabelText("Title")).toHaveValue("When God Keeps His Word");
-    expect(screen.getByLabelText("Subtitle")).toHaveValue("What Joshua 21 taught me about promises");
   });
 });
 

@@ -1,7 +1,7 @@
 import { BadGatewayException } from '@nestjs/common';
 import { AiService } from './ai.service';
 import type { GeminiClient } from './gemini-client';
-import { writingPrompt } from './writing-assist';
+import { writingPrompt } from './writing-prompts';
 
 function serviceAnswering(answer: string) {
   const generate = jest.fn().mockResolvedValue({ text: answer, model: 'test' });

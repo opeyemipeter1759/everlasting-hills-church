@@ -1,14 +1,7 @@
 import { BadGatewayException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { GeminiBusyError, GeminiClient, parseGeminiJson, type GeminiCall } from './gemini-client';
-import {
-  REWRITE_SCHEMA,
-  rewriteAnswer,
-  TITLES_SCHEMA,
-  titlesAnswer,
-  titlesPrompt,
-  writingPrompt,
-  type WritingAction,
-} from './writing-assist';
+import { titlesPrompt, writingPrompt, type WritingAction } from './writing-prompts';
+import { REWRITE_SCHEMA, rewriteAnswer, TITLES_SCHEMA, titlesAnswer } from './writing-schemas';
 
 export type WritingAssistResult =
   | { action: Exclude<WritingAction, 'titles'>; text: string; notes: string[] }
