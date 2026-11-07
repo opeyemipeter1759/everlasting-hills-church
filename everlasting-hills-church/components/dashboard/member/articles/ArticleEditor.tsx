@@ -350,7 +350,7 @@ export default function ArticleEditor() {
 
   return (
     <MediumPage>
-      <header className="mx-auto flex max-w-[1000px] flex-wrap items-center justify-between gap-3 border-b m-rule pb-3">
+      <header className="mx-auto flex max-w-[900px] flex-wrap items-center justify-between gap-3 border-b m-rule pb-3">
         <div className="flex min-w-0 items-center gap-3">
           <Link href="/dashboard/articles/mine" className="m-muted inline-flex min-h-11 items-center gap-1.5 text-sm hover:text-[var(--m-ink)]">
             <ArrowLeft size={15} aria-hidden="true" /> Your stories
@@ -381,7 +381,7 @@ export default function ArticleEditor() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-[740px] pb-10 pt-8">
+      <div className="mx-auto max-w-[900px] pb-10 pt-8">
         {restorable && (
           <div role="status" className="m-paper m-ink mb-6 flex flex-wrap items-center justify-between gap-3 border m-rule px-4 py-3 text-sm">
             <span>You have unsaved words from {new Date(restorable.savedAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })} on this device.</span>

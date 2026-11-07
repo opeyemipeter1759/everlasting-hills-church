@@ -237,7 +237,46 @@ export function diffWords(before: string, after: string): DiffPart[] | null {
   }
   while (i < n) push("del", a[i++]);
   while (j < m) push("add", b[j++]);
-  return parts;
+  return coalesce(parts);
+}
+
+/**
+ * Joins edits separated only by a space, so "i has" → "I have" shows as one
+ * crossed-out phrase and one new phrase, not alternating single words.
+ */
+function coalesce(parts: DiffPart[]): DiffPart[] {
+  const out: DiffPart[] = [];
+  let del = "";
+  let add = "";
+  let gap = "";
+  const flush = () => {
+    if (del) out.push({ kind: "del", text: del });
+    if (add) out.push({ kind: "add", text: add });
+    del = "";
+    add = "";
+  };
+  for (const part of parts) {
+    if (part.kind === "same") {
+      if (/^\s+$/.test(part.text) && (del || add)) {
+        gap += part.text;
+        continue;
+      }
+      flush();
+      out.push({ kind: "same", text: gap + part.text });
+      gap = "";
+      continue;
+    }
+    if (gap) {
+      if (del) del += gap;
+      if (add) add += gap;
+      gap = "";
+    }
+    if (part.kind === "del") del += part.text;
+    else add += part.text;
+  }
+  flush();
+  if (gap) out.push({ kind: "same", text: gap });
+  return out;
 }
 
 function DiffView({ parts }: { parts: DiffPart[] }) {
