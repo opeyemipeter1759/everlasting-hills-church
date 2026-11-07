@@ -7,6 +7,8 @@ import OverviewStats from "./OverviewStats";
 import WatchCoverage from "./WatchCoverage";
 import WeeklyJoins from "./WeeklyJoins";
 import NeedsAttention from "./NeedsAttention";
+import HoursPrayed from "./HoursPrayed";
+import HandoverChain from "./HandoverChain";
 import { durationWords, hoursSince, panel, panelTitle } from "./format";
 
 /** The Prayer Watch at a glance: who is praying, when, what's waiting, and how it's growing. */
@@ -35,10 +37,12 @@ export default function PrayerWatchDashboard({ onManage }: { onManage: () => voi
   return (
     <div className="flex flex-col gap-5">
       <OverviewStats data={data} />
+      <HoursPrayed reports={data.reports} watches={data.slots.length} />
 
       <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-5">
           <WatchCoverage slots={data.slots} />
+          <HandoverChain reports={data.reports} slots={data.slots} />
           <WeeklyJoins weekly={data.weekly} />
         </div>
         <div className="flex min-w-0 flex-col gap-5">

@@ -16,6 +16,7 @@ function setup(signups: Record<string, unknown>[]) {
     prayerWatch: { findFirst: jest.fn().mockResolvedValue(watch) },
     prayerSignup: { findMany: jest.fn().mockResolvedValue(signups) },
     prayerFamilyChangeRequest: { count: jest.fn().mockResolvedValue(2) },
+    prayerWatchReport: { findMany: jest.fn().mockResolvedValue([]), findFirst: jest.fn().mockResolvedValue(null) },
     prayerWatchReflection: {
       count: jest.fn().mockResolvedValueOnce(3).mockResolvedValueOnce(10),
       findFirst: jest.fn().mockResolvedValue({ body: 'He said rest.', createdAt: NOW, Signup: { fullName: 'Ada Obi', Slot: { label: 'First Watch' } } }),
@@ -45,6 +46,7 @@ describe('PrayerWatchStatsService.overview', () => {
     expect(o.slots[1]).toMatchObject({ leaderName: null, leaderTermEndsAt: null, whatsappLinkSet: false });
     expect(o.oldestPendingAt).toBe('2026-11-05T09:00:00.000Z');
     expect(o.latestReflection).toMatchObject({ firstName: 'Ada', watchLabel: 'First Watch' });
+    expect(o.reports).toMatchObject({ trackingSince: null, reportsIn: 0, reportsDue: 0, chain: [] });
   });
 
   it('buckets joins into the last twelve Lagos weeks by approval date', async () => {

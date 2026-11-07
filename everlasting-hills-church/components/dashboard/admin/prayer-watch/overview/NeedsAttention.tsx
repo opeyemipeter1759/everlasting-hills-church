@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRightLeft, CheckCircle2, Clock3, Crown, MessageCircle, Send, UserPlus, type LucideIcon } from "lucide-react";
+import { ArrowRightLeft, CheckCircle2, ClipboardX, Clock3, Crown, MessageCircle, Send, UserPlus, type LucideIcon } from "lucide-react";
 import type { PrayerWatchOverviewData } from "@/lib/api/prayer-watch-overview";
 import { durationWords, hoursSince, longDate, panel, panelHint, panelTitle, plural } from "./format";
 
@@ -43,6 +43,17 @@ export function attentionItems(data: PrayerWatchOverviewData, now = Date.now()):
       } else if (daysLeft <= SOON_DAYS) {
         items.push({ key: `term-${s.id}`, icon: Clock3, urgent: false, text: `${s.leaderName}'s term on the ${s.label} ends ${longDate(s.leaderTermEndsAt)}` });
       }
+    }
+    const nights = data.reports?.chain ?? [];
+    const missed = nights.filter((c) => c.watches.some((w) => w.slotId === s.id && w.status === "missing")).length;
+    if (missed >= 2) {
+      items.push({
+        key: `reports-${s.id}`,
+        icon: ClipboardX,
+        urgent: missed >= 3,
+        text: `${s.label} missed ${missed} of the last ${nights.length} reports`,
+        detail: s.leaderName ? `Check in with ${s.leaderName}.` : "It has no leader to report it.",
+      });
     }
     if (s.confirmed > 0 && !s.whatsappLinkSet) {
       items.push({ key: `wa-${s.id}`, icon: MessageCircle, urgent: false, text: `${s.label} has no family WhatsApp group linked`, detail: "Approved people can't join their family until it's added." });

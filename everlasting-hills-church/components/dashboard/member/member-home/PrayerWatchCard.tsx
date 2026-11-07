@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock3, Moon, Send } from "lucide-react";
+import { ClipboardCheck, Clock3, Moon, Send } from "lucide-react";
 import { useMyPrayerSignup } from "@/lib/api/prayer-watch";
 import { card, cardTitle, hdrBdr, iconBg, iconCl, kicker, muted, linkCl } from "./tokens";
 
@@ -66,7 +66,7 @@ export function PrayerWatchCard() {
     <section className={card} aria-label="Prayer Watch">
       {header}
       <div className="px-5 py-5">
-        <p className="text-sm font-semibold text-[#87102C] dark:text-[#FFB3C1]">You&apos;re on the watch</p>
+        <p className="text-sm font-semibold text-[#87102C] dark:text-[#FFB3C1]">{data.leadsWatch ? "You lead this watch" : "You’re on the watch"}</p>
         <p className="mt-1 text-2xl font-bold tabular-nums text-[#111] dark:text-white">
           {slot.startTime}–{slot.endTime}
         </p>
@@ -80,6 +80,14 @@ export function PrayerWatchCard() {
           >
             <Send size={13} aria-hidden="true" /> Join the Telegram channel
           </a>
+        )}
+        {data.leadsWatch && (
+          <Link
+            href="/dashboard/prayer-watch/report"
+            className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[#87102C] px-3.5 text-xs font-bold text-white hover:bg-[#6d0d24] dark:bg-[#FFB3C1] dark:text-[#2A0912] dark:hover:bg-[#ffc7d2]"
+          >
+            <ClipboardCheck size={14} aria-hidden="true" /> Report the watch
+          </Link>
         )}
         <Link href="/dashboard/prayer-watch" className={`${linkCl} mt-3`}>
           Open Prayer Watch →

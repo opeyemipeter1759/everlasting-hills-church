@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrayerSignupStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
+import { reportsWindowStart, summarizeReports } from './prayer-watch-report-summary';
+import { nightKey } from './prayer-watch-nights';
 
 const DAY_MS = 86_400_000;
 const WAT_OFFSET_MS = 3_600_000;
@@ -43,7 +45,8 @@ export class PrayerWatchStatsService {
     });
     if (!watch) return null;
 
-    const [signups, familyChangesPending, reflections30d, reflectionsTotal, latestReflection] = await Promise.all([
+    const slotIds = watch.Slots.map((s) => s.id);
+    const [signups, familyChangesPending, reflections30d, reflectionsTotal, latestReflection, reports, firstReport] = await Promise.all([
       this.prisma.prayerSignup.findMany({
         where: { watchId: watch.id },
         select: { slotId: true, status: true, isWorker: true, createdAt: true, decidedAt: true },
@@ -56,6 +59,11 @@ export class PrayerWatchStatsService {
         orderBy: { createdAt: 'desc' },
         select: { body: true, createdAt: true, Signup: { select: { fullName: true, Slot: { select: { label: true } } } } },
       }),
+      this.prisma.prayerWatchReport.findMany({
+        where: { slotId: { in: slotIds }, nightDate: { gte: reportsWindowStart(watch.Slots, now) } },
+        select: { slotId: true, nightDate: true, minutesPrayed: true, peoplePresent: true, handedOver: true, handedOverTo: true, notes: true },
+      }),
+      this.prisma.prayerWatchReport.findFirst({ where: { slotId: { in: slotIds } }, orderBy: { nightDate: 'asc' }, select: { nightDate: true } }),
     ]);
 
     const confirmed = signups.filter((s) => s.status === PrayerSignupStatus.CONFIRMED);
@@ -109,6 +117,7 @@ export class PrayerWatchStatsService {
         };
       }),
       weekly: weeks.map((weekStart) => ({ weekStart, joined: joinedByWeek.get(weekStart) ?? 0 })),
+      reports: summarizeReports(watch.Slots, reports, firstReport ? nightKey(firstReport.nightDate) : null, now),
       latestReflection: latestReflection
         ? {
             excerpt: latestReflection.body.length > 220 ? `${latestReflection.body.slice(0, 217).trimEnd()}…` : latestReflection.body,

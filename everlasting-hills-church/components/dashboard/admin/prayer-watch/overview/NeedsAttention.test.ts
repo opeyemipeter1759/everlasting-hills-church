@@ -32,6 +32,7 @@ function data(o: Partial<PrayerWatchOverviewData> = {}, slots: OverviewSlot[] = 
     medianWaitHours: null,
     slots,
     weekly: [],
+    reports: null,
     latestReflection: null,
     ...o,
   };
@@ -61,6 +62,14 @@ describe("attentionItems", () => {
     expect(over[0]).toMatchObject({ key: "term-s1", urgent: true });
     const soon = attentionItems(data({}, [slot({ leaderTermEndsAt: new Date(NOW + 10 * DAY).toISOString() })]), NOW);
     expect(soon[0]).toMatchObject({ key: "term-s1", urgent: false });
+  });
+
+  it("flags a watch that keeps missing its nightly report", () => {
+    const watch = (status: "reported" | "missing") => ({ slotId: "s1", status, minutes: 0, people: 0, handedOver: false, handedOverTo: null, notes: null });
+    const chain = ["2026-11-06", "2026-11-05", "2026-11-04"].map((night, i) => ({ night, watches: [watch(i === 0 ? "reported" : "missing")] }));
+    const reports = { fullNightMinutes: 480, trackingSince: "2026-11-04", thisWeekMinutes: 0, lastWeekMinutes: 0, reportsIn: 1, reportsDue: 3, handoversMade: 0, averagePeople: null, daily: [], chain };
+    const items = attentionItems(data({ reports }), NOW);
+    expect(items[0]).toMatchObject({ key: "reports-s1", urgent: false, text: "First Watch missed 2 of the last 3 reports", detail: "Check in with Tolu Ade." });
   });
 
   it("notes a watch whose family WhatsApp group isn't linked", () => {

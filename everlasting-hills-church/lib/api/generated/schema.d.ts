@@ -7420,6 +7420,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/prayer-watch/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Dashboard overview: totals, coverage per watch, weekly joins, what needs attention (Admin Head+) */
+        get: operations["PrayerWatchController_getOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/prayer-watch/admin/reflections": {
         parameters: {
             query?: never;
@@ -7685,6 +7702,40 @@ export interface paths {
         };
         /** Past watches I have kept, with any reflection I left */
         get: operations["PrayerWatchController_getMyHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/prayer-watch/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Report a watch as kept and handed over, or correct the report (watch leader, or Admin Head+) */
+        post: operations["PrayerWatchController_submitReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/prayer-watch/reports/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The watches I lead, the watch after each, and the last week of nights with their reports */
+        get: operations["PrayerWatchController_getMyReports"];
         put?: never;
         post?: never;
         delete?: never;
@@ -11649,6 +11700,42 @@ export interface components {
         StartWatchDto: {
             /** @description Where the player will resume, in seconds. Never past what the server has seen watched. */
             position?: number;
+        };
+        SubmitPrayerWatchReportDto: {
+            /**
+             * @description When it ended and was handed on
+             * @example 00:00
+             */
+            endTime: string;
+            /**
+             * @description Handed over to the next watch, or closed the night for the last one
+             * @example true
+             */
+            handedOver: boolean;
+            /**
+             * @description Who took over, when not the next watch leader
+             * @example Bisi Ojo
+             */
+            handedOverTo?: string;
+            /**
+             * @description The evening the night began, Lagos time
+             * @example 2026-11-09
+             */
+            nightDate: string;
+            /** @example Strong night. We prayed for the exam students. */
+            notes?: string;
+            /**
+             * @description How many prayed on the watch
+             * @example 14
+             */
+            peoplePresent: number;
+            /** @example slot-id */
+            slotId: string;
+            /**
+             * @description When the watch actually began
+             * @example 22:00
+             */
+            startTime: string;
         };
         SubscribeDto: {
             /** @description Plan to read, from GET /reading-plans */
@@ -30234,6 +30321,37 @@ export interface operations {
             };
         };
     };
+    PrayerWatchController_getOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     PrayerWatchController_getReflections: {
         parameters: {
             query?: never;
@@ -30777,6 +30895,72 @@ export interface operations {
         };
     };
     PrayerWatchController_getMyHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PrayerWatchController_submitReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitPrayerWatchReportDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    PrayerWatchController_getMyReports: {
         parameters: {
             query?: never;
             header?: never;

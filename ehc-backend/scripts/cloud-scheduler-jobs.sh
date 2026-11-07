@@ -43,6 +43,7 @@ JOBS=(
   "fasting-push|*/5 * * * *|Push during a church fast: 2 hours before each session, and when it goes live on YouTube"
   "push-prayer-watch-reminder|*/5 * * * *|Push: your Prayer Watch hour starts in 30 minutes"
   "prayer-watch-leader-terms|0 8 * * *|Prayer Watch: tell admins when a watch leader's three months are up"
+  "prayer-watch-report-reminders|*/15 * * * *|Prayer Watch: nudge a watch leader who hasn't reported their watch"
   "one-on-one-sweep|*/10 * * * *|One-on-One: release expired holds, lapse unanswered requests, nudge pastors, send reminders"
 )
 
