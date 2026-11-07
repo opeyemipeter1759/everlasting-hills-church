@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
-import { Extension } from "@tiptap/core";
+import { Extension, type JSONContent } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import {
@@ -21,10 +21,18 @@ import {
   PenLine,
   Quote,
   Redo2,
+  SpellCheck,
+  Wand2,
   Undo2,
   X,
 } from "lucide-react";
 import { docToMarkdown, markdownToDoc, SAFE_HREF } from "@/lib/article-markdown";
+import { showToast } from "@/components/ui/toast/toast";
+import type { WritingAction } from "@/lib/api/articles";
+import { AiMenu, AiPanel, useWritingAssist, type AssistTarget } from "./WritingAssistant";
+
+/** The API's limit on one request. */
+const AI_TEXT_MAX = 42_000;
 
 type Mode = "visual" | "markdown";
 type BlockStyle = "p" | "h2" | "h3";
@@ -191,12 +199,18 @@ export default function ArticleBodyEditor({
   onChange,
   maxLength,
   status,
+  context,
+  onApplyTitle,
 }: {
   value: string;
   onChange: (markdown: string) => void;
   maxLength: number;
   /** Shown at the right of the status bar, e.g. the word count. */
   status?: React.ReactNode;
+  /** The story's title and subtitle, which the AI reads for context. */
+  context: { title: string; subtitle: string };
+  /** Called when a member picks one of the AI's title suggestions. */
+  onApplyTitle: (title: string, subtitle: string) => void;
 }) {
   const [mode, setMode] = useState<Mode>("visual");
   const [mod, setMod] = useState("Ctrl");
@@ -209,6 +223,9 @@ export default function ArticleBodyEditor({
   onChangeRef.current = onChange;
   const sourceBox = useRef<HTMLTextAreaElement>(null);
   const linkInput = useRef<HTMLInputElement>(null);
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const assist = useWritingAssist(context);
 
   useEffect(() => {
     setMode(readMode());
@@ -265,6 +282,7 @@ export default function ArticleBodyEditor({
             quote: e.isActive("blockquote"),
             canUndo: e.can().undo(),
             canRedo: e.can().redo(),
+            hasSelection: !e.state.selection.empty,
           }
         : null,
   });
@@ -339,6 +357,105 @@ export default function ArticleBodyEditor({
     const chain = editor.chain().focus();
     if (style === "p") chain.setParagraph().run();
     else chain.setHeading({ level: style === "h2" ? 2 : 3 }).run();
+  }
+
+  /**
+   * What an AI action works on: the selection when there is one, else the
+   * whole story. Each target knows how to put the answer back, and refuses
+   * (returns false) if that text was edited while the AI was thinking.
+   */
+  function buildTarget(): AssistTarget {
+    const story: AssistTarget = {
+      scope: "story",
+      text: valueRef.current,
+      replace: (markdown) => {
+        if (valueRef.current !== story.text) return false;
+        if (mode === "visual" && editor) {
+          // Through the editor, so Ctrl+Z brings the original back.
+          editor.chain().focus().setContent(markdownToDoc(markdown), { emitUpdate: true }).run();
+        } else {
+          lastEmitted.current = "\u0000";
+          onChange(markdown);
+        }
+        return true;
+      },
+    };
+
+    if (mode === "markdown") {
+      const box = sourceBox.current;
+      const start = box?.selectionStart ?? 0;
+      const end = box?.selectionEnd ?? 0;
+      if (!box || start === end) return story;
+      const text = valueRef.current.slice(start, end);
+      const intact = () => valueRef.current.slice(start, end) === text;
+      const splice = (at: number, until: number, insert: string) => {
+        lastEmitted.current = "\u0000";
+        onChange(valueRef.current.slice(0, at) + insert + valueRef.current.slice(until));
+      };
+      return {
+        scope: "selection",
+        text,
+        replace: (markdown) => {
+          if (!intact()) return false;
+          splice(start, end, markdown);
+          return true;
+        },
+        insertAfter: (markdown) => {
+          if (!intact()) return false;
+          splice(end, end, `\n\n${markdown}`);
+          return true;
+        },
+      };
+    }
+
+    if (!editor || editor.state.selection.empty) return story;
+    const { from, to, $from, $to } = editor.state.selection;
+    const inline = $from.sameParent($to) && $from.parent.isTextblock;
+    const slice = editor.state.doc.slice(from, to).content.toJSON() as JSONContent[];
+    const text = docToMarkdown({ type: "doc", content: inline ? [{ type: "paragraph", content: slice }] : slice });
+    const original = editor.state.doc.textBetween(from, to, "\n");
+    const intact = () => to <= editor.state.doc.content.size && editor.state.doc.textBetween(from, to, "\n") === original;
+    return {
+      scope: "selection",
+      text,
+      replace: (markdown) => {
+        if (!intact()) return false;
+        const doc = markdownToDoc(markdown).content ?? [];
+        // Inside one paragraph, put the words back inline instead of splitting it.
+        const content = inline && doc.length === 1 && doc[0].type === "paragraph" ? doc[0].content ?? [] : doc;
+        editor.chain().focus().insertContentAt({ from, to }, content).run();
+        return true;
+      },
+      insertAfter: (markdown) => {
+        if (!intact()) return false;
+        const $end = editor.state.doc.resolve(to);
+        const after = $end.depth > 0 ? $end.after(1) : to;
+        editor.chain().focus().insertContentAt(after, markdownToDoc(markdown).content ?? []).run();
+        return true;
+      },
+    };
+  }
+
+  function runAi(action: WritingAction) {
+    if (action === "titles") {
+      const text = valueRef.current;
+      if (text.trim().split(/\s+/).length < 25) {
+        showToast.error("Write a few sentences first, so the assistant has something to suggest a title from.");
+        return;
+      }
+      assist.run("titles", { scope: "story", text: text.slice(0, AI_TEXT_MAX), replace: () => false });
+      return;
+    }
+    const target = buildTarget();
+    if (target.text.trim().length < 3) {
+      showToast.error("Write something first, or select the words you want help with.");
+      return;
+    }
+    if (target.text.length > AI_TEXT_MAX) {
+      showToast.error("That is too long for the assistant in one go. Select a part of the story and try again.");
+      return;
+    }
+    assist.run(action, target);
   }
 
   const visual = mode === "visual";
@@ -420,10 +537,12 @@ export default function ArticleBodyEditor({
             </p>
           )}
 
+          <div className="ml-auto flex items-center gap-2 pl-1">
+            <AiMenu scope={visual && state?.hasSelection ? "selection" : "story"} disabled={visual && !editor} onPick={runAi} />
           <div
             role="group"
             aria-label="Editor mode"
-            className="ml-auto flex items-center gap-0.5 rounded-lg bg-[var(--m-brand-soft)] p-0.5 text-[12px] font-medium"
+            className="flex items-center gap-0.5 rounded-lg bg-[var(--m-brand-soft)] p-0.5 text-[12px] font-medium"
           >
             {(
               [
@@ -446,6 +565,7 @@ export default function ArticleBodyEditor({
                 {label}
               </button>
             ))}
+          </div>
           </div>
         </div>
 
@@ -524,6 +644,13 @@ export default function ArticleBodyEditor({
           <ToolButton tone="dark" label="Quote" active={state?.quote} onClick={run((e) => e.chain().focus().toggleBlockquote().run())}>
             <Quote size={15} aria-hidden="true" />
           </ToolButton>
+          <Separator tone="dark" />
+          <ToolButton tone="dark" label="Fix spelling & grammar" onClick={() => runAi("fix")}>
+            <SpellCheck size={15} aria-hidden="true" />
+          </ToolButton>
+          <ToolButton tone="dark" label="Improve writing" onClick={() => runAi("improve")}>
+            <Wand2 size={15} aria-hidden="true" />
+          </ToolButton>
         </BubbleMenu>
       )}
 
@@ -563,6 +690,13 @@ export default function ArticleBodyEditor({
         {status}
       </div>
       {helpOpen && <Shortcuts mod={mod} onClose={() => setHelpOpen(false)} />}
+
+      <AiPanel
+        job={assist.job}
+        onClose={assist.close}
+        onRetry={() => assist.job && assist.run(assist.job.action, assist.job.target)}
+        onApplyTitle={onApplyTitle}
+      />
     </div>
   );
 }

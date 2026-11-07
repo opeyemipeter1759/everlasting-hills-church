@@ -503,6 +503,11 @@ export default function ArticleEditor() {
               value={body}
               onChange={change(setBody)}
               maxLength={BODY_MAX}
+              context={{ title, subtitle }}
+              onApplyTitle={(nextTitle, nextSubtitle) => {
+                change(setTitle)(nextTitle.slice(0, TITLE_MAX));
+                if (nextSubtitle.trim()) change(setSubtitle)(nextSubtitle.slice(0, SUBTITLE_MAX));
+              }}
               status={
                 <span className="tabular-nums">
                   {words} words · {minutes} min read
