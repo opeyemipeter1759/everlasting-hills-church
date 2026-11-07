@@ -33,6 +33,7 @@ import { SiteSettingsModule } from './site-settings/site-settings.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { EventsModule } from './events/events.module';
 import { OverviewModule } from './overview/overview.module';
+import { MemberHomeModule } from './member-home/member-home.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { AdminModule } from './admin/admin.module';
 import { ReportsModule } from './reports/reports.module';
@@ -150,6 +151,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     EventsModule,
     InventoryModule,
     OverviewModule,
+    MemberHomeModule,
     SessionsModule,
     AdminModule,
     ReportsModule,

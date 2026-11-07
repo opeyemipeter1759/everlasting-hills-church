@@ -72,5 +72,6 @@ import { SermonMemberStatsService } from './services/sermon-member-stats.service
     SermonDirectMessageService,
     SermonMemberStatsService,
   ],
+  exports: [SermonMemberStatsService],
 })
 export class SermonsModule {}

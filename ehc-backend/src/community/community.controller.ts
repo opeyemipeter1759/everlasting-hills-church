@@ -1,4 +1,4 @@
-import { Body, Controller, ForbiddenException, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { IsString, MaxLength, MinLength } from 'class-validator';
@@ -20,12 +20,6 @@ class CreatePostDto {
 @Roles(Role.MEMBER)
 export class CommunityController {
   constructor(private readonly community: CommunityService) {}
-
-  @Get('feed')
-  @ApiOperation({ summary: 'Latest 20 community posts' })
-  feed() {
-    return this.community.getFeed();
-  }
 
   @Post('posts')
   @ApiOperation({ summary: 'Submit a new community post' })

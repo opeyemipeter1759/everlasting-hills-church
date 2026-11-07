@@ -39,6 +39,6 @@ import { ReadingPlanShareService } from './services/reading-plan-share.service';
     AdminReadingService,
     ReadingPlanShareService,
   ],
-  exports: [PlanProgressRepository],
+  exports: [PlanProgressRepository, MeReadingPlanService, DailyScriptureService, BiblePassageService],
 })
 export class ReadingPlanModule {}

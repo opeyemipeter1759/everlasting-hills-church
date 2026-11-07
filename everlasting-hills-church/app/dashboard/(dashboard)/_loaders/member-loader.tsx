@@ -1,131 +1,19 @@
 import MemberHome from "@/components/dashboard/member/MemberHome";
-import type { StreakState } from "@/components/dashboard/member/member-home/types";
-import { getMemberDisplayId, safeGet, type MeResponse } from "./shared";
-import { daysUntilBirthday } from "@/lib/birthday";
+import { HomeQueryHydration } from "@/components/dashboard/member/member-home/HomeQueryHydration";
+import { safeGet } from "./shared";
+import { toMemberHomeProps } from "./member-home/to-props";
+import type { MemberHomeData } from "./member-home/types";
 
-interface SermonBookmark {
-  Sermon: { slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; audioUrl: string | null };
-}
-interface ListenHistoryItem {
-  positionSec: number;
-  completed: boolean;
-  Sermon: { slug: string; title: string; speaker: string; date: string; thumbnailUrl: string | null; audioDuration: number | null };
-}
-interface MemberAttendanceOverview {
-  attendance: { marked: number; total: number; percentage: number; lastMarkedAt: string | null };
-  streak: StreakState;
-  coursesCompleted: number;
-  sermonsCompleted: number;
-}
-interface CommunityBirthday {
-  id: string;
-  firstName: string;
-  lastName: string;
-  photoUrl: string | null;
-  daysUntil: number;
-}
-
-const DEFAULT_STREAK: StreakState = {
-  level: 1,
-  title: "Seeker",
-  task: { attendance: 1, course: 0, sermon: 0 },
-  progress: { attendance: 0, course: 0, sermon: 0 },
-  history: [],
-};
-
-export async function loadMemberDashboard(mePromise: Promise<MeResponse>) {
-  const [me, bookmarksRaw, historyRaw, streakRaw, overviewRaw, announcementsRaw, communityFeedRaw, communityBirthdaysRaw] = await Promise.all([
-    mePromise,
-    safeGet<SermonBookmark[]>("/sermons/me/bookmarks"),
-    safeGet<ListenHistoryItem[]>("/sermons/me/history"),
-    safeGet<number>("/sermons/me/streak"),
-    safeGet<MemberAttendanceOverview>("/overview/member"),
-    safeGet<Array<{ id: string; title: string; body: string; imageUrl: string | null; createdAt: string; eventTime: string | null; venue: string | null }>>("/announcements/feed"),
-    safeGet<Array<{ id: string; text: string; reactions: number; createdAt: string; authorName: string; authorPhotoUrl: string | null }>>("/community/feed"),
-    safeGet<CommunityBirthday[]>("/members/birthdays/community?daysAhead=7"),
-  ]);
-
-  const bookmarks = bookmarksRaw?.map((b) => ({
-    slug: b.Sermon.slug,
-    title: b.Sermon.title,
-    speaker: b.Sermon.speaker,
-    date: b.Sermon.date,
-    thumbnailUrl: b.Sermon.thumbnailUrl,
-    audioUrl: b.Sermon.audioUrl,
-  })) ?? [];
-
-  const listenHistory = historyRaw?.map((p) => ({
-    slug: p.Sermon.slug,
-    title: p.Sermon.title,
-    speaker: p.Sermon.speaker,
-    date: p.Sermon.date,
-    thumbnailUrl: p.Sermon.thumbnailUrl,
-    positionSec: p.positionSec,
-    completed: p.completed,
-    audioDuration: p.Sermon.audioDuration,
-  })) ?? [];
-
-  const sermonStreak = typeof streakRaw === "number" ? streakRaw : 0;
-  const attendanceRate  = overviewRaw?.attendance.percentage ?? 0;
-  const attendanceCount = overviewRaw?.attendance.marked     ?? 0;
-  const attendanceTotal = overviewRaw?.attendance.total       ?? 0;
-  const lastServiceDate = overviewRaw?.attendance.lastMarkedAt ?? null;
-  const streak = overviewRaw?.streak ?? DEFAULT_STREAK;
-  const coursesCompleted = overviewRaw?.coursesCompleted ?? 0;
-  const sermonsCompleted = overviewRaw?.sermonsCompleted ?? 0;
-
-  // Shared with the site-wide celebration, so both agree on which day it is.
-  // It also counts across the new year, which the inline version here did not.
-  const daysUntil = daysUntilBirthday(me.member?.dateOfBirth);
-  const birthdayDaysUntil = daysUntil !== null && daysUntil <= 7 ? daysUntil : null;
-
+/**
+ * The member dashboard's home page: one request to /member-home on the
+ * server. Its answer becomes the page's props, and fills the cards' own
+ * queries so none of them fetch on first load.
+ */
+export async function MemberDashboard() {
+  const data = await safeGet<MemberHomeData>("/member-home");
   return (
-    <MemberHome
-      member={
-        me.member
-          ? {
-              id: me.member.id,
-              firstName: me.member.firstName,
-              lastName: me.member.lastName,
-              email: me.member.email,
-              phone: me.member.phone,
-              address: me.member.address,
-              dateOfBirth: me.member.dateOfBirth ? me.member.dateOfBirth.split("T")[0] : null,
-              bio: me.member.bio,
-              photoUrl: me.member.photoUrl,
-            }
-          : undefined
-      }
-      userEmail={me.member?.email ?? ""}
-      memberDisplayId={getMemberDisplayId(me.member?.id)}
-      sermonStreak={sermonStreak}
-      bookmarks={bookmarks}
-      listenHistory={listenHistory}
-      birthdayDaysUntil={birthdayDaysUntil}
-      attendanceRate={attendanceRate}
-      attendanceCount={attendanceCount}
-      attendanceTotal={attendanceTotal}
-      lastServiceDate={lastServiceDate}
-      streak={streak}
-      coursesCompleted={coursesCompleted}
-      sermonsCompleted={sermonsCompleted}
-      nextService={null}
-      hasCheckedInToday={false}
-      todayService={null}
-      prayerCount={0}
-      recentServices={[]}
-      monthlyAttendance={[]}
-      announcements={announcementsRaw ?? []}
-      communityBirthdays={communityBirthdaysRaw ?? []}
-      ministryUnit={null}
-      featuredSermon={null}
-      pastorWord={null}
-      dailyPrayer={null}
-      communityFeed={communityFeedRaw ?? []}
-      onlineCount={null}
-      discipleshipMilestones={[]}
-      memberSince={null}
-      anniversaryDaysUntil={null}
-    />
+    <HomeQueryHydration data={data}>
+      <MemberHome {...toMemberHomeProps(data)} />
+    </HomeQueryHydration>
   );
 }

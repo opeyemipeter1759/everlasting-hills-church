@@ -20,6 +20,6 @@ import { OneOnOneSweepService } from './one-on-one-sweep.service';
     OneOnOneLinksService,
     OneOnOneSweepService,
   ],
-  exports: [OneOnOneSweepService],
+  exports: [OneOnOneSweepService, OneOnOneRequestsService],
 })
 export class OneOnOneModule {}

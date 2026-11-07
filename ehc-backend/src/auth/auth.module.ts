@@ -40,6 +40,6 @@ import { AuthMeService } from './services/auth-me.service';
     { provide: APP_GUARD, useClass: PageAccessGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
   ],
-  exports: [EffectiveRolesService, PageAccessService],
+  exports: [EffectiveRolesService, PageAccessService, AuthMeService],
 })
 export class AuthModule {}
