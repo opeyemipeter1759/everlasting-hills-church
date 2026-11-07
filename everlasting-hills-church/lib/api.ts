@@ -391,23 +391,6 @@ export function useOnlineCheckIn() {
   });
 }
 
-export interface MemberAttendanceOverview {
-  attendance: {
-    marked: number;
-    total: number;
-    percentage: number;
-    lastMarkedAt: string | null;
-  };
-}
-
-export function useMemberOverview() {
-  return useQuery({
-    queryKey: ['overview', 'member'],
-    queryFn: () => api.get<MemberAttendanceOverview>('/overview/member'),
-    enabled: typeof window !== 'undefined',
-  });
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin Attendance endpoints
 // ─────────────────────────────────────────────────────────────────────────────

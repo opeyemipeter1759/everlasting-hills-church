@@ -25,5 +25,6 @@ import { EvangelismTestimoniesService } from './services/evangelism-testimonies.
     EvangelismTasksService,
     EvangelismTestimoniesService,
   ],
+  exports: [EvangelismAccessService],
 })
 export class EvangelismModule {}

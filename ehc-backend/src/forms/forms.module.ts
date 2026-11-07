@@ -35,5 +35,6 @@ import { PledgesController } from './pledges.controller';
     SalvationFormService,
     PledgeService,
   ],
+  exports: [PledgeService],
 })
 export class FormsModule {}

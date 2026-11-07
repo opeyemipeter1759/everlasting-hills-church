@@ -29,11 +29,4 @@ export class SermonsMemberStatsController {
   getMySermonStats(@CurrentUser() user: AuthUser) {
     return this.memberStats.getMemberSermonStats(user.userId);
   }
-
-  @Get('me/streak')
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'My weekly sermon streak' })
-  getMySermonStreak(@CurrentUser() user: AuthUser) {
-    return this.memberStats.getSermonStreak(user.userId);
-  }
 }
