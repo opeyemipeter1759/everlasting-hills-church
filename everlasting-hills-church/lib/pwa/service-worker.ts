@@ -38,8 +38,15 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
 async function post(message: Record<string, unknown>): Promise<void> {
   if (!isServiceWorkerSupported()) return;
   try {
-    const registration = await navigator.serviceWorker.ready;
-    registration.active?.postMessage(message);
+    // `ready` never settles when no worker is registered (always the case in
+    // development), and login awaits this before navigating — so check first,
+    // and cap the wait in case a registration never activates.
+    if (!(await navigator.serviceWorker.getRegistration())) return;
+    const registration = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+    ]);
+    registration?.active?.postMessage(message);
   } catch {
     /* no worker, nothing to tell */
   }

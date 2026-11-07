@@ -9,6 +9,7 @@ import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { uploadArticleCover, useArticle, useCreateArticle, useDeleteArticle, useUpdateArticle } from "@/lib/api/articles";
 import { MediumPage } from "./ArticleTabs";
 import ReviewNotes, { applySuggestion } from "./ReviewNotes";
+import ArticleBodyEditor from "./ArticleBodyEditor";
 
 /** Matches the DTO, so the server never has to reject something the form allowed. */
 export const TITLE_MIN = 3;
@@ -17,7 +18,6 @@ export const SUBTITLE_MAX = 200;
 export const BODY_MIN = 20;
 export const BODY_MAX = 40_000;
 
-const FORMATTING_HINT = "**bold** · *italic* · ## heading · - list · > quote · [link](url)";
 const LOCAL_PREFIX = "ehc.article-draft.";
 
 interface LocalDraft {
@@ -51,6 +51,79 @@ function writeLocal(key: string, draft: LocalDraft | null) {
   } catch {
     // Storage full or blocked: the server copy is still the safe one.
   }
+}
+
+/**
+ * The title and subtitle: borderless, growing with what is typed (a long
+ * title wraps instead of scrolling out of sight), labelled in the left margin
+ * on wide screens while focused, as Medium does, and counting characters only
+ * once the limit is near. Enter moves on to the next field rather than
+ * starting a line, since neither can hold one.
+ */
+function HeadingField({
+  id,
+  label,
+  value,
+  max,
+  placeholder,
+  onChange,
+  onEnter,
+  className,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  max: number;
+  placeholder: string;
+  onChange: (value: string) => void;
+  onEnter: () => void;
+  className: string;
+}) {
+  const box = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [value]);
+
+  const nearLimit = value.length >= max * 0.8;
+  return (
+    <div className="group relative">
+      <label
+        htmlFor={id}
+        className="max-xl:sr-only absolute -left-28 top-2 w-20 border-r border-[var(--m-line)] pr-3 text-right font-sans text-[13px] text-[var(--m-gray)] opacity-0 transition-opacity group-focus-within:opacity-100"
+      >
+        {label}
+      </label>
+      <textarea
+        id={id}
+        ref={box}
+        rows={1}
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\s*\n\s*/g, " "))}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            onEnter();
+          }
+        }}
+        placeholder={placeholder}
+        maxLength={max}
+        className={`block w-full resize-none overflow-hidden border-0 bg-transparent p-0 outline-none placeholder:text-[var(--m-gray)] placeholder:opacity-50 focus:ring-0 ${className}`}
+      />
+      {nearLimit && (
+        <span
+          aria-live="polite"
+          className={`absolute -bottom-5 right-0 font-sans text-[11px] tabular-nums opacity-0 transition-opacity group-focus-within:opacity-100 ${
+            value.length >= max ? "text-[var(--m-brand)]" : "text-[var(--m-gray)]"
+          }`}
+        >
+          {value.length}/{max}
+        </span>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -92,7 +165,6 @@ export default function ArticleEditor() {
   const [dirty, setDirty] = useState(false);
   const [localSavedAt, setLocalSavedAt] = useState<number | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
-  const bodyBox = useRef<HTMLTextAreaElement>(null);
 
   // Loaded once. Re-syncing on every refetch would throw away what somebody is typing.
   useEffect(() => {
@@ -142,14 +214,6 @@ export default function ArticleEditor() {
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
-
-  // The story box grows with the story.
-  useEffect(() => {
-    const el = bodyBox.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.max(320, el.scrollHeight)}px`;
-  }, [body, preview]);
 
   const words = useMemo(() => body.split(/\s+/).filter(Boolean).length, [body]);
   const minutes = Math.max(1, Math.round(words / 200));
@@ -375,8 +439,13 @@ export default function ArticleEditor() {
           !preview && (
             <>
               <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={chooseCover} aria-label="Cover picture" />
-              <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading} className="m-icon-btn mb-6 text-sm">
-                {uploading ? <Loader2 size={17} className="animate-spin" aria-hidden="true" /> : <ImagePlus size={17} aria-hidden="true" />}
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                disabled={uploading}
+                className="m-muted mb-8 inline-flex items-center gap-2 rounded-full border border-dashed border-[var(--m-line)] px-4 py-2 font-sans text-[13px] font-medium transition-colors hover:border-[var(--m-brand)] hover:text-[var(--m-brand)] disabled:opacity-60"
+              >
+                {uploading ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <ImagePlus size={15} aria-hidden="true" />}
                 {uploading ? "Uploading cover…" : "Add a cover image"}
               </button>
             </>
@@ -410,47 +479,36 @@ export default function ArticleEditor() {
           </article>
         ) : (
           <>
-            <label htmlFor="article-title" className="sr-only">
-              Title
-            </label>
-            <textarea
+            <HeadingField
               id="article-title"
-              rows={1}
+              label="Title"
               value={title}
-              onChange={(e) => change(setTitle)(e.target.value.replace(/\n/g, " "))}
+              max={TITLE_MAX}
               placeholder="Title"
-              maxLength={TITLE_MAX}
-              className="m-display m-ink w-full resize-none border-0 bg-transparent p-0 text-[40px] leading-[1.12] outline-none placeholder:text-[var(--m-gray)] placeholder:opacity-60 focus:ring-0 sm:text-[48px]"
+              onChange={change(setTitle)}
+              onEnter={() => document.getElementById("article-subtitle")?.focus()}
+              className="m-display m-ink text-[36px] leading-[1.15] tracking-[-0.02em] sm:text-[46px]"
             />
-            <label htmlFor="article-subtitle" className="sr-only">
-              Subtitle
-            </label>
-            <input
+            <HeadingField
               id="article-subtitle"
+              label="Subtitle"
               value={subtitle}
-              onChange={(e) => change(setSubtitle)(e.target.value)}
-              placeholder="Subtitle (optional)"
-              maxLength={SUBTITLE_MAX}
-              className="m-muted mt-3 w-full border-0 bg-transparent p-0 text-[22px] leading-snug outline-none placeholder:opacity-60 focus:ring-0"
+              max={SUBTITLE_MAX}
+              placeholder="Add a subtitle (optional)"
+              onChange={change(setSubtitle)}
+              onEnter={() => document.querySelector<HTMLElement>('[aria-label="Your story"], #article-body')?.focus()}
+              className="mt-4 font-sans text-[19px] leading-[1.45] text-[var(--m-gray)] sm:text-[22px]"
             />
-            <label htmlFor="article-body" className="sr-only">
-              Your story
-            </label>
-            <textarea
-              id="article-body"
-              ref={bodyBox}
+            <ArticleBodyEditor
               value={body}
-              onChange={(e) => change(setBody)(e.target.value)}
-              placeholder="Tell your story…"
+              onChange={change(setBody)}
               maxLength={BODY_MAX}
-              className="m-article mt-8 w-full resize-none overflow-hidden border-0 bg-transparent p-0 outline-none placeholder:text-[var(--m-gray)] placeholder:opacity-60 focus:ring-0"
+              status={
+                <span className="tabular-nums">
+                  {words} words · {minutes} min read
+                </span>
+              }
             />
-            <div className="m-muted mt-4 flex flex-wrap items-center justify-between gap-2 border-t m-rule pt-3 text-[12px]">
-              <span>{FORMATTING_HINT}</span>
-              <span className="tabular-nums">
-                {words} words · {minutes} min read
-              </span>
-            </div>
           </>
         )}
 

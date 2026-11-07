@@ -131,6 +131,7 @@ describe("writing a story", () => {
     render(<ArticleEditor />);
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "A new word" } });
     fireEvent.change(screen.getByLabelText("Subtitle"), { target: { value: "What Psalm 23 did" } });
+    fireEvent.click(screen.getByRole("button", { name: "Markdown" }));
     fireEvent.change(screen.getByLabelText("Your story"), { target: { value: "The Lord is my shepherd, and this week I learnt why." } });
     fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
     await waitFor(() =>
@@ -148,6 +149,7 @@ describe("writing a story", () => {
     render(<ArticleEditor />);
     expect(screen.getByText(`About ${label}`)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "What I learned today" } });
+    fireEvent.click(screen.getByRole("button", { name: "Markdown" }));
     fireEvent.change(screen.getByLabelText("Your story"), { target: { value: "God keeps His covenant even when we forget ours." } });
     fireEvent.click(screen.getByRole("button", { name: "Submit for review" }));
     await waitFor(() =>
@@ -165,6 +167,20 @@ describe("writing a story", () => {
     render(<ArticleEditor />);
     fireEvent.click(screen.getByRole("button", { name: "Restore" }));
     expect(screen.getByLabelText("Title")).toHaveValue("Lost words");
+  });
+
+  it("shows the story formatted in the editor, not as Markdown", async () => {
+    window.localStorage.setItem(
+      "ehc.article-draft.new",
+      JSON.stringify({ title: "Formatted", subtitle: "", body: "## Grace\n\nSome **bold** words.\n\n- one\n- two", coverImageUrl: null, savedAt: Date.now() }),
+    );
+    render(<ArticleEditor />);
+    fireEvent.click(screen.getByRole("button", { name: "Restore" }));
+    const story = await screen.findByRole("textbox", { name: "Your story" });
+    await waitFor(() => expect(story.querySelector("h2")).toHaveTextContent("Grace"));
+    expect(story.querySelector("strong")).toHaveTextContent("bold");
+    expect(story.querySelectorAll("li")).toHaveLength(2);
+    expect(story).not.toHaveTextContent("**");
   });
 });
 
