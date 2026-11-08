@@ -16,7 +16,7 @@ function makeService(overrides: Record<string, Record<string, jest.Mock>> = {}) 
     spouse: { mine: ok({ status: 'SINGLE' }) },
     pledges: { mine: ok(null) },
     evangelism: { tally: ok({ reached: 4 }) },
-    prayerWatch: { getMySignup: ok(null) },
+    prayerWatch: { getMySignup: ok(null), getPublicView: ok({ id: 'w1', slots: [] }) },
     oneOnOne: { listMine: ok([]) },
     readingPlan: { today: ok({ day: 1 }), subscriptions: ok([]) },
     scripture: { today: ok({ reference: 'John 3:16' }) },
@@ -45,6 +45,7 @@ describe('MemberHomeService', () => {
     expect(home.latestSermon).toEqual({ ready: false });
     expect(home.pledgeCampaign).toBe(HOME_PLEDGE_CAMPAIGN);
     expect(home.unavailable).toEqual([]);
+    expect(home.prayerWatchCurrent).toEqual({ id: 'w1', slots: [] });
     expect(deps.pledges.mine).toHaveBeenCalledWith(actor, HOME_PLEDGE_CAMPAIGN);
     expect(deps.spouse.mine).toHaveBeenCalledWith('u1', 'a@b.org');
   });

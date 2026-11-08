@@ -28,12 +28,12 @@ export function EvangelismTallyCard() {
       </div>
       <div className="grid grid-cols-2 gap-3 px-5 py-5">
         <div>
-          <p className="text-3xl font-bold tabular-nums text-[#87102C] dark:text-[#FFB3C1]">{data.reached}</p>
-          <p className={`text-sm ${muted}`}>{data.reached === 1 ? "person reached" : "people reached"}</p>
+          <p className="text-2xl font-bold leading-none tabular-nums text-[#87102C] dark:text-[#FFB3C1]">{data.reached}</p>
+          <p className={`mt-1 text-xs ${muted}`}>{data.reached === 1 ? "person reached" : "people reached"}</p>
         </div>
         <div>
-          <p className="text-3xl font-bold tabular-nums text-[#87102C] dark:text-[#FFB3C1]">{data.saved}</p>
-          <p className={`text-sm ${muted}`}>gave their life to Christ</p>
+          <p className="text-2xl font-bold leading-none tabular-nums text-[#87102C] dark:text-[#FFB3C1]">{data.saved}</p>
+          <p className={`mt-1 text-xs ${muted}`}>gave their life to Christ</p>
         </div>
         {data.rededicated > 0 && (
           <p className={`col-span-2 text-sm ${muted}`}>

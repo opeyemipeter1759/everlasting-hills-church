@@ -52,15 +52,15 @@ export default function DailyScriptureCard() {
   return (
     <section
       aria-labelledby="daily-scripture-title"
-      className="min-w-0 overflow-hidden rounded-2xl border border-[#E7CDD3] bg-white dark:border-white/10 dark:bg-white/[0.03]"
+      className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-[#E7CDD3] bg-white dark:border-white/10 dark:bg-white/[0.03]"
     >
-      <div className="bg-gradient-to-br from-[#220d20] to-[#740d2b] p-5 text-white sm:p-6">
+      <div className="flex-1 bg-gradient-to-br from-[#220d20] to-[#740d2b] p-5 text-white">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2
             id="daily-scripture-title"
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#f5d49a]"
+            className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#f5d49a]"
           >
-            <BookOpen size={16} aria-hidden="true" />
+            <BookOpen size={14} aria-hidden="true" />
             Scripture for today
           </h2>
           <time dateTime={data.date} className="text-xs text-white/65">
@@ -71,17 +71,16 @@ export default function DailyScriptureCard() {
             }).format(new Date(`${data.date}T12:00:00Z`))}
           </time>
         </div>
-        <blockquote className="mt-4 max-w-3xl break-words font-serif text-xl leading-relaxed sm:text-2xl">
-          {data.text}
-        </blockquote>
-        <p className="mt-4 text-sm font-semibold text-[#f5d49a]">
-          {data.reference}{" "}
-          <span className="font-normal text-white/65">
-            · {data.translationCode}
-          </span>
-        </p>
-
-        <HillsConfession date={data.date} />
+        {/* Side by side from tablet up, so the card stays short; stacked on phones. */}
+        <div className="mt-4 grid gap-5 md:grid-cols-2 md:gap-6">
+          <div className="min-w-0">
+            <blockquote className="break-words font-serif text-[17px] leading-relaxed sm:text-lg">{data.text}</blockquote>
+            <p className="mt-3 text-xs font-semibold text-[#f5d49a]">
+              {data.reference} <span className="font-normal text-white/65">· {data.translationCode}</span>
+            </p>
+          </div>
+          <HillsConfession date={data.date} />
+        </div>
       </div>
 
       <DailySharePanel

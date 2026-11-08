@@ -6,8 +6,8 @@ import { WelcomeHero } from "./WelcomeHero";
 import { BirthdayCard } from "./BirthdayCard";
 import { QuickActionsStrip } from "./QuickActionsStrip";
 import { CheckInPanel } from "./CheckInPanel";
-import { OnlineCheckInBar } from "./OnlineCheckInBar";
-import { JourneyBand } from "./JourneyBand";
+import { WarmAttendanceStat } from "./WarmAttendanceStat";
+import { WarmStreakStat } from "./WarmStreakStat";
 import { FeaturedSermonCard } from "./FeaturedSermonCard";
 import { ContinueListeningCard } from "./ContinueListeningCard";
 import { GatheringsPanel } from "./GatheringsPanel";
@@ -22,6 +22,7 @@ import { PrayerWatchCard } from "./PrayerWatchCard";
 import { OneOnOneCard } from "./OneOnOneCard";
 import { SpouseRequestsInbox } from "@/components/dashboard/settings/SpouseLink";
 import LatestSermonSummary from "@/components/sermon-digest/LatestSermonSummary";
+import { DashboardColumns, MainColumn, SideColumn, Tile } from "@/components/ui/layout/DashboardColumns";
 
 const DEFAULT_STREAK: StreakState = {
   level: 1,
@@ -46,16 +47,13 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     nextService = null,
     hasCheckedInToday = false,
     todayService = null,
-    prayerCount = 0,
     recentServices = [],
-    monthlyAttendance = [],
     listenHistory = [],
     announcements = [],
     birthdayDaysUntil = null,
     communityBirthdays = [],
     ministryUnit = null,
     featuredSermon = null,
-    discipleshipMilestones = [],
   } = props;
 
   const displayName = member ? `${member.firstName} ${member.lastName}` : userEmail;
@@ -64,13 +62,17 @@ export default function MemberHome(props: MemberHomePropsOptional) {
     ? `${member.firstName[0]}${member.lastName[0]}`.toUpperCase()
     : (userEmail[0] ?? "M").toUpperCase();
 
-  const isNewMember = attendanceCount === 0 && prayerCount === 0;
 
   return (
-    <div className="space-y-5 max-w-full">
-      <ProfileCompletionToast member={member} />
-      <QrCheckinBanner />
-      <SpouseRequestsInbox />
+    <div className="max-w-full space-y-5">
+      {/* Notices: only shown when there is something to act on. */}
+      <div className="space-y-3 empty:hidden">
+        <ProfileCompletionToast member={member} />
+        <QrCheckinBanner />
+        <SpouseRequestsInbox />
+        <PushOptInCard />
+      </div>
+
       <WelcomeHero
         firstName={firstName}
         initials={initials}
@@ -80,66 +82,52 @@ export default function MemberHome(props: MemberHomePropsOptional) {
         streak={streak}
         nextService={nextService}
       />
-
-      <PushOptInCard />
-
-      <PledgeAppeal member={member} userEmail={userEmail} />
-
-      <BirthdayCard
-        memberId={member?.id ?? null}
-        birthdayDaysUntil={birthdayDaysUntil}
-        communityBirthdays={communityBirthdays}
-      />
-
       <QuickActionsStrip />
 
-      <EvangelismTallyCard />
+      {/* Wide column and narrow column stack independently: no card sets another's height. */}
+      <DashboardColumns>
+        <MainColumn>
+          <Tile order={1}><PledgeAppeal member={member} userEmail={userEmail} /></Tile>
+          <Tile order={3}><DailyScriptureCard /></Tile>
+          <Tile order={6}><TodayReadingCard /></Tile>
+          <Tile order={9}><AnnouncementsPanel announcements={announcements} /></Tile>
+          <Tile order={12}><LatestSermonSummary compact /></Tile>
+          {featuredSermon && <Tile order={14}><FeaturedSermonCard sermon={featuredSermon} /></Tile>}
+          <Tile order={15}><GatheringsPanel /></Tile>
+        </MainColumn>
 
-      <PrayerWatchCard />
-
-      <OneOnOneCard />
-
-      {/* Side by side from lg up: the reading and the day's word are read together. */}
-        <TodayReadingCard />
-        <DailyScriptureCard />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <CheckInPanel
-          todayService={todayService}
-          hasCheckedInToday={hasCheckedInToday}
-          nextService={nextService}
-        />
-        <AnnouncementsPanel announcements={announcements} />
-      </div>
-
-{/*       <OnlineCheckInBar />
- */}
-      <JourneyBand
-        isNewMember={isNewMember}
-        member={member}
-        memberDisplayId={memberDisplayId}
-        prayerCount={prayerCount}
-        ministryUnit={ministryUnit}
-        attendanceRate={attendanceRate}
-        attendanceCount={attendanceCount}
-        attendanceTotal={attendanceTotal}
-        lastServiceDate={lastServiceDate}
-        recentServices={recentServices}
-        streak={streak}
-        coursesCompleted={coursesCompleted}
-        sermonsCompleted={sermonsCompleted}
-        nextService={nextService}
-        discipleshipMilestones={discipleshipMilestones}
-        monthlyAttendance={monthlyAttendance}
-      />
-
-      {featuredSermon && <FeaturedSermonCard sermon={featuredSermon} />}
-         <div className="grid grid-cols-1 gap-5">
-          <ContinueListeningCard listenHistory={listenHistory} />
-                  <LatestSermonSummary />
-          
-        </div>
-          <GatheringsPanel />
+        <SideColumn>
+          <Tile order={2}>
+            <CheckInPanel todayService={todayService} hasCheckedInToday={hasCheckedInToday} nextService={nextService} />
+          </Tile>
+          <Tile order={4}>
+            <WarmStreakStat
+              memberDisplayId={memberDisplayId}
+              streak={streak}
+              coursesCompleted={coursesCompleted}
+              sermonsCompleted={sermonsCompleted}
+              nextService={nextService}
+              ministryUnit={ministryUnit}
+            />
+          </Tile>
+          <Tile order={5}><PrayerWatchCard /></Tile>
+          <Tile order={7}>
+            <WarmAttendanceStat
+              attendanceRate={attendanceRate}
+              attendanceCount={attendanceCount}
+              attendanceTotal={attendanceTotal}
+              lastServiceDate={lastServiceDate}
+              recentServices={recentServices}
+            />
+          </Tile>
+          <Tile order={8}><ContinueListeningCard listenHistory={listenHistory} /></Tile>
+          <Tile order={10}>
+            <BirthdayCard memberId={member?.id ?? null} birthdayDaysUntil={birthdayDaysUntil} communityBirthdays={communityBirthdays} />
+          </Tile>
+          <Tile order={11}><OneOnOneCard /></Tile>
+          <Tile order={13}><EvangelismTallyCard /></Tile>
+        </SideColumn>
+      </DashboardColumns>
     </div>
   );
 }

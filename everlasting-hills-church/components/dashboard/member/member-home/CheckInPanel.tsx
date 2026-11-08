@@ -49,16 +49,16 @@ export function CheckInPanel({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a0610] via-[#0e0407] to-[#1a0610] border border-white/[0.07] min-h-[440px] shadow-[0_8px_40px_rgba(0,0,0,0.35)]">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1a0610] via-[#0e0407] to-[#1a0610] border border-white/[0.07] min-h-[260px] shadow-[0_4px_24px_rgba(0,0,0,0.25)]">
       <CosmicBackdrop />
 
-      <div className="relative z-10 flex flex-col h-full p-4 xs:p-7 sm:p-8">
+      <div className="relative z-10 flex flex-col h-full p-5 sm:p-6">
         {/* Header */}
-        <div className="mb-6">
-          <p className="text-[10px] tracking-[0.15em] xs:tracking-[0.3em] uppercase font-bold text-[#FFB3C1]/70">
+        <div className="mb-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#FFB3C1]/70">
             {isServiceDay ? "Today's Service" : "Next Service"}
           </p>
-          <h2 className="text-white text-xl sm:text-2xl font-bold mt-1.5">{serviceName}.</h2>
+          <h2 className="text-white text-base font-bold mt-1">{serviceName}.</h2>
 
           {isServiceDay && serviceTime && (
             <div className="flex flex-wrap items-center gap-3 mt-2.5">
@@ -94,7 +94,7 @@ export function CheckInPanel({
         </div>
 
         {/* Center stage */}
-        <div className="flex-1 flex items-center justify-center py-6">
+        <div className="flex-1 flex items-center justify-center py-4">
           {canMarkLoading ? (
             <motion.span
               animate={{ rotate: 360 }}

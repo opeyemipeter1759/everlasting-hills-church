@@ -43,8 +43,8 @@ export function GatheringsPanel() {
       icon={CalendarClock}
       action={
         liveCount > 0 ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 shrink-0">
-            <Radio size={9} className="animate-pulse" /> {liveCount} live
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">
+            <Radio size={11} className="animate-pulse" /> {liveCount} live
           </span>
         ) : undefined
       }
@@ -71,17 +71,17 @@ function GatheringRow({ gathering }: { gathering: Gathering }) {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-xs font-semibold text-[#111] dark:text-white line-clamp-1">
+          <p className="text-sm font-semibold text-[#111] dark:text-white line-clamp-1">
             {gathering.title}
           </p>
           {gathering.isLive && (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              Live now
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+              ● Live now
             </span>
           )}
         </div>
 
-        <p className={`text-[10px] ${muted} mt-0.5`}>
+        <p className={`text-xs ${muted} mt-0.5`}>
           <GatheringTiming gathering={gathering} />
         </p>
       </div>
@@ -92,9 +92,9 @@ function GatheringRow({ gathering }: { gathering: Gathering }) {
           href={gathering.joinUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="self-center inline-flex items-center gap-1 rounded-xl bg-[#87102C] px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:bg-[#6E0C24] shrink-0"
+          className="self-center inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-[#87102C] px-3.5 text-sm font-semibold text-white transition-colors hover:bg-[#6E0C24] shrink-0"
         >
-          Join <ExternalLink size={11} />
+          Join <ExternalLink size={13} />
         </a>
       )}
     </div>

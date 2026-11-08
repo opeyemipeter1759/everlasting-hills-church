@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { BookOpen, Check, Copy, Download, Layers, Loader2, Share2, Sparkles, X } from "lucide-react";
+import { BookOpen, Check, ChevronDown, Copy, Download, Layers, Loader2, Settings2, Share2, Sparkles, X } from "lucide-react";
 import type { DailyScripture } from "@/lib/api/daily-scripture";
 import { useHillsConfession } from "@/components/sermon-digest/useHillsConfession";
 import {
@@ -85,6 +85,7 @@ export default function DailySharePanel({
   const [copied, setCopied] = useState(false);
   const [message, setMessage] = useState("");
   const [enlarged, setEnlarged] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const ready = !(usesScripture && translationChanging) && prepared?.key === content.key ? prepared : null;
 
   // The latest drawing function, so the effect below runs only when what the
@@ -163,150 +164,118 @@ export default function DailySharePanel({
     }
   }
 
-  const secondary =
-    "inline-flex min-h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:border-[#87102C]/40 hover:text-[#87102C] disabled:opacity-50 dark:border-white/15 dark:bg-transparent dark:text-gray-200 sm:flex-none";
-
-  const confessionNote = (
-    <div className="rounded-xl border border-[#E7CDD3] bg-[#FFF8F9] p-3 text-sm dark:border-white/10 dark:bg-white/[0.04]">
-      <p className="font-semibold text-gray-900 dark:text-white">
-        {plural ? "With the Hills Confession" : confession.source}
-      </p>
-      <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-        {confession.sermon
-          ? `${plural ? `${confession.source} · ` : ""}Word of the Day: ${confession.sermon.word}${confession.sermon.verse.reference ? ` · ${confession.sermon.verse.reference}` : ""}`
-          : "Updates with each Sunday and Wednesday sermon."}
-      </p>
-    </div>
-  );
+  const button =
+    "inline-flex min-h-10 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 text-[13px] font-semibold transition disabled:opacity-50";
+  const secondary = `${button} border border-gray-200 bg-white text-gray-700 hover:border-[#87102C]/40 hover:text-[#87102C] dark:border-white/15 dark:bg-transparent dark:text-gray-200`;
+  const word = confession.sermon
+    ? `${plural ? `${confession.source} · ` : ""}Word of the Day: ${confession.sermon.word}${confession.sermon.verse.reference ? ` · ${confession.sermon.verse.reference}` : ""}`
+    : "Updates with each Sunday and Wednesday sermon.";
 
   return (
-    <div className="p-4 sm:p-5">
-      <div>
-        <h3 className="font-semibold text-gray-900 dark:text-white">Share today’s word</h3>
-        <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
-          Encourage someone today. Every image carries our church’s name and website.
-        </p>
-      </div>
-
-      <div role="radiogroup" aria-label="What to share" className="mt-4 grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1 dark:bg-white/[0.06]">
-        {TARGETS.map(({ id, label, icon: Icon }) => {
-          const active = target === id;
-          return (
+    <div className="space-y-3 p-4 sm:px-5">
+      {/* One line: what this is, and what to share. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Share today’s word</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Every image carries our church’s name and website.</p>
+        </div>
+        <div role="radiogroup" aria-label="What to share" className="inline-flex rounded-lg bg-gray-100 p-0.5 dark:bg-white/[0.06]">
+          {TARGETS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               type="button"
               role="radio"
-              aria-checked={active}
+              aria-checked={target === id}
               onClick={() => {
                 setTarget(id);
                 setEnlarged(false);
               }}
-              className={`inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 text-sm font-semibold transition ${
-                active
+              className={`inline-flex min-h-8 items-center gap-1 rounded-md px-2.5 text-xs font-semibold transition ${
+                target === id
                   ? "bg-white text-[#87102C] shadow-sm dark:bg-white/15 dark:text-white"
                   : "text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
               }`}
             >
-              <Icon size={15} aria-hidden="true" className="hidden shrink-0 min-[400px]:block" />
+              <Icon size={13} aria-hidden="true" className="hidden shrink-0 min-[400px]:block" />
               {label}
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-[72px_1fr] gap-x-4 gap-y-3 sm:grid-cols-[104px_1fr] sm:grid-rows-[auto_1fr]">
-        {/* Preview: exactly what goes to the status. Two images fan out for "Both". */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button type="button" onClick={share} disabled={!ready || sharing} className={`${button} grow bg-[#87102C] text-white hover:bg-[#6d0d24] sm:grow-0`}>
+          {(!ready && !imageError) || sharing ? <Loader2 size={15} className="animate-spin" aria-hidden="true" /> : <Share2 size={15} aria-hidden="true" />}
+          {sharing ? "Opening sharing…" : "Share to WhatsApp Status"}
+        </button>
+        <button type="button" disabled={!ready} onClick={save} className={secondary}>
+          <Download size={15} aria-hidden="true" />
+          {plural ? "Save images" : "Save image"}
+        </button>
+        <button type="button" onClick={copyText} className={secondary}>
+          {copied ? <Check size={15} aria-hidden="true" /> : <Copy size={15} aria-hidden="true" />}
+          {copied ? "Copied" : "Copy text"}
+        </button>
         <button
           type="button"
-          onClick={() => ready && setEnlarged((open) => !open)}
-          disabled={!ready}
-          aria-label={enlarged ? "Hide the large preview" : `Show the status ${plural ? "images" : "image"} larger`}
-          className={`relative aspect-[9/16] self-start rounded-lg sm:row-span-2 ${
-            ready && plural ? "" : "overflow-hidden border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5"
-          }`}
+          onClick={() => setOptionsOpen((open) => !open)}
+          aria-expanded={optionsOpen}
+          className="ml-auto inline-flex min-h-10 items-center gap-1 px-1 text-xs font-semibold text-gray-500 hover:text-[#87102C] dark:text-gray-400 dark:hover:text-rose-300"
         >
-          {ready ? (
-            ready.items.map((item, index) => (
-              // A local blob preview; next/image adds nothing here.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={item.url}
-                src={item.url}
-                alt=""
-                className={
-                  plural
-                    ? `absolute w-[80%] rounded-md border border-white shadow-md dark:border-white/20 ${
-                        index === 0 ? "left-0 top-0 -rotate-6" : "bottom-0 right-0 rotate-6"
-                      }`
-                    : "h-full w-full object-cover"
-                }
-              />
-            ))
-          ) : (
-            <span className="absolute inset-0 flex items-center justify-center text-gray-400">
-              {imageError ? <X size={18} aria-hidden="true" /> : <Loader2 size={18} className="animate-spin" aria-hidden="true" />}
-            </span>
-          )}
+          <Settings2 size={14} aria-hidden="true" /> {usesScripture ? "Version & preview" : "Preview"}
+          <ChevronDown size={14} aria-hidden="true" className={`transition-transform ${optionsOpen ? "rotate-180" : ""}`} />
         </button>
-
-        <div className="min-w-0 space-y-2">
-          {usesScripture && versionPicker}
-          {target !== "scripture" && confessionNote}
-        </div>
-
-        {/* Full width under the preview on phones; beside it from sm up. */}
-        <div className="col-span-2 flex flex-wrap items-start gap-2 self-start sm:col-span-1 sm:col-start-2">
-          <button
-            type="button"
-            onClick={share}
-            disabled={!ready || sharing}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#87102C] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#6d0d24] disabled:opacity-50 sm:w-auto"
-          >
-            {(!ready && !imageError) || sharing ? (
-              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Share2 size={16} aria-hidden="true" />
-            )}
-            {sharing ? "Opening sharing…" : "Share to WhatsApp Status"}
-          </button>
-          <button type="button" disabled={!ready} onClick={save} className={secondary}>
-            <Download size={16} aria-hidden="true" />
-            {plural ? "Save images" : "Save image"}
-          </button>
-          <button type="button" onClick={copyText} className={secondary}>
-            {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
-            {copied ? "Copied" : "Copy text"}
-          </button>
-        </div>
       </div>
 
-      {imageError && (
-        <p className="mt-3 text-sm text-amber-700 dark:text-amber-300">
-          The status image couldn’t be prepared. You can still copy and share the text.
-        </p>
+      {/* Tucked away: the Bible version, the image preview and the how-to. */}
+      {optionsOpen && (
+        <div className="grid grid-cols-[56px_1fr] gap-3 rounded-xl border border-gray-200 p-3 dark:border-white/10">
+          <button
+            type="button"
+            onClick={() => ready && setEnlarged((open) => !open)}
+            disabled={!ready}
+            aria-label={enlarged ? "Hide the large preview" : `Show the status ${plural ? "images" : "image"} larger`}
+            className={`relative aspect-[9/16] self-start rounded-md ${ready && plural ? "" : "overflow-hidden border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5"}`}
+          >
+            {ready ? (
+              ready.items.map((item, index) => (
+                // A local blob preview; next/image adds nothing here.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={item.url}
+                  src={item.url}
+                  alt=""
+                  className={plural ? `absolute w-[80%] rounded border border-white shadow dark:border-white/20 ${index === 0 ? "left-0 top-0 -rotate-6" : "bottom-0 right-0 rotate-6"}` : "h-full w-full object-cover"}
+                />
+              ))
+            ) : (
+              <span className="absolute inset-0 flex items-center justify-center text-gray-400">
+                {imageError ? <X size={16} aria-hidden="true" /> : <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
+              </span>
+            )}
+          </button>
+          <div className="min-w-0 space-y-2 text-xs text-gray-500 dark:text-gray-400">
+            {usesScripture && versionPicker}
+            {target !== "scripture" && <p>{word}</p>}
+            <p className="leading-relaxed">
+              On your phone, choose WhatsApp, then My status. No share option? Save the {plural ? "images" : "image"} and upload {plural ? "them" : "it"} in WhatsApp.
+            </p>
+          </div>
+        </div>
       )}
+
+      {imageError && <p className="text-xs text-amber-700 dark:text-amber-300">The status image couldn’t be prepared. You can still copy and share the text.</p>}
       {message && (
-        <p role="status" className="mt-3 text-sm text-[#87102C] dark:text-rose-300">
+        <p role="status" className="text-xs text-[#87102C] dark:text-rose-300">
           {message}
         </p>
       )}
-      <p className="mt-3 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
-        On your phone, choose WhatsApp, then My status. No share option? Save the {plural ? "images" : "image"} and upload{" "}
-        {plural ? "them" : "it"} in WhatsApp.
-      </p>
 
       {enlarged && ready && (
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
+        <div className="flex flex-wrap justify-center gap-3">
           {ready.items.map((item) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={item.url}
-              src={item.url}
-              alt={item.alt}
-              width={1080}
-              height={1920}
-              className="h-auto w-full max-w-[240px] rounded-xl shadow-lg"
-            />
+            <img key={item.url} src={item.url} alt={item.alt} width={1080} height={1920} className="h-auto w-full max-w-[220px] rounded-xl shadow-lg" />
           ))}
         </div>
       )}

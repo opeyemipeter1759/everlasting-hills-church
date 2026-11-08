@@ -36,16 +36,16 @@ export function NoServiceCenter({ nextService }: { nextService: MemberHomeProps[
     const countdown = getServiceCountdown(nextService.scheduledAt);
     return (
       <div className="text-center max-w-sm w-full">
-        <p className="text-[#FFB3C1]/60 text-[10px] uppercase tracking-[0.15em] xs:tracking-[0.3em] font-bold mb-2">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#FFB3C1]/60 mb-2">
           Next Service In
         </p>
-        <p className="text-white text-5xl font-black tracking-tight tabular-nums">{countdown}</p>
+        <p className="text-white text-2xl font-bold leading-none tracking-tight tabular-nums">{countdown}</p>
         <p className="text-white/60 text-sm font-semibold mt-2">{nextService.name}</p>
         <p className="text-white/35 text-xs mt-1 leading-relaxed">
           {fmtDate(nextService.scheduledAt, { weekday: "long", day: "numeric", month: "long" })}
           {" · "}{fmtTime(nextService.scheduledAt)} · Hills Auditorium
         </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+        <div className="flex flex-col gap-2 mt-5">
           <a
             href={CHURCH.youtubeUrl} target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#87102C]/30 transition-all"
@@ -67,12 +67,12 @@ export function NoServiceCenter({ nextService }: { nextService: MemberHomeProps[
     );
   }
   return (
-    <div className="text-center max-w-sm">
-      <h3 className="text-white text-xl font-bold mb-2 tracking-tight">No Service Today</h3>
-      <p className="text-white/55 text-sm mb-7 leading-relaxed">
+    <div className="text-center max-w-sm w-full">
+      <h3 className="text-white text-base font-bold mb-1 tracking-tight">No Service Today</h3>
+      <p className="text-white/55 text-xs mb-5 leading-relaxed">
         Stay connected through our platforms.
       </p>
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
+      <div className="flex flex-col gap-2">
         <a
           href={CHURCH.youtubeUrl} target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] hover:-translate-y-0.5 transition-all"

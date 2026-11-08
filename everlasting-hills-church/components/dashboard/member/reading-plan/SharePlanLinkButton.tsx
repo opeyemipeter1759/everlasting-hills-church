@@ -29,7 +29,14 @@ async function copy(text: string): Promise<boolean> {
  * link to paste anywhere. The link opens the plan ready to start, and someone
  * signed out is brought back to it after logging in.
  */
-export function SharePlanLinkButton({ plan, className = "" }: { plan: SharablePlan; className?: string }) {
+/** "overlay": a glass circle for use over a cover image. "outline": a bordered button for a plain card. */
+const VARIANTS = {
+  overlay: "h-11 w-11 rounded-full bg-black/35 text-white backdrop-blur-sm hover:bg-black/55 focus-visible:outline-white",
+  outline:
+    "h-10 w-10 rounded-xl border border-gray-200 text-gray-600 hover:border-[#87102C]/30 hover:text-[#87102C] focus-visible:outline-[#87102C] dark:border-white/15 dark:text-gray-200 dark:hover:text-[#FFB3C1]",
+};
+
+export function SharePlanLinkButton({ plan, variant = "overlay", className = "" }: { plan: SharablePlan; variant?: keyof typeof VARIANTS; className?: string }) {
   async function send() {
     const url = planShareLink(plan.slug);
     if (hasShareSheet()) {
@@ -55,9 +62,9 @@ export function SharePlanLinkButton({ plan, className = "" }: { plan: SharablePl
       onClick={send}
       aria-label={`Send a link to ${plan.title}`}
       title="Send a link to this plan"
-      className={`inline-flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition-colors hover:bg-black/55 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center transition-colors focus-visible:outline focus-visible:outline-2 ${VARIANTS[variant]} ${className}`}
     >
-      <Share2 size={17} aria-hidden="true" />
+      <Share2 size={variant === "overlay" ? 17 : 15} aria-hidden="true" />
     </button>
   );
 }

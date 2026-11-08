@@ -72,7 +72,7 @@ export class MemberHomeService {
 
     const [
       me, bookmarks, listenHistory, sermonStreak, overview, announcements, communityFeed, communityBirthdays,
-      spouse, pledge, evangelismTally, prayerWatch, oneOnOneRequests, readingToday, readingSubscriptions,
+      spouse, pledge, evangelismTally, prayerWatch, prayerWatchCurrent, oneOnOneRequests, readingToday, readingSubscriptions,
       canMark, gatherings, scriptureToday, scriptureTranslations, latestSermon,
     ] = await Promise.all([
       section('me', () => this.authMe.getMe(actor.userId)),
@@ -87,6 +87,8 @@ export class MemberHomeService {
       section('pledge', () => this.pledges.mine(actor, HOME_PLEDGE_CAMPAIGN)),
       section('evangelismTally', () => (actor.memberId ? this.evangelism.tally(actor.memberId) : NO_TALLY)),
       section('prayerWatch', () => (actor.profileId ? this.prayerWatch.getMySignup(actor.profileId) : null)),
+      // Every watch of the night, so the card can show where theirs falls.
+      section('prayerWatchCurrent', () => this.prayerWatch.getPublicView()),
       section('oneOnOneRequests', () => this.oneOnOne.listMine(actor)),
       section('readingToday', () => this.readingPlan.today(actor, undefined)),
       section('readingSubscriptions', () => this.readingPlan.subscriptions(actor)),
@@ -102,7 +104,7 @@ export class MemberHomeService {
 
     return {
       me, bookmarks, listenHistory, sermonStreak, overview, announcements, communityFeed, communityBirthdays,
-      spouse, pledge, evangelismTally, prayerWatch, oneOnOneRequests,
+      spouse, pledge, evangelismTally, prayerWatch, prayerWatchCurrent, oneOnOneRequests,
       readingPlan: { today: readingToday, subscriptions: readingSubscriptions },
       canMark, gatherings,
       scripture: { today: scriptureToday, translations: scriptureTranslations },

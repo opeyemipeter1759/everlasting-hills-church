@@ -137,7 +137,7 @@ describe("DailyScriptureCard", () => {
       refetch: vi.fn(),
     } as never));
 
-    renderSharingScripture();
+    renderSharingScripture(); fireEvent.click(screen.getByRole("button", { name: /Version & preview/ })); // the picker sits behind this
     chooseOption("Bible version for this status", /^KJV/);
 
     expect(useDailyScripture).toHaveBeenLastCalledWith("KJV");
@@ -231,7 +231,7 @@ describe("sharing the Hills Confession", () => {
     render(<DailyScriptureCard />);
     const options = screen.getAllByRole("radio");
     expect(options[0]).toHaveAccessibleName("Both");
-    expect(options[0]).toHaveAttribute("aria-checked", "true");
+    expect(options[0]).toHaveAttribute("aria-checked", "true"); fireEvent.click(screen.getByRole("button", { name: /Version & preview/ })); // the picker sits behind this
     expect(screen.getByLabelText("Bible version for this status")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("radio", { name: "Confession" }));
@@ -274,7 +274,7 @@ describe("sharing the Hills Confession", () => {
     render(<DailyScriptureCard />);
 
     // The Bible version still applies to the scripture image.
-    expect(screen.getByLabelText("Bible version for this status")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Version & preview/ })); expect(screen.getByLabelText("Bible version for this status")).toBeInTheDocument();
     fireEvent.click(await shareButton());
     expect(share).toHaveBeenCalledWith({ files: [file, confessionImage], title: expect.stringContaining("Hills Confession") });
 

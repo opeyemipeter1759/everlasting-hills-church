@@ -29,18 +29,18 @@ export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, at
       <div aria-hidden="true" className="absolute -right-20 -top-20 h-72 w-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
       <div aria-hidden="true" className="absolute -bottom-24 -left-12 h-56 w-56 rounded-full bg-amber-300/10 blur-3xl pointer-events-none" />
       {/* Watermark */}
-      <div aria-hidden="true" className="pointer-events-none absolute right-8 top-1/2 -translate-y-1/2 select-none text-[80px] font-black leading-none tracking-tight text-white/[0.04]">
+      <div aria-hidden="true" className="pointer-events-none absolute right-8 top-1/2 -translate-y-1/2 select-none text-[56px] font-black leading-none tracking-tight text-white/[0.04]">
         EHC
       </div>
 
-      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6 p-4 xs:p-7 sm:p-9">
+      <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:px-6 sm:py-5">
         <div className="flex md:items-center flex-col md:flex-row gap-5">
           <div className="relative flex-shrink-0">
-            <div className="w-16 h-16 rounded-2xl ring-2 ring-white/20 ring-offset-2 ring-offset-transparent overflow-hidden bg-white/10 flex items-center justify-center">
+            <div className="w-14 h-14 rounded-2xl ring-2 ring-white/20 ring-offset-2 ring-offset-transparent overflow-hidden bg-white/10 flex items-center justify-center">
               {photoUrl ? (
-                <Image src={photoUrl} alt={firstName} width={64} height={64} priority className="w-full h-full object-cover" />
+                <Image src={photoUrl} alt={firstName} width={56} height={56} priority className="w-full h-full object-cover" />
               ) : (
-                <span className="text-2xl font-extrabold text-white">{initials}</span>
+                <span className="text-lg font-bold text-white">{initials}</span>
               )}
             </div>
             <span className="absolute -bottom-1 md:-right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-[#87102C]" />
@@ -55,12 +55,9 @@ export function WelcomeHero({ firstName, initials, photoUrl, memberDisplayId, at
             > {date}
               <QrCode size={11} className="opacity-50 group-hover:opacity-100 transition-opacity flex-shrink-0" />
             </button>
-            <h1 className="text-2xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-3xl">
+            <h1 className="text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl">
               {getGreeting()}, {firstName} <span aria-hidden="true">👋</span>
             </h1>
-            <p className="mt-2 text-sm text-white/55">
-              Welcome back to Everlasting Hills Church.
-            </p>
           </div>
         </div>
 

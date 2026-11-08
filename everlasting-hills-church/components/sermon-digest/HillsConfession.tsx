@@ -12,8 +12,8 @@ export default function HillsConfession({ date }: { date: string }) {
   const { lines, sermon, source } = useHillsConfession(date);
 
   return (
-    <div role="group" aria-labelledby="hills-confession-title" className="mt-6 border-t border-[#f5d49a]/30 pt-5">
-      <p id="hills-confession-title" className="text-[11px] font-black uppercase tracking-[0.11em] text-[#f5d49a] xs:tracking-[0.22em]">
+    <div role="group" aria-labelledby="hills-confession-title" className="min-w-0 border-t border-[#f5d49a]/25 pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
+      <p id="hills-confession-title" className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#f5d49a]">
         The Hills Confession
         <span className="font-semibold normal-case tracking-normal text-white/60"> · say it out loud</span>
       </p>
@@ -23,7 +23,7 @@ export default function HillsConfession({ date }: { date: string }) {
         </p>
       )}
 
-      <p className="mt-3 max-w-3xl font-display text-lg font-bold leading-snug tracking-tight text-white sm:text-2xl">
+      <p className="mt-2 font-display text-[15px] font-semibold leading-relaxed text-white/90">
         {lines.map((line, index) => (
           <span key={`${index}-${line}`} className="block">
             {index === lines.length - 1 ? <span className="text-[#f5d49a]">{line}</span> : line}
@@ -32,7 +32,7 @@ export default function HillsConfession({ date }: { date: string }) {
       </p>
 
       {sermon && (
-        <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
           {sermon.verse.reference && <span className="font-semibold text-[#f5d49a]">{sermon.verse.reference}</span>}
           <a
             href={sermon.watchUrl}
