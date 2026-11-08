@@ -322,11 +322,16 @@ export interface MemberBookmarkEntry {
   Sermon: LatestSermon;
 }
 
+/** GET /sermons/me/overview: the My Sermons page in one request. Parts that failed are null. */
+export interface MemberSermonOverview {
+  stats: MemberSermonStats | null; published: LatestSermon[] | null; history: MemberHistoryEntry[] | null;
+  bookmarks: MemberBookmarkEntry[] | null; unavailable: string[];
+}
+const sermonOverview = { queryKey: ["sermons", "me", "overview"], queryFn: () => api.get<MemberSermonOverview>("/sermons/me/overview") };
+
+/** Saved, history and stats are views of the one overview query: one request, refreshed together. */
 export function useMemberSermonBookmarks() {
-  return useQuery({
-    queryKey: ["sermons", "me", "bookmarks"],
-    queryFn: () => api.get<MemberBookmarkEntry[]>("/sermons/me/bookmarks"),
-  });
+  return useQuery({ ...sermonOverview, select: (d: MemberSermonOverview) => d.bookmarks ?? [] });
 }
 
 export interface MemberHistoryEntry {
@@ -338,10 +343,7 @@ export interface MemberHistoryEntry {
 }
 
 export function useMemberSermonHistory() {
-  return useQuery({
-    queryKey: ["sermons", "me", "history"],
-    queryFn: () => api.get<MemberHistoryEntry[]>("/sermons/me/history"),
-  });
+  return useQuery({ ...sermonOverview, select: (d: MemberSermonOverview) => d.history ?? [] });
 }
 
 export interface MemberSermonStats {
@@ -351,10 +353,7 @@ export interface MemberSermonStats {
 }
 
 export function useMemberSermonStats() {
-  return useQuery({
-    queryKey: ["sermons", "me", "stats"],
-    queryFn: () => api.get<MemberSermonStats>("/sermons/me/stats"),
-  });
+  return useQuery({ ...sermonOverview, select: (d: MemberSermonOverview) => d.stats ?? { completed: 0, inProgress: 0, bookmarked: 0 } });
 }
 
 export interface CanMarkResponse {

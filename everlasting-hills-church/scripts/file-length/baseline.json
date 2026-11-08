@@ -256,7 +256,7 @@
     "config/config.ts": 285,
     "layout/AppHeader.tsx": 158,
     "layout/AppSidebar.tsx": 492,
-    "lib/api.ts": 1160,
+    "lib/api.ts": 1159,
     "lib/api/articles.ts": 405,
     "lib/api/classes.ts": 571,
     "lib/api/cms.ts": 245,
