@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Bell, BellRing, ChevronDown, Clock, MapPin, Megaphone } from "lucide-react";
+import { Bell, BellRing, CalendarDays, ChevronDown, Clock, MapPin, Megaphone } from "lucide-react";
 import RichText from "@/components/ui/display/RichText";
 import { stripMarkdown } from "@/lib/rich-text";
 import { formatHHMM12h } from "@/lib/utils/time";
+import { announcementWhen } from "@/lib/announcement-when";
 
 interface Announcement {
   id: string;
@@ -16,17 +17,7 @@ interface Announcement {
   createdAt: string;
   eventTime?: string | null;
   venue?: string | null;
-}
-
-function relativeTime(iso: string) {
-  const ms = Date.now() - new Date(iso).getTime();
-  const days = Math.floor(ms / 86_400_000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks === 1) return "Last week";
-  return `${weeks} weeks ago`;
+  Event?: { startAt?: string | null } | null;
 }
 
 function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: boolean; index: number }) {
@@ -35,6 +26,7 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
   // shorter than it looks, and clamping it would hide nothing.
   const preview = stripMarkdown(a.body);
   const clampable = preview.length > 140;
+  const when = announcementWhen(a);
 
   return (
     <motion.div
@@ -108,9 +100,10 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
         )}
 
         <div className="mt-1.5 flex flex-wrap items-center gap-3">
-          <p className="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
-            <Clock size={11} className="flex-shrink-0" />
-            {relativeTime(a.createdAt)}
+          {/* The event's own date, or the real date it was posted: never "Today" unless it is. */}
+          <p className={`flex items-center gap-1 text-[11px] ${when.isEvent ? "font-semibold text-[#87102C] dark:text-[#e8768a]" : "text-gray-400 dark:text-gray-500"}`}>
+            <CalendarDays size={11} className="flex-shrink-0" />
+            {when.label}
           </p>
           {clampable && (
             <button

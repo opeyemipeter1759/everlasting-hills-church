@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, BellRing, Clock, MapPin, Megaphone, X } from "lucide-react";
+import { ArrowRight, BellRing, CalendarDays, Clock, MapPin, Megaphone, X } from "lucide-react";
 import {
   announcementHref,
   useAnnouncementsFeed,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/api/announcements";
 import { stripMarkdown } from "@/lib/rich-text";
 import { formatHHMM12h } from "@/lib/utils/time";
+import { announcementWhen } from "@/lib/announcement-when";
 
 /** Remembers the newest announcement this browser has already been shown. */
 const SEEN_KEY = "ehc-announcements-seen";
@@ -33,18 +34,10 @@ function writeSeen(id: string) {
   }
 }
 
-function relativeTime(iso: string) {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days <= 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  const weeks = Math.floor(days / 7);
-  return weeks === 1 ? "Last week" : `${weeks} weeks ago`;
-}
-
 function Row({ a }: { a: AnnouncementFeedItem }) {
   const href = announcementHref(a);
   const preview = stripMarkdown(a.body);
+  const when = announcementWhen(a);
 
   const body = (
     <>
@@ -77,8 +70,9 @@ function Row({ a }: { a: AnnouncementFeedItem }) {
               {a.venue}
             </span>
           )}
-          <span className="text-[10px] text-gray-400 dark:text-gray-500">
-            {relativeTime(a.createdAt)}
+          <span className={`flex items-center gap-1 text-[10px] ${when.isEvent ? "font-semibold text-[#87102C] dark:text-[#e8768a]" : "text-gray-400 dark:text-gray-500"}`}>
+            <CalendarDays size={10} aria-hidden="true" />
+            {when.label}
           </span>
           {href && (
             <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-bold text-[#87102C] dark:text-[#e8768a]">
