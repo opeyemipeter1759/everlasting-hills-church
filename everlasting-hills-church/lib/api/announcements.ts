@@ -13,7 +13,7 @@ export interface AnnouncementFeedItem {
   venue: string | null;
   /** Set when this announcement was raised from a published event. */
   eventId?: string | null;
-  Event?: { slug: string; customPath: string | null } | null;
+  Event?: { slug: string; customPath: string | null; startAt?: string | null } | null;
 }
 
 /** Where an announcement leads, when it leads anywhere. */

@@ -24,7 +24,7 @@ export function CircleProgress({
 // ── Panel Card (shared premium card shell) ────────────────────────────────────
 
 export function PanelCard({
-  kicker: k, title, icon: Icon, action, children, bodyClass = "p-5 sm:p-6",
+  kicker: k, title, icon: Icon, action, children, bodyClass = "p-5",
 }: {
   kicker: string;
   title: string;
@@ -35,7 +35,7 @@ export function PanelCard({
 }) {
   return (
     <section className={card}>
-      <div className={`flex items-center justify-between gap-3 ${hdrBdr} px-5 py-4 sm:px-6`}>
+      <div className={`flex items-center justify-between gap-3 ${hdrBdr} px-5 py-4`}>
         <div className="flex items-center gap-3 min-w-0">
           <span className={iconBg}>
             <Icon size={15} className={iconCl} aria-hidden="true" />

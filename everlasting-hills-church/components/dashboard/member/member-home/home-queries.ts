@@ -20,6 +20,7 @@ export function homeQueryEntries(data: MemberHomeData): Array<{ key: readonly un
     { key: ["members", "me", "spouse"], section: "spouse", value: data.spouse },
     { key: ["evangelism", "mine", "tally"], section: "evangelismTally", value: data.evangelismTally },
     { key: ["prayer-watch", "mine"], section: "prayerWatch", value: data.prayerWatch },
+    { key: ["prayer-watch", "public"], section: "prayerWatchCurrent", value: data.prayerWatchCurrent },
     { key: ["one-on-one", "mine"], section: "oneOnOneRequests", value: data.oneOnOneRequests },
     { key: ["reading-plan", "me", "today", "active"], section: "readingToday", value: data.readingPlan.today },
     { key: ["reading-plan", "me", "subscriptions"], section: "readingSubscriptions", value: data.readingPlan.subscriptions },
@@ -31,7 +32,7 @@ export function homeQueryEntries(data: MemberHomeData): Array<{ key: readonly un
 }
 
 /** Sections whose null means "failed" rather than "nothing": never cache those. */
-const NULL_MEANS_FAILED = new Set(["canMark", "gatherings", "spouse", "evangelismTally", "oneOnOneRequests", "readingSubscriptions", "scriptureToday", "scriptureTranslations", "latestSermon"]);
+const NULL_MEANS_FAILED = new Set(["canMark", "gatherings", "prayerWatchCurrent", "spouse", "evangelismTally", "oneOnOneRequests", "readingSubscriptions", "scriptureToday", "scriptureTranslations", "latestSermon"]);
 
 export function dehydrateHome(data: MemberHomeData): DehydratedState {
   const client = new QueryClient();

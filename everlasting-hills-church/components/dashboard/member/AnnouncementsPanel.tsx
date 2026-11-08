@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Bell, BellRing, ChevronDown, Clock, MapPin, Megaphone } from "lucide-react";
+import { Bell, BellRing, CalendarDays, ChevronDown, Clock, MapPin, Megaphone } from "lucide-react";
 import RichText from "@/components/ui/display/RichText";
 import { stripMarkdown } from "@/lib/rich-text";
 import { formatHHMM12h } from "@/lib/utils/time";
+import { announcementWhen } from "@/lib/announcement-when";
 
 interface Announcement {
   id: string;
@@ -16,17 +17,7 @@ interface Announcement {
   createdAt: string;
   eventTime?: string | null;
   venue?: string | null;
-}
-
-function relativeTime(iso: string) {
-  const ms = Date.now() - new Date(iso).getTime();
-  const days = Math.floor(ms / 86_400_000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  const weeks = Math.floor(days / 7);
-  if (weeks === 1) return "Last week";
-  return `${weeks} weeks ago`;
+  Event?: { startAt?: string | null } | null;
 }
 
 function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: boolean; index: number }) {
@@ -35,6 +26,7 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
   // shorter than it looks, and clamping it would hide nothing.
   const preview = stripMarkdown(a.body);
   const clampable = preview.length > 140;
+  const when = announcementWhen(a);
 
   return (
     <motion.div
@@ -59,17 +51,17 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
               : "bg-gray-100 text-gray-400 dark:bg-white/8 dark:text-white/40"
           }`}
         >
-          <Megaphone size={16} />
+          <Megaphone size={15} />
         </span>
       )}
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-2">
-          <p className={`text-[13px] font-bold leading-snug ${isNewest ? "text-[#87102C] dark:text-[#FFB3C1]" : "text-[#111] dark:text-white"}`}>
+          <p className={`text-sm font-semibold leading-snug ${isNewest ? "text-[#87102C] dark:text-[#FFB3C1]" : "text-[#111] dark:text-white"}`}>
             {a.title}
           </p>
           {isNewest && (
-            <span className="flex-shrink-0 text-[9px] font-bold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-[#87102C] dark:text-[#FFB3C1] bg-[#FFE8ED] dark:bg-[#87102C]/25 px-2 py-0.5 rounded-full mt-0.5">
+            <span className="flex-shrink-0 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#87102C] dark:text-[#FFB3C1] bg-[#FFE8ED] dark:bg-[#87102C]/25 px-2 py-0.5 rounded-full mt-0.5">
               New
             </span>
           )}
@@ -93,14 +85,14 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
         {(a.eventTime || a.venue) && (
           <div className="mt-1.5 flex flex-wrap items-center gap-3">
             {a.eventTime && (
-              <p className="text-[10px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
-                <Clock size={9} className="flex-shrink-0" />
+              <p className="text-[11px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
+                <Clock size={11} className="flex-shrink-0" />
                 {formatHHMM12h(a.eventTime)}
               </p>
             )}
             {a.venue && (
-              <p className="text-[10px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
-                <MapPin size={9} className="flex-shrink-0" />
+              <p className="text-[11px] font-semibold text-[#87102C] dark:text-[#e8768a] flex items-center gap-1">
+                <MapPin size={11} className="flex-shrink-0" />
                 {a.venue}
               </p>
             )}
@@ -108,15 +100,16 @@ function AnnouncementRow({ a, isNewest, index }: { a: Announcement; isNewest: bo
         )}
 
         <div className="mt-1.5 flex flex-wrap items-center gap-3">
-          <p className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
-            <Clock size={9} className="flex-shrink-0" />
-            {relativeTime(a.createdAt)}
+          {/* The event's own date, or the real date it was posted: never "Today" unless it is. */}
+          <p className={`flex items-center gap-1 text-[11px] ${when.isEvent ? "font-semibold text-[#87102C] dark:text-[#e8768a]" : "text-gray-400 dark:text-gray-500"}`}>
+            <CalendarDays size={11} className="flex-shrink-0" />
+            {when.label}
           </p>
           {clampable && (
             <button
               type="button"
               onClick={() => setExpanded((v) => !v)}
-              className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#87102C] dark:text-[#e8768a] hover:underline"
+              className="inline-flex items-center gap-0.5 text-xs font-semibold text-[#87102C] dark:text-[#e8768a] hover:underline"
             >
               {expanded ? "Show less" : "Read more"}
               <ChevronDown size={11} className={`transition-transform ${expanded ? "rotate-180" : ""}`} />
@@ -158,7 +151,7 @@ export function AnnouncementsPanel({
             <BellRing size={15} className="text-[#FFB3C1]" aria-hidden="true" />
           </motion.span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-[0.11em] xs:tracking-[0.22em] text-[#FFB3C1]/70">From the Church</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#FFB3C1]/70">From the Church</p>
             <h3 className="text-sm font-bold text-white truncate">Announcements</h3>
           </div>
         </div>
@@ -167,7 +160,7 @@ export function AnnouncementsPanel({
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.15, type: "spring", stiffness: 250, damping: 18 }}
-            className="flex-shrink-0 text-[10px] font-bold text-[#FFB3C1] bg-white/10 border border-white/15 px-2.5 py-1 rounded-full"
+            className="flex-shrink-0 text-[11px] font-semibold text-[#FFB3C1] bg-white/10 border border-white/15 px-2.5 py-1 rounded-full"
           >
             {announcements.length} {announcements.length === 1 ? "update" : "updates"}
           </motion.span>

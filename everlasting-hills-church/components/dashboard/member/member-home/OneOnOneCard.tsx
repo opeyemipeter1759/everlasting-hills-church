@@ -29,7 +29,7 @@ export function OneOnOneCard() {
         {next ? (
           <>
             <StatusPill request={next} />
-            <p className="mt-1 text-xl font-bold tabular-nums text-[#111] dark:text-white">
+            <p className="mt-1 text-base font-bold tabular-nums text-[#111] dark:text-white">
               {formatWhenLong(next.proposedStartsAt ?? next.startsAt, next.proposedEndsAt ?? next.endsAt)}
             </p>
             <p className={`text-sm ${muted}`}>

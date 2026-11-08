@@ -466,7 +466,8 @@ export class AnnouncementsService {
         // Present only on announcements raised from an event, so the reader can
         // open the event itself rather than stopping at the summary.
         eventId: true,
-        Event: { select: { slug: true, customPath: true } },
+        // startAt: so the reader sees the event's real date, not when it was posted.
+        Event: { select: { slug: true, customPath: true, startAt: true } },
       },
     });
   }

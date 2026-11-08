@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { BookOpen, Check, ChevronRight, Flame, Share2 } from "lucide-react";
+import { BookOpen, Check, ChevronRight, Flame } from "lucide-react";
 import { readingHref, useReadingSubscriptions, useTodayReading } from "@/lib/api/reading-plan";
+import { SharePlanLinkButton } from "./SharePlanLinkButton";
 import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle, muted, linkCl } from "../member-home/tokens";
 
 /**
@@ -19,7 +19,6 @@ import { card, hdrBdr, iconBg, iconCl, kicker, cardTitle, muted, linkCl } from "
 export default function TodayReadingCard() {
   const { data, isLoading, isError, refetch } = useTodayReading();
   const { data: subscriptions, isLoading: plansLoading, isError: plansError, refetch: retryPlans } = useReadingSubscriptions();
-  const [sharing, setSharing] = useState(false);
 
   if (isLoading || plansLoading) {
     return (
@@ -60,7 +59,7 @@ export default function TodayReadingCard() {
           </p>
           <Link
             href={subscriptions?.length ? "/dashboard/reading/overview" : "/dashboard/reading/plans"}
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5"
+            className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-[#87102C] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#6E0C24]"
           >
             {subscriptions?.length ? "View your progress" : "Choose a plan"} <ChevronRight size={15} />
           </Link>
@@ -70,6 +69,7 @@ export default function TodayReadingCard() {
   }
 
   const { day, subscriptionId, currentDayIndex, plan, currentStreak, completedToday, completedDays } = data;
+  const progress = Math.min(100, Math.round((completedDays / Math.max(1, plan.durationDays)) * 100));
   const otherPlans = (subscriptions ?? []).filter((subscription) => subscription.status === "ACTIVE" && subscription.subscriptionId !== subscriptionId);
 
   return (
@@ -90,14 +90,14 @@ export default function TodayReadingCard() {
           <div className="absolute inset-0 bg-gradient-to-r from-[#4A0817]/85 via-[#4A0817]/45 to-transparent" />
 
           <div className="relative min-w-0">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.09em] xs:tracking-[0.18em] text-white/60">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">
               Today&apos;s reading
             </p>
-            <h3 className="mt-0.5 truncate font-serif text-lg font-bold text-white">{plan.title}</h3>
+            <h3 className="mt-0.5 line-clamp-2 text-sm font-bold leading-snug text-white">{plan.title}</h3>
           </div>
 
           {currentStreak > 0 && (
-            <span className="relative inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-bold text-amber-200 backdrop-blur-sm">
+            <span className="relative inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-[11px] font-semibold text-amber-200 backdrop-blur-sm">
               <Flame size={12} aria-hidden="true" />
               {currentStreak} day{currentStreak === 1 ? "" : "s"}
             </span>
@@ -111,12 +111,12 @@ export default function TodayReadingCard() {
             </span>
             <div className="min-w-0">
               <p className={kicker}>Today&apos;s reading</p>
-              <h3 className={`${cardTitle} truncate`}>{plan.title}</h3>
+              <h3 className={`${cardTitle} line-clamp-2`}>{plan.title}</h3>
             </div>
           </div>
 
           {currentStreak > 0 && (
-            <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
+            <span className="inline-flex flex-shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
               <Flame size={12} aria-hidden="true" />
               {currentStreak} day{currentStreak === 1 ? "" : "s"}
             </span>
@@ -124,65 +124,59 @@ export default function TodayReadingCard() {
         </div>
       )}
 
-      <div className="px-5 py-5">
-        <p className="text-lg font-bold text-[#111] dark:text-white">
-          {day?.referenceLabel ?? "Plan complete"}
-        </p>
-        <p className={`mt-1 text-xs ${muted}`}>
-          Day {currentDayIndex} of {plan.durationDays}
-          {day ? ` · about ${day.estimatedMinutes} minute${day.estimatedMinutes === 1 ? "" : "s"}` : ""}
-          {/* Progress, never debt. The day index moves when they read, so there
-              is nothing to be behind on and nothing to apologise for. */}
-          {completedDays > 0 ? ` · ${completedDays} read` : ""}
-        </p>
+      <div className="space-y-3 px-5 py-4">
+        <div>
+          <p className="text-base font-bold text-[#111] dark:text-white">{day?.referenceLabel ?? "Plan complete"}</p>
+          <p className={`mt-0.5 text-xs ${muted}`}>
+            Day {currentDayIndex} of {plan.durationDays}
+            {day ? ` · about ${day.estimatedMinutes} minute${day.estimatedMinutes === 1 ? "" : "s"}` : ""}
+          </p>
+        </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2.5">
+        {/* Progress, never debt: how much is read, not how far behind. */}
+        <div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-[#E7CDD3]/50 dark:bg-white/[0.08]" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Plan progress">
+            <div className="h-full rounded-full bg-[#87102C] dark:bg-[#FFB3C1]" style={{ width: `${progress}%` }} />
+          </div>
+          <p className={`mt-1.5 flex items-center justify-between text-[11px] ${muted}`}>
+            <span>{completedDays} of {plan.durationDays} days read</span>
+            {completedToday && (
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <Check size={12} aria-hidden="true" /> Read today
+              </span>
+            )}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
           <Link
             href={readingHref(subscriptionId)}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#87102C] px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-[#6E0C24] hover:-translate-y-0.5"
+            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-[#87102C] px-5 text-sm font-semibold text-white shadow-sm shadow-[#87102C]/20 transition-colors hover:bg-[#6E0C24]"
           >
-            {completedToday ? "Keep reading" : "Read now"} <ChevronRight size={15} />
+            {completedToday ? "Keep reading" : "Read now"} <ChevronRight size={15} aria-hidden="true" />
           </Link>
-
-          {day && (
-            <button
-              type="button"
-              onClick={() => setSharing(true)}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-gray-200 px-3 text-sm font-semibold text-gray-700 transition-colors hover:border-[#87102C]/30 hover:text-[#87102C] dark:border-white/15 dark:text-gray-200 dark:hover:text-[#FFB3C1]"
-            >
-              <Share2 size={14} aria-hidden="true" />
-              Share
-            </button>
-          )}
-
-          {completedToday && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-              <Check size={13} /> Read today
-            </span>
-          )}
-
-          <Link href="/dashboard/reading/plans" className={`${linkCl} ml-auto`}>
-            Add a plan
-          </Link>
+          {day && <SharePlanLinkButton plan={{ ...plan, subtitle: null }} variant="outline" />}
         </div>
       </div>
-      <div className={`mt-auto px-5 py-4 border-t border-gray-100 dark:border-white/10`}>
+
+      <div className="mt-auto border-t border-gray-100 px-5 py-3 dark:border-white/10">
         {otherPlans.length > 0 && <div className="mb-3 space-y-2">
-          <p className={`${kicker} mb-2`}>Also reading</p>
+          <p className={kicker}>Also reading</p>
           {otherPlans.slice(0, 2).map((subscription) => (
-            <Link key={subscription.subscriptionId} href={readingHref(subscription.subscriptionId)} className="flex min-h-11 items-center gap-3 rounded-xl bg-[#FFF4F6]/60 px-3 py-2.5 transition-colors hover:bg-[#FFE8ED] dark:bg-white/[0.03] dark:hover:bg-white/[0.07]">
+            <Link key={subscription.subscriptionId} href={readingHref(subscription.subscriptionId)} className="flex min-h-11 items-center gap-3 rounded-xl bg-[#FFF4F6]/60 px-3 py-2 transition-colors hover:bg-[#FFE8ED] dark:bg-white/[0.03] dark:hover:bg-white/[0.07]">
               <BookOpen size={15} aria-hidden="true" className="shrink-0 text-[#87102C] dark:text-[#FFB3C1]" />
               <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#111] dark:text-white">{subscription.plan.title}</p><p className={`mt-0.5 text-xs ${muted}`}>{subscription.completedDays} of {subscription.plan.durationDays} days read</p></div>
               <ChevronRight size={15} aria-hidden="true" className="shrink-0 text-gray-400" />
             </Link>
           ))}
         </div>}
-        <Link href="/dashboard/reading/overview" className={`${linkCl} inline-flex min-h-11 items-center gap-1.5`}>
-          View all plans and progress <ChevronRight size={13} aria-hidden="true" />
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/dashboard/reading/overview" className={`${linkCl} min-h-9`}>
+            All plans &amp; progress <ChevronRight size={13} aria-hidden="true" />
+          </Link>
+          <Link href="/dashboard/reading/plans" className={`${linkCl} min-h-9`}>+ Add a plan</Link>
+        </div>
       </div>
-
-{/*       <ShareSheet open={sharing} onClose={() => setSharing(false)} initialContent="reading" />
- */}    </section>
+    </section>
   );
 }

@@ -135,7 +135,7 @@
     "components/dashboard/member/family/ProfileStory.tsx": 165,
     "components/dashboard/member/member-home/BirthdayCard.tsx": 288,
     "components/dashboard/member/member-home/DailyScriptureCard.test.tsx": 293,
-    "components/dashboard/member/member-home/DailySharePanel.tsx": 315,
+    "components/dashboard/member/member-home/DailySharePanel.tsx": 284,
     "components/dashboard/member/member-home/PledgeAppeal.tsx": 206,
     "components/dashboard/member/member-home/PledgeForm.tsx": 491,
     "components/dashboard/member/MemberShell.tsx": 220,

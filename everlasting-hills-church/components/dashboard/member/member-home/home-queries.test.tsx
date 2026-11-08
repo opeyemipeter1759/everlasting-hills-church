@@ -9,7 +9,7 @@ import { useMySpouse } from "@/lib/api/family";
 import { useGatherings } from "@/lib/api/gatherings";
 import { useMyRequests } from "@/lib/api/one-on-one";
 import { useMyPledge } from "@/lib/api/pledges";
-import { useMyPrayerSignup } from "@/lib/api/prayer-watch";
+import { useMyPrayerSignup, usePublicPrayerWatch } from "@/lib/api/prayer-watch";
 import { useReadingSubscriptions, useTodayReading } from "@/lib/api/reading-plan";
 import { useLatestSummary } from "@/lib/sermon-digest";
 import type { MemberHomeData } from "@/app/dashboard/(dashboard)/_loaders/member-home/types";
@@ -22,6 +22,7 @@ const DATA = {
   pledgeCampaign: "sound-media",
   evangelismTally: { reached: 4 },
   prayerWatch: { slot: "06:00" },
+  prayerWatchCurrent: { id: "w1", slots: [{ id: "s1" }] },
   oneOnOneRequests: [{ id: "r1" }],
   readingPlan: { today: { day: 3 }, subscriptions: [{ id: "s1" }] },
   canMark: { canMark: true },
@@ -49,6 +50,7 @@ const CARDS: Array<[string, () => { data: unknown; isFetching: boolean }, unknow
   ["spouse", () => useMySpouse(), { status: "SINGLE" }],
   ["evangelism tally", () => useMyEvangelismTally(), { reached: 4 }],
   ["prayer watch", () => useMyPrayerSignup(), { slot: "06:00" }],
+  ["the night's watches", () => usePublicPrayerWatch(), { id: "w1", slots: [{ id: "s1" }] }],
   ["one-on-one", () => useMyRequests(), [{ id: "r1" }]],
   ["today's reading", () => useTodayReading(), { day: 3 }],
   ["reading plans", () => useReadingSubscriptions(), [{ id: "s1" }]],

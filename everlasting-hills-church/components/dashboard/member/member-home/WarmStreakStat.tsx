@@ -68,26 +68,29 @@ export function WarmStreakStat({ memberDisplayId, streak, coursesCompleted, serm
         <p className={kicker}>My Journey</p>
         <h3 className={cardTitle}>Streak</h3>
       </div>
-      <div className="flex-1 p-5 flex flex-col items-center gap-3">
-        {/* Ring with mascot icon + level inside */}
-        <div className="relative">
-          <CircleProgress value={progressPct} size={104} strokeWidth={8} stroke={rank.ring} />
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span
-              className="flex h-9 w-9 items-center justify-center rounded-full"
-              style={{ backgroundColor: `${rank.ring}1f` }}
-            >
-              <rank.icon size={18} style={{ color: rank.ring }} strokeWidth={2.25} />
+      <div className="flex-1 p-5 flex flex-col gap-4">
+        {/* Ring beside the rank and what is left to level up. */}
+        <div className="flex items-center gap-4">
+          <div className="relative shrink-0">
+            <CircleProgress value={progressPct} size={76} strokeWidth={7} stroke={rank.ring} />
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <rank.icon size={16} style={{ color: rank.ring }} strokeWidth={2.25} aria-hidden="true" />
+              <p className={`text-[10px] font-bold mt-1 ${muted}`}>Lv {streak.level}</p>
+            </div>
+          </div>
+          <div className="min-w-0 space-y-1.5">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${RANK_BG} ${RANK_TEXT}`}>
+              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: rank.ring }} />
+              {rank.title}
             </span>
-            <p className={`text-[10px] font-bold mt-1.5 ${muted}`}>Level {streak.level}</p>
+            <p className="text-sm font-semibold text-[#111] dark:text-white">{remainingLabel(streak.task, streak.progress)}</p>
+            {(coursesCompleted > 0 || sermonsCompleted > 0) && (
+              <p className={`text-xs ${muted}`}>
+                Lifetime: {coursesCompleted} course{coursesCompleted !== 1 ? "s" : ""} · {sermonsCompleted} sermon{sermonsCompleted !== 1 ? "s" : ""}
+              </p>
+            )}
           </div>
         </div>
-
-        {/* Rank badge */}
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold ${RANK_BG} ${RANK_TEXT}`}>
-          <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: rank.ring }} />
-          {rank.title}
-        </span>
 
         {/* Stages passed — one flame per rank tier, lit up once cleared */}
         <div className="w-full flex items-center justify-between" title={`Stage ${RANK_TIERS.findIndex((t) => t.title === rank.title) + 1} of ${RANK_TIERS.length}`}>
@@ -112,29 +115,21 @@ export function WarmStreakStat({ memberDisplayId, streak, coursesCompleted, serm
           })}
         </div>
 
-        <p className="text-xs font-semibold text-center text-[#111] dark:text-white">{remainingLabel(streak.task, streak.progress)}</p>
-
-        {(coursesCompleted > 0 || sermonsCompleted > 0) && (
-          <p className={`text-[11px] text-center ${muted}`}>
-            Lifetime: {coursesCompleted} course{coursesCompleted !== 1 ? "s" : ""} · {sermonsCompleted} sermon{sermonsCompleted !== 1 ? "s" : ""}
-          </p>
-        )}
-
         {(ministryUnit?.nextServingDate || nextService) && (
-          <div className="w-full pt-3 mt-1 border-t border-[#E7CDD3]/50 dark:border-white/[0.07]">
+          <div className="w-full pt-3 border-t border-[#E7CDD3]/50 dark:border-white/[0.07]">
             {ministryUnit?.nextServingDate ? (
               <>
                 <p className={`${kicker} mb-1`}>Serving Next</p>
-                <p className="text-xs font-semibold text-[#111] dark:text-white line-clamp-1">{ministryUnit.name}</p>
-                <p className={`text-[11px] ${muted} mt-0.5`}>
+                <p className="text-sm font-semibold text-[#111] dark:text-white line-clamp-1">{ministryUnit.name}</p>
+                <p className={`text-xs ${muted} mt-0.5`}>
                   {fmtDate(ministryUnit.nextServingDate, { weekday: "short", day: "numeric", month: "short" })}
                 </p>
               </>
             ) : nextService ? (
               <>
                 <p className={`${kicker} mb-1`}>Next Service</p>
-                <p className="text-xs font-semibold text-[#111] dark:text-white line-clamp-1">{nextService.name}</p>
-                <p className={`text-[11px] ${muted} mt-0.5`}>
+                <p className="text-sm font-semibold text-[#111] dark:text-white line-clamp-1">{nextService.name}</p>
+                <p className={`text-xs ${muted} mt-0.5`}>
                   {fmtDate(nextService.scheduledAt, { weekday: "short", day: "numeric", month: "short" })}
                   {" · "}{fmtTime(nextService.scheduledAt)}
                 </p>

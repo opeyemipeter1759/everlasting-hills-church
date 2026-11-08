@@ -6,7 +6,7 @@ import type { MySpouse } from "@/lib/api/family";
 import type { Gathering } from "@/lib/api/gatherings";
 import type { MyRequest } from "@/lib/api/one-on-one";
 import type { Pledge } from "@/lib/api/pledges";
-import type { MySignupView } from "@/lib/api/prayer-watch";
+import type { MySignupView, PublicWatch } from "@/lib/api/prayer-watch";
 import type { ReadingSubscription, TodayReading } from "@/lib/api/reading-plan";
 import type { LatestSummary } from "@/lib/sermon-digest";
 import type { MeResponse } from "../shared";
@@ -29,7 +29,10 @@ export interface MemberHomeData {
     coursesCompleted: number;
     sermonsCompleted: number;
   } | null;
-  announcements: Array<{ id: string; title: string; body: string; imageUrl: string | null; createdAt: string; eventTime: string | null; venue: string | null }> | null;
+  announcements: Array<{
+    id: string; title: string; body: string; imageUrl: string | null; createdAt: string; eventTime: string | null; venue: string | null;
+    Event?: { slug: string; customPath: string | null; startAt: string | null } | null;
+  }> | null;
   communityFeed: Array<{ id: string; text: string; reactions: number; createdAt: string; authorName: string; authorPhotoUrl: string | null }> | null;
   communityBirthdays: Array<{ id: string; firstName: string; lastName: string; photoUrl: string | null; daysUntil: number }> | null;
   spouse: MySpouse | null;
@@ -37,6 +40,8 @@ export interface MemberHomeData {
   pledgeCampaign: string;
   evangelismTally: EvangelismTally | null;
   prayerWatch: MySignupView | null;
+  /** The current watch and all its slots (the night's watches). */
+  prayerWatchCurrent: PublicWatch | null;
   oneOnOneRequests: MyRequest[] | null;
   readingPlan: { today: TodayReading | null; subscriptions: ReadingSubscription[] | null };
   canMark: CanMarkResponse | null;

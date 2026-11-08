@@ -47,7 +47,7 @@ export function TodayNextServiceCountdown({ nextService }: { nextService: NonNul
         </div>
         <div>
           <p className={`${kicker} mb-1`}>Countdown</p>
-          <p className="text-3xl font-black text-[#111] dark:text-white tabular-nums">{countdown}</p>
+          <p className="text-2xl font-bold text-[#111] dark:text-white tabular-nums">{countdown}</p>
           <p className="text-sm font-semibold text-[#8a7e80] dark:text-white/55 mt-1.5">{nextService.name}</p>
           <p className={`text-xs ${muted} mt-0.5`}>
             {fmtDate(nextService.scheduledAt, { weekday: "long", day: "numeric", month: "long" })}

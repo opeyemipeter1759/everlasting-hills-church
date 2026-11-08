@@ -28,7 +28,7 @@ export function FeaturedSermonCard({ sermon }: {
             <h3 className={`${cardTitle} truncate`}>Featured Sermon</h3>
           </div>
         </div>
-        <span className="text-[10px] font-bold text-[#87102C] dark:text-[#FFB3C1] bg-[#FFE8ED] dark:bg-[#87102C]/25 px-2.5 py-1 rounded-full uppercase tracking-wide">
+        <span className="text-[11px] font-semibold text-[#87102C] dark:text-[#FFB3C1] bg-[#FFE8ED] dark:bg-[#87102C]/25 px-2.5 py-1 rounded-full">
           Featured
         </span>
       </div>
@@ -66,21 +66,21 @@ export function FeaturedSermonCard({ sermon }: {
                   type="button"
                   onClick={() => player.play(sermon.slug)}
                   disabled={playingHere}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#87102C] text-white text-xs font-semibold hover:bg-[#6E0C24] hover:-translate-y-0.5 transition-all shadow-sm shadow-[#87102C]/20"
+                  className="inline-flex min-h-10 items-center gap-1.5 px-4 rounded-xl bg-[#87102C] text-white text-sm font-semibold hover:bg-[#6E0C24] transition-colors shadow-sm shadow-[#87102C]/20"
                 >
-                  {playingHere ? <Pause size={12} /> : <Play size={12} fill="currentColor" />}
+                  {playingHere ? <Pause size={15} /> : <Play size={15} fill="currentColor" />}
                   {playingHere ? "Playing below" : "Play"}
                 </button>
               </>
             ) : null}
             <Link href={`/sermons/${sermon.slug}`}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold hover:-translate-y-0.5 transition-all w-fit ${
+              className={`inline-flex min-h-10 items-center gap-1.5 px-4 rounded-xl text-sm font-semibold transition-colors w-fit ${
                 sermon.audioUrl
                   ? "bg-gray-100 dark:bg-white/10 text-[#111] dark:text-white hover:bg-gray-200 dark:hover:bg-white/15"
                   : "bg-[#87102C] text-white hover:bg-[#6E0C24] shadow-sm shadow-[#87102C]/20"
               }`}
             >
-              <BookOpen size={12} />
+              <BookOpen size={15} />
               {sermon.audioUrl ? "Full sermon" : "Listen now"}
             </Link>
           </div>
