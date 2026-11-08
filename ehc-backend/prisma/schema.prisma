@@ -1049,6 +1049,7 @@ model PrayerSlot {
   Signups                      PrayerSignup[]              @relation("SlotSignups")
   Leader                       PrayerSignup?               @relation("SlotLeader", fields: [leaderId], references: [id], onDelete: SetNull)
   IncomingFamilyChangeRequests PrayerFamilyChangeRequest[]
+  Reports                      PrayerWatchReport[]
 
   @@index([watchId, position])
 }
@@ -1516,6 +1517,7 @@ model Tenant {
   PastorAvailabilityBlock  PastorAvailabilityBlock[]
   PastorDelegate           PastorDelegate[]
   PastoralBooking          PastoralBooking[]
+  PrayerWatchReport        PrayerWatchReport[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -4113,4 +4115,32 @@ model PastoralBooking {
   @@index([memberProfileId])
   @@index([requesterEmail])
   @@index([status])
+}
+
+/// A watch leader's report for one watch on one night: it was kept, when it
+/// actually ran, how many prayed, and that it was handed over to the next
+/// watch. One per watch per night; the leader can correct it.
+model PrayerWatchReport {
+  id              String     @id
+  tenantId        String
+  slotId          String
+  /// The evening the night began (UTC-midnight of that Lagos date); a watch
+  /// after midnight still belongs to the night before.
+  nightDate       DateTime   @db.Date
+  reportedById    String // Profile.id of the leader (or an admin filling in)
+  startedAt       DateTime
+  endedAt         DateTime
+  minutesPrayed   Int
+  peoplePresent   Int
+  handedOver      Boolean
+  /// Snapshot of who it was handed to, as the next watch's leader then.
+  handedOverTo    String?
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  Tenant          Tenant     @relation(fields: [tenantId], references: [id])
+  Slot            PrayerSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  @@unique([slotId, nightDate])
+  @@index([tenantId, nightDate])
 }

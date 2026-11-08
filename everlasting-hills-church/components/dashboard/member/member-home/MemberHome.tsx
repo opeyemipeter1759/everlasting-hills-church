@@ -1,5 +1,4 @@
 "use client";
-
 import type { MemberHomePropsOptional, StreakState } from "./types";
 import { QrCheckinBanner } from "./QrCheckinBanner";
 import { WelcomeHero } from "./WelcomeHero";

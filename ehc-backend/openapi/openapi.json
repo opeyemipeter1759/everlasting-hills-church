@@ -4058,6 +4058,57 @@
         },
         "type": "object"
       },
+      "SubmitPrayerWatchReportDto": {
+        "properties": {
+          "endTime": {
+            "description": "When it ended and was handed on",
+            "example": "00:00",
+            "type": "string"
+          },
+          "handedOver": {
+            "description": "Handed over to the next watch, or closed the night for the last one",
+            "example": true,
+            "type": "boolean"
+          },
+          "handedOverTo": {
+            "description": "Who took over, when not the next watch leader",
+            "example": "Bisi Ojo",
+            "type": "string"
+          },
+          "nightDate": {
+            "description": "The evening the night began, Lagos time",
+            "example": "2026-11-09",
+            "type": "string"
+          },
+          "notes": {
+            "example": "Strong night. We prayed for the exam students.",
+            "type": "string"
+          },
+          "peoplePresent": {
+            "description": "How many prayed on the watch",
+            "example": 14,
+            "type": "number"
+          },
+          "slotId": {
+            "example": "slot-id",
+            "type": "string"
+          },
+          "startTime": {
+            "description": "When the watch actually began",
+            "example": "22:00",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slotId",
+          "nightDate",
+          "startTime",
+          "endTime",
+          "peoplePresent",
+          "handedOver"
+        ],
+        "type": "object"
+      },
       "SubscribeDto": {
         "properties": {
           "planId": {
@@ -35865,6 +35916,53 @@
         ]
       }
     },
+    "/prayer-watch/admin/overview": {
+      "get": {
+        "operationId": "PrayerWatchController_getOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Dashboard overview: totals, coverage per watch, weekly joins, what needs attention (Admin Head+)",
+        "tags": [
+          "prayer-watch"
+        ]
+      }
+    },
     "/prayer-watch/admin/reflections": {
       "get": {
         "operationId": "PrayerWatchController_getReflections",
@@ -36803,6 +36901,110 @@
           }
         ],
         "summary": "Past watches I have kept, with any reflection I left",
+        "tags": [
+          "prayer-watch"
+        ]
+      }
+    },
+    "/prayer-watch/reports": {
+      "post": {
+        "operationId": "PrayerWatchController_submitReport",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitPrayerWatchReportDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Report a watch as kept and handed over, or correct the report (watch leader, or Admin Head+)",
+        "tags": [
+          "prayer-watch"
+        ]
+      }
+    },
+    "/prayer-watch/reports/mine": {
+      "get": {
+        "operationId": "PrayerWatchController_getMyReports",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The watches I lead, the watch after each, and the last week of nights with their reports",
         "tags": [
           "prayer-watch"
         ]

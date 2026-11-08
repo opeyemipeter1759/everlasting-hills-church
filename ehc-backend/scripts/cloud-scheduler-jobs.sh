@@ -43,6 +43,7 @@ JOBS=(
   "fasting-push|*/5 * * * *|Push during a church fast: 2 hours before each session, and when it goes live on YouTube"
   "push-prayer-watch-reminder|*/5 * * * *|Push: your Prayer Watch hour starts in 30 minutes"
   "prayer-watch-leader-terms|0 8 * * *|Prayer Watch: tell admins when a watch leader's three months are up"
+  "prayer-watch-report-reminders|*/15 * * * *|Prayer Watch: nudge a watch leader who hasn't reported their watch"
   "one-on-one-sweep|*/10 * * * *|One-on-One: release expired holds, lapse unanswered requests, nudge pastors, send reminders"
 )
 
@@ -53,15 +54,16 @@ for spec in "${JOBS[@]}"; do
     --location "$REGION" --project "$PROJECT"
     --schedule "$cron" --time-zone "$TZ_NAME"
     --uri "$BASE_URL/jobs/${path:-$name}" --http-method POST
-    --headers "X-Cron-Secret=$SECRET,Content-Type=application/json"
     --attempt-deadline 300s
     --max-retry-attempts 2 --min-backoff 30s --max-backoff 300s
     --description "$desc"
   )
+  headers="X-Cron-Secret=$SECRET,Content-Type=application/json"
+  # `update http` takes --update-headers; only `create http` takes --headers.
   if gcloud scheduler jobs describe "$job" --location "$REGION" --project "$PROJECT" >/dev/null 2>&1; then
-    gcloud scheduler jobs update http "$job" "${common[@]}" --quiet >/dev/null && echo "updated  $job  ($cron $TZ_NAME)"
+    gcloud scheduler jobs update http "$job" "${common[@]}" --update-headers "$headers" --quiet >/dev/null && echo "updated  $job  ($cron $TZ_NAME)"
   else
-    gcloud scheduler jobs create http "$job" "${common[@]}" --quiet >/dev/null && echo "created  $job  ($cron $TZ_NAME)"
+    gcloud scheduler jobs create http "$job" "${common[@]}" --headers "$headers" --quiet >/dev/null && echo "created  $job  ($cron $TZ_NAME)"
   fi
 done
 

@@ -360,6 +360,7 @@ export class PrayerWatchService {
             createdAt: pending.createdAt.toISOString(),
           }
         : null,
+      leadsWatch: confirmed && slot.leaderId === signup.id,
     };
   }
 

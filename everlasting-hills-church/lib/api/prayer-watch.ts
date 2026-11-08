@@ -102,8 +102,7 @@ export interface SignupInput {
   isWorker: boolean;
 }
 
-/** The slot returned once a sign-up is confirmed — includes its WhatsApp
- * group, which is withheld from the public view until then. */
+/** The slot returned once a sign-up is confirmed, with the WhatsApp group the public view withholds. */
 export interface ConfirmedSlot extends PublicSlot {
   whatsappLink: string | null;
 }
@@ -143,6 +142,8 @@ export interface MySignupView {
   /** The central Telegram channel where the prayer happens. Null until confirmed. */
   telegramLink: string | null;
   pendingFamilyChangeRequest: PendingFamilyChangeRequest | null;
+  /** True when this member leads their watch, and so files its nightly report. */
+  leadsWatch: boolean;
 }
 
 export interface AdminFamilyChangeRequest {
@@ -215,8 +216,7 @@ export function useSubmitPrayerSignup() {
 
 // ── Mine (self-service) ─────────────────────────────────────────────────────
 
-/** Needs auth — pass `enabled: false` on a page a signed-out visitor can reach (this defaults to
- *  true since every existing caller lives inside the authenticated dashboard). */
+/** Needs auth: pass `enabled: false` on a page a signed-out visitor can reach (defaults to true for the dashboard). */
 export function useMyPrayerSignup(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: [...PRAYER_WATCH_KEY, "mine"],

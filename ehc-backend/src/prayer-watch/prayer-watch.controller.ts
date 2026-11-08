@@ -20,12 +20,19 @@ import {
   UpdatePrayerWatchDto,
 } from './dto/prayer-watch.dto';
 import { PrayerWatchService } from './prayer-watch.service';
+import { PrayerWatchStatsService } from './prayer-watch-stats.service';
+import { PrayerWatchReportsService } from './prayer-watch-reports.service';
+import { SubmitPrayerWatchReportDto } from './dto/prayer-watch-report.dto';
 
 /** Public sign-up + admin management for the overnight prayer watch. */
 @ApiTags('prayer-watch')
 @Controller('prayer-watch')
 export class PrayerWatchController {
-  constructor(private readonly prayerWatch: PrayerWatchService) {}
+  constructor(
+    private readonly prayerWatch: PrayerWatchService,
+    private readonly stats: PrayerWatchStatsService,
+    private readonly reports: PrayerWatchReportsService,
+  ) {}
 
   @Public()
   @UseGuards(OptionalJwtAuthGuard)
@@ -90,6 +97,30 @@ export class PrayerWatchController {
   @ApiOperation({ summary: 'First names of others on the same watch hour' })
   getCompanions(@Param('slotId') slotId: string, @CurrentUser() user: AuthUser) {
     return this.prayerWatch.getSlotCompanions(slotId, user.profileId);
+  }
+
+  // ── Watch leaders' nightly reports ─────────────────────────────────────────
+
+  @Get('reports/mine')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'The watches I lead, the watch after each, and the last week of nights with their reports' })
+  getMyReports(@CurrentUser() user: AuthUser) {
+    return this.reports.mine(user);
+  }
+
+  @Post('reports')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Report a watch as kept and handed over, or correct the report (watch leader, or Admin Head+)' })
+  submitReport(@Body() body: SubmitPrayerWatchReportDto, @CurrentUser() user: AuthUser) {
+    return this.reports.submit(user, body);
+  }
+
+  @Get('admin/overview')
+  @Roles(Role.ADMIN_HEAD)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Dashboard overview: totals, coverage per watch, weekly joins, what needs attention (Admin Head+)' })
+  getOverview() {
+    return this.stats.overview();
   }
 
   @Get('admin')

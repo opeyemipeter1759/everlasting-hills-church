@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarPlus, Clock3, Loader2, MessageCircle, Send, Users } from "lucide-react";
+import { CalendarPlus, ClipboardCheck, Clock3, Loader2, MessageCircle, Send, Users } from "lucide-react";
 import { fraunces } from "@/lib/fonts/prayer-watch";
 import { userMessageForError } from "@/lib/api/user-message";
 import {
@@ -18,22 +18,10 @@ import {
   type PublicSlot,
 } from "@/lib/api/prayer-watch";
 import { useMe } from "@/lib/api";
-
-const serif = { fontFamily: "var(--font-fraunces), serif" };
+import { SKY_GRADIENT, WATCH_COLORS, serif } from "./sky";
 
 const fieldCls =
   "min-h-11 w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-[#111] placeholder:text-gray-400 outline-none transition-colors focus:border-[#87102C]/50 focus:ring-1 focus:ring-[#87102C]/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:placeholder:text-white/30 dark:focus:border-[#FFB3C1]/50 dark:focus:ring-[#FFB3C1]/20";
-
-/** Each watch hour takes its colour from the real sky at that time — dusk,
- * deep indigo, the void before dawn, first light — so colour carries the
- * schedule itself instead of decorating four otherwise-identical rows. */
-const WATCH_COLORS = [
-  { bg: "#4F2E5E", text: "#fff", sub: "rgba(255,255,255,0.7)", bar: "rgba(255,255,255,0.25)" },
-  { bg: "#232C52", text: "#fff", sub: "rgba(255,255,255,0.7)", bar: "rgba(255,255,255,0.25)" },
-  { bg: "#0A0E1F", text: "#fff", sub: "rgba(255,255,255,0.7)", bar: "rgba(255,255,255,0.25)" },
-  { bg: "#C97A3E", text: "#150E22", sub: "rgba(21,14,34,0.62)", bar: "rgba(21,14,34,0.18)" },
-] as const;
-const SKY_GRADIENT = `linear-gradient(90deg, ${WATCH_COLORS[0].bg}, ${WATCH_COLORS[1].bg} 38%, ${WATCH_COLORS[2].bg} 62%, ${WATCH_COLORS[3].bg})`;
 
 function watchColorFor(slots: PublicSlot[] | undefined, slotId: string | undefined) {
   if (!slots || !slotId) return null;
@@ -314,7 +302,7 @@ export default function PrayerWatchScreen() {
             className="relative overflow-hidden rounded-2xl p-5 text-center xs:p-6"
             style={{ background: watchColorFor(watch.data?.slots, mine.data.slot.id)?.bg ?? "#150E22", color: watchColorFor(watch.data?.slots, mine.data.slot.id)?.text ?? "#fff" }}
           >
-            <p className="text-xs font-semibold uppercase tracking-wide opacity-70">You&apos;re on the watch</p>
+            <p className="text-xs font-semibold uppercase tracking-wide opacity-70">{mine.data.leadsWatch ? "You lead this watch" : "You’re on the watch"}</p>
             <h2 style={serif} className="mt-2 text-2xl font-medium xs:text-3xl sm:text-4xl">
               {mine.data.slot.startTime}–{mine.data.slot.endTime}
             </h2>
@@ -351,6 +339,12 @@ export default function PrayerWatchScreen() {
                 <CalendarPlus size={16} aria-hidden="true" />
                 Add to calendar
               </a>
+              {mine.data.leadsWatch && (
+                <Link href="/dashboard/prayer-watch/report" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#150E22] transition-colors hover:bg-white/90 xs:w-auto">
+                  <ClipboardCheck size={16} aria-hidden="true" />
+                  Report the watch
+                </Link>
+              )}
             </div>
 
             {mine.data.pendingFamilyChangeRequest ? (

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Clock3, Moon, Send, ShieldCheck } from "lucide-react";
+import { ChevronRight, ClipboardCheck, Clock3, Crown, Moon, Send, ShieldCheck } from "lucide-react";
 import { useMyPrayerSignup, usePublicPrayerWatch, type PublicSlot } from "@/lib/api/prayer-watch";
 import { card, cardTitle, hdrBdr, iconBg, iconCl, kicker, muted, linkCl } from "./tokens";
 import { formatUntil, watchStatus } from "./watch-time";
@@ -20,7 +20,7 @@ function useNow() {
   return now;
 }
 
-function Header({ status }: { status?: "confirmed" | "pending" }) {
+function Header({ status }: { status?: "confirmed" | "leading" | "pending" }) {
   return (
     <div className={`flex items-center justify-between gap-3 px-5 py-4 ${hdrBdr}`}>
       <div className="flex min-w-0 items-center gap-3">
@@ -35,6 +35,11 @@ function Header({ status }: { status?: "confirmed" | "pending" }) {
       {status === "confirmed" && (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
           <ShieldCheck size={12} aria-hidden="true" /> Confirmed
+        </span>
+      )}
+      {status === "leading" && (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#FFE8ED] px-2.5 py-1 text-[11px] font-semibold text-[#87102C] dark:bg-[#87102C]/25 dark:text-[#FFB3C1]">
+          <Crown size={12} aria-hidden="true" /> You lead this watch
         </span>
       )}
       {status === "pending" && (
@@ -84,12 +89,6 @@ function WatchHour({ slotId, startTime, endTime, label, live, watches }: {
     </>
   );
 }
-
-/**
- * The member's own Prayer Watch hour on their dashboard: none yet (an
- * invitation), awaiting approval, or confirmed (the hour, when it next
- * starts, and the way into the watch's Telegram channel).
- */
 export function PrayerWatchCard() {
   const { data, isLoading } = useMyPrayerSignup();
   const { data: current } = usePublicPrayerWatch();
@@ -116,10 +115,16 @@ export function PrayerWatchCard() {
 
   return (
     <section className={card} aria-label="Prayer Watch">
-      <Header status={pending ? "pending" : "confirmed"} />
+      <Header status={pending ? "pending" : data.leadsWatch ? "leading" : "confirmed"} />
       <div className="px-5 py-4">
         <WatchHour slotId={slot.id} startTime={slot.startTime} endTime={slot.endTime} label={slot.label} live={pending ? null : true} watches={current?.slots ?? []} />
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {/* The leader files the night's report; it's their main job here. */}
+          {!pending && data.leadsWatch && (
+            <Link href="/dashboard/prayer-watch/report" className={`${PRIMARY} bg-[#87102C] text-white hover:bg-[#6E0C24]`}>
+              <ClipboardCheck size={15} aria-hidden="true" /> Report the watch
+            </Link>
+          )}
           {!pending && data.telegramLink && (
             <a href={data.telegramLink} target="_blank" rel="noopener noreferrer" className={`${PRIMARY} bg-[#26A5E4] text-white hover:bg-[#1f8fc6]`}>
               <Send size={14} aria-hidden="true" /> Join on Telegram
