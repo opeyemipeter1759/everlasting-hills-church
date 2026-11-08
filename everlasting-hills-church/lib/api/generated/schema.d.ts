@@ -8635,23 +8635,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sermons/me/bookmarks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** My bookmarked sermons */
-        get: operations["SermonsMemberStatsController_getMyBookmarks"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/sermons/me/comments/{commentId}": {
         parameters: {
             query?: never;
@@ -8669,15 +8652,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sermons/me/history": {
+    "/sermons/me/overview": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** My listen history */
-        get: operations["SermonsMemberStatsController_getMyListenHistory"];
+        /** My Sermons page: stats, published sermons, listen history and bookmarks in one request */
+        get: operations["SermonsMemberStatsController_getMyOverview"];
         put?: never;
         post?: never;
         delete?: never;
@@ -8697,23 +8680,6 @@ export interface paths {
         put?: never;
         /** Answer a reflection question (upserts my response) */
         post: operations["SermonsInteractionsController_answerDiscussionQuestion"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/me/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** My sermon stats — completed / in progress / bookmarked counts */
-        get: operations["SermonsMemberStatsController_getMySermonStats"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -32967,37 +32933,6 @@ export interface operations {
             };
         };
     };
-    SermonsMemberStatsController_getMyBookmarks: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     SermonsCommentsController_deleteComment: {
         parameters: {
             query?: never;
@@ -33031,7 +32966,7 @@ export interface operations {
             };
         };
     };
-    SermonsMemberStatsController_getMyListenHistory: {
+    SermonsMemberStatsController_getMyOverview: {
         parameters: {
             query?: never;
             header?: never;
@@ -33078,37 +33013,6 @@ export interface operations {
         };
         responses: {
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    SermonsMemberStatsController_getMySermonStats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
                 headers: {
                     [name: string]: unknown;
                 };

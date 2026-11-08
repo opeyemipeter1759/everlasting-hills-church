@@ -1,7 +1,7 @@
 "use client";
 
-import { dehydrate, QueryClient, type DehydratedState } from "@tanstack/react-query";
 import { normalizePledge } from "@/lib/api/pledges";
+import type { SeedEntry } from "@/lib/api/QueryHydration";
 import type { MemberHomeData } from "@/app/dashboard/(dashboard)/_loaders/member-home/types";
 
 /**
@@ -34,13 +34,10 @@ export function homeQueryEntries(data: MemberHomeData): Array<{ key: readonly un
 /** Sections whose null means "failed" rather than "nothing": never cache those. */
 const NULL_MEANS_FAILED = new Set(["canMark", "gatherings", "prayerWatchCurrent", "spouse", "evangelismTally", "oneOnOneRequests", "readingSubscriptions", "scriptureToday", "scriptureTranslations", "latestSermon"]);
 
-export function dehydrateHome(data: MemberHomeData): DehydratedState {
-  const client = new QueryClient();
+/** The entries worth caching: not failed sections, and no null that means "failed". */
+export function homeSeedEntries(data: MemberHomeData): SeedEntry[] {
   const failed = new Set(data.unavailable);
-  for (const { key, section, value } of homeQueryEntries(data)) {
-    if (failed.has(section)) continue;
-    if (value == null && NULL_MEANS_FAILED.has(section)) continue;
-    client.setQueryData(key, value);
-  }
-  return dehydrate(client);
+  return homeQueryEntries(data)
+    .filter(({ section, value }) => !failed.has(section) && !(value == null && NULL_MEANS_FAILED.has(section)))
+    .map(({ key, value }) => ({ key, value }));
 }

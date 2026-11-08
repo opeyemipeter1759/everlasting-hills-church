@@ -40252,53 +40252,6 @@
         ]
       }
     },
-    "/sermons/me/bookmarks": {
-      "get": {
-        "operationId": "SermonsMemberStatsController_getMyBookmarks",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "My bookmarked sermons",
-        "tags": [
-          "sermons"
-        ]
-      }
-    },
     "/sermons/me/comments/{commentId}": {
       "delete": {
         "operationId": "SermonsCommentsController_deleteComment",
@@ -40355,9 +40308,9 @@
         ]
       }
     },
-    "/sermons/me/history": {
+    "/sermons/me/overview": {
       "get": {
-        "operationId": "SermonsMemberStatsController_getMyListenHistory",
+        "operationId": "SermonsMemberStatsController_getMyOverview",
         "parameters": [],
         "responses": {
           "200": {
@@ -40396,7 +40349,7 @@
             "access-token": []
           }
         ],
-        "summary": "My listen history",
+        "summary": "My Sermons page: stats, published sermons, listen history and bookmarks in one request",
         "tags": [
           "sermons"
         ]
@@ -40463,53 +40416,6 @@
           }
         ],
         "summary": "Answer a reflection question (upserts my response)",
-        "tags": [
-          "sermons"
-        ]
-      }
-    },
-    "/sermons/me/stats": {
-      "get": {
-        "operationId": "SermonsMemberStatsController_getMySermonStats",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "My sermon stats — completed / in progress / bookmarked counts",
         "tags": [
           "sermons"
         ]
