@@ -3,7 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
-import { generateUnusableInitialPassword, passwordSetupRedirect } from '../../auth/secure-provisioning';
+import { generateUnusableInitialPassword } from '../../auth/secure-provisioning';
+import { createRecoveryLink } from '../../auth/recovery-link';
+import { buildPasswordResetEmail } from '../../notifications/templates/password-reset.email';
 import type { AuthUser } from '../../auth/types/auth-user';
 import type { Env } from '../../config/env.validation';
 import { NotificationEvents } from '../../notifications/notification-events';
@@ -114,13 +116,17 @@ export class UsersCreateService {
       throw dbError;
     }
 
-    // The user chooses a password through Supabase's signed, expiring recovery
-    // link. No phone number or shared default password is ever disclosed.
-    const { error: setupError } = await client.auth.resetPasswordForEmail(normalizedEmail, {
-      redirectTo: passwordSetupRedirect(this.appUrl),
-    });
-    if (setupError) {
-      this.logger.error(`Could not send password setup email to ${normalizedEmail}: ${setupError.message}`);
+    // The user chooses a password through a signed, expiring one-time link
+    // (sent by us so it opens the live site). No phone number or shared
+    // default password is ever disclosed.
+    const setup = await createRecoveryLink(normalizedEmail, this.appUrl);
+    if (setup.link) {
+      await this.events.emitAsync(
+        NotificationEvents.SendEmail,
+        buildPasswordResetEmail({ email: normalizedEmail, link: setup.link, purpose: 'setup' }),
+      );
+    } else {
+      this.logger.error(`Could not create a password setup link for ${normalizedEmail}: ${setup.reason}`);
     }
 
     this.events.emit(
@@ -140,7 +146,7 @@ export class UsersCreateService {
       userId: supabaseUserId,
       role: data.role,
       member: result.member,
-      passwordSetupEmailSent: !setupError,
+      passwordSetupEmailSent: !!setup.link,
     };
   }
 }

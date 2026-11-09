@@ -22,7 +22,3 @@ export function generateTempPassword(): string {
   }
   return out;
 }
-
-export function passwordSetupRedirect(appUrl: string): string {
-  return `${appUrl.replace(/\/$/, '')}/change-password`;
-}

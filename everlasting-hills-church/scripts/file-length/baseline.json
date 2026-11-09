@@ -1,7 +1,6 @@
 {
   "max": 150,
   "files": {
-    "app/(auth)/change-password/page.tsx": 159,
     "app/(public)/articles/[slug]/page.tsx": 199,
     "app/(public)/attend/online/page.tsx": 305,
     "app/(public)/classes/membership/page.tsx": 295,

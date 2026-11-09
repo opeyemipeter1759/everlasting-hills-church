@@ -1,6 +1,10 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Env } from '../../config/env.validation';
+import { NotificationEvents } from '../../notifications/notification-events';
+import { buildPasswordResetEmail } from '../../notifications/templates/password-reset.email';
+import { createRecoveryLink } from '../recovery-link';
 import { AuthSupabaseService } from './auth-supabase.service';
 import { AuthProfileSummaryService } from './auth-profile-summary.service';
 import { assertActiveMemberAccount, isMemberAccountInactive } from '../member-account-status';
@@ -13,9 +17,10 @@ export class AuthSessionService {
   constructor(
     private readonly supabase: AuthSupabaseService,
     private readonly profileSummary: AuthProfileSummaryService,
+    private readonly events: EventEmitter2,
     config: ConfigService<Env, true>,
   ) {
-    // Recovery link is sent by Supabase and lands at `${publicSiteUrl}/change-password`.
+    // The recovery email links to `${publicSiteUrl}/change-password`.
     this.publicSiteUrl =
       (config.get('FRONTEND_URL', { infer: true }) as string | undefined) ?? 'http://localhost:3000';
   }
@@ -56,17 +61,42 @@ export class AuthSessionService {
     };
   }
 
+  /**
+   * Emails a one-time link to the change-password page. We send it ourselves
+   * (not Supabase) so the link always opens the live site. The reply is the
+   * same whether or not the account exists, so it can't be used to probe emails.
+   */
   async requestPasswordReset(email: string) {
-    const redirectTo = `${this.publicSiteUrl.replace(/\/$/, '')}/change-password`;
-    const { error } = await this.supabase.anonClient.auth.resetPasswordForEmail(email, { redirectTo });
-    if (error) {
-      // Log but do not leak. Rate-limit failures from Supabase land here too.
-      this.logger.warn(`Password reset request for ${email}: ${error.message}`);
+    const result = await createRecoveryLink(email, this.publicSiteUrl);
+    if (result.link) {
+      // Awaited so the send finishes inside this request — on Cloud Run the
+      // instance gets no CPU once the response is out.
+      await this.events.emitAsync(
+        NotificationEvents.SendEmail,
+        buildPasswordResetEmail({ email, link: result.link, purpose: 'reset' }),
+      );
+    } else {
+      // Log but do not leak: unknown addresses land here too.
+      this.logger.warn(`Password reset request for ${email}: ${result.reason}`);
     }
     return {
       success: true,
       message: 'If an account exists for that email, a reset link has been sent.',
     };
+  }
+
+  /**
+   * Opens the link from the reset email: exchanges its one-time token for a
+   * short-lived session, which the change-password page uses to set the new
+   * password. A token works once and expires after an hour.
+   */
+  async verifyRecovery(tokenHash: string) {
+    const { data, error } = await this.supabase.anonClient.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash });
+    if (error || !data.session) {
+      this.logger.warn(`Recovery link rejected: ${error?.message ?? 'no session'}`);
+      throw new UnauthorizedException('This password-reset link is invalid or has expired. Request a new one.');
+    }
+    return { access_token: data.session.access_token, expires_in: data.session.expires_in };
   }
 
   async logout(authorization?: string) {

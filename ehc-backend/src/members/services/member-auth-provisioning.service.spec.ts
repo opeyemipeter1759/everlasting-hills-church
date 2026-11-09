@@ -26,7 +26,7 @@ function setup(profile: { id: string } | null) {
     get: jest.fn((key: string) => (key === 'FRONTEND_URL' ? 'https://church.test' : undefined)),
   };
   return {
-    service: new MemberAuthProvisioningService(prisma as never, config as never),
+    service: new MemberAuthProvisioningService(prisma as never, { emitAsync: jest.fn() } as never, config as never),
     admin,
   };
 }
@@ -74,6 +74,7 @@ describe('MemberAuthProvisioningService', () => {
     (createAdminClient as jest.Mock).mockReturnValue({ auth: { admin } });
     const service = new MemberAuthProvisioningService(
       { profile: { findUnique: jest.fn() } } as never,
+      { emitAsync: jest.fn() } as never,
       { get: jest.fn().mockReturnValue('https://church.test') } as never,
     );
 
@@ -97,6 +98,7 @@ describe('MemberAuthProvisioningService', () => {
     (createAdminClient as jest.Mock).mockReturnValue({ auth: { admin } });
     const service = new MemberAuthProvisioningService(
       { profile: { findUnique: jest.fn() } } as never,
+      { emitAsync: jest.fn() } as never,
       { get: jest.fn().mockReturnValue('https://church.test') } as never,
     );
 
@@ -127,6 +129,7 @@ describe('MemberAuthProvisioningService', () => {
     (createAdminClient as jest.Mock).mockReturnValue({ auth: { admin } });
     const service = new MemberAuthProvisioningService(
       { profile: { findUnique: jest.fn() } } as never,
+      { emitAsync: jest.fn() } as never,
       { get: jest.fn().mockReturnValue('https://church.test') } as never,
     );
 
@@ -151,6 +154,7 @@ describe('MemberAuthProvisioningService', () => {
     (createAdminClient as jest.Mock).mockReturnValue({ auth: { admin } });
     const service = new MemberAuthProvisioningService(
       { profile: { findUnique: jest.fn() } } as never,
+      { emitAsync: jest.fn() } as never,
       { get: jest.fn().mockReturnValue('https://church.test') } as never,
     );
 
@@ -168,6 +172,7 @@ describe('MemberAuthProvisioningService', () => {
     (createAdminClient as jest.Mock).mockReturnValue({ auth: { admin } });
     const service = new MemberAuthProvisioningService(
       { profile: { findUnique: jest.fn() } } as never,
+      { emitAsync: jest.fn() } as never,
       { get: jest.fn().mockReturnValue('https://church.test') } as never,
     );
 

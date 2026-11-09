@@ -6,8 +6,12 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Role } from '@prisma/client';
-import { generateTempPassword, passwordSetupRedirect } from '../../auth/secure-provisioning';
+import { generateTempPassword } from '../../auth/secure-provisioning';
+import { createRecoveryLink } from '../../auth/recovery-link';
+import { NotificationEvents } from '../../notifications/notification-events';
+import { buildPasswordResetEmail } from '../../notifications/templates/password-reset.email';
 import type { Env } from '../../config/env.validation';
 import { PrismaService } from '../../prisma/prisma.service';
 import { createAdminClient } from '../members-supabase-admin.util';
@@ -46,6 +50,7 @@ export class MemberAuthProvisioningService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly events: EventEmitter2,
     config: ConfigService<Env, true>,
   ) {
     this.appUrl = config.get('FRONTEND_URL', { infer: true }) ?? 'http://localhost:3000';
@@ -151,14 +156,14 @@ export class MemberAuthProvisioningService {
     return { userId: found.id, created: false, tempPassword };
   }
 
+  /** Emails a new account a one-time link to choose its password (sent by us, so it opens the live site). */
   async sendPasswordSetupEmail(email: string): Promise<boolean> {
-    const { error } = await createAdminClient().auth.resetPasswordForEmail(email, {
-      redirectTo: passwordSetupRedirect(this.appUrl),
-    });
-    if (error) {
-      this.logger.error(`Could not send password setup email to ${email}: ${error.message}`);
+    const result = await createRecoveryLink(email, this.appUrl);
+    if (!result.link) {
+      this.logger.error(`Could not create a password setup link for ${email}: ${result.reason}`);
       return false;
     }
+    await this.events.emitAsync(NotificationEvents.SendEmail, buildPasswordResetEmail({ email, link: result.link, purpose: 'setup' }));
     return true;
   }
 
