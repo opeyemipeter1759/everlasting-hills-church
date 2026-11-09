@@ -6,7 +6,7 @@ const hc = (men: number, women: number, children: number) => ({
   men, women, boys: children, girls: 0, children, firstTimers: 0, total: men + women + children, status: "CONFIRMED" as const,
 });
 const svc = (id: string, serviceType: OverviewService["serviceType"], date: string, h: ReturnType<typeof hc> | null): OverviewService => ({
-  id, name: id, serviceType, date, headcount: h, checkedIn: 0, absent: 0,
+  id, name: id, serviceType, date, headcount: h, checkedIn: 0, checkedInByGender: { men: 0, women: 0, unknown: 0 }, absent: 0,
 });
 
 // Newest first, as the API returns them.

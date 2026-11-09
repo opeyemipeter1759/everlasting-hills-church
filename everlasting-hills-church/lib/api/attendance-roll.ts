@@ -121,6 +121,8 @@ export interface OverviewService {
   headcount: ServiceHeadcountSummary | null;
   /** Active members who checked in on the app, and those marked absent. */
   checkedIn: number;
+  /** The members who checked in, split by the gender on their profile. */
+  checkedInByGender: { men: number; women: number; unknown: number };
   absent: number;
 }
 

@@ -25,6 +25,12 @@ function makeService(services: unknown[]) {
         { serviceId: 's2', present: false, _count: { _all: 40 } },
         { serviceId: 's1', present: true, _count: { _all: 12 } },
       ]),
+      findMany: jest.fn().mockResolvedValue([
+        { serviceId: 's2', Member: { gender: 'Male' } },
+        { serviceId: 's2', Member: { gender: 'FEMALE' } },
+        { serviceId: 's2', Member: { gender: 'female' } },
+        { serviceId: 's2', Member: { gender: null } },
+      ]),
     },
   };
   const svc = new AttendanceServiceOverviewService(prisma as never, { get: () => 't1' } as never);
@@ -43,9 +49,10 @@ describe('AttendanceServiceOverviewService.recentServices', () => {
       date: '2026-11-08',
       headcount: { men: 30, women: 44, boys: 1, girls: 6, children: 7, firstTimers: 6, total: 81, status: 'CONFIRMED' },
       checkedIn: 43,
+      checkedInByGender: { men: 1, women: 2, unknown: 1 },
       absent: 40,
     });
-    expect(out.services[1]).toMatchObject({ date: '2026-11-04', headcount: null, checkedIn: 12, absent: 0 });
+    expect(out.services[1]).toMatchObject({ date: '2026-11-04', headcount: null, checkedIn: 12, absent: 0, checkedInByGender: { men: 0, women: 0, unknown: 0 } });
   });
 
   it('counts only active members, so a deactivated member is not on the roll', async () => {
@@ -60,5 +67,6 @@ describe('AttendanceServiceOverviewService.recentServices', () => {
     await expect(svc.recentServices(500)).resolves.toEqual({ activeMembers: 83, services: [] });
     expect(prisma.service.findMany.mock.calls[0][0].take).toBe(52);
     expect(prisma.attendanceRecord.groupBy).not.toHaveBeenCalled();
+    expect(prisma.attendanceRecord.findMany).not.toHaveBeenCalled();
   });
 });

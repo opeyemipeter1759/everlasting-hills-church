@@ -10,9 +10,9 @@ export default function HeadcountFigures({ hc, prev }: { hc: ServiceHeadcountSum
   const described = parts.map((p) => `${p.label} ${p.value} (${share(p.value, hc.total)}%)`).join(", ");
 
   return (
-    <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,13rem)_1fr] lg:items-end">
+    <div className="mt-3 grid gap-5 sm:grid-cols-[minmax(0,7.5rem)_1fr] sm:items-end">
       <div>
-        <p className="text-6xl font-black leading-none tracking-tight tabular-nums text-[#1A1210] dark:text-white">{hc.total}</p>
+        <p className="text-5xl font-black leading-none tracking-tight tabular-nums text-[#1A1210] dark:text-white">{hc.total}</p>
         <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-white/80">people in church</p>
         {prev && <p className="mt-0.5 text-xs text-gray-500 dark:text-white/50">{comparedWith(hc.total, prev.headcount.total, prev.date)}</p>}
       </div>

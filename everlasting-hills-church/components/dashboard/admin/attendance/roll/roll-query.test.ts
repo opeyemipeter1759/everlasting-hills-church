@@ -25,7 +25,7 @@ describe("rollQuery", () => {
 
   it("lists recent services first, then the wider scopes", () => {
     const options = scopeOptions([
-      { id: "s1", name: "x", serviceType: "SUNDAY", date: "2026-11-08", headcount: null, checkedIn: 43, absent: 38 },
+      { id: "s1", name: "x", serviceType: "SUNDAY", date: "2026-11-08", headcount: null, checkedIn: 43, checkedInByGender: { men: 20, women: 23, unknown: 0 }, absent: 38 },
     ]);
     expect(options[0]).toEqual({ value: "s1", label: "Sunday, 8 Nov", group: "Recent services", hint: "43 in" });
     expect(options.slice(1).map((o) => o.value)).toEqual(["all", "sunday", "wednesday"]);

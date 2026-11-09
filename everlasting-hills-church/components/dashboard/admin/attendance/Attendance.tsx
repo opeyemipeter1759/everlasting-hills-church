@@ -11,7 +11,7 @@ import { defaultService } from "./overview/overview-data";
 import AttendanceRoll from "./roll/AttendanceRoll";
 import AttendanceTabs, { panelId, tabId, type AttendanceTab } from "./AttendanceTabs";
 import AttendanceInsights from "./insights/AttendanceInsights";
-import { isOneService } from "./roll/roll-query";
+import { isOneService, type RollStatus } from "./roll/roll-query";
 import { useServiceOverview } from "@/lib/api/attendance-roll";
 import { useTodayFeed } from "@/lib/api";
 
@@ -39,6 +39,7 @@ export default function Attendance() {
   // every Sunday (or every service); then the overview keeps its own.
   const [focusId, setFocusId] = useState<string | null>(null);
   const [scope, setScope] = useState<string | null>(null);
+  const [statusRequest, setStatusRequest] = useState<{ status: RollStatus; at: number } | null>(null);
   const shownId = focusId ?? defaultService(services)?.id ?? null;
 
   const refresh = useCallback(async () => {
@@ -54,6 +55,11 @@ export default function Attendance() {
   function showService(id: string) {
     setFocusId(id);
     setScope(id);
+  }
+
+  function showRoll(id: string, status: RollStatus) {
+    showService(id);
+    setStatusRequest({ status, at: Date.now() });
   }
 
   function changeScope(next: string) {
@@ -87,13 +93,13 @@ export default function Attendance() {
         {overview.isLoading ? (
           <div className="h-80 animate-pulse rounded-2xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#1c1c1e]" aria-label="Loading the last service" />
         ) : overview.data && shownId ? (
-          <ServiceOverview data={overview.data} selectedId={shownId} onSelect={showService} />
+          <ServiceOverview data={overview.data} selectedId={shownId} onSelect={showService} onShowRoll={showRoll} />
         ) : (
           <p className="rounded-2xl border border-dashed border-gray-300 px-5 py-8 text-center text-sm text-gray-500 dark:border-white/15 dark:text-white/50">
             {overview.isError ? "The service overview couldn't load. Refresh to try again." : "No services have been held yet."}
           </p>
         )}
-        {!overview.isLoading && <AttendanceRoll scope={scope ?? shownId ?? "all"} onScopeChange={changeScope} services={services} />}
+        {!overview.isLoading && <AttendanceRoll scope={scope ?? shownId ?? "all"} onScopeChange={changeScope} services={services} statusRequest={statusRequest} />}
         {/* The live check-in feed only means something on a day with a service. */}
         {todayFeed.data?.sessionId && <TodayFeed />}
         <ReportsSection />

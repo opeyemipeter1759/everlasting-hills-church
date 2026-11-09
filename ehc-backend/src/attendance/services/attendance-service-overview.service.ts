@@ -51,15 +51,33 @@ export class AttendanceServiceOverviewService {
       this.prisma.member.count({ where: activeMembersOf(this.tenantId) }),
     ]);
 
-    const groups = services.length
-      ? await this.prisma.attendanceRecord.groupBy({
-          by: ['serviceId', 'present'],
-          where: { tenantId: this.tenantId, serviceId: { in: services.map((s) => s.id) }, Member: ACTIVE_MEMBER },
-          _count: { _all: true },
-        })
-      : [];
-    const countOf = (serviceId: string, present: boolean) =>
-      groups.find((g) => g.serviceId === serviceId && g.present === present)?._count._all ?? 0;
+    const ids = services.map((s) => s.id);
+    const [groups, present] = ids.length
+      ? await Promise.all([
+          this.prisma.attendanceRecord.groupBy({
+            by: ['serviceId', 'present'],
+            where: { tenantId: this.tenantId, serviceId: { in: ids }, Member: ACTIVE_MEMBER },
+            _count: { _all: true },
+          }),
+          // Who checked in, to split them into men and women. Gender is stored
+          // in mixed case ("Male", "MALE"), so it is read per row, not grouped.
+          this.prisma.attendanceRecord.findMany({
+            where: { tenantId: this.tenantId, serviceId: { in: ids }, present: true, Member: ACTIVE_MEMBER },
+            select: { serviceId: true, Member: { select: { gender: true } } },
+          }),
+        ])
+      : [[], []];
+    const countOf = (serviceId: string, isPresent: boolean) =>
+      groups.find((g) => g.serviceId === serviceId && g.present === isPresent)?._count._all ?? 0;
+    const byGender = new Map<string, { men: number; women: number; unknown: number }>();
+    for (const r of present) {
+      const split = byGender.get(r.serviceId) ?? { men: 0, women: 0, unknown: 0 };
+      const g = r.Member.gender?.toUpperCase();
+      if (g === 'MALE') split.men += 1;
+      else if (g === 'FEMALE') split.women += 1;
+      else split.unknown += 1;
+      byGender.set(r.serviceId, split);
+    }
 
     return {
       activeMembers,
@@ -72,6 +90,7 @@ export class AttendanceServiceOverviewService {
           date: watDateStr(s.scheduledAt),
           headcount: hc ? { ...hc, children: hc.boys + hc.girls } : null,
           checkedIn: countOf(s.id, true),
+          checkedInByGender: byGender.get(s.id) ?? { men: 0, women: 0, unknown: 0 },
           absent: countOf(s.id, false),
         };
       }),

@@ -32,6 +32,13 @@ export function previousCounted(services: OverviewService[], id: string): Overvi
   return services.slice(i + 1).find((s) => s.serviceType === kind && s.headcount);
 }
 
+/** The service of the same kind just before this one, counted or not, to compare check-ins against. */
+export function previousOfKind(services: OverviewService[], id: string): OverviewService | undefined {
+  const i = services.findIndex((s) => s.id === id);
+  if (i < 0) return undefined;
+  return services.slice(i + 1).find((s) => s.serviceType === services[i].serviceType);
+}
+
 /** Services of one kind, oldest first, for the strip under the figures. */
 export function sameKind(services: OverviewService[], kind: OverviewService["serviceType"], max = 12): OverviewService[] {
   return services.filter((s) => s.serviceType === kind).slice(0, max).reverse();

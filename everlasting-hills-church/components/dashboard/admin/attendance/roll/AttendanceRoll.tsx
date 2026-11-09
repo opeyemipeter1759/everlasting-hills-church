@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, Loader2 } from "lucide-react";
+import { Download } from "lucide-react";
 import { downloadAttendanceCsv, useAttendanceList, useOverrideAttendance, type AttendanceRow, type OverviewService } from "@/lib/api/attendance-roll";
 import { PaginationFooter } from "@/components/ui/navigation/PaginationFooter";
 import { showToast } from "@/components/ui/toast/toast";
 import RollFilters, { type RollFilterValues } from "./RollFilters";
 import RollTable from "./RollTable";
 import BulkMarkBar from "./BulkMarkBar";
-import { isOneService, rollQuery, scopeOptions, type RollSortCol, type RollState } from "./roll-query";
+import RollUpdating from "./RollUpdating";
+import { isOneService, rollQuery, scopeOptions, type RollSortCol, type RollState, type RollStatus } from "./roll-query";
 
 type Filters = Omit<RollState, "scope" | "page" | "limit" | "sort">;
 const NO_FILTERS: Filters = { status: undefined, gender: undefined, name: "" };
@@ -17,7 +18,11 @@ const NO_FILTERS: Filters = { status: undefined, gender: undefined, name: "" };
  * Who checked in, member by member. The service comes from the page so the
  * overview above and this roll always show the same one.
  */
-export default function AttendanceRoll({ scope, onScopeChange, services }: { scope: string; onScopeChange: (scope: string) => void; services: OverviewService[] }) {
+export default function AttendanceRoll({ scope, onScopeChange, services, statusRequest }: {
+  scope: string; onScopeChange: (scope: string) => void; services: OverviewService[];
+  /** Set by the overview’s "See who checked in / didn’t" buttons. */
+  statusRequest: { status: RollStatus; at: number } | null;
+}) {
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [name, setName] = useState("");
   const [sort, setSort] = useState<RollState["sort"]>(null);
@@ -29,10 +34,7 @@ export default function AttendanceRoll({ scope, onScopeChange, services }: { sco
 
   // Typing settles for a moment before the list is asked again.
   useEffect(() => {
-    const t = setTimeout(() => {
-      setFilters((f) => (f.name === name ? f : { ...f, name }));
-      setPage(1);
-    }, 300);
+    const t = setTimeout(() => { setFilters((f) => (f.name === name ? f : { ...f, name })); setPage(1); }, 300);
     return () => clearTimeout(t);
   }, [name]);
 
@@ -41,6 +43,13 @@ export default function AttendanceRoll({ scope, onScopeChange, services }: { sco
     setPage(1);
     setSelected(new Set());
   }, [scope]);
+
+  useEffect(() => {
+    if (!statusRequest) return;
+    setFilters((f) => ({ ...f, status: statusRequest.status }));
+    setPage(1);
+    top.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [statusRequest]);
 
   const query = rollQuery({ scope, ...filters, sort, page, limit });
   const { data, isLoading, isFetching } = useAttendanceList(query);
@@ -64,10 +73,7 @@ export default function AttendanceRoll({ scope, onScopeChange, services }: { sco
     }
   }
 
-  function goTo(p: number) {
-    setPage(p);
-    top.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  const goTo = (p: number) => { setPage(p); top.current?.scrollIntoView({ behavior: "smooth", block: "start" }); };
 
   function sortBy(col: RollSortCol) {
     setSort((s) => ({ col, dir: s?.col === col && s.dir === "asc" ? "desc" : "asc" }));
@@ -114,13 +120,7 @@ export default function AttendanceRoll({ scope, onScopeChange, services }: { sco
       </div>
 
       <div className="relative overflow-x-auto">
-        {isFetching && !isLoading && (
-          <div className="absolute inset-0 z-10 flex items-start justify-center bg-white/50 pt-10 dark:bg-[#1c1c1e]/50">
-            <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-500 shadow dark:border-white/10 dark:bg-[#2a2a2e] dark:text-gray-400">
-              <Loader2 size={12} className="animate-spin text-[#87102C]" /> Updating
-            </span>
-          </div>
-        )}
+        {isFetching && !isLoading && <RollUpdating />}
         <RollTable
           rows={rows}
           loading={isLoading}

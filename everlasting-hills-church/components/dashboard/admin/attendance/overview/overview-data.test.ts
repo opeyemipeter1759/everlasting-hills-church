@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { OverviewService } from "@/lib/api/attendance-roll";
-import { change, comparedWith, dayMonth, defaultService, lagosToday, longDate, previousCounted, rollSize, sameKind, share } from "./overview-data";
+import { change, comparedWith, dayMonth, defaultService, lagosToday, longDate, previousCounted, previousOfKind, rollSize, sameKind, share } from "./overview-data";
 
 const hc = (total: number) => ({ men: total, women: 0, boys: 0, girls: 0, children: 0, firstTimers: 0, total, status: "CONFIRMED" as const });
 const svc = (id: string, serviceType: OverviewService["serviceType"], date: string, extra: Partial<OverviewService> = {}): OverviewService => ({
-  id, name: id, serviceType, date, headcount: null, checkedIn: 0, absent: 0, ...extra,
+  id, name: id, serviceType, date, headcount: null, checkedIn: 0, checkedInByGender: { men: 0, women: 0, unknown: 0 }, absent: 0, ...extra,
 });
 
 // Newest first, as the API returns them.
@@ -28,6 +28,12 @@ describe("overview data", () => {
     expect(previousCounted(SERVICES, "wed-11")?.id).toBe("wed-4");
     expect(previousCounted(SERVICES, "sun-1")).toBeUndefined();
     expect(previousCounted(SERVICES, "missing")).toBeUndefined();
+  });
+
+  it("compares check-ins with the service of the same kind just before, counted or not", () => {
+    expect(previousOfKind(SERVICES, "sun-15")?.id).toBe("sun-8");
+    expect(previousOfKind(SERVICES, "wed-11")?.id).toBe("wed-4");
+    expect(previousOfKind(SERVICES, "sun-1")).toBeUndefined();
   });
 
   it("lists one kind of service oldest first", () => {
