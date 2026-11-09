@@ -27,7 +27,8 @@ const PeakHoursChart = dynamic(() => import("../charts/PeakHoursChart").then((m)
 const HeatmapChart = dynamic(() => import("../charts/HeatmapChart").then((m) => m.HeatmapChart), { ssr: false, loading: chartLoading });
 const MemberGrowthChart = dynamic(() => import("../charts/MemberGrowthChart").then((m) => m.MemberGrowthChart), { ssr: false, loading: chartLoading });
 
-export default function AttendaceAnalytic() {
+/** The check-in charts. `embedded` drops the page heading for the Insights tab on the Attendance page. */
+export default function AttendaceAnalytic({ embedded = false }: { embedded?: boolean }) {
   const [pending, setPending] = useState<AnalyticsFilter>(DEFAULT_FILTER);
   // Debounce 400 ms so fast pill-clicks or date picker changes don't refetch on
   // every click — every chart reads one /analytics/attendance-page request.
@@ -40,10 +41,17 @@ export default function AttendaceAnalytic() {
   return (
     <div className="space-y-5 pb-10">
       <div className="space-y-3">
-        <div>
-          <h1 className="text-lg font-black text-gray-900 dark:text-white">Attendance Analytics</h1>
-          <p className="text-xs text-gray-400 mt-0.5">All charts update when you change the filter</p>
-        </div>
+        {embedded ? (
+          <div>
+            <h2 className="text-base font-black text-gray-900 dark:text-white">Check-in analytics</h2>
+            <p className="text-xs text-gray-500 dark:text-white/50 mt-0.5">From members&apos; app check-ins. Every chart follows the filter.</p>
+          </div>
+        ) : (
+          <div>
+            <h1 className="text-lg font-black text-gray-900 dark:text-white">Attendance Analytics</h1>
+            <p className="text-xs text-gray-400 mt-0.5">All charts update when you change the filter</p>
+          </div>
+        )}
         <AnalyticsFilterBar value={pending} onChange={setPending} />
       </div>
 

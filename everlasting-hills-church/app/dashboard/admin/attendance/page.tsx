@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import Attendance from "@/components/dashboard/admin/attendance/Attendance";
-import ComingSoon from "@/components/dashboard/shell/ComingSoon";
-import { ClipboardList } from "lucide-react";
 
 export default function AttendancePage() {
+  // Attendance reads ?tab= to open on Insights; useSearchParams needs a Suspense boundary.
   return (
-   <Attendance/>
+    <Suspense>
+      <Attendance />
+    </Suspense>
   );
 }
