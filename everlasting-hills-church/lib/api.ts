@@ -446,20 +446,6 @@ export function useAdminStatsOverview() {
   });
 }
 
-export interface MembersAtRisk {
-  absentConsecutiveWeeks: { userId: string; userName: string; photoUrl: string | null; phone: string | null; consecutiveAbsences: number; lastSeen: string | null }[];
-  neverAttended: { userId: string; userName: string; photoUrl: string | null; phone: string | null; joinedAt: string }[];
-  belowFiftyPercent: { userId: string; userName: string; photoUrl: string | null; phone: string | null; presentCount: number; totalCount: number; rate: number }[];
-}
-
-export function useMembersAtRisk() {
-  return useQuery({
-    queryKey: ['members', 'at-risk'],
-    queryFn: () => api.get<MembersAtRisk>('/members/at-risk'),
-    enabled: typeof window !== 'undefined',
-  });
-}
-
 export interface TodayFeedResponse {
   date: string;
   sessionId: string | null;

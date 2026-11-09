@@ -3,19 +3,21 @@ import { useState, useCallback } from "react";
 import { RefreshCw } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { LiveSessionBanner } from "./LiveSessionBanner";
-import { AtRiskPanel } from "./AtRiskPanel";
 import { TodayFeed } from "./TodayFeed";
 import { ReportsSection } from "./ReportsSection";
 import ServiceOverview from "./overview/ServiceOverview";
 import { defaultService } from "./overview/overview-data";
 import AttendanceRoll from "./roll/AttendanceRoll";
+import AtRiskTable from "./at-risk/AtRiskTable";
 import { isOneService } from "./roll/roll-query";
 import { useServiceOverview } from "@/lib/api/attendance-roll";
+import { useTodayFeed } from "@/lib/api";
 
 export default function Attendance() {
   const queryClient = useQueryClient();
   const [spinning, setSpinning] = useState(false);
   const overview = useServiceOverview(24);
+  const todayFeed = useTodayFeed();
   const services = overview.data?.services ?? [];
   // The overview and the roll follow one service until the roll is widened to
   // every Sunday (or every service); then the overview keeps its own.
@@ -73,10 +75,9 @@ export default function Attendance() {
       )}
 
       {!overview.isLoading && <AttendanceRoll scope={scope ?? shownId ?? "all"} onScopeChange={changeScope} services={services} />}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <AtRiskPanel />
-        <TodayFeed />
-      </div>
+      {/* The live check-in feed only means something on a day with a service. */}
+      {todayFeed.data?.sessionId && <TodayFeed />}
+      <AtRiskTable />
       <ReportsSection />
     </div>
   );

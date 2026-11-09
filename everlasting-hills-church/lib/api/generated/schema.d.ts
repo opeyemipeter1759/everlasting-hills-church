@@ -5296,7 +5296,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Members at risk — consecutive absences, never attended, below 50% rate (ADMIN+) */
+        /** Members at risk, judged on Sundays since each joined: missed the last 3+, never checked in, or under half of the last 8 (ADMIN+) */
         get: operations["MembersPastoralController_getAtRisk"];
         put?: never;
         post?: never;
@@ -24359,16 +24359,19 @@ export interface operations {
                          *       "absentConsecutiveWeeks": [
                          *         {
                          *           "consecutiveAbsences": 3,
-                         *           "lastSeen": null,
+                         *           "lastSeen": "2026-10-18",
+                         *           "presentCount": 4,
+                         *           "totalCount": 8,
                          *           "userId": "uuid",
                          *           "userName": "Emeka Nwosu"
                          *         }
                          *       ],
                          *       "belowFiftyPercent": [
                          *         {
+                         *           "lastSeen": "2026-11-08",
                          *           "presentCount": 3,
-                         *           "rate": 0.3,
-                         *           "totalCount": 10,
+                         *           "rate": 0.38,
+                         *           "totalCount": 8,
                          *           "userId": "uuid",
                          *           "userName": "Sade Kalu"
                          *         }
@@ -24376,10 +24379,17 @@ export interface operations {
                          *       "neverAttended": [
                          *         {
                          *           "joinedAt": "2026-06-01",
+                         *           "lastSeen": null,
+                         *           "sundaysSinceJoining": 12,
                          *           "userId": "uuid",
                          *           "userName": "Tolu Bello"
                          *         }
-                         *       ]
+                         *       ],
+                         *       "window": {
+                         *         "from": "2026-09-20",
+                         *         "sundays": 8,
+                         *         "to": "2026-11-08"
+                         *       }
                          *     }
                          */
                         data: unknown;

@@ -20,13 +20,16 @@ export class MembersPastoralController {
   ) {}
 
   @Get('at-risk')
-  @ApiOperation({ summary: 'Members at risk — consecutive absences, never attended, below 50% rate (ADMIN+)' })
+  @ApiOperation({
+    summary: 'Members at risk, judged on Sundays since each joined: missed the last 3+, never checked in, or under half of the last 8 (ADMIN+)',
+  })
   @ApiOkResponse({
     schema: {
       example: {
-        absentConsecutiveWeeks: [{ userId: 'uuid', userName: 'Emeka Nwosu', consecutiveAbsences: 3, lastSeen: null }],
-        neverAttended: [{ userId: 'uuid', userName: 'Tolu Bello', joinedAt: '2026-06-01' }],
-        belowFiftyPercent: [{ userId: 'uuid', userName: 'Sade Kalu', presentCount: 3, totalCount: 10, rate: 0.3 }],
+        absentConsecutiveWeeks: [{ userId: 'uuid', userName: 'Emeka Nwosu', consecutiveAbsences: 3, presentCount: 4, totalCount: 8, lastSeen: '2026-10-18' }],
+        neverAttended: [{ userId: 'uuid', userName: 'Tolu Bello', joinedAt: '2026-06-01', sundaysSinceJoining: 12, lastSeen: null }],
+        belowFiftyPercent: [{ userId: 'uuid', userName: 'Sade Kalu', presentCount: 3, totalCount: 8, rate: 0.38, lastSeen: '2026-11-08' }],
+        window: { sundays: 8, from: '2026-09-20', to: '2026-11-08' },
       },
     },
   })

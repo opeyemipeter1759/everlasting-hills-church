@@ -1,9 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ServiceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
+import { ACTIVE_MEMBER, activeMembersOf } from '../active-members';
+import { watDateStr } from '../../attendance/attendance-list.util';
+import { RATE_WINDOW, judgeMember, type RiskSunday } from './member-risk.util';
 
-/** GET /members/at-risk — three risk categories: never attended, consecutive absences, low rate. */
+/** How far back to look for a streak of missed Sundays (about half a year). */
+const STREAK_LOOKBACK = 26;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * GET /members/at-risk — active members who need checking on, judged on the
+ * Sundays held since each one joined (see judgeMember). Sundays only: the
+ * midweek service is checked into by too few people to measure anyone by.
+ * Every number is real: the Sundays missed in a row, the Sundays attended out
+ * of the last eight, and the last service each person checked into.
+ */
 @Injectable()
 export class MemberRiskService {
   private readonly tenantId: string;
@@ -15,102 +29,90 @@ export class MemberRiskService {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  async getMembersAtRisk() {
-    const fourWeeksAgo = new Date(Date.now() - 28 * 24 * 60 * 60 * 1000);
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    const [members, totalServices, presentThisMonth, recentPresent] =
-      await Promise.all([
-        this.prisma.member.findMany({
-          where: { tenantId: this.tenantId, status: 'ACTIVE' },
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            photoUrl: true,
-            phone: true,
-            joinedAt: true,
-          },
-        }),
-        this.prisma.service.count({ where: { tenantId: this.tenantId } }),
-        this.prisma.attendanceRecord.groupBy({
-          by: ['memberId'],
-          where: {
-            tenantId: this.tenantId,
-            present: true,
-            Service: { scheduledAt: { gte: monthStart } },
-          },
-        }),
-        this.prisma.attendanceRecord.groupBy({
-          by: ['memberId'],
-          where: {
-            tenantId: this.tenantId,
-            present: true,
-            Service: { scheduledAt: { gte: fourWeeksAgo } },
-          },
-        }),
-      ]);
-
-    const presentThisMonthSet = new Set(
-      presentThisMonth.map((r) => r.memberId),
-    );
-    const recentPresentSet = new Set(recentPresent.map((r) => r.memberId));
-
-    const allTimePresent = await this.prisma.attendanceRecord.groupBy({
-      by: ['memberId'],
-      where: { tenantId: this.tenantId, present: true },
-      _count: { _all: true },
+  /** Sundays that are over: the day has passed, or the service closed and its absences were written. */
+  private async heldSundays(now: Date): Promise<RiskSunday[]> {
+    const recent = await this.prisma.service.findMany({
+      where: { tenantId: this.tenantId, serviceType: ServiceType.SUNDAY, cancelledAt: null, scheduledAt: { lte: now } },
+      orderBy: { scheduledAt: 'desc' },
+      take: STREAK_LOOKBACK + 1,
+      select: { id: true, scheduledAt: true },
     });
-    const presentCountMap = new Map(
-      allTimePresent.map((r) => [r.memberId, r._count._all]),
-    );
+    const today = recent.find((s) => s.scheduledAt.getTime() + DAY_MS > now.getTime());
+    if (!today) return recent.slice(0, STREAK_LOOKBACK);
+    const closed = await this.prisma.attendanceRecord.count({ where: { serviceId: today.id, present: false } });
+    return (closed > 0 ? recent : recent.filter((s) => s.id !== today.id)).slice(0, STREAK_LOOKBACK);
+  }
 
-    const neverAttended = members
-      .filter(
-        (m) =>
-          !presentCountMap.has(m.id) && new Date(m.joinedAt) < fourWeeksAgo,
-      )
-      .map((m) => ({
+  async getMembersAtRisk(now = new Date()) {
+    const sundays = await this.heldSundays(now);
+    const [members, sundayPresent, lastSeenRows] = await Promise.all([
+      this.prisma.member.findMany({
+        where: activeMembersOf(this.tenantId),
+        select: { id: true, firstName: true, lastName: true, photoUrl: true, phone: true, joinedAt: true },
+      }),
+      this.prisma.attendanceRecord.findMany({
+        where: { tenantId: this.tenantId, present: true, serviceId: { in: sundays.map((s) => s.id) } },
+        select: { memberId: true, serviceId: true },
+      }),
+      // The last service of any kind each active member checked into.
+      this.prisma.attendanceRecord.findMany({
+        where: { tenantId: this.tenantId, present: true, Member: ACTIVE_MEMBER },
+        orderBy: { Service: { scheduledAt: 'desc' } },
+        distinct: ['memberId'],
+        select: { memberId: true, Service: { select: { scheduledAt: true } } },
+      }),
+    ]);
+
+    const presentBy = new Map<string, Set<string>>();
+    for (const r of sundayPresent) {
+      if (!presentBy.has(r.memberId)) presentBy.set(r.memberId, new Set());
+      presentBy.get(r.memberId)!.add(r.serviceId);
+    }
+    const lastSeen = new Map(lastSeenRows.map((r) => [r.memberId, watDateStr(r.Service.scheduledAt)]));
+
+    type Person = { userId: string; userName: string; photoUrl: string | null; phone: string | null; lastSeen: string | null };
+    const absentConsecutiveWeeks: (Person & { consecutiveAbsences: number; presentCount: number; totalCount: number })[] = [];
+    const neverAttended: (Person & { joinedAt: string; sundaysSinceJoining: number })[] = [];
+    const belowFiftyPercent: (Person & { presentCount: number; totalCount: number; rate: number })[] = [];
+    for (const m of members) {
+      const verdict = judgeMember(m, sundays, presentBy.get(m.id) ?? new Set(), lastSeen.has(m.id));
+      if (!verdict) continue;
+      const person: Person = {
         userId: m.id,
         userName: `${m.firstName} ${m.lastName}`,
         photoUrl: m.photoUrl ?? null,
         phone: m.phone ?? null,
-        joinedAt: m.joinedAt.toISOString().slice(0, 10),
-      }));
+        lastSeen: lastSeen.get(m.id) ?? null,
+      };
+      if (verdict.kind === 'never') {
+        neverAttended.push({ ...person, joinedAt: watDateStr(m.joinedAt), sundaysSinceJoining: verdict.eligible });
+      } else if (verdict.kind === 'in-a-row') {
+        absentConsecutiveWeeks.push({ ...person, consecutiveAbsences: verdict.missed, presentCount: verdict.attended, totalCount: verdict.eligible });
+      } else {
+        belowFiftyPercent.push({
+          ...person,
+          presentCount: verdict.attended,
+          totalCount: verdict.eligible,
+          rate: Math.round((verdict.attended / verdict.eligible) * 100) / 100,
+        });
+      }
+    }
 
-    const absentConsecutiveWeeks = members
-      .filter((m) => presentCountMap.has(m.id) && !recentPresentSet.has(m.id))
-      .map((m) => ({
-        userId: m.id,
-        userName: `${m.firstName} ${m.lastName}`,
-        photoUrl: m.photoUrl ?? null,
-        phone: m.phone ?? null,
-        consecutiveAbsences: Math.ceil(
-          (Date.now() - new Date(m.joinedAt).getTime()) /
-            (7 * 24 * 60 * 60 * 1000),
-        ),
-        lastSeen: null,
-      }));
+    absentConsecutiveWeeks.sort((a, b) => b.consecutiveAbsences - a.consecutiveAbsences || a.userName.localeCompare(b.userName));
+    neverAttended.sort((a, b) => a.joinedAt.localeCompare(b.joinedAt) || a.userName.localeCompare(b.userName));
+    belowFiftyPercent.sort((a, b) => a.rate - b.rate || a.userName.localeCompare(b.userName));
 
-    const belowFiftyPercent = members
-      .filter((m) => {
-        const count = presentCountMap.get(m.id) ?? 0;
-        return totalServices > 0 && count / totalServices < 0.5 && count > 0;
-      })
-      .map((m) => {
-        const presentCount = presentCountMap.get(m.id) ?? 0;
-        return {
-          userId: m.id,
-          userName: `${m.firstName} ${m.lastName}`,
-          photoUrl: m.photoUrl ?? null,
-          phone: m.phone ?? null,
-          presentCount,
-          totalCount: totalServices,
-          rate: Math.round((presentCount / totalServices) * 100) / 100,
-        };
-      });
-
-    return { absentConsecutiveWeeks, neverAttended, belowFiftyPercent };
+    const window = sundays.slice(0, RATE_WINDOW);
+    return {
+      absentConsecutiveWeeks,
+      neverAttended,
+      belowFiftyPercent,
+      /** The Sundays the rate is measured over, oldest and newest. */
+      window: {
+        sundays: window.length,
+        from: window.length ? watDateStr(window[window.length - 1].scheduledAt) : null,
+        to: window.length ? watDateStr(window[0].scheduledAt) : null,
+      },
+    };
   }
 }
