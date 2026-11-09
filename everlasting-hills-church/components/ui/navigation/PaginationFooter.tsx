@@ -31,7 +31,7 @@ export function PaginationFooter({ paged, pageSizeOptions = DEFAULT_SIZES, noun 
         Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
         {noun ? ` ${noun}` : ""}
       </p>
-      <div className="order-1 flex items-center gap-3 sm:order-2">
+      <div className="order-1 flex flex-wrap items-center gap-3 sm:order-2">
         <Pagination page={page} pageCount={pageCount} onPageChange={paged.setPage} />
         <Select
           aria-label="Rows per page"

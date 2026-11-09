@@ -8586,6 +8586,25 @@
           },
           {
             "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "enum": [
+                "male",
+                "female"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "One service; narrower than serviceKey",
+            "in": "query",
+            "name": "serviceId",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
             "name": "serviceKey",
             "required": false,
             "schema": {
@@ -8851,6 +8870,30 @@
           },
           {
             "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "gender",
+            "required": false,
+            "schema": {
+              "enum": [
+                "male",
+                "female"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "serviceId",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
             "name": "serviceKey",
             "required": false,
             "schema": {}
@@ -8991,6 +9034,53 @@
           }
         ],
         "summary": "Per-service present/absent tracking for the current member",
+        "tags": [
+          "attendance"
+        ]
+      }
+    },
+    "/attendance/service-overview": {
+      "get": {
+        "operationId": "AttendanceStatsController_getServiceOverview",
+        "parameters": [
+          {
+            "description": "How many services, 1-52 (default 12)",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Admin access required"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Recent services with the ushers headcount and member check-ins, newest first (ADMIN+)",
         "tags": [
           "attendance"
         ]

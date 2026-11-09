@@ -55,10 +55,12 @@ export class AttendanceExportService {
 
   /** Excel export — GET /attendance/export */
   async exportAttendanceCsv(q: Omit<ListAttendanceQuery, 'page' | 'limit'>) {
-    const result = await this.listService.listAttendance({ ...q, page: 1, limit: 10_000 });
-    const headers = ['Member', 'Phone', 'Service', 'Date', 'Status', 'Marked By', 'Marked At'];
+    // The list caps a page at 200 rows; the export needs every matching row.
+    const result = await this.listService.listAttendance({ ...q, page: 1, limit: 10_000 }, 10_000);
+    const headers = ['Member', 'Gender', 'Phone', 'Service', 'Date', 'Status', 'Marked By', 'Marked At'];
     const rows = result.data.map((r) => [
       r.userName,
+      r.gender === 'MALE' ? 'Male' : r.gender === 'FEMALE' ? 'Female' : '',
       r.phone ?? '',
       r.serviceName,
       r.date,

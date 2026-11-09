@@ -4,11 +4,13 @@ import { randomUUID } from 'crypto';
 import { ServiceType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
+import { activeMembersOf } from '../../members/active-members';
 
 /**
- * Marks every member who has NO present record for a service as ABSENT. Called
- * automatically when a session window closes (see SessionsService), and exposed
- * as a manual admin endpoint too.
+ * Marks every active member who has NO present record for a service as ABSENT.
+ * Called automatically when a session window closes (see SessionsService), and
+ * exposed as a manual admin endpoint too. A deactivated member has left the
+ * membership, so nobody expects them in church and they are never marked.
  */
 @Injectable()
 export class AttendanceAbsenceService {
@@ -25,7 +27,7 @@ export class AttendanceAbsenceService {
     const [service, members] = await Promise.all([
       this.prisma.service.findUnique({ where: { id: serviceId } }),
       this.prisma.member.findMany({
-        where: { tenantId: this.tenantId },
+        where: activeMembersOf(this.tenantId),
         select: { id: true },
       }),
     ]);

@@ -1,3 +1,5 @@
+import { ServiceType } from '@prisma/client';
+import { ACTIVE_MEMBER } from '../members/active-members';
 import { WAT_OFFSET_MS } from './attendance.types';
 import type { ListAttendanceQuery } from './attendance.types';
 
@@ -36,30 +38,56 @@ export function buildScheduledFilter(q: ListAttendanceQuery): Record<string, Dat
   return scheduledFilter;
 }
 
+const SERVICE_TYPE_BY_KEY: Record<string, ServiceType> = {
+  sunday: ServiceType.SUNDAY,
+  wednesday: ServiceType.WEDNESDAY,
+};
+
+/** Each word of the search must match a first or last name, so "Marvel Angulu" finds Marvel. */
+function nameFilter(name: string): Record<string, unknown> {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const matches = (w: string) => ({
+    OR: [
+      { firstName: { contains: w, mode: 'insensitive' } },
+      { lastName: { contains: w, mode: 'insensitive' } },
+    ],
+  });
+  if (words.length <= 1) return matches(words[0] ?? name);
+  return { AND: words.map(matches) };
+}
+
+/**
+ * The where clause behind GET /attendance and its Excel export. Deactivated
+ * members are always left out: deactivating someone takes them out of the
+ * membership (see members/active-members.ts), so they are not on the roll.
+ */
 export function buildAttendanceWhere(tenantId: string, q: ListAttendanceQuery): Record<string, unknown> {
-  const { name, status } = q;
+  const { name, status, serviceId, serviceKey, gender } = q;
   const scheduledFilter = buildScheduledFilter(q);
+  const serviceType = serviceKey ? SERVICE_TYPE_BY_KEY[serviceKey] : undefined;
+  const service = {
+    ...(serviceType ? { serviceType } : {}),
+    ...(Object.keys(scheduledFilter).length ? { scheduledAt: scheduledFilter } : {}),
+  };
   return {
     tenantId,
+    ...(serviceId ? { serviceId } : {}),
     ...(status !== undefined ? { present: status === 'PRESENT' } : {}),
-    ...(name
-      ? {
-          Member: {
-            OR: [
-              { firstName: { contains: name, mode: 'insensitive' } },
-              { lastName: { contains: name, mode: 'insensitive' } },
-            ],
-          },
-        }
-      : {}),
-    ...(Object.keys(scheduledFilter).length ? { Service: { scheduledAt: scheduledFilter } } : {}),
+    Member: {
+      ...ACTIVE_MEMBER,
+      ...(gender ? { gender: { equals: gender.toUpperCase(), mode: 'insensitive' } } : {}),
+      ...(name?.trim() ? nameFilter(name) : {}),
+    },
+    ...(Object.keys(service).length ? { Service: service } : {}),
   };
 }
 
-export function buildAttendanceOrderBy(sortBy: string | undefined, sortOrder: 'ASC' | 'DESC'): Record<string, unknown> {
+export function buildAttendanceOrderBy(sortBy: string | undefined, sortOrder: 'ASC' | 'DESC'): Record<string, unknown>[] {
   const dir = sortOrder === 'ASC' ? 'asc' : 'desc';
-  if (sortBy === 'name') return { Member: { firstName: dir } };
-  if (sortBy === 'status') return { present: dir };
-  if (sortBy === 'markedAt') return { checkedInAt: dir };
-  return { Service: { scheduledAt: dir } };
+  // Names break every tie, so rows keep their place from one page to the next.
+  const byName = [{ Member: { firstName: 'asc' } }, { Member: { lastName: 'asc' } }, { id: 'asc' }];
+  if (sortBy === 'name') return [{ Member: { firstName: dir } }, { Member: { lastName: dir } }, { id: 'asc' }];
+  if (sortBy === 'status') return [{ present: dir }, ...byName];
+  if (sortBy === 'markedAt') return [{ checkedInAt: dir }, ...byName];
+  return [{ Service: { scheduledAt: dir } }, ...byName];
 }

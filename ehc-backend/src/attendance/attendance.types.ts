@@ -8,6 +8,10 @@ export interface ListAttendanceQuery {
   name?: string;
   status?: AttendanceStatus;
   serviceKey?: string;
+  /** One service; narrower than serviceKey, which means every Sunday or every Wednesday. */
+  serviceId?: string;
+  /** 'male' or 'female', matched whatever casing the member's record uses. */
+  gender?: string;
   year?: string;
   month?: string;
   date?: string;

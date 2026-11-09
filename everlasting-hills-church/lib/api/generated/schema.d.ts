@@ -745,6 +745,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/attendance/service-overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent services with the ushers headcount and member check-ins, newest first (ADMIN+) */
+        get: operations["AttendanceStatsController_getServiceOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/attendance/services": {
         parameters: {
             query?: never;
@@ -12918,6 +12935,9 @@ export interface operations {
                 date?: unknown;
                 month?: unknown;
                 year?: unknown;
+                gender?: "male" | "female";
+                /** @description One service; narrower than serviceKey */
+                serviceId?: unknown;
                 serviceKey?: "sunday" | "wednesday";
                 status?: "PRESENT" | "ABSENT";
                 name?: unknown;
@@ -13050,6 +13070,9 @@ export interface operations {
                 dateTo?: unknown;
                 dateFrom?: unknown;
                 month?: unknown;
+                name?: unknown;
+                gender?: "male" | "female";
+                serviceId?: unknown;
                 serviceKey?: unknown;
                 status?: "PRESENT" | "ABSENT";
             };
@@ -13128,6 +13151,38 @@ export interface operations {
                         data: unknown;
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AttendanceStatsController_getServiceOverview: {
+        parameters: {
+            query?: {
+                /** @description How many services, 1-52 (default 12) */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Admin access required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
                 };
             };
             /** @description Error response */

@@ -10,6 +10,7 @@ import { AttendanceSessionWindowService } from './services/attendance-session-wi
 import { AttendanceCheckInService } from './services/attendance-checkin.service';
 import { AttendanceHistoryService } from './services/attendance-history.service';
 import { AttendanceOverviewService } from './services/attendance-overview.service';
+import { AttendanceServiceOverviewService } from './services/attendance-service-overview.service';
 import { ServiceSessionManagementService } from './services/service-session-management.service';
 import { AttendanceListService } from './services/attendance-list.service';
 import { AttendanceExportService } from './services/attendance-export.service';
@@ -34,6 +35,7 @@ import { AttendanceAbsenteeMailService } from './services/attendance-absentee-ma
     AttendanceCheckInService,
     AttendanceHistoryService,
     AttendanceOverviewService,
+    AttendanceServiceOverviewService,
     ServiceSessionManagementService,
     AttendanceListService,
     AttendanceExportService,
