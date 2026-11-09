@@ -84,16 +84,22 @@ export class PrayerWatchReportsService {
     };
   }
 
-  /** The watches this person leads, the watch after each, and the last week of nights with what was reported. */
+  /**
+   * The watches this person leads, the watch after each, and the last week of nights with what was reported.
+   *
+   * Every watch shares the nights the overview shows: tonight counts from the
+   * moment the First Watch begins. A leader whose watch is later in the night
+   * still sees tonight first, marked not open yet, rather than the last night
+   * their watch ran, which on a Monday is the Saturday before.
+   */
   async mine(user: Pick<AuthUser, 'profileId' | 'email'>, now = new Date()) {
     const slots = await this.currentSlots();
     const led = slots.filter((s) => this.leads(s, user));
     if (led.length === 0) return { slots: [] };
 
-    const nightsFor = new Map(led.map((s) => [s.id, recentWatchNights(latestNightStarted(now, s.startTime), HISTORY_NIGHTS)]));
-    const oldest = [...nightsFor.values()].map((n) => n[n.length - 1]).sort()[0];
+    const nights = recentWatchNights(latestNightStarted(now, slots[0].startTime), HISTORY_NIGHTS);
     const reports = await this.prisma.prayerWatchReport.findMany({
-      where: { slotId: { in: led.map((s) => s.id) }, nightDate: { gte: nightDateValue(oldest) } },
+      where: { slotId: { in: led.map((s) => s.id) }, nightDate: { gte: nightDateValue(nights[nights.length - 1]) } },
     });
     const byKey = new Map(reports.map((r) => [`${r.slotId}|${nightKey(r.nightDate)}`, r]));
 
@@ -105,9 +111,11 @@ export class PrayerWatchReportsService {
         endTime: slot.endTime,
         position: slots.indexOf(slot),
         next: this.nextAfter(slots, slot),
-        nights: nightsFor.get(slot.id)!.map((night) => {
+        nights: nights.map((night) => {
           const report = byKey.get(`${slot.id}|${night}`);
-          return { night, report: report ? this.toView(report) : null };
+          // Open once this watch has begun that night; a report can't come in before then.
+          const open = slotDateTime(nightDateValue(night), slot.startTime) <= now;
+          return { night, open, report: report ? this.toView(report) : null };
         }),
       })),
     };

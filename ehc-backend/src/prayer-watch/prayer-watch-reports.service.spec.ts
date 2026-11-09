@@ -129,4 +129,28 @@ describe('PrayerWatchReportsService', () => {
     expect(await svc.sendReminders(NOW)).toEqual({ nudged: 0 });
     expect(events.emit).not.toHaveBeenCalled();
   });
+
+  it('shows a later watch tonight first, not open yet, instead of the Saturday before', async () => {
+    const { svc, prisma } = setup();
+    const third = { ...SLOTS[2], Leader: { profileId: 'p3', fullName: 'Ada Eze', email: 'ada@example.com' } };
+    prisma.prayerWatch.findFirst.mockResolvedValue({ Slots: [SLOTS[0], SLOTS[1], third, SLOTS[3]] });
+    prisma.prayerWatchReport.findMany.mockResolvedValue([
+      report({ slotId: 's3', nightDate: new Date('2026-11-07T00:00:00Z'), startedAt: new Date('2026-11-08T01:00:00Z'), endedAt: new Date('2026-11-08T03:00:00Z'), updatedAt: NOW }),
+    ]);
+
+    const { slots } = await svc.mine(user({ profileId: 'p3' }), NOW);
+
+    expect(slots[0].nights.slice(0, 3)).toMatchObject([
+      { night: '2026-11-09', open: false, report: null },
+      { night: '2026-11-07', open: true, report: { night: '2026-11-07' } },
+      { night: '2026-11-06', open: true, report: null },
+    ]);
+    expect(slots[0].nights).toHaveLength(7);
+  });
+
+  it('opens tonight for a watch that has begun', async () => {
+    const { svc } = setup();
+    const { slots } = await svc.mine(user(), NOW);
+    expect(slots[0].nights[0]).toMatchObject({ night: '2026-11-09', open: true });
+  });
 });

@@ -6,9 +6,11 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { fraunces } from "@/lib/fonts/prayer-watch";
 import { useMyWatchReports } from "@/lib/api/prayer-watch-reports";
 import { userMessageForError } from "@/lib/api/user-message";
+import { nightWeekday } from "@/lib/prayer-watch-nights";
 import { SKY_GRADIENT, serif, skyAt } from "../sky";
 import NightPicker from "./NightPicker";
 import ReportForm from "./ReportForm";
+import { hintCls } from "./ui";
 
 /** Where a watch leader tells the church their watch was kept and handed on, night by night. */
 export default function WatchReportScreen() {
@@ -91,7 +93,14 @@ export default function WatchReportScreen() {
           <div className="mt-5">
             <NightPicker nights={watch.nights} value={chosen.night} onChange={setNight} accent={sky} />
           </div>
-          <ReportForm key={`${watch.id}-${chosen.night}`} watch={watch} night={chosen.night} report={chosen.report} />
+          {chosen.open ? (
+            <ReportForm key={`${watch.id}-${chosen.night}`} watch={watch} night={chosen.night} report={chosen.report} />
+          ) : (
+            <div className="mt-6">
+              <h2 className="text-lg font-semibold text-[#111] dark:text-white">{nightWeekday(chosen.night)} night</h2>
+              <p className={hintCls}>Your watch starts at {watch.startTime}. You can report it here once it has begun.</p>
+            </div>
+          )}
         </>
       )}
     </div>

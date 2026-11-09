@@ -6,7 +6,7 @@ import type { LedWatch } from "@/lib/api/prayer-watch-reports";
 const weekday = (night: string) => new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short" }).format(new Date(`${night}T00:00:00Z`));
 const day = (night: string) => new Date(`${night}T00:00:00Z`).getUTCDate();
 
-/** The last week of watch nights, newest first; each shows whether its report is in. */
+/** The last week of watch nights, newest first; each shows whether its report is in, and tonight shows until the watch begins. */
 export default function NightPicker({
   nights,
   value,
@@ -20,7 +20,7 @@ export default function NightPicker({
 }) {
   return (
     <div role="radiogroup" aria-label="Which night" className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-      {nights.map(({ night, report }) => {
+      {nights.map(({ night, open, report }) => {
         const on = night === value;
         return (
           <button
@@ -28,7 +28,7 @@ export default function NightPicker({
             type="button"
             role="radio"
             aria-checked={on}
-            aria-label={`${weekday(night)} ${day(night)}: ${report ? "report sent" : "no report yet"}`}
+            aria-label={`${weekday(night)} ${day(night)}: ${report ? "report sent" : open ? "no report yet" : "tonight, your watch hasn't started"}`}
             onClick={() => onChange(night)}
             style={on ? { background: accent.bg, color: accent.text, borderColor: accent.bg } : undefined}
             className={`flex min-w-[64px] flex-shrink-0 flex-col items-center rounded-xl border px-3 py-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#87102C] ${
@@ -42,7 +42,7 @@ export default function NightPicker({
                 <Check size={12} aria-hidden="true" /> Sent
               </span>
             ) : (
-              <span className="mt-0.5 text-[11px] opacity-70">To do</span>
+              <span className="mt-0.5 text-[11px] opacity-70">{open ? "To do" : "Tonight"}</span>
             )}
           </button>
         );

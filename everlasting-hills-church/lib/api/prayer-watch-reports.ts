@@ -25,8 +25,11 @@ export interface LedWatch {
   position: number;
   /** The watch that takes over, or null when this one closes the night. */
   next: { label: string; leaderName: string | null } | null;
-  /** The last seven watch nights this watch has begun on, newest first. */
-  nights: { night: string; report: WatchReport | null }[];
+  /**
+   * The last seven watch nights, newest first; tonight leads from the moment the
+   * First Watch begins. `open` stays false until this watch has begun that night.
+   */
+  nights: { night: string; open: boolean; report: WatchReport | null }[];
 }
 
 export interface WatchReportInput {
