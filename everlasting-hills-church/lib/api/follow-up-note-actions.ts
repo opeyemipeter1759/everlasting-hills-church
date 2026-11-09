@@ -5,7 +5,7 @@ import { api } from "@/lib/api/request";
 import { showToast } from "@/components/ui/toast/toast";
 import { useMe } from "@/lib/api";
 import type { FollowUpNote } from "./follow-up-pipeline";
-import { applyReaction, draftNote, replaceNote, withoutNote } from "./follow-up-notes.util";
+import { applyReaction, draftNote, markDeleted, replaceNote } from "./follow-up-notes.util";
 
 function notesKey(kind: string, id: string) {
   return ["follow-up", "notes", kind, id];
@@ -76,7 +76,7 @@ export function useFollowUpNoteActions(subject: { kind: string; id: string } | n
 
   const remove = useMutation({
     mutationFn: (id: string) => api.delete<FollowUpNote[]>(`${base}/${id}`),
-    onMutate: (id) => begin((notes) => withoutNote(notes, id)),
+    onMutate: (id) => begin((notes) => markDeleted(notes, id)),
     onSuccess: settle,
     onError: (err, _vars, context) => undo(context, err, "Couldn't delete that message"),
   });

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../../auth/types/auth-user';
@@ -33,21 +33,6 @@ export class AttendanceSelfServiceController {
     // Pass the Supabase userId — the service looks up Profile by `userId` column
     // and auto-provisions a Member row if the user has a Profile but no Member.
     return this.checkIn.checkIn(user.userId, user.email);
-  }
-
-  @Post('services/:serviceId/check-in')
-  @ApiOperation({ summary: 'Check in for a specific service' })
-  async checkInByServiceId(
-    @CurrentUser() user: AuthUser,
-    @Param('serviceId') serviceId: string,
-  ) {
-    return this.checkIn.checkInByServiceId(user.userId, serviceId, user.email);
-  }
-
-  @Get('me')
-  @ApiOperation({ summary: 'Get current member attendance history' })
-  async getMyAttendance(@CurrentUser() user: AuthUser) {
-    return this.history.getMemberAttendance(user.userId);
   }
 
   @Get('me/history')

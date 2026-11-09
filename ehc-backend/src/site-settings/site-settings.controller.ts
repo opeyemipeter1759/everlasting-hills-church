@@ -1,11 +1,5 @@
 import { Body, Controller, Get, Param, Put } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOkResponse,
-  ApiOperation,
-  ApiParam,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Public } from '../auth/decorators/public.decorator';
@@ -38,29 +32,6 @@ export class SiteSettingsController {
   })
   async getAll() {
     return this.service.findAll();
-  }
-
-  @Public()
-  @Get(':section')
-  @ApiOperation({ summary: 'One homepage section' })
-  @ApiParam({
-    name: 'section',
-    enum: [
-      'HERO',
-      'ABOUT',
-      'CULTURE',
-      'SCRIPTURE',
-      'SERVICE',
-      'SERMONS',
-      'COMMUNITY',
-      'GIVING',
-      'CONTACT',
-      'CAROUSEL',
-      'DIRECTIONS',
-    ],
-  })
-  async getOne(@Param('section') section: string) {
-    return this.service.findOne(section);
   }
 
   @Roles(Role.ADMIN)

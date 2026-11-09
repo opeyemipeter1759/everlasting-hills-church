@@ -1,14 +1,20 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Header } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
+import type { AuthUser } from '../auth/types/auth-user';
+import { AdminHomeService } from './admin-home.service';
 import { AdminService } from './admin.service';
 
 @ApiTags('admin')
 @Controller('admin')
 @ApiBearerAuth('access-token')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly adminHome: AdminHomeService,
+  ) {}
 
   @Get('stats/overview')
   @Roles(Role.ADMIN)
@@ -27,37 +33,13 @@ export class AdminController {
     return this.adminService.getStatsOverview();
   }
 
-  @Get('dashboard-summary')
+  @Get('home')
   @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Live stat cards (members, attendance, visitors, volunteers, events, sermons) with MoM trends (ADMIN+)' })
-  @ApiOkResponse({
-    schema: {
-      example: {
-        stats: [
-          { key: 'members', label: 'Members', value: 1284, trend: { value: 4.2, direction: 'up' } },
-        ],
-      },
-    },
+  @Header('Cache-Control', 'no-store')
+  @ApiOperation({
+    summary: "Everything on the admin dashboard's overview, in one request (ADMIN+; giving and recent activity are null below PASTOR)",
   })
-  getDashboardSummary() {
-    return this.adminService.getDashboardSummary();
-  }
-
-  @Get('attendance-trend')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Attendance trend points tagged by service type for Sunday/Wednesday filtering (ADMIN+)' })
-  @ApiOkResponse({
-    schema: {
-      example: {
-        points: [
-          { label: '7 Apr', value: 420, serviceType: 'SUNDAY', date: '2026-04-07T09:00:00.000Z' },
-        ],
-      },
-    },
-  })
-  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Points to return (default 24, max 500)' })
-  getAttendanceTrend(@Query('limit') limit?: string) {
-    const parsed = Number(limit);
-    return this.adminService.getAttendanceTrend(Number.isFinite(parsed) && parsed > 0 ? parsed : undefined);
+  load(@CurrentUser() actor: AuthUser) {
+    return this.adminHome.load(actor);
   }
 }

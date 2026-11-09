@@ -44,7 +44,7 @@ export class FollowUpNoteActivityService {
     const ids = rows.map((r) => r.id);
     const [notes, reads] = await Promise.all([
       this.prisma.followUpNote.findMany({
-        where: { tenantId: this.tenantId, subjectId: { in: ids } },
+        where: { tenantId: this.tenantId, subjectId: { in: ids }, deletedAt: null },
         select: { subjectKind: true, subjectId: true, authorId: true, createdAt: true },
       }),
       viewerProfileId

@@ -267,33 +267,23 @@ export function myPrayerWatchIcsHref(signupId: string) {
 
 // ── Admin ────────────────────────────────────────────────────────────────────
 
-export function useAdminPrayerWatch() {
-  return useQuery({
-    queryKey: [...PRAYER_WATCH_KEY, "admin"],
-    queryFn: () => api.get<AdminWatch>("/prayer-watch/admin"),
-  });
+/** GET /prayer-watch/admin/manage: the Manage tab in one request. Parts that failed are null and named in `unavailable`. */
+interface AdminManage {
+  watch: AdminWatch | null; signups: SignupListRow[] | null; pending: PendingSignup[] | null;
+  declined: DeclinedSignup[] | null; reflections: AdminReflection[] | null; unavailable: string[];
 }
+const ADMIN_MANAGE = { queryKey: [...PRAYER_WATCH_KEY, "admin", "manage"], queryFn: () => api.get<AdminManage>("/prayer-watch/admin/manage") };
+/** One part of the Manage answer; a part that failed on the server is this hook's error. */
+const part = <K extends keyof Omit<AdminManage, "unavailable">>(key: K) => (d: AdminManage) => {
+  if (d.unavailable.includes(key) || d[key] == null) throw new Error("This section could not load. Try again.");
+  return d[key] as NonNullable<AdminManage[K]>;
+};
 
-export function usePrayerSignupList() {
-  return useQuery({
-    queryKey: [...PRAYER_WATCH_KEY, "admin", "signups"],
-    queryFn: () => api.get<SignupListRow[]>("/prayer-watch/admin/signups"),
-  });
-}
-
-export function usePendingSignups() {
-  return useQuery({
-    queryKey: [...PRAYER_WATCH_KEY, "admin", "signups", "pending"],
-    queryFn: () => api.get<PendingSignup[]>("/prayer-watch/admin/signups/pending"),
-  });
-}
-
-export function useDeclinedSignups() {
-  return useQuery({
-    queryKey: [...PRAYER_WATCH_KEY, "admin", "signups", "declined"],
-    queryFn: () => api.get<DeclinedSignup[]>("/prayer-watch/admin/signups/declined"),
-  });
-}
+/** The Manage tab's five lists are views of one query: one request, refreshed together. */
+export function useAdminPrayerWatch() { return useQuery({ ...ADMIN_MANAGE, select: part("watch") }); }
+export function usePrayerSignupList() { return useQuery({ ...ADMIN_MANAGE, select: part("signups") }); }
+export function usePendingSignups() { return useQuery({ ...ADMIN_MANAGE, select: part("pending") }); }
+export function useDeclinedSignups() { return useQuery({ ...ADMIN_MANAGE, select: part("declined") }); }
 
 /** `slotId` offers a different watch than the one applied for instead of a flat approve — ignored when declining. */
 export function useDecideSignup() {
@@ -302,16 +292,11 @@ export function useDecideSignup() {
     mutationFn: ({ id, approve, note, slotId }: { id: string; approve: boolean; note?: string; slotId?: string }) =>
       api.post(`/prayer-watch/admin/signups/${id}/${approve ? "approve" : "decline"}`, { note, slotId }),
     onSuccess: async () => {
-      // Belt and suspenders: invalidate (so any other mounted view refetches
-      // too) and explicitly refetch the three lists this screen shows right
-      // now, so the queue visibly updates the moment a decision lands.
+      // Invalidate (so any other mounted view refetches too) and wait for the
+      // Manage answer, which holds all three sign-up lists, so the queue
+      // visibly updates the moment a decision lands.
       await qc.invalidateQueries({ queryKey: PRAYER_WATCH_KEY });
-      await Promise.all([
-        qc.refetchQueries({ queryKey: [...PRAYER_WATCH_KEY, "admin", "signups", "pending"] }),
-        qc.refetchQueries({ queryKey: [...PRAYER_WATCH_KEY, "admin", "signups", "declined"] }),
-        qc.refetchQueries({ queryKey: [...PRAYER_WATCH_KEY, "admin", "signups"] }),
-        qc.refetchQueries({ queryKey: [...PRAYER_WATCH_KEY, "admin"] }),
-      ]);
+      await qc.refetchQueries({ queryKey: ADMIN_MANAGE.queryKey });
     },
   });
 }
@@ -325,12 +310,7 @@ export function useSetTelegramLink() {
   });
 }
 
-export function useAdminReflections() {
-  return useQuery({
-    queryKey: [...PRAYER_WATCH_KEY, "admin", "reflections"],
-    queryFn: () => api.get<AdminReflection[]>("/prayer-watch/admin/reflections"),
-  });
-}
+export function useAdminReflections() { return useQuery({ ...ADMIN_MANAGE, select: part("reflections") }); }
 
 export function useRemoveAdminReflection() {
   const invalidate = useInvalidatePrayerWatch();

@@ -22,22 +22,21 @@ export interface Book {
   updatedAt: string;
 }
 
-/** Shelves that currently have at least one published book, in order. */
+/** GET /books/feed: the member Books page in one request, books and their shelves together. */
+const BOOKS_FEED = {
+  queryKey: ["books", "feed"],
+  queryFn: () => api.get<{ books: Book[]; collections: BookCollection[] }>("/books/feed"),
+  staleTime: 60 * 1000,
+};
+
+/** Shelves that currently have at least one published book, in order. Shares one request with useBooksFeed. */
 export function useBookCollectionsFeed() {
-  return useQuery({
-    queryKey: ["book-collections", "feed"],
-    queryFn: () => api.get<BookCollection[]>("/book-collections/feed"),
-    staleTime: 60 * 1000,
-  });
+  return useQuery({ ...BOOKS_FEED, select: (d: { collections: BookCollection[] }) => d.collections });
 }
 
-/** The church library: every published book, newest first. */
+/** The church library: every published book, newest first. Shares one request with useBookCollectionsFeed. */
 export function useBooksFeed() {
-  return useQuery({
-    queryKey: ["books", "feed"],
-    queryFn: () => api.get<Book[]>("/books/feed"),
-    staleTime: 60 * 1000,
-  });
+  return useQuery({ ...BOOKS_FEED, select: (d: { books: Book[] }) => d.books });
 }
 
 /** One book to read. */

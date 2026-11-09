@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Pagination } from "@/components/ui/navigation/Pagination";
 import { Select } from "@/components/ui/select";
-import { apiClient } from "@/lib/api/axios";
+import { apiClient, type ApiError } from "@/lib/api/axios";
 import { showToast } from "@/components/ui/toast/toast";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import type { VisitorRow } from "./FirstTimer/types";
@@ -49,17 +49,22 @@ export default function FirstTimersClient({ visitors }: Props) {
   const [editTarget, setEditTarget] = useState<VisitorRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<VisitorRow | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // Set when the server refused because their Follow Up chat would go too.
+  const [chatWarning, setChatWarning] = useState<string | null>(null);
+  const closeDelete = () => { setDeleteTarget(null); setChatWarning(null); };
 
   async function confirmDelete() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await apiClient.delete(`/visitors/${deleteTarget.id}`);
+      await apiClient.delete(`/visitors/${deleteTarget.id}${chatWarning ? "?force=true" : ""}`);
       showToast.success(`${deleteTarget.firstName} ${deleteTarget.lastName} deleted`);
       handleDeleted(deleteTarget.id);
-      setDeleteTarget(null);
+      closeDelete();
     } catch (err) {
-      showToast.error((err as { message?: string }).message ?? "Couldn't delete visitor");
+      const e = err as ApiError;
+      if (e.status === 409 && e.code === "HAS_FOLLOW_UP_CHAT") setChatWarning(e.message);
+      else showToast.error(e.message ?? "Couldn't delete visitor");
     } finally {
       setDeleting(false);
     }
@@ -129,12 +134,13 @@ export default function FirstTimersClient({ visitors }: Props) {
         description={
           <>
             <span className="font-semibold">{deleteTarget?.firstName} {deleteTarget?.lastName}</span>'s first-timer record will be permanently deleted. This cannot be undone.
+            {chatWarning && <span className="mt-2 block font-semibold text-red-600 dark:text-red-400">{chatWarning}</span>}
           </>
         }
-        confirmLabel="Delete"
+        confirmLabel={chatWarning ? "Delete record and chat" : "Delete"}
         loading={deleting}
         onConfirm={confirmDelete}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={closeDelete}
       />
     </div>
   );

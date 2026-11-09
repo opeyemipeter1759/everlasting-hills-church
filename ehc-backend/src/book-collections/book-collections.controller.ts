@@ -23,13 +23,6 @@ export class BookCollectionsController {
     return this.collections.list();
   }
 
-  @Get('feed')
-  @Roles(Role.MEMBER)
-  @ApiOperation({ summary: 'Collections with at least one published book, in shelf order (MEMBER+)' })
-  feed() {
-    return this.collections.feed();
-  }
-
   @Post()
   @ApiOperation({ summary: 'Add a shelf, e.g. "Faith" (ADMIN+)' })
   create(@Body() body: CreateBookCollectionDto) {

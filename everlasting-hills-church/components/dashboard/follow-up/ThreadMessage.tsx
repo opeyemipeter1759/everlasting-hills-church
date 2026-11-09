@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FollowUpNote } from "@/lib/api/follow-up-pipeline";
 import { NoteEditor } from "./NoteEditor";
-import { Avatar, HoverTime } from "./message-bits";
+import { Avatar, DeletedMessage, HoverTime } from "./message-bits";
 import { MessageActions } from "./MessageActions";
 import { fullTimestamp, timeLabel } from "./thread-utils";
 import { MessageBody } from "./message-format";
@@ -70,8 +70,14 @@ export function ThreadMessage({
           />
         ) : (
           <div className="break-words text-[15px] leading-[1.46667] text-[#1D1C1D] dark:text-white/85">
-            <MessageBody body={note.body} />
-            {note.editedAt && <span className="ml-1 text-[11px] text-gray-400 dark:text-white/30">(edited)</span>}
+            {note.deleted ? (
+              <DeletedMessage />
+            ) : (
+              <>
+                <MessageBody body={note.body} />
+                {note.editedAt && <span className="ml-1 text-[11px] text-gray-400 dark:text-white/30">(edited)</span>}
+              </>
+            )}
           </div>
         )}
 

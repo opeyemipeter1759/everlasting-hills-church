@@ -1,16 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiOperation,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { CreateTestimonialDto, MarkTestimonialReadDto, UpdateTestimonialDto } from './dto/testimonial.dto';
@@ -21,33 +12,6 @@ import { TestimonialsService } from './testimonials.service';
 export class TestimonialsController {
   constructor(private readonly testimonialsService: TestimonialsService) {}
 
-  /**
-   * Public endpoint — drives the homepage "My Everlasting Hills Experience" slider.
-   * Returns published items only, ordered by `order` then `publishedAt`.
-   */
-  @Public()
-  @Get('published')
-  @ApiOperation({ summary: 'List published testimonials (public)' })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiOkResponse({
-    description: 'Array of published testimonials',
-    schema: {
-      example: [
-        {
-          id: 'uuid',
-          authorName: 'Sade Adeyemi',
-          authorRole: 'Member since 2018',
-          authorPhotoUrl: 'https://cdn.example.com/sade.jpg',
-          content: 'Everlasting Hills has been a home for me…',
-          publishedAt: '2026-05-01T00:00:00.000Z',
-        },
-      ],
-    },
-  })
-  async listPublished(@Query('limit') limit?: string) {
-    return this.testimonialsService.listPublished(limit ? Number(limit) : 20);
-  }
-
   // ── Admin (ADMIN+ can view/moderate/delete; PASTOR+ can also create/edit) ───
 
   @Roles(Role.ADMIN)
@@ -56,14 +20,6 @@ export class TestimonialsController {
   @ApiOperation({ summary: 'List all testimonials including drafts (ADMIN+)' })
   async listAll() {
     return this.testimonialsService.listAll();
-  }
-
-  @Roles(Role.ADMIN)
-  @Get(':id')
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Get testimonial by id (ADMIN+)' })
-  async getById(@Param('id') id: string) {
-    return this.testimonialsService.getById(id);
   }
 
   @Roles(Role.PASTOR)

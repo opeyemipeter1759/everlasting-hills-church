@@ -11,11 +11,9 @@ import {
 } from '@nestjs/common';
 import type { RawBodyRequest } from '@nestjs/common';
 import type { Request } from 'express';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Public } from '../auth/decorators/public.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthUser } from '../auth/types/auth-user';
 import { GivingService } from './giving.service';
 import { InitGivingDto } from './dto/init-giving.dto';
 
@@ -51,12 +49,5 @@ export class GivingController {
     // rawBody is populated because the app is created with { rawBody: true }.
     const raw = req.rawBody ?? Buffer.from(JSON.stringify(req.body ?? {}));
     return this.giving.handleWebhook(raw, signature);
-  }
-
-  @Get('me')
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'My giving history' })
-  async myGiving(@CurrentUser() user: AuthUser) {
-    return this.giving.listForEmail(user.email);
   }
 }

@@ -8,17 +8,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
-import {
-  AdminCreatePrayerSignupDto,
-  CreatePrayerSignupDto,
-  CreatePrayerWatchReflectionDto,
-  DecideFamilyChangeDto,
-  DecideSignupDto,
-  MovePrayerSignupDto,
-  RequestFamilyChangeDto,
-  SetSlotLeaderDto,
-  UpdatePrayerWatchDto,
-} from './dto/prayer-watch.dto';
+import { CreatePrayerSignupDto, CreatePrayerWatchReflectionDto, DecideFamilyChangeDto, DecideSignupDto, MovePrayerSignupDto, RequestFamilyChangeDto, SetSlotLeaderDto, UpdatePrayerWatchDto } from './dto/prayer-watch.dto';
 import { PrayerWatchService } from './prayer-watch.service';
 import { PrayerWatchStatsService } from './prayer-watch-stats.service';
 import { PrayerWatchReportsService } from './prayer-watch-reports.service';
@@ -123,20 +113,32 @@ export class PrayerWatchController {
     return this.stats.overview();
   }
 
-  @Get('admin')
+  /**
+   * Everything the admin Manage tab shows, in one request: the watch with its
+   * families, every sign-up, those pending and declined, and reflections. A
+   * part that fails comes back null and is named in `unavailable`, so the tab
+   * shows the rest. Family-change requests stay separate: their status filter
+   * changes as the admin clicks, and should not reload all of this.
+   */
+  @Get('admin/manage')
   @Roles(Role.ADMIN_HEAD)
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Full watch with names per slot (Admin Head+)' })
-  getAdmin() {
-    return this.prayerWatch.getAdminView();
-  }
-
-  @Get('admin/reflections')
-  @Roles(Role.ADMIN_HEAD)
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'What members sensed God say during their watch hour (Admin Head+)' })
-  getReflections() {
-    return this.prayerWatch.listReflections();
+  @ApiOperation({ summary: 'Admin Manage tab: watch, sign-ups (all, pending, declined) and reflections in one request (Admin Head+)' })
+  async getManage() {
+    const unavailable: string[] = [];
+    const part = <T>(name: string, run: () => Promise<T>) =>
+      run().catch(() => {
+        unavailable.push(name);
+        return null;
+      });
+    const [watch, signups, pending, declined, reflections] = await Promise.all([
+      part('watch', () => this.prayerWatch.getAdminView()),
+      part('signups', () => this.prayerWatch.listSignups()),
+      part('pending', () => this.prayerWatch.listPendingSignups()),
+      part('declined', () => this.prayerWatch.listDeclinedSignups()),
+      part('reflections', () => this.prayerWatch.listReflections()),
+    ]);
+    return { watch, signups, pending, declined, reflections, unavailable };
   }
 
   @Delete('admin/reflections/:id')
@@ -171,30 +173,6 @@ export class PrayerWatchController {
     return this.prayerWatch.decideFamilyChange(user.profileId!, id, false, body);
   }
 
-  @Get('admin/signups')
-  @Roles(Role.ADMIN_HEAD)
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Flat, searchable sign-up list (Admin Head+)' })
-  listSignups() {
-    return this.prayerWatch.listSignups();
-  }
-
-  @Get('admin/signups/pending')
-  @Roles(Role.ADMIN_HEAD)
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Sign-ups waiting for approval (Admin Head+)' })
-  listPendingSignups() {
-    return this.prayerWatch.listPendingSignups();
-  }
-
-  @Get('admin/signups/declined')
-  @Roles(Role.ADMIN_HEAD)
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Sign-ups the admin declined, with why (Admin Head+)' })
-  listDeclinedSignups() {
-    return this.prayerWatch.listDeclinedSignups();
-  }
-
   @Post('admin/signups/:id/approve')
   @Roles(Role.ADMIN_HEAD)
   @ApiBearerAuth('access-token')
@@ -209,14 +187,6 @@ export class PrayerWatchController {
   @ApiOperation({ summary: 'Decline a sign-up, with a note the person sees (Admin Head+)' })
   declineSignup(@Param('id') id: string, @Body() body: DecideSignupDto, @CurrentUser() user: AuthUser) {
     return this.prayerWatch.decideSignup(user.profileId!, id, false, body);
-  }
-
-  @Post('admin/signups')
-  @Roles(Role.ADMIN_HEAD)
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Manually add a sign-up (Admin Head+)' })
-  addSignup(@Body() body: AdminCreatePrayerSignupDto) {
-    return this.prayerWatch.createSignup(body);
   }
 
   @Delete('admin/signups/:id')

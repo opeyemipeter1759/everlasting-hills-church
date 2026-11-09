@@ -2,28 +2,18 @@
 
 import Link from "next/link";
 import { CalendarDays, ChevronRight } from "lucide-react";
-import { useCalendarSummary, type CalendarEvent } from "@/lib/api/calendar";
+import type { CalendarEvent, CalendarSummary } from "@/lib/api/calendar";
 import DashboardCard, { type DashboardCardChrome } from "./DashboardCard";
 
 /**
  * Calendar summary for the superadmin home: the next few published events plus
- * week/month/draft counts. Self-fetching, like FollowUpCard, so it reads real events
- * without going through the (still mock) dashboard data loader.
+ * week/month/draft counts. The data arrives with the rest of the dashboard
+ * (GET /admin/home); null means that part could not be loaded.
  */
-export default function CalendarSummaryCard(chrome: DashboardCardChrome) {
-  const { data, isLoading, isError } = useCalendarSummary();
-
+export default function CalendarSummaryCard({ summary: data, ...chrome }: DashboardCardChrome & { summary: CalendarSummary | null }) {
   return (
     <DashboardCard kicker="Calendar" title="Church Calendar" icon={CalendarDays} {...chrome}>
-      {isLoading ? (
-        <div className="space-y-3" aria-busy="true">
-          <span className="sr-only">Loading calendar…</span>
-          <div className="h-14 animate-pulse rounded-xl bg-[#FFF4F6] dark:bg-white/[0.04]" />
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-12 animate-pulse rounded-xl bg-[#FFF4F6] dark:bg-white/[0.04]" />
-          ))}
-        </div>
-      ) : isError || !data ? (
+      {!data ? (
         <p className="py-6 text-center text-sm text-[#8a7e80] dark:text-white/40">
           Couldn&apos;t load the calendar.
         </p>

@@ -10,7 +10,7 @@ import type { AdminDashboardData } from "@/lib/types/admin-dashboard";
 export default function GivingSummaryCard({
   giving,
   ...chrome
-}: { giving: AdminDashboardData["giving"] } & DashboardCardChrome) {
+}: { giving: NonNullable<AdminDashboardData["giving"]> } & DashboardCardChrome) {
   const total = giving.breakdown.reduce((sum, b) => sum + b.value, 0) || 1;
   const fmt = (n: number) => `${giving.currency}${n.toLocaleString()}`;
 

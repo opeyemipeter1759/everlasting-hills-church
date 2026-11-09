@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/ui/display/EmptyState";
 import { SkeletonLines } from "@/components/ui/display/SkeletonBlock";
 import { MemberAvatar } from "@/components/ui/display/MemberAvatar";
 import { Pagination } from "@/components/ui/navigation/Pagination";
-import { useAnalyticsAlerts, type AnalyticsAlert } from "@/lib/api/analytics";
+import { useAnalyticsAlerts, type AnalyticsAlert, type AnalyticsFilter } from "@/lib/api/analytics";
 
 const TYPE_LABELS: Record<AnalyticsAlert["type"], string> = {
   LOW_TURNOUT: "Low Turnout", MILESTONE: "Milestone", AT_RISK: "At Risk", SESSION: "Session",
@@ -38,9 +38,9 @@ function AlertRow({ a }: { a: AnalyticsAlert }) {
   );
 }
 
-export function AlertsPanel() {
+export function AlertsPanel({ pageFilter }: { pageFilter: AnalyticsFilter }) {
   const [filter, setFilter] = useState<typeof ALL_TYPES[number]>("ALL");
-  const { data, isLoading } = useAnalyticsAlerts();
+  const { data, isLoading } = useAnalyticsAlerts(pageFilter);
   const filtered = filter === "ALL" ? (data ?? []) : (data ?? []).filter((a) => a.type === filter);
 
   const [page, setPage] = useState(1);

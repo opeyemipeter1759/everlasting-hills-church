@@ -6,7 +6,6 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import type { AuthUser } from '../auth/types/auth-user';
 import { ContactDto } from './dto/contact.dto';
-import { HomeCellDto } from './dto/home-cell.dto';
 import { ServeTeamDto } from './dto/serve-team.dto';
 import { TestimonyDto } from './dto/testimony.dto';
 import { SalvationDecisionDto } from './dto/salvation.dto';
@@ -17,7 +16,6 @@ import { Role } from '@prisma/client';
 import { TestimonyFormService } from './services/testimony-form.service';
 import { ServeTeamFormService } from './services/serve-team-form.service';
 import { ContactFormService } from './services/contact-form.service';
-import { HomeCellFormService } from './services/home-cell-form.service';
 
 /** Remaining public intake forms: testimony, serve-team interest, contact, home-cell. */
 @ApiTags('forms')
@@ -27,7 +25,6 @@ export class FormsMiscController {
     private readonly testimonySvc: TestimonyFormService,
     private readonly serveTeamSvc: ServeTeamFormService,
     private readonly contactSvc: ContactFormService,
-    private readonly homeCellSvc: HomeCellFormService,
     private readonly salvationSvc: SalvationFormService,
   ) {}
 
@@ -117,19 +114,5 @@ export class FormsMiscController {
   @ApiBadRequestResponse({ description: 'Validation failed' })
   async contact(@Body() body: ContactDto) {
     return this.contactSvc.submitContact(body);
-  }
-
-  @Public()
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  @Post('home-cell')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: 'Register for a Home Cell',
-    description: 'Submit Home Cell registration and notify the team by email.',
-  })
-  @ApiCreatedResponse({ description: 'Home Cell registration submitted' })
-  @ApiBadRequestResponse({ description: 'Validation failed' })
-  async homeCell(@Body() body: HomeCellDto) {
-    return this.homeCellSvc.submitHomeCell(body);
   }
 }

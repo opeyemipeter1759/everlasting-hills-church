@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { FollowUpNote } from "./follow-up-pipeline";
-import { applyReaction, draftNote, isPending, replaceNote, withoutNote } from "./follow-up-notes.util";
+import { applyReaction, draftNote, isPending, markDeleted, replaceNote } from "./follow-up-notes.util";
 
 const me = { profileId: "p1", member: { firstName: "Grace", lastName: "Ade", photoUrl: null } } as never;
 
@@ -40,12 +40,20 @@ describe("thread optimistic updates", () => {
     expect(updated[1].body).toBe("b");
   });
 
-  it("removes a reply without touching its parent", () => {
+  it("marks a deleted message without losing the replies under it", () => {
     const notes = [note("a", [note("a1"), note("a2")])];
 
-    const updated = withoutNote(notes, "a1");
+    const updated = markDeleted(notes, "a");
 
-    expect(updated[0].replies.map((r) => r.id)).toEqual(["a2"]);
+    expect(updated[0]).toMatchObject({ deleted: true, body: "", canEdit: false, canDelete: false });
+    expect(updated[0].replies.map((r) => r.id)).toEqual(["a1", "a2"]);
+  });
+
+  it("marks a deleted reply and leaves its parent alone", () => {
+    const updated = markDeleted([note("a", [note("a1"), note("a2")])], "a1");
+
+    expect(updated[0].deleted).toBeUndefined();
+    expect(updated[0].replies.map((r) => [r.id, !!r.deleted])).toEqual([["a1", true], ["a2", false]]);
   });
 
   it("adds your emoji, then takes it back on a second tap", () => {

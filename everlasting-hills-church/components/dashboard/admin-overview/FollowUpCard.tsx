@@ -1,16 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ChevronRight } from "lucide-react";
-import { apiClient } from "@/lib/api/axios";
-
-interface AbsentEntry {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-}
+import type { AbsentMember } from "@/lib/types/admin-dashboard";
 
 const AVATAR_COLORS = [
   "bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-400",
@@ -26,17 +18,10 @@ function avatarColor(name: string) {
 }
 
 /**
- * Follow-up status: members absent 3+ Sundays. Self-fetching so it can drop into
- * the admin dashboard without touching the (mock) dashboard data loader.
+ * Follow-up status: members absent 3+ Sundays. The list arrives with the rest of
+ * the dashboard (GET /admin/home); null means that part could not be loaded.
  */
-export default function FollowUpCard() {
-  const { data: absent = [], isLoading } = useQuery({
-    queryKey: ["members", "absent"],
-    queryFn: async () => {
-      const res = await apiClient.get<AbsentEntry[]>("/members/absent?missedSundays=3");
-      return res.data;
-    },
-  });
+export default function FollowUpCard({ absent }: { absent: AbsentMember[] | null }) {
 
   return (
     <div className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none">
@@ -51,12 +36,12 @@ export default function FollowUpCard() {
           <h3 className="text-sm font-bold text-[#111] dark:text-white -mt-0.5">Absent 3+ Sundays</h3>
         </div>
         <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400">
-          {absent.length}
+          {absent?.length ?? "–"}
         </span>
       </div>
 
-      {isLoading ? (
-        <p className="px-6 py-6 text-sm text-[#8a7e80] dark:text-white/40 text-center">Loading…</p>
+      {!absent ? (
+        <p className="px-6 py-6 text-sm text-[#8a7e80] dark:text-white/40 text-center">Couldn&apos;t load absent members.</p>
       ) : absent.length === 0 ? (
         <p className="px-6 py-6 text-sm text-[#8a7e80] dark:text-white/40 text-center">
           All members attended recently

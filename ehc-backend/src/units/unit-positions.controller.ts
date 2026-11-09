@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/commo
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import { CreateUnitPositionDto, SetMemberPositionDto, UpdateUnitPositionDto } from './dto/unit-position.dto';
+import { CreateUnitPositionDto, SetMemberPositionDto } from './dto/unit-position.dto';
 import { UnitPositionsService } from './services/unit-positions.service';
 
 /**
@@ -31,18 +31,6 @@ export class UnitPositionsController {
     @Body() body: CreateUnitPositionDto,
   ) {
     return this.positions.create(actor, unitId, body);
-  }
-
-  @Patch(':unitId/positions/:positionId')
-  @ApiOperation({ summary: 'Rename a position' })
-  @ApiBody({ type: UpdateUnitPositionDto })
-  async update(
-    @CurrentUser() actor: AuthUser,
-    @Param('unitId') unitId: string,
-    @Param('positionId') positionId: string,
-    @Body() body: UpdateUnitPositionDto,
-  ) {
-    return this.positions.update(actor, unitId, positionId, body);
   }
 
   @Delete(':unitId/positions/:positionId')

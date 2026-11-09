@@ -225,10 +225,12 @@ describe('Feedback on a contact', () => {
         findMany: jest.fn().mockResolvedValue([]),
         findFirst: jest.fn().mockResolvedValue(note),
         create: jest.fn().mockResolvedValue({}),
-        update: jest.fn(),
+        update: jest.fn().mockReturnValue('update-op'),
         delete: jest.fn(),
       },
+      followUpNoteReaction: { deleteMany: jest.fn().mockReturnValue('reactions-op') },
       followUpNoteRead: { upsert: jest.fn() },
+      $transaction: jest.fn().mockResolvedValue([]),
       member: { findMany: jest.fn().mockResolvedValue([]), findUnique: jest.fn().mockResolvedValue(null) },
       notification: { findMany: jest.fn().mockResolvedValue([]) },
     };
@@ -249,6 +251,17 @@ describe('Feedback on a contact', () => {
     await expect(svc.edit(viewer, 'n1', 'x')).rejects.toBeInstanceOf(ForbiddenException);
     await expect(svc.remove(viewer, 'n1')).rejects.toBeInstanceOf(ForbiddenException);
     await expect(svc.remove({ ...viewer, canLead: true }, 'n1')).resolves.toEqual([]);
+  });
+
+  it('deletes a message by clearing it, so the replies under it stay', async () => {
+    const { svc, prisma } = notesService({ id: 'n1', subjectId: 'c1', authorId: 'p1', deletedAt: null });
+    await svc.remove(viewer, 'n1');
+    expect(prisma.followUpNote.delete).not.toHaveBeenCalled();
+    expect(prisma.followUpNote.update.mock.calls[0][0]).toMatchObject({
+      where: { id: 'n1' },
+      data: { body: '', deletedById: 'p1', deletedAt: expect.any(Date) },
+    });
+    expect(prisma.$transaction).toHaveBeenCalledWith(['update-op', 'reactions-op']);
   });
 
   it("can't reach Follow Up's notes by id", async () => {

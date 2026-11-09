@@ -84,6 +84,6 @@ import { FollowUpRemindersService } from './services/follow-up-reminders.service
   ],
   // SchedulingService (scheduling.module.ts) runs the daily auto-surface job
   // and the reminder/escalation sweep.
-  exports: [FollowUpAutoSurfaceService, FollowUpRemindersService],
+  exports: [FollowUpAutoSurfaceService, FollowUpRemindersService, FollowUpReadService],
 })
 export class FollowUpModule {}

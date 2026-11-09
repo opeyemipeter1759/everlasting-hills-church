@@ -6,6 +6,7 @@ import type { FollowUpPerson } from './follow-up-person.types';
 import { memberInclude, toMemberPerson, toVisitorPerson, visitorInclude } from './person-mapper.util';
 import { FollowUpStatusService } from './follow-up-status.service';
 import { unassignedIfOptedOut } from './master-list.util';
+import { currentSubject } from './follow-up-subject.util';
 
 export type { FollowUpPerson } from './follow-up-person.types';
 
@@ -27,7 +28,9 @@ export class FollowUpPersonService {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  async get(kind: string, id: string): Promise<FollowUpPerson> {
+  async get(requestedKind: string, requestedId: string): Promise<FollowUpPerson> {
+    // A link to a first-timer who has since become a member opens the member.
+    const { kind, id } = await currentSubject(this.prisma, this.tenantId, { kind: requestedKind, id: requestedId });
     const person = kind === 'VISITOR' ? await this.visitor(id) : await this.member(id);
     const [agreed, waiting, moves] = await Promise.all([
       this.status.approvedFor(kind, [id]),

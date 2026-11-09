@@ -3579,6 +3579,11 @@ model FollowUpNote {
   parentId    String?
   createdAt   DateTime               @default(now())
   editedAt    DateTime?
+  /// Set when the message was deleted. The row stays so its replies and the
+  /// record of who removed it survive; the text is cleared.
+  deletedAt   DateTime?
+  /// Profile.id of whoever deleted it.
+  deletedById String?
   Tenant      Tenant                 @relation(fields: [tenantId], references: [id])
   Parent      FollowUpNote?          @relation("FollowUpNoteReplies", fields: [parentId], references: [id], onDelete: Cascade)
   Replies     FollowUpNote[]         @relation("FollowUpNoteReplies")

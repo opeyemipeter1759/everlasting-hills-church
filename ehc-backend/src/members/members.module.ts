@@ -75,6 +75,6 @@ import { MemberProfileDetailsService } from './services/member-profile-details.s
     MemberPastoralCareService,
     MemberRiskService,
   ],
-  exports: [MemberSpouseService, MemberBirthdaysService],
+  exports: [MemberSpouseService, MemberBirthdaysService, MemberPastoralCareService, MemberRiskService],
 })
 export class MembersModule {}

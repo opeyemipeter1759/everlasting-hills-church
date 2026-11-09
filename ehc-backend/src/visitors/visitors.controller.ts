@@ -97,9 +97,12 @@ export class VisitorsController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a visitor record' })
-  async delete(@Param('id') id: string) {
-    return this.visitorsService.delete(id);
+  @ApiOperation({
+    summary: 'Delete a visitor record. Refused with 409 while their Follow Up chat has messages, unless force=true (which deletes the chat too)',
+  })
+  @ApiQuery({ name: 'force', required: false, type: Boolean })
+  async delete(@Param('id') id: string, @Query('force') force?: string) {
+    return this.visitorsService.delete(id, force === 'true');
   }
 
   @Post('import')

@@ -20,142 +20,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/analytics": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get admin analytics */
-        get: operations["AnalyticsController_getAnalytics"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/attendance-trend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Attendance trend points tagged by service type for Sunday/Wednesday filtering (ADMIN+) */
-        get: operations["AdminController_getAttendanceTrend"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/dashboard-summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Live stat cards (members, attendance, visitors, volunteers, events, sermons) with MoM trends (ADMIN+) */
-        get: operations["AdminController_getDashboardSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/engagement/at-risk": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Members at risk (PASTOR+) */
-        get: operations["AnalyticsController_engagementAtRisk"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/engagement/distribution": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Engagement distribution (PASTOR+) */
-        get: operations["AnalyticsController_engagementDistribution"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/engagement/leaderboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Engagement leaderboard (PASTOR+) */
-        get: operations["AnalyticsController_engagementLeaderboard"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/engagement/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Refresh engagement scores (PASTOR+) */
-        post: operations["AnalyticsController_refreshEngagement"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/engagement/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Engagement summary (PASTOR+) */
-        get: operations["AnalyticsController_engagementSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/first-timer/pipeline": {
         parameters: {
             query?: never;
@@ -173,100 +37,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/first-timer/sources": {
+    "/admin/home": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Get first-timer sources */
-        get: operations["AnalyticsController_getFirstTimerSources"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/first-timers-by-month": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get first-timers by month */
-        get: operations["AnalyticsController_getFirstTimersByMonth"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/giving/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Giving by category (PASTOR+) */
-        get: operations["AnalyticsController_getGivingByCategory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/giving/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Giving summary (PASTOR+) */
-        get: operations["AnalyticsController_getGivingSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/giving/top-donors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Top donors (PASTOR+) */
-        get: operations["AnalyticsController_getTopDonors"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/giving/trend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Giving trend (PASTOR+) */
-        get: operations["AnalyticsController_getGivingTrend"];
+        /** Everything on the admin dashboard's overview, in one request (ADMIN+; giving and recent activity are null below PASTOR) */
+        get: operations["AdminController_load"];
         put?: never;
         post?: never;
         delete?: never;
@@ -284,40 +63,6 @@ export interface paths {
         };
         /** Operational stat cards for the admin dashboard (ADMIN+) */
         get: operations["AdminController_getStatsOverview"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/units": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get department/unit stats */
-        get: operations["AnalyticsController_getUnits"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/units/{unitId}/attendance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get unit member attendance */
-        get: operations["AnalyticsController_getUnitAttendance"];
         put?: never;
         post?: never;
         delete?: never;
@@ -360,32 +105,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/analytics/absentee-trend": {
+    "/analytics/attendance-page": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Absentee count trend */
-        get: operations["AttendanceAnalyticsController_getAbsenteeTrend"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/alerts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** At-risk, low-turnout, and milestone alerts */
-        get: operations["AttendanceAnalyticsController_getAlerts"];
+        /** Everything on the Attendance Analytics page that follows its filter, in one request — period OR dateFrom+dateTo, plus serviceType */
+        get: operations["AttendanceAnalyticsController_getAttendancePage"];
         put?: never;
         post?: never;
         delete?: never;
@@ -411,40 +139,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/analytics/consistency": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Member consistency scores and streaks */
-        get: operations["AttendanceAnalyticsController_getConsistency"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/first-timers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Members attending for the first time in the period */
-        get: operations["AttendanceAnalyticsController_getFirstTimers"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/analytics/heatmap": {
         parameters: {
             query?: never;
@@ -454,176 +148,6 @@ export interface paths {
         };
         /** Full-year attendance heatmap */
         get: operations["AttendanceAnalyticsController_getHeatmap"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/leaderboard": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Top attendees ranked by rate */
-        get: operations["AttendanceAnalyticsController_getLeaderboard"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/member-growth": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** New member growth over time */
-        get: operations["AttendanceAnalyticsController_getMemberGrowth"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/overview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Stat cards — supports period OR dateFrom+dateTo+serviceType */
-        get: operations["AttendanceAnalyticsController_getOverview"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/peak-hours": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Peak check-in hours */
-        get: operations["AttendanceAnalyticsController_getPeakHours"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/rate-trend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Attendance rate over time */
-        get: operations["AttendanceAnalyticsController_getRateTrend"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/retention": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Member retention vs previous period */
-        get: operations["AttendanceAnalyticsController_getRetention"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/service-comparison": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Sunday vs Wednesday comparison */
-        get: operations["AttendanceAnalyticsController_getServiceComparison"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/service-health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health scores per service type */
-        get: operations["AttendanceAnalyticsController_getServiceHealth"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/split": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Present vs absent totals (donut) */
-        get: operations["AttendanceAnalyticsController_getSplit"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/analytics/trend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Per-service attendance trend */
-        get: operations["AttendanceAnalyticsController_getTrend"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1170,23 +694,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/attendance/day-of-week": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Attendance by day of week (ADMIN+) */
-        get: operations["AttendanceStatsController_getAttendanceByDayOfWeek"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/attendance/export": {
         parameters: {
             query?: never;
@@ -1213,23 +720,6 @@ export interface paths {
         };
         /** Today's live check-in feed (ADMIN+). Poll every 30s. */
         get: operations["AttendanceController_getTodayFeed"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get current member attendance history */
-        get: operations["AttendanceSelfServiceController_getMyAttendance"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1291,23 +781,6 @@ export interface paths {
         patch: operations["ServiceSessionController_updateService"];
         trace?: never;
     };
-    "/attendance/services/{serviceId}/check-in": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Check in for a specific service */
-        post: operations["AttendanceSelfServiceController_checkInByServiceId"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/attendance/services/{serviceId}/close": {
         parameters: {
             query?: never;
@@ -1359,23 +832,6 @@ export interface paths {
         patch: operations["ServiceSessionController_openService"];
         trace?: never;
     };
-    "/attendance/services/next": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get next scheduled service */
-        get: operations["ServiceSessionController_getNextService"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/attendance/session/{sessionId}/bulk": {
         parameters: {
             query?: never;
@@ -1410,40 +866,6 @@ export interface paths {
         patch: operations["AttendanceController_overrideAttendance"];
         trace?: never;
     };
-    "/attendance/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get attendance dashboard stats (ADMIN+) */
-        get: operations["AttendanceStatsController_getStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Attendance summary metrics (ADMIN+) */
-        get: operations["AttendanceStatsController_getAttendanceSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/attendance/today": {
         parameters: {
             query?: never;
@@ -1453,40 +875,6 @@ export interface paths {
         };
         /** Get today service attendance with members (ADMIN+) */
         get: operations["AttendanceStatsController_getTodayAttendance"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/top-attendees": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Top attendees (ADMIN+) */
-        get: operations["AttendanceStatsController_getTopAttendees"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/attendance/trend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get attendance trend (ADMIN+) */
-        get: operations["AttendanceStatsController_getAttendanceTrend"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1699,23 +1087,6 @@ export interface paths {
         patch: operations["BookCollectionsController_update"];
         trace?: never;
     };
-    "/book-collections/feed": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Collections with at least one published book, in shelf order (MEMBER+) */
-        get: operations["BookCollectionsController_feed"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/books": {
         parameters: {
             query?: never;
@@ -1777,7 +1148,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Published books, for members to browse (MEMBER+) */
+        /** Published books and their shelves, for members to browse (MEMBER+) */
         get: operations["BooksController_feed"];
         put?: never;
         post?: never;
@@ -2070,23 +1441,6 @@ export interface paths {
         /** Download a single service as .ics */
         get: operations["CalendarController_serviceIcs"];
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/class-admin/actions/{actionId}/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /** Verify a learner action step (staff or facilitator) */
-        put: operations["ClassesAdminController_verify"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2803,23 +2157,6 @@ export interface paths {
         };
         /** Version history for a page (PASTOR+) */
         get: operations["CmsVersionsController_listVersions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/cms/pages/{key}/versions/{version}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** A single historical version snapshot (PASTOR+) */
-        get: operations["CmsVersionsController_getVersion"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4115,23 +3452,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/events/admin/calendar/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Next published events + week/month/draft counts (ADMIN+) */
-        get: operations["EventsController_calendarSummary"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/finance/entries": {
         parameters: {
             query?: never;
@@ -4457,23 +3777,6 @@ export interface paths {
         head?: never;
         /** Restore an opted-out member's login access (UNIT_LEAD+ of that unit) */
         patch: operations["FollowUpMemberStatusController_restore"];
-        trace?: never;
-    };
-    "/follow-up/{id}/send-to-pastor": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Send a first-timer's details to the Pastor by email + a pre-filled WhatsApp link (UNIT_LEAD+ of that unit) */
-        post: operations["FollowUpController_sendToPastor"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/follow-up/{id}/snooze": {
@@ -4957,26 +4260,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/forms/home-cell": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register for a Home Cell
-         * @description Submit Home Cell registration and notify the team by email.
-         */
-        post: operations["FormsMiscController_homeCell"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/forms/prayer-request": {
         parameters: {
             query?: never;
@@ -5361,23 +4644,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/giving/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** My giving history */
-        get: operations["GivingController_myGiving"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/giving/verify/{reference}": {
         parameters: {
             query?: never;
@@ -5620,23 +4886,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/home-cell/cities": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Distinct cities for a given state */
-        get: operations["HomeCellController_cities"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/home-cell/states": {
         parameters: {
             query?: never;
@@ -5687,8 +4936,7 @@ export interface paths {
         delete: operations["InventoryController_remove"];
         options?: never;
         head?: never;
-        /** Edit an item's details (ADMIN+) */
-        patch: operations["InventoryController_update"];
+        patch?: never;
         trace?: never;
     };
     "/inventory/{id}/repairs": {
@@ -5706,23 +4954,6 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
-        trace?: never;
-    };
-    "/inventory/{id}/repairs/{historyId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Edit a logged repair — e.g. mark it completed (ADMIN+) */
-        patch: operations["InventoryController_updateRepair"];
         trace?: never;
     };
     "/inventory/filters": {
@@ -5955,23 +5186,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/members/{id}/follow-up": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add follow-up task for a member */
-        post: operations["MembersPastoralController_addFollowUp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/members/{id}/like": {
         parameters: {
             query?: never;
@@ -5985,23 +5199,6 @@ export interface paths {
         post: operations["MembersFamilyController_like"];
         /** Take back a like on a member's profile */
         delete: operations["MembersFamilyController_unlike"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/{id}/pastor-note": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add pastor note for a member (PASTOR+) */
-        post: operations["MembersPastoralController_addPastorNote"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -6075,40 +5272,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/members/absent": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Absent members */
-        get: operations["MembersPastoralController_absent"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/anniversaries/today": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Members whose wedding anniversary is today */
-        get: operations["MembersPastoralController_todayAnniversaries"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/members/at-risk": {
         parameters: {
             query?: never;
@@ -6135,40 +5298,6 @@ export interface paths {
         };
         /** Community-safe upcoming birthdays — no email/DOB (public) */
         get: operations["MembersBirthdayGreetingsController_community"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/birthdays/today": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Today birthdays */
-        get: operations["MembersPastoralController_todayBirthdays"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/birthdays/upcoming": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Upcoming birthdays */
-        get: operations["MembersPastoralController_upcomingBirthdays"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6254,41 +5383,6 @@ export interface paths {
         };
         /** Active members by name, a page at a time, for the church family directory (MEMBER+) */
         get: operations["MembersFamilyController_directory"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/follow-up/{taskId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete follow-up task */
-        delete: operations["MembersPastoralController_deleteFollowUp"];
-        options?: never;
-        head?: never;
-        /** Toggle follow-up task done */
-        patch: operations["MembersPastoralController_toggleFollowUp"];
-        trace?: never;
-    };
-    "/members/follow-ups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** All open follow-up tasks org-wide, with assigned leader (ADMIN+) */
-        get: operations["MembersPastoralController_getOpenFollowUps"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6401,23 +5495,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/members/me/deactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Request deactivation of my own account */
-        post: operations["MembersSelfServiceController_deactivateMe"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/members/me/profile-details": {
         parameters: {
             query?: never;
@@ -6430,23 +5507,6 @@ export interface paths {
         /** Update my spiritual and career profile, and who may see each part */
         put: operations["MembersFamilyController_updateMyDetails"];
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/me/reactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Reactivate my own (self-deactivated) account */
-        post: operations["MembersSelfServiceController_reactivateMe"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6518,23 +5578,6 @@ export interface paths {
         /** Decline a spouse request */
         post: operations["MembersFamilyController_declineSpouse"];
         delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/members/pastor-note/{noteId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Delete pastor note (PASTOR+) */
-        delete: operations["MembersPastoralController_deletePastorNote"];
         options?: never;
         head?: never;
         patch?: never;
@@ -7358,8 +6401,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Full watch with names per slot (Admin Head+) */
-        get: operations["PrayerWatchController_getAdmin"];
+        get?: never;
         put?: never;
         post?: never;
         delete?: never;
@@ -7420,6 +6462,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/prayer-watch/admin/manage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Manage tab: watch, sign-ups (all, pending, declined) and reflections in one request (Admin Head+) */
+        get: operations["PrayerWatchController_getManage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/prayer-watch/admin/overview": {
         parameters: {
             query?: never;
@@ -7429,23 +6488,6 @@ export interface paths {
         };
         /** Dashboard overview: totals, coverage per watch, weekly joins, what needs attention (Admin Head+) */
         get: operations["PrayerWatchController_getOverview"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/prayer-watch/admin/reflections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** What members sensed God say during their watch hour (Admin Head+) */
-        get: operations["PrayerWatchController_getReflections"];
         put?: never;
         post?: never;
         delete?: never;
@@ -7466,24 +6508,6 @@ export interface paths {
         post?: never;
         /** Remove a reflection entry (Admin Head+) */
         delete: operations["PrayerWatchController_removeReflection"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/prayer-watch/admin/signups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Flat, searchable sign-up list (Admin Head+) */
-        get: operations["PrayerWatchController_listSignups"];
-        put?: never;
-        /** Manually add a sign-up (Admin Head+) */
-        post: operations["PrayerWatchController_addSignup"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -7555,40 +6579,6 @@ export interface paths {
         head?: never;
         /** Move a sign-up to another slot (Admin Head+) */
         patch: operations["PrayerWatchController_moveSignup"];
-        trace?: never;
-    };
-    "/prayer-watch/admin/signups/declined": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Sign-ups the admin declined, with why (Admin Head+) */
-        get: operations["PrayerWatchController_listDeclinedSignups"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/prayer-watch/admin/signups/pending": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Sign-ups waiting for approval (Admin Head+) */
-        get: operations["PrayerWatchController_listPendingSignups"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/prayer-watch/admin/slots/{slotId}/leader": {
@@ -8121,23 +7111,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/reading-plans/{planId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Plan detail */
-        get: operations["ReadingPlanController_detail"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/reading-plans/{planId}/days": {
         parameters: {
             query?: never;
@@ -8373,40 +7346,6 @@ export interface paths {
         get: operations["SermonsAdminController_getSermonEngagement"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/admin/{id}/episodes/{episodeId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get sermon episode by sermon id (admin) */
-        get: operations["SermonsAdminController_getEpisodeBySermonId"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/sermons/admin/{id}/featured": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Set featured sermon */
-        post: operations["SermonsAdminController_setFeatured"];
         delete?: never;
         options?: never;
         head?: never;
@@ -8771,23 +7710,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/sermons/slug/{slug}/episodes/{episodeId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get sermon episode by sermon slug (public) */
-        get: operations["SermonsPublicController_getEpisodeBySlug"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/sermons/subscribers": {
         parameters: {
             query?: never;
@@ -8904,8 +7826,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** One homepage section */
-        get: operations["SiteSettingsController_getOne"];
+        get?: never;
         /**
          * Update one homepage section
          * @description Replaces the content blob for this section. Body is validated server-side by the section-specific Zod schema; mismatch returns 400 with field-level details.
@@ -9048,8 +7969,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get testimonial by id (ADMIN+) */
-        get: operations["TestimonialsController_getById"];
+        get?: never;
         put?: never;
         post?: never;
         /** Delete testimonial (ADMIN+) */
@@ -9075,23 +7995,6 @@ export interface paths {
         head?: never;
         /** Mark testimonial read or unread (ADMIN+) */
         patch: operations["TestimonialsController_markRead"];
-        trace?: never;
-    };
-    "/testimonials/published": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List published testimonials (public) */
-        get: operations["TestimonialsController_listPublished"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/units": {
@@ -9163,8 +8066,7 @@ export interface paths {
         delete: operations["UnitExpensesController_delete"];
         options?: never;
         head?: never;
-        /** Edit an expense entry */
-        patch: operations["UnitExpensesController_update"];
+        patch?: never;
         trace?: never;
     };
     "/units/{unitId}/lead": {
@@ -9235,23 +8137,6 @@ export interface paths {
         head?: never;
         /** Set or clear a unit member's position */
         patch: operations["UnitPositionsController_setMemberPosition"];
-        trace?: never;
-    };
-    "/units/{unitId}/members/{memberId}/role": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Set lead or assistant role for a unit member (ADMIN+, or HOD/ADMIN_HEAD scoped to their department, lead only) */
-        patch: operations["UnitsMembersController_setMemberRole"];
         trace?: never;
     };
     "/units/{unitId}/messages": {
@@ -9356,8 +8241,7 @@ export interface paths {
         delete: operations["UnitPositionsController_delete"];
         options?: never;
         head?: never;
-        /** Rename a position */
-        patch: operations["UnitPositionsController_update"];
+        patch?: never;
         trace?: never;
     };
     "/units/{unitId}/tasks": {
@@ -9647,8 +8531,7 @@ export interface paths {
         delete: operations["UsersController_deleteUser"];
         options?: never;
         head?: never;
-        /** Update user profile (name/phone) */
-        patch: operations["UsersController_updateProfile"];
+        patch?: never;
         trace?: never;
     };
     "/users/{profileId}/finance-head": {
@@ -9860,7 +8743,7 @@ export interface paths {
         get: operations["VisitorsController_getById"];
         put?: never;
         post?: never;
-        /** Delete a visitor record */
+        /** Delete a visitor record. Refused with 409 while their Follow Up chat has messages, unless force=true (which deletes the chat too) */
         delete: operations["VisitorsController_delete"];
         options?: never;
         head?: never;
@@ -9969,21 +8852,6 @@ export interface components {
             body: string;
             /** @description The message this answers, when it is a reply. */
             parentId?: string;
-        };
-        AdminCreatePrayerSignupDto: {
-            /** @example adaeze@example.com */
-            email: string;
-            /** @example Adaeze Okafor */
-            fullName: string;
-            /**
-             * @description true = worker/serves in a unit or department, false = member only
-             * @example true
-             */
-            isWorker: boolean;
-            /** @example +234 801 234 5678 */
-            phone: string;
-            /** @example slot-id */
-            slotId: string;
         };
         ApiError: {
             /** @example BAD_REQUEST */
@@ -10982,18 +9850,6 @@ export interface components {
             maxWatched?: number;
             /** @description Where the player is now, in seconds */
             position: number;
-        };
-        HomeCellDto: {
-            /** @example 12 Adeyemi Street, Ikeja, Lagos */
-            address?: string;
-            /** @example tunde@example.com */
-            email: string;
-            /** @example Tunde Adeyemi */
-            name: string;
-            /** @example +2348012345678 */
-            phone: string;
-            /** @example Ikeja / Surulere area */
-            preferredArea?: string;
         };
         ImportRowDto: {
             /** @example jane@example.com */
@@ -12031,22 +10887,6 @@ export interface components {
             /** @example 2 */
             visitorWeeklyCap?: number;
         };
-        UpdateInventoryItemDto: {
-            assignedTo?: string;
-            category?: string;
-            /** @enum {string} */
-            condition?: "NEW" | "GOOD" | "FAIR" | "POOR";
-            location?: string;
-            name?: string;
-            notes?: string;
-            photoUrl?: string;
-            purchaseDate?: string;
-            purchaseValue?: number;
-            quantity?: number;
-            serialNumber?: string;
-            /** @enum {string} */
-            status?: "IN_USE" | "IN_STORAGE" | "UNDER_REPAIR" | "RETIRED";
-        };
         UpdateMemberDto: {
             /** @example 12 Adeola Street, Ibadan */
             address?: string;
@@ -12158,14 +10998,6 @@ export interface components {
              * @enum {string}
              */
             status: "PENDING" | "ANSWERED";
-        };
-        UpdateRepairDto: {
-            cost?: number;
-            description?: string;
-            performedBy?: string;
-            resolution?: string;
-            /** @enum {string} */
-            status?: "PENDING" | "IN_PROGRESS" | "COMPLETED";
         };
         UpdateReportDto: {
             attachmentName?: string;
@@ -12283,18 +11115,6 @@ export interface components {
             description?: string;
             name?: string;
         };
-        UpdateUnitExpenseDto: {
-            amount?: number;
-            category?: string;
-            date?: string;
-            description?: string;
-            receiptUrl?: string;
-            title?: string;
-        };
-        UpdateUnitPositionDto: {
-            /** @example Treasurer */
-            name: string;
-        };
         UpdateUnitTaskDto: {
             /** @description null clears the assignee */
             assignedToId?: Record<string, never>;
@@ -12311,11 +11131,6 @@ export interface components {
             /** @enum {string} */
             outcome?: "COMPLETED" | "IN_PROGRESS" | "BLOCKED";
             summary?: string;
-        };
-        UpdateUserDto: {
-            firstName?: string;
-            lastName?: string;
-            phone?: string;
         };
         UpdateUserRoleDto: {
             /**
@@ -12361,9 +11176,6 @@ export interface components {
              * @example 150000
              */
             tithe: number;
-        };
-        VerifyDto: {
-            verified: boolean;
         };
         VisitorImportRowDto: {
             address?: string;
@@ -12482,300 +11294,6 @@ export interface operations {
             };
         };
     };
-    AnalyticsController_getAnalytics: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Admin analytics payload */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @example {
-                         *       "avgAttendance": 80,
-                         *       "draftTestimonials": 4,
-                         *       "newMembersThisMonth": 5,
-                         *       "pendingPrayers": 3,
-                         *       "pendingQuestions": 2,
-                         *       "totalGivingNaira": 250000,
-                         *       "totalMembers": 123,
-                         *       "totalPrayers": 10,
-                         *       "totalVisitors": 45
-                         *     }
-                         */
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AdminController_getAttendanceTrend: {
-        parameters: {
-            query?: {
-                /** @description Points to return (default 24, max 500) */
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @example {
-                         *       "points": [
-                         *         {
-                         *           "date": "2026-04-07T09:00:00.000Z",
-                         *           "label": "7 Apr",
-                         *           "serviceType": "SUNDAY",
-                         *           "value": 420
-                         *         }
-                         *       ]
-                         *     }
-                         */
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AdminController_getDashboardSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @example {
-                         *       "stats": [
-                         *         {
-                         *           "key": "members",
-                         *           "label": "Members",
-                         *           "trend": {
-                         *             "direction": "up",
-                         *             "value": 4.2
-                         *           },
-                         *           "value": 1284
-                         *         }
-                         *       ]
-                         *     }
-                         */
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_engagementAtRisk: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_engagementDistribution: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_engagementLeaderboard: {
-        parameters: {
-            query: {
-                limit: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_refreshEngagement: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_engagementSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     AnalyticsController_getFirstTimerPipeline: {
         parameters: {
             query?: never;
@@ -12807,170 +11325,9 @@ export interface operations {
             };
         };
     };
-    AnalyticsController_getFirstTimerSources: {
+    AdminController_load: {
         parameters: {
             query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_getFirstTimersByMonth: {
-        parameters: {
-            query: {
-                months: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_getGivingByCategory: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_getGivingSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_getTopDonors: {
-        parameters: {
-            query: {
-                limit: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_getGivingTrend: {
-        parameters: {
-            query: {
-                months: string;
-            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -13022,74 +11379,6 @@ export interface operations {
                          *       "totalMembers": 120
                          *     }
                          */
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_getUnits: {
-        parameters: {
-            query: {
-                unitId: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AnalyticsController_getUnitAttendance: {
-        parameters: {
-            query: {
-                months: string;
-            };
-            header?: never;
-            path: {
-                unitId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
                         data: unknown;
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
@@ -13176,44 +11465,13 @@ export interface operations {
             };
         };
     };
-    AttendanceAnalyticsController_getAbsenteeTrend: {
+    AttendanceAnalyticsController_getAttendancePage: {
         parameters: {
             query: {
                 dateFrom: string;
                 dateTo: string;
                 serviceType: string;
             };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getAlerts: {
-        parameters: {
-            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -13280,426 +11538,10 @@ export interface operations {
             };
         };
     };
-    AttendanceAnalyticsController_getConsistency: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-                serviceType: string;
-                limit: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getFirstTimers: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-                serviceType: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     AttendanceAnalyticsController_getHeatmap: {
         parameters: {
             query: {
                 year: string;
-                serviceType: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getLeaderboard: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-                serviceType: string;
-                limit: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getMemberGrowth: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getOverview: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-                serviceType: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getPeakHours: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-                serviceType: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getRateTrend: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-                serviceType: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getRetention: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-                serviceType: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getServiceComparison: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getServiceHealth: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getSplit: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
-                serviceType: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceAnalyticsController_getTrend: {
-        parameters: {
-            query: {
-                dateFrom: string;
-                dateTo: string;
                 serviceType: string;
             };
             header?: never;
@@ -15202,37 +13044,6 @@ export interface operations {
             };
         };
     };
-    AttendanceStatsController_getAttendanceByDayOfWeek: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     AttendanceController_exportCsv: {
         parameters: {
             query?: {
@@ -15269,37 +13080,6 @@ export interface operations {
         };
     };
     AttendanceController_getTodayFeed: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceSelfServiceController_getMyAttendance: {
         parameters: {
             query?: never;
             header?: never;
@@ -15497,39 +13277,6 @@ export interface operations {
             };
         };
     };
-    AttendanceSelfServiceController_checkInByServiceId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                serviceId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     ServiceSessionController_closeService: {
         parameters: {
             query?: never;
@@ -15603,37 +13350,6 @@ export interface operations {
             path: {
                 serviceId: string;
             };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    ServiceSessionController_getNextService: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -15771,68 +13487,6 @@ export interface operations {
             };
         };
     };
-    AttendanceStatsController_getStats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceStatsController_getAttendanceSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     AttendanceStatsController_getTodayAttendance: {
         parameters: {
             query?: never;
@@ -15849,72 +13503,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceStatsController_getTopAttendees: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    AttendanceStatsController_getAttendanceTrend: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
                 };
             };
             /** @description Error response */
@@ -16465,37 +14053,6 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateBookCollectionDto"];
             };
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    BookCollectionsController_feed: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -17309,43 +14866,6 @@ export interface operations {
                 };
                 content: {
                     "text/calendar": string;
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    ClassesAdminController_verify: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                actionId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
                 };
             };
             /** @description Error response */
@@ -18890,40 +16410,6 @@ export interface operations {
             header?: never;
             path: {
                 key: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    CmsVersionsController_getVersion: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                key: string;
-                version: string;
             };
             cookie?: never;
         };
@@ -22424,37 +19910,6 @@ export interface operations {
             };
         };
     };
-    EventsController_calendarSummary: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     FinanceController_listEntries: {
         parameters: {
             query: {
@@ -23234,39 +20689,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    FollowUpController_sendToPastor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -24323,51 +21745,6 @@ export interface operations {
             };
         };
     };
-    FormsMiscController_homeCell: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HomeCellDto"];
-            };
-        };
-        responses: {
-            /** @description Home Cell registration submitted */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Validation failed */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     FormsController_prayerRequest: {
         parameters: {
             query?: never;
@@ -25268,37 +22645,6 @@ export interface operations {
             };
         };
     };
-    GivingController_myGiving: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     GivingController_verify: {
         parameters: {
             query?: never;
@@ -25894,39 +23240,6 @@ export interface operations {
             };
         };
     };
-    HomeCellController_cities: {
-        parameters: {
-            query: {
-                state: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     HomeCellController_states: {
         parameters: {
             query?: never;
@@ -26094,43 +23407,6 @@ export interface operations {
             };
         };
     };
-    InventoryController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateInventoryItemDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     InventoryController_logRepair: {
         parameters: {
             query?: never;
@@ -26147,44 +23423,6 @@ export interface operations {
         };
         responses: {
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    InventoryController_updateRepair: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                historyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateRepairDto"];
-            };
-        };
-        responses: {
-            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -26840,43 +24078,6 @@ export interface operations {
             };
         };
     };
-    MembersPastoralController_addFollowUp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": unknown;
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     MembersFamilyController_like: {
         parameters: {
             query?: never;
@@ -26922,43 +24123,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersPastoralController_addPastorNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": unknown;
-            };
-        };
-        responses: {
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -27120,70 +24284,6 @@ export interface operations {
             };
         };
     };
-    MembersPastoralController_absent: {
-        parameters: {
-            query?: {
-                missedSundays?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersPastoralController_todayAnniversaries: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     MembersPastoralController_getAtRisk: {
         parameters: {
             query?: never;
@@ -27244,70 +24344,6 @@ export interface operations {
         };
     };
     MembersBirthdayGreetingsController_community: {
-        parameters: {
-            query?: {
-                daysAhead?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersPastoralController_todayBirthdays: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersPastoralController_upcomingBirthdays: {
         parameters: {
             query?: {
                 daysAhead?: string;
@@ -27503,107 +24539,6 @@ export interface operations {
                 q?: string;
                 page?: string;
             };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersPastoralController_deleteFollowUp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taskId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersPastoralController_toggleFollowUp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                taskId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": unknown;
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersPastoralController_getOpenFollowUps: {
-        parameters: {
-            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -27913,45 +24848,6 @@ export interface operations {
             };
         };
     };
-    MembersSelfServiceController_deactivateMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Account deactivated; reversible within the stated window */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @example {
-                         *       "reversalDays": 14,
-                         *       "status": "INACTIVE",
-                         *       "success": true
-                         *     }
-                         */
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     MembersFamilyController_myDetails: {
         parameters: {
             query?: never;
@@ -27997,37 +24893,6 @@ export interface operations {
         };
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersSelfServiceController_reactivateMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -28222,39 +25087,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    MembersPastoralController_deletePastorNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                noteId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -30114,37 +26946,6 @@ export interface operations {
             };
         };
     };
-    PrayerWatchController_getAdmin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     PrayerWatchController_updateWatch: {
         parameters: {
             query?: never;
@@ -30287,7 +27088,7 @@ export interface operations {
             };
         };
     };
-    PrayerWatchController_getOverview: {
+    PrayerWatchController_getManage: {
         parameters: {
             query?: never;
             header?: never;
@@ -30318,7 +27119,7 @@ export interface operations {
             };
         };
     };
-    PrayerWatchController_getReflections: {
+    PrayerWatchController_getOverview: {
         parameters: {
             query?: never;
             header?: never;
@@ -30361,72 +27162,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    PrayerWatchController_listSignups: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    PrayerWatchController_addSignup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdminCreatePrayerSignupDto"];
-            };
-        };
-        responses: {
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -30569,68 +27304,6 @@ export interface operations {
                 "application/json": components["schemas"]["MovePrayerSignupDto"];
             };
         };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    PrayerWatchController_listDeclinedSignups: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    PrayerWatchController_listPendingSignups: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
         responses: {
             200: {
                 headers: {
@@ -31786,39 +28459,6 @@ export interface operations {
             };
         };
     };
-    ReadingPlanController_detail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                planId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     ReadingPlanController_days: {
         parameters: {
             query?: {
@@ -32362,73 +29002,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    SermonsAdminController_getEpisodeBySermonId: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                episodeId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    SermonsAdminController_setFeatured: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -33197,40 +29770,6 @@ export interface operations {
             };
         };
     };
-    SermonsPublicController_getEpisodeBySlug: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slug: string;
-                episodeId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     SermonsSubscribersController_getSubscribers: {
         parameters: {
             query?: never;
@@ -33448,39 +29987,6 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Map of section → { section, content, updatedAt, updatedBy } */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    SiteSettingsController_getOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                section: "HERO" | "ABOUT" | "CULTURE" | "SCRIPTURE" | "SERVICE" | "SERMONS" | "COMMUNITY" | "GIVING" | "CONTACT" | "CAROUSEL" | "DIRECTIONS";
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -33912,39 +30418,6 @@ export interface operations {
             };
         };
     };
-    TestimonialsController_getById: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     TestimonialsController_delete: {
         parameters: {
             query?: never;
@@ -34036,52 +30509,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    TestimonialsController_listPublished: {
-        parameters: {
-            query?: {
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Array of published testimonials */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /**
-                         * @example [
-                         *       {
-                         *         "authorName": "Sade Adeyemi",
-                         *         "authorPhotoUrl": "https://cdn.example.com/sade.jpg",
-                         *         "authorRole": "Member since 2018",
-                         *         "content": "Everlasting Hills has been a home for me…",
-                         *         "id": "uuid",
-                         *         "publishedAt": "2026-05-01T00:00:00.000Z"
-                         *       }
-                         *     ]
-                         */
                         data: unknown;
                         meta: components["schemas"]["ApiResponseMeta"];
                     };
@@ -34371,44 +30798,6 @@ export interface operations {
             };
         };
     };
-    UnitExpensesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                unitId: string;
-                expenseId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUnitExpenseDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     UnitsMembersController_appointLead: {
         parameters: {
             query?: never;
@@ -34598,44 +30987,6 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SetMemberPositionDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    UnitsMembersController_setMemberRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                unitId: string;
-                memberId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetMemberRoleDto"];
             };
         };
         responses: {
@@ -34950,44 +31301,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
-    UnitPositionsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                unitId: string;
-                positionId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUnitPositionDto"];
-            };
-        };
         responses: {
             200: {
                 headers: {
@@ -35788,43 +32101,6 @@ export interface operations {
             };
         };
     };
-    UsersController_updateProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                profileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUserDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: unknown;
-                        meta: components["schemas"]["ApiResponseMeta"];
-                    };
-                };
-            };
-            /** @description Error response */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorEnvelope"];
-                };
-            };
-        };
-    };
     UsersGrantsController_assignFinanceHead: {
         parameters: {
             query?: never;
@@ -36317,7 +32593,9 @@ export interface operations {
     };
     VisitorsController_delete: {
         parameters: {
-            query?: never;
+            query?: {
+                force?: boolean;
+            };
             header?: never;
             path: {
                 id: string;

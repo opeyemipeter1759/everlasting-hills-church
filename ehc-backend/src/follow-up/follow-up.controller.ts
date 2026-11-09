@@ -19,7 +19,6 @@ import { FollowUpIntakeService } from './services/follow-up-intake.service';
 import { FollowUpProgressService } from './services/follow-up-progress.service';
 import { FollowUpPickersService } from './services/follow-up-pickers.service';
 import { FollowUpAutoSurfaceService } from './services/follow-up-auto-surface.service';
-import { FollowUpPastorEscalationService } from './services/follow-up-pastor-escalation.service';
 import { FollowUpConnectionsService } from './services/follow-up-connections.service';
 import { FollowUpGamificationService } from './services/follow-up-gamification.service';
 import { FollowUpMasterListService } from './services/follow-up-master-list.service';
@@ -71,7 +70,6 @@ export class FollowUpController {
     private readonly progress: FollowUpProgressService,
     private readonly pickers: FollowUpPickersService,
     private readonly autoSurface: FollowUpAutoSurfaceService,
-    private readonly pastorEscalation: FollowUpPastorEscalationService,
     private readonly connections: FollowUpConnectionsService,
     private readonly gamification: FollowUpGamificationService,
     private readonly masterListService: FollowUpMasterListService,
@@ -406,13 +404,6 @@ export class FollowUpController {
   @ApiBody({ type: SnoozeFollowUpDto })
   async snooze(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: SnoozeFollowUpDto) {
     return this.progress.snooze(actor, id, body.until ?? null);
-  }
-
-  @Post(':id/send-to-pastor')
-  @Roles(Role.UNIT_LEAD, Role.HOD)
-  @ApiOperation({ summary: "Send a first-timer's details to the Pastor by email + a pre-filled WhatsApp link (UNIT_LEAD+ of that unit)" })
-  async sendToPastor(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
-    return this.pastorEscalation.sendToPastor(actor, id);
   }
 
   @Get(':id/connections')

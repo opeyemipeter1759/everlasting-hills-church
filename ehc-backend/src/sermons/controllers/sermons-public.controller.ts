@@ -39,13 +39,6 @@ export class SermonsPublicController {
   }
 
   @Public()
-  @Get('slug/:slug/episodes/:episodeId')
-  @ApiOperation({ summary: 'Get sermon episode by sermon slug (public)' })
-  getEpisodeBySlug(@Param('slug') slug: string, @Param('episodeId') episodeId: string) {
-    return this.episode.getEpisodeBySlug(slug, episodeId);
-  }
-
-  @Public()
   @Get('featured')
   @ApiOperation({ summary: 'Get featured sermon (public)' })
   getFeaturedSermon() {
