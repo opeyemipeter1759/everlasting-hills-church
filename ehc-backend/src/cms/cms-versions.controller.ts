@@ -26,14 +26,6 @@ export class CmsVersionsController {
 
   @Roles(Role.PASTOR)
   @ApiBearerAuth('access-token')
-  @Get('pages/:key/versions/:version')
-  @ApiOperation({ summary: 'A single historical version snapshot (PASTOR+)' })
-  getVersion(@Param('key') key: string, @Param('version') version: string) {
-    return this.versions.getVersion(decodeCmsKey(key), Number(version));
-  }
-
-  @Roles(Role.PASTOR)
-  @ApiBearerAuth('access-token')
   @Post('pages/:key/versions/:version/restore')
   @ApiOperation({ summary: 'Restore (republish) a prior version (PASTOR+)' })
   rollback(

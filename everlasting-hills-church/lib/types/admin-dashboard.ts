@@ -1,8 +1,10 @@
 /**
  * Types for the Super Admin dashboard overview. Shared by every card component
- * and by useAdminDashboardData, which assembles this shape from several real
- * backend endpoints (see that file for the mapping).
+ * and by useAdminDashboardData, which assembles this shape from GET /admin/home
+ * (see that file for the mapping).
  */
+
+import type { CalendarSummary } from "@/lib/api/calendar";
 
 export type TrendDirection = "up" | "down";
 
@@ -68,14 +70,23 @@ export interface GivingBreakdown {
   value: number;
 }
 
+/** A member absent several Sundays running, for the follow-up card. */
+export interface AbsentMember {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string | null;
+}
+
 export interface AdminDashboardData {
   stats: SummaryStat[];
+  /** Null below PASTOR (giving is pastor-only) or when it could not be loaded. */
   giving: {
     thisMonth: number;
     currency: string;
     trend: Trend;
     breakdown: GivingBreakdown[];
-  };
+  } | null;
   aiInsights: {
     attendanceChange: number; // %
     visitorRetentionChange: number; // %
@@ -105,5 +116,10 @@ export interface AdminDashboardData {
     upcomingBirthdays: Array<{ id: string; firstName: string; lastName: string; photoUrl: string | null; daysUntil: number }>;
   };
   ministryUnits: MinistryUnit[];
-  recentActivities: ActivityItem[];
+  /** Null below PASTOR (the CMS audit log is pastor-only) or when it could not be loaded. */
+  recentActivities: ActivityItem[] | null;
+  /** Null when it could not be loaded. */
+  absentMembers: AbsentMember[] | null;
+  /** Null when it could not be loaded. */
+  calendar: CalendarSummary | null;
 }

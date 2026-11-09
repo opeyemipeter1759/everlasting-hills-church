@@ -70,11 +70,6 @@ export class HomeCellController {
   states() { return this.svc.getStates(); }
 
   @Public()
-  @Get('cities')
-  @ApiOperation({ summary: 'Distinct cities for a given state' })
-  cities(@Query('state') state: string) { return this.svc.getCities(state); }
-
-  @Public()
   @Get()
   @ApiOperation({ summary: 'Search active cells by state and/or city' })
   search(@Query('state') state?: string, @Query('city') city?: string) {

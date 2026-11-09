@@ -6,12 +6,14 @@ import { AttendanceOverviewService } from './attendance-overview.service';
 import { AttendanceComparisonService } from './attendance-comparison.service';
 import { AttendanceInsightsService } from './attendance-insights.service';
 import { AttendanceAlertsService } from './attendance-alerts.service';
+import { AttendancePageService } from './attendance-page.service';
 import { AuthModule } from '../auth/auth.module';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [AuthModule, PrismaModule],
   controllers: [AnalyticsController, AttendanceAnalyticsController],
-  providers: [AnalyticsService, AttendanceOverviewService, AttendanceComparisonService, AttendanceInsightsService, AttendanceAlertsService],
+  providers: [AnalyticsService, AttendanceOverviewService, AttendanceComparisonService, AttendanceInsightsService, AttendanceAlertsService, AttendancePageService],
+  exports: [AnalyticsService],
 })
 export class AnalyticsModule {}

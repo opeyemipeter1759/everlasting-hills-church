@@ -85,7 +85,7 @@ export class MemberPastoralCareService {
     return this.prisma.followUpTask.delete({ where: { id: taskId } });
   }
 
-  /** GET /members/follow-ups — every open task org-wide, with who's assigned to shepherd
+  /** Part of GET /admin/home — every open task org-wide, with who's assigned to shepherd
    * each member (if anyone). Backs the pastor's follow-ups oversight page. */
   async listOpenFollowUpTasks() {
     const tasks = await this.prisma.followUpTask.findMany({

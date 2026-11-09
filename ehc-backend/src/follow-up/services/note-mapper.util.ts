@@ -23,6 +23,8 @@ export interface MappedNote {
   author: NoteAuthor;
   reactions: NoteReaction[];
   replies: MappedNote[];
+  /** Deleted: shown as "This message was deleted", with its replies kept. */
+  deleted: boolean;
   canEdit: boolean;
   canDelete: boolean;
 }
@@ -36,6 +38,7 @@ export type NoteRow = {
   parentId: string | null;
   createdAt: Date;
   editedAt: Date | null;
+  deletedAt?: Date | null;
   Reactions: ReactionRow[];
 };
 
@@ -67,10 +70,11 @@ function reactionsOf(row: NoteRow, ctx: MapContext): NoteReaction[] {
 export function mapNote(row: NoteRow, ctx: MapContext, replies: MappedNote[] = []): MappedNote {
   const author = ctx.authors.get(row.authorId);
   const mine = row.authorId === ctx.viewerProfileId;
+  const deleted = !!row.deletedAt;
 
   return {
     id: row.id,
-    body: row.body,
+    body: deleted ? '' : row.body,
     createdAt: row.createdAt.toISOString(),
     editedAt: row.editedAt ? row.editedAt.toISOString() : null,
     author: {
@@ -78,9 +82,10 @@ export function mapNote(row: NoteRow, ctx: MapContext, replies: MappedNote[] = [
       name: author ? personName(author) : 'A team member',
       photoUrl: author?.photoUrl ?? null,
     },
-    reactions: reactionsOf(row, ctx),
+    reactions: deleted ? [] : reactionsOf(row, ctx),
     replies,
-    canEdit: mine,
-    canDelete: mine || ctx.canModerate,
+    deleted,
+    canEdit: mine && !deleted,
+    canDelete: (mine || ctx.canModerate) && !deleted,
   };
 }

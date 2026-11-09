@@ -67,14 +67,4 @@ export class ServiceSessionController {
   async exportService(@Param('serviceId') serviceId: string) {
     return this.exportSvc.exportServiceCsv(serviceId);
   }
-
-  /**
-   * Next-service is read by both the admin dashboard and the UNIT_LEAD dashboard, so it's
-   * accessible to any authenticated user — not gated to ADMIN.
-   */
-  @Get('services/next')
-  @ApiOperation({ summary: 'Get next scheduled service' })
-  async getNextService() {
-    return this.overview.getNextService();
-  }
 }

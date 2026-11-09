@@ -7,19 +7,7 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { ClassesAdminService } from './classes-admin.service';
 import { ClassApplicationsService } from './class-applications.service';
 import { MembershipService } from './membership.service';
-import {
-  CohortDto,
-  DecisionDto,
-  ExceptionEnrollDto,
-  LessonContentDto,
-  MemberRefDto,
-  MembershipStatusDto,
-  QuizDto,
-  SessionDto,
-  SessionMarkDto,
-  UpdateCohortDto,
-  VerifyDto,
-} from './dto/classes.dto';
+import { CohortDto, DecisionDto, ExceptionEnrollDto, LessonContentDto, MemberRefDto, MembershipStatusDto, QuizDto, SessionDto, SessionMarkDto, UpdateCohortDto } from './dto/classes.dto';
 
 /**
  * Running the classes and membership. Most routes are for pastors and admins
@@ -123,13 +111,6 @@ export class ClassesAdminController {
   @ApiBody({ type: SessionMarkDto })
   markSession(@CurrentUser() actor: AuthUser, @Param('sessionId') sessionId: string, @Body() body: SessionMarkDto) {
     return this.admin.markSession(actor, sessionId, body.memberId, body.present);
-  }
-
-  @Put('actions/:actionId/verify')
-  @ApiOperation({ summary: 'Verify a learner action step (staff or facilitator)' })
-  @ApiBody({ type: VerifyDto })
-  verify(@CurrentUser() actor: AuthUser, @Param('actionId') actionId: string, @Body() body: VerifyDto) {
-    return this.admin.verifyAction(actor, actionId, body.verified);
   }
 
   @Post('enroll')

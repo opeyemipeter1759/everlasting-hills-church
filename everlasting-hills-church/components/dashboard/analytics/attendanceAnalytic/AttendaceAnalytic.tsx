@@ -29,8 +29,8 @@ const MemberGrowthChart = dynamic(() => import("../charts/MemberGrowthChart").th
 
 export default function AttendaceAnalytic() {
   const [pending, setPending] = useState<AnalyticsFilter>(DEFAULT_FILTER);
-  // Debounce 400 ms so fast pill-clicks or date picker changes don't fire 16
-  // requests per interaction — all hooks share the same stable filter object.
+  // Debounce 400 ms so fast pill-clicks or date picker changes don't refetch on
+  // every click — every chart reads one /analytics/attendance-page request.
   const [filter, setFilter] = useState<AnalyticsFilter>(DEFAULT_FILTER);
   useEffect(() => {
     const t = setTimeout(() => setFilter(pending), 400);
@@ -73,7 +73,7 @@ export default function AttendaceAnalytic() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2"><Leaderboard filter={filter} /></div>
-        <ServiceHealthPanel />
+        <ServiceHealthPanel filter={filter} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -82,7 +82,7 @@ export default function AttendaceAnalytic() {
       </div>
 
       <PeriodComparison />
-      <AlertsPanel />
+      <AlertsPanel pageFilter={filter} />
     </div>
   );
 }

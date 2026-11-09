@@ -135,12 +135,12 @@ export function useRemovePlan() {
   });
 }
 
-export function useReadingPlans(track?: ReadingTrack) {
+export function useReadingPlans(track?: ReadingTrack, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: ["reading-plan", "catalogue", track ?? "all"],
-    queryFn: () =>
-      api.get<ReadingPlanSummary[]>(`/reading-plans${track ? `?track=${track}` : ""}`),
+    queryFn: () => api.get<ReadingPlanSummary[]>(`/reading-plans${track ? `?track=${track}` : ""}`),
     staleTime: 5 * 60 * 1000,
+    enabled: options.enabled ?? true,
   });
 }
 

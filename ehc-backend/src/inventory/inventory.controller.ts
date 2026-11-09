@@ -1,12 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InventoryCondition, InventoryStatus, Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { InventoryService } from './inventory.service';
 import { CreateInventoryItemDto } from './dto/create-inventory-item.dto';
-import { UpdateInventoryItemDto } from './dto/update-inventory-item.dto';
 import { LogRepairDto } from './dto/log-repair.dto';
-import { UpdateRepairDto } from './dto/update-repair.dto';
 
 /**
  * Church inventory — physical assets and their full lifecycle (purchase + repairs).
@@ -55,12 +53,6 @@ export class InventoryController {
     return this.inventory.create(body);
   }
 
-  @Patch(':id')
-  @ApiOperation({ summary: "Edit an item's details (ADMIN+)" })
-  update(@Param('id') id: string, @Body() body: UpdateInventoryItemDto) {
-    return this.inventory.update(id, body);
-  }
-
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an item and its history (ADMIN+)' })
   remove(@Param('id') id: string) {
@@ -71,15 +63,5 @@ export class InventoryController {
   @ApiOperation({ summary: 'Log a repair against an item (ADMIN+)' })
   logRepair(@Param('id') id: string, @Body() body: LogRepairDto) {
     return this.inventory.logRepair(id, body);
-  }
-
-  @Patch(':id/repairs/:historyId')
-  @ApiOperation({ summary: 'Edit a logged repair — e.g. mark it completed (ADMIN+)' })
-  updateRepair(
-    @Param('id') id: string,
-    @Param('historyId') historyId: string,
-    @Body() body: UpdateRepairDto,
-  ) {
-    return this.inventory.updateRepair(id, historyId, body);
   }
 }

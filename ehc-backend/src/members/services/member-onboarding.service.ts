@@ -9,6 +9,7 @@ import { buildMemberWelcomeEmail } from '../../notifications/member-welcome-emai
 import { PrismaService } from '../../prisma/prisma.service';
 import { normalizeGender, parseBirthday } from '../members-supabase-admin.util';
 import { MemberAuthProvisioningService } from './member-auth-provisioning.service';
+import { moveFollowUpThread } from '../../follow-up/services/follow-up-subject.util';
 
 /** Converts a Visitor into a member using a coordinated auth + database flow. */
 @Injectable()
@@ -118,6 +119,10 @@ export class MemberOnboardingService {
           where: { tenantId: this.tenantId, visitorId: visitor.id },
           data: { sourceType: FollowUpSourceType.ABSENTEE, memberId: createdMember.id, visitorId: null },
         });
+        // The team's conversation about them (and their status requests and
+        // read markers) is keyed to the visitor too; without moving it, the
+        // member's thread opens empty and the chat looks lost.
+        await moveFollowUpThread(tx, this.tenantId, { kind: 'VISITOR', id: visitor.id }, { kind: 'MEMBER', id: createdMember.id });
         return createdMember;
       });
     } catch (error) {

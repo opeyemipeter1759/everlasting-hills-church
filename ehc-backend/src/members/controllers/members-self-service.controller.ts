@@ -20,7 +20,6 @@ import type { AuthUser } from '../../auth/types/auth-user';
 import { UpdateMyProfileDto } from '../dto/update-my-profile.dto';
 import { MemberProfileService } from '../services/member-profile.service';
 import { MemberAvatarService } from '../services/member-avatar.service';
-import { MemberDeactivationService } from '../services/member-deactivation.service';
 import { MemberSearchService } from '../services/member-search.service';
 
 /**
@@ -37,7 +36,6 @@ export class MembersSelfServiceController {
   constructor(
     private readonly profile: MemberProfileService,
     private readonly avatar: MemberAvatarService,
-    private readonly deactivation: MemberDeactivationService,
     private readonly search: MemberSearchService,
   ) {}
 
@@ -130,24 +128,6 @@ export class MembersSelfServiceController {
   @ApiOperation({ summary: 'Remove my profile banner, back to the church colours' })
   async clearMyCover(@CurrentUser() actor: AuthUser) {
     return this.avatar.clearMyCover(actor.userId, actor.email);
-  }
-
-  @Post('me/deactivate')
-  @Roles(Role.MEMBER)
-  @ApiOperation({ summary: 'Request deactivation of my own account' })
-  @ApiOkResponse({
-    description: 'Account deactivated; reversible within the stated window',
-    schema: { example: { success: true, status: 'INACTIVE', reversalDays: 14 } },
-  })
-  async deactivateMe(@CurrentUser() actor: AuthUser) {
-    return this.deactivation.requestDeactivation(actor.userId, actor.email);
-  }
-
-  @Post('me/reactivate')
-  @Roles(Role.MEMBER)
-  @ApiOperation({ summary: 'Reactivate my own (self-deactivated) account' })
-  async reactivateMe(@CurrentUser() actor: AuthUser) {
-    return this.deactivation.reactivateMe(actor.userId, actor.email);
   }
 
   @Patch('me')

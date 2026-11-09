@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import type { FollowUpNote } from "@/lib/api/follow-up-pipeline";
-import { Avatar } from "./message-bits";
+import { Avatar, DeletedMessage } from "./message-bits";
 import { MessageBody } from "./message-format";
 import { timeLabel } from "./thread-utils";
 import { ReplySummary } from "./ReplySummary";
@@ -51,7 +51,7 @@ export function ReplyThread({
                 <span className="text-[11px] text-gray-400 dark:text-white/35">{timeLabel(reply.createdAt)}</span>
               </p>
               <div className="text-sm leading-relaxed text-gray-700 dark:text-white/75">
-                <MessageBody body={reply.body} />
+                {reply.deleted ? <DeletedMessage /> : <MessageBody body={reply.body} />}
               </div>
             </div>
           </li>

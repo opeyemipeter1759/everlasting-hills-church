@@ -86,3 +86,8 @@ export function HoverTime({ iso }: { iso: string }) {
     </span>
   );
 }
+
+/** In place of a deleted message, so the replies under it still make sense. */
+export function DeletedMessage() {
+  return <span className="italic text-gray-400 dark:text-white/35">This message was deleted.</span>;
+}

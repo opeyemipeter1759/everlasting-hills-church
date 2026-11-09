@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { PrismaService } from '../../prisma/prisma.service';
 import { mapNote, type MapContext, type MappedNote, type NoteRow as Row } from './note-mapper.util';
@@ -21,6 +21,23 @@ export function assembleThread(rows: Row[], ctx: MapContext): MappedNote[] {
     repliesByParent.set(parentId, [...(repliesByParent.get(parentId) ?? []), mapNote(row, ctx)]);
   }
   return rows.filter((r) => !r.parentId).map((row) => mapNote(row, ctx, repliesByParent.get(row.id) ?? []));
+}
+
+/** A deleted message can't be edited or reacted to; its replies stay readable. */
+export function assertNotDeleted(note: { deletedAt: Date | null }) {
+  if (note.deletedAt) throw new BadRequestException('This message was deleted');
+}
+
+/**
+ * Deletes a message without losing the conversation under it: the text is
+ * cleared and the row is stamped with who deleted it and when. Hard-deleting
+ * cascaded to every reply, which is how whole conversations disappeared.
+ */
+export async function softDeleteNote(prisma: PrismaService, id: string, deletedById: string | null): Promise<void> {
+  await prisma.$transaction([
+    prisma.followUpNote.update({ where: { id }, data: { body: '', deletedAt: new Date(), deletedById } }),
+    prisma.followUpNoteReaction.deleteMany({ where: { noteId: id } }),
+  ]);
 }
 
 /** Same emoji twice takes it back — one row per person per emoji. */

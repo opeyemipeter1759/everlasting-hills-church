@@ -10,7 +10,6 @@ import { SermonAdminReadService } from '../services/sermon-admin-read.service';
 import { SermonCreateService } from '../services/sermon-create.service';
 import { SermonUpdateService } from '../services/sermon-update.service';
 import { SermonAdminActionsService } from '../services/sermon-admin-actions.service';
-import { SermonEpisodeService } from '../services/sermon-episode.service';
 import { SermonEngagementService } from '../services/sermon-engagement.service';
 import { SermonAnalyticsService } from '../services/sermon-analytics.service';
 import { SermonsAuthService } from '../services/sermons-auth.service';
@@ -31,7 +30,6 @@ export class SermonsAdminController {
     private readonly create: SermonCreateService,
     private readonly update: SermonUpdateService,
     private readonly adminActions: SermonAdminActionsService,
-    private readonly episode: SermonEpisodeService,
     private readonly engagement: SermonEngagementService,
     private readonly analytics: SermonAnalyticsService,
     private readonly sermonsAuth: SermonsAuthService,
@@ -78,14 +76,6 @@ export class SermonsAdminController {
     return this.engagement.getSermonEngagement(id);
   }
 
-  @Roles(Role.PASTOR)
-  @Get('admin/:id/episodes/:episodeId')
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Get sermon episode by sermon id (admin)' })
-  getEpisodeBySermonId(@Param('id') id: string, @Param('episodeId') episodeId: string) {
-    return this.episode.getEpisodeBySermonId(id, episodeId);
-  }
-
   @Roles(Role.MEMBER)
   @Post('admin')
   @ApiBearerAuth('access-token')
@@ -115,14 +105,6 @@ export class SermonsAdminController {
   async deleteSermon(@CurrentUser() actor: AuthUser, @Param('id') id: string) {
     await this.sermonsAuth.requireManage(actor);
     return this.adminActions.deleteSermon(id);
-  }
-
-  @Roles(Role.PASTOR)
-  @Post('admin/:id/featured')
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Set featured sermon' })
-  setFeatured(@Param('id') id: string) {
-    return this.adminActions.setFeaturedSermon(id);
   }
 
   @Roles(Role.PASTOR)

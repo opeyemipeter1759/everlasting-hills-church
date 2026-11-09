@@ -1,14 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import { BulkCreateUsersDto, CreateUserDto, UpdateUserDto } from './dto/user.dto';
+import { BulkCreateUsersDto, CreateUserDto } from './dto/user.dto';
 import { UsersListService } from './services/users-list.service';
 import { UsersCreateService } from './services/users-create.service';
 import { UsersBulkCreateService } from './services/users-bulk-create.service';
-import { UsersUpdateService } from './services/users-update.service';
 import { UsersDeletionService } from './services/users-deletion.service';
 import { UsersResendLoginService } from './services/users-resend-login.service';
 
@@ -25,7 +24,6 @@ export class UsersController {
     private readonly usersList: UsersListService,
     private readonly usersCreate: UsersCreateService,
     private readonly usersBulkCreate: UsersBulkCreateService,
-    private readonly usersUpdate: UsersUpdateService,
     private readonly usersDeletion: UsersDeletionService,
     private readonly usersResendLogin: UsersResendLoginService,
   ) {}
@@ -63,18 +61,6 @@ export class UsersController {
   @ApiCreatedResponse({ description: 'Batch result: { created[], failed[], total }' })
   async bulkCreate(@CurrentUser() actor: AuthUser, @Body() body: BulkCreateUsersDto) {
     return this.usersBulkCreate.bulkCreate(actor, body.members);
-  }
-
-  @Patch(':profileId')
-  @Roles(Role.ADMIN)
-  @ApiOperation({ summary: 'Update user profile (name/phone)' })
-  @ApiBody({ type: UpdateUserDto })
-  async updateProfile(
-    @CurrentUser() actor: AuthUser,
-    @Param('profileId') profileId: string,
-    @Body() body: UpdateUserDto,
-  ) {
-    return this.usersUpdate.updateProfile(actor, profileId, body);
   }
 
   @Post(':profileId/resend-login')

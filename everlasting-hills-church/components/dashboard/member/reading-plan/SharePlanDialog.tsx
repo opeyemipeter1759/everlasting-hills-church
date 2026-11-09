@@ -18,12 +18,15 @@ import { PlanLinkField } from "./SharePlanLinkButton";
 export default function SharePlanDialog({
   open,
   plans,
+  loading = false,
   onClose,
   onShared,
 }: {
   open: boolean;
   /** One plan to share it directly, or several to choose from. */
   plans: ReadingPlanSummary[];
+  /** The plans are still being fetched (the admin page loads them on open). */
+  loading?: boolean;
   onClose: () => void;
   onShared: (shared: { title: string; recipients: number }) => void;
 }) {
@@ -62,7 +65,13 @@ export default function SharePlanDialog({
 
   return (
     <Modal open={open} onClose={() => { if (!share.isPending) onClose(); }} title="Share with the church">
-      {plan && (
+      {loading ? (
+        <p className="flex items-center gap-2 py-6 text-sm text-gray-500 dark:text-white/55">
+          <Loader2 size={15} className="animate-spin" aria-hidden="true" /> Loading plans…
+        </p>
+      ) : !plan ? (
+        <p className="py-6 text-sm text-gray-500 dark:text-white/55">There are no reading plans to share yet.</p>
+      ) : (
         <form onSubmit={submit} className="space-y-4">
           {plans.length > 1 ? (
             <label className="block text-sm font-semibold text-gray-700 dark:text-white/75">

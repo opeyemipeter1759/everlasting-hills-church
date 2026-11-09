@@ -43,11 +43,16 @@ export function replaceNote(
   );
 }
 
-/** Removes one message, and its replies with it. */
-export function withoutNote(notes: FollowUpNote[], id: string): FollowUpNote[] {
-  return notes
-    .filter((note) => note.id !== id)
-    .map((note) => ({ ...note, replies: withoutNote(note.replies, id) }));
+/**
+ * Shows a message as deleted the moment you delete it, keeping its replies —
+ * the same thing the server now does, so nothing under it vanishes.
+ */
+export function markDeleted(notes: FollowUpNote[], id: string): FollowUpNote[] {
+  return notes.map((note) =>
+    note.id === id
+      ? { ...note, body: "", deleted: true, reactions: [], canEdit: false, canDelete: false }
+      : { ...note, replies: markDeleted(note.replies, id) },
+  );
 }
 
 /** Adds your emoji, or takes it back when it is already yours. */

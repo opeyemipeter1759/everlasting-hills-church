@@ -37,15 +37,6 @@ export interface AssignmentRow {
   leader: { id: string; name: string; photoUrl: string | null };
 }
 
-export interface OpenFollowUpRow {
-  id: string;
-  title: string;
-  dueDate: string | null;
-  createdAt: string;
-  member: { id: string; name: string; photoUrl: string | null; phone: string | null };
-  assignedLeaderName: string | null;
-}
-
 // ── Unit Lead: my shepherd list ─────────────────────────────────────────────
 
 export function useMyFollowUps() {
@@ -84,10 +75,3 @@ export function useAllAssignments() {
   });
 }
 
-export function useOpenFollowUpTasks() {
-  return useQuery({
-    queryKey: ["members", "follow-ups"],
-    queryFn: () => api.get<OpenFollowUpRow[]>("/members/follow-ups"),
-    enabled: typeof window !== "undefined",
-  });
-}

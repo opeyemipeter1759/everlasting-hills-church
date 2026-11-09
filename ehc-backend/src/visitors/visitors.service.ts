@@ -122,8 +122,26 @@ export class VisitorsService {
     return this.prisma.visitor.update({ where: { id }, data: dto });
   }
 
-  async delete(id: string) {
-    const result = await this.prisma.visitor.deleteMany({ where: { id, tenantId: this.tenantId } });
+  /**
+   * Deletes a first-timer. Their Follow Up chat is keyed to this record with no
+   * foreign key, so deleting it would leave the conversation unreachable: refuse
+   * while there are messages, and only with `force` delete the chat as well.
+   */
+  async delete(id: string, force = false) {
+    const thread = { tenantId: this.tenantId, subjectKind: 'VISITOR', subjectId: id };
+    const messages = await this.prisma.followUpNote.count({ where: { ...thread, deletedAt: null } });
+    if (messages > 0 && !force) {
+      throw new ConflictException({
+        message: `This first-timer has ${messages} Follow Up message${messages === 1 ? '' : 's'}. Deleting them deletes that conversation too.`,
+        error: 'HAS_FOLLOW_UP_CHAT',
+      });
+    }
+    const [, , , result] = await this.prisma.$transaction([
+      this.prisma.followUpNote.deleteMany({ where: thread }),
+      this.prisma.followUpStatusChange.deleteMany({ where: thread }),
+      this.prisma.followUpNoteRead.deleteMany({ where: thread }),
+      this.prisma.visitor.deleteMany({ where: { id, tenantId: this.tenantId } }),
+    ]);
     if (result.count === 0) throw new NotFoundException('Visitor not found');
     return { id, deleted: true };
   }

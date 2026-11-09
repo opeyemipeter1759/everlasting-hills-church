@@ -30,18 +30,13 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
     href: '/dashboard/admin',
     role: Role.ADMIN,
     paths: [
+      // '/admin' covers /admin/home, which carries the members, events and
+      // audit parts the page used to fetch from their own endpoints.
       '/admin',
       '/overview',
       '/visitors',
-      '/members/birthdays',
-      '/members/anniversaries',
-      '/members/at-risk',
-      '/members/absent',
-      '/members/follow-ups',
-      '/events/admin',
       '/pledges',
       '/follow-up',
-      '/cms/audit',
       '/ai',
     ],
   },

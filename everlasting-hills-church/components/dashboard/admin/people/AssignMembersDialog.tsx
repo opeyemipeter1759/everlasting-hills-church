@@ -21,13 +21,18 @@ export default function AssignMembersDialog({
   const [leaderSearch, setLeaderSearch] = useState("");
   const form = useAssignMembersForm(preselected, onClose);
 
-  const memberResults = usePeople({ search: memberSearch, limit: 20 });
+  // The dialog stays mounted while closed, so the pickers only fetch once it
+  // opens — otherwise every visit to People loaded two lists nobody asked for.
+  const memberResults = usePeople({ search: memberSearch, limit: 20 }, { enabled: open });
   // Leaders: bias to leadership roles, but allow searching anyone.
-  const leaderResults = usePeople({
-    search: leaderSearch,
-    limit: 20,
-    ...(leaderSearch ? {} : { role: "UNIT_LEAD" }),
-  });
+  const leaderResults = usePeople(
+    {
+      search: leaderSearch,
+      limit: 20,
+      ...(leaderSearch ? {} : { role: "UNIT_LEAD" }),
+    },
+    { enabled: open },
+  );
 
   function close() {
     setMemberSearch("");

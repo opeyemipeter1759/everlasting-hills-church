@@ -18,7 +18,7 @@ export function MessageFooter({
 }) {
   return (
     <>
-      <ReactionBar reactions={note.reactions} busy={busy} onToggle={(emoji) => onReact(note.id, emoji)} />
+      {!note.deleted && <ReactionBar reactions={note.reactions} busy={busy} onToggle={(emoji) => onReact(note.id, emoji)} />}
       <ReplyThread replies={note.replies} busy={busy} onReply={(body) => onReply(note.id, body)} />
     </>
   );

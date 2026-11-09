@@ -628,8 +628,8 @@ export interface FollowUpNote {
   author: { profileId: string; name: string; photoUrl: string | null };
   reactions: NoteReaction[];
   replies: FollowUpNote[];
-  canEdit: boolean;
-  canDelete: boolean;
+  deleted?: boolean; // shown as "This message was deleted"; replies stay
+  canEdit: boolean; canDelete: boolean;
 }
 
 export { useFollowUpNotes, useFollowUpNoteActions } from "./follow-up-notes";

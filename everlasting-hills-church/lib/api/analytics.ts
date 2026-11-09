@@ -51,22 +51,55 @@ function filterParams(f: AnalyticsFilter) {
 // doesn't spiral into repeated hammering of the DB.
 const QUERY_OPTS = { staleTime: 2 * 60_000, retry: 1 } as const;
 
-export const useAnalyticsOverview    = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","overview",...filterKey(f)],    queryFn: () => api.get<AnalyticsStats>("/analytics/overview",        filterParams(f)) });
-export const useAnalyticsTrend       = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","trend",...filterKey(f)],       queryFn: () => api.get<TrendPoint[]>("/analytics/trend",             filterParams(f)) });
-export const useAnalyticsSplit       = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","split",...filterKey(f)],       queryFn: () => api.get<SplitData>("/analytics/split",                filterParams(f)) });
-export const useAnalyticsRateTrend   = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","rate-trend",...filterKey(f)],  queryFn: () => api.get<RatePoint[]>("/analytics/rate-trend",         filterParams(f)) });
-export const useAnalyticsAbsentee    = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","absentee",...filterKey(f)],    queryFn: () => api.get<AbsenteePoint[]>("/analytics/absentee-trend", filterParams(f)) });
-export const useAnalyticsSvcCompare  = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","svc",...filterKey(f)],         queryFn: () => api.get<SvcComparison[]>("/analytics/service-comparison", filterParams(f)) });
-export const useAnalyticsMemberGrowth= (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","growth",...filterKey(f)],      queryFn: () => api.get<GrowthPoint[]>("/analytics/member-growth",   filterParams(f)) });
-export const useAnalyticsLeaderboard = (f: AnalyticsFilter, limit = 10) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","leader",...filterKey(f),limit], queryFn: () => api.get<LeaderboardRow[]>("/analytics/leaderboard", { ...filterParams(f), limit }) });
-export const useAnalyticsFirstTimers = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","ft",...filterKey(f)],          queryFn: () => api.get<FirstTimer[]>("/analytics/first-timers",     filterParams(f)) });
-export const useAnalyticsRetention   = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","retain",...filterKey(f)],      queryFn: () => api.get<RetentionData>("/analytics/retention",        filterParams(f)) });
+/** GET /analytics/attendance-page: every part that follows the page filter; a failed part is null and named in `unavailable`. */
+export interface AttendancePageData {
+  overview: AnalyticsStats | null; trend: TrendPoint[] | null; split: SplitData | null; rateTrend: RatePoint[] | null;
+  absenteeTrend: AbsenteePoint[] | null; serviceComparison: SvcComparison[] | null; memberGrowth: GrowthPoint[] | null;
+  leaderboard: LeaderboardRow[] | null; firstTimers: FirstTimer[] | null; retention: RetentionData | null; peakHours: PeakHour[] | null;
+  consistency: ConsistencyRow[] | null; serviceHealth: ServiceHealth[] | null; alerts: AnalyticsAlert[] | null;
+  unavailable: string[];
+}
+type Part = Exclude<keyof AttendancePageData, "unavailable">;
+
+/**
+ * One request for the whole page. Each chart's hook below is a view of it
+ * (same key), so the charts share that request and refresh together when the
+ * filter changes. A part the server could not load surfaces as that chart's error.
+ */
+const attendancePage = (f: AnalyticsFilter) => ({
+  ...QUERY_OPTS,
+  queryKey: ["analytics", "attendance-page", ...filterKey(f)],
+  queryFn: () => api.get<AttendancePageData>("/analytics/attendance-page", filterParams(f)),
+});
+function part<K extends Part>(key: K) {
+  return (d: AttendancePageData) => {
+    if (d.unavailable.includes(key) || d[key] === null) throw new Error(`Could not load ${key}`);
+    return d[key] as NonNullable<AttendancePageData[K]>;
+  };
+}
+const view = <K extends Part>(key: K) => (f: AnalyticsFilter) => useQuery({ ...attendancePage(f), select: part(key) });
+
+export const useAnalyticsOverview = view("overview");
+export const useAnalyticsTrend = view("trend");
+export const useAnalyticsSplit = view("split");
+export const useAnalyticsRateTrend = view("rateTrend");
+export const useAnalyticsAbsentee = view("absenteeTrend");
+export const useAnalyticsSvcCompare = view("serviceComparison");
+export const useAnalyticsMemberGrowth = view("memberGrowth");
+export const useAnalyticsFirstTimers = view("firstTimers");
+export const useAnalyticsRetention = view("retention");
+export const useAnalyticsPeakHours = view("peakHours");
+export const useAnalyticsServiceHealth = view("serviceHealth");
+export const useAnalyticsAlerts = view("alerts");
+/** The page loads the top 10, so picking top 3/5/10 trims it rather than refetching. */
+export const useAnalyticsLeaderboard = (f: AnalyticsFilter, limit = 10) =>
+  useQuery({ ...attendancePage(f), select: (d: AttendancePageData) => part("leaderboard")(d).slice(0, limit) });
+export const useAnalyticsConsistency = (f: AnalyticsFilter, limit = 10) =>
+  useQuery({ ...attendancePage(f), select: (d: AttendancePageData) => part("consistency")(d).slice(0, limit) });
+
+// The heatmap (own year picker) and the period comparison (own two periods) change independently of the page filter.
 export const useAnalyticsHeatmap     = (year: number, serviceType?: ServiceTypeFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","heatmap",year,serviceType], queryFn: () => api.get<HeatmapPoint[]>("/analytics/heatmap", { year, ...(serviceType && serviceType !== "all" ? { serviceType } : {}) }) });
-export const useAnalyticsPeakHours   = (f: AnalyticsFilter) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","peak",...filterKey(f)],        queryFn: () => api.get<PeakHour[]>("/analytics/peak-hours",          filterParams(f)) });
-export const useAnalyticsConsistency = (f: AnalyticsFilter, limit = 10) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","consist",...filterKey(f),limit], queryFn: () => api.get<ConsistencyRow[]>("/analytics/consistency", { ...filterParams(f), limit }) });
-export const useAnalyticsServiceHealth = () => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","health"], queryFn: () => api.get<ServiceHealth[]>("/analytics/service-health") });
 export const useAnalyticsCompare     = (a: Record<string,string>, b: Record<string,string>) => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","compare",a,b], queryFn: () => api.get("/analytics/compare", { periodA: a.period, dateFromA: a.dateFrom, dateToA: a.dateTo, periodB: b.period, dateFromB: b.dateFrom, dateToB: b.dateTo }) });
-export const useAnalyticsAlerts      = () => useQuery({ ...QUERY_OPTS, queryKey: ["analytics","alerts"], queryFn: () => api.get<AnalyticsAlert[]>("/analytics/alerts") });
 
 export const MOCK_ALERTS: AnalyticsAlert[] = [
   { id:"1",severity:"warning",type:"AT_RISK",message:"5 members absent 3+ consecutive weeks",timestamp:"2026-06-19T10:00:00Z"},

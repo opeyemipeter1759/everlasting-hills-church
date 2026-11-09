@@ -20,6 +20,7 @@ export interface CalendarEvent {
   venueName: string | null;
 }
 
+/** Next published events + week/month/draft counts; part of GET /admin/home. */
 export interface CalendarSummary {
   upcoming: CalendarEvent[];
   counts: { thisWeek: number; thisMonth: number; drafts: number };
@@ -52,14 +53,6 @@ export function useCalendarEvents(from: string, to: string) {
   return useQuery({
     queryKey: [...KEY, "range", from, to],
     queryFn: () => api.get<CalendarEvent[]>(`/events/admin/calendar?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`),
-  });
-}
-
-/** Next published events + week/month/draft counts, for the superadmin home card. */
-export function useCalendarSummary() {
-  return useQuery({
-    queryKey: [...KEY, "summary"],
-    queryFn: () => api.get<CalendarSummary>("/events/admin/calendar/summary"),
   });
 }
 

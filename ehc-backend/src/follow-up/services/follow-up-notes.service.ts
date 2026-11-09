@@ -5,7 +5,8 @@ import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { FollowUpStatusService } from './follow-up-status.service';
 import type { MapContext, MappedNote } from './note-mapper.util';
-import { assembleThread, createNote, profileIdsIn, toggleReaction } from './note-thread.util';
+import { assembleThread, assertNotDeleted, createNote, profileIdsIn, softDeleteNote, toggleReaction } from './note-thread.util';
+import { currentSubject } from './follow-up-subject.util';
 import { FollowUpNoteActivityService } from './follow-up-note-activity.service';
 import { FollowUpNoteAlertsService } from './follow-up-note-alerts.service';
 
@@ -32,7 +33,9 @@ export class FollowUpNotesService {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  async list(actor: AuthUser, subjectKind: string, subjectId: string): Promise<FollowUpNote[]> {
+  async list(actor: AuthUser, kind: string, id: string): Promise<FollowUpNote[]> {
+    // A first-timer converted to a member is discussed as the member now.
+    const { kind: subjectKind, id: subjectId } = await currentSubject(this.prisma, this.tenantId, { kind, id });
     // Whoever is looking at the thread has now seen all of it: nothing on it
     // is unread for them on the Master List any more.
     if (actor.profileId) await this.activity.markRead(actor.profileId, subjectKind, subjectId);
@@ -56,8 +59,9 @@ export class FollowUpNotesService {
     return assembleThread(rows, ctx);
   }
 
-  async add(actor: AuthUser, subjectKind: string, subjectId: string, body: string, parentId?: string) {
+  async add(actor: AuthUser, kind: string, id: string, body: string, parentId?: string) {
     if (!actor.profileId) throw new ForbiddenException('No profile linked to this account');
+    const { kind: subjectKind, id: subjectId } = await currentSubject(this.prisma, this.tenantId, { kind, id });
     await createNote(this.prisma, {
       tenantId: this.tenantId,
       subjectKind,
@@ -77,6 +81,7 @@ export class FollowUpNotesService {
     if (!actor.profileId) throw new ForbiddenException('No profile linked to this account');
     const note = await this.prisma.followUpNote.findFirst({ where: { id: noteId, tenantId: this.tenantId } });
     if (!note) throw new NotFoundException('Message not found');
+    assertNotDeleted(note);
 
     await toggleReaction(this.prisma, {
       tenantId: this.tenantId,
@@ -89,14 +94,16 @@ export class FollowUpNotesService {
 
   async edit(actor: AuthUser, id: string, body: string) {
     const note = await this.mine(actor, id, 'edit');
+    assertNotDeleted(note);
     await this.prisma.followUpNote.update({ where: { id }, data: { body: body.trim(), editedAt: new Date() } });
     return this.list(actor, note.subjectKind, note.subjectId);
   }
 
   async remove(actor: AuthUser, id: string) {
     const note = await this.mine(actor, id, 'delete');
-    // Replies and reactions go with it — the schema cascades both.
-    await this.prisma.followUpNote.delete({ where: { id } });
+    if (note.deletedAt) return this.list(actor, note.subjectKind, note.subjectId);
+    // Soft delete: replies under it stay, and who removed it is recorded.
+    await softDeleteNote(this.prisma, id, actor.profileId);
     return this.list(actor, note.subjectKind, note.subjectId);
   }
 

@@ -6,7 +6,7 @@ import { InboxService } from '../../inbox/inbox.service';
 import { NotificationEvents } from '../../notifications/notification-events';
 import { buildFollowUpMessageEmail } from '../../notifications/templates/follow-up-message.email';
 import type { MapContext, MappedNote } from '../../follow-up/services/note-mapper.util';
-import { assembleThread, createNote, profileIdsIn, toggleReaction } from '../../follow-up/services/note-thread.util';
+import { assembleThread, assertNotDeleted, createNote, profileIdsIn, softDeleteNote, toggleReaction } from '../../follow-up/services/note-thread.util';
 import type { EvangelismViewer } from '../evangelism.types';
 import { EvangelismAccessService } from './evangelism-access.service';
 import { EVANGELISM_NOTE_KIND } from './evangelism-contacts.service';
@@ -97,6 +97,7 @@ export class EvangelismNotesService {
   async react(viewer: EvangelismViewer, noteId: string, emoji: string) {
     if (!viewer.profileId) throw new ForbiddenException('No profile linked to this account');
     const note = await this.note(noteId);
+    assertNotDeleted(note);
     await toggleReaction(this.prisma, { tenantId: this.tenantId, noteId, profileId: viewer.profileId, emoji });
     return this.list(viewer, note.subjectId);
   }
@@ -104,6 +105,7 @@ export class EvangelismNotesService {
   async edit(viewer: EvangelismViewer, noteId: string, body: string) {
     const note = await this.note(noteId);
     if (note.authorId !== viewer.profileId) throw new ForbiddenException('You can only edit your own messages');
+    assertNotDeleted(note);
     await this.prisma.followUpNote.update({ where: { id: noteId }, data: { body: body.trim(), editedAt: new Date() } });
     return this.list(viewer, note.subjectId);
   }
@@ -111,8 +113,8 @@ export class EvangelismNotesService {
   async remove(viewer: EvangelismViewer, noteId: string) {
     const note = await this.note(noteId);
     if (note.authorId !== viewer.profileId && !viewer.canLead) throw new ForbiddenException('You can only delete your own messages');
-    // Replies and reactions go with it — the schema cascades both.
-    await this.prisma.followUpNote.delete({ where: { id: noteId } });
+    // Soft delete: replies under it stay, and who removed it is recorded.
+    if (!note.deletedAt) await softDeleteNote(this.prisma, noteId, viewer.profileId ?? null);
     return this.list(viewer, note.subjectId);
   }
 

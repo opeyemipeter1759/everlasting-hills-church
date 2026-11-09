@@ -1,109 +1,28 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, Clock, EyeOff, Mail, MailOpen, MessageSquare, RefreshCw, Search, ShieldCheck, Trash2, Users, X } from "lucide-react";
-import {
-  useAdminTestimonials,
-  useDeleteTestimonial,
-  useMarkTestimonialRead,
-  useTogglePublishTestimonial,
-  type AdminTestimonial,
-} from "@/lib/api/testimonials";
-import { Avatar } from "@/components/dashboard/admin/departments/HeadPicker";
+import { useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { useAdminTestimonials, useDeleteTestimonial, type AdminTestimonial } from "@/lib/api/testimonials";
 import TestimoniesSkeleton from "@/components/ui/skeleton/TestimoniesSkeleton";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
-import { Pagination } from "@/components/ui/navigation/Pagination";
-import { Select } from "@/components/ui/select";
 import { showToast } from "@/components/ui/toast/toast";
-import type { ApiError } from "@/lib/api/axios";
-import { groupByDay } from "@/lib/utils/time";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { hasMinRole } from "@/lib/auth/frontend-session";
+import { errorMessage } from "./shared";
+import { useTestimonyFilters } from "./useTestimonyFilters";
+import ReadTabs from "./ReadTabs";
+import TestimonyFilters from "./TestimonyFilters";
+import TestimonyList from "./TestimonyList";
+import TestimonyPager from "./TestimonyPager";
 
-function fmt(d: string) {
-  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-}
-
-function errorMessage(err: unknown, fallback: string): string {
-  return (err as ApiError)?.message || fallback;
-}
-
-type ReadTab = "UNREAD" | "READ";
-
-type StatusFilter = "" | "PUBLISHED" | "DRAFT";
-
-const STATUS_TABS: { label: string; value: StatusFilter }[] = [
-  { label: "All", value: "" },
-  { label: "Published", value: "PUBLISHED" },
-  { label: "Draft", value: "DRAFT" },
-];
-
-type ShareFilter = "" | "SHARED" | "NOT_SHARED";
-
-const SHARE_TABS: { label: string; value: ShareFilter }[] = [
-  { label: "All", value: "" },
-  { label: "Willing to Share", value: "SHARED" },
-  { label: "Not Willing to Share", value: "NOT_SHARED" },
-];
-
-const PAGE_SIZE_OPTIONS = [10, 25, 50];
-const DEFAULT_PAGE_SIZE = 10;
-
+/** Admin view of testimonies: read/unread inbox, filters, paging, and per-testimony actions. */
 export default function TestimoniesAdminClient() {
   const q = useAdminTestimonials();
   const deleteTestimonial = useDeleteTestimonial();
   const currentUser = useCurrentUser();
   const [confirmTarget, setConfirmTarget] = useState<AdminTestimonial | null>(null);
-  const [readTab, setReadTab] = useState<ReadTab>("UNREAD");
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<StatusFilter>("");
-  const [share, setShare] = useState<ShareFilter>("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-
   const testimonials = q.data ?? [];
-  const term = search.trim().toLowerCase();
-  const from = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
-  const to = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
-
-  const unreadCount = testimonials.filter((t) => !t.readAt).length;
-  const readCount = testimonials.length - unreadCount;
-
-  const filtered = testimonials.filter((t) => {
-    if (readTab === "UNREAD" && t.readAt) return false;
-    if (readTab === "READ" && !t.readAt) return false;
-    if (status === "PUBLISHED" && !t.published) return false;
-    if (status === "DRAFT" && t.published) return false;
-    if (share === "SHARED" && t.sharePhysically !== true) return false;
-    if (share === "NOT_SHARED" && t.sharePhysically !== false) return false;
-    const created = new Date(t.createdAt);
-    if (from && created < from) return false;
-    if (to && created > to) return false;
-    if (term) {
-      const haystack = `${t.content} ${t.authorName} ${t.authorRole ?? ""}`.toLowerCase();
-      if (!haystack.includes(term)) return false;
-    }
-    return true;
-  });
-
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  useEffect(() => setPage(1), [readTab, search, status, share, dateFrom, dateTo]);
-  // Clamp back if a filter shrinks the result set below the page we were sitting on.
-  useEffect(() => { if (page > pageCount) setPage(pageCount); }, [page, pageCount]);
-  const paged = filtered.slice((page - 1) * pageSize, page * pageSize);
-
-  const groups = groupByDay(paged, (t) => t.createdAt);
-  const hasFilters = !!(search || status || share || dateFrom || dateTo);
-
-  function clearFilters() {
-    setSearch("");
-    setStatus("");
-    setShare("");
-    setDateFrom("");
-    setDateTo("");
-  }
+  const f = useTestimonyFilters(testimonials);
 
   async function handleDelete() {
     if (!confirmTarget) return;
@@ -124,7 +43,6 @@ export default function TestimoniesAdminClient() {
 
   return (
     <div className="px-5 space-y-6">
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.1em] xs:tracking-[0.2em] text-[#87102C] dark:text-[#e8768a]">
@@ -144,177 +62,16 @@ export default function TestimoniesAdminClient() {
         </button>
       </div>
 
-      {/* Unread / Read — new testimonies land in Unread until an admin marks them read. */}
-      <div role="tablist" aria-label="Read status" className="flex gap-1 border-b border-gray-200 dark:border-white/10">
-        {(
-          [
-            { value: "UNREAD", label: "Unread", count: unreadCount, Icon: Mail },
-            { value: "READ", label: "Read", count: readCount, Icon: MailOpen },
-          ] as const
-        ).map(({ value, label, count, Icon }) => (
-          <button
-            key={value}
-            type="button"
-            role="tab"
-            aria-selected={readTab === value}
-            onClick={() => setReadTab(value)}
-            className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-bold transition-colors ${
-              readTab === value
-                ? "border-[#87102C] text-[#87102C] dark:border-[#e8768a] dark:text-[#e8768a]"
-                : "border-transparent text-gray-500 hover:text-gray-800 dark:text-white/50 dark:hover:text-white"
-            }`}
-          >
-            <Icon size={14} /> {label}
-            <span
-              className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${
-                readTab === value ? "bg-[#87102C] text-white" : "bg-gray-100 text-gray-500 dark:bg-white/10 dark:text-white/60"
-              }`}
-            >
-              {count}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative min-w-[220px] flex-1">
-            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search testimonials or authors…"
-              className="w-full rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 py-2 pl-9 pr-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20"
-            />
-          </div>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-xs font-semibold text-gray-600 dark:text-white/70 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20"
-          />
-          <span className="text-xs text-gray-400">to</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2.5 py-2 text-xs font-semibold text-gray-600 dark:text-white/70 focus:outline-none focus:ring-2 focus:ring-[#87102C]/20"
-          />
-          {hasFilters && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-semibold text-gray-400 hover:text-gray-700 dark:hover:text-white"
-            >
-              <X size={13} /> Clear
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {STATUS_TABS.map((t) => (
-            <button
-              key={t.label}
-              type="button"
-              onClick={() => setStatus(t.value)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                status === t.value
-                  ? "bg-[#87102C] text-white"
-                  : "border border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/60 hover:border-[#87102C]/30"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {SHARE_TABS.map((t) => (
-            <button
-              key={t.label}
-              type="button"
-              onClick={() => setShare(t.value)}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold transition-colors ${
-                share === t.value
-                  ? "bg-sky-600 text-white"
-                  : "border border-gray-200 dark:border-white/10 text-gray-600 dark:text-white/60 hover:border-sky-400/50"
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {q.isError ? (
-        <p className="rounded-2xl border border-rose-200 dark:border-rose-500/20 bg-rose-50 dark:bg-rose-500/10 p-5 text-sm text-rose-700 dark:text-rose-400">
-          Couldn&apos;t load testimonials.
-        </p>
-      ) : testimonials.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-5 xs:p-8 sm:p-12 text-center">
-          <MessageSquare size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
-          <p className="text-base font-semibold text-gray-700 dark:text-white/80">No testimonials yet.</p>
-          <p className="mt-1 text-sm text-gray-400 dark:text-white/40">Submissions from the public testimony form will show up here as drafts.</p>
-        </div>
-      ) : filtered.length === 0 && !hasFilters ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-5 xs:p-8 sm:p-12 text-center">
-          {readTab === "UNREAD" ? (
-            <MailOpen size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
-          ) : (
-            <Mail size={26} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
-          )}
-          <p className="text-base font-semibold text-gray-700 dark:text-white/80">
-            {readTab === "UNREAD" ? "You're all caught up." : "Nothing marked read yet."}
-          </p>
-          <p className="mt-1 text-sm text-gray-400 dark:text-white/40">
-            {readTab === "UNREAD"
-              ? "New testimonies will show up here until someone marks them read."
-              : "Use Mark as read on a testimony to move it here."}
-          </p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-300 dark:border-white/15 bg-gray-50/60 dark:bg-white/[0.02] p-5 xs:p-8 sm:p-12 text-center">
-          <Search size={24} className="mx-auto mb-3 text-gray-300 dark:text-white/20" />
-          <p className="text-base font-semibold text-gray-700 dark:text-white/80">No testimonials match your filters.</p>
-          <button type="button" onClick={clearFilters} className="mt-2 text-sm font-semibold text-[#87102C] hover:underline dark:text-[#e8768a]">
-            Clear filters
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {groups.map((group) => (
-            <div key={group.label}>
-              <h2 className="mb-3 text-xs font-black uppercase tracking-widest text-gray-400 dark:text-white/40">
-                {group.label} <span className="font-semibold normal-case text-gray-300 dark:text-white/25">· {group.items.length}</span>
-              </h2>
-              <div className="space-y-3">
-                {group.items.map((t) => (
-                  <TestimonialCard key={t.id} t={t} canTogglePublish={canTogglePublish} onDelete={() => setConfirmTarget(t)} />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {filtered.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-xs text-gray-400 dark:text-white/40 order-2 sm:order-1">
-            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
-          </p>
-          <div className="flex items-center gap-3 order-1 sm:order-2">
-            <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
-            <Select
-              aria-label="Rows per page"
-              value={String(pageSize)}
-              onChange={(v) => { setPageSize(Number(v)); setPage(1); }}
-              className="text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 py-1.5 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer"
-              options={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: `${n} / page` }))}
-            />
-          </div>
-        </div>
-      )}
+      <ReadTabs f={f} />
+      <TestimonyFilters f={f} />
+      <TestimonyList
+        isError={q.isError}
+        total={testimonials.length}
+        f={f}
+        canTogglePublish={canTogglePublish}
+        onDelete={setConfirmTarget}
+      />
+      <TestimonyPager f={f} />
 
       <ConfirmDialog
         open={!!confirmTarget}
@@ -326,146 +83,6 @@ export default function TestimoniesAdminClient() {
         onConfirm={handleDelete}
         onCancel={() => setConfirmTarget(null)}
       />
-    </div>
-  );
-}
-
-function TestimonialCard({ t, canTogglePublish, onDelete }: { t: AdminTestimonial; canTogglePublish: boolean; onDelete: () => void }) {
-  const togglePublish = useTogglePublishTestimonial();
-  const markRead = useMarkTestimonialRead();
-  const isRead = !!t.readAt;
-
-  function toggleRead() {
-    markRead.mutate(
-      { id: t.id, read: !isRead },
-      {
-        onSuccess: () => showToast.success(isRead ? "Moved back to Unread" : "Moved to Read"),
-        onError: (err) => showToast.error(errorMessage(err, "Couldn't update")),
-      },
-    );
-  }
-
-  // A signed-in member is always linked (even when isAnonymous — see submitTestimony)
-  // so admins can identify who really submitted, distinct from a public guest.
-  const displayName = t.member ? `${t.member.firstName} ${t.member.lastName}` : t.authorName;
-  const avatarPhoto = t.member?.photoUrl ?? t.authorPhotoUrl;
-
-  async function toggleStatus() {
-    try {
-      await togglePublish.mutateAsync({ id: t.id, published: !t.published });
-      showToast.success(t.published ? "Moved to draft" : "Testimonial published");
-    } catch (err) {
-      showToast.error(errorMessage(err, "Couldn't update status"));
-    }
-  }
-
-  return (
-    <div
-      className={`rounded-2xl border bg-white dark:bg-[#161618] p-5 space-y-3 ${
-        t.published ? "border-gray-200 dark:border-white/10" : "border-l-4 border-l-amber-400 border-gray-200 dark:border-l-amber-500 dark:border-white/10"
-      }`}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
-          <Avatar name={displayName} photoUrl={avatarPhoto} px={36} />
-          <div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <p className="text-sm font-bold text-gray-900 dark:text-white">{displayName}</p>
-              {t.member && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400"
-                  title="Signed in when submitted"
-                >
-                  <ShieldCheck size={9} /> Verified
-                </span>
-              )}
-            </div>
-            <p className="text-[11px] text-gray-400">
-              {t.authorRole ? `${t.authorRole} · ` : ""}{fmt(t.createdAt)}
-            </p>
-            {t.member?.email && (
-              <p className="text-[11px] text-gray-400">Member contact: {t.member.email}{t.member.phone ? ` · ${t.member.phone}` : ""}</p>
-            )}
-            {t.submitterContact && (
-              <p className="text-[11px] text-gray-400">Contact: {t.submitterContact}</p>
-            )}
-            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-              {t.isAnonymous && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-bold text-gray-600 dark:text-white/60">
-                  <EyeOff size={10} /> Wants to stay anonymous
-                </span>
-              )}
-              {t.sharePhysically !== null && (
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    t.sharePhysically
-                      ? "bg-sky-50 text-sky-600 dark:bg-sky-500/10 dark:text-sky-400"
-                      : "bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50"
-                  }`}
-                >
-                  <Users size={10} /> {t.sharePhysically ? "Willing to share physically" : "Prefers not to share physically"}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-              t.published
-                ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                : "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
-            }`}
-          >
-            {t.published ? <CheckCircle2 size={10} /> : <Clock size={10} />} {t.published ? "Published" : "Draft"}
-          </span>
-          <button
-            type="button"
-            onClick={onDelete}
-            className="shrink-0 rounded-lg p-1.5 text-gray-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
-            aria-label="Delete testimonial"
-            title="Delete"
-          >
-            <Trash2 size={15} />
-          </button>
-        </div>
-      </div>
-
-      <p className="whitespace-pre-wrap break-words text-sm text-gray-700 dark:text-white/80">{t.content}</p>
-
-      <div className="flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 dark:border-white/[0.06] pt-3">
-        {t.readAt && (
-          <p className="mr-auto text-[11px] text-gray-400 dark:text-white/40">
-            Read{t.readByName ? ` by ${t.readByName}` : ""} · {fmt(t.readAt)}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={toggleRead}
-          disabled={markRead.isPending}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
-            isRead
-              ? "border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
-              : "bg-[#87102C] text-white hover:bg-[#6d0d24]"
-          }`}
-        >
-          {isRead ? <Mail size={13} /> : <MailOpen size={13} />} {isRead ? "Mark as unread" : "Mark as read"}
-        </button>
-        {canTogglePublish && (
-          <button
-            type="button"
-            onClick={toggleStatus}
-            disabled={togglePublish.isPending}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
-              t.published
-                ? "border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-white/10 dark:text-white/60 dark:hover:bg-white/5"
-                : "bg-emerald-600 text-white hover:bg-emerald-700"
-            }`}
-          >
-            <CheckCircle2 size={13} /> {t.published ? "Move to draft" : "Publish"}
-          </button>
-        )}
-      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 import { TrendingUp, TrendingDown, HeartPulse } from "lucide-react";
 import { SectionCard } from "@/components/ui/cards/SectionCard";
 import { SkeletonBlock } from "@/components/ui/display/SkeletonBlock";
-import { useAnalyticsServiceHealth, type ServiceHealth } from "@/lib/api/analytics";
+import { useAnalyticsServiceHealth, type AnalyticsFilter, type ServiceHealth } from "@/lib/api/analytics";
 
 const SVC_NAMES: Record<string, string> = { sunday: "Sunday Service", wednesday: "Wednesday", special: "Special Service" };
 
@@ -34,8 +34,8 @@ function HealthCard({ h }: { h: ServiceHealth }) {
   );
 }
 
-export function ServiceHealthPanel() {
-  const { data, isLoading } = useAnalyticsServiceHealth();
+export function ServiceHealthPanel({ filter }: { filter: AnalyticsFilter }) {
+  const { data, isLoading } = useAnalyticsServiceHealth(filter);
   return (
     <SectionCard title="Service Health" iconEl={<HeartPulse size={13} />}>
       {isLoading ? <SkeletonBlock className="h-40" /> : (

@@ -39,11 +39,9 @@ export default function TeamsView({
     );
   }
 
-  // Staffed teams first, biggest first; empty ones last, alphabetically.
-  const ordered = [...groups].sort((a, b) => {
-    if (a.members.length !== b.members.length) return b.members.length - a.members.length;
-    return a.team.name.localeCompare(b.team.name);
-  });
+  // Already in order (staffed first, biggest first, empty last) — sorted in
+  // useServiceTeams before paging, so the order runs across pages.
+  const ordered = groups;
 
   // Departments in the order their first team appears, so the grouping is stable.
   const byDepartment = new Map<string, Group[]>();

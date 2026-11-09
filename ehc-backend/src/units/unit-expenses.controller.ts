@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
-import { CreateUnitExpenseDto, UpdateUnitExpenseDto } from './dto/unit-expense.dto';
+import { CreateUnitExpenseDto } from './dto/unit-expense.dto';
 import { UnitExpensesService } from './services/unit-expenses.service';
 
 @ApiTags('units')
@@ -26,18 +26,6 @@ export class UnitExpensesController {
     @Body() body: CreateUnitExpenseDto,
   ) {
     return this.expenses.create(actor, unitId, body);
-  }
-
-  @Patch(':unitId/expenses/:expenseId')
-  @ApiOperation({ summary: 'Edit an expense entry' })
-  @ApiBody({ type: UpdateUnitExpenseDto })
-  async update(
-    @CurrentUser() actor: AuthUser,
-    @Param('unitId') unitId: string,
-    @Param('expenseId') expenseId: string,
-    @Body() body: UpdateUnitExpenseDto,
-  ) {
-    return this.expenses.update(actor, unitId, expenseId, body);
   }
 
   @Delete(':unitId/expenses/:expenseId')

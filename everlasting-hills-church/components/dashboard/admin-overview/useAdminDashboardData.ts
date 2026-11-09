@@ -3,11 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/axios";
 import { timeAgo } from "@/lib/utils/time";
-import type {
-  AdminDashboardData,
-  AttendancePoint,
-  SummaryStat,
-} from "@/lib/types/admin-dashboard";
+import type { CalendarSummary } from "@/lib/api/calendar";
+import type { AbsentMember, AdminDashboardData, AttendancePoint, SummaryStat } from "@/lib/types/admin-dashboard";
 
 export type DataStatus = "loading" | "error" | "empty" | "success";
 
@@ -66,136 +63,117 @@ function activityText(entry: AuditEntry): string {
   return `${who} ${verbFor(entry.action)} ${entry.entity}`;
 }
 
-/**
- * Loads the Super Admin dashboard overview from real backend endpoints — no
- * mock/dummy data. Each section maps to an existing endpoint (see the comment
- * above each call); sections without a dedicated payload shape are assembled
- * client-side from list endpoints that already exist for their own pages.
- */
+/** GET /admin/home: each part is null when it failed (listed in `unavailable`)
+ *  or, for giving and the audit log, when the viewer is below PASTOR. */
+interface AdminHomeResponse {
+  summary: { stats: SummaryStat[] } | null;
+  attendanceTrend: { points: AttendancePoint[] } | null;
+  upcomingBirthdays: UpcomingBirthday[] | null;
+  anniversariesToday: unknown[] | null;
+  givingSummary: { thisMonthNaira: number; momChange: number } | null;
+  givingCategories: { category: string; amountNaira: number }[] | null;
+  unassignedFollowUps: number | null;
+  analytics: { pendingPrayers?: number; pendingQuestions?: number; draftTestimonials?: number } | null;
+  openFollowUpTasks: number | null;
+  atRisk: AtRiskResponse | null;
+  units: { name: string; totalMembers: number; activeMembers: number }[] | null;
+  recentActivity: AuditEntry[] | null;
+  absentMembers: AbsentMember[] | null;
+  calendar: CalendarSummary | null;
+  unavailable: string[];
+}
+
 /**
  * Query key for the whole admin dashboard.
  *
  * It sits under ["admin"] on purpose: saving a headcount already calls
- * invalidateQueries({ queryKey: ["admin"] }), which did nothing while this
- * screen fetched by hand in a useEffect. An usher could record a count and the
- * Attendance Trend would keep showing the old one until a full reload.
+ * invalidateQueries({ queryKey: ["admin"] }), so the Attendance Trend picks up
+ * a count an usher just recorded without a full reload.
  */
 export const ADMIN_DASHBOARD_KEY = ["admin", "dashboard"] as const;
 
-async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
-  const [
-    summary,
-    trend,
-    upcomingBirthdays,
-    anniversaries,
-    givingSummary,
-    givingCategories,
-    unassignedFollowUps,
-    adminAnalytics,
-    openFollowUpTasks,
-    atRisk,
-    units,
-    audit,
-  ] = await Promise.all([
-    apiClient.get<{ stats: SummaryStat[] }>("/admin/dashboard-summary"),
-    // Every recorded headcount; the chart offers its own date-range filter,
-    // so trimming the history here would just hide counts that were taken.
-    apiClient.get<{ points: AttendancePoint[] }>("/admin/attendance-trend?limit=500"),
-    apiClient.get<UpcomingBirthday[]>("/members/birthdays/upcoming?daysAhead=7"),
-    apiClient.get<unknown[]>("/members/anniversaries/today"),
-    apiClient.get<{ thisMonthNaira: number; momChange: number }>("/admin/giving/summary"),
-    apiClient.get<{ category: string; amountNaira: number }[]>("/admin/giving/categories"),
-    apiClient.get<unknown[]>("/follow-up?stage=UNASSIGNED"),
-    apiClient.get<{
-      totalPrayers: number;
-      pendingPrayers?: number;
-      pendingQuestions?: number;
-      draftTestimonials?: number;
-    }>("/admin/analytics"),
-    apiClient.get<unknown[]>("/members/follow-ups"),
-    apiClient.get<AtRiskResponse>("/members/at-risk"),
-    apiClient.get<{ name: string; totalMembers: number; activeMembers: number }[]>("/admin/units"),
-    apiClient.get<AuditEntry[]>("/cms/audit?limit=10"),
-  ]);
-
-  const stats = summary.data?.stats ?? [];
-
-  // /members/at-risk already returns who each person is, why they were flagged
-  // and how to reach them. Keeping only a count left an admin reading "8 at
-  // risk" with nowhere to go, so the names are carried through, most urgent
-  // first, and the count is derived from them.
-  const atRiskPeople: AdminDashboardData["pastoralCare"]["atRisk"] = [];
-  const seenAtRisk = new Set<string>();
-  const addAtRisk = (e: AtRiskEntry, reason: string, weight: number) => {
-    if (seenAtRisk.has(e.userId)) return;
-    seenAtRisk.add(e.userId);
-    atRiskPeople.push({
-      id: e.userId,
-      name: e.userName,
-      photoUrl: e.photoUrl,
-      phone: e.phone,
-      reason,
-      weight,
-    });
+/**
+ * At-risk people, most urgent first. /admin/home carries who each person is,
+ * why they were flagged and how to reach them, so an admin reading "8 at risk"
+ * has somewhere to go; the count is derived from the same list.
+ */
+function atRiskPeople(atRisk: AtRiskResponse | null): AdminDashboardData["pastoralCare"]["atRisk"] {
+  const people: AdminDashboardData["pastoralCare"]["atRisk"] = [];
+  if (!atRisk) return people;
+  const seen = new Set<string>();
+  const add = (e: AtRiskEntry, reason: string, weight: number) => {
+    if (seen.has(e.userId)) return;
+    seen.add(e.userId);
+    people.push({ id: e.userId, name: e.userName, photoUrl: e.photoUrl, phone: e.phone, reason, weight });
   };
   // Consecutive absence first: it is the most recent, most actionable signal.
-  for (const e of atRisk.data.absentConsecutiveWeeks) {
-    addAtRisk(e, `Missed ${e.consecutiveAbsences} in a row`, 1000 + e.consecutiveAbsences);
-  }
-  for (const e of atRisk.data.neverAttended) addAtRisk(e, "Never attended", 500);
-  for (const e of atRisk.data.belowFiftyPercent) {
-    addAtRisk(e, `${Math.round(e.rate * 100)}% attendance`, Math.round(100 - e.rate * 100));
-  }
-  atRiskPeople.sort((a, b) => b.weight - a.weight);
+  for (const e of atRisk.absentConsecutiveWeeks) add(e, `Missed ${e.consecutiveAbsences} in a row`, 1000 + e.consecutiveAbsences);
+  for (const e of atRisk.neverAttended) add(e, "Never attended", 500);
+  for (const e of atRisk.belowFiftyPercent) add(e, `${Math.round(e.rate * 100)}% attendance`, Math.round(100 - e.rate * 100));
+  return people.sort((a, b) => b.weight - a.weight);
+}
+
+/**
+ * The Super Admin dashboard overview, from one request (GET /admin/home).
+ * A part that failed falls back to empty so the rest of the page still shows;
+ * only the stat cards failing counts as the dashboard failing.
+ */
+async function fetchAdminDashboard(): Promise<AdminDashboardData | null> {
+  const home = (await apiClient.get<AdminHomeResponse>("/admin/home")).data;
+  if (home.unavailable.includes("summary")) throw new Error("Could not load the dashboard.");
+
+  const stats = home.summary?.stats ?? [];
+  const birthdays = home.upcomingBirthdays ?? [];
+  const atRisk = atRiskPeople(home.atRisk);
+  const { givingSummary, givingCategories } = home;
 
   const data: AdminDashboardData = {
     stats,
-    attendanceTrend: trend.data?.points ?? [],
-    giving: {
-      thisMonth: givingSummary.data.thisMonthNaira,
-      currency: "₦",
-      trend: {
-        value: Math.abs(givingSummary.data.momChange),
-        direction: givingSummary.data.momChange < 0 ? "down" : "up",
-      },
-      breakdown: givingCategories.data.map((c) => ({ label: c.category, value: c.amountNaira })),
-    },
+    attendanceTrend: home.attendanceTrend?.points ?? [],
+    giving:
+      givingSummary && givingCategories
+        ? {
+            thisMonth: givingSummary.thisMonthNaira,
+            currency: "₦",
+            trend: { value: Math.abs(givingSummary.momChange), direction: givingSummary.momChange < 0 ? "down" : "up" },
+            breakdown: givingCategories.map((c) => ({ label: c.category, value: c.amountNaira })),
+          }
+        : null,
     aiInsights: {
       attendanceChange: signedTrend(stats, "attendance"),
       visitorRetentionChange: signedTrend(stats, "visitors"),
-      membersNeedingFollowUp: unassignedFollowUps.data.length,
+      membersNeedingFollowUp: home.unassignedFollowUps ?? 0,
     },
     pastoralCare: {
       // Pending, not every request ever submitted — this sits beside two
       // outstanding-work counts, and a lifetime total can never reach zero.
-      // ?? 0 because the frontend deploys ahead of the API: until the build
-      // carrying these counts is live they arrive undefined, and undefined
-      // sums to NaN, which rendered the card as an empty box rather than as
-      // an all-clear.
-      prayerRequests: adminAnalytics.data.pendingPrayers ?? 0,
-      questions: adminAnalytics.data.pendingQuestions ?? 0,
-      testimonies: adminAnalytics.data.draftTestimonials ?? 0,
-      openFollowUps: openFollowUpTasks.data.length,
-      atRiskMembers: seenAtRisk.size,
-      atRisk: atRiskPeople,
+      prayerRequests: home.analytics?.pendingPrayers ?? 0,
+      questions: home.analytics?.pendingQuestions ?? 0,
+      testimonies: home.analytics?.draftTestimonials ?? 0,
+      openFollowUps: home.openFollowUpTasks ?? 0,
+      atRiskMembers: atRisk.length,
+      atRisk,
     },
     celebrations: {
-      birthdaysToday: upcomingBirthdays.data.filter((b) => b.daysUntil === 0).length,
-      anniversaries: anniversaries.data.length,
-      upcomingBirthdays: upcomingBirthdays.data,
+      birthdaysToday: birthdays.filter((b) => b.daysUntil === 0).length,
+      anniversaries: home.anniversariesToday?.length ?? 0,
+      upcomingBirthdays: birthdays,
     },
-    ministryUnits: units.data.map((u) => ({
+    ministryUnits: (home.units ?? []).map((u) => ({
       name: u.name,
       members: u.totalMembers,
       activeMembers: u.activeMembers,
       activePct: u.totalMembers > 0 ? Math.round((u.activeMembers / u.totalMembers) * 100) : 0,
     })),
-    recentActivities: audit.data.map((entry) => ({
-      id: entry.id,
-      type: entry.entity,
-      text: activityText(entry),
-      timeAgo: timeAgo(entry.createdAt),
-    })),
+    recentActivities:
+      home.recentActivity?.map((entry) => ({
+        id: entry.id,
+        type: entry.entity,
+        text: activityText(entry),
+        timeAgo: timeAgo(entry.createdAt),
+      })) ?? null,
+    absentMembers: home.absentMembers,
+    calendar: home.calendar,
   };
 
   // No stat cards means nothing has been recorded yet, which the dashboard
@@ -207,8 +185,8 @@ export function useAdminDashboardData() {
   const query = useQuery({
     queryKey: ADMIN_DASHBOARD_KEY,
     queryFn: fetchAdminDashboard,
-    // Long enough that moving between dashboard tabs does not re-fetch ten
-    // endpoints, short enough that a count recorded a minute ago shows up.
+    // Long enough that moving between dashboard tabs does not re-fetch,
+    // short enough that a count recorded a minute ago shows up.
     staleTime: 30_000,
     refetchOnWindowFocus: true,
   });

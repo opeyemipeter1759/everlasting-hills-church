@@ -54,14 +54,6 @@ export class EventsController {
   // `:id` matches the literal string "calendar" and the grid 404s.
 
   @Roles(Role.ADMIN)
-  @Get('admin/calendar/summary')
-  @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Next published events + week/month/draft counts (ADMIN+)' })
-  calendarSummary() {
-    return this.eventsService.calendarSummary();
-  }
-
-  @Roles(Role.ADMIN)
   @Get('admin/calendar')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Events overlapping a date window, drafts included (ADMIN+)' })

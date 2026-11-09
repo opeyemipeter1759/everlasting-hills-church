@@ -5,6 +5,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { BooksService } from './books.service';
+import { BookCollectionsService } from '../book-collections/book-collections.service';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
 import { CreateBookCommentDto } from './dto/create-book-comment.dto';
@@ -19,7 +20,10 @@ import { CreateBookCommentDto } from './dto/create-book-comment.dto';
 @Controller('books')
 @Roles(Role.ADMIN)
 export class BooksController {
-  constructor(private readonly books: BooksService) {}
+  constructor(
+    private readonly books: BooksService,
+    private readonly collections: BookCollectionsService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'List every book, any status (ADMIN+)' })
@@ -27,11 +31,16 @@ export class BooksController {
     return this.books.list();
   }
 
+  /**
+   * The member Books page in one request: published books, and the shelves
+   * (collections with at least one published book) they are grouped into.
+   */
   @Get('feed')
   @Roles(Role.MEMBER)
-  @ApiOperation({ summary: 'Published books, for members to browse (MEMBER+)' })
-  feed() {
-    return this.books.feed();
+  @ApiOperation({ summary: 'Published books and their shelves, for members to browse (MEMBER+)' })
+  async feed() {
+    const [books, collections] = await Promise.all([this.books.feed(), this.collections.feed()]);
+    return { books, collections };
   }
 
   @Get(':id')

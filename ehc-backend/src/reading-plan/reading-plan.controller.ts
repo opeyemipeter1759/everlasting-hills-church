@@ -46,13 +46,6 @@ export class ReadingPlanController {
     return this.catalogue.list(query.track, query.intensity);
   }
 
-  @Get('reading-plans/:planId')
-  @ApiOperation({ summary: 'Plan detail' })
-  @Header('Cache-Control', 'public, max-age=31536000, immutable')
-  detail(@Param('planId') planId: string) {
-    return this.catalogue.detail(planId);
-  }
-
   @Get('reading-plans/:planId/days')
   @ApiOperation({ summary: 'Paginated day list for a plan' })
   @ApiQuery({ name: 'page', required: false, type: Number })
