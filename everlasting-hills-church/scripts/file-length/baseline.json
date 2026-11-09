@@ -273,7 +273,7 @@
     "lib/site-settings.ts": 544,
     "lib/youtube-videos.ts": 169,
     "middleware.ts": 394,
-    "scripts/generate-plan-artwork.mjs": 604,
+    "scripts/generate-plan-artwork.mjs": 589,
     "types/follow-up.ts": 242,
     "types/index.ts": 561,
     "ui/EHCSlider.tsx": 402

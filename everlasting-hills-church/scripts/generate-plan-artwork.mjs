@@ -19,26 +19,10 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { BLUSH, CREAM, GOLD, H, W, WINE, WINE_DARK, WINE_DEEP, svg } from "./plan-artwork-shared.mjs";
+import { BOOK_IN_DAYS_READINGS, bookInDaysCover } from "./plan-artwork-book-in-days.mjs";
 
 const OUT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "public", "reading-plans");
-
-const W = 800;
-const H = 400;
-
-/** The church's palette, as used everywhere else in the dashboard. */
-const WINE = "#87102C";
-const WINE_DEEP = "#4A0817";
-const WINE_DARK = "#6E0C24";
-const CREAM = "#FFF4F6";
-const BLUSH = "#FFB3C1";
-const GOLD = "#E8B44A";
-
-const svg = (body, defs = "") =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img">
-<defs>${defs}</defs>
-${body}
-</svg>
-`;
 
 // ── 1. Start with Jesus ──────────────────────────────────────────────────────
 // A sunrise. Concentric arcs breaking over a horizon, because this plan is for
@@ -594,6 +578,7 @@ const COVERS = {
   "history-in-32-days": () => booksCover(6, 17),
   "poetry-and-wisdom-in-31-days": () => booksCover(18, 22),
   "prophets-in-32-days": () => booksCover(23, 39),
+  ...Object.fromEntries(Object.keys(BOOK_IN_DAYS_READINGS).map((slug) => [slug, () => bookInDaysCover(slug)])),
 };
 
 mkdirSync(OUT, { recursive: true });
