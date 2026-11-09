@@ -914,7 +914,7 @@ export interface paths {
         put?: never;
         /**
          * Request Password Reset
-         * @description Send a Supabase recovery email. Always returns success to avoid leaking which emails exist.
+         * @description Email a one-time link to the change-password page. Always returns success to avoid leaking which emails exist.
          */
         post: operations["AuthController_forgotPassword"];
         delete?: never;
@@ -974,6 +974,26 @@ export interface paths {
         get: operations["AuthAccountController_me"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/recovery/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open a password-reset link
+         * @description Exchanges the link's one-time token for a short-lived session used to set a new password.
+         */
+        post: operations["AuthController_verifyRecovery"];
         delete?: never;
         options?: never;
         head?: never;
@@ -11177,6 +11197,10 @@ export interface components {
              */
             tithe: number;
         };
+        VerifyRecoveryDto: {
+            /** @description The token_hash from the password-reset link */
+            tokenHash: string;
+        };
         VisitorImportRowDto: {
             address?: string;
             /** @description Day of birth, 1-31 (no year collected) */
@@ -13781,6 +13805,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AuthController_verifyRecovery: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyRecoveryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
             /** @description Error response */

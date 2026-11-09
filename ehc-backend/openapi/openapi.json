@@ -5491,6 +5491,18 @@
         ],
         "type": "object"
       },
+      "VerifyRecoveryDto": {
+        "properties": {
+          "tokenHash": {
+            "description": "The token_hash from the password-reset link",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tokenHash"
+        ],
+        "type": "object"
+      },
       "VisitorImportRowDto": {
         "properties": {
           "address": {
@@ -9682,7 +9694,7 @@
     },
     "/auth/forgot-password": {
       "post": {
-        "description": "Send a Supabase recovery email. Always returns success to avoid leaking which emails exist.",
+        "description": "Email a one-time link to the change-password page. Always returns success to avoid leaking which emails exist.",
         "operationId": "AuthController_forgotPassword",
         "parameters": [],
         "requestBody": {
@@ -9958,6 +9970,59 @@
           }
         ],
         "summary": "Get current user dashboard payload",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/recovery/verify": {
+      "post": {
+        "description": "Exchanges the link's one-time token for a short-lived session used to set a new password.",
+        "operationId": "AuthController_verifyRecovery",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRecoveryDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "summary": "Open a password-reset link",
         "tags": [
           "auth"
         ]

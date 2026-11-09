@@ -10,6 +10,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyRecoveryDto } from './dto/verify-recovery.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from './decorators/public.decorator';
 import { AuthLoginService } from './services/auth-login.service';
@@ -80,7 +81,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Request Password Reset',
-    description: 'Send a Supabase recovery email. Always returns success to avoid leaking which emails exist.',
+    description: 'Email a one-time link to the change-password page. Always returns success to avoid leaking which emails exist.',
   })
   @ApiOkResponse({
     description: 'Reset email dispatched (or silently no-op if the address is unknown)',
@@ -88,5 +89,17 @@ export class AuthController {
   })
   async forgotPassword(@Body() body: ForgotPasswordDto) {
     return this.session.requestPasswordReset(body.email);
+  }
+
+  @Public()
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('recovery/verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Open a password-reset link',
+    description: "Exchanges the link's one-time token for a short-lived session used to set a new password.",
+  })
+  async verifyRecovery(@Body() body: VerifyRecoveryDto) {
+    return this.session.verifyRecovery(body.tokenHash);
   }
 }
