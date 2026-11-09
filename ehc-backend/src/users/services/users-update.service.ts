@@ -6,6 +6,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
+import { leaveServiceTeams } from '../../members/leave-service-teams';
 import { GRANTED_ROLES } from '../users.types';
 import type { UpdateUserDto, UpdateUserRoleDto } from '../dto/user.dto';
 import { UsersAuthService } from './users-auth.service';
@@ -105,9 +106,13 @@ export class UsersUpdateService {
       throw new BadRequestException('User has no Member record');
     }
 
-    return this.prisma.member.update({
-      where: { id: target.Member.id },
-      data: { status: 'INACTIVE' },
-    });
+    const memberId = target.Member.id;
+    const { member, leadsEnded } = await this.prisma.$transaction(async (tx) => ({
+      member: await tx.member.update({ where: { id: memberId }, data: { status: 'INACTIVE' } }),
+      // A deactivated member serves on no team.
+      leadsEnded: await leaveServiceTeams(tx, this.tenantId, [memberId], actor.userId),
+    }));
+    leadsEnded.forEach((id) => this.effectiveRoles.invalidate(id));
+    return member;
   }
 }

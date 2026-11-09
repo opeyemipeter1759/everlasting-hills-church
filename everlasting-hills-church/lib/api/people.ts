@@ -167,14 +167,12 @@ function useInvalidatePeople() {
 }
 
 /** Unit-membership changes move a person in/out of a unit's roster, which also
- * shifts that unit's member count (["units"]) and its department's rollup
- * (["departments"]) — not just the person's own directory row. */
+ * shifts that unit's member count (["units"]), its department's rollup
+ * (["departments"]) and the Service Teams roster — not just their directory row. */
 function useInvalidateUnitMembership() {
   const qc = useQueryClient();
   return () => {
-    qc.invalidateQueries({ queryKey: PEOPLE_KEY });
-    qc.invalidateQueries({ queryKey: ["units"] });
-    qc.invalidateQueries({ queryKey: ["departments"] });
+    for (const queryKey of [PEOPLE_KEY, ["units"], ["departments"], ["service-teams"]]) qc.invalidateQueries({ queryKey });
   };
 }
 
@@ -209,11 +207,13 @@ export function useUpdateMember() {
 
 export function useUpdateMemberStatus() {
   const qc = useQueryClient();
+  const invalidate = useInvalidateUnitMembership();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: MemberStatus }) =>
       api.patch<{ id: string; status: MemberStatus }>(`/members/${id}/status`, { status }),
     onSuccess: (_result, variables) => {
-      qc.invalidateQueries({ queryKey: PEOPLE_KEY });
+      // Deactivating someone also takes them off every service team.
+      invalidate();
       qc.invalidateQueries({ queryKey: ["member", variables.id] });
     },
   });
@@ -346,7 +346,7 @@ export function useDeletePerson() {
 }
 
 export function useBulkMemberOp() {
-  const invalidate = useInvalidatePeople();
+  const invalidate = useInvalidateUnitMembership();
   return useMutation({
     mutationFn: (body: {
       ids: string[];

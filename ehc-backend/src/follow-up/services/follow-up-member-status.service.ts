@@ -4,6 +4,8 @@ import { MemberStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
+import { EffectiveRolesService } from '../../auth/effective-roles.service';
+import { leaveServiceTeams } from '../../members/leave-service-teams';
 import { ENTRY_INCLUDE } from '../follow-up.types';
 import { FollowUpAuthService } from './follow-up-auth.service';
 import { FollowUpEntryMapperService } from './follow-up-entry-mapper.service';
@@ -19,6 +21,7 @@ export class FollowUpMemberStatusService {
     private readonly auth: FollowUpAuthService,
     private readonly mapper: FollowUpEntryMapperService,
     private readonly audit: FollowUpAuditService,
+    private readonly effectiveRoles: EffectiveRolesService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -37,8 +40,14 @@ export class FollowUpMemberStatusService {
       throw new BadRequestException('Only a follow-up entry linked to a member can be opted out');
     }
 
-    await this.prisma.member.update({ where: { id: entry.memberId }, data: { status: MemberStatus.OPTED_OUT } });
-    await this.audit.write({ action: 'OPT_OUT', entity: 'Member', entityId: entry.memberId, actorId: actor.userId });
+    const memberId = entry.memberId;
+    const leadsEnded = await this.prisma.$transaction(async (tx) => {
+      await tx.member.update({ where: { id: memberId }, data: { status: MemberStatus.OPTED_OUT } });
+      // Opting out deactivates them, and a deactivated member serves on no team.
+      return leaveServiceTeams(tx, this.tenantId, [memberId], actor.userId);
+    });
+    leadsEnded.forEach((profileId) => this.effectiveRoles.invalidate(profileId));
+    await this.audit.write({ action: 'OPT_OUT', entity: 'Member', entityId: memberId, actorId: actor.userId });
 
     const updated = await this.prisma.followUpEntry.findFirstOrThrow({ where: { id }, include: ENTRY_INCLUDE });
     return this.mapper.mapEntry(updated, actor);

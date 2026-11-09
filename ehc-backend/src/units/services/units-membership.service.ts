@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Role } from '@prisma/client';
+import { MemberStatus, Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
@@ -92,9 +92,12 @@ export class UnitsMembershipService {
 
     const member = await this.prisma.member.findFirst({
       where: { id: data.memberId, tenantId: this.tenantId },
-      select: { id: true, profileId: true },
+      select: { id: true, profileId: true, status: true },
     });
     if (!member) throw new NotFoundException('Member not found');
+    if (member.status !== MemberStatus.ACTIVE) {
+      throw new BadRequestException('This member has been deactivated. Reactivate them before adding them to a team.');
+    }
 
     if (data.isLead && data.isAssistant) {
       throw new BadRequestException('A member cannot be both lead and assistant');

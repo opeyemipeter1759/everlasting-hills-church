@@ -53,11 +53,11 @@ export default function PeopleConfirmDialogs({
             <strong className="text-gray-900 dark:text-white">{statusSubject}</strong>{" "}
             {pendingStatus?.status === "INACTIVE" ? (
               <>
-                will immediately lose account access and stop receiving member emails, including absence emails.
-                Their membership records will be kept.
+                will immediately lose account access, come off every service team, and stop receiving member emails,
+                including absence emails. Their membership records will be kept.
               </>
             ) : (
-              <>will regain account access and receive member emails again.</>
+              <>will regain account access and receive member emails again. Add them back to a service team if they&apos;re serving again.</>
             )}
             {actionError && <span className="block mt-2 text-red-600 dark:text-red-400 text-xs">{actionError}</span>}
           </span>

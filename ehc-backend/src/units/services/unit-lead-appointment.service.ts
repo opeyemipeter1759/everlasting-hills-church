@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { Prisma } from '@prisma/client';
+import { MemberStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
@@ -72,10 +72,13 @@ export class UnitLeadAppointmentService {
 
     const target = await this.prisma.profile.findFirst({
       where: { id: profileId, tenantId: this.tenantId },
-      select: { id: true, Member: { select: { id: true } } },
+      select: { id: true, Member: { select: { id: true, status: true } } },
     });
     if (!target) throw new NotFoundException('Person not found in this church');
     if (!target.Member) throw new BadRequestException('This person has no member record');
+    if (target.Member.status !== MemberStatus.ACTIVE) {
+      throw new BadRequestException('This member has been deactivated. Reactivate them before making them a lead.');
+    }
     const memberId = target.Member.id;
 
     const current = await this.prisma.unitLeadAssignment.findFirst({

@@ -118,8 +118,8 @@ export class MembersController {
   @Patch('bulk')
   @ApiOperation({ summary: 'Bulk status / tag operation on member ids (ADMIN+)' })
   @ApiBody({ type: BulkMemberOpDto })
-  async bulkOp(@Body() body: BulkMemberOpDto) {
-    return this.bulkOps.bulkMemberOp(body);
+  async bulkOp(@CurrentUser() actor: AuthUser, @Body() body: BulkMemberOpDto) {
+    return this.bulkOps.bulkMemberOp(body, actor.userId);
   }
 
   @Get(':id')
@@ -139,8 +139,8 @@ export class MembersController {
   @Roles(Role.ADMIN_HEAD)
   @ApiOperation({ summary: 'Update member status' })
   @ApiBody({ type: UpdateMemberStatusDto })
-  async updateStatus(@Param('id') id: string, @Body() body: UpdateMemberStatusDto) {
-    return this.crud.updateMemberStatus(id, body.status);
+  async updateStatus(@CurrentUser() actor: AuthUser, @Param('id') id: string, @Body() body: UpdateMemberStatusDto) {
+    return this.crud.updateMemberStatus(id, body.status, actor.userId);
   }
 
   @Delete(':id')

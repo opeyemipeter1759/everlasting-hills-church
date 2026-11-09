@@ -5,6 +5,8 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import { NotificationEvents } from '../../notifications/notification-events';
 import { buildAccountDeactivationEmail } from '../../notifications/templates/account-deactivation.email';
+import { EffectiveRolesService } from '../../auth/effective-roles.service';
+import { leaveServiceTeams } from '../leave-service-teams';
 import { MemberSelfLookupService } from './member-self-lookup.service';
 
 /** Days a member has to reverse a self-deactivation before data may be removed. */
@@ -14,13 +16,16 @@ const DEACTIVATION_REVERSAL_DAYS = 14;
 @Injectable()
 export class MemberDeactivationService {
   private readonly appUrl: string;
+  private readonly tenantId: string;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: EventEmitter2,
     private readonly selfLookup: MemberSelfLookupService,
+    private readonly effectiveRoles: EffectiveRolesService,
     config: ConfigService<Env, true>,
   ) {
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
     this.appUrl =
       (config.get('FRONTEND_URL', { infer: true }) as string | undefined) ??
       process.env.NEXT_PUBLIC_APP_URL ??
@@ -34,11 +39,16 @@ export class MemberDeactivationService {
    */
   async requestDeactivation(userId: string, fallbackEmail?: string) {
     const { memberId } = await this.selfLookup.getMyMember(userId, fallbackEmail);
-    const member = await this.prisma.member.update({
-      where: { id: memberId },
-      data: { status: 'INACTIVE', deactivationRequestedAt: new Date() },
-      select: { id: true, firstName: true, email: true },
-    });
+    const { member, leadsEnded } = await this.prisma.$transaction(async (tx) => ({
+      member: await tx.member.update({
+        where: { id: memberId },
+        data: { status: 'INACTIVE', deactivationRequestedAt: new Date() },
+        select: { id: true, firstName: true, email: true },
+      }),
+      // A deactivated member serves on no team.
+      leadsEnded: await leaveServiceTeams(tx, this.tenantId, [memberId], userId),
+    }));
+    leadsEnded.forEach((profileId) => this.effectiveRoles.invalidate(profileId));
 
     if (member.email) {
       this.events.emit(

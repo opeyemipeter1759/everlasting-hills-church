@@ -6,6 +6,7 @@ import type { Env } from '../../config/env.validation';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import type { UpdateMemberInput } from '../members.types';
 import { evangelismTally } from '../../evangelism/evangelism-tally';
+import { leaveServiceTeams } from '../leave-service-teams';
 
 /** Admin CRUD on a single member: read, edit core fields, change status. */
 @Injectable()
@@ -85,6 +86,7 @@ export class MemberCrudService {
   async updateMemberStatus(
     memberId: string,
     status: Extract<MemberStatus, 'ACTIVE' | 'INACTIVE'>,
+    actorId: string | null = null,
   ) {
     const member = await this.prisma.member.findFirst({
       where: { id: memberId, tenantId: this.tenantId },
@@ -92,14 +94,20 @@ export class MemberCrudService {
     });
     if (!member) throw new NotFoundException('Member not found');
 
-    return this.prisma.member.update({
-      where: { id: member.id },
-      data: {
-        status,
-        // An administrator-managed status change is not a pending self-delete.
-        deactivationRequestedAt: null,
-      },
-      select: { id: true, status: true },
+    const { updated, leadsEnded } = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.member.update({
+        where: { id: member.id },
+        data: {
+          status,
+          // An administrator-managed status change is not a pending self-delete.
+          deactivationRequestedAt: null,
+        },
+        select: { id: true, status: true },
+      });
+      const ended = status === MemberStatus.ACTIVE ? [] : await leaveServiceTeams(tx, this.tenantId, [member.id], actorId);
+      return { updated: row, leadsEnded: ended };
     });
+    leadsEnded.forEach((profileId) => this.effectiveRoles.invalidate(profileId));
+    return updated;
   }
 }

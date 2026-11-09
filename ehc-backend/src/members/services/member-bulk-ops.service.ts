@@ -3,7 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { MemberStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
+import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import type { BulkMemberOpInput } from '../members.types';
+import { leaveServiceTeams } from '../leave-service-teams';
 
 /** Tag and bulk status/tag mutations on member rows. */
 @Injectable()
@@ -12,6 +14,7 @@ export class MemberBulkOpsService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly effectiveRoles: EffectiveRolesService,
     config: ConfigService<Env, true>,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
@@ -35,7 +38,7 @@ export class MemberBulkOpsService {
   }
 
   /** Bulk status / tag operations on a set of member ids. */
-  async bulkMemberOp(input: BulkMemberOpInput) {
+  async bulkMemberOp(input: BulkMemberOpInput, actorId: string | null = null) {
     const ids = input.ids ?? [];
     if (ids.length === 0) return { updated: 0 };
 
@@ -44,11 +47,17 @@ export class MemberBulkOpsService {
       if (status !== MemberStatus.ACTIVE && status !== MemberStatus.INACTIVE) {
         throw new BadRequestException('Invalid status');
       }
-      const res = await this.prisma.member.updateMany({
-        where: { id: { in: ids }, tenantId: this.tenantId },
-        data: { status, deactivationRequestedAt: null },
+      const { count, leadsEnded } = await this.prisma.$transaction(async (tx) => {
+        const res = await tx.member.updateMany({
+          where: { id: { in: ids }, tenantId: this.tenantId },
+          data: { status, deactivationRequestedAt: null },
+        });
+        // Deactivating someone takes them off every service team.
+        const ended = status === MemberStatus.ACTIVE ? [] : await leaveServiceTeams(tx, this.tenantId, ids, actorId);
+        return { count: res.count, leadsEnded: ended };
       });
-      return { updated: res.count };
+      leadsEnded.forEach((profileId) => this.effectiveRoles.invalidate(profileId));
+      return { updated: count };
     }
 
     if (input.op === 'addTag' || input.op === 'removeTag') {
