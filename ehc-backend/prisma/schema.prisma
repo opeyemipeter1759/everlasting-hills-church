@@ -946,7 +946,7 @@ enum FinanceEntryFrequency {
 /// free text rather than an enum so a new fund doesn't need a migration.
 /// Expenses share the same shape with their own free-text category.
 model FinanceEntry {
-  id           String                 @id
+  id           String                @id
   tenantId     String
   kind         FinanceEntryKind
   category     String
@@ -962,10 +962,10 @@ model FinanceEntry {
   /// Uploaded via /uploads/document — a photo or PDF of the receipt, if attached.
   receiptUrl   String?
   recordedById String?
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  Tenant       Tenant                 @relation(fields: [tenantId], references: [id])
-  RecordedBy   Profile?               @relation(fields: [recordedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  Tenant       Tenant                @relation(fields: [tenantId], references: [id])
+  RecordedBy   Profile?              @relation(fields: [recordedById], references: [id], onDelete: SetNull)
 
   @@index([tenantId, kind, date])
   @@index([tenantId, category])
@@ -1005,16 +1005,16 @@ enum PrayerSignupStatus {
 /// An overnight prayer watch — one per event. Members sign up for a 2-hour
 /// slot within it via a public, no-login form; an admin approves each one.
 model PrayerWatch {
-  id        String       @id
-  tenantId  String
-  title     String
-  watchDate DateTime
+  id           String       @id
+  tenantId     String
+  title        String
+  watchDate    DateTime
   /// The central Telegram channel where the prayer itself happens, shared by
   /// every slot. Shown to a signer only once their sign-up is CONFIRMED.
   telegramLink String?
-  createdAt DateTime     @default(now())
-  Tenant    Tenant       @relation(fields: [tenantId], references: [id])
-  Slots     PrayerSlot[]
+  createdAt    DateTime     @default(now())
+  Tenant       Tenant       @relation(fields: [tenantId], references: [id])
+  Slots        PrayerSlot[]
 
   @@index([tenantId, watchDate])
 }
@@ -1343,6 +1343,7 @@ model Service {
   FollowUpContactLog    FollowUpContactLog[]
   ServiceOffering       ServiceOffering?
   Tenant                Tenant                  @relation(fields: [tenantId], references: [id])
+  ServiceReadiness      ServiceReadiness[]
 
   @@index([tenantId, scheduledAt])
   @@index([tenantId, serviceType, scheduledAt])
@@ -1518,6 +1519,10 @@ model Tenant {
   PastorDelegate           PastorDelegate[]
   PastoralBooking          PastoralBooking[]
   PrayerWatchReport        PrayerWatchReport[]
+  ReadinessChecklistItem   ReadinessChecklistItem[]
+  ServiceReadiness         ServiceReadiness[]
+  ServiceInspection        ServiceInspection[]
+  ReadinessUpdate          ReadinessUpdate[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1792,26 +1797,155 @@ model AuditLog {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Unit {
-  id                    String                  @id
-  tenantId              String
-  name                  String
-  description           String?
-  departmentId          String? // nullable: units can exist unassigned and the UI surfaces them
-  createdAt             DateTime                @default(now())
-  Tenant                Tenant                  @relation(fields: [tenantId], references: [id])
-  Department            Department?             @relation(fields: [departmentId], references: [id])
-  UnitMember            UnitMember[]
-  LeadAssignments       UnitLeadAssignment[]
-  FollowUpEntry         FollowUpEntry[]
-  ServiceFollowUpReport ServiceFollowUpReport[]
-  Report                Report[]
-  UnitPosition          UnitPosition[]
-  UnitTask              UnitTask[]
-  UnitExpense           UnitExpense[]
-  UnitMessage           UnitMessage[]
-  ServiceAssignment     ServiceAssignment[]
+  id                     String                   @id
+  tenantId               String
+  name                   String
+  description            String?
+  departmentId           String? // nullable: units can exist unassigned and the UI surfaces them
+  createdAt              DateTime                 @default(now())
+  Tenant                 Tenant                   @relation(fields: [tenantId], references: [id])
+  Department             Department?              @relation(fields: [departmentId], references: [id])
+  UnitMember             UnitMember[]
+  LeadAssignments        UnitLeadAssignment[]
+  FollowUpEntry          FollowUpEntry[]
+  ServiceFollowUpReport  ServiceFollowUpReport[]
+  Report                 Report[]
+  UnitPosition           UnitPosition[]
+  UnitTask               UnitTask[]
+  UnitExpense            UnitExpense[]
+  UnitMessage            UnitMessage[]
+  ServiceAssignment      ServiceAssignment[]
+  /// No longer read: every unit plans for every Sunday and Wednesday service.
+  /// Kept so the applied migration and the schema stay in step.
+  readinessSunday        Boolean                  @default(false)
+  readinessWednesday     Boolean                  @default(false)
+  ReadinessChecklistItem ReadinessChecklistItem[]
+  ServiceReadiness       ServiceReadiness[]
 
   @@index([departmentId])
+}
+
+enum ReadinessState {
+  NOT_STARTED
+  CONFIRMED
+  AT_RISK
+}
+
+/// Stage 1 of the Administration Manual's service cycle: one department's plan
+/// for one service, due 24 hours before the service's ready-by time. A row is
+/// created (NOT_STARTED) for every department serving that service, so the
+/// board and the reminder job work from rows, not from their absence.
+model ServiceReadiness {
+  id              String              @id
+  tenantId        String
+  serviceId       String
+  unitId          String
+  state           ReadinessState      @default(NOT_STARTED)
+  workers         String?
+  equipment       String?
+  done            String?
+  outstanding     String?
+  challenges      String?
+  support         String?
+  /// The head's yes/no: "we will be ready by the deadline".
+  canMeetDeadline Boolean?
+  confirmedAt     DateTime?
+  /// Profile.id of whoever submitted the plan.
+  confirmedById   String?
+  /// Set when the head was reminded, and when the Administrator was told it
+  /// was missing, so each happens once.
+  remindedAt      DateTime?
+  escalatedAt     DateTime?
+  /// The Church Administrator's approval of the submitted plan.
+  approvedAt      DateTime?
+  /// Profile.id of the approver.
+  approvedById    String?
+  /// The unit's latest word after submitting: everything ready, or a blocker.
+  status          ReadinessStatus?
+  blocker         String?
+  statusUpdatedAt DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  Tenant          Tenant              @relation(fields: [tenantId], references: [id])
+  Service         Service             @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  Unit            Unit                @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  Inspections     ServiceInspection[]
+  Updates         ReadinessUpdate[]
+
+  @@unique([serviceId, unitId])
+  @@index([tenantId, state])
+}
+
+enum ReadinessStatus {
+  READY
+  BLOCKED
+}
+
+/// Each update a unit posts on its plan, oldest first: "everything is ready",
+/// or a blocker and what it is. The latest is copied onto ServiceReadiness.
+model ReadinessUpdate {
+  id          String           @id
+  tenantId    String
+  readinessId String
+  status      ReadinessStatus
+  note        String?
+  /// Profile.id of whoever posted it.
+  byId        String?
+  createdAt   DateTime         @default(now())
+  Tenant      Tenant           @relation(fields: [tenantId], references: [id])
+  Readiness   ServiceReadiness @relation(fields: [readinessId], references: [id], onDelete: Cascade)
+
+  @@index([readinessId, createdAt])
+}
+
+enum InspectionRound {
+  /// The day before the service, at the time it starts (Saturday 8:00 am, Tuesday 5:30 pm).
+  DAY_BEFORE
+  /// 2 hours before the service (Sunday 6:00 am, Wednesday 3:30 pm).
+  ON_THE_DAY
+}
+
+enum InspectionResult {
+  READY
+  ISSUES
+}
+
+/// Stage 2: the Church Administrator's inspection of one department for one
+/// service, in one of its two rounds. The checklist is copied in at inspection
+/// time, so later edits to the template don't rewrite what was inspected.
+model ServiceInspection {
+  id            String           @id
+  tenantId      String
+  readinessId   String
+  round         InspectionRound
+  result        InspectionResult
+  /// [{ label, passed, note? }] in checklist order.
+  checks        Json
+  note          String?
+  inspectedAt   DateTime         @default(now())
+  /// Profile.id of the inspector.
+  inspectedById String?
+  Tenant        Tenant           @relation(fields: [tenantId], references: [id])
+  Readiness     ServiceReadiness @relation(fields: [readinessId], references: [id], onDelete: Cascade)
+
+  @@unique([readinessId, round])
+}
+
+/// One line on a department's readiness checklist for a kind of service — what
+/// the Church Administrator ticks at inspection (Sunday 7:45, Wednesday 5:00 pm).
+/// Edited by Admin Head and above; replaced as a whole list per unit and type.
+model ReadinessChecklistItem {
+  id          String      @id
+  tenantId    String
+  unitId      String
+  serviceType ServiceType
+  label       String
+  position    Int
+  createdAt   DateTime    @default(now())
+  Tenant      Tenant      @relation(fields: [tenantId], references: [id])
+  Unit        Unit        @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@index([unitId, serviceType, position])
 }
 
 enum ReportScope {
@@ -2110,7 +2244,7 @@ model UnitExpense {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Visitor {
-  id                  String          @id
+  id                  String            @id
   tenantId            String
   firstName           String
   lastName            String
@@ -2136,14 +2270,14 @@ model Visitor {
   /// Consent checkbox on the first-timer form: only when true may this person be
   /// surfaced as a suggested friend-match for someone else (their own reason for
   /// matching them to another guest, not a blanket "may we share your info" flag).
-  shareForConnections Boolean         @default(false)
-  submittedAt         DateTime        @default(now())
+  shareForConnections Boolean           @default(false)
+  submittedAt         DateTime          @default(now())
   attendanceType      String?
   convertedAt         DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
   convertedToMemberId String? // no FK; mirrors AuditLog.actorId — just an audit pointer
   serviceId           String? // the Service day this first-timer was registered at, when resolvable
-  Tenant              Tenant          @relation(fields: [tenantId], references: [id])
-  Service             Service?        @relation(fields: [serviceId], references: [id])
+  Tenant              Tenant            @relation(fields: [tenantId], references: [id])
+  Service             Service?          @relation(fields: [serviceId], references: [id])
   FollowUpEntry       FollowUpEntry[]
   PastoralBooking     PastoralBooking[]
 
@@ -2562,35 +2696,35 @@ model PushSubscription {
 /// midnight (22:00 to 06:00); the dispatcher handles that case.
 /// Tenant-scoped in the service layer; RLS deny-all backstop.
 model NotificationPreference {
-  id                  String   @id
-  tenantId            String
-  userId              String   @unique // Profile.id
-  serviceStarting     Boolean  @default(true)
-  serviceReminder     Boolean  @default(true)
-  servingReminder     Boolean  @default(true)
+  id                         String   @id
+  tenantId                   String
+  userId                     String   @unique // Profile.id
+  serviceStarting            Boolean  @default(true)
+  serviceReminder            Boolean  @default(true)
+  servingReminder            Boolean  @default(true)
   /// Opt-in only. Never default this to true.
-  prayerMeeting       Boolean  @default(false)
+  prayerMeeting              Boolean  @default(false)
   /// Default true: this only fires for a watch hour the member themself chose.
-  prayerWatchReminder Boolean  @default(true)
-  announcements       Boolean  @default(true)
-  unitAnnouncements   Boolean  @default(true)
-  newSermon           Boolean  @default(true)
-  milestones          Boolean  @default(true)
+  prayerWatchReminder        Boolean  @default(true)
+  announcements              Boolean  @default(true)
+  unitAnnouncements          Boolean  @default(true)
+  newSermon                  Boolean  @default(true)
+  milestones                 Boolean  @default(true)
   /// Admin/staff-facing, not member-facing: a Prayer Watch sign-up is waiting
   /// on their review. Default true since staff opted into the role, not the
   /// notification.
-  prayerWatchPendingApproval Boolean @default(true)
+  prayerWatchPendingApproval Boolean  @default(true)
   /// One-on-One: decisions on a session the person requested.
-  pastoralSessionUpdates     Boolean @default(true)
+  pastoralSessionUpdates     Boolean  @default(true)
   /// One-on-One: new requests and changes, for pastors and their delegates.
-  pastoralRequests           Boolean @default(true)
-  quietStart          String? // "HH:MM", DB CHECK-guarded
-  quietEnd            String? // "HH:MM", DB CHECK-guarded
-  timezone            String   @default("Africa/Lagos")
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @default(now()) @updatedAt
-  Tenant              Tenant   @relation(fields: [tenantId], references: [id])
-  User                Profile  @relation("NotificationPreferenceUser", fields: [userId], references: [id], onDelete: Cascade)
+  pastoralRequests           Boolean  @default(true)
+  quietStart                 String? // "HH:MM", DB CHECK-guarded
+  quietEnd                   String? // "HH:MM", DB CHECK-guarded
+  timezone                   String   @default("Africa/Lagos")
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @default(now()) @updatedAt
+  Tenant                     Tenant   @relation(fields: [tenantId], references: [id])
+  User                       Profile  @relation("NotificationPreferenceUser", fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
 }
@@ -3947,38 +4081,38 @@ enum PastoralMeetingFormat {
 /// A pastor who takes one-on-one sessions. A row here, not a role, makes
 /// someone a host: Pastor Opeyemi is SUPER_ADMIN, not PASTOR.
 model PastorHost {
-  id               String                   @id
-  tenantId         String
-  profileId        String
-  displayName      String
+  id                 String                    @id
+  tenantId           String
+  profileId          String
+  displayName        String
   /// The pastor's public share link: /talk-to-a-pastor/<slug>.
-  slug             String?
+  slug               String?
   /// A standing Google Meet or Zoom room, used for online sessions when no
   /// link is pasted on approval and Google can't create one.
   defaultMeetingLink String?
-  title            String?
-  bio              String?
-  active           Boolean                  @default(true)
-  position         Int                      @default(0)
-  bufferMinutes    Int                      @default(30)
-  dailyCap         Int                      @default(3)
-  minNoticeHours   Int                      @default(48)
-  horizonDays      Int                      @default(28)
-  visitorsAllowed  Boolean                  @default(true)
-  visitorWeeklyCap Int                      @default(2)
+  title              String?
+  bio                String?
+  active             Boolean                   @default(true)
+  position           Int                       @default(0)
+  bufferMinutes      Int                       @default(30)
+  dailyCap           Int                       @default(3)
+  minNoticeHours     Int                       @default(48)
+  horizonDays        Int                       @default(28)
+  visitorsAllowed    Boolean                   @default(true)
+  visitorWeeklyCap   Int                       @default(2)
   /// Receives the requests made on the general /talk-to-a-pastor page, where
   /// no pastor is named, and assigns them on. At most one per tenant.
-  publicIntake     Boolean                  @default(false)
-  createdAt        DateTime                 @default(now())
-  updatedAt        DateTime                 @updatedAt
-  Tenant           Tenant                   @relation(fields: [tenantId], references: [id])
-  Profile          Profile                  @relation("PastorHostProfile", fields: [profileId], references: [id], onDelete: Cascade)
-  SessionTypes     PastorSessionType[]
-  Rules            PastorAvailabilityRule[]
-  Blocks           PastorAvailabilityBlock[]
-  Delegates        PastorDelegate[]
-  Bookings         PastoralBooking[]        @relation("PastoralBookingHost")
-  CoHostBookings   PastoralBooking[]        @relation("PastoralBookingCoHost")
+  publicIntake       Boolean                   @default(false)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+  Tenant             Tenant                    @relation(fields: [tenantId], references: [id])
+  Profile            Profile                   @relation("PastorHostProfile", fields: [profileId], references: [id], onDelete: Cascade)
+  SessionTypes       PastorSessionType[]
+  Rules              PastorAvailabilityRule[]
+  Blocks             PastorAvailabilityBlock[]
+  Delegates          PastorDelegate[]
+  Bookings           PastoralBooking[]         @relation("PastoralBookingHost")
+  CoHostBookings     PastoralBooking[]         @relation("PastoralBookingCoHost")
 
   @@unique([tenantId, profileId])
   @@unique([tenantId, slug])
@@ -4060,60 +4194,60 @@ model PastorDelegate {
 }
 
 model PastoralBooking {
-  id                    String                @id
-  tenantId              String
-  hostId                String
-  coHostId              String?
-  sessionTypeId         String
-  requesterType         PastoralRequesterType
-  memberProfileId       String?
-  visitorId             String?
-  requesterName         String
-  requesterEmail        String
-  requesterPhone        String?
-  requesterLocation     String?
-  requesterTimezone     String?
-  foundVia              String?
-  startsAt              DateTime
-  endsAt                DateTime
-  status                PastoralBookingStatus @default(PENDING)
+  id                 String                 @id
+  tenantId           String
+  hostId             String
+  coHostId           String?
+  sessionTypeId      String
+  requesterType      PastoralRequesterType
+  memberProfileId    String?
+  visitorId          String?
+  requesterName      String
+  requesterEmail     String
+  requesterPhone     String?
+  requesterLocation  String?
+  requesterTimezone  String?
+  foundVia           String?
+  startsAt           DateTime
+  endsAt             DateTime
+  status             PastoralBookingStatus  @default(PENDING)
   /// Made on the nameless public page: the requester sees "one of our pastors"
   /// until it is approved, a new time is suggested, or it is assigned.
-  anonymousIntake       Boolean               @default(false)
+  anonymousIntake    Boolean                @default(false)
   /// Who passed this request to its current pastor, and when.
-  assignedById          String?
-  assignedAt            DateTime?
-  holdExpiresAt         DateTime?
+  assignedById       String?
+  assignedAt         DateTime?
+  holdExpiresAt      DateTime?
   /// Decided by the pastor when approving or suggesting a time; null until then.
-  format                PastoralMeetingFormat?
+  format             PastoralMeetingFormat?
   /// Null when the session type doesn't ask for one.
-  topic                 String?
+  topic              String?
   /// AES-256-GCM, readable by the host pastor only.
-  noteEncrypted         String?
-  proposedStartsAt      DateTime?
-  proposedEndsAt        DateTime?
-  decisionNote          String?
-  decidedAt             DateTime?
-  decidedById           String?
-  cancelledAt           DateTime?
-  cancelledBy           String? // "REQUESTER" | "HOST"
-  cancelReason          String?
-  emailVerifiedAt       DateTime?
-  verifyTokenHash       String?
-  manageTokenHash       String?
-  googleEventId         String?
-  meetLink              String?
-  pendingNudgeSentAt    DateTime?
-  reminderDaySentAt     DateTime?
-  reminderHourSentAt    DateTime?
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  Tenant                Tenant                @relation(fields: [tenantId], references: [id])
-  Host                  PastorHost            @relation("PastoralBookingHost", fields: [hostId], references: [id])
-  CoHost                PastorHost?           @relation("PastoralBookingCoHost", fields: [coHostId], references: [id])
-  SessionType           PastorSessionType     @relation(fields: [sessionTypeId], references: [id])
-  Member                Profile?              @relation("PastoralBookingMember", fields: [memberProfileId], references: [id])
-  Visitor               Visitor?              @relation(fields: [visitorId], references: [id])
+  noteEncrypted      String?
+  proposedStartsAt   DateTime?
+  proposedEndsAt     DateTime?
+  decisionNote       String?
+  decidedAt          DateTime?
+  decidedById        String?
+  cancelledAt        DateTime?
+  cancelledBy        String? // "REQUESTER" | "HOST"
+  cancelReason       String?
+  emailVerifiedAt    DateTime?
+  verifyTokenHash    String?
+  manageTokenHash    String?
+  googleEventId      String?
+  meetLink           String?
+  pendingNudgeSentAt DateTime?
+  reminderDaySentAt  DateTime?
+  reminderHourSentAt DateTime?
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  Tenant             Tenant                 @relation(fields: [tenantId], references: [id])
+  Host               PastorHost             @relation("PastoralBookingHost", fields: [hostId], references: [id])
+  CoHost             PastorHost?            @relation("PastoralBookingCoHost", fields: [coHostId], references: [id])
+  SessionType        PastorSessionType      @relation(fields: [sessionTypeId], references: [id])
+  Member             Profile?               @relation("PastoralBookingMember", fields: [memberProfileId], references: [id])
+  Visitor            Visitor?               @relation(fields: [visitorId], references: [id])
 
   @@index([hostId, startsAt])
   @@index([coHostId, startsAt])
@@ -4126,25 +4260,25 @@ model PastoralBooking {
 /// actually ran, how many prayed, and that it was handed over to the next
 /// watch. One per watch per night; the leader can correct it.
 model PrayerWatchReport {
-  id              String     @id
-  tenantId        String
-  slotId          String
+  id            String     @id
+  tenantId      String
+  slotId        String
   /// The evening the night began (UTC-midnight of that Lagos date); a watch
   /// after midnight still belongs to the night before.
-  nightDate       DateTime   @db.Date
-  reportedById    String // Profile.id of the leader (or an admin filling in)
-  startedAt       DateTime
-  endedAt         DateTime
-  minutesPrayed   Int
-  peoplePresent   Int
-  handedOver      Boolean
+  nightDate     DateTime   @db.Date
+  reportedById  String // Profile.id of the leader (or an admin filling in)
+  startedAt     DateTime
+  endedAt       DateTime
+  minutesPrayed Int
+  peoplePresent Int
+  handedOver    Boolean
   /// Snapshot of who it was handed to, as the next watch's leader then.
-  handedOverTo    String?
-  notes           String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  Tenant          Tenant     @relation(fields: [tenantId], references: [id])
-  Slot            PrayerSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  handedOverTo  String?
+  notes         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  Tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  Slot          PrayerSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
 
   @@unique([slotId, nightDate])
   @@index([tenantId, nightDate])

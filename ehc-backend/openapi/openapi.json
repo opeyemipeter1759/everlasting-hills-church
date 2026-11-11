@@ -2480,6 +2480,26 @@
         ],
         "type": "object"
       },
+      "InspectionCheckDto": {
+        "properties": {
+          "label": {
+            "example": "Cameras charged and mounted",
+            "type": "string"
+          },
+          "note": {
+            "example": "Camera 2 battery at 20%",
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "label",
+          "passed"
+        ],
+        "type": "object"
+      },
       "JoinDto": {
         "properties": {},
         "type": "object"
@@ -2883,6 +2903,25 @@
         },
         "required": [
           "email"
+        ],
+        "type": "object"
+      },
+      "PostReadinessUpdateDto": {
+        "properties": {
+          "note": {
+            "description": "Required for a blocker: what is wrong and what you need",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "READY",
+              "BLOCKED"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
         ],
         "type": "object"
       },
@@ -3582,6 +3621,61 @@
           "last_name",
           "decision"
         ],
+        "type": "object"
+      },
+      "SaveInspectionDto": {
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/InspectionCheckDto"
+            },
+            "type": "array"
+          },
+          "note": {
+            "description": "Overall note",
+            "type": "string"
+          },
+          "ready": {
+            "description": "For a department with no checklist yet: was it ready?",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "checks"
+        ],
+        "type": "object"
+      },
+      "SaveReadinessPlanDto": {
+        "properties": {
+          "canMeetDeadline": {
+            "description": "The unit can meet the ready-by deadline",
+            "type": "boolean"
+          },
+          "challenges": {
+            "description": "Anticipated challenges",
+            "type": "string"
+          },
+          "done": {
+            "description": "Preparation already completed",
+            "type": "string"
+          },
+          "equipment": {
+            "description": "Equipment and materials required",
+            "type": "string"
+          },
+          "outstanding": {
+            "description": "Preparation still outstanding",
+            "type": "string"
+          },
+          "support": {
+            "description": "Support required",
+            "type": "string"
+          },
+          "workers": {
+            "description": "Workers assigned and their availability",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "ScriptureDto": {
@@ -5083,6 +5177,31 @@
         },
         "required": [
           "status"
+        ],
+        "type": "object"
+      },
+      "UpdateReadinessUnitDto": {
+        "properties": {
+          "sundayChecklist": {
+            "example": [
+              "Cameras charged and mounted",
+              "Stream key tested"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "wednesdayChecklist": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sundayChecklist",
+          "wednesdayChecklist"
         ],
         "type": "object"
       },
@@ -37038,6 +37157,564 @@
         "summary": "Upload sermon audio through the API (PASTOR+ or Audio Production)",
         "tags": [
           "sermons"
+        ]
+      }
+    },
+    "/service-readiness/board": {
+      "get": {
+        "operationId": "ServiceReadinessController_getBoard",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Every unit for the next (or a chosen) Sunday or Wednesday service: submitted or not, approved, ready or blocked",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/mine": {
+      "get": {
+        "operationId": "ServiceReadinessPlansController_mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The units I lead, for the coming Sunday and Wednesday: my plan and updates, the roster, and last time's plan",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/services/{serviceId}/inspections/{round}": {
+      "get": {
+        "operationId": "ServiceReadinessController_getInspection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Inspect a service: each serving department's checklist, plan and saved result for the day-before or 2-hours-before round",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/services/{serviceId}/units/{unitId}/approve": {
+      "put": {
+        "operationId": "ServiceReadinessController_approve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Approve a unit's submitted plan for a service",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/services/{serviceId}/units/{unitId}/inspections/{round}": {
+      "put": {
+        "operationId": "ServiceReadinessController_saveInspection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveInspectionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Record one department's inspection: each checklist line ticked or not, and a note",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/services/{serviceId}/units/{unitId}/plan": {
+      "put": {
+        "operationId": "ServiceReadinessPlansController_savePlan",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveReadinessPlanDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Submit a unit's plan for a service (due 24 hours before it must be ready)",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/services/{serviceId}/units/{unitId}/updates": {
+      "post": {
+        "operationId": "ServiceReadinessPlansController_postUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostReadinessUpdateDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Post an update on a submitted plan: everything ready, or a blocker",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/setup": {
+      "get": {
+        "operationId": "ServiceReadinessController_getSetup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Each unit's Sunday and Wednesday inspection checklists, and the next services with ready-by times",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/units/{unitId}": {
+      "put": {
+        "operationId": "ServiceReadinessController_updateUnit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReadinessUnitDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Save one unit's Sunday / Wednesday checklists",
+        "tags": [
+          "service-readiness"
         ]
       }
     },
