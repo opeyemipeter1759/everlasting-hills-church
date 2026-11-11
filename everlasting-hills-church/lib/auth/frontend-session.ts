@@ -164,10 +164,10 @@ export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
   ["/dashboard/testimonies", "ADMIN"],
   ["/dashboard/questions", "ADMIN"],
   ["/dashboard/settings/homepage", "ADMIN"],
+  ["/dashboard/admin/service-readiness", "ADMIN_HEAD"], // Church Administrator: Admin Head and above
   ["/dashboard/admin", "ADMIN"],
-  // Membership and Assimilation unit pages. Signing in is enough to route
-  // here; which units a person can actually see comes from the API
-  // (GET /departments/my-units), which is also what builds their sidebar.
+  // Membership and Assimilation unit pages. Signing in is enough to route here; which
+  // units a person can see comes from GET /departments/my-units (it also builds the sidebar).
   ["/dashboard/membership-assimilation", "MEMBER"],
   // Growth & Outreach unit pages (Evangelism): same arrangement.
   ["/dashboard/growth-outreach", "MEMBER"],

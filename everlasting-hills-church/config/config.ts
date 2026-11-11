@@ -48,9 +48,8 @@ export type UserRole =
   | "MEMBER"
   | "VISITOR";
 
-// Admin merged into Admin Head — same level, full church-wide access. ADMIN is
-// legacy (kept only so existing grants keep working); ADMIN_HEAD is the name
-// used going forward.
+// Admin merged into Admin Head — same level, full church-wide access. ADMIN is legacy
+// (kept only so existing grants keep working); ADMIN_HEAD is the name used going forward.
 const LEVELS: Record<UserRole, number> = {
   VISITOR: 0,
   MEMBER: 1,
@@ -68,9 +67,8 @@ const CHURCH_WIDE_ROLES = new Set<UserRole>(["ADMIN", "ADMIN_HEAD", "PASTOR", "S
 const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER"]);
 
 export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
-  // Finance visibility does NOT follow the normal "any church-wide role passes
-  // a lateral gate" rule — only Pastor and Finance Head get through; even
-  // Admin, Admin Head, and Super Admin are deliberately excluded.
+  // Finance visibility does NOT follow the normal "any church-wide role passes a lateral gate"
+  // rule — only Pastor and Finance Head get through; even Admin, Admin Head and Super Admin are excluded.
   if (minRole === "FINANCE_HEAD") {
     return userRole === "FINANCE_HEAD" || userRole === "PASTOR";
   }
@@ -187,6 +185,7 @@ export const NAV_GROUPS: NavGroup[] = [
     section: "My Unit",
     items: [
       { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead", dynamicUnits: "lead" },
+      { label: "Service Plan", href: "/dashboard/service-readiness", icon: ClipboardList, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
     ],
   },
   {
@@ -203,6 +202,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
 
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
+      { label: "Service Readiness", href: "/dashboard/admin/service-readiness", icon: CheckCircle, minRole: "ADMIN_HEAD" },
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
       { label: "Prayer Watch",  href: "/dashboard/admin/prayer-watch",  icon: Clock,      minRole: "ADMIN" },

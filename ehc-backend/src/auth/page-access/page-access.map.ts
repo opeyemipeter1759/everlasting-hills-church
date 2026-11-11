@@ -77,6 +77,7 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
     paths: ['/users', '/units', '/departments', '/members/directory', '/assignments'],
   },
   { href: '/dashboard/admin/service-teams', role: Role.ADMIN, paths: ['/service-teams', '/departments', '/units'] },
+  { href: '/dashboard/admin/service-readiness', role: Role.ADMIN_HEAD, paths: ['/service-readiness'] },
   { href: '/dashboard/admin/services', role: Role.ADMIN, paths: ['/attendance/services'] },
   { href: '/dashboard/admin/units', role: Role.ADMIN, paths: ['/units', '/members/search'] },
   { href: '/dashboard/analytics/attendance', role: Role.ADMIN, paths: ['/analytics'] },
