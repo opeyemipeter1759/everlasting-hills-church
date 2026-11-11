@@ -2,17 +2,17 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
-import type { PlanInput, ReadinessStatus } from "@/lib/api/service-readiness-plans";
+import type { ReadinessStatus } from "@/lib/api/service-readiness-plans";
 
 const unitPath = (serviceId: string, unitId: string) =>
   `/service-readiness/services/${encodeURIComponent(serviceId)}/units/${encodeURIComponent(unitId)}`;
 
-/** A unit leader submits (or changes) the unit's plan; a change goes back for approval. */
-export function useSaveReadinessPlan() {
+/** A unit leader sends the unit's task list to the Administrator, who is emailed it. */
+export function useSendReadinessPlan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ serviceId, unitId, ...body }: PlanInput & { serviceId: string; unitId: string }) =>
-      api.put<{ saved: boolean }>(`${unitPath(serviceId, unitId)}/plan`, body),
+    mutationFn: ({ serviceId, unitId }: { serviceId: string; unitId: string }) =>
+      api.put<{ saved: boolean }>(`${unitPath(serviceId, unitId)}/plan`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["service-readiness"] }),
   });
 }

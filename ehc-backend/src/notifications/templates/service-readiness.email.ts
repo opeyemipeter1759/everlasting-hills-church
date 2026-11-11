@@ -9,13 +9,16 @@ export function lagosWhen(at: Date): string {
 }
 
 const para = (text: string) => `<p style="margin:0 0 14px">${escapeHtml(text)}</p>`;
+const list = (items: string[]) => `<ul style="margin:0 0 14px;padding-left:20px">${items.map((i) => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`;
 
-function email(to: string, subject: string, heading: string, lines: string[], cta: { label: string; href: string }, tag: string): SendEmailPayload {
+function email(
+  to: string, subject: string, heading: string, lines: string[], cta: { label: string; href: string }, tag: string, items: string[] = [],
+): SendEmailPayload {
   return {
     to,
     subject,
-    text: [...lines, '', `${cta.label}: ${cta.href}`, '', '— Everlasting Hills Church'].join('\n'),
-    html: renderEmailLayout({ heading, bodyHtml: lines.map(para).join(''), cta }),
+    text: [...lines, ...items.map((i) => `- ${i}`), '', `${cta.label}: ${cta.href}`, '', '— Everlasting Hills Church'].join('\n'),
+    html: renderEmailLayout({ heading, bodyHtml: lines.map(para).join('') + (items.length ? list(items) : ''), cta }),
     tag,
   };
 }
@@ -25,28 +28,41 @@ export function buildPlanReminderEmail(a: { to: string; unitName: string; day: s
   return email(
     a.to,
     `${a.unitName}: plan for ${a.day}'s service is due ${lagosWhen(a.planDue)}`,
-    `Submit ${a.unitName}'s plan`,
+    `Send ${a.unitName}'s plan`,
     [
-      `${a.unitName} hasn't submitted its plan for ${a.day}'s service yet.`,
-      `It's due ${lagosWhen(a.planDue)}: who is serving, the equipment you need, what's done and anything outstanding.`,
+      `${a.unitName} hasn't sent its plan for ${a.day}'s service yet.`,
+      `It's due ${lagosWhen(a.planDue)}. List the tasks your unit needs to get done for the service, then send the plan.`,
     ],
-    { label: 'Submit the plan', href: a.link },
+    { label: 'Open my service plan', href: a.link },
     'readiness-plan-reminder',
   );
 }
 
-/** To Admin, Admin Head, Super Admin and Pastor: a unit submitted (or changed) its plan. */
-export function buildPlanSubmittedEmail(a: { to: string; unitName: string; day: string; by: string; changed: boolean; needs: string | null; link: string }) {
+/** To a unit's leaders: the Administrator added tasks to their plan. */
+export function buildTasksAddedEmail(a: { to: string; unitName: string; day: string; by: string; titles: string[]; link: string }) {
+  const many = a.titles.length > 1;
   return email(
     a.to,
-    `${a.unitName} ${a.changed ? 'updated' : 'submitted'} its plan for ${a.day}`,
-    `${a.unitName}'s plan is ${a.changed ? 'updated' : 'in'}`,
-    [
-      `${a.by} ${a.changed ? 'updated' : 'submitted'} ${a.unitName}'s plan for ${a.day}'s service. It's waiting for your approval.`,
-      ...(a.needs ? [`They need: ${a.needs}`] : []),
-    ],
+    `${a.by} added ${many ? `${a.titles.length} tasks` : 'a task'} to ${a.unitName}'s plan for ${a.day}`,
+    `New task${many ? 's' : ''} for ${a.unitName}`,
+    [`${a.by} added ${many ? 'these tasks' : 'this task'} to ${a.unitName}'s plan for ${a.day}'s service:`],
+    { label: 'Open my service plan', href: a.link },
+    'readiness-task-added',
+    a.titles,
+  );
+}
+
+/** To Admin, Admin Head, Super Admin and Pastor: a unit submitted (or re-sent) its plan. */
+export function buildPlanSubmittedEmail(a: { to: string; unitName: string; day: string; by: string; changed: boolean; tasks: string[]; link: string }) {
+  const verb = a.changed ? 're-sent' : 'sent';
+  return email(
+    a.to,
+    `${a.unitName} ${verb} its plan for ${a.day}`,
+    `${a.unitName}'s plan is in`,
+    [`${a.by} ${verb} ${a.unitName}'s plan for ${a.day}'s service. It's waiting for your approval.`, ...(a.tasks.length ? ['Their tasks:'] : [])],
     { label: 'Review and approve', href: a.link },
     'readiness-plan-submitted',
+    a.tasks,
   );
 }
 

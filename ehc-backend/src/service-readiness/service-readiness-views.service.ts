@@ -57,7 +57,7 @@ export class ServiceReadinessViewsService {
     return { services: services.map(serviceView), selectedId: selected.id, rows };
   }
 
-  /** The units this person leads, for each coming service: their plan and updates, the roster, and last time's plan. */
+  /** The units this person leads, for each coming service: their tasks and updates, and last time's task list to copy. */
   async mine(actor: AuthUser) {
     const unitIds = await unitsHeadedBy(this.prisma, this.tenantId, actor);
     if (!unitIds.length) return { items: [] };
@@ -80,14 +80,14 @@ export class ServiceReadinessViewsService {
         const previous = await this.prisma.serviceReadiness.findFirst({
           where: { unitId, state: { not: ReadinessState.NOT_STARTED }, Service: { serviceType: service.serviceType, scheduledAt: { lt: service.scheduledAt } } },
           orderBy: { Service: { scheduledAt: 'desc' } },
-          select: { workers: true, equipment: true, done: true, outstanding: true, challenges: true, support: true },
+          select: { Tasks: { orderBy: { position: 'asc' }, select: { title: true } } },
         });
         return {
           service: serviceView(service),
           unit: { id: unitId, name: Unit.name },
           plan,
           roster: roster.filter((r) => r.serviceId === serviceId && r.unitId === unitId).map((r) => `${fullName(r.Member)} (${r.role})`),
-          previous,
+          previous: previous?.Tasks.length ? previous.Tasks.map((t) => t.title) : null,
         };
       }),
     );

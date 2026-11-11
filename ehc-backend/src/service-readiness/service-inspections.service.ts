@@ -42,6 +42,7 @@ export class ServiceInspectionsService {
         select: {
           id: true, unitId: true, state: true, outstanding: true, support: true, canMeetDeadline: true,
           approvedAt: true, status: true, blocker: true,
+          Tasks: { where: { done: false }, orderBy: { position: 'asc' }, select: { title: true } },
           Unit: { select: { name: true } },
           Inspections: { where: { round }, select: { result: true, checks: true, note: true, inspectedAt: true } },
         },
@@ -58,8 +59,9 @@ export class ServiceInspectionsService {
       round,
       dueAt: times.inspections[round].toISOString(),
       rows: records
-        .map(({ id, Unit, Inspections, ...plan }) => ({
+        .map(({ id, Unit, Inspections, Tasks, ...plan }) => ({
           readinessId: id,
+          openTasks: Tasks.map((t) => t.title),
           ...plan,
           unitName: Unit.name,
           planMissing: plan.state === ReadinessState.NOT_STARTED,

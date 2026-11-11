@@ -9,7 +9,7 @@ vi.mock("@/components/ui/toast/toast", () => ({ showToast: { success: vi.fn(), e
 
 const row: InspectionRow = {
   readinessId: "r1", unitId: "u-av", unitName: "Audio & Video Streaming", state: "CONFIRMED", planMissing: false,
-  outstanding: "Test the stream", support: "Spare HDMI cable", canMeetDeadline: true, approvedAt: null, status: null, blocker: null,
+  outstanding: "Test the stream", support: "Spare HDMI cable", canMeetDeadline: true, approvedAt: null, status: null, blocker: null, openTasks: ["Test the stream"],
   checklist: ["Cameras mounted", "Stream key tested"], inspection: null,
 };
 
@@ -21,7 +21,7 @@ afterEach(() => {
 describe("inspecting a department", () => {
   it("shows what the plan still needs at the day-before inspection", () => {
     render(<InspectionCard row={row} serviceId="s1" round="DAY_BEFORE" />);
-    expect(screen.getByText(/Needs: Spare HDMI cable · Outstanding: Test the stream/)).toBeInTheDocument();
+    expect(screen.getByText(/Still to do: Test the stream/)).toBeInTheDocument();
   });
 
   it("sends each checklist line as ticked or not, with the note", () => {

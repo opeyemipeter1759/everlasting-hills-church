@@ -7878,13 +7878,48 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Submit a unit's plan for a service (due 24 hours before it must be ready) */
+        /** Send a unit's plan (its task list) to the Administrator; due 24 hours before the service must be ready */
         put: operations["ServiceReadinessPlansController_savePlan"];
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/units/{unitId}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add tasks to a unit's plan for a service */
+        post: operations["ServiceReadinessTasksController_add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/units/{unitId}/tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a task */
+        delete: operations["ServiceReadinessTasksController_remove"];
+        options?: never;
+        head?: never;
+        /** Tick a task off, or rename it */
+        patch: operations["ServiceReadinessTasksController_update"];
         trace?: never;
     };
     "/service-readiness/services/{serviceId}/units/{unitId}/updates": {
@@ -9042,6 +9077,15 @@ export interface components {
             body: string;
             /** @description The message this answers, when it is a reply. */
             parentId?: string;
+        };
+        AddReadinessTasksDto: {
+            /**
+             * @example [
+             *       "Test the wireless mics",
+             *       "Charge camera batteries"
+             *     ]
+             */
+            titles: string[];
         };
         ApiError: {
             /** @example BAD_REQUEST */
@@ -11224,6 +11268,10 @@ export interface components {
              * @enum {string}
              */
             status: "PENDING" | "ANSWERED";
+        };
+        UpdateReadinessTaskDto: {
+            done?: boolean;
+            title?: string;
         };
         UpdateReadinessUnitDto: {
             /**
@@ -30383,6 +30431,118 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SaveReadinessPlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessTasksController_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddReadinessTasksDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessTasksController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessTasksController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReadinessTaskDto"];
             };
         };
         responses: {

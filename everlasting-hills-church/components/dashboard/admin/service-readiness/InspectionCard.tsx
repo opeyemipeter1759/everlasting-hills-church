@@ -34,9 +34,9 @@ export default function InspectionCard({ row, serviceId, round }: { row: Inspect
         {round === "DAY_BEFORE" && <StateChip plan={row} />}
         {saved && <ResultChip result={saved.result} />}
       </div>
-      {round === "DAY_BEFORE" && (row.support || row.outstanding || row.planMissing || row.blocker) && (
+      {round === "DAY_BEFORE" && (row.openTasks.length > 0 || row.planMissing || row.blocker) && (
         <p className="mt-2 rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
-          {row.planMissing ? "No plan submitted." : [row.blocker && `Blocker: ${row.blocker}`, row.support && `Needs: ${row.support}`, row.outstanding && `Outstanding: ${row.outstanding}`].filter(Boolean).join(" · ")}
+          {row.planMissing ? "No plan submitted." : [row.blocker && `Blocker: ${row.blocker}`, row.openTasks.length > 0 && `Still to do: ${row.openTasks.join(", ")}`].filter(Boolean).join(" · ")}
         </p>
       )}
       {row.checklist.length ? (

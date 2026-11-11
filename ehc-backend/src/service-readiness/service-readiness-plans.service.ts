@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { ReadinessState, ServiceType } from '@prisma/client';
@@ -66,9 +66,11 @@ export class ServiceReadinessPlansService {
     });
   }
 
-  /** Submits (or changes) a unit's plan. A change needs approving again. */
+  /** Sends a unit's plan (its task list) to the Administrator. Sending again needs approving again. */
   async savePlan(actor: AuthUser, serviceId: string, unitId: string, dto: SaveReadinessPlanDto) {
     const record = await readinessRecordFor(this.prisma, this.tenantId, actor, serviceId, unitId);
+    const tasks = await this.prisma.readinessTask.findMany({ where: { readinessId: record.id }, orderBy: { position: 'asc' }, select: { title: true } });
+    if (!tasks.length) throw new BadRequestException('Add at least one task before sending the plan');
     const text = Object.fromEntries(PLAN_FIELDS.map((f) => [f, dto[f]?.trim() || null]));
     await this.prisma.serviceReadiness.update({
       where: { id: record.id },
@@ -87,7 +89,7 @@ export class ServiceReadinessPlansService {
       unitName: record.Unit.name,
       byProfileId: actor.profileId,
       changed: record.state !== ReadinessState.NOT_STARTED,
-      needs: (text.support as string | null) ?? null,
+      tasks: tasks.map((t) => t.title),
     });
     return { saved: true };
   }
