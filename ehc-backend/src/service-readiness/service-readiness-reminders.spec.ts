@@ -43,6 +43,7 @@ describe('the readiness board', () => {
   it('lists overdue, then not submitted, blocked, waiting for approval, approved', async () => {
     const row = (unit: string, state: string, extra: Record<string, unknown> = {}) => ({
       state, unitId: unit, confirmedById: null, approvedById: null, approvedAt: null, status: null, Updates: [],
+      Tasks: [{ id: `t-${unit}`, title: 'Test the mics', done: false, byAdministrator: false }],
       Unit: { name: unit, Department: null }, Inspections: [], ...extra,
     });
     const prisma = {
@@ -62,5 +63,8 @@ describe('the readiness board', () => {
     expect(before.rows.map((r) => r.unitName)).toEqual(['Sanitation', 'Ushering', 'Media', 'Worship']);
     const after = await views.board(undefined, new Date('2026-11-14T08:00:00Z'));
     expect(after.rows[0]).toMatchObject({ unitName: 'Sanitation', overdue: true });
+    // The page reads these lower-case names; Prisma's relation names must not leak through.
+    expect(after.rows[0].tasks).toEqual([{ id: 't-Sanitation', title: 'Test the mics', done: false, byAdministrator: false }]);
+    expect(after.rows[0]).not.toHaveProperty('Tasks');
   });
 });

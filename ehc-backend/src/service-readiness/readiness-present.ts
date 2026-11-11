@@ -21,7 +21,8 @@ export const serviceView = (s: Upcoming) => ({
     : null,
 });
 
-type WithPeople = { confirmedById: string | null; approvedById: string | null; Updates: { byId: string | null }[] };
+type Task = { id: string; title: string; done: boolean; byAdministrator: boolean };
+type WithPeople = { confirmedById: string | null; approvedById: string | null; Updates: { byId: string | null }[]; Tasks: Task[] };
 
 /** Plans with names in place of profile ids, looked up in one query. */
 export async function presentPlans<T extends WithPeople>(prisma: PrismaService, records: T[]) {
@@ -33,9 +34,11 @@ export async function presentPlans<T extends WithPeople>(prisma: PrismaService, 
   const byProfile = new Map(people.map((p) => [p.profileId, fullName(p)]));
   const nameOf = (id: string | null) => (id ? (byProfile.get(id) ?? null) : null);
   return records.map((r) => {
-    const { confirmedById, approvedById, Updates, ...rest } = r;
+    const { confirmedById, approvedById, Updates, Tasks, ...rest } = r;
     return {
       ...rest,
+      // The pages read `tasks` and `updates`, in lower case.
+      tasks: Tasks,
       confirmedBy: nameOf(confirmedById),
       approvedBy: nameOf(approvedById),
       updates: Updates.map(({ byId, ...u }) => ({ ...u, by: nameOf(byId) })),
