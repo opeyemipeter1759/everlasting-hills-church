@@ -33,7 +33,7 @@ export class ServiceReadinessPlansController {
   }
 
   @Put('services/:serviceId/units/:unitId/plan')
-  @ApiOperation({ summary: "Submit a unit's plan for a service (due 24 hours before it must be ready)" })
+  @ApiOperation({ summary: "Send a unit's plan (its task list) to the Administrator; due 24 hours before the service must be ready" })
   savePlan(
     @CurrentUser() actor: AuthUser,
     @Param('serviceId') serviceId: string,

@@ -20,7 +20,7 @@ export default function ServiceReadinessAdmin() {
       <header>
         <h1 className="text-2xl font-black tracking-tight text-[#111] dark:text-white">Service readiness</h1>
         <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-white/55">
-          Every department plans 24 hours ahead and is inspected twice: the day before, and 2 hours before the service (Sunday 6:00 am, Wednesday 3:30 pm).
+          Each unit lists its tasks for every service and sends the plan 24 hours ahead. Approve plans, add tasks, and inspect units the day before and 2 hours before.
         </p>
       </header>
       <div role="tablist" aria-label="Service readiness" className="flex gap-1 border-b border-gray-200 dark:border-white/10">

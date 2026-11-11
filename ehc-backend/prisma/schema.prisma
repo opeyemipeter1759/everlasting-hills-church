@@ -1523,6 +1523,7 @@ model Tenant {
   ServiceReadiness         ServiceReadiness[]
   ServiceInspection        ServiceInspection[]
   ReadinessUpdate          ReadinessUpdate[]
+  ReadinessTask            ReadinessTask[]
 }
 
 /// Church-owned physical assets: equipment, furniture, AV/media gear, vehicles,
@@ -1871,6 +1872,7 @@ model ServiceReadiness {
   Unit            Unit                @relation(fields: [unitId], references: [id], onDelete: Cascade)
   Inspections     ServiceInspection[]
   Updates         ReadinessUpdate[]
+  Tasks           ReadinessTask[]
 
   @@unique([serviceId, unitId])
   @@index([tenantId, state])
@@ -1896,6 +1898,29 @@ model ReadinessUpdate {
   Readiness   ServiceReadiness @relation(fields: [readinessId], references: [id], onDelete: Cascade)
 
   @@index([readinessId, createdAt])
+}
+
+/// One thing a unit has to get done before a service. Unit leaders write
+/// their own; the Church Administrator can add to them.
+model ReadinessTask {
+  id              String           @id
+  tenantId        String
+  readinessId     String
+  title           String
+  position        Int              @default(0)
+  done            Boolean          @default(false)
+  doneAt          DateTime?
+  /// Profile.id of whoever ticked it off.
+  doneById        String?
+  /// Profile.id of whoever added it.
+  createdById     String?
+  /// Added by the Church Administrator rather than the unit.
+  byAdministrator Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  Tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  Readiness       ServiceReadiness @relation(fields: [readinessId], references: [id], onDelete: Cascade)
+
+  @@index([readinessId, position])
 }
 
 enum InspectionRound {

@@ -8,11 +8,12 @@ const actor = (over: Record<string, unknown> = {}) =>
   ({ userId: 'auth', email: 'a@b.c', role: Role.MEMBER, effectiveRoles: [Role.MEMBER], unitLeadOf: [], hodOf: [], headUsher: false,
     profileId: 'p-head', memberId: 'm-head', tenantId: null, ...over }) as never;
 
-function build(opts: { heads?: { unitId: string }[]; state?: string } = {}) {
+function build(opts: { heads?: { unitId: string }[]; state?: string; tasks?: { title: string }[] } = {}) {
   const record = { id: 'r1', state: opts.state ?? 'NOT_STARTED', Unit: { name: 'Projection' }, Service: { serviceType: 'SUNDAY' } };
   const prisma = {
     serviceReadiness: { findFirst: jest.fn().mockResolvedValue(record), update: jest.fn().mockReturnValue('update') },
     readinessUpdate: { create: jest.fn().mockReturnValue('create') },
+    readinessTask: { findMany: jest.fn().mockResolvedValue(opts.tasks ?? [{ title: 'Test the mics' }]) },
     unitMember: { findMany: jest.fn().mockResolvedValue(opts.heads ?? [{ unitId: 'u-av' }]) },
     unit: { findMany: jest.fn().mockResolvedValue([]) },
     $transaction: jest.fn().mockResolvedValue([]),
@@ -24,13 +25,17 @@ function build(opts: { heads?: { unitId: string }[]; state?: string } = {}) {
 }
 
 describe('a unit submitting its plan', () => {
-  it('saves it as submitted, clears any approval, and emails the administrators', async () => {
+  it('sends it, clears any approval, and emails the administrators its tasks', async () => {
     const { svc, prisma, notify } = build();
     await expect(svc.savePlan(actor(), 's1', 'u-av', { workers: ' Ada, Tunde ', support: 'HDMI cable' })).resolves.toEqual({ saved: true });
     expect(prisma.serviceReadiness.update.mock.calls[0][0].data).toMatchObject({
       workers: 'Ada, Tunde', state: 'CONFIRMED', confirmedById: 'p-head', approvedAt: null, approvedById: null,
     });
-    expect(notify.planSubmitted).toHaveBeenCalledWith(expect.objectContaining({ unitName: 'Projection', changed: false, needs: 'HDMI cable' }));
+    expect(notify.planSubmitted).toHaveBeenCalledWith(expect.objectContaining({ unitName: 'Projection', changed: false, tasks: ['Test the mics'] }));
+  });
+
+  it('needs at least one task', async () => {
+    await expect(build({ tasks: [] }).svc.savePlan(actor(), 's1', 'u-av', {})).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('tells the administrators when a submitted plan is changed', async () => {

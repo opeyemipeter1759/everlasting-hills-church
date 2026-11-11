@@ -41,6 +41,24 @@
         ],
         "type": "object"
       },
+      "AddReadinessTasksDto": {
+        "properties": {
+          "titles": {
+            "example": [
+              "Test the wireless mics",
+              "Charge camera batteries"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "titles"
+        ],
+        "type": "object"
+      },
       "ApiError": {
         "properties": {
           "code": {
@@ -5178,6 +5196,18 @@
         "required": [
           "status"
         ],
+        "type": "object"
+      },
+      "UpdateReadinessTaskDto": {
+        "properties": {
+          "done": {
+            "type": "boolean"
+          },
+          "title": {
+            "maxLength": 200,
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "UpdateReadinessUnitDto": {
@@ -37425,7 +37455,233 @@
             "access-token": []
           }
         ],
-        "summary": "Submit a unit's plan for a service (due 24 hours before it must be ready)",
+        "summary": "Send a unit's plan (its task list) to the Administrator; due 24 hours before the service must be ready",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/services/{serviceId}/units/{unitId}/tasks": {
+      "post": {
+        "operationId": "ServiceReadinessTasksController_add",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddReadinessTasksDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Add tasks to a unit's plan for a service",
+        "tags": [
+          "service-readiness"
+        ]
+      }
+    },
+    "/service-readiness/services/{serviceId}/units/{unitId}/tasks/{taskId}": {
+      "delete": {
+        "operationId": "ServiceReadinessTasksController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove a task",
+        "tags": [
+          "service-readiness"
+        ]
+      },
+      "patch": {
+        "operationId": "ServiceReadinessTasksController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "serviceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "unitId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "taskId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReadinessTaskDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Tick a task off, or rename it",
         "tags": [
           "service-readiness"
         ]

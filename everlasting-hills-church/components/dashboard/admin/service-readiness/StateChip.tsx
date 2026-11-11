@@ -7,10 +7,10 @@ const GREEN = "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-e
 
 type ChipPlan = Pick<ReadinessPlan, "state" | "status" | "approvedAt">;
 
-/** Where a unit's plan stands, most urgent first: overdue, not submitted, blocked, awaiting approval, approved. */
+/** Where a unit's plan stands, most urgent first: overdue, not sent, blocked, awaiting approval, approved. */
 export function planLabel(plan: ChipPlan, overdue = false): [string, string] {
   if (overdue) return ["Overdue", RED];
-  if (plan.state === "NOT_STARTED") return ["Not submitted", GREY];
+  if (plan.state === "NOT_STARTED") return ["Not sent", GREY];
   if (plan.status === "BLOCKED") return ["Blocked", RED];
   if (!plan.approvedAt) return ["Awaiting approval", AMBER];
   return [plan.status === "READY" ? "Approved · Ready" : "Approved", GREEN];

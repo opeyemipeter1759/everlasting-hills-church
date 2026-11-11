@@ -22,6 +22,8 @@ export interface InspectionRow {
   approvedAt: string | null;
   status: ReadinessStatus | null;
   blocker: string | null;
+  /** The unit's tasks not yet ticked off. */
+  openTasks: string[];
   /** The unit's checklist for this kind of service, in order. */
   checklist: string[];
   inspection: { result: InspectionResult; checks: InspectionCheck[]; note: string | null; inspectedAt: string } | null;

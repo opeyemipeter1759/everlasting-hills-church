@@ -7,6 +7,7 @@ export const PLAN_SELECT = {
   canMeetDeadline: true, confirmedAt: true, confirmedById: true, approvedAt: true, approvedById: true,
   status: true, blocker: true, statusUpdatedAt: true,
   Updates: { orderBy: { createdAt: 'asc' as const }, select: { status: true, note: true, byId: true, createdAt: true } },
+  Tasks: { orderBy: { position: 'asc' as const }, select: { id: true, title: true, done: true, byAdministrator: true } },
 } as const;
 
 export const fullName = (m: { firstName: string; lastName: string }) => `${m.firstName} ${m.lastName}`.trim();

@@ -3,18 +3,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 
-/** NOT_STARTED = not submitted; CONFIRMED = submitted. (AT_RISK is no longer set.) */
+/** NOT_STARTED = not sent yet; CONFIRMED = sent to the Administrator. (AT_RISK is no longer set.) */
 export type ReadinessState = "NOT_STARTED" | "CONFIRMED" | "AT_RISK";
 export type ReadinessStatus = "READY" | "BLOCKED";
 
-/** A unit's Stage 1 plan, in the manual's order. */
-export interface ReadinessPlanFields {
-  workers: string | null;
-  equipment: string | null;
-  done: string | null;
-  outstanding: string | null;
-  challenges: string | null;
-  support: string | null;
+/** One thing a unit has to get done before the service. */
+export interface ReadinessTask {
+  id: string;
+  title: string;
+  done: boolean;
+  /** Added by the Church Administrator rather than the unit. */
+  byAdministrator: boolean;
 }
 
 export interface ReadinessUpdate {
@@ -24,9 +23,10 @@ export interface ReadinessUpdate {
   createdAt: string;
 }
 
-export interface ReadinessPlan extends ReadinessPlanFields {
+/** A unit's plan for a service: its task list, where it stands, and its updates. */
+export interface ReadinessPlan {
   state: ReadinessState;
-  canMeetDeadline: boolean | null;
+  tasks: ReadinessTask[];
   confirmedAt: string | null;
   confirmedBy: string | null;
   approvedAt: string | null;
@@ -70,13 +70,9 @@ export interface MyReadinessItem {
   service: ReadinessServiceRef;
   unit: { id: string; name: string };
   plan: ReadinessPlan;
-  /** Who is on this service's roster for the unit: "Ada Obi (Camera)". */
-  roster: string[];
-  /** The unit's plan for the last service of this kind, to start from. */
-  previous: ReadinessPlanFields | null;
+  /** The unit's task list from the last service of this kind, to copy. */
+  previous: string[] | null;
 }
-
-export type PlanInput = Partial<Record<keyof ReadinessPlanFields, string>>;
 
 /** The Church Administrator's board for the next (or a chosen) service. Refreshes every minute. */
 export function useReadinessBoard(serviceId: string | null) {

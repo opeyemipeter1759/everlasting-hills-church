@@ -11,11 +11,13 @@ import { ServiceReadinessRemindersService } from './service-readiness-reminders.
 import { ServiceInspectionsService } from './service-inspections.service';
 import { ServiceReadinessNotifyService } from './service-readiness-notify.service';
 import { ServiceReadinessUpdatesService } from './service-readiness-updates.service';
+import { ServiceReadinessTasksService } from './service-readiness-tasks.service';
+import { ServiceReadinessTasksController } from './service-readiness-tasks.controller';
 
 /** Service Readiness (Administration Manual): setup, departments' plans, the board and reminders. */
 @Module({
   imports: [PrismaModule, PushModule],
-  controllers: [ServiceReadinessController, ServiceReadinessPlansController],
+  controllers: [ServiceReadinessController, ServiceReadinessPlansController, ServiceReadinessTasksController],
   providers: [
     ServiceReadinessSetupService,
     ServiceCalendarService,
@@ -25,6 +27,7 @@ import { ServiceReadinessUpdatesService } from './service-readiness-updates.serv
     ServiceInspectionsService,
     ServiceReadinessNotifyService,
     ServiceReadinessUpdatesService,
+    ServiceReadinessTasksService,
   ],
   exports: [ServiceCalendarService, ServiceReadinessRemindersService],
 })
