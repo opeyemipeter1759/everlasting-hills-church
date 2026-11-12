@@ -11,18 +11,6 @@ import { userMessageForError } from "@/lib/api/user-message";
 import { askHillsBot } from "@/lib/api/help-chat";
 import { findSection, matchTopic } from "@/lib/help/help-content";
 
-const ROLE_LABELS: Record<string, string> = {
-  MEMBER: "Member",
-  UNIT_LEAD: "Unit Lead",
-  HEAD_USHER: "Head Usher",
-  FINANCE_HEAD: "Finance Head",
-  HOD: "Unit Head",
-  ADMIN_HEAD: "Admin Head",
-  ADMIN: "Admin",
-  PASTOR: "Pastor",
-  SUPER_ADMIN: "Super Admin",
-};
-
 interface Answer {
   steps: string[];
   cta?: { label: string; href: string };
@@ -67,7 +55,7 @@ export default function HelpChatWidget() {
     setMessages((prev) => [...prev, { id: newId(), kind: "user", text: question }, { id: loadingId, kind: "loading" }]);
 
     try {
-      const result = await askHillsBot(question, { pathname, role: role ? (ROLE_LABELS[role] ?? "Member") : "Member" });
+      const result = await askHillsBot(question, { pathname, role: role ?? "MEMBER" });
       const answer: Message =
         result.confident && result.steps.length > 0
           ? {
