@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ArrowRight, Loader2, MessageCircleQuestion, Send, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { ArrowRight, Loader2, MessageCircleQuestion, Send, X } from "lucide-react";
 import { apiClient } from "@/lib/api/axios";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { normalizeRole } from "@/lib/auth/frontend-session";
@@ -117,30 +117,38 @@ export default function HelpChatWidget() {
   return (
     <>
       {open && (
-        <div className="fixed inset-x-3 bottom-24 z-50 flex max-h-[min(640px,calc(100dvh-7rem))] flex-col overflow-hidden rounded-2xl border border-[#E4D6C7] bg-white shadow-2xl dark:border-white/10 dark:bg-[#1A1210] sm:inset-x-auto sm:bottom-24 sm:right-6 sm:w-[400px]">
+        <div className="fixed inset-0 z-50 flex flex-col bg-[#150D10] sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[560px] sm:max-h-[calc(100vh-3rem)] sm:w-[380px] sm:rounded-2xl sm:border sm:border-white/10 sm:shadow-2xl">
           {/* Header */}
-          <div className="flex items-start justify-between gap-2 bg-[#87102C] px-4 py-3.5 text-white">
-            <div className="min-w-0">
-              <p className="flex items-center gap-1.5 text-sm font-bold">
-                <MessageCircleQuestion size={16} aria-hidden="true" />
-                HillsBot
-              </p>
-              <p className="mt-0.5 text-xs text-white/75">Here to help with anything on the site</p>
+          <div className="flex items-start justify-between gap-2 bg-[#87102C] px-4 pb-3.5 pt-[max(0.875rem,env(safe-area-inset-top))]">
+            <div className="flex min-w-0 items-start gap-2.5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                <MessageCircleQuestion size={18} className="text-white" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 pt-0.5">
+                <p className="flex items-center gap-1.5 text-[15px] font-bold text-white">
+                  HillsBot
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    Online
+                  </span>
+                </p>
+                <p className="mt-0.5 text-xs text-white/70">Here to help with anything on the site</p>
+              </div>
             </div>
             <button
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Close HillsBot"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 hover:bg-white/25"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
             >
-              <X size={14} />
+              <X size={15} />
             </button>
           </div>
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
             {messages.length === 0 && (
-              <p className="text-sm text-gray-600 dark:text-white/70">
+              <p className="text-sm text-white/70">
                 Hi{user?.fullName ? ` ${user.fullName.split(" ")[0]}` : ""}! How can I help you today?
               </p>
             )}
@@ -159,28 +167,28 @@ export default function HelpChatWidget() {
                     key={m.id}
                     role="status"
                     aria-label="HillsBot is typing"
-                    className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-sm border border-[#E4D6C7] bg-white px-4 py-3.5 dark:border-white/10 dark:bg-white/[0.03]"
+                    className="flex w-fit items-center gap-1 rounded-2xl rounded-bl-sm border border-white/10 bg-white/[0.04] px-4 py-3.5"
                   >
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#87102C]/50 [animation-delay:-0.3s] dark:bg-[#e8768a]/60" />
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#87102C]/50 [animation-delay:-0.15s] dark:bg-[#e8768a]/60" />
-                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#87102C]/50 dark:bg-[#e8768a]/60" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#e8768a]/70 [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#e8768a]/70 [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#e8768a]/70" />
                   </div>
                 );
               }
               if (m.kind === "fallback") {
                 return (
-                  <div key={m.id} className="max-w-[90%] rounded-2xl rounded-bl-sm border border-[#E4D6C7] bg-white px-3.5 py-3 text-sm text-gray-700 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/80">
+                  <div key={m.id} className="max-w-[90%] rounded-2xl rounded-bl-sm border border-white/10 bg-white/[0.04] px-3.5 py-3 text-sm text-white/80">
                     I don&apos;t have an answer for that yet. Try rephrasing, or talk to a person below — someone will get back to you.
                   </div>
                 );
               }
               return (
-                <div key={m.id} className="max-w-[90%] rounded-2xl rounded-bl-sm border border-[#E4D6C7] bg-white px-3.5 py-3 dark:border-white/10 dark:bg-white/[0.03]">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">Here&apos;s how it works:</p>
+                <div key={m.id} className="max-w-[90%] rounded-2xl rounded-bl-sm border border-white/10 bg-white/[0.04] px-3.5 py-3">
+                  <p className="text-sm font-semibold text-white">Here&apos;s how it works:</p>
                   <ol className="mt-2 space-y-1.5">
                     {m.answer.steps.map((step, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700 dark:text-white/80">
-                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#87102C]/10 text-[10px] font-bold text-[#87102C] dark:bg-[#e8768a]/15 dark:text-[#e8768a]">
+                      <li key={i} className="flex items-start gap-2 text-sm text-white/80">
+                        <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#e8768a]/15 text-[10px] font-bold text-[#e8768a]">
                           {i + 1}
                         </span>
                         {step}
@@ -190,35 +198,33 @@ export default function HelpChatWidget() {
                   {m.answer.cta && (
                     <a
                       href={m.answer.cta.href}
-                      className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#87102C] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#6f0d24]"
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#87102C] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#9c1636]"
                     >
                       {m.answer.cta.label}
                       <ArrowRight size={12} aria-hidden="true" />
                     </a>
                   )}
-                  <div className="mt-3 flex items-center gap-2 border-t border-[#E4D6C7] pt-2.5 dark:border-white/10">
+                  <div className="mt-3 flex items-center gap-2 border-t border-white/10 pt-2.5">
                     {m.feedback ? (
-                      <p className="text-xs text-gray-500 dark:text-white/50">
+                      <p className="text-xs text-white/50">
                         {m.feedback === "yes" ? "Glad that helped!" : "Thanks — let's get you to a person."}
                       </p>
                     ) : (
                       <>
-                        <span className="text-xs text-gray-500 dark:text-white/50">Did this help?</span>
+                        <span className="text-xs text-white/50">Did this help?</span>
                         <button
                           type="button"
                           onClick={() => setFeedback(m.id, "yes")}
-                          aria-label="Yes, this helped"
-                          className="rounded-lg p-1 text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10"
+                          className="rounded-full border border-white/15 px-2.5 py-1 text-xs font-semibold text-white/80 hover:border-emerald-400/40 hover:text-emerald-300"
                         >
-                          <ThumbsUp size={13} />
+                          Yes
                         </button>
                         <button
                           type="button"
                           onClick={() => setFeedback(m.id, "no")}
-                          aria-label="Not really"
-                          className="rounded-lg p-1 text-gray-400 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10"
+                          className="rounded-full border border-white/15 px-2.5 py-1 text-xs font-semibold text-white/80 hover:border-rose-400/40 hover:text-rose-300"
                         >
-                          <ThumbsDown size={13} />
+                          Not really
                         </button>
                       </>
                     )}
@@ -228,26 +234,26 @@ export default function HelpChatWidget() {
             })}
 
             {contactOpen && (
-              <div className="rounded-2xl border border-[#E4D6C7] bg-[#FBF6EF] p-3.5 dark:border-white/10 dark:bg-white/[0.03]">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3.5">
                 {sent ? (
-                  <p className="text-sm text-gray-700 dark:text-white/80">
+                  <p className="text-sm text-white/80">
                     Thanks — your question has been sent to the church team. We&apos;ll get back to you soon.
                   </p>
                 ) : (
                   <>
-                    <p className="text-xs font-semibold text-gray-600 dark:text-white/60">Talk to a person</p>
+                    <p className="text-xs font-semibold text-white/60">Talk to a person</p>
                     <textarea
                       value={contactText}
                       onChange={(e) => setContactText(e.target.value)}
                       rows={3}
                       placeholder="What do you need help with?"
-                      className="mt-1.5 w-full rounded-xl border border-[#E4D6C7] bg-white px-3 py-2 text-sm outline-none focus:border-[#87102C] dark:border-white/10 dark:bg-white/5 dark:text-white"
+                      className="mt-1.5 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#e8768a]/50"
                     />
                     <button
                       type="button"
                       onClick={submitContact}
                       disabled={sending}
-                      className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-[#87102C] px-3.5 text-xs font-semibold text-white hover:bg-[#6f0d24] disabled:opacity-60"
+                      className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-[#87102C] px-3.5 text-xs font-semibold text-white hover:bg-[#9c1636] disabled:opacity-60"
                     >
                       {sending && <Loader2 size={13} className="animate-spin" aria-hidden="true" />}
                       Send to the church team
@@ -259,7 +265,7 @@ export default function HelpChatWidget() {
           </div>
 
           {/* Composer */}
-          <div className="border-t border-[#E4D6C7] p-3 dark:border-white/10">
+          <div className="border-t border-white/10 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="flex items-center gap-2">
               <input
                 value={input}
@@ -268,23 +274,23 @@ export default function HelpChatWidget() {
                   if (e.key === "Enter") handleSend();
                 }}
                 placeholder="Type your question..."
-                className="min-h-10 flex-1 rounded-xl border border-[#E4D6C7] bg-white px-3 text-sm outline-none focus:border-[#87102C] dark:border-white/10 dark:bg-white/5 dark:text-white"
+                className="min-h-11 flex-1 rounded-full border border-white/10 bg-white/5 px-4 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#e8768a]/50"
               />
               <button
                 type="button"
                 onClick={handleSend}
                 aria-label="Send"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#87102C] text-white hover:bg-[#6f0d24]"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#87102C] text-white hover:bg-[#9c1636]"
               >
-                <Send size={15} />
+                <Send size={16} />
               </button>
             </div>
             <div className="mt-2 flex items-center justify-between gap-2">
-              <p className="text-[11px] text-gray-400 dark:text-white/35">Never share passwords or personal details here.</p>
+              <p className="text-[11px] text-white/35">Never share passwords here.</p>
               <button
                 type="button"
                 onClick={() => openContact()}
-                className="shrink-0 text-xs font-semibold text-[#87102C] hover:underline dark:text-[#e8768a]"
+                className="shrink-0 text-xs font-semibold text-[#e8768a] hover:underline"
               >
                 Talk to a person
               </button>
@@ -293,25 +299,17 @@ export default function HelpChatWidget() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close HillsBot" : "Open HillsBot"}
-        className={
-          open
-            ? "fixed bottom-5 right-4 z-50 inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#87102C] px-4 text-sm font-semibold text-white shadow-lg hover:bg-[#6f0d24] sm:right-6"
-            : "fixed bottom-5 right-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#87102C] text-white shadow-lg hover:bg-[#6f0d24] sm:right-6"
-        }
-      >
-        {open ? (
-          <>
-            <X size={14} aria-hidden="true" />
-            Close
-          </>
-        ) : (
-          <MessageCircleQuestion size={22} aria-hidden="true" />
-        )}
-      </button>
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Open HillsBot"
+          className="fixed bottom-5 right-4 z-50 inline-flex min-h-12 items-center gap-2 rounded-full bg-[#87102C] px-4 text-sm font-semibold text-white shadow-lg hover:bg-[#9c1636] sm:right-6"
+        >
+          <MessageCircleQuestion size={18} aria-hidden="true" />
+          Ask HillsBot
+        </button>
+      )}
     </>
   );
 }
