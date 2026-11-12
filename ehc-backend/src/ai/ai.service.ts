@@ -1,5 +1,7 @@
 import { BadGatewayException, Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 import { GeminiBusyError, GeminiClient, parseGeminiJson, type GeminiCall } from './gemini-client';
+import { helpChatPrompt } from './help-chat-prompt';
+import { HELP_CHAT_SCHEMA, helpChatAnswer } from './help-chat-schema';
 import { titlesPrompt, writingPrompt, type WritingAction } from './writing-prompts';
 import { REWRITE_SCHEMA, rewriteAnswer, TITLES_SCHEMA, titlesAnswer } from './writing-schemas';
 
@@ -43,6 +45,13 @@ export class AiService {
     const parsed = this.parse(rewriteAnswer, answer);
     if (!parsed.text.trim()) throw new BadGatewayException('Gemini returned an empty answer. Please try again.');
     return { action, text: parsed.text, notes: parsed.notes };
+  }
+
+  /** HillsBot: answers an in-app help question, grounded in the page map — open to every role. */
+  async helpChat(question: string, context: { pathname: string; role: string }) {
+    const sizing = { maxOutputTokens: 2_048, thinkingLevel: 'low' as const, timeoutMs: 20_000, waitBudgetMs: 6_000 };
+    const { text } = await this.call({ input: helpChatPrompt(question, context), schema: HELP_CHAT_SCHEMA, ...sizing });
+    return this.parse(helpChatAnswer, text);
   }
 
   private parse<T>(schema: { safeParse: (v: unknown) => { success: true; data: T } | { success: false } }, answer: string): T {

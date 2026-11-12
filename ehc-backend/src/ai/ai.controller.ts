@@ -23,6 +23,16 @@ class WritingAssistDto {
   @IsOptional() @ValidateNested() @Type(() => WritingContextDto) context?: WritingContextDto;
 }
 
+class HelpChatContextDto {
+  @IsString() @IsNotEmpty() @MaxLength(200) pathname!: string;
+  @IsString() @IsNotEmpty() @MaxLength(40) role!: string;
+}
+
+class HelpChatDto {
+  @IsString() @IsNotEmpty() @MaxLength(500) question!: string;
+  @ValidateNested() @Type(() => HelpChatContextDto) context!: HelpChatContextDto;
+}
+
 @ApiTags('ai')
 @ApiBearerAuth('access-token')
 @Controller('ai')
@@ -52,5 +62,18 @@ export class AiController {
   @ApiOperation({ summary: 'Fix, improve, rephrase, shorten, expand or simplify article text, or suggest titles (member)' })
   writingAssist(@Body() dto: WritingAssistDto) {
     return this.ai.writingAssist(dto.action, dto.text, dto.context);
+  }
+
+  // HillsBot, the in-app help widget. Open to every signed-in role (Member,
+  // Unit Lead, Admin Head, Pastor, ...) — the page map and the role/pathname
+  // sent along with each question are what keep its answers in scope, not
+  // the role gate here.
+  @Roles(Role.MEMBER)
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @Post('help-chat')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'HillsBot: answer an in-app help question, grounded in the page map (any signed-in role)' })
+  helpChat(@Body() dto: HelpChatDto) {
+    return this.ai.helpChat(dto.question, dto.context);
   }
 }
