@@ -10,6 +10,7 @@ import { NotificationEvents } from '../notifications/notification-events';
 import { IcsBuilderService } from '../calendar/services/ics-builder.service';
 import { PushDispatchService } from '../push/services/push-dispatch.service';
 import { buildPrayerWatchFamilyChangeDecidedEmail } from '../notifications/templates/prayer-watch-family-change-decided.email';
+import { buildPrayerWatchFamilyChangeLeaderNoticeEmail } from '../notifications/templates/prayer-watch-family-change-leader-notice.email';
 import { buildPrayerWatchLeaderAssignedEmail } from '../notifications/templates/prayer-watch-leader-assigned.email';
 import { buildPrayerWatchLeaderTermEndedEmail } from '../notifications/templates/prayer-watch-leader-term-ended.email';
 import { buildPrayerWatchSignupApprovedEmail } from '../notifications/templates/prayer-watch-signup-approved.email';
@@ -700,14 +701,21 @@ export class PrayerWatchService {
     }));
   }
 
-  /** Approving actually performs the move; declining just records why. Either way, the member is emailed. */
+  /** Approving actually performs the move; declining just records why. Either
+   * way, the member is emailed. On approval, the family they're leaving —
+   * if it has a leader other than themselves — is told too, so the leader
+   * hears it from the church and can announce it and clear the WhatsApp
+   * group, rather than the person just going quiet on them. */
   async decideFamilyChange(actorProfileId: string, id: string, approve: boolean, dto: DecideFamilyChangeDto) {
     const request = await this.prisma.prayerFamilyChangeRequest.findFirst({
       where: { id, tenantId: this.tenantId },
-      include: { Signup: true, ToSlot: true },
+      include: { Signup: { include: { Slot: { include: { Leader: true } } } }, ToSlot: true },
     });
     if (!request) throw new NotFoundException('Request not found');
     if (request.status !== 'PENDING') throw new ConflictException('That request has already been decided');
+
+    const fromSlot = request.Signup.Slot;
+    const previousLeader = fromSlot.Leader;
 
     if (approve) {
       await this.moveSignup(request.signupId, { slotId: request.toSlotId });
@@ -730,6 +738,21 @@ export class PrayerWatchService {
         url: this.pageUrl,
       }),
     );
+
+    if (approve && previousLeader && previousLeader.id !== request.signupId) {
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildPrayerWatchFamilyChangeLeaderNoticeEmail({
+          to: previousLeader.email,
+          leaderFullName: previousLeader.fullName,
+          memberFullName: request.Signup.fullName,
+          fromSlotLabel: fromSlot.label,
+          fromSlotTime: `${fromSlot.startTime}–${fromSlot.endTime}`,
+          toSlotLabel: request.ToSlot.label,
+          url: this.pageUrl,
+        }),
+      );
+    }
 
     return { id, status: approve ? 'APPROVED' : 'DECLINED' };
   }
@@ -756,6 +779,11 @@ export class PrayerWatchService {
           if (destination.id !== signup.slotId) {
             const confirmedCount = await tx.prayerSignup.count({ where: { slotId: destination.id, status: 'CONFIRMED' } });
             if (confirmedCount >= destination.capacity) throw new ConflictException('That slot is full.');
+
+            // Leaving this slot invalidates its leadership if this sign-up
+            // was the one leading it — a leader must be one of the slot's
+            // own sign-ups (see setSlotLeader).
+            await tx.prayerSlot.updateMany({ where: { id: signup.slotId, leaderId: signup.id }, data: { leaderId: null } });
           }
 
           return tx.prayerSignup.update({ where: { id }, data: { slotId: destination.id } });
