@@ -23,25 +23,17 @@ export function buildPrayerWatchFamilyChangeLeaderNoticeEmail({
   toSlotLabel,
   url,
 }: Args): SendEmailPayload {
-  const message = `${memberFullName} has moved from your ${fromSlotLabel} (${fromSlotTime}) Prayer Watchmen Family to a different watch hour (${toSlotLabel}).`;
-  const ask = "Please let the rest of the family know, and remove them from the family's WhatsApp group whenever you get a chance.";
+  const message = `${memberFullName} has moved from the ${fromSlotLabel} (${fromSlotTime}) Prayer Watchmen Family to a different watch hour (${toSlotLabel}).`;
+  const ask = "Please inform the rest of the family and ensure they are removed from the family's WhatsApp group.";
+  const thanks = 'Thank you for your commitment and for carrying this family.';
 
-  const text = [
-    greetingText(leaderFullName),
-    '',
-    message,
-    '',
-    ask,
-    '',
-    'Thank you for carrying this family,',
-    'Everlasting Hills Church',
-  ].join('\n');
+  const text = [greetingText(leaderFullName), '', message, '', ask, '', thanks].join('\n');
 
   const bodyHtml = `
     ${greetingHtml(leaderFullName)}
     <p style="margin:0 0 16px">${escapeHtml(message)}</p>
     <p style="margin:0 0 16px">${escapeHtml(ask)}</p>
-    <p style="margin:0">Thank you for carrying this family.</p>
+    <p style="margin:0">${escapeHtml(thanks)}</p>
   `;
 
   return {

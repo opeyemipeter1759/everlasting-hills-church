@@ -11,6 +11,7 @@ import { IcsBuilderService } from '../calendar/services/ics-builder.service';
 import { PushDispatchService } from '../push/services/push-dispatch.service';
 import { buildPrayerWatchFamilyChangeDecidedEmail } from '../notifications/templates/prayer-watch-family-change-decided.email';
 import { buildPrayerWatchFamilyChangeLeaderNoticeEmail } from '../notifications/templates/prayer-watch-family-change-leader-notice.email';
+import { buildPrayerWatchFamilyChangeLeaderWelcomeEmail } from '../notifications/templates/prayer-watch-family-change-leader-welcome.email';
 import { buildPrayerWatchLeaderAssignedEmail } from '../notifications/templates/prayer-watch-leader-assigned.email';
 import { buildPrayerWatchLeaderTermEndedEmail } from '../notifications/templates/prayer-watch-leader-term-ended.email';
 import { buildPrayerWatchSignupApprovedEmail } from '../notifications/templates/prayer-watch-signup-approved.email';
@@ -702,20 +703,22 @@ export class PrayerWatchService {
   }
 
   /** Approving actually performs the move; declining just records why. Either
-   * way, the member is emailed. On approval, the family they're leaving —
-   * if it has a leader other than themselves — is told too, so the leader
-   * hears it from the church and can announce it and clear the WhatsApp
-   * group, rather than the person just going quiet on them. */
+   * way, the member is emailed. On approval, both families' leaders (other
+   * than the member themselves) are told too: the one they're leaving, so
+   * that leader can announce it and clear the WhatsApp group rather than the
+   * person just going quiet on them; and the one they're joining, so that
+   * leader can welcome them in. */
   async decideFamilyChange(actorProfileId: string, id: string, approve: boolean, dto: DecideFamilyChangeDto) {
     const request = await this.prisma.prayerFamilyChangeRequest.findFirst({
       where: { id, tenantId: this.tenantId },
-      include: { Signup: { include: { Slot: { include: { Leader: true } } } }, ToSlot: true },
+      include: { Signup: { include: { Slot: { include: { Leader: true } } } }, ToSlot: { include: { Leader: true } } },
     });
     if (!request) throw new NotFoundException('Request not found');
     if (request.status !== 'PENDING') throw new ConflictException('That request has already been decided');
 
     const fromSlot = request.Signup.Slot;
     const previousLeader = fromSlot.Leader;
+    const newLeader = request.ToSlot.Leader;
 
     if (approve) {
       await this.moveSignup(request.signupId, { slotId: request.toSlotId });
@@ -749,6 +752,20 @@ export class PrayerWatchService {
           fromSlotLabel: fromSlot.label,
           fromSlotTime: `${fromSlot.startTime}–${fromSlot.endTime}`,
           toSlotLabel: request.ToSlot.label,
+          url: this.pageUrl,
+        }),
+      );
+    }
+
+    if (approve && newLeader && newLeader.id !== request.signupId) {
+      this.events.emit(
+        NotificationEvents.SendEmail,
+        buildPrayerWatchFamilyChangeLeaderWelcomeEmail({
+          to: newLeader.email,
+          leaderFullName: newLeader.fullName,
+          memberFullName: request.Signup.fullName,
+          toSlotLabel: request.ToSlot.label,
+          toSlotTime: `${request.ToSlot.startTime}–${request.ToSlot.endTime}`,
           url: this.pageUrl,
         }),
       );
