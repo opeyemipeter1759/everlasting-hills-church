@@ -12,6 +12,7 @@ import { askHillsBot } from "@/lib/api/help-chat";
 import { findSection, matchTopic } from "@/lib/help/help-content";
 
 interface Answer {
+  heading: string;
   steps: string[];
   cta?: { label: string; href: string };
 }
@@ -61,7 +62,11 @@ export default function HelpChatWidget() {
           ? {
               id: loadingId,
               kind: "answer",
-              answer: { steps: result.steps, cta: result.ctaLabel && result.ctaHref ? { label: result.ctaLabel, href: result.ctaHref } : undefined },
+              answer: {
+                heading: result.heading,
+                steps: result.steps,
+                cta: result.ctaLabel && result.ctaHref ? { label: result.ctaLabel, href: result.ctaHref } : undefined,
+              },
             }
           : { id: loadingId, kind: "fallback" };
       setMessages((prev) => prev.map((m) => (m.id === loadingId ? answer : m)));
@@ -70,7 +75,7 @@ export default function HelpChatWidget() {
       // member-pages-only knowledge base rather than leaving the question hanging.
       const topic = matchTopic(question, section);
       const answer: Message = topic
-        ? { id: loadingId, kind: "answer", answer: { steps: topic.steps, cta: topic.cta } }
+        ? { id: loadingId, kind: "answer", answer: { heading: "Here's how it works:", steps: topic.steps, cta: topic.cta } }
         : { id: loadingId, kind: "fallback" };
       setMessages((prev) => prev.map((m) => (m.id === loadingId ? answer : m)));
     }
@@ -184,7 +189,7 @@ export default function HelpChatWidget() {
               }
               return (
                 <div key={m.id} className="max-w-[90%] rounded-2xl rounded-bl-sm border border-white/10 bg-white/[0.04] px-3.5 py-3">
-                  <p className="text-sm font-semibold text-white">Here&apos;s how it works:</p>
+                  <p className="text-sm font-semibold text-white">{m.answer.heading}</p>
                   <ol className="mt-2 space-y-1.5">
                     {m.answer.steps.map((step, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-white/80">

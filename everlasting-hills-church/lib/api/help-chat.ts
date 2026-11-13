@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api/axios";
 
 export interface HelpChatAnswer {
   confident: boolean;
+  heading: string;
   steps: string[];
   ctaLabel?: string;
   ctaHref?: string;
