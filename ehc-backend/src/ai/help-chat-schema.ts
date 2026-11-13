@@ -12,15 +12,18 @@ export const HELP_CHAT_SCHEMA = {
     heading: {
       type: 'string',
       description:
-        'A short lead-in line introduced before the list, tailored to this answer — e.g. "Here\'s how it works:", "A verse worth carrying with you:", "A few thoughts on that:", "Some books worth exploring:". Empty string if not confident.',
+        'A short lead-in line, tailored to this answer. "Here\'s how it works:" (or any variant) is ONLY for an app-navigation answer — e.g. "A verse worth carrying with you:" for a scripture, "A thought on consecration:" for a faith reflection, "Some books worth exploring:" for a book recommendation. Empty string if not confident.',
     },
     steps: {
       type: 'array',
       items: { type: 'string' },
       description: 'Up to 5 short items — app steps, verses with their reference, short reflections, or book + author + why. Empty array when not confident.',
     },
-    ctaLabel: { type: 'string', description: 'Optional short button label, e.g. "Go to today\'s reading". Empty string if none.' },
-    ctaHref: { type: 'string', description: 'Optional exact in-app path from the page map, e.g. /dashboard/reading. Empty string if none.' },
+    ctaLabel: {
+      type: 'string',
+      description: 'Optional short button label — ONLY for an app-navigation answer (e.g. "Go to today\'s reading"), or a book recommendation linking to the Book Library. Never for a scripture or faith/consecration answer. Empty string if none.',
+    },
+    ctaHref: { type: 'string', description: 'Optional exact in-app path from the page map, matching ctaLabel\'s rule above. Empty string if none.' },
   },
   required: ['confident', 'heading', 'steps', 'ctaLabel', 'ctaHref'],
 };
