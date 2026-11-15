@@ -2429,6 +2429,10 @@
         ],
         "type": "object"
       },
+      "HelpChatDto": {
+        "properties": {},
+        "type": "object"
+      },
       "ImportRowDto": {
         "properties": {
           "email": {
@@ -3368,6 +3372,16 @@
         "required": [
           "refresh_token"
         ],
+        "type": "object"
+      },
+      "RejectGiftEntryDto": {
+        "properties": {
+          "reason": {
+            "description": "Why the entry was rejected; shown to the member",
+            "maxLength": 300,
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "ReplaceRulesDto": {
@@ -5931,6 +5945,189 @@
         ]
       }
     },
+    "/admin/gift-exchange/entries": {
+      "get": {
+        "operationId": "GiftExchangeAdminController_list",
+        "parameters": [
+          {
+            "description": "Only entries with this status",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "INTERESTED",
+                "REJECTED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Everyone who showed interest, newest first, with counts per status; optional status filter",
+        "tags": [
+          "gift-exchange"
+        ]
+      }
+    },
+    "/admin/gift-exchange/entries/{id}/reinstate": {
+      "patch": {
+        "operationId": "GiftExchangeAdminController_reinstate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Put a rejected entry back to interested and clear the reason",
+        "tags": [
+          "gift-exchange"
+        ]
+      }
+    },
+    "/admin/gift-exchange/entries/{id}/reject": {
+      "patch": {
+        "operationId": "GiftExchangeAdminController_reject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectGiftEntryDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Reject a member's interest, with an optional reason",
+        "tags": [
+          "gift-exchange"
+        ]
+      }
+    },
     "/admin/home": {
       "get": {
         "operationId": "AdminController_load",
@@ -6084,6 +6281,63 @@
           }
         ],
         "summary": "Run a Gemini prompt for the website AI helpers (admin)",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/ai/help-chat": {
+      "post": {
+        "operationId": "AiController_helpChat",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HelpChatDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "HillsBot: answer an in-app help question, grounded in the page map (any signed-in role)",
         "tags": [
           "ai"
         ]
@@ -25034,6 +25288,145 @@
         "summary": "All gatherings including inactive — admin view",
         "tags": [
           "gatherings"
+        ]
+      }
+    },
+    "/gift-exchange/me": {
+      "get": {
+        "operationId": "GiftExchangeController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Whether I am in, how many are interested, and (when I am) the countdown target with server time",
+        "tags": [
+          "gift-exchange"
+        ]
+      }
+    },
+    "/gift-exchange/register": {
+      "delete": {
+        "operationId": "GiftExchangeController_withdraw",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Withdraw my interest (no-op if not registered; a rejected entry is left as it is)",
+        "tags": [
+          "gift-exchange"
+        ]
+      },
+      "post": {
+        "operationId": "GiftExchangeController_register",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Show interest in the gift exchange (idempotent; 403 if my entry was rejected)",
+        "tags": [
+          "gift-exchange"
         ]
       }
     },

@@ -35,6 +35,7 @@ import { EventsModule } from './events/events.module';
 import { OverviewModule } from './overview/overview.module';
 import { MemberHomeModule } from './member-home/member-home.module';
 import { ServiceReadinessModule } from './service-readiness/service-readiness.module';
+import { GiftExchangeModule } from './gift-exchange/gift-exchange.module';
 import { SessionsModule } from './sessions/sessions.module';
 import { AdminModule } from './admin/admin.module';
 import { ReportsModule } from './reports/reports.module';
@@ -154,6 +155,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     OverviewModule,
     MemberHomeModule,
     ServiceReadinessModule,
+    GiftExchangeModule,
     SessionsModule,
     AdminModule,
     ReportsModule,

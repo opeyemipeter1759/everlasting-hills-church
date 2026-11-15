@@ -151,7 +151,7 @@ import {
   HandHeart,
   UsersRound,
   CalendarHeart,
-  Clock,
+  Clock, Gift,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -200,12 +200,12 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "People",        href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
-
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       { label: "Service Readiness", href: "/dashboard/admin/service-readiness", icon: CheckCircle, minRole: "ADMIN_HEAD" },
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
       { label: "Pledges",       href: "/dashboard/admin/pledges",       icon: HandCoins,     minRole: "ADMIN" },
       { label: "Prayer Watch",  href: "/dashboard/admin/prayer-watch",  icon: Clock,      minRole: "ADMIN" },
+      { label: "Gift Exchange", href: "/dashboard/admin/gift-exchange", icon: Gift,          minRole: "ADMIN" },
       { label: "Finance",       href: "/dashboard/admin/finance",       icon: DollarSign,    minRole: "FINANCE_HEAD" },
       { label: "Online Audience", href: "/dashboard/admin/online-audience", icon: Wifi, minRole: "ADMIN" },
       { label: "Services",      href: "/dashboard/admin/services",      icon: Calendar,      minRole: "ADMIN" },

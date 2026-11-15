@@ -42,6 +42,13 @@ export const envSchema = z.object({
   CONTACT_EMAIL: z.email().optional(),
 
   FRONTEND_URL: z.url().optional(),
+
+  // Gift exchange countdown target (ISO date-time, e.g. 2026-12-06T00:00:00+01:00).
+  // Unset: the first Sunday of December at 00:00 Lagos time.
+  GIFT_EXCHANGE_TARGET_DATE: z
+    .string()
+    .refine((v) => !Number.isNaN(Date.parse(v)), 'GIFT_EXCHANGE_TARGET_DATE must be an ISO date-time')
+    .optional(),
   // Used in account invitation/deactivation links. The historical name is
   // retained because the frontend also consumes it at build time.
   NEXT_PUBLIC_APP_URL: z.url().optional(),

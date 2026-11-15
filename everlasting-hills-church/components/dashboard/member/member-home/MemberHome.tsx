@@ -19,6 +19,7 @@ import { PushOptInCard } from "./PushOptInCard";
 import { EvangelismTallyCard } from "./EvangelismTallyCard";
 import { PrayerWatchCard } from "./PrayerWatchCard";
 import { OneOnOneCard } from "./OneOnOneCard";
+import { GiftExchangeCard } from "./GiftExchangeCard";
 import { SpouseRequestsInbox } from "@/components/dashboard/settings/SpouseLink";
 import LatestSermonSummary from "@/components/sermon-digest/LatestSermonSummary";
 import { DashboardColumns, MainColumn, SideColumn, Tile } from "@/components/ui/layout/DashboardColumns";
@@ -99,6 +100,7 @@ export default function MemberHome(props: MemberHomePropsOptional) {
           <Tile order={2}>
             <CheckInPanel todayService={todayService} hasCheckedInToday={hasCheckedInToday} nextService={nextService} />
           </Tile>
+          <Tile order={16}><GiftExchangeCard /></Tile>
           <Tile order={4}>
             <WarmStreakStat
               memberDisplayId={memberDisplayId}
