@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Crown, Heart, Zap, Users, ArrowLeft, ArrowRight } from "lucide-react";
 import ScrollReveal from "@/components/home/ScrollReveal";
+import WhoItsFor from "@/components/ministries/WhoItsFor";
 import type { Metadata } from "next";
 import { getStructuredContent } from "@/lib/cms-page";
 
@@ -402,10 +403,9 @@ export default async function MinistryDetailPage({
                 </h2>
               </ScrollReveal>
               <ScrollReveal delay={0.2}>
-                <p className="text-[#555] text-base sm:text-lg leading-relaxed">
-                  {m.overview}
-                </p>
+                <p className="text-[#555] text-base sm:text-lg leading-relaxed">{m.overview}</p>
               </ScrollReveal>
+              <WhoItsFor who={m.who} />
 
             </div>
 

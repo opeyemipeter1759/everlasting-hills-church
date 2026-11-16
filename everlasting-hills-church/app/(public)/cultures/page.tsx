@@ -14,10 +14,10 @@ interface Culture {
   anchorText: string;
   /** NKJV wording of anchorText */
   verseText: string;
-  /** Original-language key term, e.g. "theopneustos" or "oikeios · koinonia" */
-  keyTerm?: string;
+  /** Original-language key term, e.g. "theopneustos" or "oikeios · koinonia" (null when cleared in the CMS) */
+  keyTerm?: string | null;
   /** What the key term means, e.g. "God-breathed" */
-  keyTermMeaning?: string;
+  keyTermMeaning?: string | null;
 }
 interface CultureContent {
   eyebrow: string;
@@ -182,7 +182,7 @@ export default async function CulturesPage({
                     {p.keyTerm && (
                       <p className="mt-3 font-serif text-sm italic text-[#9C7A3C]">
                         {p.keyTerm}
-                        <span className="font-sans not-italic text-[#6B625D]"> — {p.keyTermMeaning}</span>
+                        {p.keyTermMeaning && <span className="font-sans not-italic text-[#6B625D]"> — {p.keyTermMeaning}</span>}
                       </p>
                     )}
                   </div>

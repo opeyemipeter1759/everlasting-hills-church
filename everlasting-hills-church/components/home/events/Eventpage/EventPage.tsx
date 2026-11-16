@@ -40,7 +40,8 @@ function isValidIntro(c: unknown): c is EventsIntroContent {
 export default async function EventPage() {
   const [events, hero] = await Promise.all([
     fetchAllEvents(),
-    getStructuredContent<EventsIntroContent>("eventsIntro", {
+    // The CMS page key is "events"; "eventsIntro" is only its content type.
+    getStructuredContent<EventsIntroContent>("events", {
       fallback: HERO_FALLBACK,
       valid: isValidIntro,
     }),
