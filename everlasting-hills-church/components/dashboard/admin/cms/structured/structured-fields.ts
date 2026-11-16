@@ -1,9 +1,7 @@
 import type { FieldDef } from "./StructuredForm";
+import { cultureFields } from "./culture-fields";
 
-/**
- * Field definitions per structured content type. Adding a designed page = a new
- * entry here (+ a backend Zod schema/seed + public wiring), no bespoke editor UI.
- */
+/** Field definitions per structured content type (+ a backend Zod schema/seed + public wiring). */
 
 const hero: FieldDef[] = [
   { kind: "text", key: "eyebrow", label: "Eyebrow" },
@@ -243,6 +241,7 @@ const legalFields: FieldDef[] = [
 ];
 STRUCTURED_FIELDS.privacyLegal = legalFields;
 STRUCTURED_FIELDS.termsLegal = legalFields;
+STRUCTURED_FIELDS.cultures = cultureFields;
 
 export function structuredFields(contentType: string): FieldDef[] | undefined {
   return STRUCTURED_FIELDS[contentType];

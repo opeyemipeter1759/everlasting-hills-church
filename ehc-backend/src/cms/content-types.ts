@@ -1,5 +1,6 @@
 import type { ZodTypeAny } from 'zod';
 import { BeliefsSchema, DEFAULT_BELIEFS } from './schemas/structured/beliefs.schema';
+import { CulturesSchema, DEFAULT_CULTURES } from './schemas/structured/cultures.schema';
 import {
   AboutSchema, DEFAULT_ABOUT,
   MinistriesSchema, DEFAULT_MINISTRIES,
@@ -29,6 +30,7 @@ export interface ContentType {
 
 export const CONTENT_TYPES: Record<string, ContentType> = {
   beliefs: { schema: BeliefsSchema, default: DEFAULT_BELIEFS },
+  cultures: { schema: CulturesSchema, default: DEFAULT_CULTURES },
   about: { schema: AboutSchema, default: DEFAULT_ABOUT },
   ministries: { schema: MinistriesSchema, default: DEFAULT_MINISTRIES },
   ministryMens: { schema: MinistryDetailSchema, default: DEFAULT_MINISTRY_MENS },
