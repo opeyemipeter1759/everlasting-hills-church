@@ -5,6 +5,7 @@ import { Pagination } from "@/components/ui/navigation/Pagination";
 import { Select } from "@/components/ui/select";
 import { apiClient, type ApiError } from "@/lib/api/axios";
 import { showToast } from "@/components/ui/toast/toast";
+import { useRefreshEverywhere } from "@/lib/api/refresh-everywhere";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import type { VisitorRow } from "./FirstTimer/types";
 import { useFirstTimersFilter, PAGE_SIZE_OPTIONS } from "./FirstTimer/useFirstTimersFilter";
@@ -46,6 +47,7 @@ export default function FirstTimersClient({ visitors }: Props) {
     total,
   } = useFirstTimersFilter(visitors);
 
+  const refreshEverywhere = useRefreshEverywhere();
   const [editTarget, setEditTarget] = useState<VisitorRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<VisitorRow | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -60,6 +62,7 @@ export default function FirstTimersClient({ visitors }: Props) {
       await apiClient.delete(`/visitors/${deleteTarget.id}${chatWarning ? "?force=true" : ""}`);
       showToast.success(`${deleteTarget.firstName} ${deleteTarget.lastName} deleted`);
       handleDeleted(deleteTarget.id);
+      refreshEverywhere(); // the totals here, Follow Up and its counts held them too
       closeDelete();
     } catch (err) {
       const e = err as ApiError;

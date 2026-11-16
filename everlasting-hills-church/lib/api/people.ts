@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { api } from "@/lib/api/request";
 import { apiClient } from "@/lib/api/axios";
+import { useRefreshEverywhere } from "@/lib/api/refresh-everywhere";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -205,17 +206,13 @@ export function useUpdateMember() {
   });
 }
 
+/** Deactivating someone takes them off service teams, follow-up, attendance and every count. */
 export function useUpdateMemberStatus() {
-  const qc = useQueryClient();
-  const invalidate = useInvalidateUnitMembership();
+  const refreshEverywhere = useRefreshEverywhere();
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: MemberStatus }) =>
       api.patch<{ id: string; status: MemberStatus }>(`/members/${id}/status`, { status }),
-    onSuccess: (_result, variables) => {
-      // Deactivating someone also takes them off every service team.
-      invalidate();
-      qc.invalidateQueries({ queryKey: ["member", variables.id] });
-    },
+    onSuccess: refreshEverywhere,
   });
 }
 
@@ -333,7 +330,7 @@ export function useResendLoginDetails() {
 }
 
 export function useDeletePerson() {
-  const invalidate = useInvalidatePeople();
+  const invalidate = useRefreshEverywhere();
   // Members carry a profileId; we delete through /users/:profileId (removes
   // Profile + Member + auth user). Falls back to /members/:id when no profile.
   return useMutation({
@@ -346,7 +343,7 @@ export function useDeletePerson() {
 }
 
 export function useBulkMemberOp() {
-  const invalidate = useInvalidateUnitMembership();
+  const invalidate = useRefreshEverywhere();
   return useMutation({
     mutationFn: (body: {
       ids: string[];
