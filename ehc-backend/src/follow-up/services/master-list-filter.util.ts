@@ -36,6 +36,11 @@ export interface MasterListFilters {
   assigneeId?: string;
   /** Whose list this is: Follow Up's, the Integration Team's, or both. */
   scope?: MasterListScope;
+  /**
+   * Which team is looking. The Integration Team sees its own assignee even on
+   * a list wider than its own scope (its Members tab covers every status).
+   */
+  board?: 'FOLLOW_UP' | 'INTEGRATION';
   /** A service id, or "latest": only the members who missed that service. */
   absentFrom?: string;
   take: number;

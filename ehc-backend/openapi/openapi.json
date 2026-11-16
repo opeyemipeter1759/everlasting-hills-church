@@ -22467,6 +22467,19 @@
             }
           },
           {
+            "description": "INTEGRATION shows the Integration Team's own assignee, whatever the scope.",
+            "in": "query",
+            "name": "board",
+            "required": false,
+            "schema": {
+              "enum": [
+                "FOLLOW_UP",
+                "INTEGRATION"
+              ],
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "take",
             "required": true,

@@ -47,7 +47,9 @@ export class FollowUpMasterListService {
     // me) means the Integration Team's assignee, never Follow Up's.
     const everyone = roll
       .map(unassignedIfOptedOut)
-      .map((row) => (opts.scope === 'INTEGRATION' ? { ...row, assignedTo: row.integrationAssignedTo } : row));
+      .map((row) =>
+        opts.scope === 'INTEGRATION' || opts.board === 'INTEGRATION' ? { ...row, assignedTo: row.integrationAssignedTo } : row,
+      );
 
     // "latest" is the most recent service that counts, so the Integration
     // Team's list can open on it without first looking up which one that is.

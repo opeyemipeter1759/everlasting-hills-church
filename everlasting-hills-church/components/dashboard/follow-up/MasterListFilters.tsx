@@ -13,7 +13,7 @@ import { Select } from "@/components/ui/select";
 import { useFollowUpLeadership } from "./useFollowUpLeadership";
 import { MasterListDates } from "./MasterListDates";
 import { FilterSearch } from "./FilterSearch";
-import { PILL, statusOptionsFor, type DatePreset } from "./filter-bits";
+import { PILL, STATUS_OPTIONS, statusOptionsFor, type DatePreset } from "./filter-bits";
 
 /**
  * Narrowing the roll: by name, by where someone stands, by when they came —
@@ -23,12 +23,15 @@ import { PILL, statusOptionsFor, type DatePreset } from "./filter-bits";
 export function MasterListFilters({
   value,
   scope,
+  absence = scope === "INTEGRATION",
   statusLocked = false,
   latestServiceId = null,
   onChange,
 }: {
   value: MasterListQuery;
   scope?: MasterListQuery["scope"];
+  /** The Integration Team's lists can be narrowed to who missed a service. */
+  absence?: boolean;
   /** The tab already fixes the status, so offering to change it would mislead. */
   statusLocked?: boolean;
   /** Which service "latest" resolved to, so the filter can name it. */
@@ -40,19 +43,16 @@ export function MasterListFilters({
   // The Integration Team watches for members who stop coming, so their list
   // can be narrowed to whoever missed one service. Special services are not
   // called for everyone, so nobody is absent from them.
-  const showAbsence = scope === "INTEGRATION";
+  const showAbsence = absence;
+  // Its Members tab covers the whole roll, so every status is worth picking there.
+  const statusOptions = absence && (scope ?? "ALL") === "ALL" ? STATUS_OPTIONS : statusOptionsFor(scope);
   const { data: services = [] } = useFollowUpServices();
   const serviceOptions = services.filter((s) => s.serviceType !== "SPECIAL");
   const [preset, setPreset] = useState<DatePreset>("");
   const set = (patch: Partial<MasterListQuery>) => onChange({ ...value, ...patch });
-  // On the Integration list the latest service is the starting point, so
-  // only a different choice counts as filtering.
-  const absenceFiltered = showAbsence
-    ? value.absentFrom !== LATEST_SERVICE && value.absentFrom !== latestServiceId
-    : !!value.absentFrom;
   // "latest" is shown as the service it stands for, by name.
   const absenceValue = value.absentFrom === LATEST_SERVICE ? (latestServiceId ?? "") : (value.absentFrom ?? "");
-  const filtering = !!(value.status || value.from || value.to || value.assigneeId || absenceFiltered);
+  const filtering = !!(value.status || value.from || value.to || value.assigneeId || value.absentFrom);
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50/60 p-2 dark:border-white/10 dark:bg-white/[0.03]">
@@ -67,7 +67,7 @@ export function MasterListFilters({
           icon={<CircleDot size={15} aria-hidden="true" />}
           prefixLabel="Status:"
           placeholder="Any"
-          options={[{ value: "", label: "Any status" }, ...statusOptionsFor(scope)]}
+          options={[{ value: "", label: "Any status" }, ...statusOptions]}
         />
       )}
 
@@ -116,7 +116,7 @@ export function MasterListFilters({
           type="button"
           onClick={() => {
             setPreset("");
-            onChange({ search: value.search, ...(showAbsence ? { absentFrom: LATEST_SERVICE } : {}) });
+            onChange({ search: value.search });
           }}
           className="flex h-10 items-center gap-1 rounded-xl px-2.5 text-sm font-semibold text-[#87102C] transition-colors hover:bg-[#FFE8ED] dark:text-[#FFB3C1] dark:hover:bg-white/10"
         >

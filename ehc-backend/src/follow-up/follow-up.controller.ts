@@ -125,6 +125,7 @@ export class FollowUpController {
       "FOLLOW_UP leaves out anyone integrated or opted out; INTEGRATION shows only the integrated and anyone who has gone away; OPTED_OUT only those who have opted out.",
   })
   @ApiQuery({ name: 'absentFrom', required: false, description: 'A service id, or "latest" for the most recent service with attendance taken: only the members who missed it.' })
+  @ApiQuery({ name: 'board', required: false, enum: ['FOLLOW_UP', 'INTEGRATION'], description: "INTEGRATION shows the Integration Team's own assignee, whatever the scope." })
   async masterList(
     @CurrentUser() actor: AuthUser,
     @Query('search') search?: string,
@@ -134,6 +135,7 @@ export class FollowUpController {
     @Query('assigneeId') assigneeId?: string,
     @Query('scope') scope?: MasterListScope,
     @Query('absentFrom') absentFrom?: string,
+    @Query('board') board?: string,
     @Query('take') take?: string,
     @Query('skip') skip?: string,
   ) {
@@ -146,6 +148,7 @@ export class FollowUpController {
       assigneeId,
       scope,
       absentFrom,
+      board: board === 'INTEGRATION' ? 'INTEGRATION' : 'FOLLOW_UP',
       take: take ? parseInt(take, 10) : 50,
       skip: skip ? parseInt(skip, 10) : 0,
     }, actor.profileId ?? null);

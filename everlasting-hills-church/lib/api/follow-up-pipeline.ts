@@ -486,18 +486,18 @@ export interface MasterListQuery {
    * since stopped coming.
    */
   scope?: "FOLLOW_UP" | "INTEGRATION" | "OPTED_OUT" | "ALL";
+  /** Which team is looking: the Integration Team sees its own assignee on any scope. */
+  board?: "FOLLOW_UP" | "INTEGRATION";
   /** A service id, or LATEST_SERVICE: only the members who missed that service. */
   absentFrom?: string;
-  take?: number;
-  skip?: number;
+  take?: number; skip?: number;
 }
 
 /** Everyone on the church roll, filtered and paged, for the Master list. */
 export function useFollowUpMasterList(params: MasterListQuery) {
-  const { search = "", status = "", from = "", to = "", assigneeId = "", scope = "ALL", absentFrom = "", take = 50, skip = 0 } =
-    params;
+  const { search = "", status = "", from = "", to = "", assigneeId = "", scope = "ALL", board = "", absentFrom = "", take = 50, skip = 0 } = params;
   return useQuery({
-    queryKey: ["follow-up", "master-list", { search, status, from, to, assigneeId, scope, absentFrom, take, skip }],
+    queryKey: ["follow-up", "master-list", { search, status, from, to, assigneeId, scope, board, absentFrom, take, skip }],
     queryFn: () =>
       api.get<MasterListPage>("/follow-up/master-list", {
         ...(search ? { search } : {}),
@@ -506,9 +506,9 @@ export function useFollowUpMasterList(params: MasterListQuery) {
         ...(to ? { to } : {}),
         ...(assigneeId ? { assigneeId } : {}),
         ...(scope !== "ALL" ? { scope } : {}),
+        ...(board ? { board } : {}),
         ...(absentFrom ? { absentFrom } : {}),
-        take,
-        skip,
+        take, skip,
       }),
     enabled: typeof window !== "undefined",
   });

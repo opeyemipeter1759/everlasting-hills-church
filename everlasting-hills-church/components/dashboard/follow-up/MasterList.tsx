@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  LATEST_SERVICE,
   useFollowUpMasterList,
   useFollowUpPerson,
   type MasterListPage,
@@ -29,18 +28,18 @@ const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
  */
 export default function MasterList({
   fixed,
+  initialQuery = {},
   showFilters = true,
   onMeta,
 }: {
   fixed?: MasterListQuery;
+  /** Where the filters start; unlike `fixed`, the viewer can change or clear them. */
+  initialQuery?: MasterListQuery;
   showFilters?: boolean;
   /** Told the totals for the current filters, e.g. for the Integration Team's Absent card. */
   onMeta?: (meta: MasterListPage["meta"] | undefined) => void;
 }) {
-  // The Integration Team's list opens on who missed the latest service.
-  const [query, setQuery] = useState<MasterListQuery>(
-    fixed?.scope === "INTEGRATION" && showFilters ? { absentFrom: LATEST_SERVICE } : {},
-  );
+  const [query, setQuery] = useState<MasterListQuery>(initialQuery);
   const editing = useMasterListEditing();
   const selection = useMasterSelection();
   const { canRunUnit } = useFollowUpLeadership();
@@ -60,9 +59,9 @@ export default function MasterList({
   useEffect(() => {
     onMeta?.(meta);
   }, [meta, onMeta]);
-  // The Integration Team watches for people who stop coming, so their list
-  // shows each person's absences.
-  const showAbsence = fixed?.scope === "INTEGRATION";
+  // The Integration Team watches for people who stop coming, so their lists
+  // show each person's absences, on its own scope or on every status.
+  const showAbsence = fixed?.scope === "INTEGRATION" || fixed?.board === "INTEGRATION";
   const total = data?.meta.total ?? 0;
   const from = total === 0 ? 0 : page * pageSize + 1;
   const to = Math.min((page + 1) * pageSize, total);
@@ -74,6 +73,7 @@ export default function MasterList({
         <MasterListFilters
           value={query}
           scope={fixed?.scope}
+          absence={showAbsence}
           statusLocked={!!fixed?.status || fixed?.scope === "OPTED_OUT"}
           latestServiceId={meta?.absenceServiceId ?? null}
           onChange={(next) => {
@@ -100,7 +100,7 @@ export default function MasterList({
       <PersonDrawer
         person={selected}
         onClose={() => setSelected(null)}
-        board={fixed?.scope === "INTEGRATION" ? "INTEGRATION" : "FOLLOW_UP"}
+        board={showAbsence ? "INTEGRATION" : "FOLLOW_UP"}
       />
 
       <EditVisitorModal visitor={editing.visitor} onClose={editing.close} onUpdated={editing.saved} />

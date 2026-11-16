@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { HeartHandshake, UserCheck, UserMinus } from "lucide-react";
+import { UserCheck, UserMinus, Users } from "lucide-react";
 import { FollowUpTabs, TABS_BOTTOM_SPACE } from "@/components/dashboard/follow-up/FollowUpTabs";
 import MasterList from "@/components/dashboard/follow-up/MasterList";
 import AssignedToMe from "@/components/dashboard/follow-up/AssignedToMe";
@@ -12,13 +12,13 @@ import { IntegrationHeader } from "./IntegrationHeader";
 type IntegrationTab = "members" | "away" | "mine";
 
 const TABS = [
-  { id: "members" as const, label: "Integrated members", icon: HeartHandshake },
+  { id: "members" as const, label: "Members", icon: Users },
   { id: "away" as const, label: "Away", icon: UserMinus },
   { id: "mine" as const, label: "Assigned to me", icon: UserCheck },
 ];
 
 const NOTE: Record<IntegrationTab, string> = {
-  members: "Everyone Follow Up has settled in. Keep an eye on them — this is where they land.",
+  members: "Opens on everyone integrated. Change the status to see anyone else on the roll, or pick a service to see who missed it.",
   away: "Members who have stopped coming. Somebody from this team should reach them.",
   mine: "The people you are responsible for staying in touch with.",
 };
@@ -46,7 +46,6 @@ export default function IntegrationBoard() {
   const tabCounts = isLoading
     ? {}
     : {
-        members: counts?.byStatus.INTEGRATED ?? 0,
         away: counts?.byStatus.AWAY ?? 0,
         mine: counts?.integrationAssignedToMe ?? 0,
       };
@@ -70,7 +69,8 @@ export default function IntegrationBoard() {
         ) : (
           <MasterList
             key={active}
-            fixed={{ scope: "INTEGRATION", status: active === "away" ? "AWAY" : "INTEGRATED" }}
+            fixed={active === "away" ? { scope: "INTEGRATION", status: "AWAY" } : { scope: "ALL", board: "INTEGRATION" }}
+            initialQuery={active === "away" ? {} : { status: "INTEGRATED" }}
             onMeta={onMeta}
           />
         )}
