@@ -2429,6 +2429,10 @@
         ],
         "type": "object"
       },
+      "HelpChatDto": {
+        "properties": {},
+        "type": "object"
+      },
       "ImportRowDto": {
         "properties": {
           "email": {
@@ -6084,6 +6088,63 @@
           }
         ],
         "summary": "Run a Gemini prompt for the website AI helpers (admin)",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/ai/help-chat": {
+      "post": {
+        "operationId": "AiController_helpChat",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HelpChatDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "HillsBot: answer an in-app help question, grounded in the page map (any signed-in role)",
         "tags": [
           "ai"
         ]

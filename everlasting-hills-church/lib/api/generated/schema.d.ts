@@ -88,6 +88,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ai/help-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** HillsBot: answer an in-app help question, grounded in the page map (any signed-in role) */
+        post: operations["AiController_helpChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ai/writing-assist": {
         parameters: {
             query?: never;
@@ -10085,6 +10102,7 @@ export interface components {
             /** @description Where the player is now, in seconds */
             position: number;
         };
+        HelpChatDto: Record<string, never>;
         ImportRowDto: {
             /** @example jane@example.com */
             email: string;
@@ -11693,6 +11711,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["GenerateDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AiController_helpChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HelpChatDto"];
             };
         };
         responses: {
