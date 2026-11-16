@@ -7785,6 +7785,194 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/service-readiness/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every unit for the next (or a chosen) Sunday or Wednesday service: submitted or not, approved, ready or blocked */
+        get: operations["ServiceReadinessController_getBoard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The units I lead, for the coming Sunday and Wednesday: my plan and updates, the roster, and last time's plan */
+        get: operations["ServiceReadinessPlansController_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/inspections/{round}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Inspect a service: each serving department's checklist, plan and saved result for the day-before or 2-hours-before round */
+        get: operations["ServiceReadinessController_getInspection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/units/{unitId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Approve a unit's submitted plan for a service */
+        put: operations["ServiceReadinessController_approve"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/units/{unitId}/inspections/{round}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Record one department's inspection: each checklist line ticked or not, and a note */
+        put: operations["ServiceReadinessController_saveInspection"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/units/{unitId}/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Send a unit's plan (its task list) to the Administrator; due 24 hours before the service must be ready */
+        put: operations["ServiceReadinessPlansController_savePlan"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/units/{unitId}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add tasks to a unit's plan for a service */
+        post: operations["ServiceReadinessTasksController_add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/units/{unitId}/tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a task */
+        delete: operations["ServiceReadinessTasksController_remove"];
+        options?: never;
+        head?: never;
+        /** Tick a task off, or rename it */
+        patch: operations["ServiceReadinessTasksController_update"];
+        trace?: never;
+    };
+    "/service-readiness/services/{serviceId}/units/{unitId}/updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Post an update on a submitted plan: everything ready, or a blocker */
+        post: operations["ServiceReadinessPlansController_postUpdate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/setup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Each unit's Sunday and Wednesday inspection checklists, and the next services with ready-by times */
+        get: operations["ServiceReadinessController_getSetup"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/service-readiness/units/{unitId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save one unit's Sunday / Wednesday checklists */
+        put: operations["ServiceReadinessController_updateUnit"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/service-teams": {
         parameters: {
             query?: never;
@@ -8890,6 +9078,15 @@ export interface components {
             /** @description The message this answers, when it is a reply. */
             parentId?: string;
         };
+        AddReadinessTasksDto: {
+            /**
+             * @example [
+             *       "Test the wireless mics",
+             *       "Charge camera batteries"
+             *     ]
+             */
+            titles: string[];
+        };
         ApiError: {
             /** @example BAD_REQUEST */
             code: string;
@@ -9926,6 +10123,13 @@ export interface components {
             /** @example Jane Doe */
             name?: string;
         };
+        InspectionCheckDto: {
+            /** @example Cameras charged and mounted */
+            label: string;
+            /** @example Camera 2 battery at 20% */
+            note?: string;
+            passed: boolean;
+        };
         JoinDto: Record<string, never>;
         LessonContentDto: {
             actionStep?: Record<string, never>;
@@ -10103,6 +10307,12 @@ export interface components {
         PledgeTrackingLinkDto: {
             /** @example tomike@example.com */
             email: string;
+        };
+        PostReadinessUpdateDto: {
+            /** @description Required for a blocker: what is wrong and what you need */
+            note?: string;
+            /** @enum {string} */
+            status: "READY" | "BLOCKED";
         };
         PrayerRequestDto: {
             /** @example john@example.com */
@@ -10373,6 +10583,29 @@ export interface components {
             message?: string;
             /** @example +234 801 234 5678 */
             phone?: string;
+        };
+        SaveInspectionDto: {
+            checks: components["schemas"]["InspectionCheckDto"][];
+            /** @description Overall note */
+            note?: string;
+            /** @description For a department with no checklist yet: was it ready? */
+            ready?: boolean;
+        };
+        SaveReadinessPlanDto: {
+            /** @description The unit can meet the ready-by deadline */
+            canMeetDeadline?: boolean;
+            /** @description Anticipated challenges */
+            challenges?: string;
+            /** @description Preparation already completed */
+            done?: string;
+            /** @description Equipment and materials required */
+            equipment?: string;
+            /** @description Preparation still outstanding */
+            outstanding?: string;
+            /** @description Support required */
+            support?: string;
+            /** @description Workers assigned and their availability */
+            workers?: string;
         };
         ScriptureDto: {
             /** @example Genesis 49:26 */
@@ -11035,6 +11268,20 @@ export interface components {
              * @enum {string}
              */
             status: "PENDING" | "ANSWERED";
+        };
+        UpdateReadinessTaskDto: {
+            done?: boolean;
+            title?: string;
+        };
+        UpdateReadinessUnitDto: {
+            /**
+             * @example [
+             *       "Cameras charged and mounted",
+             *       "Stream key tested"
+             *     ]
+             */
+            sundayChecklist: string[];
+            wednesdayChecklist: string[];
         };
         UpdateReportDto: {
             attachmentName?: string;
@@ -29981,6 +30228,431 @@ export interface operations {
         responses: {
             /** @description Audio uploaded successfully */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessController_getBoard: {
+        parameters: {
+            query: {
+                serviceId: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessPlansController_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessController_getInspection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessController_approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessController_saveInspection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveInspectionDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessPlansController_savePlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveReadinessPlanDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessTasksController_add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddReadinessTasksDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessTasksController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessTasksController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReadinessTaskDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessPlansController_postUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serviceId: string;
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PostReadinessUpdateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessController_getSetup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    ServiceReadinessController_updateUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                unitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateReadinessUnitDto"];
+            };
+        };
+        responses: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

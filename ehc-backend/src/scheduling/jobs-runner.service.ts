@@ -10,6 +10,8 @@ import { ClassesAdminService } from '../classes/classes-admin.service';
 import { OneOnOneSweepService } from '../one-on-one/one-on-one-sweep.service';
 import { PrayerWatchService } from '../prayer-watch/prayer-watch.service';
 import { PrayerWatchReportsService } from '../prayer-watch/prayer-watch-reports.service';
+import { ServiceCalendarService } from '../service-readiness/service-calendar.service';
+import { ServiceReadinessRemindersService } from '../service-readiness/service-readiness-reminders.service';
 
 /** Names match the @Cron({ name }) options so logs and Cloud Scheduler agree. */
 export const JOB_NAMES = [
@@ -32,6 +34,8 @@ export const JOB_NAMES = [
   'one-on-one-sweep',
   'prayer-watch-leader-terms',
   'prayer-watch-report-reminders',
+  'service-calendar',
+  'service-readiness-reminders',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -66,6 +70,8 @@ export class JobsRunnerService {
     private readonly oneOnOneSweep: OneOnOneSweepService,
     private readonly prayerWatch: PrayerWatchService,
     private readonly prayerWatchReports: PrayerWatchReportsService,
+    private readonly serviceCalendar: ServiceCalendarService,
+    private readonly readinessReminders: ServiceReadinessRemindersService,
   ) {}
 
   isJob(name: string): name is JobName {
@@ -131,6 +137,10 @@ export class JobsRunnerService {
         return this.prayerWatch.notifyEndedLeaderTerms().then(() => undefined);
       case 'prayer-watch-report-reminders':
         return this.prayerWatchReports.sendReminders().then(() => undefined);
+      case 'service-calendar':
+        return this.serviceCalendar.ensureUpcoming().then(() => undefined);
+      case 'service-readiness-reminders':
+        return this.readinessReminders.run().then(() => undefined);
     }
   }
 }

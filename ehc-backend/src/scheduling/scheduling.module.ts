@@ -12,6 +12,7 @@ import { ClassesModule } from '../classes/classes.module';
 import { OneOnOneModule } from '../one-on-one/one-on-one.module';
 import { PrayerWatchModule } from '../prayer-watch/prayer-watch.module';
 import { JobsController } from './jobs.controller';
+import { ServiceReadinessModule } from '../service-readiness/service-readiness.module';
 
 /**
  * Registers the cron runtime (ScheduleModule.forRoot) and the recurring tasks,
@@ -22,7 +23,7 @@ import { JobsController } from './jobs.controller';
  * MailDispatcher and PrismaService are resolved from their global modules.
  */
 @Module({
-  imports: [ScheduleModule.forRoot(), FollowUpModule, CalendarModule, AttendanceModule, SermonDigestModule, FastingEmailModule, ClassesModule, OneOnOneModule, PrayerWatchModule],
+  imports: [ScheduleModule.forRoot(), FollowUpModule, CalendarModule, AttendanceModule, SermonDigestModule, FastingEmailModule, ClassesModule, OneOnOneModule, PrayerWatchModule, ServiceReadinessModule],
   controllers: [JobsController],
   providers: [SchedulingService, CronGateService, JobsRunnerService],
 })
