@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
-import { WAT_MS, QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere } from './attendance-analytics.utils';
+import { WAT_MS, QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere, CURRENT_MEMBERS } from './attendance-analytics.utils';
 
 /** First-timers, retention, heatmap, peak-hours. */
 @Injectable()
@@ -52,7 +52,7 @@ export class AttendanceInsightsService {
     const svcWhere = svcTypeWhere(serviceType);
     const services = await this.prisma.service.findMany({
       where: { tenantId: this.tid, scheduledAt: { gte: start, lt: end }, ...svcWhere },
-      select: { scheduledAt: true, serviceType: true, AttendanceRecord: { select: { present: true } } },
+      select: { scheduledAt: true, serviceType: true, AttendanceRecord: { where: CURRENT_MEMBERS, select: { present: true } } },
     });
     return services.map((s: any) => {
       const total = s.AttendanceRecord.length;

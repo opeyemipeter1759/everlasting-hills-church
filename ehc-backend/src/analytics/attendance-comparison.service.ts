@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
-import { WAT_MS, QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere } from './attendance-analytics.utils';
+import { WAT_MS, QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere, CURRENT_MEMBERS } from './attendance-analytics.utils';
 
 /** Service-type comparison, member growth, leaderboard, period-vs-period comparison. */
 @Injectable()
@@ -18,7 +18,7 @@ export class AttendanceComparisonService {
     const services = await this.prisma.service.findMany({
       where: { tenantId: this.tid, scheduledAt: { gte: start, lt: end }, ...svcWhere },
       orderBy: { scheduledAt: 'asc' },
-      select: { scheduledAt: true, serviceType: true, AttendanceRecord: { select: { present: true } } },
+      select: { scheduledAt: true, serviceType: true, AttendanceRecord: { where: CURRENT_MEMBERS, select: { present: true } } },
     });
     const byType: Record<string, { present: number; total: number }> = {};
     services.forEach((s: any) => {
@@ -66,7 +66,7 @@ export class AttendanceComparisonService {
     if (services.length === 0) return [];
     const serviceIds = services.map((s: any) => s.id);
     const records = await this.prisma.attendanceRecord.findMany({
-      where: { tenantId: this.tid, serviceId: { in: serviceIds } },
+      where: { tenantId: this.tid, serviceId: { in: serviceIds }, ...CURRENT_MEMBERS },
       select: { memberId: true, present: true, serviceId: true, Member: { select: { firstName: true, lastName: true, photoUrl: true } } },
     });
     const memberMap = new Map<string, { name: string; photoUrl: string | null; attended: number; presentByIdx: boolean[] }>();
@@ -91,8 +91,8 @@ export class AttendanceComparisonService {
     const summarize = async (q: typeof a) => {
       const range = resolveRange(q as QueryFilter);
       const [total, present, svcs] = await Promise.all([
-        this.prisma.attendanceRecord.count({ where: { tenantId: this.tid, Service: { scheduledAt: { gte: range.start, lt: range.end } } } }),
-        this.prisma.attendanceRecord.count({ where: { tenantId: this.tid, present: true, Service: { scheduledAt: { gte: range.start, lt: range.end } } } }),
+        this.prisma.attendanceRecord.count({ where: { tenantId: this.tid, ...CURRENT_MEMBERS, Service: { scheduledAt: { gte: range.start, lt: range.end } } } }),
+        this.prisma.attendanceRecord.count({ where: { tenantId: this.tid, present: true, ...CURRENT_MEMBERS, Service: { scheduledAt: { gte: range.start, lt: range.end } } } }),
         this.prisma.service.count({ where: { tenantId: this.tid, scheduledAt: { gte: range.start, lt: range.end } } }),
       ]);
       return { total, present, absent: total - present, servicesHeld: svcs, rate: total > 0 ? Math.round((present / total) * 1000) / 10 : 0, avgPerService: svcs > 0 ? Math.round((present / svcs) * 10) / 10 : 0, dateRange: { from: watStr(range.start), to: watStr(new Date(range.end.getTime() - 1)) } };

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
-import { QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere } from './attendance-analytics.utils';
+import { QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere, CURRENT_MEMBERS } from './attendance-analytics.utils';
 
 /** Member consistency scores/streaks, per-service-type health scores, at-risk/milestone alerts. */
 @Injectable()
@@ -22,7 +22,7 @@ export class AttendanceAlertsService {
     if (services.length === 0) return [];
     const svcIds = services.map((s: any) => s.id);
     const records = await this.prisma.attendanceRecord.findMany({
-      where: { tenantId: this.tid, serviceId: { in: svcIds } },
+      where: { tenantId: this.tid, serviceId: { in: svcIds }, ...CURRENT_MEMBERS },
       select: { memberId: true, serviceId: true, present: true, Member: { select: { firstName: true, lastName: true, photoUrl: true } } },
     });
     const m = new Map<string, { name: string; photoUrl: string | null; presence: boolean[] }>();
@@ -49,7 +49,7 @@ export class AttendanceAlertsService {
       const svcs = await this.prisma.service.findMany({
         where: { tenantId: this.tid, serviceType: type as any, scheduledAt: { gte: eightSvcsAgo } },
         orderBy: { scheduledAt: 'desc' }, take: 8,
-        select: { AttendanceRecord: { select: { present: true } } },
+        select: { AttendanceRecord: { where: CURRENT_MEMBERS, select: { present: true } } },
       });
       if (svcs.length === 0) return { serviceKey: svcKey(type), healthScore: 0, avgRate: 0, trend: 0, sessionsReviewed: 0 };
       const rates = svcs.map((s: any) => { const t = s.AttendanceRecord.length; const p = s.AttendanceRecord.filter((r: any) => r.present).length; return t > 0 ? p / t : 0; });
@@ -67,7 +67,7 @@ export class AttendanceAlertsService {
     const services = await this.prisma.service.findMany({
       where: { tenantId: this.tid, scheduledAt: { gte: threeWeeksAgo } },
       orderBy: { scheduledAt: 'asc' },
-      select: { id: true, scheduledAt: true, AttendanceRecord: { select: { memberId: true, present: true } } },
+      select: { id: true, scheduledAt: true, AttendanceRecord: { where: CURRENT_MEMBERS, select: { memberId: true, present: true } } },
     });
     const alerts: { id: string; type: string; severity: string; message: string; memberName?: string | null; memberPhotoUrl?: string | null; timestamp: string }[] = [];
     services.forEach((s: any) => {

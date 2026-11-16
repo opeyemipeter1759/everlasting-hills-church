@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { ACTIVE_MEMBER } from '../members/active-members';
 import type { Env } from '../config/env.validation';
-import { QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere } from './attendance-analytics.utils';
+import { QueryFilter, resolveRange, watStr, svcKey, svcTypeWhere, CURRENT_MEMBERS } from './attendance-analytics.utils';
 
 /** Stat cards, trend, present/absent split, rate-trend, absentee-trend. */
 @Injectable()
@@ -16,7 +16,7 @@ export class AttendanceOverviewService {
   async getOverview(filter: QueryFilter) {
     const { start, end, prevStart, prevEnd } = resolveRange(filter);
     const svcWhere = svcTypeWhere(filter.serviceType);
-    const arWhere = (s: Date, e: Date) => ({ tenantId: this.tid, Service: { scheduledAt: { gte: s, lt: e }, ...svcWhere } });
+    const arWhere = (s: Date, e: Date) => ({ tenantId: this.tid, ...CURRENT_MEMBERS, Service: { scheduledAt: { gte: s, lt: e }, ...svcWhere } });
 
     const [curr, prev, currPresent, prevPresent, currSvcs, prevSvcs, totalMembers] = await Promise.all([
       this.prisma.attendanceRecord.count({ where: arWhere(start, end) }),
@@ -47,7 +47,7 @@ export class AttendanceOverviewService {
     const services = await this.prisma.service.findMany({
       where: { tenantId: this.tid, scheduledAt: { gte: start, lt: end }, ...svcWhere },
       orderBy: { scheduledAt: 'asc' },
-      include: { AttendanceRecord: { select: { present: true } } },
+      include: { AttendanceRecord: { where: CURRENT_MEMBERS, select: { present: true } } },
     });
     return services.map((s: any) => {
       const present = s.AttendanceRecord.filter((r: any) => r.present).length;

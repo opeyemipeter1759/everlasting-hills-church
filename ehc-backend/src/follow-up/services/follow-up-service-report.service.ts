@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { FollowUpReportSentVia, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ACTIVE_MEMBER } from '../../members/active-members';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { NotificationEvents } from '../../notifications/notification-events';
@@ -52,7 +53,8 @@ export class FollowUpServiceReportService {
       unitId,
       OR: [
         { sourceType: 'FIRST_TIMER' as const, Visitor: { serviceId } },
-        { sourceType: 'ABSENTEE' as const, Member: { AttendanceRecord: { none: { serviceId, present: true } } } },
+        // A deactivated member isn't expected at any service, so they are never absent from one.
+        { sourceType: 'ABSENTEE' as const, Member: { ...ACTIVE_MEMBER, AttendanceRecord: { none: { serviceId, present: true } } } },
       ],
     };
   }

@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nest
 import { ConfigService } from '@nestjs/config';
 import { FollowUpStage } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { ACTIVE_MEMBER } from '../../members/active-members';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { ENTRY_INCLUDE } from '../follow-up.types';
@@ -63,7 +64,8 @@ export class FollowUpReadService {
                 { sourceType: 'FIRST_TIMER' as const, Visitor: { serviceId: opts.serviceId } },
                 {
                   sourceType: 'ABSENTEE' as const,
-                  Member: { AttendanceRecord: { none: { serviceId: opts.serviceId, present: true } } },
+                  // A deactivated member isn't expected at any service.
+                  Member: { ...ACTIVE_MEMBER, AttendanceRecord: { none: { serviceId: opts.serviceId, present: true } } },
                 },
               ],
             }

@@ -1,4 +1,13 @@
+import { ACTIVE_MEMBER } from '../members/active-members';
+
 export const WAT_MS = 60 * 60 * 1000; // WAT = UTC+1
+
+/**
+ * Attendance of current members only. A deactivated member has left, so their
+ * records (absences above all) drop out of every figure here, as they already
+ * do from the attendance roll.
+ */
+export const CURRENT_MEMBERS = { Member: ACTIVE_MEMBER };
 
 export type Period = 'today' | 'week' | 'month' | 'year';
 
