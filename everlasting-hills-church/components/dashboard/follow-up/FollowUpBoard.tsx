@@ -19,7 +19,7 @@ export default function FollowUpBoard() {
   // as "none", which is a different thing from "not known yet".
   const counts = summary.isLoading
     ? {}
-    : { master: summary.total, mine: summary.assignedToMe, optedOut: summary.optedOut };
+    : { master: summary.followingUp, mine: summary.assignedToMe, optedOut: summary.optedOut };
   useEffect(() => {
     if (tabs.length > 0 && !tabs.some((tab) => tab.id === active)) setActive(tabs[0].id);
   }, [tabs, active]);

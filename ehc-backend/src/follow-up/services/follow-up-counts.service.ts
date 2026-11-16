@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { FollowUpRollService } from './follow-up-roll.service';
+import { FollowUpNoteActivityService } from './follow-up-note-activity.service';
 import type { MasterListStatus } from './master-list.util';
 import { inScope } from './master-list-filter.util';
+import { threadKey } from './note-activity.util';
 
 export type StatusCounts = Record<MasterListStatus, number>;
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface FollowUpCounts {
   /** Everyone on the roll the team is responsible for. */
@@ -19,6 +23,18 @@ export interface FollowUpCounts {
   integrationAssignedToMe: number;
   /** Nobody is carrying these yet. */
   unassigned: number;
+  /**
+   * The Follow Up board's own list (everyone not yet integrated or opted out),
+   * for the summary at the top of the page.
+   */
+  followUp: {
+    /** Came to the church's notice in the last seven days. */
+    newThisWeek: number;
+    /** Nobody on Follow Up is carrying them yet. */
+    unassigned: number;
+    /** Nothing logged on their thread in the last seven days. */
+    quiet: number;
+  };
 }
 
 const EMPTY: StatusCounts = {
@@ -38,11 +54,16 @@ const EMPTY: StatusCounts = {
  */
 @Injectable()
 export class FollowUpCountsService {
-  constructor(private readonly roll: FollowUpRollService) {}
+  constructor(
+    private readonly roll: FollowUpRollService,
+    private readonly activity: FollowUpNoteActivityService,
+  ) {}
 
-  async summary(actor: AuthUser): Promise<FollowUpCounts> {
-    const everyone = await this.roll.everyone();
+  async summary(actor: AuthUser, now = new Date()): Promise<FollowUpCounts> {
+    const weekAgo = new Date(now.getTime() - WEEK_MS);
+    const [everyone, active] = await Promise.all([this.roll.everyone(), this.activity.activeSince(weekAgo)]);
     const byStatus = { ...EMPTY };
+    const followUp = { newThisWeek: 0, unassigned: 0, quiet: 0 };
     let assignedToMe = 0;
     let integrationAssignedToMe = 0;
     let unassigned = 0;
@@ -54,8 +75,14 @@ export class FollowUpCountsService {
       }
       if (!row.assignedTo) unassigned += 1;
       else if (actor.memberId && row.assignedTo.id === actor.memberId && inScope(row.status, 'FOLLOW_UP')) assignedToMe += 1;
+
+      if (inScope(row.status, 'FOLLOW_UP')) {
+        if (new Date(row.since).getTime() >= weekAgo.getTime()) followUp.newThisWeek += 1;
+        if (!row.assignedTo) followUp.unassigned += 1;
+        if (!active.has(threadKey(row.kind, row.id))) followUp.quiet += 1;
+      }
     }
 
-    return { total: everyone.length, byStatus, assignedToMe, integrationAssignedToMe, unassigned };
+    return { total: everyone.length, byStatus, assignedToMe, integrationAssignedToMe, unassigned, followUp };
   }
 }

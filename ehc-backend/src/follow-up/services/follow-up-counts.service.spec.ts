@@ -1,5 +1,6 @@
 import { FollowUpCountsService } from './follow-up-counts.service';
 import type { FollowUpRollService, RollRow } from './follow-up-roll.service';
+import type { FollowUpNoteActivityService } from './follow-up-note-activity.service';
 import type { AuthUser } from '../../auth/types/auth-user';
 
 function row(over: Partial<RollRow>): RollRow {
@@ -20,9 +21,10 @@ function row(over: Partial<RollRow>): RollRow {
   };
 }
 
-function makeService(rows: RollRow[]) {
+function makeService(rows: RollRow[], activeThreads: string[] = []) {
   const roll = { everyone: jest.fn().mockResolvedValue(rows) } as unknown as FollowUpRollService;
-  return new FollowUpCountsService(roll);
+  const activity = { activeSince: jest.fn().mockResolvedValue(new Set(activeThreads)) } as unknown as FollowUpNoteActivityService;
+  return new FollowUpCountsService(roll, activity);
 }
 
 const viewer = { memberId: 'me' } as AuthUser;
@@ -82,5 +84,24 @@ describe('FollowUpCountsService', () => {
     expect(counts.assignedToMe).toBe(1);
     expect(counts.integrationAssignedToMe).toBe(2);
     expect(counts.byStatus.OPTED_OUT).toBe(2);
+  });
+
+  it("sums up Follow Up's own list: who is new, who nobody carries, who has gone quiet", async () => {
+    const now = new Date('2026-11-16T09:00:00Z');
+    const ruth = { id: 'ruth', name: 'Ruth' };
+    const service = makeService(
+      [
+        row({ id: '1', kind: 'VISITOR', since: '2026-11-15T10:00:00Z', assignedTo: ruth }), // new, talked to
+        row({ id: '2', status: 'AWAY', assignedTo: ruth }), // quiet
+        row({ id: '3', status: 'THIRD_TIMER' }), // nobody carries them, and quiet
+        row({ id: '4', status: 'INTEGRATED', since: '2026-11-15T10:00:00Z' }), // not Follow Up's any more
+        row({ id: '5', status: 'OPTED_OUT' }),
+      ],
+      ['VISITOR:1', 'MEMBER:4'],
+    );
+
+    const counts = await service.summary(viewer, now);
+
+    expect(counts.followUp).toEqual({ newThisWeek: 1, unassigned: 1, quiet: 2 });
   });
 });

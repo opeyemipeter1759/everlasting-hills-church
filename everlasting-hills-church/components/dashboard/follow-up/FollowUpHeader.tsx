@@ -2,9 +2,27 @@
 
 import { CalendarDays, PhoneCall } from "lucide-react";
 import { useMe } from "@/lib/api";
-import { freshness, RefreshButton, WeekProgress } from "./header-parts";
+import { freshness, RefreshButton } from "./header-parts";
 import { StatCards } from "./StatCards";
+import { rollWords, weekWords, type Words } from "./summary-words";
 import { useFollowUpSummary } from "./useFollowUpSummary";
+
+/** A sentence with its figures in bold, so the numbers can be read at a glance. */
+function Figures({ words }: { words: Words }) {
+  return (
+    <>
+      {words.map((word, i) =>
+        typeof word === "number" ? (
+          <strong key={i} className="font-semibold tabular-nums text-white">
+            {word}
+          </strong>
+        ) : (
+          word
+        ),
+      )}
+    </>
+  );
+}
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -47,21 +65,21 @@ export function FollowUpHeader() {
               </span>
               Follow Up
             </h1>
-            <p className="mt-2 flex max-w-md flex-wrap items-center gap-x-1 text-sm text-white/70">
-              {firstName ? `${greeting()}, ${firstName}.` : null}
-              {/* Until the figures land, say nothing: "Everyone has been
-                  reached" would be a claim we can't yet make. */}
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/75">
+              {firstName ? `${greeting()}, ${firstName}. ` : null}
+              {/* Until the figures land, say nothing: a zero would be a claim
+                  we can't yet make. */}
               {summary.isLoading ? (
-                <span className="inline-block h-4 w-56 animate-pulse rounded bg-white/20" />
-              ) : summary.toCall > 0 ? (
-                <span>
-                  {summary.toCall} {summary.toCall === 1 ? "person is" : "people are"} waiting to hear from the church
-                  today.
-                </span>
-              ) : (
-                <span>Everyone has been reached. Nobody is waiting on a call.</span>
+                <span className="inline-block h-4 w-56 animate-pulse rounded bg-white/20 align-middle" />
+              ) : summary.denied ? null : (
+                <Figures words={rollWords(summary)} />
               )}
             </p>
+            {!summary.isLoading && !summary.denied && summary.followingUp > 0 && summary.thisWeek && (
+              <p className="mt-1 max-w-xl text-sm leading-relaxed text-white/75">
+                <Figures words={weekWords(summary.thisWeek)} />
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col items-end gap-2">
@@ -71,12 +89,6 @@ export function FollowUpHeader() {
             </span>
           </div>
         </div>
-
-    {/*     {!summary.denied && summary.total > 0 && (
-          <div className="relative">
-            <WeekProgress percent={summary.progress} reached={summary.reachedThisWeek} total={summary.total} />
-          </div>
-        )} */}
       </header>
 
       {!summary.denied && <StatCards summary={summary} />}

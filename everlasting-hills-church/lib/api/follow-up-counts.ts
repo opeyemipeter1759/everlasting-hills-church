@@ -11,6 +11,15 @@ export interface FollowUpCounts {
   /** The Integration Team's own caseload for whoever is asking. */
   integrationAssignedToMe: number;
   unassigned: number;
+  /** The Follow Up board's own list: everyone not yet integrated or opted out. */
+  followUp: {
+    /** Came to the church's notice in the last seven days. */
+    newThisWeek: number;
+    /** Nobody on Follow Up is carrying them yet. */
+    unassigned: number;
+    /** Nothing logged on their thread in the last seven days. */
+    quiet: number;
+  };
 }
 
 /** How often the figures catch up with what the team has been doing. */

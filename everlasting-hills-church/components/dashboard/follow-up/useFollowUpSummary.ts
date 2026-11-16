@@ -2,25 +2,27 @@
 
 import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTotalMembers } from "@/lib/api";
-import { useFollowUpEntries } from "@/lib/api/follow-up-pipeline";
 import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
 import type { ApiError } from "@/lib/api/axios";
 
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
 export interface FollowUpSummary {
-  /** Everyone on the church roll, including those who never signed in. */
-  totalMembers: number;
+  /** Everyone on the roll, signed in or not: integrated and opted out included. */
+  total: number;
+  /** The Master list tab: everyone not yet integrated or opted out. */
+  followingUp: number;
+  firstTimers: number;
+  secondTimers: number;
+  thirdTimers: number;
+  away: number;
+  /**
+   * Of the Master list: new in the last seven days, with nobody assigned, and
+   * with nothing logged in the last seven days. Null until the API sends them.
+   */
+  thisWeek: { newThisWeek: number; unassigned: number; quiet: number } | null;
   /** Assigned to whoever is looking — so this figure differs per person. */
   assignedToMe: number;
   integrated: number;
   optedOut: number;
-  /** Contacted in the last 7 days, and that as a portion of everyone active. */
-  reachedThisWeek: number;
-  total: number;
-  progress: number;
-  toCall: number;
   updatedAt: number;
   isFetching: boolean;
   /** First load — the figures are not known yet, so show placeholders, not zeros. */
@@ -31,50 +33,34 @@ export interface FollowUpSummary {
 }
 
 /**
- * The figures the Follow Up header states, worked out from the entries the
- * viewer can already see — one query, so the header costs nothing extra.
+ * The figures the Follow Up header states. All of them are counted by the API
+ * over the same roll the Master List reads, so the summary, the cards and the
+ * tab badges always say what the table says.
  */
 export function useFollowUpSummary(): FollowUpSummary {
   const queryClient = useQueryClient();
-  const { data: entries = [], isFetching, isLoading: entriesLoading, dataUpdatedAt, error } = useFollowUpEntries({});
-  const { data: members, isLoading: membersLoading } = useTotalMembers();
-  // Integrated, opted out and your own caseload are counted over the Master
-  // List itself, so the cards say what the table says.
-  const { data: counts, isLoading: countsLoading, isFetching: countsFetching } = useFollowUpCounts();
+  const { data: counts, isLoading, isFetching, dataUpdatedAt, error } = useFollowUpCounts();
 
   return useMemo(() => {
-    const active = entries.filter((e) => e.memberStatus !== "OPTED_OUT");
-    const since = Date.now() - WEEK_MS;
-    const reachedThisWeek = active.filter(
-      (e) => e.lastContactAt && new Date(e.lastContactAt).getTime() >= since,
-    ).length;
-
+    const by = counts?.byStatus;
+    const followUp = counts?.followUp;
     return {
-      totalMembers: members?.total ?? 0,
+      total: counts?.total ?? 0,
+      // The Master list holds everyone not yet integrated or opted out.
+      followingUp: by ? by.FIRST_TIMER + by.SECOND_TIMER + by.THIRD_TIMER + by.AWAY : 0,
+      firstTimers: by?.FIRST_TIMER ?? 0,
+      secondTimers: by?.SECOND_TIMER ?? 0,
+      thirdTimers: by?.THIRD_TIMER ?? 0,
+      away: by?.AWAY ?? 0,
+      thisWeek: followUp ? { newThisWeek: followUp.newThisWeek, unassigned: followUp.unassigned, quiet: followUp.quiet } : null,
       assignedToMe: counts?.assignedToMe ?? 0,
       integrated: counts?.byStatus.INTEGRATED ?? 0,
       optedOut: counts?.byStatus.OPTED_OUT ?? 0,
-      reachedThisWeek,
-      total: active.length,
-      progress: active.length === 0 ? 0 : Math.round((reachedThisWeek / active.length) * 100),
-      toCall: active.filter((e) => e.dueStatus === "DUE" || e.dueStatus === "OVERDUE").length,
       updatedAt: dataUpdatedAt,
-      isFetching: isFetching || countsFetching,
-      isLoading: entriesLoading || membersLoading || countsLoading,
+      isFetching,
+      isLoading,
       denied: (error as ApiError | null)?.status === 403,
       refresh: () => queryClient.invalidateQueries({ queryKey: ["follow-up"] }),
     };
-  }, [
-    entries,
-    members,
-    counts,
-    isFetching,
-    countsFetching,
-    entriesLoading,
-    membersLoading,
-    countsLoading,
-    dataUpdatedAt,
-    error,
-    queryClient,
-  ]);
+  }, [counts, isFetching, isLoading, dataUpdatedAt, error, queryClient]);
 }

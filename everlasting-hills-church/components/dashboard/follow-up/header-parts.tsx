@@ -2,26 +2,6 @@
 
 import { RefreshCw } from "lucide-react";
 
-/** How much of the church's follow-up list has been reached this week. */
-export function WeekProgress({ percent, reached, total }: { percent: number; reached: number; total: number }) {
-  return (
-    <div className="mt-6">
-      <div className="flex items-end justify-between gap-3 text-xs">
-        <span className="font-medium text-white/80">
-          {reached} of {total} reached this week
-        </span>
-        <span className="font-bold tabular-nums text-white">{percent}%</span>
-      </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/15" role="presentation">
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-[#FFB3C1] to-white transition-[width] duration-700 ease-out"
-          style={{ width: `${Math.max(percent, 2)}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 export function RefreshButton({ onClick, busy }: { onClick: () => void; busy: boolean }) {
   return (
     <button

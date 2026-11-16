@@ -31,6 +31,16 @@ export class FollowUpNoteActivityService {
     });
   }
 
+  /** Everyone with something logged on their thread since `since`, as "KIND:id" keys. */
+  async activeSince(since: Date): Promise<Set<string>> {
+    const notes = await this.prisma.followUpNote.findMany({
+      where: { tenantId: this.tenantId, deletedAt: null, createdAt: { gte: since } },
+      select: { subjectKind: true, subjectId: true },
+      distinct: ['subjectKind', 'subjectId'],
+    });
+    return new Set(notes.map((n) => threadKey(n.subjectKind, n.subjectId)));
+  }
+
   /**
    * Activity for each row on a Master List page, keyed by "KIND:id". Worked
    * out for the page only, so it costs the same however many people the
