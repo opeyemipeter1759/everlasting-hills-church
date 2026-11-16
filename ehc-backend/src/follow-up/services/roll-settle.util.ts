@@ -17,7 +17,9 @@ export function settle(
   waiting: Map<string, AgreedStatus>,
 ): RollRow[] {
   return rows.map((row) => {
-    const agreedStatus = agreed.get(row.id);
+    // A deactivated or opted-out account already reads OPTED_OUT, and nothing
+    // agreed on the list moves it back until the account is reactivated.
+    const agreedStatus = row.status === 'OPTED_OUT' ? undefined : agreed.get(row.id);
     const supersededBy = row.latestEntryAt ? new Date(row.latestEntryAt) : null;
     const stillStands = !!agreedStatus && (!supersededBy || agreedStatus.at >= supersededBy);
 

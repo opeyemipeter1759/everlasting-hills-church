@@ -44,8 +44,9 @@ const INTEGRATED_OUTCOMES = ['WANT_TO_BE_MEMBER', 'BECAME_MEMBER', 'RETURNED'];
 
 /**
  * Where a member stands, most decisive fact first: they asked not to be
- * contacted; an outcome says they've settled; they're being followed up for
- * being away; otherwise how many times they have actually been here.
+ * contacted, or the church deactivated them; an outcome says they've settled;
+ * they're being followed up for being away; otherwise how many times they have
+ * actually been here.
  */
 export function memberStatusFor(
   memberStatus: MemberStatus,
@@ -53,7 +54,7 @@ export function memberStatusFor(
   sourceType: string | null,
   outcome: string | null,
 ): MasterListStatus {
-  if (memberStatus === MemberStatus.OPTED_OUT) return 'OPTED_OUT';
+  if (memberStatus !== MemberStatus.ACTIVE) return 'OPTED_OUT';
   if (outcome && INTEGRATED_OUTCOMES.includes(outcome)) return 'INTEGRATED';
   if (sourceType === 'ABSENTEE') return 'AWAY';
   if (attended <= 1) return 'FIRST_TIMER';

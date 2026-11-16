@@ -43,7 +43,8 @@ export class FollowUpPersonService {
     ]);
     return unassignedIfOptedOut({
       ...person,
-      status: agreed.get(id)?.status ?? person.status,
+      // A deactivated or opted-out account reads OPTED_OUT whatever was agreed on the list.
+      status: person.status === 'OPTED_OUT' ? person.status : agreed.get(id)?.status ?? person.status,
       statusAwaitingApproval: waiting.get(id)?.status ?? null,
       milestones: moves.map((m) => ({
         status: m.toStatus as 'INTEGRATED' | 'OPTED_OUT',
