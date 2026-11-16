@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiCreatedResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { CreateTestimonialDto, MarkTestimonialReadDto, UpdateTestimonialDto } from './dto/testimonial.dto';
@@ -11,6 +12,20 @@ import { TestimonialsService } from './testimonials.service';
 @Controller('testimonials')
 export class TestimonialsController {
   constructor(private readonly testimonialsService: TestimonialsService) {}
+
+  /**
+   * Public: drives the homepage "My Everlasting Hills Experience" section
+   * (everlasting-hills-church/data/testimonials.ts calls it with a plain fetch).
+   * Published items only, ordered by `order` then `publishedAt`.
+   * Declared before ':id' routes so "published" is never read as an id.
+   */
+  @Public()
+  @Get('published')
+  @ApiOperation({ summary: 'List published testimonials (public)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async listPublished(@Query('limit') limit?: string) {
+    return this.testimonialsService.listPublished(limit ? Number(limit) : 20);
+  }
 
   // ── Admin (ADMIN+ can view/moderate/delete; PASTOR+ can also create/edit) ───
 

@@ -29,7 +29,8 @@ export const PAGE_REGISTRY: PageDef[] = [
   { key: 'home', title: 'Homepage', route: '/', group: 'Homepage', highImpact: true },
 
   { key: 'about', title: 'About', route: '/about', group: 'About', editor: 'structured', contentType: 'about' },
-  { key: 'about/beliefs', title: 'What We Believe', route: '/beliefs', group: 'About', editor: 'structured', contentType: 'beliefs' },
+  // Replaced "What We Believe" (about/beliefs, /beliefs now redirects here). Its saved rows stay in the database.
+  { key: 'about/cultures', title: 'Our Culture', route: '/cultures', group: 'About', editor: 'structured', contentType: 'cultures' },
   { key: 'about/pastor', title: 'Lead Pastor', route: '/pastor', group: 'About' },
 
   { key: 'ministries', title: 'Ministries', route: '/ministries', group: 'Ministries', editor: 'structured', contentType: 'ministries' },
@@ -67,7 +68,7 @@ export function cacheTagFor(key: string): string {
 }
 
 /**
- * Decode a `:key` route param back into a registry key (e.g. "about/beliefs").
+ * Decode a `:key` route param back into a registry key (e.g. "about/cultures").
  *
  * Some hosting front ends — Cloud Run's included — normalize a %2F-encoded
  * slash back into a literal "/" before the request ever reaches this app, which
