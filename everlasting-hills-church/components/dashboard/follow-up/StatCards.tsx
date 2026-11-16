@@ -60,9 +60,9 @@ export function StatCards({ summary }: { summary: FollowUpSummary }) {
         loading={summary.isLoading}
         icon={Users}
         tone="violet"
-        value={summary.total}
-        label="Church members"
-        note="Everyone on the roll, signed in or not"
+        value={summary.visitors}
+        label="Total visitors"
+        note="Every first timer on record, with an account or not"
       />
       <StatCard
         loading={summary.isLoading}

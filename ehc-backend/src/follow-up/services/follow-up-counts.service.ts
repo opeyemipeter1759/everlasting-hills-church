@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../../prisma/prisma.service';
+import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
+import { countVisitorsOnRecord } from '../../visitors/visitors-on-record';
 import { FollowUpRollService } from './follow-up-roll.service';
 import { FollowUpNoteActivityService } from './follow-up-note-activity.service';
 import type { MasterListStatus } from './master-list.util';
@@ -23,6 +27,8 @@ export interface FollowUpCounts {
   integrationAssignedToMe: number;
   /** Nobody is carrying these yet. */
   unassigned: number;
+  /** First timers on record — the same total the admin First Timers page shows. */
+  visitors: number;
   /**
    * The Follow Up board's own list (everyone not yet integrated or opted out),
    * for the summary at the top of the page.
@@ -54,14 +60,24 @@ const EMPTY: StatusCounts = {
  */
 @Injectable()
 export class FollowUpCountsService {
+  private readonly tenantId: string;
+
   constructor(
     private readonly roll: FollowUpRollService,
     private readonly activity: FollowUpNoteActivityService,
-  ) {}
+    private readonly prisma: PrismaService,
+    config: ConfigService<Env, true>,
+  ) {
+    this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
+  }
 
   async summary(actor: AuthUser, now = new Date()): Promise<FollowUpCounts> {
     const weekAgo = new Date(now.getTime() - WEEK_MS);
-    const [everyone, active] = await Promise.all([this.roll.everyone(), this.activity.activeSince(weekAgo)]);
+    const [everyone, active, visitors] = await Promise.all([
+      this.roll.everyone(),
+      this.activity.activeSince(weekAgo),
+      countVisitorsOnRecord(this.prisma, this.tenantId),
+    ]);
     const byStatus = { ...EMPTY };
     const followUp = { newThisWeek: 0, unassigned: 0, quiet: 0 };
     let assignedToMe = 0;
@@ -83,6 +99,6 @@ export class FollowUpCountsService {
       }
     }
 
-    return { total: everyone.length, byStatus, assignedToMe, integrationAssignedToMe, unassigned, followUp };
+    return { total: everyone.length, byStatus, assignedToMe, integrationAssignedToMe, unassigned, visitors, followUp };
   }
 }

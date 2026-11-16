@@ -38,8 +38,9 @@ function StatCard({
 }
 
 /**
- * Four counts: the true all-time total (from the backend — this page's own
- * `visitors` prop only ever holds unconverted rows), how many of those are
+ * Four counts: every first timer on record (from the backend, the same total
+ * the Follow Up page shows; this page's own rows are only the unconverted
+ * ones), how many of those are
  * still in the pipeline right now, and an online-first-timer breakdown using
  * the same "awaiting 2nd visit" check-in flag already shown per-row.
  */
@@ -55,7 +56,7 @@ export default function FirstTimerStatsCards({ active }: { active: VisitorRow[] 
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <StatCard
         icon={Users}
-        label="First-Timers Ever"
+        label="Total visitors"
         value={stats?.total ?? 0}
         loading={isLoading}
         iconBg="bg-[#FFE8ED] dark:bg-[#87102C]/25"

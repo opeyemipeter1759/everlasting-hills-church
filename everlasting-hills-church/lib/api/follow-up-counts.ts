@@ -11,6 +11,8 @@ export interface FollowUpCounts {
   /** The Integration Team's own caseload for whoever is asking. */
   integrationAssignedToMe: number;
   unassigned: number;
+  /** First timers on record — the same total the admin First Timers page shows. */
+  visitors: number;
   /** The Follow Up board's own list: everyone not yet integrated or opted out. */
   followUp: {
     /** Came to the church's notice in the last seven days. */

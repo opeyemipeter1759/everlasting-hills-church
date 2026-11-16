@@ -24,7 +24,11 @@ function row(over: Partial<RollRow>): RollRow {
 function makeService(rows: RollRow[], activeThreads: string[] = []) {
   const roll = { everyone: jest.fn().mockResolvedValue(rows) } as unknown as FollowUpRollService;
   const activity = { activeSince: jest.fn().mockResolvedValue(new Set(activeThreads)) } as unknown as FollowUpNoteActivityService;
-  return new FollowUpCountsService(roll, activity);
+  const prisma = {
+    visitor: { count: jest.fn().mockResolvedValue(3), findMany: jest.fn().mockResolvedValue([{ convertedToMemberId: 'm1' }]) },
+    member: { findMany: jest.fn().mockResolvedValue([{ id: 'm1' }]) },
+  };
+  return new FollowUpCountsService(roll, activity, prisma as never, { get: () => 't1' } as never);
 }
 
 const viewer = { memberId: 'me' } as AuthUser;
@@ -103,5 +107,10 @@ describe('FollowUpCountsService', () => {
     const counts = await service.summary(viewer, now);
 
     expect(counts.followUp).toEqual({ newThisWeek: 1, unassigned: 1, quiet: 2 });
+  });
+
+  it('gives the same first-timer total the admin First Timers page shows', async () => {
+    const counts = await makeService([]).summary(viewer);
+    expect(counts.visitors).toBe(3);
   });
 });

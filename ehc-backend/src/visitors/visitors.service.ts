@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { UpdateVisitorDto } from './dto/update-visitor.dto';
+import { visitorsOnRecord } from './visitors-on-record';
 
 /**
  * Visitor queries + admin edit/delete for first-timer records.
@@ -146,14 +147,15 @@ export class VisitorsService {
     return { id, deleted: true };
   }
 
-  /** All-time first-timer count broken down by attendance type. Same
-   * in-person/online matching convention as AnalyticsService.getFirstTimerPipeline. */
+  /** First timers on record (the same total the Follow Up page shows), broken
+   * down by attendance type. Same in-person/online matching convention as
+   * AnalyticsService.getFirstTimerPipeline. */
   async getStats() {
-    const t = this.tenantId;
+    const onRecord = await visitorsOnRecord(this.prisma, this.tenantId);
     const [total, onsite, online] = await Promise.all([
-      this.prisma.visitor.count({ where: { tenantId: t } }),
-      this.prisma.visitor.count({ where: { tenantId: t, attendanceType: { contains: 'person', mode: 'insensitive' } } }),
-      this.prisma.visitor.count({ where: { tenantId: t, attendanceType: { contains: 'online', mode: 'insensitive' } } }),
+      this.prisma.visitor.count({ where: onRecord }),
+      this.prisma.visitor.count({ where: { ...onRecord, attendanceType: { contains: 'person', mode: 'insensitive' } } }),
+      this.prisma.visitor.count({ where: { ...onRecord, attendanceType: { contains: 'online', mode: 'insensitive' } } }),
     ]);
     return { total, onsite, online };
   }

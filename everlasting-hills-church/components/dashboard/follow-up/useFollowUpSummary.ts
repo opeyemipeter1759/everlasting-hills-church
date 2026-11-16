@@ -6,8 +6,8 @@ import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
 import type { ApiError } from "@/lib/api/axios";
 
 export interface FollowUpSummary {
-  /** Everyone on the roll, signed in or not: integrated and opted out included. */
-  total: number;
+  /** First timers on record, with an account or not — the admin First Timers page's total too. */
+  visitors: number;
   /** The Master list tab: everyone not yet integrated or opted out. */
   followingUp: number;
   firstTimers: number;
@@ -45,7 +45,7 @@ export function useFollowUpSummary(): FollowUpSummary {
     const by = counts?.byStatus;
     const followUp = counts?.followUp;
     return {
-      total: counts?.total ?? 0,
+      visitors: counts?.visitors ?? 0,
       // The Master list holds everyone not yet integrated or opted out.
       followingUp: by ? by.FIRST_TIMER + by.SECOND_TIMER + by.THIRD_TIMER + by.AWAY : 0,
       firstTimers: by?.FIRST_TIMER ?? 0,
