@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
@@ -67,6 +68,8 @@ export class FollowUpAuthService {
    * what grants access. */
   async hasUnitAccess(actor: AuthUser): Promise<boolean> {
     if (actor.effectiveRoles.some((r) => ADMIN_PLUS.includes(r))) return true;
+    // The first-timer contact reads the pipeline to send opening messages.
+    if (actor.effectiveRoles.includes(Role.FIRST_TIMER_CONTACT)) return true;
     if (actor.unitLeadOf.length > 0) return true;
     if (actor.hodOf?.length) return true;
     if (!actor.memberId) return false;

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { FollowUpPipelineController } from './follow-up-pipeline.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { InboxModule } from '../inbox/inbox.module';
@@ -46,7 +47,7 @@ import { FollowUpRemindersService } from './services/follow-up-reminders.service
   // its `/follow-up/service-reports` (history) route has the same single-segment
   // shape as FollowUpController's `/follow-up/:id` — Express/Nest match routes in
   // registration order, so the more specific literal path must come first.
-  controllers: [FollowUpServiceReportsController, FollowUpController, FollowUpMemberStatusController],
+  controllers: [FollowUpServiceReportsController, FollowUpPipelineController, FollowUpController, FollowUpMemberStatusController],
   providers: [
     FollowUpAuthService,
     FollowUpAssignableService,

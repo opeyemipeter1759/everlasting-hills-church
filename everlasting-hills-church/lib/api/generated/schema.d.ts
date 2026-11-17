@@ -4039,6 +4039,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/follow-up/overview/{year}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The year at a glance: twelve months and their total */
+        get: operations["FollowUpPipelineController_year"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/overview/{year}/{month}/breakdowns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How one month heard about the church, and who has them */
+        get: operations["FollowUpPipelineController_breakdowns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/follow-up/person/{kind}/{id}": {
         parameters: {
             query?: never;
@@ -4048,6 +4082,23 @@ export interface paths {
         };
         /** Full details of one first-timer or member (Follow-Up team only) */
         get: operations["FollowUpController_person"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/follow-up/pipeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** First-timers and the status counts beside them, under the same filters */
+        get: operations["FollowUpPipelineController_people"];
         put?: never;
         post?: never;
         delete?: never;
@@ -21649,6 +21700,73 @@ export interface operations {
             };
         };
     };
+    FollowUpPipelineController_year: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                year: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpPipelineController_breakdowns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                year: number;
+                month: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_person: {
         parameters: {
             query?: never;
@@ -21657,6 +21775,47 @@ export interface operations {
                 kind: string;
                 id: string;
             };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FollowUpPipelineController_people: {
+        parameters: {
+            query?: {
+                skip?: unknown;
+                take?: unknown;
+                notContacted?: unknown;
+                /** @description A member id, or "none" */
+                assigneeId?: unknown;
+                search?: unknown;
+                month?: unknown;
+                year?: unknown;
+                status?: "FIRST_TIMER" | "SECOND_TIMER" | "THIRD_TIMER" | "INTEGRATED" | "OPTED_OUT";
+            };
+            header?: never;
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;

@@ -22927,6 +22927,126 @@
         ]
       }
     },
+    "/follow-up/overview/{year}": {
+      "get": {
+        "operationId": "FollowUpPipelineController_year",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "year",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "The year at a glance: twelve months and their total",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/overview/{year}/{month}/breakdowns": {
+      "get": {
+        "operationId": "FollowUpPipelineController_breakdowns",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "year",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "path",
+            "name": "month",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "How one month heard about the church, and who has them",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/person/{kind}/{id}": {
       "get": {
         "operationId": "FollowUpController_person",
@@ -22986,6 +23106,112 @@
           }
         ],
         "summary": "Full details of one first-timer or member (Follow-Up team only)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/pipeline": {
+      "get": {
+        "operationId": "FollowUpPipelineController_people",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "take",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "notContacted",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "description": "A member id, or \"none\"",
+            "in": "query",
+            "name": "assigneeId",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "FIRST_TIMER",
+                "SECOND_TIMER",
+                "THIRD_TIMER",
+                "INTEGRATED",
+                "OPTED_OUT"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "First-timers and the status counts beside them, under the same filters",
         "tags": [
           "follow-up"
         ]
