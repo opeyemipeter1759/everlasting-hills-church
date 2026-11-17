@@ -57,6 +57,17 @@ export class FirstTimerDto {
   @MaxLength(80)
   invited_by?: string;
 
+  @ApiProperty({ example: '', required: false, description: 'How they heard, when they chose Other' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  heard_from_other?: string;
+
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
+  @IsBoolean()
+  is_student?: boolean;
+
   @ApiProperty({ example: false, required: false })
   @IsOptional()
   @IsBoolean()

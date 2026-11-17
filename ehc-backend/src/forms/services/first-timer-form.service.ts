@@ -12,6 +12,9 @@ import { buildFirstTimerAdminEmail } from '../../notifications/templates/first-t
 import { composeBirthdayIso } from '../birthday.util';
 import { FormsEmailDispatchService } from './forms-email-dispatch.service';
 import { VisitorEvents, type VisitorCreatedPayload } from '../../notifications/notification-events';
+import { normalizeNigerianPhone } from '../../common/phone.util';
+import { heardFromProblems } from '../first-timer-heard-from.schema';
+import { findPossibleReturn, lagosDay } from './first-timer-return';
 
 @Injectable()
 export class FirstTimerFormService {
@@ -29,34 +32,32 @@ export class FirstTimerFormService {
 
   async submitFirstTimer(data: FirstTimerDto) {
     const normalizedEmail = data.email?.trim();
-    const normalizedPhone = data.phone_number.trim();
+    const normalizedPhone = normalizeNigerianPhone(data.phone_number) ?? data.phone_number.trim();
 
-    if (normalizedEmail) {
-      const existing = await this.prisma.visitor.findFirst({
-        where: { email: normalizedEmail, tenantId: this.tenantId },
-      });
-      if (existing) {
-        throw new BadRequestException(`A visitor with email "${normalizedEmail}" already exists`);
-      }
-    }
-    if (normalizedPhone) {
-      const existing = await this.prisma.visitor.findFirst({
-        where: { phone: normalizedPhone, tenantId: this.tenantId },
-      });
-      if (existing) {
-        throw new BadRequestException(`A visitor with phone number "${normalizedPhone}" already exists`);
-      }
-    }
+    const problems = heardFromProblems({
+      howDidYouLearn: data.how_did_you_learn,
+      invitedBy: data.invited_by,
+      heardFromOther: data.heard_from_other,
+    });
+    if (problems.length) throw new BadRequestException(problems.join('. '));
+
+    // A phone or email the church already has is a possible return visit, not
+    // an error: the form goes in, flagged for staff to confirm. Families share
+    // phones, so nothing is merged.
+    const possibleReturn = await findPossibleReturn(this.prisma, this.tenantId, normalizedPhone, normalizedEmail ?? null);
 
     // find-or-create (not a plain lookup): a first-timer registering live is a real
     // visit happening now, so it's fine to create today's Service row on demand —
     // mirrors what attendance check-in already does for the same reason.
     const todaysService = await this.sessionWindow.findOrCreateTodayService();
+    // Their first visit is the day of the service they came to, in Lagos time.
+    const firstVisitDate = lagosDay(todaysService?.scheduledAt ?? new Date());
+    const visitorId = randomUUID();
 
-    const [visitor] = await Promise.all([
+    const [visitor] = await this.prisma.$transaction([
       this.prisma.visitor.create({
         data: {
-          id: randomUUID(),
+          id: visitorId,
           tenantId: this.tenantId,
           firstName: data.first_name.trim(),
           lastName: data.last_name.trim(),
@@ -66,7 +67,12 @@ export class FirstTimerFormService {
           dateOfBirth: composeBirthdayIso(data.birth_day, data.birth_month),
           attendanceType: data.attendance_type ?? null,
           howDidYouLearn: data.how_did_you_learn ?? null,
-          invitedBy: data.invited_by ?? null,
+          invitedBy: data.invited_by?.trim() || null,
+          heardFromOther: data.heard_from_other?.trim() || null,
+          isStudent: data.is_student ?? null,
+          firstVisitDate,
+          possibleReturnVisitorId: possibleReturn.visitorId,
+          possibleReturnMemberId: possibleReturn.memberId,
           locatedInIbadan: data.located_in_ibadan ?? null,
           membershipInterest: data.membership_interest ?? null,
           address: data.address ?? null,
@@ -78,6 +84,9 @@ export class FirstTimerFormService {
           shareForConnections: data.share_for_connections ?? false,
           serviceId: todaysService?.id ?? null,
         },
+      }),
+      this.prisma.firstTimerVisit.create({
+        data: { id: randomUUID(), tenantId: this.tenantId, visitorId, visitedOn: firstVisitDate, source: 'FORM' },
       }),
       this.prisma.formSubmission.create({
         data: {
