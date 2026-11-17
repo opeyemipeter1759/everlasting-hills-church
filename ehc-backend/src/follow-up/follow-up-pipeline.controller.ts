@@ -9,6 +9,7 @@ import { PIPELINE_STATUSES, type PipelineFilters, type PipelineStatus } from '..
 import { PrismaService } from '../prisma/prisma.service';
 import { allAnswers, publicAnswers } from '../visitors/first-timer-answers';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
+import { PhotoUrlService } from './photos/photo-url.service';
 
 const STAGES = ['UNASSIGNED', 'ASSIGNED', 'IN_PROGRESS', 'AWAITING_REVIEW', 'CONFIRMED', 'REOPENED', 'OPTED_OUT'];
 
@@ -55,6 +56,7 @@ export class FollowUpPipelineController {
     private readonly pipeline: PipelineRepository,
     private readonly auth: FollowUpAuthService,
     private readonly prisma: PrismaService,
+    private readonly photos: PhotoUrlService,
   ) {}
 
   @Get('pipeline')
@@ -69,7 +71,9 @@ export class FollowUpPipelineController {
   @ApiQuery({ name: 'skip', required: false })
   async people(@CurrentUser() actor: AuthUser, @Query() query: Record<string, string | undefined>) {
     await this.auth.requireAccess(actor);
-    return this.pipeline.list(parsePipelineFilters(query));
+    const page = await this.pipeline.list(parsePipelineFilters(query));
+    // Only keys from rows this tenant's own query returned are signed, the whole page in one call.
+    return { ...page, rows: await this.photos.attach(page.rows) };
   }
 
   @Get('overview/:year')
@@ -99,7 +103,8 @@ export class FollowUpPipelineController {
     const person = await this.pipeline.one(visitorId);
     const visitor = person ? await this.prisma.visitor.findUnique({ where: { id: visitorId } }) : null;
     if (!person || !visitor) throw new NotFoundException('First-timer not found');
-    return { person, answers: allAnswers(visitor) };
+    const [withPhoto] = await this.photos.attach([person]);
+    return { person: withPhoto, answers: allAnswers(visitor) };
   }
 
   @Get('first-timers/:visitorId/answers')

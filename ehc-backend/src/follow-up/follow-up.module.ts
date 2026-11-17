@@ -4,6 +4,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 import { InboxModule } from '../inbox/inbox.module';
 import { AttendanceModule } from '../attendance/attendance.module';
+import { FirstTimerPhotosModule } from './photos/first-timer-photos.module';
 import { FollowUpServiceReportsController } from './follow-up-service-reports.controller';
 import { FollowUpController } from './follow-up.controller';
 import { FollowUpMemberStatusController } from './follow-up-member-status.controller';
@@ -42,7 +43,7 @@ import { FollowUpGamificationService } from './services/follow-up-gamification.s
 import { FollowUpRemindersService } from './services/follow-up-reminders.service';
 
 @Module({
-  imports: [PrismaModule, AuthModule, InboxModule, AttendanceModule],
+  imports: [PrismaModule, AuthModule, InboxModule, AttendanceModule, FirstTimerPhotosModule],
   // FollowUpServiceReportsController must be registered before FollowUpController:
   // its `/follow-up/service-reports` (history) route has the same single-segment
   // shape as FollowUpController's `/follow-up/:id` — Express/Nest match routes in
