@@ -55,7 +55,8 @@ export async function applyPhones(prisma: PrismaClient, tenantId: string, change
       written += count;
     }
     return written;
-  });
+    // One update per person over the pooler: far longer than the 5 second default.
+  }, { maxWait: 20_000, timeout: 180_000 });
 }
 
 if (require.main === module) {
