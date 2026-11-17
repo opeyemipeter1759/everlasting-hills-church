@@ -21,6 +21,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { MembersModule } from './members/members.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { FollowUpModule } from './follow-up/follow-up.module';
+import { FollowUpWorkflowModule } from './follow-up/follow-up-workflow.module';
 import { PipelineModule } from './pipeline/pipeline.module';
 import { OutboxModule } from './outbox/outbox.module';
 import { EvangelismModule } from './evangelism/evangelism.module';
@@ -143,6 +144,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     PipelineModule,
     OutboxModule,
     FollowUpModule,
+    FollowUpWorkflowModule,
     EvangelismModule,
     CmsModule,
     VisitorsModule,

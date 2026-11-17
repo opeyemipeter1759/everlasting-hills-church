@@ -10,6 +10,7 @@ import AddMemberForm from "@/components/dashboard/admin/unit/AddMemberForm";
 import UnitLeadTabs from "./UnitLeadTabs";
 import { Select } from "@/components/ui/select";
 import RefreshButton from "@/components/ui/button/RefreshButton";
+import ApprovalsQueueCard from "@/components/dashboard/follow-up/v2/approvals/ApprovalsQueueCard";
 import Link from "next/link";
 
 function MemberPositionPicker({
@@ -75,7 +76,6 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
 
   return (
     <div className="space-y-5 mx-auto max-w-full">
-      {/* Header */}
       <div>
         <div className="flex flex-col md:flex-row gap-3 justify-between">
           <div className="flex items-center gap-2">
@@ -110,6 +110,7 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
       </div>
 
       <UnitLeadTabs unitId={unitId} active="members" />
+      <ApprovalsQueueCard unitId={unitId} />
 
       {unit && (
         <div className="grid items-stretch gap-5 lg:h-[calc(100dvh-17rem)] lg:grid-cols-[minmax(15rem,0.8fr)_minmax(0,1.6fr)]">
@@ -128,7 +129,6 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
         </div>
       )}
 
-      {/* Member panel */}
       <div className="bg-white dark:bg-[#1c1c1e] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100 dark:border-white/8 flex items-center justify-between">
           <p className="text-[10px] font-bold uppercase tracking-[0.13em] xs:tracking-[0.25em] text-gray-400 dark:text-gray-500">
@@ -159,7 +159,6 @@ export default function UnitLeadDashboard({ unitId }: { unitId: string }) {
             />
           )}
 
-          {/* Loading members */}
           {!unit && summary && (
             <div className="space-y-2 animate-pulse">
               {[1, 2, 3].map((i) => (

@@ -14,4 +14,13 @@ export class AssignFollowUpDto {
   @IsOptional()
   @IsIn(['FOLLOW_UP', 'INTEGRATION'])
   team?: 'FOLLOW_UP' | 'INTEGRATION';
+
+  @ApiProperty({
+    required: false,
+    description:
+      'The unit this assignment sits under; its lead decides approvals. Must be one of the assignee\'s units. Default: the entry\'s current unit when the assignee is in it, else the assignee\'s only unit.',
+  })
+  @IsOptional()
+  @IsString()
+  unitId?: string;
 }

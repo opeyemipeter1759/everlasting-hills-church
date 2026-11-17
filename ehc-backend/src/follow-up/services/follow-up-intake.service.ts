@@ -18,12 +18,19 @@ import { FollowUpNotifyService } from './follow-up-notify.service';
 import { FollowUpUnitLeaderLookupService } from './follow-up-unit-leader-lookup.service';
 import { FollowUpAssignableService } from './follow-up-assignable.service';
 import { findFollowUpUnit, findIntegrationUnit } from '../follow-up-unit.util';
+import { ADMIN_PLUS } from '../follow-up.types';
+import { OutboxService } from '../../outbox/outbox.service';
+import { assignEntry, pickAssignmentUnit } from '../routing/assignment';
+import { FollowUpEvent, safeFirstName, type AssignedPayload } from '../events/follow-up-events';
+import { WORKFLOW_TX } from '../workflow-tx';
 
-function personName(p: { firstName: string; lastName: string }): string {
-  return `${p.firstName} ${p.lastName}`.trim();
-}
-
-/** Adding entries to the Master List and (re)assigning them to a team member. */
+/**
+ * Adding entries to the Master List and (re)assigning them to a team member.
+ * Every Follow Up assignment goes through `assignEntry`, which stamps when it
+ * happened and its unit, cancels a pending approval and, for a first-timer,
+ * records `first_timer.assigned` in the same transaction. A hand assignment
+ * always wins over the routing rules: they only ever place new registrations.
+ */
 @Injectable()
 export class FollowUpIntakeService {
   private readonly tenantId: string;
@@ -38,6 +45,7 @@ export class FollowUpIntakeService {
     private readonly unitLeaderLookup: FollowUpUnitLeaderLookupService,
     private readonly assignable: FollowUpAssignableService,
     config: ConfigService<Env, true>,
+    private readonly outbox: OutboxService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -104,22 +112,33 @@ export class FollowUpIntakeService {
     // picked someone specific.
     const assigneeId = dto.assigneeId ?? (await this.autoAssign.pickAssignee(unitId, subjectGender));
 
-    let entry;
+    let entryId: string;
+    let firstTimer = false;
+    const eventIds: string[] = [];
     try {
-      entry = await this.prisma.followUpEntry.create({
-        data: {
-          id: randomUUID(),
-          tenantId: this.tenantId,
-          unitId,
-          sourceType: dto.sourceType,
-          memberId: dto.sourceType === FollowUpSourceType.ABSENTEE ? dto.memberId : null,
-          visitorId: dto.sourceType === FollowUpSourceType.FIRST_TIMER ? dto.visitorId : null,
-          addedById: actor.profileId,
-          assigneeId,
-          stage: assigneeId ? FollowUpStage.ASSIGNED : FollowUpStage.UNASSIGNED,
-        },
-        include: ENTRY_INCLUDE,
-      });
+      entryId = await this.prisma.$transaction(async (tx) => {
+        const created = await tx.followUpEntry.create({
+          data: {
+            id: randomUUID(),
+            tenantId: this.tenantId,
+            unitId,
+            sourceType: dto.sourceType,
+            memberId: dto.sourceType === FollowUpSourceType.ABSENTEE ? dto.memberId : null,
+            visitorId: dto.sourceType === FollowUpSourceType.FIRST_TIMER ? dto.visitorId : null,
+            addedById: actor.profileId!,
+            stage: FollowUpStage.UNASSIGNED,
+          },
+          select: { id: true },
+        });
+        if (assigneeId) {
+          const result = await assignEntry(tx, this.outbox, {
+            tenantId: this.tenantId, entryId: created.id, assigneeId, unitId, actorId: actor.profileId,
+          });
+          firstTimer = !!result.visitorId;
+          if (result.eventId) eventIds.push(result.eventId);
+        }
+        return created.id;
+      }, WORKFLOW_TX);
     } catch (err) {
       // Two leaders submitting the same person at nearly the same moment both
       // pass the check above — the DB's unique constraint is what actually
@@ -130,18 +149,21 @@ export class FollowUpIntakeService {
       }
       throw err;
     }
+    await this.outbox.dispatchNow(eventIds);
 
     await this.audit.write({
       action: 'CREATE',
       entity: 'FollowUpEntry',
-      entityId: entry.id,
+      entityId: entryId,
       actorId: actor.userId,
       after: { unitId, sourceType: dto.sourceType, assigneeId },
     });
 
-    if (assigneeId) {
-      await this.notify.notifyAssigned(assigneeId, subjectName, entry.id);
+    // A first-timer's assignee hears through the outbox; anyone else as before.
+    if (assigneeId && !firstTimer) {
+      await this.notify.notifyAssigned(assigneeId, subjectName, entryId);
     }
+    const entry = await this.prisma.followUpEntry.findUniqueOrThrow({ where: { id: entryId }, include: ENTRY_INCLUDE });
     return this.mapper.mapEntry(entry, actor);
   }
 
@@ -156,33 +178,42 @@ export class FollowUpIntakeService {
 
     if (dto.team === 'INTEGRATION') return this.assignIntegration(actor, entry, dto.assigneeId);
 
-    // The assignee's own unit — not the entry's current unit — decides both who's
-    // allowed to make this assignment and where the entry ends up. This is what
-    // lets a leader claim someone from the shared "Follow-Up" pool into their team.
-    const assigneeMembership = await this.prisma.unitMember.findFirst({
+    // One of the assignee's own units, not necessarily the entry's current one,
+    // decides who may make this assignment and where the entry ends up. This is
+    // what lets a leader claim someone from the shared "Follow-Up" pool into
+    // their team. The unit is also whose lead decides an approval later.
+    const memberships = await this.prisma.unitMember.findMany({
       where: { tenantId: this.tenantId, memberId: dto.assigneeId },
       select: { unitId: true },
+      orderBy: { joinedAt: 'asc' },
     });
-    if (!assigneeMembership) throw new BadRequestException('Assignee must belong to a unit');
+    if (memberships.length === 0) throw new BadRequestException('Assignee must belong to a unit');
 
-    if (!(await this.auth.canLeadUnit(actor, assigneeMembership.unitId))) {
+    const followUpUnit = await findFollowUpUnit(this.prisma, this.tenantId);
+    const unitId = pickAssignmentUnit(
+      memberships.map((m) => m.unitId),
+      { requested: dto.unitId, current: entry.unitId, followUpUnitId: followUpUnit?.id },
+    );
+    if (!unitId) throw new BadRequestException('That person is not in the unit you picked');
+
+    if (!(await this.auth.canLeadUnit(actor, unitId))) {
       throw new ForbiddenException('You can only assign to your own team');
     }
 
-    const followUpUnit = await findFollowUpUnit(this.prisma, this.tenantId);
-    if (entry.unitId !== assigneeMembership.unitId && entry.unitId !== followUpUnit?.id) {
+    // A team lead may claim from the shared pool or work within their own team;
+    // an admin's hand assignment wins wherever the entry sits.
+    const isAdmin = actor.effectiveRoles?.some((r) => ADMIN_PLUS.includes(r));
+    if (!isAdmin && entry.unitId !== unitId && entry.unitId !== followUpUnit?.id) {
       throw new ForbiddenException('This entry already belongs to a different team');
     }
 
-    const updated = await this.prisma.followUpEntry.update({
-      where: { id },
-      data: {
-        assigneeId: dto.assigneeId,
-        unitId: assigneeMembership.unitId,
-        stage: entry.stage === FollowUpStage.UNASSIGNED ? FollowUpStage.ASSIGNED : entry.stage,
-      },
-      include: ENTRY_INCLUDE,
-    });
+    const result = await this.prisma.$transaction((tx) =>
+      assignEntry(tx, this.outbox, {
+        tenantId: this.tenantId, entryId: id, assigneeId: dto.assigneeId, unitId, actorId: actor.profileId,
+      }),
+      WORKFLOW_TX,
+    );
+    if (result.eventId) await this.outbox.dispatchNow([result.eventId]);
 
     await this.audit.write({
       action: 'ASSIGN',
@@ -190,11 +221,13 @@ export class FollowUpIntakeService {
       entityId: id,
       actorId: actor.userId,
       before: { assigneeId: entry.assigneeId, unitId: entry.unitId },
-      after: { assigneeId: dto.assigneeId, unitId: assigneeMembership.unitId },
+      after: { assigneeId: dto.assigneeId, unitId, cancelledApprovals: result.cancelledApprovals },
     });
 
+    const updated = await this.prisma.followUpEntry.findUniqueOrThrow({ where: { id }, include: ENTRY_INCLUDE });
     const mapped = this.mapper.mapEntry(updated, actor);
-    await this.notify.notifyAssigned(dto.assigneeId, mapped.person.name, id);
+    // A first-timer's assignee hears through the outbox; anyone else as before.
+    if (result.changed && !result.visitorId) await this.notify.notifyAssigned(dto.assigneeId, mapped.person.name, id);
     return mapped;
   }
 
@@ -244,45 +277,62 @@ export class FollowUpIntakeService {
     const followUpUnitId = await this.unitLeaderLookup.getFollowUpUnitId();
     if (!followUpUnitId) throw new BadRequestException('No "Follow-Up" unit configured to route quick-captures into');
 
-    const visitor = await this.prisma.visitor.create({
-      data: {
-        id: randomUUID(),
-        tenantId: this.tenantId,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
-        phone: dto.phone,
-        serviceId: dto.serviceId ?? null,
-        attendanceType: 'In-Person',
-      },
-      select: { id: true, firstName: true, lastName: true, gender: true },
-    });
-
-    const assigneeId = await this.autoAssign.pickAssignee(followUpUnitId, visitor.gender);
-    const entry = await this.prisma.followUpEntry.create({
-      data: {
-        id: randomUUID(),
-        tenantId: this.tenantId,
-        unitId: followUpUnitId,
-        sourceType: FollowUpSourceType.FIRST_TIMER,
-        visitorId: visitor.id,
-        addedById: actor.profileId,
-        assigneeId,
-        stage: assigneeId ? FollowUpStage.ASSIGNED : FollowUpStage.UNASSIGNED,
-      },
-      include: ENTRY_INCLUDE,
-    });
+    // A door capture has no gender or student answer yet, so no routing rule
+    // can match: it takes the Follow-Up unit's own auto-assign.
+    const assigneeId = await this.autoAssign.pickAssignee(followUpUnitId, null);
+    const eventIds: string[] = [];
+    const { visitorId, entryId } = await this.prisma.$transaction(async (tx) => {
+      const visitor = await tx.visitor.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
+          phone: dto.phone,
+          serviceId: dto.serviceId ?? null,
+          attendanceType: 'In-Person',
+        },
+        select: { id: true, firstName: true },
+      });
+      const created = await tx.followUpEntry.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          unitId: followUpUnitId,
+          sourceType: FollowUpSourceType.FIRST_TIMER,
+          visitorId: visitor.id,
+          addedById: actor.profileId!,
+          stage: FollowUpStage.UNASSIGNED,
+        },
+        select: { id: true },
+      });
+      if (assigneeId) {
+        const result = await assignEntry(tx, this.outbox, {
+          tenantId: this.tenantId, entryId: created.id, assigneeId, unitId: followUpUnitId, actorId: actor.profileId,
+        });
+        if (result.eventId) eventIds.push(result.eventId);
+      }
+      eventIds.push(
+        await this.outbox.record(tx, {
+          tenantId: this.tenantId,
+          type: FollowUpEvent.Registered,
+          payload: { visitorId: visitor.id, firstName: safeFirstName(visitor.firstName) },
+          actorId: actor.profileId,
+        }),
+      );
+      return { visitorId: visitor.id, entryId: created.id };
+    }, WORKFLOW_TX);
+    await this.outbox.dispatchNow(eventIds);
 
     await this.audit.write({
       action: 'QUICK_CAPTURE',
       entity: 'FollowUpEntry',
-      entityId: entry.id,
+      entityId: entryId,
       actorId: actor.userId,
-      after: { visitorId: visitor.id, assigneeId },
+      after: { visitorId, assigneeId },
     });
 
-    if (assigneeId) {
-      await this.notify.notifyAssigned(assigneeId, personName(visitor), entry.id);
-    }
+    const entry = await this.prisma.followUpEntry.findUniqueOrThrow({ where: { id: entryId }, include: ENTRY_INCLUDE });
     return this.mapper.mapEntry(entry, actor);
   }
 
@@ -328,28 +378,60 @@ export class FollowUpIntakeService {
       return { reassigned: moved.count };
     }
 
-    const result = await this.prisma.followUpEntry.updateMany({
+    // Still-open entries only: integrated and opted-out people stay with whoever had them.
+    const open = await this.prisma.followUpEntry.findMany({
       where: {
         tenantId: this.tenantId,
         unitId: dto.unitId,
         assigneeId: dto.fromAssigneeId,
-        stage: { not: FollowUpStage.CONFIRMED },
+        stage: { notIn: [FollowUpStage.CONFIRMED, FollowUpStage.OPTED_OUT] },
         OR: [{ Member: null }, { Member: { status: { not: MemberStatus.OPTED_OUT } } }],
       },
-      data: { assigneeId: dto.toAssigneeId },
+      select: { id: true },
     });
+
+    // Each move is a full assignment (time, unit, cancelled approvals), but the
+    // new assignee is told once for the lot, not once per person.
+    const eventIds: string[] = [];
+    let others = 0;
+    await this.prisma.$transaction(
+      async (tx) => {
+        const firstTimers: { visitorId: string; firstName: string | null; entryId: string }[] = [];
+        for (const { id } of open) {
+          const result = await assignEntry(tx, this.outbox, {
+            tenantId: this.tenantId, entryId: id, assigneeId: dto.toAssigneeId, unitId: dto.unitId, actorId: actor.profileId, notify: false,
+          });
+          if (!result.changed) continue;
+          if (result.visitorId) firstTimers.push({ visitorId: result.visitorId, firstName: result.firstName, entryId: id });
+          else others += 1;
+        }
+        if (firstTimers.length === 0) return;
+        const [one] = firstTimers;
+        const payload: AssignedPayload =
+          firstTimers.length === 1
+            ? { assigneeMemberId: dto.toAssigneeId, visitorId: one.visitorId, firstName: one.firstName ?? undefined, entryId: one.entryId }
+            : { assigneeMemberId: dto.toAssigneeId, count: firstTimers.length, unitId: dto.unitId };
+        eventIds.push(
+          await this.outbox.record(tx, {
+            tenantId: this.tenantId, type: FollowUpEvent.Assigned, payload: { ...payload }, actorId: actor.profileId,
+          }),
+        );
+      },
+      { ...WORKFLOW_TX, timeout: 60_000 },
+    );
+    await this.outbox.dispatchNow(eventIds);
 
     await this.audit.write({
       action: 'BULK_REASSIGN',
       entity: 'FollowUpEntry',
       actorId: actor.userId,
       before: { assigneeId: dto.fromAssigneeId },
-      after: { assigneeId: dto.toAssigneeId, count: result.count },
+      after: { assigneeId: dto.toAssigneeId, count: open.length },
     });
 
-    if (result.count > 0) {
-      await this.notify.notifyAssigned(dto.toAssigneeId, `${result.count} follow-up${result.count === 1 ? '' : 's'}`);
+    if (others > 0) {
+      await this.notify.notifyAssigned(dto.toAssigneeId, `${others} follow-up${others === 1 ? '' : 's'}`);
     }
-    return { reassigned: result.count };
+    return { reassigned: open.length };
   }
 }

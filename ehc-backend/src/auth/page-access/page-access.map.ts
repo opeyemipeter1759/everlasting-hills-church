@@ -52,7 +52,7 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
     href: '/dashboard/admin/first-timers',
     role: Role.ADMIN,
     // The funnel under this page reads the same people from the follow-up
-    // side, by status — a listing, not the run of the pipeline.
+    // side: the first-timer pipeline, by status.
     paths: [
       '/visitors',
       '/admin/first-timer',
@@ -62,8 +62,10 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
       '/follow-up/counts',
       '/follow-up/master-list',
       '/follow-up/person',
+      '/follow-up/pipeline',
     ],
   },
+  { href: '/dashboard/admin/follow-up-routing', role: Role.ADMIN, paths: ['/routing-rules'] },
   { href: '/dashboard/admin/gatherings', role: Role.ADMIN, paths: ['/gatherings'] },
   { href: '/dashboard/admin/home-cell', role: Role.ADMIN, paths: ['/home-cell'] },
   { href: '/dashboard/admin/inventory', role: Role.ADMIN, paths: ['/inventory', '/departments', '/uploads/image'] },
@@ -90,6 +92,18 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
     paths: ['/site-settings', '/testimonials', '/uploads/image', '/ai'],
   },
   { href: '/dashboard/testimonies', role: Role.ADMIN, paths: ['/testimonials', '/ai'] },
+
+  // ── First timers (the First-Timer Contact role) ──────────────────────────
+  {
+    href: '/dashboard/first-timers',
+    role: Role.FIRST_TIMER_CONTACT,
+    paths: ['/opening-message', '/message-templates', '/follow-up/pipeline', '/follow-up/first-timers'],
+  },
+  {
+    href: '/dashboard/follow-up/overview',
+    role: Role.FIRST_TIMER_CONTACT,
+    paths: ['/follow-up/overview', '/follow-up/pipeline', '/follow-up/first-timers'],
+  },
 
   // ── Departments, units, ushering ──────────────────────────────────────────
   {
