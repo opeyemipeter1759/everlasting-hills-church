@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, GoneException, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FollowUpSourceType, FollowUpStage, Role } from '@prisma/client';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -29,7 +29,7 @@ import { FollowUpStatusBulkService } from './services/follow-up-status-bulk.serv
 import { FollowUpCountsService } from './services/follow-up-counts.service';
 import type { MasterListScope } from './services/master-list-filter.util';
 import { FollowUpWorkloadService } from './services/follow-up-workload.service';
-import { RequestStatusChangeDto, DecideStatusChangeDto, BulkStatusChangeDto } from './dto/status-change.dto';
+import { DecideStatusChangeDto } from './dto/status-change.dto';
 import { AddFollowUpNoteDto, EditFollowUpNoteDto, ReactToNoteDto } from './dto/follow-up-note.dto';
 import { FollowUpNotesService } from './services/follow-up-notes.service';
 
@@ -47,6 +47,9 @@ function parseSourceType(type?: string): FollowUpSourceType {
   }
   throw new BadRequestException('type must be FIRST_TIMER or ABSENTEE');
 }
+
+const STATUS_RETIRED =
+  "Statuses now follow visits and approvals. Use Came again, Request approval or Opt out on the person's profile.";
 
 /**
  * Follow-Up Pipeline: a unit's Master List of first-timers and absentees.
@@ -180,22 +183,22 @@ export class FollowUpController {
   }
 
   /**
-   * Ask for someone's status to be changed. Anyone on the team may ask; it
-   * waits for a unit lead or head of department unless the asker is one.
+   * Statuses are no longer set by hand: visits make someone a second or third
+   * timer, an approval integrates them, and Opt out on the profile opts them
+   * out. These two stay only to tell an old page what to do instead.
    */
   @Post('status')
-  @ApiOperation({ summary: 'Request a Master List status change (Follow-Up team; approved on sight for a lead/HOD)' })
-  async requestStatusChange(@CurrentUser() actor: AuthUser, @Body() body: RequestStatusChangeDto) {
-    await this.auth.requireAccess(actor);
-    return this.statusService.request(actor, body);
+  @HttpCode(410)
+  @ApiOperation({ summary: 'Retired: statuses follow visits and approvals', deprecated: true })
+  requestStatusChange(): never {
+    throw new GoneException(STATUS_RETIRED);
   }
 
-  /** Set the status of everyone a leader has ticked, in one go. */
   @Post('status/bulk')
-  @ApiOperation({ summary: 'Set the Master List status of several people at once (UNIT_LEAD/HOD+)' })
-  async bulkStatusChange(@CurrentUser() actor: AuthUser, @Body() body: BulkStatusChangeDto) {
-    await this.auth.requireAccess(actor);
-    return this.statusBulk.apply(actor, body);
+  @HttpCode(410)
+  @ApiOperation({ summary: 'Retired: statuses follow visits and approvals', deprecated: true })
+  bulkStatusChange(): never {
+    throw new GoneException(STATUS_RETIRED);
   }
 
   @Get('status/pending')
