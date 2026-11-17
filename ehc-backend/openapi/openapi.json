@@ -44022,7 +44022,7 @@
             "access-token": []
           }
         ],
-        "summary": "End an active First-Timer Contact assignment",
+        "summary": "End an active Guest Care Coordinator assignment",
         "tags": [
           "users"
         ]
@@ -44076,7 +44076,7 @@
             "access-token": []
           }
         ],
-        "summary": "Assign First-Timer Contact: global, unscoped, additive",
+        "summary": "Assign Guest Care Coordinator: global, unscoped, additive",
         "tags": [
           "users"
         ]

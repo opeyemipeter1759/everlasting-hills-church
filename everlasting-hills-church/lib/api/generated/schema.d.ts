@@ -9357,9 +9357,9 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Assign First-Timer Contact: global, unscoped, additive */
+        /** Assign Guest Care Coordinator: global, unscoped, additive */
         post: operations["UsersGrantsController_assignFirstTimerContact"];
-        /** End an active First-Timer Contact assignment */
+        /** End an active Guest Care Coordinator assignment */
         delete: operations["UsersGrantsController_removeFirstTimerContact"];
         options?: never;
         head?: never;
