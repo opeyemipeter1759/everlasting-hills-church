@@ -19,7 +19,16 @@ const MAX_TAKE = 200;
 
 const emptyCounts = (): StatusCounts => ({ FIRST_TIMER: 0, SECOND_TIMER: 0, THIRD_TIMER: 0, INTEGRATED: 0, OPTED_OUT: 0 });
 
-const iso = (d: Date | string | null): string | null => (d === null ? null : new Date(d).toISOString());
+/**
+ * Prisma keeps timestamps as UTC in columns without a time zone, so json_agg
+ * hands them back with no offset. Read such a string as UTC: JavaScript would
+ * otherwise read it in the machine's own time zone.
+ */
+const iso = (d: Date | string | null): string | null => {
+  if (d === null) return null;
+  const utc = typeof d === 'string' && !/(Z|[+-]\d\d:?\d\d)$/.test(d) ? `${d}Z` : d;
+  return new Date(utc).toISOString();
+};
 const day = (d: Date | string): string => (typeof d === 'string' ? d.slice(0, 10) : d.toISOString().slice(0, 10));
 
 /**
