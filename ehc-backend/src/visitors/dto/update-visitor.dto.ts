@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateIf } from 'class-validator';
+import { FRIEND_OR_FAMILY, HEARD_OTHER } from '../../forms/first-timer-heard-from.schema';
 
 export class UpdateVisitorDto {
   @ApiProperty({ required: false })
@@ -50,11 +51,26 @@ export class UpdateVisitorDto {
   @MaxLength(200)
   howDidYouLearn?: string;
 
+  /** Required when the same edit sets howDidYouLearn to Friend or Family. An edit to another field never touches it. */
   @ApiProperty({ required: false })
-  @IsOptional()
+  @ValidateIf((o: UpdateVisitorDto) => o.howDidYouLearn === FRIEND_OR_FAMILY || !!o.invitedBy)
   @IsString()
+  @IsNotEmpty({ message: 'Tell us who invited them' })
   @MaxLength(120)
   invitedBy?: string;
+
+  /** Required when the same edit sets howDidYouLearn to Other. */
+  @ApiProperty({ required: false })
+  @ValidateIf((o: UpdateVisitorDto) => o.howDidYouLearn === HEARD_OTHER || !!o.heardFromOther)
+  @IsString()
+  @IsNotEmpty({ message: 'Tell us how they heard about us' })
+  @MaxLength(200)
+  heardFromOther?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  isStudent?: boolean;
 
   @ApiProperty({ required: false })
   @IsOptional()
