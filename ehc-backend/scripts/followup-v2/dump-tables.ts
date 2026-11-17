@@ -19,21 +19,29 @@ import { runDataScript } from './data-script';
 
 const PAGE = 1000;
 
-type Reader = (prisma: PrismaClient, tenantId: string, skip: number) => Promise<unknown[]>;
+/**
+ * The tables, in a fixed order. Read with plain SQL, every column the table
+ * has, so the dump works before the v2 migrations run (the generated client
+ * already expects the new columns) as well as after.
+ */
+export const TABLES = ['Visitor', 'FollowUpEntry', 'FollowUpStatusChange', 'FollowUpStageHistory', 'Notification'] as const;
 
-/** Each table, read in pages in a fixed order so a dump is the same from run to run. */
-export const TABLES: Record<string, Reader> = {
-  Visitor: (p, tenantId, skip) => p.visitor.findMany({ where: { tenantId }, orderBy: { id: 'asc' }, skip, take: PAGE }),
-  FollowUpEntry: (p, tenantId, skip) => p.followUpEntry.findMany({ where: { tenantId }, orderBy: { id: 'asc' }, skip, take: PAGE }),
-  FollowUpStatusChange: (p, tenantId, skip) => p.followUpStatusChange.findMany({ where: { tenantId }, orderBy: { id: 'asc' }, skip, take: PAGE }),
-  FollowUpStageHistory: (p, tenantId, skip) => p.followUpStageHistory.findMany({ where: { tenantId }, orderBy: { id: 'asc' }, skip, take: PAGE }),
-  Notification: (p, tenantId, skip) => p.notification.findMany({ where: { tenantId }, orderBy: { id: 'asc' }, skip, take: PAGE }),
-};
+/** False for a table the migrations have not created yet (FollowUpStageHistory, before v2). */
+async function exists(prisma: PrismaClient, table: string): Promise<boolean> {
+  const [row] = await prisma.$queryRawUnsafe<{ found: boolean }[]>('SELECT to_regclass($1) IS NOT NULL AS found', `public."${table}"`);
+  return row?.found ?? false;
+}
 
-export async function readTable(prisma: PrismaClient, tenantId: string, read: Reader): Promise<unknown[]> {
+/** Every row of the tenant, in pages ordered by id so a dump is the same from run to run. Null when the table does not exist. */
+export async function readTable(prisma: PrismaClient, tenantId: string, table: (typeof TABLES)[number]): Promise<unknown[] | null> {
+  if (!(await exists(prisma, table))) return null;
   const rows: unknown[] = [];
   for (let skip = 0; ; skip += PAGE) {
-    const page = await read(prisma, tenantId, skip);
+    // The table name is one of the constants above, never input.
+    const page = await prisma.$queryRawUnsafe<unknown[]>(
+      `SELECT * FROM "${table}" WHERE "tenantId" = $1 ORDER BY id LIMIT ${PAGE} OFFSET ${skip}`,
+      tenantId,
+    );
     rows.push(...page);
     if (page.length < PAGE) return rows;
   }
@@ -50,10 +58,15 @@ if (require.main === module) {
     const when = stamp();
     if (apply) mkdirSync(folder, { recursive: true });
 
-    for (const [table, read] of Object.entries(TABLES)) {
-      const rows = await readTable(prisma, tenantId, read);
+    for (const table of TABLES) {
+      const rows = await readTable(prisma, tenantId, table);
+      if (rows === null) {
+        console.log(`${table}: not created yet, nothing to keep`);
+        continue;
+      }
       const file = join(folder, `${when}-${table}.json`);
-      if (apply) writeFileSync(file, JSON.stringify({ table, tenantId, dumpedAt: new Date().toISOString(), rows }, null, 2));
+      const json = JSON.stringify({ table, tenantId, dumpedAt: new Date().toISOString(), rows }, (_k, v) => (typeof v === 'bigint' ? v.toString() : v), 2);
+      if (apply) writeFileSync(file, json);
       console.log(`${table}: ${rows.length} rows ${apply ? 'written to' : 'would go to'} ${file}`);
     }
   });

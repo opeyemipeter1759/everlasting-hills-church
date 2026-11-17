@@ -13,6 +13,8 @@ export interface RoutingSubject {
  */
 export const SEGMENTS: Record<string, (subject: RoutingSubject) => boolean> = {
   STUDENT: (s) => s.isStudent === true,
+  // Everyone the student rule does not take, including anyone who did not answer.
+  NOT_STUDENT: (s) => s.isStudent !== true,
 };
 
 export const SEGMENT_KEYS = Object.keys(SEGMENTS) as [string, ...string[]];

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSaveRoutingRule, type RoutingOptions, type RoutingRule } from "@/lib/api/routing-rules";
-import { createRoutingRuleSchema, updateRoutingRuleSchema, SEGMENTS } from "@/lib/follow-up/routing-schema";
+import { createRoutingRuleSchema, updateRoutingRuleSchema, SEGMENTS, type Segment } from "@/lib/follow-up/routing-schema";
 import { firstProblem } from "@/lib/follow-up/first-problem";
 
 const field =
@@ -10,6 +10,7 @@ const field =
 
 /** Add a rule, or edit one: its name, the unit the assignments sit under, and the pool from that unit. */
 export default function RoutingRuleForm({ rule, options, onDone }: { rule?: RoutingRule; options: RoutingOptions; onDone: () => void }) {
+  const [segment, setSegment] = useState<Segment>("STUDENT");
   const [name, setName] = useState(rule?.name ?? SEGMENTS.STUDENT.label);
   const [unitId, setUnitId] = useState(rule?.unitId ?? "");
   const [pool, setPool] = useState<string[]>(rule?.pool.map((p) => p.memberId) ?? []);
@@ -42,7 +43,7 @@ export default function RoutingRuleForm({ rule, options, onDone }: { rule?: Rout
       if (!problem) save.mutate({ id: rule.id, update }, { onSuccess: onDone });
       return;
     }
-    const create = { name: name.trim(), segment: "STUDENT" as const, unitId, memberIds: pool };
+    const create = { name: name.trim(), segment, unitId, memberIds: pool };
     const problem = firstProblem(createRoutingRuleSchema, create);
     setError(problem);
     if (!problem) save.mutate({ create }, { onSuccess: onDone });
@@ -50,6 +51,24 @@ export default function RoutingRuleForm({ rule, options, onDone }: { rule?: Rout
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      {!rule && (
+        <label className="block">
+          <span className="text-xs font-medium text-gray-600 dark:text-white/55">Who it routes</span>
+          <select
+            value={segment}
+            onChange={(e) => {
+              const next = e.target.value as Segment;
+              if (name === SEGMENTS[segment].label) setName(SEGMENTS[next].label);
+              setSegment(next);
+            }}
+            className={field}
+          >
+            {(Object.keys(SEGMENTS) as Segment[]).map((s) => (
+              <option key={s} value={s}>{SEGMENTS[s].label}: {SEGMENTS[s].hint.toLowerCase()}</option>
+            ))}
+          </select>
+        </label>
+      )}
       <label className="block">
         <span className="text-xs font-medium text-gray-600 dark:text-white/55">Name</span>
         <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className={field} />

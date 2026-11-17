@@ -5,14 +5,15 @@
  *
  * Dry run by default (prints what it would do):
  *   npx ts-node --transpile-only scripts/followup-v2/seed-roles-and-routing.ts \
- *     --contact=<profileId> --pool=<memberId,memberId,...> --unit=<unitId> [--name="Students"]
+ *     --contact=<profileId> --pool=<memberId,memberId,...> --unit=<unitId> [--segment=STUDENT] [--name="Students"]
  * Apply:
  *   ... --apply
  *
  * --contact  Profile id of the first-timer contact (FirstTimerContactAssignment).
  * --pool     Member ids of everyone who shares the student first-timers.
  * --unit     The unit the assignments sit under; its lead approves integrations.
- * --name     The rule's name (default "Students").
+ * --segment  Who the rule routes: STUDENT (default) or NOT_STUDENT (everyone else).
+ * --name     The rule's name (default "Students", or "Everyone else" for NOT_STUDENT).
  * --tenant   Tenant id (default DEFAULT_TENANT_ID from the environment).
  *
  * Either part may be run alone. Reads DATABASE_URL like every other script.
@@ -21,7 +22,8 @@ import 'dotenv/config';
 import { MemberStatus, PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 
-const SEGMENT = 'STUDENT';
+const SEGMENTS = ['STUDENT', 'NOT_STUDENT'];
+const DEFAULT_NAME: Record<string, string> = { STUDENT: 'Students', NOT_STUDENT: 'Everyone else' };
 
 function arg(name: string): string | undefined {
   const hit = process.argv.find((a) => a.startsWith(`--${name}=`));
@@ -46,7 +48,7 @@ async function seedContact(tenantId: string, profileId: string, apply: boolean) 
   if (apply) await prisma.firstTimerContactAssignment.create({ data: { id: randomUUID(), tenantId, userId: profileId } });
 }
 
-async function seedRule(tenantId: string, unitId: string, memberIds: string[], name: string, apply: boolean) {
+async function seedRule(tenantId: string, unitId: string, memberIds: string[], segment: string, name: string, apply: boolean) {
   const unit = await prisma.unit.findFirst({ where: { id: unitId, tenantId }, select: { id: true, name: true } });
   if (!unit) throw new Error(`No unit ${unitId} in this tenant`);
   const members = await prisma.member.findMany({
@@ -62,16 +64,16 @@ async function seedRule(tenantId: string, unitId: string, memberIds: string[], n
   const names = members.map((m) => `${m.firstName} ${m.lastName}`).join(', ');
 
   const existing = await prisma.routingRule.findFirst({
-    where: { tenantId, segment: SEGMENT },
+    where: { tenantId, segment },
     orderBy: { createdAt: 'asc' },
     include: { Members: { select: { memberId: true } } },
   });
   if (!existing) {
-    console.log(`Rule: ${apply ? 'creating' : 'would create'} "${name}" (${SEGMENT}, least loaded) under ${unit.name}, pool: ${names}.`);
+    console.log(`Rule: ${apply ? 'creating' : 'would create'} "${name}" (${segment}, least loaded) under ${unit.name}, pool: ${names}.`);
     if (apply) {
       await prisma.routingRule.create({
         data: {
-          id: randomUUID(), tenantId, name, segment: SEGMENT, unitId, strategy: 'LEAST_LOADED', active: true,
+          id: randomUUID(), tenantId, name, segment, unitId, strategy: 'LEAST_LOADED', active: true,
           Members: { create: memberIds.map((memberId) => ({ id: randomUUID(), memberId })) },
         },
       });
@@ -119,7 +121,9 @@ async function main() {
   if (pool && unitId) {
     const memberIds = [...new Set(pool.split(',').map((s) => s.trim()).filter(Boolean))];
     if (memberIds.length === 0) throw new Error('--pool is empty');
-    await seedRule(tenantId, unitId, memberIds, arg('name') || 'Students', apply);
+    const segment = arg('segment') || 'STUDENT';
+    if (!SEGMENTS.includes(segment)) throw new Error(`--segment must be one of ${SEGMENTS.join(', ')}`);
+    await seedRule(tenantId, unitId, memberIds, segment, arg('name') || DEFAULT_NAME[segment], apply);
   }
   if (!apply) console.log('\nDry run. Re-run with --apply to make these changes.');
 }

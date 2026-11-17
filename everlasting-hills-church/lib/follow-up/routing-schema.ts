@@ -7,6 +7,7 @@ import { z } from "zod";
  */
 export const SEGMENTS = {
   STUDENT: { label: "Students", hint: "First-timers who say on the form that they are students" },
+  NOT_STUDENT: { label: "Everyone else", hint: "First-timers who are not students, or did not say" },
 } as const;
 
 export type Segment = keyof typeof SEGMENTS;
@@ -16,7 +17,7 @@ const memberIds = z.array(z.string().trim().min(1)).max(50, "A pool can hold up 
 
 export const createRoutingRuleSchema = z.object({
   name,
-  segment: z.enum(["STUDENT"]),
+  segment: z.enum(["STUDENT", "NOT_STUDENT"]),
   unitId: z.string().trim().min(1, "Pick the unit"),
   memberIds,
   priority: z.number().int().min(0).max(100).optional(),
