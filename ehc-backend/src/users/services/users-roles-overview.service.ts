@@ -66,7 +66,7 @@ export class UsersRolesOverviewService {
       { role: Role.HOD,         label: 'Head of Department', level: 4, count: countMap[Role.HOD]  ?? 0 },
       { role: Role.HEAD_USHER,  label: 'Head Usher',  level: 3, count: countMap[Role.HEAD_USHER]  ?? 0 },
       { role: Role.FINANCE_HEAD, label: 'Finance Head', level: 3, count: countMap[Role.FINANCE_HEAD] ?? 0 },
-      { role: Role.FIRST_TIMER_CONTACT, label: 'First-Timer Contact', level: 3, count: countMap[Role.FIRST_TIMER_CONTACT] ?? 0 },
+      { role: Role.FIRST_TIMER_CONTACT, label: 'Guest Care Coordinator', level: 3, count: countMap[Role.FIRST_TIMER_CONTACT] ?? 0 },
       { role: Role.UNIT_LEAD,   label: 'Unit Leader', level: 2, count: countMap[Role.UNIT_LEAD]   ?? 0 },
       { role: Role.MEMBER,      label: 'Member',      level: 1, count: countMap[Role.MEMBER]       ?? 0 },
       { role: 'VISITOR',        label: 'Visitor',     level: 0, count: visitorCount },

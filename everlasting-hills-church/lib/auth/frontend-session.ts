@@ -73,7 +73,7 @@ export function normalizeRole(role: string | null | undefined): UserRole | null 
   if (cleaned === "leader" || cleaned === "unit head" || cleaned === "unit_head") return "UNIT_LEAD";
   if (cleaned === "head usher" || cleaned === "head_usher" || cleaned === "headusher") return "HEAD_USHER";
   if (cleaned === "finance head" || cleaned === "finance_head" || cleaned === "financehead") return "FINANCE_HEAD";
-  if (cleaned === "first-timer contact" || cleaned === "first_timer_contact") return "FIRST_TIMER_CONTACT";
+  if (cleaned === "guest care coordinator" || cleaned === "first-timer contact" || cleaned === "first_timer_contact") return "FIRST_TIMER_CONTACT";
   if (cleaned === "admin head" || cleaned === "admin_head" || cleaned === "adminhead") return "ADMIN_HEAD";
   if (cleaned === "admin") return "ADMIN";
   if (cleaned === "pastor") return "PASTOR";

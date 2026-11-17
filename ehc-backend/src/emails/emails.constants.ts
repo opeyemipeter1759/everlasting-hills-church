@@ -10,7 +10,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   [Role.HEAD_USHER]: 'Head Usher',
   [Role.FINANCE_HEAD]: 'Finance Head',
   [Role.UNIT_LEAD]: 'Unit Lead',
-  [Role.FIRST_TIMER_CONTACT]: 'First-Timer Contact',
+  [Role.FIRST_TIMER_CONTACT]: 'Guest Care Coordinator',
   [Role.MEMBER]: 'Member',
   [Role.VISITOR]: 'Visitor',
 };

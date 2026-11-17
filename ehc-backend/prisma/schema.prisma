@@ -4433,6 +4433,8 @@ model ApprovalRequest {
   /// Profile.id of whoever asked.
   requesterId   String
   note          String?
+  /// What a kind needs beyond its subject, such as the person a first-timer is to be assigned to.
+  payload       Json?
   /// Profile.id of whoever decided.
   deciderId     String?
   decidedAt     DateTime?

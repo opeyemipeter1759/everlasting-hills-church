@@ -11,5 +11,5 @@ export function canSendOpening(actor: AuthUser): boolean {
 
 /** The service-side check behind the route guard, so a mis-set decorator can never open these up. */
 export function requireOpeningSender(actor: AuthUser): void {
-  if (!canSendOpening(actor)) throw new ForbiddenException('Only the first-timer contact and admins can do this');
+  if (!canSendOpening(actor)) throw new ForbiddenException('Only the Guest Care Coordinator and admins can do this');
 }

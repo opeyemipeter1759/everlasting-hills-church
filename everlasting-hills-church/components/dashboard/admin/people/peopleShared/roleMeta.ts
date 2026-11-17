@@ -8,7 +8,7 @@ export const ROLE_LABEL: Record<PersonRole, string> = {
   HOD: "Head of Department",
   HEAD_USHER: "Head Usher",
   FINANCE_HEAD: "Finance Head",
-  FIRST_TIMER_CONTACT: "First-Timer Contact",
+  FIRST_TIMER_CONTACT: "Guest Care Coordinator",
   UNIT_LEAD: "Unit Lead",
   MEMBER: "Member",
   VISITOR: "Visitor",

@@ -41,7 +41,7 @@ export const PERMISSION_ROLE_OPTIONS: PermissionRoleOption[] = [
   { role: "HOD", label: "Head of Department" },
   { role: "HEAD_USHER", label: "Head Usher" },
   { role: "FINANCE_HEAD", label: "Finance Head" },
-  { role: "FIRST_TIMER_CONTACT", label: "First-Timer Contact" },
+  { role: "FIRST_TIMER_CONTACT", label: "Guest Care Coordinator" },
   { role: "UNIT_LEAD", label: "Unit Leader" },
   { role: "MEMBER", label: "Member" },
 ];

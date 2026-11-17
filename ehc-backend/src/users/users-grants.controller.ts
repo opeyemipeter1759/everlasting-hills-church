@@ -49,13 +49,13 @@ export class UsersGrantsController {
   }
 
   @Post(':profileId/first-timer-contact')
-  @ApiOperation({ summary: 'Assign First-Timer Contact: global, unscoped, additive' })
+  @ApiOperation({ summary: 'Assign Guest Care Coordinator: global, unscoped, additive' })
   async assignFirstTimerContact(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
     return this.grants.assignFirstTimerContact(actor, profileId);
   }
 
   @Delete(':profileId/first-timer-contact')
-  @ApiOperation({ summary: 'End an active First-Timer Contact assignment' })
+  @ApiOperation({ summary: 'End an active Guest Care Coordinator assignment' })
   async removeFirstTimerContact(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
     return this.grants.removeFirstTimerContact(actor, profileId);
   }
