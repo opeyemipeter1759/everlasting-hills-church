@@ -219,6 +219,10 @@
               "INTEGRATION"
             ],
             "type": "string"
+          },
+          "unitId": {
+            "description": "The unit this assignment sits under; its lead decides approvals. Must be one of the assignee's units. Default: the entry's current unit when the assignee is in it, else the assignee's only unit.",
+            "type": "string"
           }
         },
         "required": [
@@ -444,69 +448,6 @@
           "unitId",
           "fromAssigneeId",
           "toAssigneeId"
-        ],
-        "type": "object"
-      },
-      "BulkStatusChangeDto": {
-        "properties": {
-          "note": {
-            "type": "string"
-          },
-          "subjects": {
-            "description": "The people whose status changes together.",
-            "items": {
-              "$ref": "#/components/schemas/BulkStatusSubjectDto"
-            },
-            "type": "array"
-          },
-          "toStatus": {
-            "description": "What they all become.",
-            "enum": [
-              "FIRST_TIMER",
-              "SECOND_TIMER",
-              "THIRD_TIMER",
-              "INTEGRATED",
-              "AWAY",
-              "OPTED_OUT"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "subjects",
-          "toStatus"
-        ],
-        "type": "object"
-      },
-      "BulkStatusSubjectDto": {
-        "properties": {
-          "fromStatus": {
-            "description": "The status the leader saw — kept for the record.",
-            "enum": [
-              "FIRST_TIMER",
-              "SECOND_TIMER",
-              "THIRD_TIMER",
-              "INTEGRATED",
-              "AWAY",
-              "OPTED_OUT"
-            ],
-            "type": "string"
-          },
-          "subjectId": {
-            "type": "string"
-          },
-          "subjectKind": {
-            "enum": [
-              "MEMBER",
-              "VISITOR"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "subjectKind",
-          "subjectId",
-          "fromStatus"
         ],
         "type": "object"
       },
@@ -2342,6 +2283,11 @@
             "example": "Female",
             "type": "string"
           },
+          "heard_from_other": {
+            "description": "How they heard, when they chose Other",
+            "example": "",
+            "type": "string"
+          },
           "how_did_you_learn": {
             "example": "Social Media",
             "type": "string"
@@ -2349,6 +2295,10 @@
           "invited_by": {
             "example": "",
             "type": "string"
+          },
+          "is_student": {
+            "example": false,
+            "type": "boolean"
           },
           "last_name": {
             "example": "Hall",
@@ -3434,54 +3384,6 @@
         },
         "required": [
           "toSlotId"
-        ],
-        "type": "object"
-      },
-      "RequestStatusChangeDto": {
-        "properties": {
-          "fromStatus": {
-            "description": "The status the requester saw — kept for the record.",
-            "enum": [
-              "FIRST_TIMER",
-              "SECOND_TIMER",
-              "THIRD_TIMER",
-              "INTEGRATED",
-              "AWAY",
-              "OPTED_OUT"
-            ],
-            "type": "string"
-          },
-          "note": {
-            "description": "Why — shown to whoever approves it.",
-            "type": "string"
-          },
-          "subjectId": {
-            "type": "string"
-          },
-          "subjectKind": {
-            "enum": [
-              "MEMBER",
-              "VISITOR"
-            ],
-            "type": "string"
-          },
-          "toStatus": {
-            "enum": [
-              "FIRST_TIMER",
-              "SECOND_TIMER",
-              "THIRD_TIMER",
-              "INTEGRATED",
-              "AWAY",
-              "OPTED_OUT"
-            ],
-            "type": "string"
-          }
-        },
-        "required": [
-          "subjectKind",
-          "subjectId",
-          "fromStatus",
-          "toStatus"
         ],
         "type": "object"
       },
@@ -5576,11 +5478,17 @@
           "gender": {
             "type": "string"
           },
+          "heardFromOther": {
+            "type": "string"
+          },
           "howDidYouLearn": {
             "type": "string"
           },
           "invitedBy": {
             "type": "string"
+          },
+          "isStudent": {
+            "type": "boolean"
           },
           "lastName": {
             "type": "string"
@@ -6830,6 +6738,221 @@
         "summary": "Recent published announcements for the member dashboard (max 5)",
         "tags": [
           "announcements"
+        ]
+      }
+    },
+    "/approvals": {
+      "post": {
+        "operationId": "ApprovalsController_request",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Ask for a first-timer to be integrated (their assignee or an admin)",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/approvals/{id}/decide": {
+      "post": {
+        "operationId": "ApprovalsController_decide",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Approve or request changes (the unit's current lead, else its department head, else an admin; admins may override)",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/approvals/queue": {
+      "get": {
+        "operationId": "ApprovalsController_queue",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "unitId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Pending requests the caller may decide, oldest first",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
+    "/approvals/subject/{visitorId}": {
+      "get": {
+        "operationId": "ApprovalsController_subject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A first-timer's latest approval request, and what the caller may do about it",
+        "tags": [
+          "approvals"
         ]
       }
     },
@@ -22410,6 +22533,62 @@
         ]
       }
     },
+    "/follow-up/first-timers/{visitorId}/actions": {
+      "get": {
+        "operationId": "FollowUpStageController_actions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "What the viewer may do to this first-timer: reassign, opt out, restore, archive",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/first-timers/{visitorId}/answers": {
       "get": {
         "operationId": "FollowUpPipelineController_answers",
@@ -22461,6 +22640,682 @@
           }
         ],
         "summary": "A first-timer form answers without the pastoral ones, for lists and the Overview",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/first-visit": {
+      "patch": {
+        "operationId": "FirstTimerVisitsController_firstVisit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Correct their first visit date, and the month they count in",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/opt-out": {
+      "post": {
+        "operationId": "FollowUpStageController_optOut",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Opt a first-timer out of follow-up (lead of their unit, its department head, or ADMIN+)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/photo": {
+      "delete": {
+        "operationId": "FirstTimerPhotosController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Remove their photo from their record and from storage",
+        "tags": [
+          "follow-up"
+        ]
+      },
+      "post": {
+        "operationId": "FirstTimerPhotosController_confirm",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Put an uploaded photo on their record, replacing (and deleting) any earlier one",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/photo/upload-url": {
+      "post": {
+        "operationId": "FirstTimerPhotosController_uploadUrl",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A one-time link to upload their photo straight to storage (WebP, JPEG or PNG, 5 MB at most, consent required)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/possible-return": {
+      "get": {
+        "operationId": "FirstTimerVisitsController_possibleReturn",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Who a form flagged as a possible return visit may be",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/possible-return/confirm": {
+      "post": {
+        "operationId": "FirstTimerVisitsController_confirm",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Same person: a return visit on the original record, and this form archived. Never merges.",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/possible-return/dismiss": {
+      "post": {
+        "operationId": "FirstTimerVisitsController_dismiss",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Different person: clear the flag and keep both records",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/restore": {
+      "post": {
+        "operationId": "FollowUpStageController_restore",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Put an opted-out first-timer back on the stage they had before (same people as opt out)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/visits": {
+      "get": {
+        "operationId": "FirstTimerVisitsController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Their visits, how each was recorded, and the latest service day",
+        "tags": [
+          "follow-up"
+        ]
+      },
+      "post": {
+        "operationId": "FirstTimerVisitsController_cameAgain",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Came again: a visit on a Lagos date (default: the latest service held). The same date twice is one visit.",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/visits/{date}": {
+      "delete": {
+        "operationId": "FirstTimerVisitsController_undo",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "date",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Undo a Came again visit. The first visit is never removed.",
         "tags": [
           "follow-up"
         ]
@@ -23732,34 +24587,15 @@
     },
     "/follow-up/status": {
       "post": {
+        "deprecated": true,
         "operationId": "FollowUpController_requestStatusChange",
         "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestStatusChangeDto"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "201": {
+          "410": {
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
                 }
               }
             },
@@ -23781,7 +24617,7 @@
             "access-token": []
           }
         ],
-        "summary": "Request a Master List status change (Follow-Up team; approved on sight for a lead/HOD)",
+        "summary": "Retired: statuses follow visits and approvals",
         "tags": [
           "follow-up"
         ]
@@ -23855,34 +24691,15 @@
     },
     "/follow-up/status/bulk": {
       "post": {
+        "deprecated": true,
         "operationId": "FollowUpController_bulkStatusChange",
         "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkStatusChangeDto"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
-          "201": {
+          "410": {
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
                 }
               }
             },
@@ -23904,7 +24721,7 @@
             "access-token": []
           }
         ],
-        "summary": "Set the Master List status of several people at once (UNIT_LEAD/HOD+)",
+        "summary": "Retired: statuses follow visits and approvals",
         "tags": [
           "follow-up"
         ]
@@ -29722,6 +30539,236 @@
         ]
       }
     },
+    "/message-templates/{key}": {
+      "get": {
+        "operationId": "MessageTemplatesController_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A template: the version in use, recent versions with their editors, and the rules a save must meet",
+        "tags": [
+          "message-templates"
+        ]
+      },
+      "post": {
+        "operationId": "MessageTemplatesController_save",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Save a new version, in use straight away. Unknown placeholders are refused with a 400 naming them",
+        "tags": [
+          "message-templates"
+        ]
+      }
+    },
+    "/message-templates/{key}/preview": {
+      "post": {
+        "operationId": "MessageTemplatesController_preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Fill in a draft (or the version in use) for one real first-timer, as this sender",
+        "tags": [
+          "message-templates"
+        ]
+      }
+    },
+    "/message-templates/{key}/versions/{version}/revert": {
+      "post": {
+        "operationId": "MessageTemplatesController_revert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Revert: saves an old version as the newest version",
+        "tags": [
+          "message-templates"
+        ]
+      }
+    },
     "/nav-permissions": {
       "delete": {
         "operationId": "NavPermissionsController_resetOne",
@@ -32235,6 +33282,268 @@
         "summary": "A signed-in member marks themselves present while watching online",
         "tags": [
           "online-attendance"
+        ]
+      }
+    },
+    "/opening-message/email": {
+      "post": {
+        "operationId": "OpeningMessageController_bulk",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Email up to 25 first-timers; stops at the daily reserve and reports who did not get it",
+        "tags": [
+          "opening-message"
+        ]
+      }
+    },
+    "/opening-message/first-timers/{visitorId}": {
+      "get": {
+        "operationId": "OpeningMessageController_context",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "What a send to this first-timer would say, and every send so far",
+        "tags": [
+          "opening-message"
+        ]
+      }
+    },
+    "/opening-message/first-timers/{visitorId}/email": {
+      "post": {
+        "operationId": "OpeningMessageController_email",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Email the opening message to one first-timer, within the daily email budget",
+        "tags": [
+          "opening-message"
+        ]
+      }
+    },
+    "/opening-message/first-timers/{visitorId}/whatsapp": {
+      "post": {
+        "operationId": "OpeningMessageController_whatsapp",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Log a WhatsApp send, when the sender taps the button",
+        "tags": [
+          "opening-message"
+        ]
+      }
+    },
+    "/opening-message/queue": {
+      "get": {
+        "operationId": "OpeningMessageController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "First-timers nobody has contacted yet, oldest first, each with a ready WhatsApp link",
+        "tags": [
+          "opening-message"
         ]
       }
     },
@@ -35650,6 +36959,201 @@
         "summary": "Service comparison — JSON or Excel download (ADMIN+)",
         "tags": [
           "reports"
+        ]
+      }
+    },
+    "/routing-rules": {
+      "get": {
+        "operationId": "RoutingRulesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Every routing rule with its unit, pool and each person's open load",
+        "tags": [
+          "routing-rules"
+        ]
+      },
+      "post": {
+        "operationId": "RoutingRulesController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Add a routing rule",
+        "tags": [
+          "routing-rules"
+        ]
+      }
+    },
+    "/routing-rules/{id}": {
+      "patch": {
+        "operationId": "RoutingRulesController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Change a rule's name, unit, pool, priority, or switch it on or off",
+        "tags": [
+          "routing-rules"
+        ]
+      }
+    },
+    "/routing-rules/options": {
+      "get": {
+        "operationId": "RoutingRulesController_options",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Units and their active members, for picking a pool",
+        "tags": [
+          "routing-rules"
         ]
       }
     },
@@ -43217,7 +44721,7 @@
     },
     "/visitors/{id}": {
       "delete": {
-        "operationId": "VisitorsController_delete",
+        "operationId": "VisitorsController_archive",
         "parameters": [
           {
             "in": "path",
@@ -43225,14 +44729,6 @@
             "required": true,
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "force",
-            "required": false,
-            "schema": {
-              "type": "boolean"
             }
           }
         ],
@@ -43273,7 +44769,7 @@
             "access-token": []
           }
         ],
-        "summary": "Delete a visitor record. Refused with 409 while their Follow Up chat has messages, unless force=true (which deletes the chat too)",
+        "summary": "Archive a first-timer record; nothing is deleted (ADMIN+)",
         "tags": [
           "visitors"
         ]
@@ -43505,6 +45001,109 @@
           }
         ],
         "summary": "Total visitor count",
+        "tags": [
+          "visitors"
+        ]
+      }
+    },
+    "/visitors/first-timers": {
+      "get": {
+        "operationId": "VisitorsController_firstTimers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "take",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "description": "YYYY-MM-DD, the day the form came in",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "interest",
+            "required": false,
+            "schema": {
+              "enum": [
+                "yes",
+                "no"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A page of first-timer forms with the counts beside it (ADMIN+)",
         "tags": [
           "visitors"
         ]
