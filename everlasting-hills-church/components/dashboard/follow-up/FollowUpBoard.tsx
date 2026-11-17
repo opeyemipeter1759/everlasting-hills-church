@@ -8,6 +8,7 @@ import { useFollowUpSummary } from "./useFollowUpSummary";
 import MasterListPipeline from "./MasterListPipeline";
 import AssignedToMe from "./AssignedToMe";
 import { FollowUpReport } from "./FollowUpReport";
+import OverviewYear from "./v2/overview/OverviewYear";
 
 /**
  * The Follow Up board. Every list reads the first-timer pipeline, and each tab
@@ -35,6 +36,10 @@ export default function FollowUpBoard() {
       {active === "master" ? (
         <section role="tabpanel" aria-label="Master list">
           <MasterListPipeline linkThreads />
+        </section>
+      ) : active === "overview" ? (
+        <section role="tabpanel" aria-label="Overview">
+          <OverviewYear />
         </section>
       ) : active === "mine" ? (
         <section role="tabpanel" aria-label="Assigned to me">

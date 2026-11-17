@@ -10,7 +10,7 @@ const values = (scope?: Parameters<typeof statusOptionsFor>[0]) => statusOptions
 describe("Opted out has its own tab", () => {
   it("is a tab for everyone on the team, after Assigned to me", () => {
     const { result } = renderHook(() => useFollowUpTabs());
-    expect(result.current.map((t) => t.label)).toEqual(["Master list", "Assigned to me", "Opted out"]);
+    expect(result.current.map((t) => t.label)).toEqual(["Master list", "Overview", "Assigned to me", "Opted out"]);
   });
 
   it("is no longer something to filter by, on any board", () => {
