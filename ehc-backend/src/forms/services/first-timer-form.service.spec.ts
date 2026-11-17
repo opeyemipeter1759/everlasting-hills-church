@@ -3,7 +3,9 @@ import { FirstTimerFormService } from './first-timer-form.service';
 import { heardFromProblems } from '../first-timer-heard-from.schema';
 import { lagosDay } from './first-timer-return';
 
-function setup(existing: { visitorId?: string; memberId?: string } = {}) {
+type Opening = { renderWelcomeEmail: jest.Mock; logAutomaticWelcome: jest.Mock };
+
+function setup(existing: { visitorId?: string; memberId?: string } = {}, opening?: Partial<Opening>) {
   const created: Record<string, unknown[]> = { visitor: [], visit: [] };
   const prisma = {
     $queryRaw: jest
@@ -18,9 +20,16 @@ function setup(existing: { visitorId?: string; memberId?: string } = {}) {
   const emailDispatch = { dispatch: jest.fn(), adminEmail: 'admin@example.com', appUrl: 'https://example.com' };
   // Sunday 15 November 2026 in Lagos is stored as 23:00 UTC the day before.
   const sessionWindow = { findOrCreateTodayService: jest.fn().mockResolvedValue({ id: 's1', scheduledAt: new Date('2026-11-14T23:00:00Z') }) };
-  const events = { emit: jest.fn() };
-  const svc = new FirstTimerFormService(prisma as never, emailDispatch as never, sessionWindow as never, events as never, { get: () => 't1' } as never);
-  return { svc, created };
+  const events = { emit: jest.fn(), emitAsync: jest.fn().mockResolvedValue([]) };
+  const welcome = {
+    renderWelcomeEmail: jest.fn().mockResolvedValue({ payload: { to: 'ada@example.com', subject: 'From the template' }, templateVersion: 3 }),
+    logAutomaticWelcome: jest.fn().mockResolvedValue(undefined),
+    ...opening,
+  };
+  const svc = new FirstTimerFormService(
+    prisma as never, emailDispatch as never, sessionWindow as never, events as never, { get: () => 't1' } as never, welcome as never,
+  );
+  return { svc, created, events, emailDispatch, welcome };
 }
 
 const form = { first_name: 'Ada', last_name: 'Eze', phone_number: '0803 123 4567', how_did_you_learn: 'Social Media' };
@@ -49,6 +58,36 @@ describe('FirstTimerFormService', () => {
     await expect(svc.submitFirstTimer({ ...form, how_did_you_learn: 'Friend/Family' } as never)).rejects.toThrow(BadRequestException);
     await expect(setup().svc.submitFirstTimer({ ...form, how_did_you_learn: 'Other' } as never)).rejects.toThrow('Tell us how you heard about us');
     await expect(setup().svc.submitFirstTimer({ ...form, how_did_you_learn: 'Friend/Family', invited_by: 'Bisi' } as never)).resolves.toBeDefined();
+  });
+});
+
+describe('after the form is saved', () => {
+  const withEmail = { ...form, email: 'ada@example.com' };
+
+  it('routes the new first-timer inside the request, and a routing failure still saves the form', async () => {
+    const { svc, events } = setup();
+    await svc.submitFirstTimer(form as never);
+    expect(events.emitAsync).toHaveBeenCalledWith('visitor.created', expect.objectContaining({ visitorIds: [expect.any(String)] }));
+
+    const failing = setup();
+    failing.events.emitAsync.mockRejectedValue(new Error('routing down'));
+    await expect(failing.svc.submitFirstTimer(form as never)).resolves.toMatchObject({ success: true });
+  });
+
+  it('writes the welcome from the opening template and logs the version it used', async () => {
+    const { svc, emailDispatch, welcome } = setup();
+    await svc.submitFirstTimer(withEmail as never);
+    expect(welcome.renderWelcomeEmail).toHaveBeenCalledWith({ firstName: 'Ada', email: 'ada@example.com' });
+    expect(emailDispatch.dispatch).toHaveBeenCalledWith(expect.objectContaining({ subject: 'From the template' }));
+    expect(welcome.logAutomaticWelcome).toHaveBeenCalledWith(expect.any(String), 3);
+  });
+
+  it('sends the standard welcome when the template cannot be read, and logs nothing', async () => {
+    const { svc, emailDispatch, welcome } = setup({}, { renderWelcomeEmail: jest.fn().mockRejectedValue(new Error('db down')) });
+    await svc.submitFirstTimer(withEmail as never);
+    const sent = emailDispatch.dispatch.mock.calls.map(([payload]) => payload as { to?: string });
+    expect(sent.some((payload) => payload.to === 'ada@example.com')).toBe(true);
+    expect(welcome.logAutomaticWelcome).not.toHaveBeenCalled();
   });
 });
 

@@ -1,7 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import { FollowUpLogKind, FollowUpStage } from '@prisma/client';
+import { FollowUpLogKind, FollowUpSourceType, FollowUpStage } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
@@ -14,6 +14,8 @@ import { FollowUpAuditService } from './follow-up-audit.service';
 import { AttendanceOverrideService } from '../../attendance/services/attendance-override.service';
 import { FollowUpNoteAlertsService } from './follow-up-note-alerts.service';
 import { contactLogBody, mirrorLogToThread } from './contact-log-note.util';
+import { setStage } from '../stage-transitions';
+import { stampEntryFirstContact } from '../first-contact';
 
 /** Logging contact attempts and final outcomes on a Master List entry. */
 @Injectable()
@@ -77,28 +79,50 @@ export class FollowUpProgressService {
     }
 
     const logId = randomUUID();
-    const log = await this.prisma.followUpContactLog.create({
-      data: {
-        id: logId,
-        tenantId: this.tenantId,
-        entryId: id,
-        byId: actor.memberId,
-        kind,
-        method: isContact ? dto.method : null,
-        outcome: isContact ? dto.outcome : null,
-        note: dto.note,
-        serviceId: dto.serviceId ?? null,
-        // A service-tied log gets its date from the service; only a general
-        // check-in needs the logger to say when it happened.
-        contactedAt: !dto.serviceId && dto.contactedAt ? new Date(dto.contactedAt) : null,
-        isPastoralContact: dto.isPastoralContact ?? false,
-        isPrivate: dto.isPrivate ?? false,
-      },
+    const byId = actor.memberId;
+    const now = new Date();
+    // The log, the counts, the stage and the first-contact stamp commit
+    // together, so a contact is never half recorded.
+    const log = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.followUpContactLog.create({
+        data: {
+          id: logId,
+          tenantId: this.tenantId,
+          entryId: id,
+          byId,
+          kind,
+          method: isContact ? dto.method : null,
+          outcome: isContact ? dto.outcome : null,
+          note: dto.note,
+          serviceId: dto.serviceId ?? null,
+          // A service-tied log gets its date from the service; only a general
+          // check-in needs the logger to say when it happened.
+          contactedAt: !dto.serviceId && dto.contactedAt ? new Date(dto.contactedAt) : null,
+          isPastoralContact: dto.isPastoralContact ?? false,
+          isPrivate: dto.isPrivate ?? false,
+        },
+      });
+
+      // A quick update is a note for whoever picks this up next. It shouldn't
+      // pretend to be a real contact attempt, so it doesn't advance the stage,
+      // count toward the goal, or count as a first contact.
+      if (isContact) {
+        await tx.followUpEntry.update({ where: { id }, data: { contactCount: { increment: 1 }, lastContactAt: now } });
+        if (WORKING_STAGES.includes(entry.stage)) {
+          await setStage(tx, { tenantId: this.tenantId, entryId: id, to: FollowUpStage.IN_PROGRESS, reason: 'CONTACTED', actorId: actor.profileId });
+        }
+        // The first contact of any kind sets the 48-hour metric, for first-timers.
+        if (entry.sourceType === FollowUpSourceType.FIRST_TIMER) {
+          const at = created.contactedAt && created.contactedAt < now ? created.contactedAt : now;
+          await stampEntryFirstContact(tx, { tenantId: this.tenantId, entryId: id, at, actorId: actor.profileId });
+        }
+      }
+      return created;
     });
 
     // Everything done for someone lives in one conversation: put this on
     // their activity thread too, and tell the people following them. A log
-    // marked private stays private — only its author and the unit lead see it.
+    // marked private stays private: only its author and the unit lead see it.
     if (!log.isPrivate && actor.profileId) {
       const body = contactLogBody(log);
       const thread = await mirrorLogToThread(this.prisma, {
@@ -111,20 +135,7 @@ export class FollowUpProgressService {
       if (thread) void this.alerts.onNewMessage(actor.profileId, thread.subjectKind, thread.subjectId, body);
     }
 
-    // A quick update is a note for whoever picks this up next — it shouldn't
-    // pretend to be a real contact attempt, so it doesn't advance the stage or
-    // count toward the goal.
-    const updated = await this.prisma.followUpEntry.update({
-      where: { id },
-      data: isContact
-        ? {
-            contactCount: { increment: 1 },
-            lastContactAt: new Date(),
-            stage: WORKING_STAGES.includes(entry.stage) ? FollowUpStage.IN_PROGRESS : entry.stage,
-          }
-        : {},
-      include: ENTRY_INCLUDE,
-    });
+    const updated = await this.prisma.followUpEntry.findFirstOrThrow({ where: { id }, include: ENTRY_INCLUDE });
 
     await this.audit.write({
       action: isContact ? 'LOG_CONTACT' : 'LOG_QUICK_UPDATE',

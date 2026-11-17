@@ -26,6 +26,7 @@ describe('Integration Team assignment is its own', () => {
     const svc = new FollowUpIntakeService(
       prisma as never, auth as never, mapper as never, { write: jest.fn() } as never,
       {} as never, notify as never, {} as never, { isSuperAdmin: jest.fn().mockResolvedValue(false) } as never, config,
+      {} as never,
     );
     return { svc, prisma, update, notify, auth };
   }
@@ -134,9 +135,12 @@ describe('Logged contacts on the activity thread', () => {
 describe('Logging a contact', () => {
   function progress(isPrivate: boolean) {
     const upsert = jest.fn().mockResolvedValue({});
-    const prisma = {
+    const entry = { id: 'e1', unitId: 'u', assigneeId: 'lead', memberId: 'm1', visitorId: null, stage: 'IN_PROGRESS', sourceType: 'ABSENTEE' };
+    const prisma: Record<string, unknown> = {
       followUpEntry: {
-        findFirst: jest.fn().mockResolvedValue({ id: 'e1', unitId: 'u', assigneeId: 'lead', memberId: 'm1', visitorId: null, stage: 'IN_PROGRESS' }),
+        findFirst: jest.fn().mockResolvedValue(entry),
+        findFirstOrThrow: jest.fn().mockResolvedValue(entry),
+        findUnique: jest.fn().mockResolvedValue({ stage: 'IN_PROGRESS' }),
         update: jest.fn().mockResolvedValue({ id: 'e1' }),
       },
       followUpContactLog: {
@@ -144,6 +148,8 @@ describe('Logging a contact', () => {
       },
       followUpNote: { upsert },
     };
+    // The log and its effects on the entry commit in one transaction.
+    prisma.$transaction = jest.fn(async (fn: (tx: unknown) => unknown) => fn(prisma));
     const alerts = { onNewMessage: jest.fn() };
     const svc = new FollowUpProgressService(
       prisma as never,

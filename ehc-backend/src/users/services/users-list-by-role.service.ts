@@ -72,6 +72,7 @@ export class UsersListByRoleService {
       [Role.HOD]: [],
       [Role.HEAD_USHER]: [],
       [Role.FINANCE_HEAD]: [],
+      [Role.FIRST_TIMER_CONTACT]: [],
       [Role.UNIT_LEAD]: [],
       [Role.MEMBER]: [],
       VISITOR: [],

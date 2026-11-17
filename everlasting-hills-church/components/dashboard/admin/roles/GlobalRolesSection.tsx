@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2, ShieldCheck, UserMinus, UserPlus } from "lucide-react";
 import { useUsersByRole } from "@/lib/api";
 import { useRevokeGrant, useRemoveHeadUsher, useRemoveFinanceHead, type PersonRole } from "@/lib/api/people";
+import { firstTimerContactHolders, useRemoveFirstTimerContact } from "@/lib/api/first-timer-contact";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
@@ -20,6 +21,7 @@ export default function GlobalRolesSection({ grantable }: { grantable: PersonRol
   const revoke = useRevokeGrant();
   const removeHeadUsher = useRemoveHeadUsher();
   const removeFinanceHead = useRemoveFinanceHead();
+  const removeContact = useRemoveFirstTimerContact();
   const [grantOpen, setGrantOpen] = useState(false);
   const [confirmRevoke, setConfirmRevoke] = useState<{ profileId: string; role: PersonRole; name: string } | null>(null);
 
@@ -30,9 +32,10 @@ export default function GlobalRolesSection({ grantable }: { grantable: PersonRol
     { role: "HOD", people: byRole.data?.HOD ?? [] },
     { role: "HEAD_USHER", people: byRole.data?.HEAD_USHER ?? [] },
     { role: "FINANCE_HEAD", people: byRole.data?.FINANCE_HEAD ?? [] },
+    { role: "FIRST_TIMER_CONTACT", people: firstTimerContactHolders(byRole.data) },
   ];
 
-  const revokePending = revoke.isPending || removeHeadUsher.isPending || removeFinanceHead.isPending;
+  const revokePending = revoke.isPending || removeHeadUsher.isPending || removeFinanceHead.isPending || removeContact.isPending;
 
   return (
     <section className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#161618] p-5">
@@ -110,6 +113,8 @@ export default function GlobalRolesSection({ grantable }: { grantable: PersonRol
               await removeHeadUsher.mutateAsync(confirmRevoke.profileId);
             } else if (confirmRevoke.role === "FINANCE_HEAD") {
               await removeFinanceHead.mutateAsync(confirmRevoke.profileId);
+            } else if (confirmRevoke.role === "FIRST_TIMER_CONTACT") {
+              await removeContact.mutateAsync(confirmRevoke.profileId);
             } else {
               await revoke.mutateAsync(confirmRevoke);
             }

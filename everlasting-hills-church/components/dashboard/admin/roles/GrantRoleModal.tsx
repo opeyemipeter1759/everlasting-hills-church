@@ -5,6 +5,7 @@ import { Loader2, Search } from "lucide-react";
 import FormModal, { fieldCls } from "@/components/ui/overlay/FormModal";
 import { Select } from "@/components/ui/select";
 import { usePeople, useGrantRole, useAssignHeadUsher, useAssignFinanceHead, type PersonRole } from "@/lib/api/people";
+import { useAssignFirstTimerContact } from "@/lib/api/first-timer-contact";
 import { showToast } from "@/components/ui/toast/toast";
 import type { ApiError } from "@/lib/api/axios";
 import { ROLE_LABEL } from "../people/peopleShared";
@@ -31,7 +32,8 @@ export default function GrantRoleModal({
   const grant = useGrantRole();
   const assignHeadUsher = useAssignHeadUsher();
   const assignFinanceHead = useAssignFinanceHead();
-  const pending = grant.isPending || assignHeadUsher.isPending || assignFinanceHead.isPending;
+  const assignContact = useAssignFirstTimerContact();
+  const pending = grant.isPending || assignHeadUsher.isPending || assignFinanceHead.isPending || assignContact.isPending;
   const people = (q.data?.data ?? []).filter((p) => p.profileId);
 
   async function pick(profileId: string, name: string) {
@@ -42,6 +44,8 @@ export default function GrantRoleModal({
         await assignHeadUsher.mutateAsync(profileId);
       } else if (role === "FINANCE_HEAD") {
         await assignFinanceHead.mutateAsync(profileId);
+      } else if (role === "FIRST_TIMER_CONTACT") {
+        await assignContact.mutateAsync(profileId);
       } else {
         await grant.mutateAsync({ profileId, role });
       }

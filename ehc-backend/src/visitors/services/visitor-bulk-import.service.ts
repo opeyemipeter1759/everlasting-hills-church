@@ -119,8 +119,11 @@ export class VisitorBulkImportService {
     }
 
     if (createdIds.length > 0) {
-      // Surface the whole batch in the Follow-Up pipeline right away.
-      this.events.emit(VisitorEvents.Created, { visitorIds: createdIds } satisfies VisitorCreatedPayload);
+      // Surface and route the whole batch in the Follow-Up pipeline right away,
+      // inside the request: Cloud Run throttles the CPU once the response is sent.
+      await this.events
+        .emitAsync(VisitorEvents.Created, { visitorIds: createdIds } satisfies VisitorCreatedPayload)
+        .catch((err: unknown) => this.logger.warn(`Routing the imported first-timers failed: ${(err as Error).message}`));
     }
 
     const skipped = results.filter((r) => r.status === 'skipped').length;

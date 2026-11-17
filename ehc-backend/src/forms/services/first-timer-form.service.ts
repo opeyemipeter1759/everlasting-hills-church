@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
@@ -15,9 +15,11 @@ import { VisitorEvents, type VisitorCreatedPayload } from '../../notifications/n
 import { normalizeNigerianPhone } from '../../common/phone.util';
 import { heardFromProblems } from '../first-timer-heard-from.schema';
 import { findPossibleReturn, lagosDay } from './first-timer-return';
+import { OpeningMessageService } from '../../message-templates/opening-message.service';
 
 @Injectable()
 export class FirstTimerFormService {
+  private readonly logger = new Logger(FirstTimerFormService.name);
   private readonly tenantId: string;
 
   constructor(
@@ -26,6 +28,7 @@ export class FirstTimerFormService {
     private readonly sessionWindow: AttendanceSessionWindowService,
     private readonly events: EventEmitter2,
     config: ConfigService<Env, true>,
+    private readonly opening: OpeningMessageService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -98,8 +101,12 @@ export class FirstTimerFormService {
       }),
     ]);
 
-    // Put them in the Follow-Up pipeline now, not at tomorrow's 9am sweep.
-    this.events.emit(VisitorEvents.Created, { visitorIds: [visitor.id] } satisfies VisitorCreatedPayload);
+    // Put them in the Follow-Up pipeline and route them now, inside the request:
+    // Cloud Run throttles the CPU once the response is sent. The form is already
+    // saved, so a failure here is logged and the daily sweep picks them up.
+    await this.events
+      .emitAsync(VisitorEvents.Created, { visitorIds: [visitor.id] } satisfies VisitorCreatedPayload)
+      .catch((err: unknown) => this.logger.warn(`Routing a new first-timer failed: ${(err as Error).message}`));
 
     // Fire-and-forget — does not block response.
     // Admin/pastoral team: full details + review & assign-for-follow-up CTAs.
@@ -107,20 +114,34 @@ export class FirstTimerFormService {
       buildFirstTimerAdminEmail({ data, adminEmail: this.emailDispatch.adminEmail, appUrl: this.emailDispatch.appUrl }),
     );
     // The guest: warm welcome with service times, address, and ways to connect.
-    if (normalizedEmail) {
-      this.emailDispatch.dispatch(
-        buildFirstTimerWelcomeEmail({
-          firstName: data.first_name.trim(),
-          email: normalizedEmail,
-          appUrl: this.emailDispatch.appUrl,
-        }),
-      );
-    }
+    if (normalizedEmail) await this.sendWelcome(visitor.id, data.first_name.trim(), normalizedEmail);
 
     return {
       success: true,
       message: 'First timer registration submitted successfully',
       visitor,
     };
+  }
+
+  /**
+   * The guest's welcome, written from the opening-message template the
+   * First-Timer Contact keeps, or the standard welcome when there is none. If
+   * the template cannot be read, the standard welcome still goes.
+   */
+  private async sendWelcome(visitorId: string, firstName: string, email: string) {
+    let rendered: Awaited<ReturnType<OpeningMessageService['renderWelcomeEmail']>>;
+    try {
+      rendered = await this.opening.renderWelcomeEmail({ firstName, email });
+    } catch (err) {
+      this.logger.warn(`The welcome template could not be read, sending the standard welcome: ${(err as Error).message}`);
+      this.emailDispatch.dispatch(buildFirstTimerWelcomeEmail({ firstName, email, appUrl: this.emailDispatch.appUrl }));
+      return;
+    }
+    this.emailDispatch.dispatch(rendered.payload);
+    if (rendered.templateVersion !== null) {
+      await this.opening
+        .logAutomaticWelcome(visitorId, rendered.templateVersion)
+        .catch((err: unknown) => this.logger.warn(`Logging the welcome failed: ${(err as Error).message}`));
+    }
   }
 }
