@@ -22354,6 +22354,118 @@
         ]
       }
     },
+    "/follow-up/first-timers/{visitorId}": {
+      "get": {
+        "operationId": "FollowUpPipelineController_person",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "One first-timer: where they stand, and every answer they gave (pastoral ones included; profile only)",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
+    "/follow-up/first-timers/{visitorId}/answers": {
+      "get": {
+        "operationId": "FollowUpPipelineController_answers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "visitorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A first-timer form answers without the pastoral ones, for lists and the Overview",
+        "tags": [
+          "follow-up"
+        ]
+      }
+    },
     "/follow-up/leaderboard": {
       "get": {
         "operationId": "FollowUpController_leaderboard",

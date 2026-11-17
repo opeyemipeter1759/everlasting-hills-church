@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, NotFoundException, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -6,6 +6,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { PipelineRepository } from '../pipeline/pipeline.repository';
 import { PIPELINE_STATUSES, type PipelineFilters, type PipelineStatus } from '../pipeline/pipeline.types';
+import { PrismaService } from '../prisma/prisma.service';
+import { allAnswers, publicAnswers } from '../visitors/first-timer-answers';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
 
 const STAGES = ['UNASSIGNED', 'ASSIGNED', 'IN_PROGRESS', 'AWAITING_REVIEW', 'CONFIRMED', 'REOPENED', 'OPTED_OUT'];
@@ -52,6 +54,7 @@ export class FollowUpPipelineController {
   constructor(
     private readonly pipeline: PipelineRepository,
     private readonly auth: FollowUpAuthService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Get('pipeline')
@@ -86,5 +89,26 @@ export class FollowUpPipelineController {
   ) {
     await this.auth.requireAccess(actor);
     return this.pipeline.breakdowns(parsePipelineFilters({ year: String(year), month: String(month) }));
+  }
+
+  @Get('first-timers/:visitorId')
+  @ApiOperation({ summary: 'One first-timer: where they stand, and every answer they gave (pastoral ones included; profile only)' })
+  async person(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string) {
+    await this.auth.requireAccess(actor);
+    // The pipeline is tenant-scoped and leaves out archived forms, so finding them there is the check.
+    const person = await this.pipeline.one(visitorId);
+    const visitor = person ? await this.prisma.visitor.findUnique({ where: { id: visitorId } }) : null;
+    if (!person || !visitor) throw new NotFoundException('First-timer not found');
+    return { person, answers: allAnswers(visitor) };
+  }
+
+  @Get('first-timers/:visitorId/answers')
+  @ApiOperation({ summary: 'A first-timer form answers without the pastoral ones, for lists and the Overview' })
+  async answers(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string) {
+    await this.auth.requireAccess(actor);
+    const person = await this.pipeline.one(visitorId);
+    const visitor = person ? await this.prisma.visitor.findUnique({ where: { id: visitorId } }) : null;
+    if (!visitor) throw new NotFoundException('First-timer not found');
+    return publicAnswers(visitor);
   }
 }
