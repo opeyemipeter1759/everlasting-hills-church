@@ -6,7 +6,7 @@ import ApprovalsQueueList from "./ApprovalsQueueList";
 
 /**
  * The unit-lead dashboard's approvals queue: first-timers waiting on this
- * unit's lead to approve their integration. Shows nothing when none are
+ * unit's team leads (who they go to, and their integration). Shows nothing when none are
  * waiting, so a lead of any other team never sees an empty box.
  */
 export default function ApprovalsQueueCard({ unitId }: { unitId: string }) {

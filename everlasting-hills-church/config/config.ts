@@ -180,7 +180,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead", dynamicUnits: "lead" },
       { label: "Service Plan", href: "/dashboard/service-readiness", icon: ClipboardList, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
-      { label: "Approvals", href: "/dashboard/follow-up/approvals", icon: CheckCircle, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
     ],
   },
   {
@@ -195,6 +194,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Welcome queue", href: "/dashboard/first-timers", icon: HandHeart, minRole: "FIRST_TIMER_CONTACT" },
       { label: "First-timer overview", href: "/dashboard/follow-up/overview", icon: CalendarRange, minRole: "FIRST_TIMER_CONTACT" },
+      { label: "Approvals", href: "/dashboard/follow-up/approvals", icon: CheckCircle, minRole: "UNIT_LEAD" },
     ],
   },
   {

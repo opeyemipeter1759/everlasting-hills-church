@@ -4,9 +4,9 @@ import { useApprovalQueue } from "@/lib/api/approvals";
 import ApprovalsQueueList from "./ApprovalsQueueList";
 
 /**
- * Every approval the viewer may decide: unit leads see their own units,
- * department heads see units with no lead, admins see everything (marked
- * when deciding would be an override). Open a person to decide.
+ * Everything waiting on the viewer: team leads see who new first-timers go to
+ * and who is ready to be integrated in their units; admins see the accounts to
+ * create, and everything else marked as an override.
  */
 export default function ApprovalsQueuePage() {
   const { data, isLoading } = useApprovalQueue();
@@ -16,7 +16,7 @@ export default function ApprovalsQueuePage() {
       <header>
         <h1 className="text-xl font-bold text-[#111] dark:text-white">Approvals</h1>
         <p className="mt-1 text-sm text-gray-600 dark:text-white/60">
-          First-timers whose follow-up team says they are ready to be integrated. Open someone to see their profile, visits and notes, then decide.
+          Who new first-timers go to, who their follow-up team says is ready to be integrated, and accounts to create. Open someone to see their profile, visits and notes.
         </p>
       </header>
       {isLoading && <div className="h-40 animate-pulse rounded-2xl bg-gray-100 dark:bg-white/[0.05]" aria-label="Loading" />}

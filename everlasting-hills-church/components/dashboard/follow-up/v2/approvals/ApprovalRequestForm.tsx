@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRequestApproval } from "@/lib/api/approvals";
 import { firstProblem, requestApprovalSchema } from "@/lib/follow-up/approval-schema";
 
-/** "Request approval" with an optional note for the unit lead. */
+/** "Request approval" with an optional note for the team leads. */
 export default function ApprovalRequestForm({ visitorId, again, onDone }: { visitorId: string; again: boolean; onDone: () => void }) {
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -28,17 +28,17 @@ export default function ApprovalRequestForm({ visitorId, again, onDone }: { visi
     <form onSubmit={submit} className="mt-3 space-y-3">
       <p className="text-sm text-gray-600 dark:text-white/60">
         {again
-          ? "When the changes are done, ask the unit lead again."
-          : "When they are settled in, ask the unit lead to approve their integration."}
+          ? "When the changes are done, ask the team leads again."
+          : "When they are settled in, ask the team leads to approve their integration."}
       </p>
       <label className="block">
-        <span className="text-xs font-medium text-gray-600 dark:text-white/55">Note for the unit lead (optional)</span>
+        <span className="text-xs font-medium text-gray-600 dark:text-white/55">Note for the team leads (optional)</span>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={3}
           maxLength={1000}
-          placeholder="How they are doing, and anything the lead should know"
+          placeholder="How they are doing, and anything the team leads should know"
           className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 focus:border-[#87102C] focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white"
         />
       </label>

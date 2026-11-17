@@ -8,7 +8,7 @@ import { decideApprovalSchema, firstProblem, type DecideApprovalInput } from "@/
 interface Props {
   approvalId: string;
   firstName: string;
-  /** Deciding as an admin in place of the unit lead. */
+  /** Deciding as an admin in place of the team leads. */
   asOverride: boolean;
   onDone: () => void;
 }
@@ -41,7 +41,7 @@ export default function ApprovalDecisionForm({ approvalId, firstName, asOverride
     <div className="mt-4 space-y-3 border-t border-gray-100 pt-4 dark:border-white/10">
       {asOverride && (
         <p className="rounded-xl bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
-          You would be deciding as an admin, in place of the unit lead. This is flagged and kept on record.
+          You would be deciding as an admin, in place of the team leads. This is flagged and kept on record.
         </p>
       )}
       <label className="block">

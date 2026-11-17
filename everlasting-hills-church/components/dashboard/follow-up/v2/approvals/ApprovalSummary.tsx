@@ -23,8 +23,7 @@ export function ApprovalPill({ status }: { status: ApprovalView["status"] }) {
 export function decidersText(deciders: SubjectApproval["deciders"], unitName: string | null): string {
   const unit = unitName ?? "this unit";
   if (!deciders) return "";
-  if (deciders.level === "LEAD") return `${deciders.names.join(" or ")}, lead of ${unit}, decides.`;
-  if (deciders.level === "HEAD") return `${unit} has no lead, so ${deciders.names.join(" or ")} (department head) decides.`;
+  if (deciders.level !== "ADMIN") return `Any of the team leads of ${unit} decides: ${deciders.names.join(" or ")}.`;
   return `${unit} has no lead or department head, so an admin decides.`;
 }
 
@@ -49,7 +48,7 @@ export default function ApprovalSummary({ request, deciders }: { request: Approv
       {request.status === "CANCELLED" && <p>Cancelled on {decided} because they were reassigned.</p>}
       {request.status !== "CANCELLED" && request.decisionNote && <Quote>{request.decisionNote}</Quote>}
       {request.adminOverride && (
-        <p className="text-xs text-gray-500 dark:text-white/45">Decided by an admin in place of the unit lead. This is on record.</p>
+        <p className="text-xs text-gray-500 dark:text-white/45">Decided by an admin in place of the team leads. This is on record.</p>
       )}
     </div>
   );

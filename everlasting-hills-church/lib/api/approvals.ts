@@ -24,7 +24,22 @@ export interface ApprovalView {
   deciderName: string | null;
   decisionNote: string | null;
   adminOverride: boolean;
+  /** For an assignment: who the first-timer would go to. */
+  proposedAssignee: { memberId: string; name: string | null } | null;
 }
+
+/** A request still waiting on someone, and whether the viewer may decide it. */
+export interface PendingDecision extends ApprovalView {
+  canDecide: boolean;
+  asOverride: boolean;
+}
+
+/** The kinds of approval: who a new first-timer goes to, integration, and an account to create. */
+export const APPROVAL_KIND_LABEL: Record<string, string> = {
+  FIRST_TIMER_ASSIGNMENT: "Assignment",
+  FIRST_TIMER_INTEGRATION: "Integration",
+  MEMBER_ACCOUNT: "Account",
+};
 
 /** The approval part of a first-timer's profile, and what the viewer may do. */
 export interface SubjectApproval {
@@ -34,6 +49,10 @@ export interface SubjectApproval {
   deciders: { level: DeciderLevel; names: string[] } | null;
   canDecide: boolean;
   decideAsOverride: boolean;
+  /** Who they should go to, waiting for the team leads. */
+  assignment?: PendingDecision | null;
+  /** Integrated with no account yet, waiting for an admin. */
+  account?: PendingDecision | null;
 }
 
 export interface ApprovalQueueItem extends ApprovalView {
@@ -73,7 +92,7 @@ function useApprovalMutation<T>(run: (input: T) => Promise<SubjectApproval>, don
 export function useRequestApproval() {
   return useApprovalMutation(
     (input: RequestApprovalInput) => api.post<SubjectApproval>("/approvals", input),
-    "Approval requested. The unit lead has been told.",
+    "Approval requested. The team leads have been told.",
     "Could not ask for approval",
   );
 }
