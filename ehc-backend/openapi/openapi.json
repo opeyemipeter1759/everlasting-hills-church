@@ -21365,6 +21365,175 @@
         ]
       }
     },
+    "/first-timer-team/first-timers": {
+      "get": {
+        "operationId": "FirstTimerTeamController_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "skip",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "take",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "month",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "description": "YYYY-MM-DD, the day the form came in",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "interest",
+            "required": false,
+            "schema": {
+              "enum": [
+                "yes",
+                "no"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "A page of first-timer forms with the counts beside it, without prayer requests (First Timer Team)",
+        "tags": [
+          "first-timer-team"
+        ]
+      }
+    },
+    "/first-timer-team/first-timers/{id}": {
+      "patch": {
+        "operationId": "FirstTimerTeamController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVisitorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Correct a first-timer record; the prayer request is not editable here (First Timer Team)",
+        "tags": [
+          "first-timer-team"
+        ]
+      }
+    },
     "/follow-up": {
       "get": {
         "operationId": "FollowUpController_list",
@@ -22527,7 +22696,7 @@
             "access-token": []
           }
         ],
-        "summary": "One first-timer: where they stand, and every answer they gave (pastoral ones included; profile only)",
+        "summary": "One first-timer: where they stand, and their answers (the prayer request for pastors and admins only; profile only)",
         "tags": [
           "follow-up"
         ]
@@ -24091,6 +24260,20 @@
           {
             "in": "query",
             "name": "take",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "description": "A service id: who came",
+            "in": "query",
+            "name": "presentAt",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "description": "A service id: who missed it",
+            "in": "query",
+            "name": "absentFrom",
             "required": false,
             "schema": {}
           },

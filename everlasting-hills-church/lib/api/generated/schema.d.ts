@@ -3713,6 +3713,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/first-timer-team/first-timers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A page of first-timer forms with the counts beside it, without prayer requests (First Timer Team) */
+        get: operations["FirstTimerTeamController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/first-timer-team/first-timers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Correct a first-timer record; the prayer request is not editable here (First Timer Team) */
+        patch: operations["FirstTimerTeamController_update"];
+        trace?: never;
+    };
     "/follow-up": {
         parameters: {
             query?: never;
@@ -4010,7 +4044,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** One first-timer: where they stand, and every answer they gave (pastoral ones included; profile only) */
+        /** One first-timer: where they stand, and their answers (the prayer request for pastors and admins only; profile only) */
         get: operations["FollowUpPipelineController_person"];
         put?: never;
         post?: never;
@@ -21394,6 +21428,84 @@ export interface operations {
             };
         };
     };
+    FirstTimerTeamController_list: {
+        parameters: {
+            query?: {
+                skip?: unknown;
+                take?: unknown;
+                month?: unknown;
+                year?: unknown;
+                to?: unknown;
+                /** @description YYYY-MM-DD, the day the form came in */
+                from?: unknown;
+                interest?: "yes" | "no";
+                search?: unknown;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    FirstTimerTeamController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateVisitorDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
     FollowUpController_list: {
         parameters: {
             query?: {
@@ -22912,6 +23024,10 @@ export interface operations {
             query?: {
                 skip?: unknown;
                 take?: unknown;
+                /** @description A service id: who came */
+                presentAt?: unknown;
+                /** @description A service id: who missed it */
+                absentFrom?: unknown;
                 notContacted?: unknown;
                 /** @description A member id, or "none" */
                 assigneeId?: unknown;
