@@ -112,12 +112,12 @@ export class AnalyticsService {
       onlineCount,
       inPersonCount,
     ] = await Promise.all([
-      this.prisma.visitor.count({ where: { tenantId: this.tenantId } }),
-      this.prisma.visitor.count({ where: { tenantId: this.tenantId, membershipInterest: 'Yes' } }),
-      this.prisma.visitor.findMany({ where: { tenantId: this.tenantId, membershipInterest: 'Yes', email: { not: null } }, select: { email: true } }),
-      this.prisma.visitor.count({ where: { tenantId: this.tenantId, membershipInterest: 'No' } }),
-      this.prisma.visitor.count({ where: { tenantId: this.tenantId, attendanceType: { contains: 'online', mode: 'insensitive' } } }),
-      this.prisma.visitor.count({ where: { tenantId: this.tenantId, attendanceType: { contains: 'person', mode: 'insensitive' } } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, archivedAt: null } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, archivedAt: null, membershipInterest: 'Yes' } }),
+      this.prisma.visitor.findMany({ where: { tenantId: this.tenantId, archivedAt: null, membershipInterest: 'Yes', email: { not: null } }, select: { email: true } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, archivedAt: null, membershipInterest: 'No' } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, archivedAt: null, attendanceType: { contains: 'online', mode: 'insensitive' } } }),
+      this.prisma.visitor.count({ where: { tenantId: this.tenantId, archivedAt: null, attendanceType: { contains: 'person', mode: 'insensitive' } } }),
     ]);
 
     const interestedEmails = convertedEmails.map((v: any) => v.email).filter(Boolean) as string[];
@@ -144,7 +144,7 @@ export class AnalyticsService {
   }
 
   async getFirstTimerSources() {
-    const visitors = await this.prisma.visitor.findMany({ where: { tenantId: this.tenantId }, select: { howDidYouLearn: true } });
+    const visitors = await this.prisma.visitor.findMany({ where: { tenantId: this.tenantId, archivedAt: null }, select: { howDidYouLearn: true } });
     const sourceMap: Record<string, number> = {};
     visitors.forEach((v: any) => {
       const key = v.howDidYouLearn?.trim() || 'Not specified';
@@ -163,7 +163,7 @@ export class AnalyticsService {
     for (let i = months - 1; i >= 0; i--) {
       const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      const count = await this.prisma.visitor.count({ where: { tenantId: this.tenantId, submittedAt: { gte: start, lt: end } } });
+      const count = await this.prisma.visitor.count({ where: { tenantId: this.tenantId, archivedAt: null, submittedAt: { gte: start, lt: end } } });
       result.push({ label: start.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }), count });
     }
     return result;

@@ -64,7 +64,7 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     visitorsLastYear,
   ] = await Promise.all([
     prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER } }),
-    prisma.visitor.count({ where: { tenantId } }),
+    prisma.visitor.count({ where: { tenantId, archivedAt: null } }),
     prisma.prayerRequest.count({ where: { tenantId } }),
     // Still waiting to be prayed over. totalPrayers is every request ever
     // submitted, which only ever grows — useful as an analytics total, useless
@@ -73,7 +73,7 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     prisma.question.count({ where: { tenantId, status: QuestionStatus.PENDING } }),
     prisma.testimonial.count({ where: { tenantId, published: false } }),
     prisma.member.findMany({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: sixMonthsAgo } }, select: { joinedAt: true } }),
-    prisma.visitor.findMany({ where: { tenantId }, select: { membershipInterest: true, howDidYouLearn: true, attendanceType: true } }),
+    prisma.visitor.findMany({ where: { tenantId, archivedAt: null }, select: { membershipInterest: true, howDidYouLearn: true, attendanceType: true } }),
     prisma.prayerRequest.findMany({ where: { tenantId, submittedAt: { gte: sixMonthsAgo } }, select: { submittedAt: true } }),
     prisma.givingRecord.aggregate({ where: { tenantId, paystackStatus: 'success' }, _sum: { amount: true } }),
     prisma.service.findMany({
@@ -86,12 +86,12 @@ export async function fetchAdminAnalytics(prisma: PrismaService, tenantId: strin
     prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: lastMonthStart, lt: monthStart } } }),
     prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: yearStart } } }),
     prisma.member.count({ where: { tenantId, ...ACTIVE_MEMBER, joinedAt: { gte: lastYearStart, lt: yearStart } } }),
-    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: todayStart } } }),
-    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: yesterdayStart, lt: todayStart } } }),
-    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: monthStart } } }),
-    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: lastMonthStart, lt: monthStart } } }),
-    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: yearStart } } }),
-    prisma.visitor.count({ where: { tenantId, submittedAt: { gte: lastYearStart, lt: yearStart } } }),
+    prisma.visitor.count({ where: { tenantId, archivedAt: null, submittedAt: { gte: todayStart } } }),
+    prisma.visitor.count({ where: { tenantId, archivedAt: null, submittedAt: { gte: yesterdayStart, lt: todayStart } } }),
+    prisma.visitor.count({ where: { tenantId, archivedAt: null, submittedAt: { gte: monthStart } } }),
+    prisma.visitor.count({ where: { tenantId, archivedAt: null, submittedAt: { gte: lastMonthStart, lt: monthStart } } }),
+    prisma.visitor.count({ where: { tenantId, archivedAt: null, submittedAt: { gte: yearStart } } }),
+    prisma.visitor.count({ where: { tenantId, archivedAt: null, submittedAt: { gte: lastYearStart, lt: yearStart } } }),
   ]);
 
   const memberGrowth = months.map((m) => ({

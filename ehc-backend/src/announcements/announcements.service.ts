@@ -138,7 +138,7 @@ export class AnnouncementsService {
 
     if (visitorsTargeted) {
       const visitors = await this.prisma.visitor.findMany({
-        where: { tenantId: this.tenantId, convertedAt: null, email: { not: null } },
+        where: { tenantId: this.tenantId, convertedAt: null, archivedAt: null, email: { not: null } },
         select: { email: true, firstName: true },
       });
       // A first-timer who also has a member account must not get two copies —

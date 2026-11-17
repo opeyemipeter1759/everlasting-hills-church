@@ -44,7 +44,9 @@ export class FollowUpWorkloadService {
       where: {
         tenantId: this.tenantId,
         assigneeId: { not: null },
-        stage: { not: FollowUpStage.CONFIRMED },
+        // Open caseloads only: an integrated, opted out or archived first-timer is no longer on anyone's list.
+        stage: { notIn: [FollowUpStage.CONFIRMED, FollowUpStage.OPTED_OUT] },
+        NOT: { Visitor: { archivedAt: { not: null } } },
       },
       _count: { _all: true },
     });

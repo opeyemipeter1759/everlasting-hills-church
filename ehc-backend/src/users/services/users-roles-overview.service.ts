@@ -37,7 +37,7 @@ export class UsersRolesOverviewService {
       this.prisma.departmentHod.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.headUsherAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
       this.prisma.financeHeadAssignment.findMany({ where: { tenantId: t, endedAt: null }, select: { userId: true }, distinct: ['userId'] }),
-      this.prisma.visitor.count({ where: { tenantId: t, convertedAt: null } }),
+      this.prisma.visitor.count({ where: { tenantId: t, convertedAt: null, archivedAt: null } }),
     ]);
 
     const distinctGrantCount = (role: Role) =>

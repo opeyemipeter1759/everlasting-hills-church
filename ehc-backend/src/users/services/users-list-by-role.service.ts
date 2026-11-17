@@ -49,7 +49,7 @@ export class UsersListByRoleService {
         orderBy: { createdAt: 'asc' },
       }),
       this.prisma.visitor.findMany({
-        where: { tenantId: this.tenantId, convertedAt: null },
+        where: { tenantId: this.tenantId, convertedAt: null, archivedAt: null },
         orderBy: { submittedAt: 'desc' },
         select: {
           id: true,

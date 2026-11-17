@@ -219,7 +219,7 @@ export class DailyFastEmailService {
   private async recipients(): Promise<{ email: string; firstName: string | null }[]> {
     const [members, visitors] = await Promise.all([
       this.prisma.member.findMany({ where: { tenantId: this.fasts.tenant, email: { not: null } }, select: { email: true, firstName: true } }),
-      this.prisma.visitor.findMany({ where: { tenantId: this.fasts.tenant, email: { not: null } }, select: { email: true, firstName: true } }),
+      this.prisma.visitor.findMany({ where: { tenantId: this.fasts.tenant, archivedAt: null, email: { not: null } }, select: { email: true, firstName: true } }),
     ]);
     const byEmail = new Map<string, { email: string; firstName: string | null }>();
     for (const p of [...members, ...visitors]) {
