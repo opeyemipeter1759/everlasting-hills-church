@@ -36,6 +36,8 @@ maybe('PipelineRepository against Postgres', () => {
 
   let unitId: string;
   let profileId: string;
+  // A cold or busy database can take longer than the 5 second default to seed.
+  jest.setTimeout(60_000);
 
   beforeAll(async () => {
     await prisma.tenant.create({ data: { id: tenantId, name: 'Pipeline test', slug: `pipeline-${tenantId}` } });

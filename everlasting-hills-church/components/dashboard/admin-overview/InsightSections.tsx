@@ -7,6 +7,7 @@ import FirstTimerFunnelCard from "./FirstTimerFunnelCard";
 import CalendarSummaryCard from "./CalendarSummaryCard";
 import PastoralCareCard from "./PastoralCareCard";
 import BirthdayAnniversaryCard from "./BirthdayAnniversaryCard";
+import ThisMonthCard from "./ThisMonthCard";
 
 export interface SectionProps {
   data: AdminDashboardData;
@@ -30,7 +31,7 @@ export default function InsightSections({ data, visible, dismiss }: SectionProps
         )}
       </div>
 
-      {/* Attendance trend + First-timer breakdown — side by side */}
+      {/* Attendance trend + First-timer breakdown, side by side */}
       {visible("attendance") && (
         <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
           <AttendanceTrendCard
@@ -42,11 +43,12 @@ export default function InsightSections({ data, visible, dismiss }: SectionProps
         </div>
       )}
 
-      {/* Funnel + events */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Funnel, this month's first-timers (links to the follow-up Overview) + events */}
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {visible("funnel") && (
           <FirstTimerFunnelCard viewMoreHref="/dashboard/admin/first-timers/funnel" onDismiss={() => dismiss("funnel")} />
         )}
+        <ThisMonthCard />
         {visible("events") && (
           <CalendarSummaryCard summary={data.calendar} viewMoreHref="/dashboard/admin/calendar" onDismiss={() => dismiss("events")} />
         )}

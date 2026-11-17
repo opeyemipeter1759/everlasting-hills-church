@@ -5,6 +5,7 @@ import { AuthModule } from '../auth/auth.module';
 import { InboxModule } from '../inbox/inbox.module';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { FirstTimerPhotosModule } from './photos/first-timer-photos.module';
+import { FirstTimerVisitsModule } from './visits/first-timer-visits.module';
 import { FollowUpServiceReportsController } from './follow-up-service-reports.controller';
 import { FollowUpController } from './follow-up.controller';
 import { FollowUpMemberStatusController } from './follow-up-member-status.controller';
@@ -43,10 +44,10 @@ import { FollowUpGamificationService } from './services/follow-up-gamification.s
 import { FollowUpRemindersService } from './services/follow-up-reminders.service';
 
 @Module({
-  imports: [PrismaModule, AuthModule, InboxModule, AttendanceModule, FirstTimerPhotosModule],
+  imports: [PrismaModule, AuthModule, InboxModule, AttendanceModule, FirstTimerPhotosModule, FirstTimerVisitsModule],
   // FollowUpServiceReportsController must be registered before FollowUpController:
   // its `/follow-up/service-reports` (history) route has the same single-segment
-  // shape as FollowUpController's `/follow-up/:id` — Express/Nest match routes in
+  // shape as FollowUpController's `/follow-up/:id`, and Express/Nest match routes in
   // registration order, so the more specific literal path must come first.
   controllers: [FollowUpServiceReportsController, FollowUpPipelineController, FollowUpController, FollowUpMemberStatusController],
   providers: [
