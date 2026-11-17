@@ -34,12 +34,16 @@ export interface AdminFirstTimerPage {
   onRecord: number;
 }
 
-/** The admin First Timers page: a page of forms and every count beside it, all worked out by the API. */
-export function useAdminFirstTimers(q: AdminFirstTimerQuery) {
+/**
+ * The admin First Timers page: a page of forms and every count beside it, all
+ * worked out by the API. The First Timer Team reads the same list from its own
+ * endpoint, which leaves out prayer requests.
+ */
+export function useAdminFirstTimers(q: AdminFirstTimerQuery, path = "/visitors/first-timers") {
   const params = Object.fromEntries(Object.entries(q).filter(([, v]) => v !== undefined && v !== ""));
   return useQuery({
-    queryKey: ["visitors", "first-timers", params],
-    queryFn: () => api.get<AdminFirstTimerPage>("/visitors/first-timers", params),
+    queryKey: ["visitors", "first-timers", path, params],
+    queryFn: () => api.get<AdminFirstTimerPage>(path, params),
     enabled: typeof window !== "undefined",
     placeholderData: keepPreviousData,
   });

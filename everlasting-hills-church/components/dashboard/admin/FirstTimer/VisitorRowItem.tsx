@@ -7,6 +7,7 @@ import { relativeDate } from "./helpers";
 import Avatar from "./Avatar";
 import { TypeBadge, InterestBadge } from "./badges";
 import CreateAccountBtn from "./CreateAccountBtn";
+import { useFirstTimersMode } from "./mode";
 import VisitorDetails from "./VisitorDetails";
 
 export default function VisitorRowItem({
@@ -21,6 +22,7 @@ export default function VisitorRowItem({
   onDelete: (visitor: VisitorRow) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const { team } = useFirstTimersMode();
   const name = `${visitor.firstName} ${visitor.lastName}`;
 
   return (
@@ -53,7 +55,7 @@ export default function VisitorRowItem({
         </td>
         <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center gap-1.5">
-            <CreateAccountBtn visitor={visitor} onCreated={onCreated} />
+            {!team && <CreateAccountBtn visitor={visitor} onCreated={onCreated} />}
             <button
               type="button"
               onClick={() => onEdit(visitor)}
@@ -63,7 +65,7 @@ export default function VisitorRowItem({
             >
               <Pencil size={13} />
             </button>
-            <button
+            {!team && <button
               type="button"
               onClick={() => onDelete(visitor)}
               aria-label={`Archive ${name}`}
@@ -71,7 +73,7 @@ export default function VisitorRowItem({
               className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center text-[#8a7e80] dark:text-white/40 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
             >
               <Archive size={13} />
-            </button>
+            </button>}
           </div>
         </td>
         <td className="px-3 py-3.5">

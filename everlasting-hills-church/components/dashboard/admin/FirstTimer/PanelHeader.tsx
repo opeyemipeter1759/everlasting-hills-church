@@ -4,6 +4,7 @@ import FilterTabs from "./FilterTabs";
 import SearchBox from "./SearchBox";
 import VisitorImportDialog from "./VisitorImportDialog";
 import DateRangeFilter from "./DateRangeFilter";
+import { useFirstTimersMode } from "./mode";
 
 export default function PanelHeader({
   total,
@@ -59,7 +60,7 @@ export default function PanelHeader({
           onClear={onClearDates}
         />
         <SearchBox value={search} onChange={onSearchChange} />
-        <VisitorImportDialog />
+        {!useFirstTimersMode().team && <VisitorImportDialog />}
       </div>
     </div>
   );

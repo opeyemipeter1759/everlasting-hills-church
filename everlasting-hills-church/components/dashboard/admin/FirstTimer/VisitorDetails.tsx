@@ -1,19 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Briefcase,
-  Cake,
-  ClipboardCopy,
-  Check,
-  Home,
-  Loader2,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Phone,
-  Sparkles,
-} from "lucide-react";
+import { Briefcase, Cake, ClipboardCopy, Check, Home, Loader2, Mail, MapPin, MessageCircle, Phone, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ui/toast/toast";
 import { userMessageForError } from "@/lib/api/user-message";
@@ -21,6 +9,7 @@ import { useMarkWhatsappAdded, whatsappChatLink } from "@/lib/api/whatsapp-commu
 import type { VisitorRow } from "./types";
 import type { FirstTimerAnalysis } from "@/app/api/ai/first-timer/route";
 import { postAi } from "@/lib/ai/client";
+import { useFirstTimersMode } from "./mode";
 
 const SENTIMENT_COLOR: Record<string, string> = {
   positive:   "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
@@ -45,6 +34,8 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState("");
   const [copied, setCopied]     = useState(false);
+  // The First Timer Team works without the AI read, which is built on the prayer request.
+  const { team } = useFirstTimersMode();
 
   async function analyse() {
     setLoading(true);
@@ -196,7 +187,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
         </div>
 
         {/* ── Gemini AI Analysis ─────────────────────────────────────── */}
-        <div className="mt-4 pt-4 border-t border-[#E7CDD3]/40 dark:border-white/[0.07]">
+        {!team && <div className="mt-4 pt-4 border-t border-[#E7CDD3]/40 dark:border-white/[0.07]">
           {!analysis && !loading ? (
             <button
               type="button"
@@ -257,7 +248,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
               </div>
             </div>
           ) : null}
-        </div>
+        </div>}
       </td>
     </tr>
   );
@@ -271,6 +262,7 @@ export default function VisitorDetails({ visitor }: { visitor: VisitorRow }) {
 function WhatsappCommunityAction({ visitor }: { visitor: VisitorRow }) {
   const router = useRouter();
   const mark = useMarkWhatsappAdded();
+  const { team } = useFirstTimersMode();
   const [added, setAdded] = useState(Boolean(visitor.whatsappAddedAt));
   const chat = visitor.phone ? whatsappChatLink(visitor.phone) : null;
 
@@ -305,7 +297,7 @@ function WhatsappCommunityAction({ visitor }: { visitor: VisitorRow }) {
           Open chat
         </a>
       )}
-      <button
+      {!team && <button
         type="button"
         onClick={toggle}
         disabled={mark.isPending}
@@ -316,8 +308,8 @@ function WhatsappCommunityAction({ visitor }: { visitor: VisitorRow }) {
         }`}
       >
         {mark.isPending ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
-        {added ? "Added — undo" : "Mark as added"}
-      </button>
+        {added ? "Added, undo" : "Mark as added"}
+      </button>}
     </span>
   );
 }

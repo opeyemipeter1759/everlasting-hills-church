@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAdminFirstTimers } from "@/lib/api/first-timers-admin";
 import { useMonthYearParams } from "@/components/dashboard/follow-up/v2/MonthYearFilter";
 import { useDebounced } from "@/components/dashboard/follow-up/MasterListToolbar";
+import { useFirstTimersMode } from "./mode";
 
 export type InterestFilter = "all" | "yes" | "no";
 
@@ -17,6 +18,7 @@ const DEFAULT_PAGE_SIZE = 8;
  */
 export function useFirstTimersFilter() {
   const queryClient = useQueryClient();
+  const { listPath } = useFirstTimersMode();
   const { year, month } = useMonthYearParams();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<InterestFilter>("all");
@@ -40,7 +42,7 @@ export function useFirstTimersFilter() {
     month,
     take: pageSize,
     skip: (page - 1) * pageSize,
-  });
+  }, listPath);
 
   /** After an account is made, a record archived or edited: re-read the page and its counts. */
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["visitors"] });

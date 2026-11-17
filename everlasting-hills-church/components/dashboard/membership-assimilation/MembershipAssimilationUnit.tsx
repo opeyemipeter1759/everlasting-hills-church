@@ -4,9 +4,10 @@ import { useParams } from "next/navigation";
 import { Users2 } from "lucide-react";
 import { useMyDepartmentUnits } from "@/lib/api";
 import { isMembershipAssimilationDepartment } from "@/lib/membership-assimilation";
-import { isFollowUpUnit, isIntegrationUnit } from "@/lib/integration-unit";
+import { isFirstTimerTeamUnit, isFollowUpUnit, isIntegrationUnit } from "@/lib/integration-unit";
 import FollowUpBoard from "@/components/dashboard/follow-up/FollowUpBoard";
 import IntegrationBoard from "@/components/dashboard/integration/IntegrationBoard";
+import FirstTimersClient from "@/components/dashboard/admin/FirstTimersClient";
 import { BoardSkeleton } from "@/components/dashboard/follow-up/BoardSkeleton";
 import ComingSoon from "@/components/dashboard/shell/ComingSoon";
 
@@ -23,6 +24,7 @@ export default function MembershipAssimilationUnit() {
 
   if (isFollowUpUnit(unit?.name)) return <FollowUpBoard />;
   if (isIntegrationUnit(unit?.name)) return <IntegrationBoard />;
+  if (isFirstTimerTeamUnit(unit?.name)) return <FirstTimersClient team />;
 
   return (
     <ComingSoon

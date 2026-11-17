@@ -13,6 +13,11 @@ export function isFollowUpUnit(name: string | undefined | null): boolean {
   return letters(name).includes("followup");
 }
 
+/** "First Timer Team", "First-timers" and the like. */
+export function isFirstTimerTeamUnit(name: string | undefined | null): boolean {
+  return letters(name).includes("firsttimer");
+}
+
 export function isIntegrationUnit(name: string | undefined | null): boolean {
   return letters(name).includes("integration");
 }

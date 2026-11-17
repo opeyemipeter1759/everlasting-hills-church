@@ -11,6 +11,7 @@ import { heardFromErrors } from "@/lib/first-timer/form-schema";
 import type { VisitorRow } from "./types";
 import { inputClass, labelClass, selectClass, toForm, toPayload, toPatch, type FormState } from "./editVisitorForm";
 import EditVisitorHeardFrom from "./EditVisitorHeardFrom";
+import { useFirstTimersMode } from "./mode";
 
 export default function EditVisitorModal({
   visitor,
@@ -25,6 +26,7 @@ export default function EditVisitorModal({
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [mounted, setMounted] = useState(false);
+  const { editPath } = useFirstTimersMode();
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function EditVisitorModal({
     setSaving(true);
     try {
       const payload = toPayload(form);
-      await apiClient.patch(`/visitors/${visitor.id}`, payload);
+      await apiClient.patch(editPath(visitor.id), payload);
       showToast.success("Visitor updated");
       onUpdated(visitor.id, toPatch(payload));
       onClose();
@@ -129,9 +131,7 @@ export default function EditVisitorModal({
             <label className={labelClass}>Occupation</label>
             <input value={form.occupation} onChange={(e) => set("occupation", e.target.value)} className={inputClass} />
           </div>
-
           <EditVisitorHeardFrom form={form} set={set} errors={errors} />
-
           <div>
             <label className={labelClass}>Membership interest</label>
             <Select

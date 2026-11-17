@@ -15,14 +15,25 @@ import VisitorsTable from "./FirstTimer/VisitorsTable";
 import EmptyState from "./FirstTimer/EmptyState";
 import EditVisitorModal from "./FirstTimer/EditVisitorModal";
 import FirstTimerStatsCards from "./FirstTimer/FirstTimerStatsCards";
+import { ADMIN_MODE, FirstTimersModeProvider, TEAM_MODE } from "./FirstTimer/mode";
 
 export type { VisitorRow };
 
 /**
  * The admin First Timers page. The list, its tabs and the cards are all paged
- * and counted on the server; first-timers are archived, never deleted.
+ * and counted on the server; first-timers are archived, never deleted. With
+ * `team`, the First Timer Team's view of it: no prayer requests, and editing
+ * only (accounts, imports and archiving stay with the admins).
  */
-export default function FirstTimersClient() {
+export default function FirstTimersClient({ team = false }: { team?: boolean }) {
+  return (
+    <FirstTimersModeProvider value={team ? TEAM_MODE : ADMIN_MODE}>
+      <FirstTimersPage team={team} />
+    </FirstTimersModeProvider>
+  );
+}
+
+function FirstTimersPage({ team }: { team: boolean }) {
   const f = useFirstTimersFilter();
   const refreshEverywhere = useRefreshEverywhere();
   const [editTarget, setEditTarget] = useState<VisitorRow | null>(null);
@@ -48,8 +59,10 @@ export default function FirstTimersClient() {
     <div className="space-y-5 px-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">First Timers</h1>
-          <p className="text-sm text-gray-500 dark:text-white/50 mt-1">Review newcomer submissions and create member accounts.</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{team ? "First Timer Team" : "First Timers"}</h1>
+          <p className="text-sm text-gray-500 dark:text-white/50 mt-1">
+            {team ? "Every first-timer's details, to follow up and correct. Prayer requests stay with the pastors." : "Review newcomer submissions and create member accounts."}
+          </p>
         </div>
         <MonthYearFilter />
       </div>
