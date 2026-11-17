@@ -10,6 +10,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { normalizeGender, parseBirthday } from '../members-supabase-admin.util';
 import { MemberAuthProvisioningService } from './member-auth-provisioning.service';
 import { moveFollowUpThread } from '../../follow-up/services/follow-up-subject.util';
+import { resolveMemberAccount } from '../../follow-up/approvals/account-approval';
 
 /** Converts a Visitor into a member using a coordinated auth + database flow. */
 @Injectable()
@@ -123,6 +124,8 @@ export class MemberOnboardingService {
         // read markers) is keyed to the visitor too; without moving it, the
         // member's thread opens empty and the chat looks lost.
         await moveFollowUpThread(tx, this.tenantId, { kind: 'VISITOR', id: visitor.id }, { kind: 'MEMBER', id: createdMember.id });
+        // An admin asked to create this account (after their integration was approved) now has.
+        await resolveMemberAccount(tx, { tenantId: this.tenantId, visitorId: visitor.id, actorId: opts.actorProfileId ?? null });
         return createdMember;
       });
     } catch (error) {

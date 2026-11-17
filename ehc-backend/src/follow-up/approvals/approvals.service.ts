@@ -11,18 +11,21 @@ import { parseSchema } from '../../common/zod-parse.util';
 import { FollowUpAuthService } from '../services/follow-up-auth.service';
 import { FollowUpEvent, type ApprovalDecidedPayload, type ApprovalRequestedPayload } from '../events/follow-up-events';
 import { APPROVAL_KINDS, firstTimerIntegration } from './approval-kinds';
-import { authorityFor, decidersForUnit, type Authority } from './approval-deciders';
+import { authorityFor, decidersFor, type Authority } from './approval-deciders';
+import { FIRST_TIMER_ASSIGNMENT, ROUTING_REQUESTER, assignmentPayload } from './assignment-approval';
+import { MEMBER_ACCOUNT } from './account-approval';
 import { decideApprovalSchema, requestApprovalSchema } from './approvals.schema';
-import type { ApprovalView, QueueItem, SubjectApproval } from './approvals.types';
+import type { ApprovalView, PendingDecision, QueueItem, SubjectApproval } from './approvals.types';
 import { WORKFLOW_TX } from '../workflow-tx';
 
 const QUEUE_LIMIT = 200;
 
 /**
- * Generic approvals. A request is asked for by the assignee or an admin and
- * decided by whoever holds the unit's lead assignment at that moment (else its
- * department head, else the admins); an admin may override, which is flagged
- * and audited. Each change commits with its outbox event, and a decision is a
+ * Generic approvals. A request is asked for (or raised by the system) and
+ * decided by the unit's team leads at that moment: whoever holds its lead
+ * assignment and the head of its department, any one of them (else the
+ * admins). Admin kinds go to the admins. An admin may override, which is
+ * flagged and audited. Each change commits with its outbox event, and a decision is a
  * conditional update, so two deciders (or one double tap) can never both win.
  */
 @Injectable()
@@ -85,15 +88,16 @@ export class ApprovalsService {
     const tenantId = this.tenantId;
     const note = input.note || null;
 
-    const { eventId, subjectId } = await this.prisma.$transaction(async (tx) => {
+    const { eventIds, subjectId } = await this.prisma.$transaction(async (tx) => {
       const request = await tx.approvalRequest.findFirst({ where: { id, tenantId } });
       if (!request) throw new NotFoundException('Approval request not found');
       const handler = APPROVAL_KINDS[request.kind];
       if (!handler) throw new BadRequestException('Unknown kind of approval');
 
-      const authority = await authorityFor(tx, tenantId, request.unitId, actor.profileId);
+      const authority = await authorityFor(tx, tenantId, request, actor.profileId);
       if (!authority.allowed) throw new ForbiddenException(forbiddenMessage(authority));
       if (request.status !== ApprovalStatus.PENDING) throw new ConflictException('This request has already been decided');
+      if (input.decision === 'CHANGES_REQUESTED' && handler.noteOnChanges && !note) throw new BadRequestException('Say what still needs to happen');
 
       // Exactly one row, or someone else got there first.
       const won = await tx.approvalRequest.updateMany({
@@ -102,7 +106,10 @@ export class ApprovalsService {
       });
       if (won.count !== 1) throw new ConflictException('Someone else decided this request a moment ago');
 
-      await handler.onDecided(tx, { tenantId, subjectId: request.subjectId, actorId: actor.profileId, decision: input.decision, note });
+      const followOn = await handler.onDecided(tx, {
+        tenantId, request: { ...request, status: input.decision }, actorId: actor.profileId, decision: input.decision, note,
+        assigneeId: input.assigneeId || null, outbox: this.outbox,
+      });
       await tx.auditLog.create({
         data: {
           id: randomUUID(), tenantId, actorId: actor.userId,
@@ -112,15 +119,16 @@ export class ApprovalsService {
           after: { status: input.decision, adminOverride: authority.override, deciderLevel: authority.level },
         },
       });
+      if (!handler.announceDecision) return { eventIds: followOn, subjectId: request.subjectId };
       const payload: ApprovalDecidedPayload = {
         approvalId: id, kind: request.kind, visitorId: request.subjectId,
         firstName: await handler.firstName(tx, tenantId, request.subjectId),
         unitId: request.unitId, requesterId: request.requesterId, decision: input.decision, adminOverride: authority.override,
       };
       const recorded = await this.outbox.record(tx, { tenantId, type: FollowUpEvent.ApprovalDecided, payload: { ...payload }, actorId: actor.profileId });
-      return { eventId: recorded, subjectId: request.subjectId };
+      return { eventIds: [recorded, ...followOn], subjectId: request.subjectId };
     }, WORKFLOW_TX);
-    await this.outbox.dispatchNow([eventId]);
+    await this.outbox.dispatchNow(eventIds);
     return this.forSubject(actor, subjectId);
   }
 
@@ -143,12 +151,27 @@ export class ApprovalsService {
       decideAsOverride: false,
     };
     if (pending && latest) {
-      const deciders = await decidersForUnit(this.prisma, this.tenantId, latest.unitId);
+      const deciders = await decidersFor(this.prisma, this.tenantId, latest);
       const names = deciders.level === 'ADMIN' ? [] : [...(await this.names(deciders.profileIds)).values()];
-      const authority = await authorityFor(this.prisma, this.tenantId, latest.unitId, actor.profileId);
+      const authority = await authorityFor(this.prisma, this.tenantId, latest, actor.profileId);
       Object.assign(result, { deciders: { level: deciders.level, names }, canDecide: authority.allowed, decideAsOverride: authority.override });
     }
-    return result;
+    const [assignment, account] = await Promise.all([
+      this.pendingDecision(actor, FIRST_TIMER_ASSIGNMENT, visitorId),
+      this.pendingDecision(actor, MEMBER_ACCOUNT, visitorId),
+    ]);
+    return { ...result, assignment, account };
+  }
+
+  /** A request of this kind still waiting on this person, and whether the caller may decide it. */
+  private async pendingDecision(actor: AuthUser, kind: string, visitorId: string): Promise<PendingDecision | null> {
+    const request = await this.prisma.approvalRequest.findFirst({
+      where: { tenantId: this.tenantId, kind, subjectId: visitorId, status: ApprovalStatus.PENDING },
+    });
+    if (!request) return null;
+    const [view] = await this.views([request]);
+    const authority = await authorityFor(this.prisma, this.tenantId, request, actor.profileId);
+    return { ...view, canDecide: authority.allowed, asOverride: authority.override };
   }
 
   /** Pending requests the caller may decide, oldest first. Admins see every one, marked when it would be an override. */
@@ -160,10 +183,11 @@ export class ApprovalsService {
       take: QUEUE_LIMIT,
     });
     const authority = new Map<string, Authority>();
-    for (const u of new Set(pending.map((p) => p.unitId))) {
-      authority.set(u, await authorityFor(this.prisma, this.tenantId, u, actor.profileId));
+    const keyOf = (p: { kind: string; unitId: string }) => `${p.kind}:${p.unitId}`;
+    for (const p of pending) {
+      if (!authority.has(keyOf(p))) authority.set(keyOf(p), await authorityFor(this.prisma, this.tenantId, p, actor.profileId));
     }
-    const mine = pending.filter((p) => authority.get(p.unitId)?.allowed);
+    const mine = pending.filter((p) => authority.get(keyOf(p))?.allowed);
     if (mine.length === 0) return [];
 
     const people = await this.pipeline.list({ visitorIds: mine.map((p) => p.subjectId), take: QUEUE_LIMIT });
@@ -171,17 +195,22 @@ export class ApprovalsService {
     const views = await this.views(mine);
     // Archived forms drop out of every list, this one included.
     return views
-      .map((v, i) => ({ ...v, asOverride: authority.get(mine[i].unitId)!.override, person: byVisitor.get(v.subjectId)! }))
+      .map((v, i) => ({ ...v, asOverride: authority.get(keyOf(mine[i]))!.override, person: byVisitor.get(v.subjectId)! }))
       .filter((item) => !!item.person);
   }
 
   private async views(requests: ApprovalRequest[]): Promise<ApprovalView[]> {
     const profileIds = requests.flatMap((r) => [r.requesterId, r.deciderId]).filter((p): p is string => !!p);
-    const [names, units] = await Promise.all([
+    const proposedIds = requests.map((r) => assignmentPayload(r.payload)?.assigneeId).filter((m): m is string => !!m);
+    const [names, units, proposed] = await Promise.all([
       this.names(profileIds),
       this.prisma.unit.findMany({ where: { id: { in: [...new Set(requests.map((r) => r.unitId))] } }, select: { id: true, name: true } }),
+      proposedIds.length
+        ? this.prisma.member.findMany({ where: { id: { in: [...new Set(proposedIds)] } }, select: { id: true, firstName: true, lastName: true } })
+        : Promise.resolve([] as { id: string; firstName: string; lastName: string }[]),
     ]);
     const unitName = new Map(units.map((u) => [u.id, u.name]));
+    const memberName = new Map(proposed.map((m) => [m.id, `${m.firstName} ${m.lastName}`.trim()]));
     return requests.map((r) => ({
       id: r.id,
       kind: r.kind,
@@ -190,12 +219,16 @@ export class ApprovalsService {
       unitId: r.unitId,
       unitName: unitName.get(r.unitId) ?? null,
       note: r.note,
-      requesterName: names.get(r.requesterId) ?? null,
+      requesterName: r.requesterId === ROUTING_REQUESTER ? 'The routing rules' : (names.get(r.requesterId) ?? null),
       createdAt: r.createdAt.toISOString(),
       decidedAt: r.decidedAt?.toISOString() ?? null,
       deciderName: r.deciderId ? (names.get(r.deciderId) ?? null) : null,
       decisionNote: r.decisionNote,
       adminOverride: r.adminOverride,
+      proposedAssignee: (() => {
+        const memberId = assignmentPayload(r.payload)?.assigneeId;
+        return memberId ? { memberId, name: memberName.get(memberId) ?? null } : null;
+      })(),
     }));
   }
 
@@ -211,7 +244,6 @@ export class ApprovalsService {
 }
 
 function forbiddenMessage(authority: Authority): string {
-  if (authority.level === 'LEAD') return 'Only the lead of this unit can decide this one';
-  if (authority.level === 'HEAD') return 'This unit has no lead, so its department head decides';
-  return 'Only an admin can decide this one';
+  if (authority.level === 'ADMIN') return 'Only an admin can decide this one';
+  return 'Only the team leads of this unit can decide this one';
 }

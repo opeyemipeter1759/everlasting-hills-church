@@ -9,7 +9,8 @@ import { FollowUpEvent } from '../events/follow-up-events';
 
 /**
  * Routing new registrations, against a disposable Postgres with the migrations
- * applied (spec section 6, tests 14 and 17). Set PIPELINE_TEST_DATABASE_URL to
+ * applied (spec section 6, tests 14 and 17). The routing rules propose who a
+ * new first-timer goes to; nothing is assigned until a team lead approves. Set PIPELINE_TEST_DATABASE_URL to
  * run it; skipped otherwise. It seeds a tenant of its own and deletes it after.
  */
 const maybe = testDbUrl ? describe : describe.skip;
@@ -25,11 +26,22 @@ maybe('Routing rules against Postgres', () => {
   let ruleId: string;
   let lead: Person, contact: Person, m1: Person, m2: Person, m3: Person, m4: Person, gone: Person, admin: Person;
 
+  /** Registers someone; returns their entry and the assignment proposed for the team leads. */
   async function register(name: string, isStudent: boolean | null = true) {
     const visitorId = await fx.firstTimer(name, { isStudent });
     await surface.onVisitorCreated({ visitorIds: [visitorId] });
-    return { visitorId, entry: await prisma.followUpEntry.findFirstOrThrow({ where: { visitorId } }) };
+    const proposal = await prisma.approvalRequest.findFirst({ where: { subjectId: visitorId, kind: 'FIRST_TIMER_ASSIGNMENT', status: 'PENDING' } });
+    const payload = proposal?.payload as { assigneeId?: string; routingRuleId?: string | null } | undefined;
+    return {
+      visitorId,
+      entry: await prisma.followUpEntry.findFirstOrThrow({ where: { visitorId } }),
+      proposal,
+      proposedTo: payload?.assigneeId ?? null,
+      proposedRule: payload?.routingRuleId ?? null,
+    };
   }
+  const approve = (proposalId: string, assigneeId?: string) =>
+    svc.approvals.decide(fx.actor(lead, { unitLeadOf: [unit] }), proposalId, { decision: 'APPROVED', ...(assigneeId ? { assigneeId } : {}) });
   const told = async (type: string, visitorId: string) => {
     const event = (await prisma.outboxEvent.findMany({ where: { tenantId: fx.tenantId, type } })).find(
       (e) => (e.payload as { visitorId?: string }).visitorId === visitorId,
@@ -86,48 +98,66 @@ maybe('Routing rules against Postgres', () => {
     await prisma.$disconnect();
   });
 
-  it('a student goes to the least-loaded person in the pool, under the rule\'s unit, and both people hear', async () => {
-    const { visitorId, entry } = await register('Ada');
+  it('a student is proposed to the least-loaded person in the pool, and nobody has them until a team lead approves', async () => {
+    const { visitorId, entry, proposal, proposedTo, proposedRule } = await register('Ada');
     // Mthree has never been given anyone; Gone has no load either but is inactive.
-    expect(entry).toMatchObject({ assigneeId: m3.memberId, unitId: unit, routingRuleId: ruleId, stage: 'ASSIGNED' });
-    expect(entry.assignedAt).toBeInstanceOf(Date);
+    expect(proposedTo).toBe(m3.memberId);
+    expect(proposedRule).toBe(ruleId);
+    expect(proposal).toMatchObject({ unitId: unit, requesterId: 'routing' });
+    expect(entry).toMatchObject({ assigneeId: null, unitId: unit, stage: 'UNASSIGNED' });
+    expect(await told(FollowUpEvent.Registered, visitorId)).toEqual([contact.profileId]);
+    expect(await told(FollowUpEvent.ApprovalRequested, visitorId)).toEqual([lead.profileId]);
+
+    await approve(proposal!.id);
+    const after = await prisma.followUpEntry.findUniqueOrThrow({ where: { id: entry.id } });
+    expect(after).toMatchObject({ assigneeId: m3.memberId, unitId: unit, routingRuleId: ruleId, stage: 'ASSIGNED' });
+    expect(after.assignedAt).toBeInstanceOf(Date);
     const history = await prisma.followUpStageHistory.findFirst({ where: { entryId: entry.id } });
     expect(history).toMatchObject({ fromStage: 'UNASSIGNED', toStage: 'ASSIGNED', reason: 'ASSIGNED' });
-    expect(await told(FollowUpEvent.Registered, visitorId)).toEqual([contact.profileId]);
     expect(await told(FollowUpEvent.Assigned, visitorId)).toEqual([m3.profileId]);
   });
 
-  it('a tie goes to whoever was given someone least recently', async () => {
-    expect((await register('Bola')).entry.assigneeId).toBe(m1.memberId); // 1, 1, 1: Mone was given hers first
-    expect((await register('Chidi')).entry.assigneeId).toBe(m2.memberId); // 2, 1, 1: Mtwo before Mthree
+  it('a tie goes to whoever was given or proposed someone least recently, and waiting proposals count as load', async () => {
+    expect((await register('Bola')).proposedTo).toBe(m1.memberId); // 1, 1, 1: Mone was given hers first
+    expect((await register('Chidi')).proposedTo).toBe(m2.memberId); // 2 (one waiting), 1, 1: Mtwo before Mthree
   });
 
-  it('two registrations at the same moment never land on the same person', async () => {
+  it('two registrations at the same moment are never proposed to the same person', async () => {
     // Now 2, 2, 1: one goes to Mthree, and the other must see that and go to Mone.
     const [a, b] = await Promise.all([fx.firstTimer('Dayo', { isStudent: true }), fx.firstTimer('Efe', { isStudent: true })]);
     await Promise.all([surface.onVisitorCreated({ visitorIds: [a] }), surface.onVisitorCreated({ visitorIds: [b] })]);
-    const got = await prisma.followUpEntry.findMany({ where: { visitorId: { in: [a, b] } }, select: { assigneeId: true } });
-    expect(got.map((e) => e.assigneeId).sort()).toEqual([m1.memberId, m3.memberId].sort());
+    const got = await prisma.approvalRequest.findMany({ where: { subjectId: { in: [a, b] }, kind: 'FIRST_TIMER_ASSIGNMENT' }, select: { payload: true } });
+    expect(got.map((r) => (r.payload as { assigneeId: string }).assigneeId).sort()).toEqual([m1.memberId, m3.memberId].sort());
   });
 
-  it('with no matching rule it keeps today\'s behaviour, and the contact still hears', async () => {
-    const { visitorId, entry } = await register('Funmi', false);
-    expect(entry.routingRuleId).toBeNull();
+  it('a team lead can give them to someone else in the unit instead, or leave them unassigned', async () => {
+    const other = await register('Ife');
+    await approve(other.proposal!.id, m4.memberId);
+    expect(await prisma.followUpEntry.findUniqueOrThrow({ where: { id: other.entry.id } })).toMatchObject({ assigneeId: m4.memberId, routingRuleId: null });
+
+    const left = await register('Jide');
+    await svc.approvals.decide(fx.actor(lead, { unitLeadOf: [unit] }), left.proposal!.id, { decision: 'CHANGES_REQUESTED' });
+    expect(await prisma.followUpEntry.findUniqueOrThrow({ where: { id: left.entry.id } })).toMatchObject({ assigneeId: null, stage: 'UNASSIGNED' });
+    await expect(svc.approvals.decide(fx.actor(m1), (await register('Kemi')).proposal!.id, { decision: 'APPROVED' })).rejects.toThrow(/team leads/);
+  });
+
+  it('with no matching rule the unit auto-assign proposes someone, and the contact still hears', async () => {
+    const { visitorId, entry, proposedRule } = await register('Funmi', false);
+    expect(proposedRule).toBeNull();
     expect(entry.unitId).toBe(unit);
     expect(await told(FollowUpEvent.Registered, visitorId)).toEqual([contact.profileId]);
   });
 
-  it("an admin's reassignment wins, and no later sweep undoes it", async () => {
-    const { visitorId, entry } = await register('Gbenga');
-    expect(entry.routingRuleId).toBe(ruleId);
+  it("an admin's assignment wins over a waiting proposal, and no later sweep undoes it", async () => {
+    const { visitorId, entry, proposal } = await register('Gbenga');
     await intake.assign(fx.actor(admin, { roles: [Role.ADMIN] }), entry.id, { assigneeId: m4.memberId });
     const after = await prisma.followUpEntry.findUniqueOrThrow({ where: { id: entry.id } });
     expect(after).toMatchObject({ assigneeId: m4.memberId, unitId: unit, routingRuleId: null });
-    expect(after.assignedAt!.getTime()).toBeGreaterThanOrEqual(entry.assignedAt!.getTime());
+    expect((await prisma.approvalRequest.findUniqueOrThrow({ where: { id: proposal!.id } })).status).toBe('CANCELLED');
     const assigned = (await prisma.outboxEvent.findMany({ where: { tenantId: fx.tenantId, type: FollowUpEvent.Assigned } })).filter(
       (e) => (e.payload as { visitorId?: string }).visitorId === visitorId,
     );
-    expect(assigned).toHaveLength(2);
+    expect(assigned).toHaveLength(1);
 
     await surface.run(new Map(), unit);
     expect((await prisma.followUpEntry.findUniqueOrThrow({ where: { id: entry.id } })).assigneeId).toBe(m4.memberId);
@@ -135,7 +165,7 @@ maybe('Routing rules against Postgres', () => {
 
   it('a switched-off rule routes nobody', async () => {
     await prisma.routingRule.update({ where: { id: ruleId }, data: { active: false } });
-    expect((await register('Hauwa')).entry.routingRuleId).toBeNull();
+    expect((await register('Hauwa')).proposedRule).toBeNull();
     await prisma.routingRule.update({ where: { id: ruleId }, data: { active: true } });
   });
 

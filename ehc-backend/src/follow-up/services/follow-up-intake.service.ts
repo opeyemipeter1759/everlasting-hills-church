@@ -21,6 +21,8 @@ import { findFollowUpUnit, findIntegrationUnit } from '../follow-up-unit.util';
 import { ADMIN_PLUS } from '../follow-up.types';
 import { OutboxService } from '../../outbox/outbox.service';
 import { assignEntry, pickAssignmentUnit } from '../routing/assignment';
+import { routeFor } from '../routing/routing';
+import { proposeAssignment } from '../approvals/assignment-approval';
 import { FollowUpEvent, safeFirstName, type AssignedPayload } from '../events/follow-up-events';
 import { WORKFLOW_TX } from '../workflow-tx';
 
@@ -277,11 +279,12 @@ export class FollowUpIntakeService {
     const followUpUnitId = await this.unitLeaderLookup.getFollowUpUnitId();
     if (!followUpUnitId) throw new BadRequestException('No "Follow-Up" unit configured to route quick-captures into');
 
-    // A door capture has no gender or student answer yet, so no routing rule
-    // can match: it takes the Follow-Up unit's own auto-assign.
-    const assigneeId = await this.autoAssign.pickAssignee(followUpUnitId, null);
+    // A door capture has no student answer yet, so it goes the way of anyone
+    // who is not a student (the Everyone else rule, else the Follow-Up unit's
+    // own auto-assign). The person picked is proposed for the team leads to approve.
+    const fallbackAssignee = await this.autoAssign.pickAssignee(followUpUnitId, null);
     const eventIds: string[] = [];
-    const { visitorId, entryId } = await this.prisma.$transaction(async (tx) => {
+    const { visitorId, entryId, proposedAssigneeId } = await this.prisma.$transaction(async (tx) => {
       const visitor = await tx.visitor.create({
         data: {
           id: randomUUID(),
@@ -294,11 +297,14 @@ export class FollowUpIntakeService {
         },
         select: { id: true, firstName: true },
       });
+      const route = await routeFor(tx, this.tenantId, { isStudent: null });
+      const unitId = route?.unitId ?? followUpUnitId;
+      const assigneeId = route?.assigneeId ?? fallbackAssignee;
       const created = await tx.followUpEntry.create({
         data: {
           id: randomUUID(),
           tenantId: this.tenantId,
-          unitId: followUpUnitId,
+          unitId,
           sourceType: FollowUpSourceType.FIRST_TIMER,
           visitorId: visitor.id,
           addedById: actor.profileId!,
@@ -307,10 +313,11 @@ export class FollowUpIntakeService {
         select: { id: true },
       });
       if (assigneeId) {
-        const result = await assignEntry(tx, this.outbox, {
-          tenantId: this.tenantId, entryId: created.id, assigneeId, unitId: followUpUnitId, actorId: actor.profileId,
+        const proposal = await proposeAssignment(tx, this.outbox, {
+          tenantId: this.tenantId, visitorId: visitor.id, firstName: visitor.firstName, unitId, assigneeId,
+          routingRuleId: route?.ruleId ?? null, requesterId: actor.profileId!,
         });
-        if (result.eventId) eventIds.push(result.eventId);
+        if (proposal) eventIds.push(proposal);
       }
       eventIds.push(
         await this.outbox.record(tx, {
@@ -320,7 +327,7 @@ export class FollowUpIntakeService {
           actorId: actor.profileId,
         }),
       );
-      return { visitorId: visitor.id, entryId: created.id };
+      return { visitorId: visitor.id, entryId: created.id, proposedAssigneeId: assigneeId };
     }, WORKFLOW_TX);
     await this.outbox.dispatchNow(eventIds);
 
@@ -329,7 +336,7 @@ export class FollowUpIntakeService {
       entity: 'FollowUpEntry',
       entityId: entryId,
       actorId: actor.userId,
-      after: { visitorId, assigneeId },
+      after: { visitorId, proposedAssigneeId },
     });
 
     const entry = await this.prisma.followUpEntry.findUniqueOrThrow({ where: { id: entryId }, include: ENTRY_INCLUDE });

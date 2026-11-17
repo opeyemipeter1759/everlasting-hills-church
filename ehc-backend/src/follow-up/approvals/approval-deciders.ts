@@ -2,10 +2,13 @@ import { Prisma, Role } from '@prisma/client';
 
 type Db = Prisma.TransactionClient;
 
-/** Who may override a unit's lead on an approval, flagged and audited. */
+/** Who may override a unit's team leads on an approval, flagged and audited. */
 export const OVERRIDE_ROLES: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN];
-/** Who is told, and who decides, when a unit has neither a lead nor a department head. */
+/** Who is told, and who decides, when a unit has no team leads at all, and for the kinds only admins decide. */
 export const FALLBACK_ADMIN_ROLES: Role[] = [Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
+
+/** Kinds the admins decide whatever the unit: creating a member account is an admin's job. */
+export const ADMIN_DECIDED_KINDS = new Set(['MEMBER_ACCOUNT']);
 
 export type DeciderLevel = 'LEAD' | 'HEAD' | 'ADMIN';
 
@@ -13,6 +16,12 @@ export interface UnitDeciders {
   level: DeciderLevel;
   /** Profile ids. */
   profileIds: string[];
+}
+
+/** What a request needs to say for its deciders to be worked out. */
+export interface DecidedThing {
+  kind: string;
+  unitId: string;
 }
 
 /** The department head(s) over a unit, from both assignment tables. */
@@ -37,32 +46,38 @@ export async function roleHolders(db: Db, tenantId: string, roles: Role[]): Prom
 }
 
 /**
- * Who decides for a unit right now, read from the assignment rows (never a
- * cached role set): whoever holds its unit-lead assignment, else the head(s) of
- * its department, else the admins. A lead who changes takes the pending items
- * with them, because nothing about the request names a person.
+ * A unit's team leads right now, read from the assignment rows (never a cached
+ * role set): whoever holds its unit-lead assignment together with the head(s)
+ * of its department, any one of whom decides. With neither, the admins. A lead
+ * who changes takes the pending items with them, because nothing about a
+ * request names a person.
  */
 export async function decidersForUnit(db: Db, tenantId: string, unitId: string): Promise<UnitDeciders> {
-  const leads = await db.unitLeadAssignment.findMany({
-    where: { tenantId, unitId, endedAt: null },
-    select: { userId: true },
-  });
-  if (leads.length) return { level: 'LEAD', profileIds: [...new Set(leads.map((l) => l.userId))] };
-  const heads = await departmentHeadsOf(db, tenantId, unitId);
-  if (heads.length) return { level: 'HEAD', profileIds: heads };
+  const [leads, heads] = await Promise.all([
+    db.unitLeadAssignment.findMany({ where: { tenantId, unitId, endedAt: null }, select: { userId: true } }),
+    departmentHeadsOf(db, tenantId, unitId),
+  ]);
+  const profileIds = [...new Set([...leads.map((l) => l.userId), ...heads])];
+  if (profileIds.length) return { level: leads.length ? 'LEAD' : 'HEAD', profileIds };
   return { level: 'ADMIN', profileIds: await roleHolders(db, tenantId, FALLBACK_ADMIN_ROLES) };
+}
+
+/** Who decides this request: the admins for an admin kind, else the unit's team leads. */
+export async function decidersFor(db: Db, tenantId: string, thing: DecidedThing): Promise<UnitDeciders> {
+  if (ADMIN_DECIDED_KINDS.has(thing.kind)) return { level: 'ADMIN', profileIds: await roleHolders(db, tenantId, FALLBACK_ADMIN_ROLES) };
+  return decidersForUnit(db, tenantId, thing.unitId);
 }
 
 export interface Authority {
   allowed: boolean;
-  /** An admin deciding in place of the unit's lead or department head. */
+  /** An admin deciding in place of the unit's team leads. */
   override: boolean;
   level: DeciderLevel;
 }
 
-/** Whether this profile may decide for the unit now, and whether it would be an admin override. */
-export async function authorityFor(db: Db, tenantId: string, unitId: string, profileId: string | null): Promise<Authority> {
-  const deciders = await decidersForUnit(db, tenantId, unitId);
+/** Whether this profile may decide the request now, and whether it would be an admin override. */
+export async function authorityFor(db: Db, tenantId: string, thing: DecidedThing, profileId: string | null): Promise<Authority> {
+  const deciders = await decidersFor(db, tenantId, thing);
   if (!profileId) return { allowed: false, override: false, level: deciders.level };
   if (deciders.profileIds.includes(profileId)) return { allowed: true, override: false, level: deciders.level };
   const admin = await db.roleGrant.findFirst({

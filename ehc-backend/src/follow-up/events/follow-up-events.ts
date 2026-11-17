@@ -1,6 +1,6 @@
 import { Prisma, Role } from '@prisma/client';
 import type { OutboxEventDefinition } from '../../outbox/outbox.types';
-import { decidersForUnit, departmentHeadsOf, roleHolders } from '../approvals/approval-deciders';
+import { decidersFor, departmentHeadsOf, roleHolders } from '../approvals/approval-deciders';
 
 type Db = Prisma.TransactionClient;
 
@@ -41,6 +41,8 @@ export interface ApprovalRequestedPayload {
   unitId: string;
   /** Profile id. */
   requesterId: string;
+  /** For an assignment: the first name of the person proposed. */
+  assigneeName?: string;
 }
 
 export interface ApprovalDecidedPayload extends ApprovalRequestedPayload {
@@ -54,6 +56,8 @@ export function safeFirstName(firstName: string | null | undefined): string {
 }
 
 export const profileLink = (visitorId: string) => `/dashboard/follow-up/person/${visitorId}`;
+/** Where the team leads and admins decide what is waiting for them. */
+export const APPROVALS_LINK = '/dashboard/follow-up/approvals';
 
 /** Pastor and admin role holders: told about every decision. */
 export const DECISION_WATCHERS: Role[] = [Role.PASTOR, Role.ADMIN, Role.ADMIN_HEAD, Role.SUPER_ADMIN];
@@ -116,15 +120,20 @@ export function followUpEventDefinitions(db: Db) {
   const requested: OutboxEventDefinition<ApprovalRequestedPayload> = {
     type: FollowUpEvent.ApprovalRequested,
     recipients: async (p, tenantId) => {
-      const request = await db.approvalRequest.findFirst({ where: { id: p.approvalId, tenantId }, select: { status: true, unitId: true } });
+      const request = await db.approvalRequest.findFirst({ where: { id: p.approvalId, tenantId }, select: { status: true, unitId: true, kind: true } });
       if (request?.status !== 'PENDING') return [];
-      return (await decidersForUnit(db, tenantId, request.unitId)).profileIds;
+      return (await decidersFor(db, tenantId, request)).profileIds;
     },
-    message: (p) => ({
-      title: 'Approval needed',
-      body: `${safeFirstName(p.firstName)} is ready to be integrated. Open to approve or ask for changes.`,
-      link: profileLink(p.visitorId),
-    }),
+    message: (p) => {
+      const name = safeFirstName(p.firstName);
+      if (p.kind === 'FIRST_TIMER_ASSIGNMENT') {
+        return { title: 'Assignment to approve', body: `${name} is new. Approve them going to ${p.assigneeName ?? 'the person proposed'}, or pick someone else.`, link: APPROVALS_LINK };
+      }
+      if (p.kind === 'MEMBER_ACCOUNT') {
+        return { title: 'Account to create', body: `${name} has been integrated. Create their member account.`, link: APPROVALS_LINK };
+      }
+      return { title: 'Approval needed', body: `${name} is ready to be integrated. Open to approve or ask for changes.`, link: profileLink(p.visitorId) };
+    },
     push: { category: 'followUpUpdates' },
   };
 

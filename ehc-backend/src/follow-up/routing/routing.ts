@@ -38,9 +38,10 @@ export async function matchRule(tx: Tx, tenantId: string, subject: RoutingSubjec
 
 /**
  * The pool member with the fewest open assignments (anything not integrated or
- * opted out, archived forms left out). A tie goes to whoever was given someone
- * least recently, and anyone never given anyone goes first. Inactive members
- * and Super Admins are never picked.
+ * opted out, archived forms left out), counting anyone proposed to them and
+ * still waiting for the team leads. A tie goes to whoever was given (or
+ * proposed) someone least recently, and anyone never given anyone goes first.
+ * Inactive members and Super Admins are never picked.
  */
 export async function pickLeastLoaded(tx: Tx, tenantId: string, ruleId: string): Promise<string | null> {
   const rows = await tx.$queryRaw<{ memberId: string }[]>(Prisma.sql`
@@ -56,11 +57,17 @@ export async function pickLeastLoaded(tx: Tx, tenantId: string, ruleId: string):
           FROM "FollowUpEntry" e
          WHERE e."tenantId" = ${tenantId} AND e."assigneeId" = m.id
       ) load ON true
+      LEFT JOIN LATERAL (
+        SELECT COUNT(*)::int AS waiting, MAX(a."createdAt") AS "lastProposedAt"
+          FROM "ApprovalRequest" a
+         WHERE a."tenantId" = ${tenantId} AND a.kind = 'FIRST_TIMER_ASSIGNMENT' AND a.status = 'PENDING'
+           AND a.payload->>'assigneeId' = m.id
+      ) proposed ON true
      WHERE rm."ruleId" = ${ruleId}
        AND NOT EXISTS (
          SELECT 1 FROM "RoleGrant" g
           WHERE g."userId" = m."profileId" AND g.role = 'SUPER_ADMIN' AND g."endedAt" IS NULL)
-     ORDER BY load.open ASC, load."lastAssignedAt" ASC NULLS FIRST, m.id ASC
+     ORDER BY load.open + proposed.waiting ASC, GREATEST(load."lastAssignedAt", proposed."lastProposedAt") ASC NULLS FIRST, m.id ASC
      LIMIT 1`);
   return rows[0]?.memberId ?? null;
 }

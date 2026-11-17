@@ -1,8 +1,9 @@
-import { ConflictException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { PrismaClient, Role } from '@prisma/client';
 import { testDbUrl, workflowFixture, type Person } from '../testing/workflow.fixture-spec';
 import { assignEntry } from '../routing/assignment';
 import { FollowUpEvent } from '../events/follow-up-events';
+import { resolveMemberAccount } from './account-approval';
 
 /**
  * Approvals against a disposable Postgres with the migrations applied (spec
@@ -59,15 +60,16 @@ maybe('Approvals against Postgres', () => {
     await prisma.$disconnect();
   });
 
-  it('asking moves them to awaiting review and tells the current unit lead only', async () => {
+  it("asking moves them to awaiting review and tells the unit's team leads: its lead and the department heads", async () => {
     const visitorId = await firstTimer('Ada');
     const view = await requestFor(visitorId);
     expect(view.latest?.status).toBe('PENDING');
-    expect(view.deciders).toEqual({ level: 'LEAD', names: ['Lead Staffperson'] });
+    expect(view.deciders?.level).toBe('LEAD');
+    expect([...(view.deciders?.names ?? [])].sort()).toEqual(['Head Staffperson', 'Lead Staffperson', 'Pastor Staffperson']);
     expect(await stageOf(visitorId)).toBe('AWAITING_REVIEW');
     const [event] = (await events(FollowUpEvent.ApprovalRequested)).filter((e) => (e.payload as { visitorId: string }).visitorId === visitorId);
     const told = await prisma.notification.findMany({ where: { eventId: event.id, channel: 'in_app' }, select: { profileId: true } });
-    expect(told.map((n) => n.profileId)).toEqual([lead.profileId]);
+    expect(told.map((n) => n.profileId).sort()).toEqual([lead.profileId, head.profileId, pastor.profileId].sort());
     // A second request while one is pending is refused.
     await expect(requestFor(visitorId)).rejects.toBeInstanceOf(ConflictException);
   });
@@ -96,13 +98,14 @@ maybe('Approvals against Postgres', () => {
     expect(mine).toHaveLength(1);
   });
 
-  it('a non-lead gets 403, and so does the department head while the unit has a lead', async () => {
+  it('someone who is not a team lead gets 403; the department head decides alongside the lead', async () => {
     const visitorId = await firstTimer('Dayo');
     await requestFor(visitorId);
     const id = await pendingId(visitorId);
     await expect(svc.approvals.decide(fx.actor(outsider), id, { decision: 'APPROVED' })).rejects.toBeInstanceOf(ForbiddenException);
-    await expect(svc.approvals.decide(fx.actor(head, { hodOf: [dept] }), id, { decision: 'APPROVED' })).rejects.toBeInstanceOf(ForbiddenException);
     expect((await prisma.approvalRequest.findUniqueOrThrow({ where: { id } })).status).toBe('PENDING');
+    const view = await svc.approvals.decide(fx.actor(head, { hodOf: [dept] }), id, { decision: 'APPROVED' });
+    expect(view.latest).toMatchObject({ status: 'APPROVED', deciderName: 'Head Staffperson', adminOverride: false });
   });
 
   it('after the lead changes, the new lead decides and the old one cannot, with no data moved', async () => {
@@ -168,12 +171,41 @@ maybe('Approvals against Postgres', () => {
     expect(leadQueue.every((q) => q.unitId === unit)).toBe(true);
     expect(leadQueue.map((q) => q.subjectId)).toContain(mineId);
     expect(leadQueue.map((q) => q.subjectId)).not.toContain(otherId);
+    // The department head is a team lead of every unit in the department.
     const headQueue = await svc.approvals.queue(fx.actor(head, { hodOf: [dept] }));
-    expect(headQueue.every((q) => q.unitId === leaderless)).toBe(true);
-    expect(headQueue.map((q) => q.subjectId)).toContain(otherId);
+    expect(headQueue.map((q) => q.subjectId)).toEqual(expect.arrayContaining([mineId, otherId]));
     expect(await svc.approvals.queue(fx.actor(outsider))).toEqual([]);
     const adminQueue = await svc.approvals.queue(fx.actor(admin, { roles: [Role.ADMIN] }));
     expect(adminQueue.find((q) => q.subjectId === mineId)?.asOverride).toBe(true);
+  });
+
+  it('an approved integration asks the admins for an account, which only an admin can clear', async () => {
+    const visitorId = await firstTimer('Mide');
+    await requestFor(visitorId);
+    await svc.approvals.decide(fx.actor(lead, { unitLeadOf: [unit] }), await pendingId(visitorId), { decision: 'APPROVED' });
+    const account = await prisma.approvalRequest.findFirstOrThrow({ where: { subjectId: visitorId, kind: 'MEMBER_ACCOUNT' } });
+    expect(account.status).toBe('PENDING');
+
+    // The admins hear (the decider is no admin); team leads cannot decide it.
+    const [event] = (await events(FollowUpEvent.ApprovalRequested)).filter((e) => (e.payload as { approvalId: string }).approvalId === account.id);
+    const told = await prisma.notification.findMany({ where: { eventId: event.id, channel: 'in_app' }, select: { profileId: true } });
+    expect(told.map((n) => n.profileId)).toEqual([admin.profileId]);
+    await expect(svc.approvals.decide(fx.actor(lead, { unitLeadOf: [unit] }), account.id, { decision: 'APPROVED' })).rejects.toBeInstanceOf(ForbiddenException);
+    expect((await svc.approvals.queue(fx.actor(admin, { roles: [Role.ADMIN] }))).some((q) => q.id === account.id)).toBe(true);
+
+    // Approving by hand needs the account to exist; creating the account answers it.
+    await expect(svc.approvals.decide(fx.actor(admin, { roles: [Role.ADMIN] }), account.id, { decision: 'APPROVED' })).rejects.toBeInstanceOf(BadRequestException);
+    expect(await prisma.$transaction((tx) => resolveMemberAccount(tx, { tenantId: fx.tenantId, visitorId, actorId: admin.profileId }))).toBe(1);
+    expect((await prisma.approvalRequest.findUniqueOrThrow({ where: { id: account.id } })).status).toBe('APPROVED');
+  });
+
+  it('an admin can set an account request aside without a note', async () => {
+    const visitorId = await firstTimer('Nike');
+    await requestFor(visitorId);
+    await svc.approvals.decide(fx.actor(lead, { unitLeadOf: [unit] }), await pendingId(visitorId), { decision: 'APPROVED' });
+    const account = await prisma.approvalRequest.findFirstOrThrow({ where: { subjectId: visitorId, kind: 'MEMBER_ACCOUNT' } });
+    await svc.approvals.decide(fx.actor(admin, { roles: [Role.ADMIN] }), account.id, { decision: 'CHANGES_REQUESTED' });
+    expect((await prisma.approvalRequest.findUniqueOrThrow({ where: { id: account.id } })).status).toBe('CHANGES_REQUESTED');
   });
 
   describe('events', () => {

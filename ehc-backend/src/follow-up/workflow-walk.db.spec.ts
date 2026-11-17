@@ -16,10 +16,12 @@ import { OPENING_KEY } from '../message-templates/template-variables';
 /**
  * The whole first-timer workflow from spec section 2, walked end to end on a
  * tenant of its own (Phase 3, step 2): a student registers in January and is
- * routed to the least-loaded of the pool, the First-Timer Contact is told and
+ * proposed to the least-loaded of the pool, a team lead approves the
+ * assignment, the Guest Care Coordinator is told and
  * sends on WhatsApp, which stamps the first contact, two return visits make
  * them a Second then a Third timer, the assignee asks for approval, the unit
- * lead approves, admins hear, and the person is Integrated. After every step
+ * lead approves, admins hear, the person is Integrated and the admins are
+ * asked to create their account. After every step
  * each count that should move changes by exactly one, everywhere it is shown:
  * the January card, the year strip, and the list with its status chips.
  *
@@ -39,6 +41,7 @@ maybe('The first-timer workflow, walked end to end', () => {
   let visits: FirstTimerVisitsService;
   let opening: OpeningMessageService;
   let unit: string;
+  let department: string;
   let lead: Person, arewa: Person, mosun: Person, adeyemi: Person, gift: Person, pastor: Person, admin: Person, head: Person;
 
   /** Every figure that shows this person, read the way each page reads it. */
@@ -66,9 +69,12 @@ maybe('The first-timer workflow, walked end to end', () => {
           : [[`january.${s}`, n], [`year.${s}`, n], [`list.${s}`, n]],
       ),
     );
-  const told = async (type: string, visitorId: string) => {
+  const told = async (type: string, visitorId: string, kind?: string) => {
     const events = await prisma.outboxEvent.findMany({ where: { tenantId: fx.tenantId, type } });
-    const event = events.find((e) => (e.payload as { visitorId?: string }).visitorId === visitorId);
+    const event = events.find((e) => {
+      const p = e.payload as { visitorId?: string; kind?: string };
+      return p.visitorId === visitorId && (!kind || p.kind === kind);
+    });
     if (!event) return [];
     return (await prisma.notification.findMany({ where: { eventId: event.id, channel: 'in_app' } })).map((n) => n.profileId).sort();
   };
@@ -76,7 +82,7 @@ maybe('The first-timer workflow, walked end to end', () => {
   beforeAll(async () => {
     await fx.init();
     svc = fx.services();
-    const department = await fx.department('Membership and Assimilation');
+    department = await fx.department('Membership and Assimilation');
     unit = await fx.unit('Follow-Up', department);
     lead = await fx.person('Opeyemi', { unitIds: [unit] });
     await fx.lead(unit, lead.profileId);
@@ -125,7 +131,7 @@ maybe('The first-timer workflow, walked end to end', () => {
   });
 
   it('takes a January student from registration to Integrated, one count at a time', async () => {
-    // 1. A student registers in January and lands on the least-loaded of the three.
+    // 1. A student registers in January and is proposed to the least-loaded of the three.
     let before = await snapshot();
     const visitorId = await fx.firstTimer('Tolu', {
       isStudent: true, phone: '08031234567', firstVisitDate: new Date('2026-01-11T00:00:00Z'), submittedAt: new Date('2026-01-11T09:30:00Z'),
@@ -134,14 +140,22 @@ maybe('The first-timer workflow, walked end to end', () => {
     await surface.onVisitorCreated({ visitorIds: [visitorId] });
 
     const entry = await prisma.followUpEntry.findFirstOrThrow({ where: { visitorId } });
-    expect(entry).toMatchObject({ assigneeId: gift.memberId, unitId: unit, stage: 'ASSIGNED' });
-    expect(entry.assignedAt).not.toBeNull();
+    expect(entry).toMatchObject({ assigneeId: null, unitId: unit, stage: 'UNASSIGNED' });
     let after = await snapshot();
     expect(moved(before, after)).toEqual(everywhere({ total: 1, FIRST_TIMER: 1 }));
-
-    // Arewa hears about the registration, Gift about her new first-timer.
+    // Arewa hears about the registration; both team leads are asked to approve Gift.
     expect(await told(FollowUpEvent.Registered, visitorId)).toEqual([arewa.profileId]);
+    expect(await told(FollowUpEvent.ApprovalRequested, visitorId, 'FIRST_TIMER_ASSIGNMENT')).toEqual([lead.profileId, head.profileId].sort());
+
+    // Either team lead approves: here the department head. Gift hears; no count moves.
+    before = after;
+    const proposal = await prisma.approvalRequest.findFirstOrThrow({ where: { subjectId: visitorId, kind: 'FIRST_TIMER_ASSIGNMENT' } });
+    expect((proposal.payload as { assigneeId: string }).assigneeId).toBe(gift.memberId);
+    await svc.approvals.decide(fx.actor(head, { hodOf: [department] }), proposal.id, { decision: 'APPROVED' });
+    expect(await prisma.followUpEntry.findUniqueOrThrow({ where: { id: entry.id } })).toMatchObject({ assigneeId: gift.memberId, stage: 'ASSIGNED' });
     expect(await told(FollowUpEvent.Assigned, visitorId)).toEqual([gift.profileId]);
+    after = await snapshot();
+    expect(moved(before, after)).toEqual({});
 
     // 2. Arewa sends the opening message on WhatsApp: the first contact is stamped; no count moves.
     before = after;
@@ -163,11 +177,11 @@ maybe('The first-timer workflow, walked end to end', () => {
     after = await snapshot();
     expect(moved(before, after)).toEqual(everywhere({ SECOND_TIMER: -1, THIRD_TIMER: 1 }));
 
-    // 4. Gift asks for approval; the Follow-Up lead is told.
+    // 4. Gift asks for approval; the team leads are told.
     before = after;
     const asked = await svc.approvals.request(fx.actor(gift), { visitorId, note: 'Ready to join the choir' });
     expect((await prisma.followUpEntry.findUniqueOrThrow({ where: { id: entry.id } })).stage).toBe('AWAITING_REVIEW');
-    expect(await told(FollowUpEvent.ApprovalRequested, visitorId)).toEqual([lead.profileId]);
+    expect(await told(FollowUpEvent.ApprovalRequested, visitorId, 'FIRST_TIMER_INTEGRATION')).toEqual([lead.profileId, head.profileId].sort());
     expect(moved(before, await snapshot())).toEqual({});
 
     // 5. The lead approves: Integrated, and the pastor, admins, the department head and Gift hear.
@@ -179,6 +193,9 @@ maybe('The first-timer workflow, walked end to end', () => {
     after = await snapshot();
     expect(moved(before, after)).toEqual(everywhere({ THIRD_TIMER: -1, INTEGRATED: 1 }));
     expect(await told(FollowUpEvent.ApprovalDecided, visitorId)).toEqual([pastor.profileId, admin.profileId, head.profileId, gift.profileId].sort());
+
+    // 6. They have no account yet, so the admins are asked to create one.
+    expect(await told(FollowUpEvent.ApprovalRequested, visitorId, 'MEMBER_ACCOUNT')).toEqual([admin.profileId]);
 
     // Every card and strip still adds up to its total.
     const year = await svc.pipeline.year(2026, new Date('2026-11-17T12:00:00Z'));

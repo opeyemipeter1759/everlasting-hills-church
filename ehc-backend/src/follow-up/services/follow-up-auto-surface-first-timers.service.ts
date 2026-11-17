@@ -10,7 +10,7 @@ import { FollowUpUnitLeaderLookupService } from './follow-up-unit-leader-lookup.
 import { FollowUpAutoAssignService } from './follow-up-auto-assign.service';
 import { VisitorEvents, type VisitorCreatedPayload } from '../../notifications/notification-events';
 import { routeFor } from '../routing/routing';
-import { assignEntry } from '../routing/assignment';
+import { proposeAssignment, ROUTING_REQUESTER } from '../approvals/assignment-approval';
 import { FollowUpEvent, safeFirstName, type RegisteredPayload } from '../events/follow-up-events';
 import { WORKFLOW_TX } from '../workflow-tx';
 
@@ -166,8 +166,9 @@ export class FollowUpAutoSurfaceFirstTimersService {
 
   /**
    * A routing rule decides first: its unit, and the least-loaded person in its
-   * pool. With no rule (or nobody free in its pool) it is today's behaviour:
-   * the Follow-Up unit and its own auto-assign.
+   * pool. With no rule (or nobody free in its pool) it is the Follow-Up unit and
+   * its own auto-assign. Either way the person picked is only proposed: the
+   * unit's team leads approve who a new first-timer goes to.
    */
   private async createEntry(
     tx: Prisma.TransactionClient,
@@ -189,7 +190,7 @@ export class FollowUpAutoSurfaceFirstTimersService {
     }
 
     const assigneeId = route?.assigneeId ?? (await this.autoAssign.pickAssignee(unitId, visitor.gender));
-    const entry = await tx.followUpEntry.create({
+    await tx.followUpEntry.create({
       data: {
         id: randomUUID(),
         tenantId: this.tenantId,
@@ -202,14 +203,16 @@ export class FollowUpAutoSurfaceFirstTimersService {
       select: { id: true },
     });
     if (assigneeId) {
-      const result = await assignEntry(tx, this.outbox, {
+      const eventId = await proposeAssignment(tx, this.outbox, {
         tenantId: this.tenantId,
-        entryId: entry.id,
-        assigneeId,
+        visitorId: visitor.id,
+        firstName: visitor.firstName,
         unitId,
+        assigneeId,
         routingRuleId: route?.ruleId ?? null,
+        requesterId: ROUTING_REQUESTER,
       });
-      if (result.eventId) eventIds.push(result.eventId);
+      if (eventId) eventIds.push(eventId);
     }
     return true;
   }
