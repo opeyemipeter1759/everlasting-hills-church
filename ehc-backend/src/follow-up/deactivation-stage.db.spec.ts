@@ -54,6 +54,7 @@ maybe('auto opt-out against Postgres', () => {
   });
 
   afterAll(async () => {
+    await prisma.approvalRequest.deleteMany({ where: { tenantId } });
     await prisma.followUpStageHistory.deleteMany({ where: { tenantId } });
     await prisma.followUpEntry.deleteMany({ where: { tenantId } });
     await prisma.auditLog.deleteMany({ where: { tenantId } });
@@ -63,6 +64,17 @@ maybe('auto opt-out against Postgres', () => {
     await prisma.unit.deleteMany({ where: { tenantId } });
     await prisma.tenant.delete({ where: { id: tenantId } });
     await prisma.$disconnect();
+  });
+
+  it('cancels an approval still pending when the account is deactivated', async () => {
+    const p = await convertedFirstTimer('Bola', FollowUpStage.AWAITING_REVIEW);
+    const request = await prisma.approvalRequest.create({
+      data: { id: id(), tenantId, kind: 'FIRST_TIMER_INTEGRATION', subjectType: 'VISITOR', subjectId: p.visitorId, unitId, requesterId: adderId },
+    });
+
+    await crud().updateMemberStatus(p.memberId, MemberStatus.INACTIVE, p.userId);
+    expect(await stageOf(p.entryId)).toBe(FollowUpStage.OPTED_OUT);
+    expect(await prisma.approvalRequest.findUniqueOrThrow({ where: { id: request.id } })).toMatchObject({ status: 'CANCELLED', decisionNote: 'Opted out' });
   });
 
   it('opts the follow-up out when the account is deactivated, and puts back the stage before it on reactivation', async () => {

@@ -1,5 +1,6 @@
 import { FollowUpStage, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { cancelPendingApprovals } from './approvals/approval-cancel';
 
 type Tx = Prisma.TransactionClient;
 
@@ -20,10 +21,11 @@ export interface StageChange {
  * Moves a follow-up entry to a new stage and writes the history row, inside
  * the caller's transaction. Every stage change goes through here, so the
  * history is complete and an opt-out can always be undone to the stage before
- * it. A change to the stage it already has writes nothing.
+ * it. A change to the stage it already has writes nothing. Opting someone out
+ * cancels any approval still pending for them: there is nothing left to decide.
  */
 export async function setStage(tx: Tx, change: StageChange): Promise<{ from: FollowUpStage | null; changed: boolean }> {
-  const entry = await tx.followUpEntry.findUnique({ where: { id: change.entryId }, select: { stage: true } });
+  const entry = await tx.followUpEntry.findUnique({ where: { id: change.entryId }, select: { stage: true, visitorId: true, memberId: true } });
   if (!entry) throw new Error(`Follow-up entry ${change.entryId} not found`);
   if (entry.stage === change.to) return { from: entry.stage, changed: false };
 
@@ -39,7 +41,20 @@ export async function setStage(tx: Tx, change: StageChange): Promise<{ from: Fol
       actorId: change.actorId ?? null,
     },
   });
+  if (change.to === FollowUpStage.OPTED_OUT) {
+    for (const subjectId of await formsOf(tx, entry)) {
+      await cancelPendingApprovals(tx, { tenantId: change.tenantId, subjectType: 'VISITOR', subjectId, actorId: change.actorId, note: 'Opted out' });
+    }
+  }
   return { from: entry.stage, changed: true };
+}
+
+/** The first-timer forms an entry is about: its own, or the one its member account was made from. */
+async function formsOf(tx: Tx, entry: { visitorId: string | null; memberId: string | null }): Promise<string[]> {
+  if (entry.visitorId) return [entry.visitorId];
+  if (!entry.memberId) return [];
+  const forms = await tx.visitor.findMany({ where: { convertedToMemberId: entry.memberId }, select: { id: true } });
+  return forms.map((f) => f.id);
 }
 
 /**

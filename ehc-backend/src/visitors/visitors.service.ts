@@ -8,6 +8,7 @@ import { normalizeNigerianPhone } from '../common/phone.util';
 import type { UpdateVisitorDto } from './dto/update-visitor.dto';
 import { visitorsOnRecord } from './visitors-on-record';
 import { firstTimerAdminPage, type FirstTimerAdminFilters } from './first-timer-admin-list';
+import { cancelPendingApprovals } from '../follow-up/approvals/approval-cancel';
 
 /**
  * Visitor queries + admin edit/archive for first-timer records.
@@ -148,9 +149,11 @@ export class VisitorsService {
     });
     if (!visitor) throw new NotFoundException('Visitor not found');
     const archivedAt = new Date();
-    await this.prisma.$transaction([
-      this.prisma.visitor.update({ where: { id }, data: { archivedAt, archivedById: actor.profileId } }),
-      this.prisma.auditLog.create({
+    await this.prisma.$transaction(async (tx) => {
+      await tx.visitor.update({ where: { id }, data: { archivedAt, archivedById: actor.profileId } });
+      // An archived first-timer has nothing left to approve.
+      await cancelPendingApprovals(tx, { tenantId: this.tenantId, subjectType: 'VISITOR', subjectId: id, actorId: actor.profileId, note: 'Archived' });
+      await tx.auditLog.create({
         data: {
           id: randomUUID(),
           tenantId: this.tenantId,
@@ -161,8 +164,8 @@ export class VisitorsService {
           before: { firstName: visitor.firstName, lastName: visitor.lastName, phone: visitor.phone, email: visitor.email },
           after: { archivedAt: archivedAt.toISOString(), archivedById: actor.profileId },
         },
-      }),
-    ]);
+      });
+    });
     return { id, archived: true, archivedAt: archivedAt.toISOString() };
   }
 
