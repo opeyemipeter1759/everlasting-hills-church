@@ -110,6 +110,25 @@ export class VisitorsService {
   }
 
   /** The admin First Timers page: a page of forms and the counts beside it, from one query. */
+  /** First-timers who wrote a prayer request on the form, newest first. */
+  async prayerPoints() {
+    const rows = await this.prisma.visitor.findMany({
+      where: { tenantId: this.tenantId, archivedAt: null, prayerPoint: { not: null } },
+      orderBy: { submittedAt: 'desc' },
+      select: { id: true, firstName: true, lastName: true, phone: true, submittedAt: true, firstVisitDate: true, prayerPoint: true },
+    });
+    return rows
+      .filter((r) => (r.prayerPoint ?? '').trim().length > 0)
+      .map((r) => ({
+        visitorId: r.id,
+        name: `${r.firstName} ${r.lastName}`.trim(),
+        phone: r.phone,
+        submittedAt: r.submittedAt.toISOString(),
+        firstVisitDate: r.firstVisitDate ? r.firstVisitDate.toISOString().slice(0, 10) : null,
+        prayerPoint: (r.prayerPoint ?? '').trim(),
+      }));
+  }
+
   async firstTimers(filters: FirstTimerAdminFilters) {
     return firstTimerAdminPage(this.prisma, this.tenantId, filters);
   }

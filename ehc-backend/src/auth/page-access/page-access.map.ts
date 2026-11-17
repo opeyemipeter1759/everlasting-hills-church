@@ -84,7 +84,7 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
   { href: '/dashboard/admin/units', role: Role.ADMIN, paths: ['/units', '/members/search'] },
   { href: '/dashboard/analytics/attendance', role: Role.ADMIN, paths: ['/analytics'] },
   { href: '/dashboard/analytics/growth', role: Role.ADMIN, paths: ['/visitors', '/admin/first-timer'] },
-  { href: '/dashboard/prayer-requests', role: Role.ADMIN, paths: ['/forms/prayer-requests'] },
+  { href: '/dashboard/prayer-requests', role: Role.ADMIN, paths: ['/forms/prayer-requests', '/visitors/prayer-points'] },
   { href: '/dashboard/questions', role: Role.ADMIN, paths: ['/forms/questions'] },
   {
     href: '/dashboard/settings/homepage',

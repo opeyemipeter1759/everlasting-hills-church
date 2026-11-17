@@ -169,7 +169,6 @@ export const NAV_GROUPS: NavGroup[] = [
     section: null,
     items: [
       { label: "Home",            href: "/dashboard/admin",            icon: LayoutDashboard, minRole: "ADMIN" },
-      { label: "Prayer Requests", href: "/dashboard/prayer-requests",  icon: Heart,           minRole: "ADMIN" },
       { label: "Welfare Requests", href: "/dashboard/welfare",         icon: HandHeart,       minRole: "ADMIN" },
       { label: "Testimonials",    href: "/dashboard/testimonies",     icon: MessageSquare,   minRole: "ADMIN" },
       { label: "Questions",       href: "/dashboard/questions",       icon: MessageSquare,   minRole: "ADMIN" },
@@ -242,6 +241,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: "Pastoral",
     items: [
+      { label: "Prayer Requests",   href: "/dashboard/prayer-requests",           icon: Heart,          minRole: "ADMIN" },
       { label: "Sermons",           href: "/dashboard/pastor/sermons",            icon: BookOpen,       minRole: "MEMBER", requiresAccess: "audioProduction" },
       { label: "Sermon Analytics",  href: "/dashboard/pastor/sermons/analytics",  icon: BarChart3,      minRole: "PASTOR", requiresAccess: "audioProduction" },/* 
       { label: "Alerts",            href: "/dashboard/alerts",             icon: Bell,           minRole: "PASTOR" },

@@ -98,6 +98,17 @@ export class VisitorsController {
 
   // Declared before :id — a literal segment route below a wildcard :id route
   // would otherwise be swallowed by getById("stats").
+  /**
+   * The prayer requests first-timers wrote on the form, newest first, for the
+   * Pastoral section. Pastors and admins only: the follow-up team never sees
+   * them. Archived forms are left out.
+   */
+  @Get('prayer-points')
+  @ApiOperation({ summary: "First-timers' prayer requests from the form, newest first (ADMIN+: pastors and admins)" })
+  async prayerPoints() {
+    return this.visitorsService.prayerPoints();
+  }
+
   @Get('whatsapp-community')
   @ApiOperation({
     summary: 'First-timers who asked to join the WhatsApp community, waiting first',

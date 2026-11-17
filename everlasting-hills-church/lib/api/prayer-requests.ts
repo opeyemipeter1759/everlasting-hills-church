@@ -44,6 +44,24 @@ export function usePrayerRequests() {
   });
 }
 
+/** A prayer request a first-timer wrote on the form. Pastors and admins only. */
+export interface FirstTimerPrayerPoint {
+  visitorId: string;
+  name: string;
+  phone: string | null;
+  submittedAt: string;
+  /** "YYYY-MM-DD", or null for an old form without one. */
+  firstVisitDate: string | null;
+  prayerPoint: string;
+}
+
+export function useFirstTimerPrayerPoints() {
+  return useQuery({
+    queryKey: ["prayer-requests", "first-timers"],
+    queryFn: () => api.get<FirstTimerPrayerPoint[]>("/visitors/prayer-points"),
+  });
+}
+
 export function useDeletePrayerRequest() {
   const qc = useQueryClient();
   return useMutation({

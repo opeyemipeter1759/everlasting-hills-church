@@ -51,6 +51,25 @@ describe('VisitorsService', () => {
     });
   });
 
+  describe('prayerPoints', () => {
+    it('lists the prayer requests first-timers wrote, newest first, leaving out archived and empty ones', async () => {
+      const findMany = jest.fn().mockResolvedValue([
+        { id: 'v1', firstName: 'Ada', lastName: 'Eze', phone: '2348031234567', submittedAt: new Date('2026-11-15T09:00:00Z'), firstVisitDate: new Date('2026-11-15T00:00:00Z'), prayerPoint: ' For my exams ' },
+        { id: 'v2', firstName: 'Bola', lastName: 'Ade', phone: null, submittedAt: new Date('2026-11-01T09:00:00Z'), firstVisitDate: null, prayerPoint: '   ' },
+      ]);
+      const service = makeService({ findMany });
+      const rows = await service.prayerPoints();
+
+      expect(findMany.mock.calls[0][0]).toMatchObject({
+        where: { tenantId: 'tenant-test', archivedAt: null, prayerPoint: { not: null } },
+        orderBy: { submittedAt: 'desc' },
+      });
+      expect(rows).toEqual([
+        { visitorId: 'v1', name: 'Ada Eze', phone: '2348031234567', submittedAt: '2026-11-15T09:00:00.000Z', firstVisitDate: '2026-11-15', prayerPoint: 'For my exams' },
+      ]);
+    });
+  });
+
   describe('getById', () => {
     it('throws NotFoundException when the visitor is in a different tenant', async () => {
       const findFirst = jest.fn().mockResolvedValue(null);
