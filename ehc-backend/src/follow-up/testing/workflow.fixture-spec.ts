@@ -1,4 +1,4 @@
-import { FollowUpStage, Prisma, PrismaClient, Role } from '@prisma/client';
+import { FollowUpStage, PrismaClient, Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { OutboxRegistry } from '../../outbox/outbox.registry';
@@ -80,19 +80,6 @@ export function workflowFixture(prisma: PrismaClient) {
       const registry = new OutboxRegistry();
       const push = { dispatch: jest.fn().mockResolvedValue({}) };
       const outbox = new OutboxService(prisma as never, registry, push as never);
-      // The host's clock and the database's disagree (about 0.75 s on the
-      // Docker box): Prisma stamps nextAttemptAt with host time, so a fresh
-      // event can look slightly in the future to the database and dispatchNow
-      // skips it, leaving it to the sweeper. Until the outbox claims fresh
-      // events whatever the stamp (reported to the outbox owner), line them up
-      // with database time here so these specs test the workflow, not the skew.
-      const dispatchNow = outbox.dispatchNow.bind(outbox);
-      outbox.dispatchNow = async (ids: string[]) => {
-        if (ids.length) {
-          await prisma.$executeRaw(Prisma.sql`UPDATE "OutboxEvent" SET "nextAttemptAt" = now() WHERE id IN (${Prisma.join(ids)}) AND attempts = 0`);
-        }
-        return dispatchNow(ids);
-      };
       new FollowUpEventsRegistrar(prisma as never, registry).onModuleInit();
       const pipeline = new PipelineRepository(prisma as never, config);
       const auth = new FollowUpAuthService(prisma as never, config);
