@@ -8811,6 +8811,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{profileId}/first-timer-contact": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Assign First-Timer Contact: global, unscoped, additive */
+        post: operations["UsersGrantsController_assignFirstTimerContact"];
+        /** End an active First-Timer Contact assignment */
+        delete: operations["UsersGrantsController_removeFirstTimerContact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/{profileId}/grants": {
         parameters: {
             query?: never;
@@ -9216,7 +9234,7 @@ export interface components {
              * @description Required when mode is ROLE
              * @enum {string}
              */
-            role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "MEMBER" | "VISITOR";
+            role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR";
             /** @description Required when mode is UNIT */
             unitId?: string;
         };
@@ -9384,7 +9402,7 @@ export interface components {
             /** @description Display-only names matching targetProfileIds, in the same order (snapshot at send time). */
             targetProfileNames?: string[];
             /** @description Send to anyone holding any of these roles. Combined (union) with targetGenders/targetProfileIds. Empty = no role restriction. */
-            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "MEMBER" | "VISITOR")[];
+            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR")[];
             /** @example Special Sunday Service */
             title: string;
             /**
@@ -10951,7 +10969,7 @@ export interface components {
             targetProfileIds?: string[];
             targetProfileNames?: string[];
             /** @description Only applies on the next publish (a change here never re-triggers a fan-out). */
-            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "MEMBER" | "VISITOR")[];
+            targetRoles?: ("SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR")[];
             /** @example Special Sunday Service */
             title?: string;
             /**
@@ -20719,7 +20737,7 @@ export interface operations {
         parameters: {
             query?: {
                 unitId?: string;
-                stage?: "UNASSIGNED" | "ASSIGNED" | "IN_PROGRESS" | "AWAITING_REVIEW" | "CONFIRMED" | "REOPENED";
+                stage?: "UNASSIGNED" | "ASSIGNED" | "IN_PROGRESS" | "AWAITING_REVIEW" | "CONFIRMED" | "REOPENED" | "OPTED_OUT";
                 mine?: boolean;
                 /** @description Narrow to a specific service day */
                 serviceId?: string;
@@ -24914,7 +24932,7 @@ export interface operations {
                 unit?: unknown;
                 gender?: "MALE" | "FEMALE";
                 status?: unknown;
-                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "MEMBER" | "VISITOR";
+                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR";
                 search?: unknown;
                 limit?: number;
                 page?: number;
@@ -32903,7 +32921,7 @@ export interface operations {
         parameters: {
             query?: {
                 search?: string;
-                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "MEMBER" | "VISITOR";
+                role?: "SUPER_ADMIN" | "PASTOR" | "ADMIN" | "ADMIN_HEAD" | "HOD" | "HEAD_USHER" | "FINANCE_HEAD" | "UNIT_LEAD" | "FIRST_TIMER_CONTACT" | "MEMBER" | "VISITOR";
             };
             header?: never;
             path?: never;
@@ -33036,6 +33054,72 @@ export interface operations {
         };
     };
     UsersGrantsController_removeFinanceHead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersGrantsController_assignFirstTimerContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    UsersGrantsController_removeFirstTimerContact: {
         parameters: {
             query?: never;
             header?: never;

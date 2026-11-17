@@ -12,6 +12,7 @@ import { PrayerWatchService } from '../prayer-watch/prayer-watch.service';
 import { PrayerWatchReportsService } from '../prayer-watch/prayer-watch-reports.service';
 import { ServiceCalendarService } from '../service-readiness/service-calendar.service';
 import { ServiceReadinessRemindersService } from '../service-readiness/service-readiness-reminders.service';
+import { OutboxService } from '../outbox/outbox.service';
 
 /** Names match the @Cron({ name }) options so logs and Cloud Scheduler agree. */
 export const JOB_NAMES = [
@@ -36,6 +37,7 @@ export const JOB_NAMES = [
   'prayer-watch-report-reminders',
   'service-calendar',
   'service-readiness-reminders',
+  'outbox-sweep',
 ] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
@@ -72,6 +74,7 @@ export class JobsRunnerService {
     private readonly prayerWatchReports: PrayerWatchReportsService,
     private readonly serviceCalendar: ServiceCalendarService,
     private readonly readinessReminders: ServiceReadinessRemindersService,
+    private readonly outbox: OutboxService,
   ) {}
 
   isJob(name: string): name is JobName {
@@ -141,6 +144,8 @@ export class JobsRunnerService {
         return this.serviceCalendar.ensureUpcoming().then(() => undefined);
       case 'service-readiness-reminders':
         return this.readinessReminders.run().then(() => undefined);
+      case 'outbox-sweep':
+        return this.outbox.sweep().then(() => undefined);
     }
   }
 }

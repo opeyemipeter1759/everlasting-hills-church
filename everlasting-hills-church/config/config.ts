@@ -36,35 +36,27 @@ export interface RouteInfo {
 }
 
 
-export type UserRole =
-  | "SUPER_ADMIN"
-  | "PASTOR"
-  | "ADMIN"
-  | "ADMIN_HEAD"
-  | "HOD"
-  | "HEAD_USHER"
-  | "FINANCE_HEAD"
-  | "UNIT_LEAD"
-  | "MEMBER"
-  | "VISITOR";
-
 // Admin merged into Admin Head — same level, full church-wide access. ADMIN is legacy
 // (kept only so existing grants keep working); ADMIN_HEAD is the name used going forward.
-const LEVELS: Record<UserRole, number> = {
+const LEVELS = {
   VISITOR: 0,
   MEMBER: 1,
   UNIT_LEAD: 2,
   HEAD_USHER: 3,
   FINANCE_HEAD: 3,
+  FIRST_TIMER_CONTACT: 3,
   HOD: 4,
   ADMIN_HEAD: 6,
   ADMIN: 6,
   PASTOR: 7,
   SUPER_ADMIN: 8,
-};
+} as const;
+
+/** Every role, by level; the keys of LEVELS are the role names. */
+export type UserRole = keyof typeof LEVELS;
 
 const CHURCH_WIDE_ROLES = new Set<UserRole>(["ADMIN", "ADMIN_HEAD", "PASTOR", "SUPER_ADMIN"]);
-const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER"]);
+const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER", "FIRST_TIMER_CONTACT"]);
 
 export function hasMinRole(userRole: UserRole, minRole: UserRole): boolean {
   // Finance visibility does NOT follow the normal "any church-wide role passes a lateral gate"
@@ -89,6 +81,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   HOD: "Head of Department",
   HEAD_USHER: "Head Usher",
   FINANCE_HEAD: "Finance Head",
+  FIRST_TIMER_CONTACT: "First-Timer Contact",
   UNIT_LEAD: "Unit Lead",
   MEMBER: "Member",
   VISITOR: "Visitor",
@@ -102,6 +95,7 @@ export const ROLE_BADGE_CLASS: Record<UserRole, string> = {
   HOD: "bg-teal-500/20 text-teal-300 border border-teal-500/30",
   HEAD_USHER: "bg-rose-500/20 text-rose-300 border border-rose-500/30",
   FINANCE_HEAD: "bg-green-500/20 text-green-300 border border-green-500/30",
+  FIRST_TIMER_CONTACT: "bg-sky-500/20 text-sky-300 border border-sky-500/30",
   UNIT_LEAD: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30",
   MEMBER: "bg-white/10 text-white/70 border border-white/10",
   VISITOR: "bg-white/10 text-white/70 border border-white/10",

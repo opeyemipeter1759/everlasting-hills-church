@@ -47,6 +47,7 @@ export const updatePreferencesSchema = z
     prayerWatchPendingApproval: z.boolean().optional(),
     pastoralSessionUpdates: z.boolean().optional(),
     pastoralRequests: z.boolean().optional(),
+    followUpUpdates: z.boolean().optional(),
     quietStart: hhmm.nullable().optional(),
     quietEnd: hhmm.nullable().optional(),
     timezone: z.string().min(1).max(64).optional(),

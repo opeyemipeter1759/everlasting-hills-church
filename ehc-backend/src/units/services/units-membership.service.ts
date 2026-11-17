@@ -44,7 +44,10 @@ export class UnitsMembershipService {
     if (actor.role && ADMIN_ROLES.includes(actor.role)) return;
     if (await this.headsUnitDepartment(actor, unitId)) return;
 
-    if (actor.role === Role.UNIT_LEAD || actor.role === Role.MEMBER) {
+    // Any role below church-wide, lateral ones included: a unit lead who is also
+    // Head Usher or First-Timer Contact has that as their primary role, and must
+    // still be able to manage the unit they lead.
+    if (actor.role !== Role.VISITOR) {
       if (!actor.memberId) {
         throw new ForbiddenException('No member record on your account');
       }

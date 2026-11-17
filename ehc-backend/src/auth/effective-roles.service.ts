@@ -22,6 +22,8 @@ export interface EffectiveRoles {
   headUsher: boolean;
   /** Whether the user has an active finance-head assignment. */
   financeHead: boolean;
+  /** Whether the user has an active first-timer contact assignment. */
+  firstTimerContact: boolean;
   /** Highest-level effective role, for hierarchy checks + legacy `actor.role` reads. */
   primaryRole: Role;
 }
@@ -63,6 +65,7 @@ export class EffectiveRolesService {
     hodOf: string[],
     headUsher: boolean,
     financeHead: boolean,
+    firstTimerContact = false,
   ): EffectiveRoles {
     const roles = new Set<Role>([Role.MEMBER, ...grants]);
     if (unitLeadOf.length) roles.add(Role.UNIT_LEAD);
@@ -79,6 +82,7 @@ export class EffectiveRolesService {
     if (adminHeadOf.length || hodOf.length) roles.add(Role.HOD);
     if (headUsher) roles.add(Role.HEAD_USHER);
     if (financeHead) roles.add(Role.FINANCE_HEAD);
+    if (firstTimerContact) roles.add(Role.FIRST_TIMER_CONTACT);
     const list = [...roles];
     return {
       roles: list,
@@ -88,6 +92,7 @@ export class EffectiveRolesService {
       hodOf: [...new Set([...adminHeadOf, ...hodOf])],
       headUsher,
       financeHead,
+      firstTimerContact,
       primaryRole: this.primaryOf(list),
     };
   }
@@ -99,13 +104,14 @@ export class EffectiveRolesService {
     const cached = this.cache.get(profileId);
     if (cached && cached.expiresAt > Date.now()) return cached.value;
 
-    const [grants, unitLeads, deptHeads, deptHods, usher, finance] = await Promise.all([
+    const [grants, unitLeads, deptHeads, deptHods, usher, finance, contact] = await Promise.all([
       this.prisma.roleGrant.findMany({ where: { userId: profileId, endedAt: null }, select: { role: true } }),
       this.prisma.unitLeadAssignment.findMany({ where: { userId: profileId, endedAt: null }, select: { unitId: true } }),
       this.prisma.departmentHead.findMany({ where: { userId: profileId, endedAt: null }, select: { departmentId: true } }),
       this.prisma.departmentHod.findMany({ where: { userId: profileId, endedAt: null }, select: { departmentId: true } }),
       this.prisma.headUsherAssignment.findFirst({ where: { userId: profileId, endedAt: null }, select: { id: true } }),
       this.prisma.financeHeadAssignment.findFirst({ where: { userId: profileId, endedAt: null }, select: { id: true } }),
+      this.prisma.firstTimerContactAssignment.findFirst({ where: { userId: profileId, endedAt: null }, select: { id: true } }),
     ]);
     const result = this.assemble(
       grants.map((g) => g.role),
@@ -114,6 +120,7 @@ export class EffectiveRolesService {
       deptHods.map((d) => d.departmentId),
       Boolean(usher),
       Boolean(finance),
+      Boolean(contact),
     );
     this.cache.set(profileId, { value: result, expiresAt: Date.now() + CACHE_TTL_MS });
     return result;
@@ -127,13 +134,14 @@ export class EffectiveRolesService {
     const out = new Map<string, EffectiveRoles>();
     if (profileIds.length === 0) return out;
     const ids = [...new Set(profileIds)];
-    const [grants, unitLeads, deptHeads, deptHods, ushers, financeHeads] = await Promise.all([
+    const [grants, unitLeads, deptHeads, deptHods, ushers, financeHeads, contacts] = await Promise.all([
       this.prisma.roleGrant.findMany({ where: { userId: { in: ids }, endedAt: null }, select: { userId: true, role: true } }),
       this.prisma.unitLeadAssignment.findMany({ where: { userId: { in: ids }, endedAt: null }, select: { userId: true, unitId: true } }),
       this.prisma.departmentHead.findMany({ where: { userId: { in: ids }, endedAt: null }, select: { userId: true, departmentId: true } }),
       this.prisma.departmentHod.findMany({ where: { userId: { in: ids }, endedAt: null }, select: { userId: true, departmentId: true } }),
       this.prisma.headUsherAssignment.findMany({ where: { userId: { in: ids }, endedAt: null }, select: { userId: true } }),
       this.prisma.financeHeadAssignment.findMany({ where: { userId: { in: ids }, endedAt: null }, select: { userId: true } }),
+      this.prisma.firstTimerContactAssignment.findMany({ where: { userId: { in: ids }, endedAt: null }, select: { userId: true } }),
     ]);
     const grantMap = new Map<string, Role[]>();
     const leadMap = new Map<string, string[]>();
@@ -141,6 +149,7 @@ export class EffectiveRolesService {
     const hodMap = new Map<string, string[]>();
     const usherSet = new Set(ushers.map((u) => u.userId));
     const financeSet = new Set(financeHeads.map((f) => f.userId));
+    const contactSet = new Set(contacts.map((c) => c.userId));
     for (const g of grants) (grantMap.get(g.userId) ?? grantMap.set(g.userId, []).get(g.userId)!).push(g.role);
     for (const u of unitLeads) (leadMap.get(u.userId) ?? leadMap.set(u.userId, []).get(u.userId)!).push(u.unitId);
     for (const d of deptHeads) (deptMap.get(d.userId) ?? deptMap.set(d.userId, []).get(d.userId)!).push(d.departmentId);
@@ -155,6 +164,7 @@ export class EffectiveRolesService {
           hodMap.get(id) ?? [],
           usherSet.has(id),
           financeSet.has(id),
+          contactSet.has(id),
         ),
       );
     }

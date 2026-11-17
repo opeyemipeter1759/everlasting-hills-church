@@ -113,6 +113,42 @@ export class UsersRoleGrantsService {
     return { removed: Role.HEAD_USHER };
   }
 
+  /** Assign First-Timer Contact: global and unscoped like Head Usher. Lets the
+   * holder open the first-timer pages and send the opening message, nothing
+   * more. History-preserving. */
+  async assignFirstTimerContact(actor: AuthUser, profileId: string) {
+    await this.assertTargetInTenant(profileId);
+    this.auth.assertCanActOn(actor, Role.FIRST_TIMER_CONTACT);
+    this.auth.assertCanActOn(actor, await this.auth.targetPrimaryRole(profileId));
+
+    const existing = await this.prisma.firstTimerContactAssignment.findFirst({
+      where: { userId: profileId, endedAt: null },
+      select: { id: true },
+    });
+    if (!existing) {
+      await this.prisma.firstTimerContactAssignment.create({
+        data: { id: randomUUID(), tenantId: this.tenantId, userId: profileId, assignedById: actor.profileId ?? null },
+      });
+      await this.auth.writeAudit(actor, 'ASSIGN_FIRST_TIMER_CONTACT', profileId, { role: Role.FIRST_TIMER_CONTACT });
+      this.effectiveRoles.invalidate(profileId);
+    }
+    return { assigned: Role.FIRST_TIMER_CONTACT };
+  }
+
+  async removeFirstTimerContact(actor: AuthUser, profileId: string) {
+    await this.assertTargetInTenant(profileId);
+    this.auth.assertCanActOn(actor, Role.FIRST_TIMER_CONTACT);
+    this.auth.assertCanActOn(actor, await this.auth.targetPrimaryRole(profileId));
+
+    await this.prisma.firstTimerContactAssignment.updateMany({
+      where: { userId: profileId, endedAt: null },
+      data: { endedAt: new Date() },
+    });
+    await this.auth.writeAudit(actor, 'REMOVE_FIRST_TIMER_CONTACT', profileId, { role: Role.FIRST_TIMER_CONTACT });
+    this.effectiveRoles.invalidate(profileId);
+    return { removed: Role.FIRST_TIMER_CONTACT };
+  }
+
   /** Assign Finance Head — global, unscoped, same shape as Head Usher. Grants
    * visibility into the finance module (see FinanceRolesGuard), not any
    * admin-hierarchy capability. History-preserving.

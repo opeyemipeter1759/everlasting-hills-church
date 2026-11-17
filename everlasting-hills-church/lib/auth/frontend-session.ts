@@ -20,30 +20,23 @@ export {
   ROLE_COOKIE,
 } from "./session-constants";
 
-export type UserRole =
-  | "SUPER_ADMIN"
-  | "PASTOR"
-  | "ADMIN"
-  | "ADMIN_HEAD"
-  | "HOD"
-  | "HEAD_USHER"
-  | "FINANCE_HEAD"
-  | "UNIT_LEAD"
-  | "MEMBER";
-
 // This hierarchy is only a frontend routing convenience. Nest authorization is
 // authoritative and additionally enforces assignment/department scope.
-const ROLE_LEVELS: Record<UserRole, number> = {
+const ROLE_LEVELS = {
   MEMBER: 1,
   UNIT_LEAD: 2,
   HEAD_USHER: 3,
   FINANCE_HEAD: 3,
+  FIRST_TIMER_CONTACT: 3,
   HOD: 4,
   ADMIN_HEAD: 6,
   ADMIN: 6,
   PASTOR: 7,
   SUPER_ADMIN: 8,
-};
+} as const;
+
+/** Dashboard roles; the keys of ROLE_LEVELS are the role names. */
+export type UserRole = keyof typeof ROLE_LEVELS;
 
 const CHURCH_WIDE_ROLES = new Set<UserRole>([
   "ADMIN",
@@ -51,7 +44,7 @@ const CHURCH_WIDE_ROLES = new Set<UserRole>([
   "PASTOR",
   "SUPER_ADMIN",
 ]);
-const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER"]);
+const LATERAL_ROLES = new Set<UserRole>(["HOD", "HEAD_USHER", "FIRST_TIMER_CONTACT"]);
 
 export interface FrontendSessionUser {
   email: string | null;
@@ -80,6 +73,7 @@ export function normalizeRole(role: string | null | undefined): UserRole | null 
   if (cleaned === "leader" || cleaned === "unit head" || cleaned === "unit_head") return "UNIT_LEAD";
   if (cleaned === "head usher" || cleaned === "head_usher" || cleaned === "headusher") return "HEAD_USHER";
   if (cleaned === "finance head" || cleaned === "finance_head" || cleaned === "financehead") return "FINANCE_HEAD";
+  if (cleaned === "first-timer contact" || cleaned === "first_timer_contact") return "FIRST_TIMER_CONTACT";
   if (cleaned === "admin head" || cleaned === "admin_head" || cleaned === "adminhead") return "ADMIN_HEAD";
   if (cleaned === "admin") return "ADMIN";
   if (cleaned === "pastor") return "PASTOR";

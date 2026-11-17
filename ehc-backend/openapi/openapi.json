@@ -295,6 +295,7 @@
               "HEAD_USHER",
               "FINANCE_HEAD",
               "UNIT_LEAD",
+              "FIRST_TIMER_CONTACT",
               "MEMBER",
               "VISITOR"
             ],
@@ -722,6 +723,7 @@
                 "HEAD_USHER",
                 "FINANCE_HEAD",
                 "UNIT_LEAD",
+                "FIRST_TIMER_CONTACT",
                 "MEMBER",
                 "VISITOR"
               ],
@@ -4337,6 +4339,7 @@
                 "HEAD_USHER",
                 "FINANCE_HEAD",
                 "UNIT_LEAD",
+                "FIRST_TIMER_CONTACT",
                 "MEMBER",
                 "VISITOR"
               ],
@@ -21262,7 +21265,8 @@
                 "IN_PROGRESS",
                 "AWAITING_REVIEW",
                 "CONFIRMED",
-                "REOPENED"
+                "REOPENED",
+                "OPTED_OUT"
               ],
               "type": "string"
             }
@@ -28242,6 +28246,7 @@
                 "HEAD_USHER",
                 "FINANCE_HEAD",
                 "UNIT_LEAD",
+                "FIRST_TIMER_CONTACT",
                 "MEMBER",
                 "VISITOR"
               ],
@@ -41851,6 +41856,7 @@
                 "HEAD_USHER",
                 "FINANCE_HEAD",
                 "UNIT_LEAD",
+                "FIRST_TIMER_CONTACT",
                 "MEMBER",
                 "VISITOR"
               ],
@@ -42119,6 +42125,116 @@
           }
         ],
         "summary": "Assign Finance Head — global, unscoped, additive",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{profileId}/first-timer-contact": {
+      "delete": {
+        "operationId": "UsersGrantsController_removeFirstTimerContact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "End an active First-Timer Contact assignment",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersGrantsController_assignFirstTimerContact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "profileId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Assign First-Timer Contact: global, unscoped, additive",
         "tags": [
           "users"
         ]

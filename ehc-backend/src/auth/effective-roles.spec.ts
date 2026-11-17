@@ -20,6 +20,7 @@ function makeService(rows: {
   deptHeads?: string[];
   deptHods?: string[];
   usher?: boolean;
+  contact?: boolean;
 }) {
   const prisma = {
     roleGrant: { findMany: jest.fn().mockResolvedValue((rows.grants ?? []).map((role) => ({ role }))) },
@@ -34,6 +35,10 @@ function makeService(rows: {
     },
     headUsherAssignment: {
       findFirst: jest.fn().mockResolvedValue(rows.usher ? { id: 'u1' } : null),
+    },
+    financeHeadAssignment: { findFirst: jest.fn().mockResolvedValue(null) },
+    firstTimerContactAssignment: {
+      findFirst: jest.fn().mockResolvedValue(rows.contact ? { id: 'c1' } : null),
     },
   };
   return new EffectiveRolesService(prisma as never);
@@ -81,5 +86,12 @@ describe('EffectiveRolesService', () => {
 
     expect(eff.roles).toEqual(expect.arrayContaining([Role.UNIT_LEAD, Role.HEAD_USHER]));
     expect(eff.roles).not.toContain(Role.HOD);
+  });
+
+  it('makes a first-timer contact a lateral role of its own', async () => {
+    const eff = await makeService({ contact: true }).getEffectiveRoles('p7');
+
+    expect(eff.roles).toEqual(expect.arrayContaining([Role.FIRST_TIMER_CONTACT, Role.MEMBER]));
+    expect(eff.firstTimerContact).toBe(true);
   });
 });

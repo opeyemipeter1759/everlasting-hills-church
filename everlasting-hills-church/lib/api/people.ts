@@ -20,6 +20,7 @@ export type PersonRole =
   | "HOD"
   | "HEAD_USHER"
   | "FINANCE_HEAD"
+  | "FIRST_TIMER_CONTACT"
   | "UNIT_LEAD"
   | "MEMBER"
   | "VISITOR";

@@ -368,6 +368,8 @@ enum FollowUpStage {
   AWAITING_REVIEW
   CONFIRMED
   REOPENED
+  /// Asked not to be followed up, or deactivated. Restoring puts back the stage before it.
+  OPTED_OUT
 }
 
 enum FollowUpSourceType {
@@ -454,6 +456,12 @@ model FollowUpEntry {
   /// "Call back later" — hides the entry from the default/Today views until
   /// this passes, without it being contacted or closed.
   snoozedUntil          DateTime?
+  /// When the current assignee was given them.
+  assignedAt            DateTime?
+  /// The first logged contact of any kind: the 48-hour metric.
+  firstContactedAt      DateTime?
+  /// The routing rule that assigned them, when one did.
+  routingRuleId         String?
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @default(now()) @updatedAt
   Tenant                Tenant               @relation(fields: [tenantId], references: [id])
@@ -2269,45 +2277,64 @@ model UnitExpense {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model Visitor {
-  id                  String            @id
-  tenantId            String
-  firstName           String
-  lastName            String
-  email               String?
-  phone               String?
-  dateOfBirth         String?
-  address             String?
-  occupation          String?
-  gender              String?
-  howDidYouLearn      String?
-  invitedBy           String?
-  locatedInIbadan     Boolean?
-  membershipInterest  String?
-  bornAgain           String?
-  serviceExperience   String?
-  prayerPoint         String?
-  whatsappInterest    Boolean?
+  id                       String            @id
+  tenantId                 String
+  firstName                String
+  lastName                 String
+  email                    String?
+  phone                    String?
+  dateOfBirth              String?
+  address                  String?
+  occupation               String?
+  gender                   String?
+  howDidYouLearn           String?
+  invitedBy                String?
+  locatedInIbadan          Boolean?
+  membershipInterest       String?
+  bornAgain                String?
+  serviceExperience        String?
+  prayerPoint              String?
+  whatsappInterest         Boolean?
   /// Set when someone who asked for the WhatsApp community has actually been
   /// added to it, and by which profile. Null means still waiting: that is the
   /// church's to-do list on the admin home page.
-  whatsappAddedAt     DateTime?
-  whatsappAddedBy     String?
+  whatsappAddedAt          DateTime?
+  whatsappAddedBy          String?
   /// Consent checkbox on the first-timer form: only when true may this person be
   /// surfaced as a suggested friend-match for someone else (their own reason for
   /// matching them to another guest, not a blanket "may we share your info" flag).
-  shareForConnections Boolean           @default(false)
-  submittedAt         DateTime          @default(now())
-  attendanceType      String?
-  convertedAt         DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
-  convertedToMemberId String? // no FK; mirrors AuditLog.actorId — just an audit pointer
-  serviceId           String? // the Service day this first-timer was registered at, when resolvable
-  Tenant              Tenant            @relation(fields: [tenantId], references: [id])
-  Service             Service?          @relation(fields: [serviceId], references: [id])
-  FollowUpEntry       FollowUpEntry[]
-  PastoralBooking     PastoralBooking[]
+  shareForConnections      Boolean           @default(false)
+  submittedAt              DateTime          @default(now())
+  attendanceType           String?
+  convertedAt              DateTime? // set once this visitor becomes a Member; hides them from the first-timers list
+  convertedToMemberId      String? // no FK; mirrors AuditLog.actorId, just an audit pointer
+  serviceId                String? // the Service day this first-timer was registered at, when resolvable
+  /// Church-local (Africa/Lagos) date of their first visit. Months on the Overview bucket on this.
+  firstVisitDate           DateTime?         @db.Date
+  /// Answer to "Are you a student?" on the form; routes them to the student team.
+  isStudent                Boolean?
+  /// The free text behind "How did you hear about us: Other".
+  heardFromOther           String?
+  /// Storage key of their photo (private bucket); read through short-lived signed URLs.
+  photoKey                 String?
+  photoConsent             Boolean           @default(false)
+  photoConsentAt           DateTime?
+  /// Soft delete: archived first-timers drop out of every list and count.
+  archivedAt               DateTime?
+  archivedById             String?
+  /// Set when this form came in with a phone the church already has: a possible return visit for staff to confirm.
+  possibleReturnVisitorId  String?
+  possibleReturnMemberId   String?
+  possibleReturnResolvedAt DateTime?
+  Tenant                   Tenant            @relation(fields: [tenantId], references: [id])
+  Service                  Service?          @relation(fields: [serviceId], references: [id])
+  FollowUpEntry            FollowUpEntry[]
+  PastoralBooking          PastoralBooking[]
+  Visits                   FirstTimerVisit[]
 
   @@index([tenantId, convertedAt])
   @@index([tenantId, serviceId])
+  @@index([tenantId, firstVisitDate])
 }
 
 /// Online-engagement check-ins (e.g. watching the livestream on YouTube) — tracks
@@ -2554,11 +2581,17 @@ model Notification {
   body      String?
   link      String?
   readAt    DateTime?
+  /// The outbox event this came from; with channel and profileId it makes retries safe.
+  eventId   String?
+  channel   String    @default("in_app")
+  /// A snapshot of what the notification was about, for rendering later.
+  payload   Json?
   createdAt DateTime  @default(now())
   Profile   Profile   @relation(fields: [profileId], references: [id])
   Tenant    Tenant    @relation(fields: [tenantId], references: [id])
 
   @@index([profileId, readAt])
+  @@index([profileId, readAt, createdAt(sort: Desc)])
 }
 
 /// Per-member secret for the .ics calendar subscription feed. The token IS the
@@ -2743,6 +2776,8 @@ model NotificationPreference {
   pastoralSessionUpdates     Boolean  @default(true)
   /// One-on-One: new requests and changes, for pastors and their delegates.
   pastoralRequests           Boolean  @default(true)
+  /// First-timer assignments and integration approvals.
+  followUpUpdates            Boolean  @default(true)
   quietStart                 String? // "HH:MM", DB CHECK-guarded
   quietEnd                   String? // "HH:MM", DB CHECK-guarded
   timezone                   String   @default("Africa/Lagos")
@@ -2894,6 +2929,8 @@ enum Role {
   HEAD_USHER
   FINANCE_HEAD
   UNIT_LEAD
+  /// Lateral: sends first-timers their opening message. Granted by FirstTimerContactAssignment.
+  FIRST_TIMER_CONTACT
   MEMBER
   VISITOR
 }
@@ -4307,4 +4344,178 @@ model PrayerWatchReport {
 
   @@unique([slotId, nightDate])
   @@index([tenantId, nightDate])
+}
+
+// ── Follow-up v2 ────────────────────────────────────────────────────────────
+
+/// One row per first-timer per church-local date they attended, the first
+/// visit included. Two services on one day are one visit.
+model FirstTimerVisit {
+  id           String   @id
+  tenantId     String
+  visitorId    String
+  visitedOn    DateTime @db.Date
+  /// FORM (their first visit), CAME_AGAIN (staff), RETURN_FORM (a confirmed
+  /// return-visit form), BACKFILL or BACKFILL_STATUS (the v2 cutover).
+  source       String
+  recordedById String?
+  createdAt    DateTime @default(now())
+  Visitor      Visitor  @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@unique([visitorId, visitedOn])
+  @@index([tenantId, visitedOn])
+}
+
+/// Every change of a follow-up entry's stage, so a reactivation can restore the
+/// stage someone had before they were opted out.
+model FollowUpStageHistory {
+  id        String         @id
+  tenantId  String
+  entryId   String
+  fromStage FollowUpStage?
+  toStage   FollowUpStage
+  /// DEACTIVATED, REACTIVATED, APPROVED, CHANGES_REQUESTED, OPTED_OUT, RESTORED, REQUESTED, BACKFILL
+  reason    String
+  actorId   String?
+  createdAt DateTime       @default(now())
+
+  @@index([entryId, createdAt])
+  @@index([tenantId, createdAt])
+}
+
+/// Who gets a new first-timer: a segment, a pool of people, the unit the
+/// assignment sits under, and how to pick from the pool. Data, not code.
+model RoutingRule {
+  id        String              @id
+  tenantId  String
+  name      String
+  /// STUDENT for now: first-timers who answered they are students.
+  segment   String
+  unitId    String
+  /// LEAST_LOADED: fewest open assignments, ties to whoever was assigned least recently.
+  strategy  String              @default("LEAST_LOADED")
+  priority  Int                 @default(0)
+  active    Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @default(now()) @updatedAt
+  Members   RoutingRuleMember[]
+
+  @@index([tenantId, active])
+}
+
+model RoutingRuleMember {
+  id       String      @id
+  ruleId   String
+  memberId String
+  Rule     RoutingRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@unique([ruleId, memberId])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  CHANGES_REQUESTED
+  CANCELLED
+}
+
+/// Generic approvals. The v1 kind is FIRST_TIMER_INTEGRATION; the next kind of
+/// approval is a new kind and a handler, never a new table.
+model ApprovalRequest {
+  id            String         @id
+  tenantId      String
+  kind          String
+  subjectType   String
+  subjectId     String
+  /// The unit whose current lead decides, copied from the assignment.
+  unitId        String
+  status        ApprovalStatus @default(PENDING)
+  /// Profile.id of whoever asked.
+  requesterId   String
+  note          String?
+  /// Profile.id of whoever decided.
+  deciderId     String?
+  decidedAt     DateTime?
+  decisionNote  String?
+  /// Decided by an admin who was neither the unit's lead nor its fallback.
+  adminOverride Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @default(now()) @updatedAt
+
+  @@index([tenantId, unitId, status])
+  @@index([subjectType, subjectId])
+}
+
+/// Transactional outbox: written in the same transaction as the change it
+/// describes, dispatched to notifications within the request, and retried by
+/// a scheduled sweeper for anything left behind.
+model OutboxEvent {
+  id            String    @id
+  tenantId      String
+  type          String
+  payload       Json
+  /// Profile.id of whoever caused it; never notified about their own action.
+  actorId       String?
+  /// PENDING, DISPATCHED or FAILED
+  status        String    @default("PENDING")
+  attempts      Int       @default(0)
+  nextAttemptAt DateTime  @default(now())
+  lastError     String?
+  createdAt     DateTime  @default(now())
+  dispatchedAt  DateTime?
+
+  @@index([status, nextAttemptAt])
+  @@index([tenantId, createdAt])
+}
+
+/// Versioned message templates per church. Every save is a new version; the
+/// latest is the active one.
+model MessageTemplate {
+  id           String   @id
+  tenantId     String
+  key          String
+  version      Int
+  whatsappBody String
+  emailSubject String
+  emailBody    String
+  /// Profile.id of whoever saved this version.
+  editedById   String?
+  createdAt    DateTime @default(now())
+
+  @@unique([tenantId, key, version])
+  @@index([tenantId, key])
+}
+
+/// Every opening message sent to a first-timer, on which channel, from which version.
+model MessageLog {
+  id              String   @id
+  tenantId        String
+  visitorId       String
+  channel         String
+  templateKey     String
+  templateVersion Int
+  /// Profile.id of the sender.
+  sentById        String?
+  /// SENT, FAILED or SKIPPED (the daily email budget ran out)
+  status          String   @default("SENT")
+  error           String?
+  sentAt          DateTime @default(now())
+
+  @@index([tenantId, visitorId])
+  @@index([tenantId, sentAt])
+}
+
+/// History-preserving first-timer contact assignment, the same shape as
+/// HeadUsherAssignment. Derives the FIRST_TIMER_CONTACT effective role.
+model FirstTimerContactAssignment {
+  id           String    @id
+  tenantId     String
+  /// Profile.id of the contact.
+  userId       String
+  assignedById String?
+  assignedAt   DateTime  @default(now())
+  endedAt      DateTime?
+
+  @@index([tenantId])
+  @@index([userId])
 }

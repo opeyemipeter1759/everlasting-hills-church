@@ -48,6 +48,18 @@ export class UsersGrantsController {
     return this.grants.removeHeadUsher(actor, profileId);
   }
 
+  @Post(':profileId/first-timer-contact')
+  @ApiOperation({ summary: 'Assign First-Timer Contact: global, unscoped, additive' })
+  async assignFirstTimerContact(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.grants.assignFirstTimerContact(actor, profileId);
+  }
+
+  @Delete(':profileId/first-timer-contact')
+  @ApiOperation({ summary: 'End an active First-Timer Contact assignment' })
+  async removeFirstTimerContact(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {
+    return this.grants.removeFirstTimerContact(actor, profileId);
+  }
+
   @Post(':profileId/finance-head')
   @ApiOperation({ summary: 'Assign Finance Head — global, unscoped, additive' })
   async assignFinanceHead(@CurrentUser() actor: AuthUser, @Param('profileId') profileId: string) {

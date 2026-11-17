@@ -19,6 +19,8 @@ export const PUSH_CATEGORIES = [
   // pastor and their delegates hear about new requests and changes.
   'pastoralSessionUpdates',
   'pastoralRequests',
+  // Follow-up: a first-timer assigned to you, an approval waiting on you, or a decision on one you asked for.
+  'followUpUpdates',
 ] as const;
 
 export type PushCategory = (typeof PUSH_CATEGORIES)[number];
@@ -45,6 +47,7 @@ export const DEFAULT_PREFERENCES: Record<PushCategory, boolean> = {
   prayerWatchPendingApproval: true,
   pastoralSessionUpdates: true,
   pastoralRequests: true,
+  followUpUpdates: true,
 };
 
 /**

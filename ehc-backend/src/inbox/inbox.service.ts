@@ -38,8 +38,9 @@ export class InboxService {
 
   async listForProfile(profileId: string | null) {
     if (!profileId) return [];
+    // Push rows only record that a push went out, so a retry never sends it twice; the bell shows in-app ones.
     return this.prisma.notification.findMany({
-      where: { profileId },
+      where: { profileId, channel: 'in_app' },
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
@@ -48,7 +49,7 @@ export class InboxService {
   async unreadCount(profileId: string | null): Promise<number> {
     if (!profileId) return 0;
     return this.prisma.notification.count({
-      where: { profileId, readAt: null },
+      where: { profileId, readAt: null, channel: 'in_app' },
     });
   }
 
