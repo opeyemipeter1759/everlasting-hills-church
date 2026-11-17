@@ -7,7 +7,8 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { PipelineRepository } from '../pipeline/pipeline.repository';
 import { PIPELINE_STATUSES, type PipelineFilters, type PipelineStatus } from '../pipeline/pipeline.types';
 import { PrismaService } from '../prisma/prisma.service';
-import { allAnswers, publicAnswers } from '../visitors/first-timer-answers';
+import { allAnswers, publicAnswers, teamAnswers } from '../visitors/first-timer-answers';
+import { ADMIN_PLUS } from './follow-up.types';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
 import { PhotoUrlService } from './photos/photo-url.service';
 
@@ -99,7 +100,7 @@ export class FollowUpPipelineController {
   }
 
   @Get('first-timers/:visitorId')
-  @ApiOperation({ summary: 'One first-timer: where they stand, and every answer they gave (pastoral ones included; profile only)' })
+  @ApiOperation({ summary: 'One first-timer: where they stand, and their answers (the prayer request for pastors and admins only; profile only)' })
   async person(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string) {
     await this.auth.requireAccess(actor);
     // The pipeline is tenant-scoped and leaves out archived forms, so finding them there is the check.
@@ -107,7 +108,8 @@ export class FollowUpPipelineController {
     const visitor = person ? await this.prisma.visitor.findUnique({ where: { id: visitorId } }) : null;
     if (!person || !visitor) throw new NotFoundException('First-timer not found');
     const [withPhoto] = await this.photos.attach([person]);
-    return { person: withPhoto, answers: allAnswers(visitor) };
+    const readsPrayer = actor.effectiveRoles?.some((r) => ADMIN_PLUS.includes(r)) ?? false;
+    return { person: withPhoto, answers: readsPrayer ? allAnswers(visitor) : teamAnswers(visitor) };
   }
 
   @Get('first-timers/:visitorId/answers')

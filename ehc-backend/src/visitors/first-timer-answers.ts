@@ -24,6 +24,14 @@ export function allAnswers(v: Partial<Visitor>): Answers {
   return Object.fromEntries(ANSWER_FIELDS.map((k) => [k, v[k] ?? null]));
 }
 
+/**
+ * The person's own profile, as the follow-up team reads it: every answer but
+ * the prayer request, which only pastors and admins see.
+ */
+export function teamAnswers(v: Partial<Visitor>): Answers {
+  return Object.fromEntries(ANSWER_FIELDS.filter((k) => k !== 'prayerPoint').map((k) => [k, v[k] ?? null]));
+}
+
 /** Answers safe for lists, the Overview and exports: pastoral ones left out entirely. */
 export function publicAnswers(v: Partial<Visitor>): Answers {
   return Object.fromEntries(ANSWER_FIELDS.filter((k) => !PASTORAL_FIELDS.has(k)).map((k) => [k, v[k] ?? null]));

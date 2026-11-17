@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Role } from '@prisma/client';
 import { PipelineRepository } from '../../pipeline/pipeline.repository';
 import { PIPELINE_STATUSES, type PipelineRow } from '../../pipeline/pipeline.types';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -119,7 +119,10 @@ maybe('Overview month and year against Postgres', () => {
         expect(json).not.toContain(`"${key}"`);
       }
     }
-    // The profile, and only the profile, has them: proof the seed reached the database.
-    expect(JSON.stringify(await controller.person(t.actor(), pastoralId))).toContain(SECRETS.prayerPoint);
+    // The profile, and only the profile, has them (proof the seed reached the database); the prayer request only for pastors and admins.
+    const forTeam = JSON.stringify(await controller.person(t.actor(), pastoralId));
+    expect(forTeam).toContain(SECRETS.serviceExperience);
+    expect(forTeam).not.toContain(SECRETS.prayerPoint);
+    expect(JSON.stringify(await controller.person({ ...t.actor(), effectiveRoles: [Role.PASTOR] }, pastoralId))).toContain(SECRETS.prayerPoint);
   });
 });
