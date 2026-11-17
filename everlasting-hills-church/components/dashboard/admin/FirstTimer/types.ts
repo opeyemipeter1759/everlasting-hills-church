@@ -18,6 +18,9 @@ export interface VisitorRow {
   // subset, so the person reading the record could not see who invited the
   // visitor or where they live.
   invitedBy?: string | null;
+  /** The answer when they heard about us some other way. */
+  heardFromOther?: string | null;
+  isStudent?: boolean | null;
   dateOfBirth?: string | null;
   address?: string | null;
   whatsappInterest?: boolean | null;

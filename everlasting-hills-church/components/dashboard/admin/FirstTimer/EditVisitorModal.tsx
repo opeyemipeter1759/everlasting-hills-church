@@ -7,37 +7,10 @@ import { apiClient } from "@/lib/api/axios";
 import { showToast } from "@/components/ui/toast/toast";
 import Loader from "@/components/ui/feedback/Loader";
 import { Select } from "@/components/ui/select";
+import { heardFromErrors } from "@/lib/first-timer/form-schema";
 import type { VisitorRow } from "./types";
-
-const inputClass =
-  "w-full text-sm rounded-xl px-3.5 py-2.5 border border-[#E7CDD3]/60 dark:border-white/[0.10] bg-white dark:bg-white/[0.06] text-[#111] dark:text-white placeholder:text-[#a8a3a4] focus:outline-none focus:border-[#87102C] focus:ring-2 focus:ring-[#87102C]/15 transition-all";
-const labelClass = "block text-xs font-semibold text-[#5A4A4D] dark:text-white/60 mb-1.5";
-
-type FormState = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  occupation: string;
-  gender: string;
-  attendanceType: string;
-  membershipInterest: string;
-};
-
-function toForm(v: VisitorRow): FormState {
-  return {
-    firstName: v.firstName,
-    lastName: v.lastName,
-    email: v.email ?? "",
-    phone: v.phone ?? "",
-    address: "",
-    occupation: v.occupation ?? "",
-    gender: v.gender ?? "",
-    attendanceType: v.attendanceType ?? "",
-    membershipInterest: v.membershipInterest ?? "",
-  };
-}
+import { inputClass, labelClass, selectClass, toForm, toPayload, toPatch, type FormState } from "./editVisitorForm";
+import EditVisitorHeardFrom from "./EditVisitorHeardFrom";
 
 export default function EditVisitorModal({
   visitor,
@@ -50,6 +23,7 @@ export default function EditVisitorModal({
 }) {
   const [form, setForm] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
@@ -66,31 +40,15 @@ export default function EditVisitorModal({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!visitor || !form) return;
+    const problems = heardFromErrors(form);
+    setErrors(problems);
+    if (Object.keys(problems).length > 0) return;
     setSaving(true);
     try {
-      const payload = {
-        firstName: form.firstName.trim(),
-        lastName: form.lastName.trim(),
-        email: form.email.trim() || undefined,
-        phone: form.phone.trim() || undefined,
-        address: form.address.trim() || undefined,
-        occupation: form.occupation.trim() || undefined,
-        gender: form.gender || undefined,
-        attendanceType: form.attendanceType || undefined,
-        membershipInterest: form.membershipInterest || undefined,
-      };
+      const payload = toPayload(form);
       await apiClient.patch(`/visitors/${visitor.id}`, payload);
       showToast.success("Visitor updated");
-      onUpdated(visitor.id, {
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        email: payload.email ?? null,
-        phone: payload.phone ?? null,
-        occupation: payload.occupation ?? null,
-        gender: payload.gender ?? null,
-        attendanceType: payload.attendanceType ?? null,
-        membershipInterest: payload.membershipInterest ?? null,
-      });
+      onUpdated(visitor.id, toPatch(payload));
       onClose();
     } catch (err) {
       showToast.error((err as { message?: string }).message ?? "Couldn't update visitor");
@@ -144,7 +102,7 @@ export default function EditVisitorModal({
                 value={form.gender}
                 onChange={(v) => set("gender", v)}
                 placeholder="Not set"
-                className={`${inputClass} text-left flex items-center justify-between`}
+                className={selectClass}
                 options={[
                   { value: "Male", label: "Male" },
                   { value: "Female", label: "Female" },
@@ -158,7 +116,7 @@ export default function EditVisitorModal({
                 value={form.attendanceType}
                 onChange={(v) => set("attendanceType", v)}
                 placeholder="Not set"
-                className={`${inputClass} text-left flex items-center justify-between`}
+                className={selectClass}
                 options={[
                   { value: "In-Person", label: "In-Person" },
                   { value: "Online", label: "Online" },
@@ -172,6 +130,8 @@ export default function EditVisitorModal({
             <input value={form.occupation} onChange={(e) => set("occupation", e.target.value)} className={inputClass} />
           </div>
 
+          <EditVisitorHeardFrom form={form} set={set} errors={errors} />
+
           <div>
             <label className={labelClass}>Membership interest</label>
             <Select
@@ -179,7 +139,7 @@ export default function EditVisitorModal({
               value={form.membershipInterest}
               onChange={(v) => set("membershipInterest", v)}
               placeholder="Not set"
-              className={`${inputClass} text-left flex items-center justify-between`}
+              className={selectClass}
               options={[
                 { value: "Yes", label: "Yes" },
                 { value: "Maybe", label: "Maybe" },
