@@ -5,21 +5,24 @@ import { FollowUpHeader } from "./FollowUpHeader";
 import { FollowUpTabs, TABS_BOTTOM_SPACE } from "./FollowUpTabs";
 import { useFollowUpTabs, type FollowUpTab } from "./useFollowUpTabs";
 import { useFollowUpSummary } from "./useFollowUpSummary";
-import MasterList from "./MasterList";
+import MasterListPipeline from "./MasterListPipeline";
 import AssignedToMe from "./AssignedToMe";
 import { FollowUpReport } from "./FollowUpReport";
 
+/**
+ * The Follow Up board. Every list reads the first-timer pipeline, and each tab
+ * badge is the API's total for the very list that tab opens: All on the
+ * Master list, your caseload on Assigned to me, the opted out on Opted out.
+ */
 export default function FollowUpBoard() {
   const tabs = useFollowUpTabs();
   const summary = useFollowUpSummary();
   const [active, setActive] = useState<FollowUpTab>("master");
 
   // Report is a write-up, not a list, so it carries no count. While the
-  // figures load there are no counts at all — a badge reading 0 would be read
+  // figures load there are no counts at all: a badge reading 0 would be read
   // as "none", which is a different thing from "not known yet".
-  const counts = summary.isLoading
-    ? {}
-    : { master: summary.followingUp, mine: summary.assignedToMe, optedOut: summary.optedOut };
+  const counts = summary.isLoading ? {} : { master: summary.total, mine: summary.assignedToMe, optedOut: summary.optedOut };
   useEffect(() => {
     if (tabs.length > 0 && !tabs.some((tab) => tab.id === active)) setActive(tabs[0].id);
   }, [tabs, active]);
@@ -31,7 +34,7 @@ export default function FollowUpBoard() {
 
       {active === "master" ? (
         <section role="tabpanel" aria-label="Master list">
-          <MasterList fixed={{ scope: "FOLLOW_UP" }} />
+          <MasterListPipeline linkThreads />
         </section>
       ) : active === "mine" ? (
         <section role="tabpanel" aria-label="Assigned to me">
@@ -39,7 +42,7 @@ export default function FollowUpBoard() {
         </section>
       ) : active === "optedOut" ? (
         <section role="tabpanel" aria-label="Opted out">
-          <MasterList fixed={{ scope: "OPTED_OUT" }} />
+          <MasterListPipeline fixed={{ status: "OPTED_OUT" }} empty="Nobody has opted out." />
         </section>
       ) : (
         <section role="tabpanel" aria-label="Report">

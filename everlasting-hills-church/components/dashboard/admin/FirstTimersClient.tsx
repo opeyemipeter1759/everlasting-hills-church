@@ -7,6 +7,7 @@ import { apiClient, type ApiError } from "@/lib/api/axios";
 import { showToast } from "@/components/ui/toast/toast";
 import { useRefreshEverywhere } from "@/lib/api/refresh-everywhere";
 import ConfirmDialog from "@/components/ui/overlay/ConfirmDialog";
+import { MonthYearFilter } from "@/components/dashboard/follow-up/v2/MonthYearFilter";
 import type { VisitorRow } from "./FirstTimer/types";
 import { useFirstTimersFilter, PAGE_SIZE_OPTIONS } from "./FirstTimer/useFirstTimersFilter";
 import PanelHeader from "./FirstTimer/PanelHeader";
@@ -17,108 +18,76 @@ import FirstTimerStatsCards from "./FirstTimer/FirstTimerStatsCards";
 
 export type { VisitorRow };
 
-interface Props {
-  visitors: VisitorRow[];
-}
-
-export default function FirstTimersClient({ visitors }: Props) {
-  const {
-    handleCreated,
-    handleDeleted,
-    handleUpdated,
-    active,
-    search,
-    setSearch,
-    filter,
-    setFilter,
-    fromDate,
-    setFromDate,
-    toDate,
-    setToDate,
-    clearDates,
-    filtered,
-    pagedRows,
-    page,
-    pageCount,
-    setPage,
-    pageSize,
-    setPageSize,
-    filterTabs,
-    total,
-  } = useFirstTimersFilter(visitors);
-
+/**
+ * The admin First Timers page. The list, its tabs and the cards are all paged
+ * and counted on the server; first-timers are archived, never deleted.
+ */
+export default function FirstTimersClient() {
+  const f = useFirstTimersFilter();
   const refreshEverywhere = useRefreshEverywhere();
   const [editTarget, setEditTarget] = useState<VisitorRow | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<VisitorRow | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  // Set when the server refused because their Follow Up chat would go too.
-  const [chatWarning, setChatWarning] = useState<string | null>(null);
-  const closeDelete = () => { setDeleteTarget(null); setChatWarning(null); };
+  const [archiveTarget, setArchiveTarget] = useState<VisitorRow | null>(null);
+  const [archiving, setArchiving] = useState(false);
 
-  async function confirmDelete() {
-    if (!deleteTarget) return;
-    setDeleting(true);
+  async function confirmArchive() {
+    if (!archiveTarget) return;
+    setArchiving(true);
     try {
-      await apiClient.delete(`/visitors/${deleteTarget.id}${chatWarning ? "?force=true" : ""}`);
-      showToast.success(`${deleteTarget.firstName} ${deleteTarget.lastName} deleted`);
-      handleDeleted(deleteTarget.id);
-      refreshEverywhere(); // the totals here, Follow Up and its counts held them too
-      closeDelete();
+      await apiClient.delete(`/visitors/${archiveTarget.id}`);
+      showToast.success(`${archiveTarget.firstName} ${archiveTarget.lastName} archived`);
+      refreshEverywhere(); // this page, Follow Up and every count held them
+      setArchiveTarget(null);
     } catch (err) {
-      const e = err as ApiError;
-      if (e.status === 409 && e.code === "HAS_FOLLOW_UP_CHAT") setChatWarning(e.message);
-      else showToast.error(e.message ?? "Couldn't delete visitor");
+      showToast.error((err as ApiError).message ?? "Couldn't archive them");
     } finally {
-      setDeleting(false);
+      setArchiving(false);
     }
   }
 
   return (
     <div className="space-y-5 px-5">
-      <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">First Timers</h1>
-        <p className="text-sm text-gray-500 dark:text-white/50 mt-1">
-          Review newcomer submissions and create member accounts.
-        </p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">First Timers</h1>
+          <p className="text-sm text-gray-500 dark:text-white/50 mt-1">Review newcomer submissions and create member accounts.</p>
+        </div>
+        <MonthYearFilter />
       </div>
 
-      <FirstTimerStatsCards active={active} />
+      <FirstTimerStatsCards data={f.data} loading={f.isLoading} />
 
       <div className="bg-white dark:bg-white/[0.05] border border-[#E7CDD3]/60 dark:border-white/[0.09] rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(135,16,44,0.04)] dark:shadow-none">
         <PanelHeader
-          total={total}
-          filterTabs={filterTabs}
-          filter={filter}
-          onFilterChange={setFilter}
-          search={search}
-          onSearchChange={setSearch}
-          fromDate={fromDate}
-          toDate={toDate}
-          onFromDateChange={setFromDate}
-          onToDateChange={setToDate}
-          onClearDates={clearDates}
+          total={f.total}
+          filterTabs={f.filterTabs}
+          filter={f.filter}
+          onFilterChange={f.setFilter}
+          search={f.search}
+          onSearchChange={f.setSearch}
+          fromDate={f.fromDate}
+          toDate={f.toDate}
+          onFromDateChange={f.setFromDate}
+          onToDateChange={f.setToDate}
+          onClearDates={f.clearDates}
         />
 
-        {filtered.length === 0 ? (
-          <EmptyState hasAny={total > 0} />
+        {f.isLoading && !f.data ? (
+          <div className="h-48 animate-pulse bg-gray-50 dark:bg-white/[0.02]" aria-label="Loading first timers" />
+        ) : f.shown === 0 ? (
+          <EmptyState hasAny={f.total > 0 || !!f.search || f.filter !== "all"} />
         ) : (
           <>
-            <VisitorsTable
-              rows={pagedRows}
-              onCreated={handleCreated}
-              onEdit={setEditTarget}
-              onDelete={setDeleteTarget}
-            />
+            <VisitorsTable rows={f.pagedRows} onCreated={f.handleCreated} onEdit={setEditTarget} onDelete={setArchiveTarget} />
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 px-4 sm:px-6 border-t border-[#E7CDD3]/40 dark:border-white/[0.07]">
               <p className="text-[11px] text-[#8a7e80] dark:text-white/35 order-2 sm:order-1">
-                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} of {filtered.length}
+                Showing {(f.page - 1) * f.pageSize + 1} to {Math.min(f.page * f.pageSize, f.shown)} of {f.shown}
               </p>
               <div className="flex items-center gap-3 order-1 sm:order-2">
-                <Pagination page={page} pageCount={pageCount} onPageChange={setPage} />
+                <Pagination page={f.page} pageCount={f.pageCount} onPageChange={f.setPage} />
                 <Select
                   aria-label="Rows per page"
-                  value={String(pageSize)}
-                  onChange={(v) => setPageSize(Number(v))}
+                  value={String(f.pageSize)}
+                  onChange={(v) => f.setPageSize(Number(v))}
                   className="text-xs rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-2 py-1.5 text-gray-600 dark:text-gray-300 outline-none focus:ring-2 focus:ring-[#87102C]/25 cursor-pointer"
                   options={PAGE_SIZE_OPTIONS.map((n) => ({ value: String(n), label: `${n} / page` }))}
                 />
@@ -128,22 +97,22 @@ export default function FirstTimersClient({ visitors }: Props) {
         )}
       </div>
 
-      <EditVisitorModal visitor={editTarget} onClose={() => setEditTarget(null)} onUpdated={handleUpdated} />
+      <EditVisitorModal visitor={editTarget} onClose={() => setEditTarget(null)} onUpdated={f.handleUpdated} />
 
       <ConfirmDialog
-        open={!!deleteTarget}
-        tone="danger"
-        title="Delete this visitor?"
+        open={!!archiveTarget}
+        tone="warning"
+        title="Archive this first timer?"
         description={
           <>
-            <span className="font-semibold">{deleteTarget?.firstName} {deleteTarget?.lastName}</span>'s first-timer record will be permanently deleted. This cannot be undone.
-            {chatWarning && <span className="mt-2 block font-semibold text-red-600 dark:text-red-400">{chatWarning}</span>}
+            <span className="font-semibold">{archiveTarget?.firstName} {archiveTarget?.lastName}</span> will drop out of this page, the Follow Up lists and
+            every count. Nothing is deleted: their record, the team&apos;s notes and their history stay, and the archive is logged with your name.
           </>
         }
-        confirmLabel={chatWarning ? "Delete record and chat" : "Delete"}
-        loading={deleting}
-        onConfirm={confirmDelete}
-        onCancel={closeDelete}
+        confirmLabel="Archive"
+        loading={archiving}
+        onConfirm={confirmArchive}
+        onCancel={() => setArchiveTarget(null)}
       />
     </div>
   );

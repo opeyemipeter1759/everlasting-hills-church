@@ -6,6 +6,7 @@ import type { Env } from '../../config/env.validation';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import type { BulkMemberOpInput } from '../members.types';
 import { leaveServiceTeams } from '../leave-service-teams';
+import { inactiveAmong, optOutDeactivated, restoreReactivated } from '../../follow-up/deactivation-stage';
 
 /** Tag and bulk status/tag mutations on member rows. */
 @Injectable()
@@ -48,12 +49,16 @@ export class MemberBulkOpsService {
         throw new BadRequestException('Invalid status');
       }
       const { count, leadsEnded } = await this.prisma.$transaction(async (tx) => {
+        const returning = status === MemberStatus.ACTIVE ? await inactiveAmong(tx, this.tenantId, ids) : [];
         const res = await tx.member.updateMany({
           where: { id: { in: ids }, tenantId: this.tenantId },
           data: { status, deactivationRequestedAt: null },
         });
         // Deactivating someone takes them off every service team.
         const ended = status === MemberStatus.ACTIVE ? [] : await leaveServiceTeams(tx, this.tenantId, ids, actorId);
+        // Their follow-up records move with the accounts, in this same transaction.
+        if (status === MemberStatus.ACTIVE) await restoreReactivated(tx, this.tenantId, returning, actorId);
+        else await optOutDeactivated(tx, this.tenantId, ids, actorId);
         return { count: res.count, leadsEnded: ended };
       });
       leadsEnded.forEach((profileId) => this.effectiveRoles.invalidate(profileId));

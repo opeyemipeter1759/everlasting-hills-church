@@ -51,7 +51,7 @@ export class FollowUpRollService {
     const [visitors, members] = await Promise.all([
       fetchVisitorRows(
         this.prisma,
-        { tenantId: this.tenantId, convertedAt: null, ...nameSearch(term) },
+        { tenantId: this.tenantId, convertedAt: null, archivedAt: null, ...nameSearch(term) },
         MAX_SCAN,
         0,
       ),

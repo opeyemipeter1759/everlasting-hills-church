@@ -1,87 +1,51 @@
 "use client";
 
-import { CalendarX, HeartHandshake, UserCheck, UserMinus } from "lucide-react";
+import { CalendarX, HeartHandshake } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
-import { useFollowUpServices, type MasterListPage } from "@/lib/api/follow-up-pipeline";
+import type { PipelinePage } from "@/lib/api/pipeline";
 
-function Card({
-  icon: Icon,
-  value,
-  label,
-  note,
-  tone,
-  loading,
-}: {
-  icon: LucideIcon;
-  value: number;
-  label: string;
-  note: string;
-  tone: string;
-  loading: boolean;
-}) {
+function Card({ icon: Icon, value, label, note, tone }: { icon: LucideIcon; value?: number | null; label: string; note: string; tone: string }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-white/10 dark:bg-white/[0.04]">
+    <div className="relative overflow-hidden rounded-2xl border border-gray-200/80 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
       <span aria-hidden="true" className={`absolute inset-y-0 left-0 w-1 opacity-80 ${tone}`} />
-      <div className="flex items-start justify-between gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-white/[0.07] dark:text-white/50">
-          <Icon size={18} aria-hidden="true" />
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-100 text-gray-500 dark:bg-white/[0.07] dark:text-white/50">
+          <Icon size={17} aria-hidden="true" />
         </span>
-        {loading ? (
-          <span className="mt-1 block h-7 w-10 animate-pulse rounded-md bg-gray-200 dark:bg-white/10" />
+        {value === undefined ? null : value === null ? (
+          <span className="block h-7 w-10 animate-pulse rounded-md bg-gray-200 dark:bg-white/10" />
         ) : (
-          <p className="text-3xl font-bold leading-none tabular-nums text-[#111] dark:text-white">{value}</p>
+          <p className="text-2xl font-bold leading-none tabular-nums text-[#111] dark:text-white sm:text-3xl">{value}</p>
         )}
       </div>
-      <p className="mt-3 text-sm font-semibold text-[#111] dark:text-white">{label}</p>
+      <p className="mt-2.5 text-sm font-semibold text-[#111] dark:text-white">{label}</p>
       <p className="mt-0.5 text-xs leading-relaxed text-gray-500 dark:text-white/45">{note}</p>
     </div>
   );
 }
 
 /**
- * What the Integration Team watches: who has settled, who has slipped away,
- * and who missed a service. The Absent card follows the open tab and filters
- * (`absence` is the list's own totals), so it always agrees with the rows below.
+ * Two figures, both taken from the list below under the same filters: how
+ * many are integrated, and how many missed the service picked in Absent from.
+ * Side by side on a phone, so they cost one row.
  */
-export function IntegrationStats({ absence }: { absence?: MasterListPage["meta"] }) {
-  const { data: counts, isLoading } = useFollowUpCounts();
-  const { data: services = [] } = useFollowUpServices();
-  const serviceName = services.find((s) => s.id === absence?.absenceServiceId)?.name;
-
+export function IntegrationStats({ page, serviceName }: { page?: PipelinePage; serviceName: string | null }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 xl:max-w-2xl">
       <Card
-        loading={isLoading}
         icon={HeartHandshake}
         tone="bg-emerald-500"
-        value={counts?.byStatus.INTEGRATED ?? 0}
-        label="Integrated members"
-        note="Settled in — yours to keep settled"
+        value={page ? page.counts.INTEGRATED : null}
+        label="Integrated"
+        note="Settled in, and approved by their unit lead"
       />
       <Card
-        loading={isLoading}
-        icon={UserMinus}
-        tone="bg-amber-500"
-        value={counts?.byStatus.AWAY ?? 0}
-        label="Away"
-        note="Stopped coming — somebody should visit"
-      />
-      <Card
-        loading={isLoading}
-        icon={UserCheck}
-        tone="bg-[#87102C]"
-        value={counts?.integrationAssignedToMe ?? 0}
-        label="Assigned to you"
-        note="Yours to reach — everyone sees their own"
-      />
-      <Card
-        loading={!absence}
         icon={CalendarX}
         tone="bg-rose-500"
-        value={absence?.absent ?? 0}
+        // No number until a service is picked: a zero would read as nobody missing.
+        value={!serviceName ? undefined : page ? page.counts.all : null}
         label="Absent"
-        note={serviceName ? `Missed ${serviceName}` : "Missed the service shown in the filter"}
+        note={serviceName ? `Missed ${serviceName}` : "Pick a service under Absent from"}
       />
     </div>
   );

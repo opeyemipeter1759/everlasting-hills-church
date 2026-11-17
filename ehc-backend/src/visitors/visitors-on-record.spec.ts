@@ -18,7 +18,7 @@ describe('visitorsOnRecord', () => {
     const where = await visitorsOnRecord(db as never, 't1');
 
     expect(db.member.findMany).toHaveBeenCalledWith({ where: { tenantId: 't1', id: { in: ['m1', 'm2', 'm3'] } }, select: { id: true } });
-    expect(where).toEqual({ tenantId: 't1', OR: [{ convertedAt: null }, { convertedToMemberId: { in: ['m1', 'm2'] } }] });
+    expect(where).toEqual({ tenantId: 't1', archivedAt: null, OR: [{ convertedAt: null }, { convertedToMemberId: { in: ['m1', 'm2'] } }] });
   });
 
   it('skips the member lookup when nobody has been given an account', async () => {
@@ -26,6 +26,7 @@ describe('visitorsOnRecord', () => {
 
     await expect(visitorsOnRecord(db as never, 't1')).resolves.toEqual({
       tenantId: 't1',
+      archivedAt: null,
       OR: [{ convertedAt: null }, { convertedToMemberId: { in: [] } }],
     });
     expect(db.member.findMany).not.toHaveBeenCalled();

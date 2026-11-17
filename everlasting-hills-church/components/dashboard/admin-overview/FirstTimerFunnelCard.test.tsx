@@ -3,13 +3,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import FirstTimerFunnelCard from "./FirstTimerFunnelCard";
 
 const counts = {
-  total: 42,
+  total: 39,
   byStatus: {
     FIRST_TIMER: 12,
     SECOND_TIMER: 7,
     THIRD_TIMER: 4,
     INTEGRATED: 15,
-    AWAY: 3,
     OPTED_OUT: 1,
   },
   assignedToMe: 2,
@@ -31,12 +30,13 @@ describe("FirstTimerFunnelCard", () => {
       ["Second timer", "7"],
       ["Third timer", "4"],
       ["Integrated", "15"],
-      ["Away", "3"],
       ["Opted out", "1"],
     ]) {
       const row = screen.getByText(label).closest("a");
       expect(row).toHaveTextContent(count);
     }
+    // Away is no longer a status in the pipeline.
+    expect(screen.queryByText("Away")).not.toBeInTheDocument();
   });
 
   it("sends each stage to its own list, and offers the whole funnel too", () => {

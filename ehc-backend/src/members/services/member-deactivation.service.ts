@@ -7,6 +7,7 @@ import { NotificationEvents } from '../../notifications/notification-events';
 import { buildAccountDeactivationEmail } from '../../notifications/templates/account-deactivation.email';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import { leaveServiceTeams } from '../leave-service-teams';
+import { inactiveAmong, optOutDeactivated, restoreReactivated } from '../../follow-up/deactivation-stage';
 import { MemberSelfLookupService } from './member-self-lookup.service';
 
 /** Days a member has to reverse a self-deactivation before data may be removed. */
@@ -39,15 +40,17 @@ export class MemberDeactivationService {
    */
   async requestDeactivation(userId: string, fallbackEmail?: string) {
     const { memberId } = await this.selfLookup.getMyMember(userId, fallbackEmail);
-    const { member, leadsEnded } = await this.prisma.$transaction(async (tx) => ({
-      member: await tx.member.update({
+    const { member, leadsEnded } = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.member.update({
         where: { id: memberId },
         data: { status: 'INACTIVE', deactivationRequestedAt: new Date() },
         select: { id: true, firstName: true, email: true },
-      }),
-      // A deactivated member serves on no team.
-      leadsEnded: await leaveServiceTeams(tx, this.tenantId, [memberId], userId),
-    }));
+      });
+      // A deactivated member serves on no team, and their follow-up is opted out.
+      const ended = await leaveServiceTeams(tx, this.tenantId, [memberId], userId);
+      await optOutDeactivated(tx, this.tenantId, [memberId], userId);
+      return { member: row, leadsEnded: ended };
+    });
     leadsEnded.forEach((profileId) => this.effectiveRoles.invalidate(profileId));
 
     if (member.email) {
@@ -72,9 +75,14 @@ export class MemberDeactivationService {
   /** Reverse a self-deactivation — reactivates the account and clears the request stamp. */
   async reactivateMe(userId: string, fallbackEmail?: string) {
     const { memberId } = await this.selfLookup.getMyMember(userId, fallbackEmail);
-    await this.prisma.member.update({
-      where: { id: memberId },
-      data: { status: 'ACTIVE', deactivationRequestedAt: null },
+    await this.prisma.$transaction(async (tx) => {
+      const returning = await inactiveAmong(tx, this.tenantId, [memberId]);
+      await tx.member.update({
+        where: { id: memberId },
+        data: { status: 'ACTIVE', deactivationRequestedAt: null },
+      });
+      // Their follow-up goes back to the stage it had before they left.
+      await restoreReactivated(tx, this.tenantId, returning, userId);
     });
     return { success: true, status: 'ACTIVE' };
   }

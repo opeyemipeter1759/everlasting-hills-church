@@ -2,21 +2,13 @@
 
 import { UserRoundCheck } from "lucide-react";
 import { useMe } from "@/lib/api";
-import MasterList from "./MasterList";
-import type { MasterListPage, MasterListQuery } from "@/lib/api/follow-up-pipeline";
+import MasterListPipeline from "./MasterListPipeline";
 
 /**
- * The people you are responsible for reaching — the same table as the Master
- * list, pinned to you, so opening someone gives the identical details and
- * conversation rather than a second, thinner view of the same person.
+ * The people you are responsible for reaching: the same list as the Master
+ * list, pinned to you, so its total is exactly the badge on this tab.
  */
-export default function AssignedToMe({
-  scope = "FOLLOW_UP",
-  onMeta,
-}: {
-  scope?: MasterListQuery["scope"];
-  onMeta?: (meta: MasterListPage["meta"] | undefined) => void;
-}) {
+export default function AssignedToMe() {
   const { data: me } = useMe();
   const memberId = me?.member?.id ?? "";
 
@@ -35,10 +27,9 @@ export default function AssignedToMe({
     <div className="space-y-3">
       <p className="flex items-center gap-2 text-sm text-gray-500 dark:text-white/45">
         <UserRoundCheck size={15} className="text-[#87102C] dark:text-[#FFB3C1]" aria-hidden="true" />
-        Everyone currently assigned to you. Open anyone to log a call or hand them on.
+        Everyone assigned to you. Open anyone for their profile, or Notes for the team&apos;s conversation.
       </p>
-
-      <MasterList fixed={{ assigneeId: memberId, scope }} showFilters={false} onMeta={onMeta} />
+      <MasterListPipeline fixed={{ assigneeId: memberId }} empty="Nobody is assigned to you right now." />
     </div>
   );
 }

@@ -1,80 +1,54 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { UserCheck, UserMinus, Users } from "lucide-react";
-import { FollowUpTabs, TABS_BOTTOM_SPACE } from "@/components/dashboard/follow-up/FollowUpTabs";
-import MasterList from "@/components/dashboard/follow-up/MasterList";
-import AssignedToMe from "@/components/dashboard/follow-up/AssignedToMe";
-import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
-import type { MasterListPage } from "@/lib/api/follow-up-pipeline";
+import { useFollowUpServices } from "@/lib/api/follow-up-pipeline";
+import type { PipelinePage } from "@/lib/api/pipeline";
+import { Select } from "@/components/ui/select";
+import MasterListPipeline from "@/components/dashboard/follow-up/MasterListPipeline";
+import { PILL } from "@/components/dashboard/follow-up/filter-bits";
 import { IntegrationHeader } from "./IntegrationHeader";
 
-type IntegrationTab = "members" | "away" | "mine";
-
-const TABS = [
-  { id: "members" as const, label: "Members", icon: Users },
-  { id: "away" as const, label: "Away", icon: UserMinus },
-  { id: "mine" as const, label: "Assigned to me", icon: UserCheck },
-];
-
-const NOTE: Record<IntegrationTab, string> = {
-  members: "Opens on everyone integrated. Change the status to see anyone else on the roll, or pick a service to see who missed it.",
-  away: "Members who have stopped coming. Somebody from this team should reach them.",
-  mine: "The people you are responsible for staying in touch with.",
-};
+const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
 
 /**
- * The Integration Team's page.
- *
- * Follow Up meets the people who have just arrived and walks them in; the
- * moment somebody is integrated they leave that list and appear here, because
- * from then on the work is different — not settling them in, but noticing
- * when one of them quietly stops coming.
+ * The Integration Team's page: the first-timer pipeline, opened on the people
+ * who are integrated, with "Absent from" to see who missed a service. It is
+ * the same list and the same counts the Follow Up page reads, scoped by its
+ * filters, so nothing here is counted on its own.
  */
 export default function IntegrationBoard() {
-  const [active, setActive] = useState<IntegrationTab>("members");
-  const { data: counts, isLoading } = useFollowUpCounts();
-  // The Absent card counts whatever the open list is showing, so it moves
-  // with the tab and the filters.
-  const [listMeta, setListMeta] = useState<MasterListPage["meta"] | undefined>();
-  const onMeta = useCallback((meta: MasterListPage["meta"] | undefined) => setListMeta(meta), []);
-  const changeTab = (tab: IntegrationTab) => {
-    setListMeta(undefined);
-    setActive(tab);
-  };
-
-  const tabCounts = isLoading
-    ? {}
-    : {
-        away: counts?.byStatus.AWAY ?? 0,
-        mine: counts?.integrationAssignedToMe ?? 0,
-      };
+  const { data: services = [] } = useFollowUpServices();
+  const [absentFrom, setAbsentFrom] = useState("");
+  const [page, setPage] = useState<PipelinePage | undefined>();
+  const onPage = useCallback((next: PipelinePage | undefined) => setPage(next), []);
+  const service = services.find((s) => s.id === absentFrom) ?? null;
 
   return (
-    <div className={`space-y-4 md:px-5 ${TABS_BOTTOM_SPACE}`}>
-      <IntegrationHeader absence={listMeta} />
-      <FollowUpTabs
-        tabs={TABS}
-        active={active}
-        counts={tabCounts}
-        label="Integration Team views"
-        onChange={changeTab}
-      />
+    <div className="space-y-4 md:px-5">
+      <IntegrationHeader page={page} serviceName={service?.name ?? null} />
 
-      <p className="text-sm text-gray-500 dark:text-white/45">{NOTE[active]}</p>
+      <p className="text-sm text-gray-500 dark:text-white/45">
+        Opens on everyone integrated. Tap a status to see anyone else, or pick a service to see who missed it.
+      </p>
 
-      <section role="tabpanel" aria-label={TABS.find((tab) => tab.id === active)?.label}>
-        {active === "mine" ? (
-          <AssignedToMe scope="INTEGRATION" onMeta={onMeta} />
-        ) : (
-          <MasterList
-            key={active}
-            fixed={active === "away" ? { scope: "INTEGRATION", status: "AWAY" } : { scope: "ALL", board: "INTEGRATION" }}
-            initialQuery={active === "away" ? {} : { status: "INTEGRATED" }}
-            onMeta={onMeta}
+      <MasterListPipeline
+        defaultStatus="INTEGRATED"
+        fixed={{ absentFrom: absentFrom || undefined }}
+        onPage={onPage}
+        empty={service ? `Nobody here missed ${service.name}.` : "Nobody matches these filters."}
+        filters={
+          <Select
+            aria-label="Absent from"
+            value={absentFrom}
+            onChange={setAbsentFrom}
+            className={`${PILL} w-full sm:w-[15rem]`}
+            options={[
+              { value: "", label: "Absent from: any service" },
+              ...services.map((s) => ({ value: s.id, label: `Missed ${s.name}, ${day(s.scheduledAt)}` })),
+            ]}
           />
-        )}
-      </section>
+        }
+      />
     </div>
   );
 }

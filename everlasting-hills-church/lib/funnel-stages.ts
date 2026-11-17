@@ -1,15 +1,16 @@
-import type { MasterListStatus } from "@/lib/api/follow-up-pipeline";
+import type { PipelineStatus } from "@/lib/api/pipeline";
 
 /** Where the funnel's View buttons lead. */
 export const FUNNEL_BASE = "/dashboard/admin/first-timers/funnel";
 
 /**
- * The newcomer's journey in order — first visit, second, third, settled in —
- * followed by the two ways it can stall, which are worth seeing rather than
- * leaving off the chart.
+ * The newcomer's journey in order (first visit, second, third, settled in),
+ * then the way it can stop, which is worth seeing rather than leaving off the
+ * chart. These are the first-timer pipeline's five statuses, so the funnel's
+ * counts are the same ones the Follow Up page shows.
  */
 export const FUNNEL_STAGES: {
-  status: MasterListStatus;
+  status: PipelineStatus;
   label: string;
   note: string;
   swatch: string;
@@ -18,7 +19,7 @@ export const FUNNEL_STAGES: {
   {
     status: "FIRST_TIMER",
     label: "First timer",
-    note: "Here once — the church has just met them",
+    note: "Here once. The church has just met them",
     swatch: "bg-violet-500",
     bar: "bg-gradient-to-r from-violet-500 to-violet-400",
   },
@@ -32,28 +33,21 @@ export const FUNNEL_STAGES: {
   {
     status: "THIRD_TIMER",
     label: "Third timer",
-    note: "Three visits in — nearly settled",
+    note: "Three visits or more, not yet integrated",
     swatch: "bg-sky-500",
     bar: "bg-gradient-to-r from-sky-500 to-sky-400",
   },
   {
     status: "INTEGRATED",
     label: "Integrated",
-    note: "Settled in — the Integration Team watches over them",
+    note: "Settled in, and approved by their unit lead",
     swatch: "bg-emerald-500",
     bar: "bg-gradient-to-r from-emerald-500 to-emerald-400",
   },
   {
-    status: "AWAY",
-    label: "Away",
-    note: "Stopped coming — somebody should reach them",
-    swatch: "bg-amber-500",
-    bar: "bg-gradient-to-r from-amber-500 to-amber-400",
-  },
-  {
     status: "OPTED_OUT",
     label: "Opted out",
-    note: "Asked not to be contacted for now",
+    note: "Asked not to be followed up, or their account was deactivated",
     swatch: "bg-gray-400",
     bar: "bg-gradient-to-r from-gray-400 to-gray-300",
   },

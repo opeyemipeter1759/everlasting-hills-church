@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { FUNNEL_BASE, FUNNEL_STAGES } from "@/lib/funnel-stages";
 import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
-import type { MasterListStatus } from "@/lib/api/follow-up-pipeline";
+import type { PipelineStatus } from "@/lib/api/pipeline";
 
 /** Every stage as a chip, so moving between them is one click and the URL says which. */
-export function FunnelStageTabs({ active }: { active: MasterListStatus | null }) {
+export function FunnelStageTabs({ active }: { active: PipelineStatus | null }) {
   const { data: counts, isLoading } = useFollowUpCounts();
 
   return (

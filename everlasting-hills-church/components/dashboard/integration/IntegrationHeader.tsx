@@ -3,8 +3,7 @@
 import { CalendarDays, HeartHandshake } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMe } from "@/lib/api";
-import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
-import type { MasterListPage } from "@/lib/api/follow-up-pipeline";
+import type { PipelinePage } from "@/lib/api/pipeline";
 import { RefreshButton } from "@/components/dashboard/follow-up/header-parts";
 import { IntegrationStats } from "./IntegrationStats";
 
@@ -15,22 +14,30 @@ function greeting(): string {
   return "Good evening";
 }
 
-/** Who this team is and what is waiting for them today. */
-export function IntegrationHeader({ absence }: { absence?: MasterListPage["meta"] }) {
+/** What the open list says, in a sentence. Its figures are the list's own counts. */
+function summary(page: PipelinePage, serviceName: string | null): string {
+  const integrated = page.counts.INTEGRATED;
+  if (serviceName) {
+    const missed = page.counts.all;
+    if (missed === 0) return `Nobody here missed ${serviceName}.`;
+    return `${missed} ${missed === 1 ? "person" : "people"} missed ${serviceName}, ${integrated} of them integrated.`;
+  }
+  if (integrated === 0) return "Nobody is integrated yet.";
+  return `${integrated} ${integrated === 1 ? "person is" : "people are"} integrated. Keep an eye out for anyone who stops coming.`;
+}
+
+/** Who this team is, and what the list below says today. */
+export function IntegrationHeader({ page, serviceName }: { page?: PipelinePage; serviceName: string | null }) {
   const { data: me } = useMe();
   const queryClient = useQueryClient();
-  const { data: counts, isLoading, isFetching } = useFollowUpCounts();
   const firstName = me?.member?.firstName ?? null;
-  const away = counts?.byStatus.AWAY ?? 0;
   const today = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
 
   return (
     <section className="space-y-3">
-      <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#87102C] via-[#9B1435] to-[#5E0A1E] px-6 py-7 text-white shadow-xl shadow-[#87102C]/25 sm:px-8">
+      <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#87102C] via-[#9B1435] to-[#5E0A1E] px-5 py-6 text-white shadow-xl shadow-[#87102C]/25 sm:px-8 sm:py-7">
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-        <div aria-hidden="true" className="pointer-events-none absolute -bottom-28 -left-16 h-56 w-56 rounded-full bg-[#FFB3C1]/10 blur-3xl" />
-
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
+        <div className="relative flex items-start justify-between gap-4">
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-xs font-medium text-white/60">
               <CalendarDays size={13} aria-hidden="true" />
@@ -42,28 +49,16 @@ export function IntegrationHeader({ absence }: { absence?: MasterListPage["meta"
               </span>
               Integration Team
             </h1>
-            <p className="mt-2 flex max-w-md flex-wrap items-center gap-x-1 text-sm text-white/70">
-              {firstName ? `${greeting()}, ${firstName}.` : null}
-              {isLoading ? (
-                <span className="inline-block h-4 w-56 animate-pulse rounded bg-white/20" />
-              ) : away > 0 ? (
-                <span>
-                  {away} {away === 1 ? "member has" : "members have"} stopped coming. Nobody should slip away quietly.
-                </span>
-              ) : (
-                <span>Nobody has slipped away. Everyone integrated is still being seen.</span>
-              )}
+            <p className="mt-2 max-w-md text-sm text-white/75">
+              {firstName ? `${greeting()}, ${firstName}. ` : null}
+              {page ? summary(page, serviceName) : <span className="inline-block h-4 w-48 animate-pulse rounded bg-white/20 align-middle" />}
             </p>
           </div>
-
-          <RefreshButton
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["follow-up"] })}
-            busy={isFetching}
-          />
+          <RefreshButton onClick={() => queryClient.invalidateQueries({ queryKey: ["follow-up"] })} busy={false} />
         </div>
       </header>
 
-      <IntegrationStats absence={absence} />
+      <IntegrationStats page={page} serviceName={serviceName} />
     </section>
   );
 }

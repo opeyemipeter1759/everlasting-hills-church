@@ -1,77 +1,13 @@
-import { serverApi } from "@/lib/api/server";
-import FirstTimersClient, {
-  type VisitorRow,
-} from "@/components/dashboard/admin/FirstTimersClient";
+import FirstTimersClient from "@/components/dashboard/admin/FirstTimersClient";
 
-export const metadata = { title: "First Timers — Dashboard" };
+export const metadata = { title: "First Timers | Dashboard" };
 export const dynamic = "force-dynamic";
 
-interface VisitorApi {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-  phone: string | null;
-  gender: string | null;
-  attendanceType: string | null;
-  membershipInterest: string | null;
-  howDidYouLearn: string | null;
-  locatedInIbadan: boolean | null;
-  bornAgain: string | null;
-  occupation: string | null;
-  submittedAt: string;
-  invitedBy?: string | null;
-  dateOfBirth?: string | null;
-  address?: string | null;
-  whatsappInterest?: boolean | null;
-  whatsappAddedAt?: string | null;
-  serviceExperience?: string | null;
-  prayerPoint?: string | null;
-}
-
-async function safeGet<T>(path: string): Promise<T | null> {
-  try {
-    return await serverApi.get<T>(path, { cache: "no-store" });
-  } catch {
-    return null;
-  }
-}
-
-export default async function FirstTimersPage() {
-  const [visitorsRaw, onlineRaw] = await Promise.all([
-    safeGet<VisitorApi[]>("/visitors?limit=200"),
-    // This endpoint paginates, so after serverApi strips the outer envelope the
-    // rows are still one level down in `data`, not a bare array.
-    safeGet<{ data: { email: string }[] }>("/online-attendance?take=200"),
-  ]);
-
-  const onlineEmails = new Set(
-    (onlineRaw?.data ?? []).map((r) => r.email.toLowerCase()),
-  );
-
-  const visitors: VisitorRow[] = (visitorsRaw ?? []).map((v) => ({
-    id: v.id,
-    firstName: v.firstName,
-    lastName: v.lastName,
-    email: v.email,
-    phone: v.phone,
-    gender: v.gender,
-    attendanceType: v.attendanceType,
-    membershipInterest: v.membershipInterest,
-    howDidYouLearn: v.howDidYouLearn,
-    locatedInIbadan: v.locatedInIbadan,
-    bornAgain: v.bornAgain,
-    occupation: v.occupation,
-    submittedAt: v.submittedAt,
-    invitedBy: v.invitedBy ?? null,
-    dateOfBirth: v.dateOfBirth ?? null,
-    address: v.address ?? null,
-    whatsappInterest: v.whatsappInterest ?? null,
-    whatsappAddedAt: v.whatsappAddedAt ?? null,
-    hasOnlineCheckIn: v.email ? onlineEmails.has(v.email.toLowerCase()) : false,
-    serviceExperience: v.serviceExperience ?? null,
-    prayerPoint: v.prayerPoint ?? null,
-  }));
-
-  return <FirstTimersClient visitors={visitors} />;
+/**
+ * The admin First Timers page. The list, its tabs and the cards are paged and
+ * counted by the API (GET /visitors/first-timers), so the page itself only
+ * renders the client.
+ */
+export default function FirstTimersPage() {
+  return <FirstTimersClient />;
 }

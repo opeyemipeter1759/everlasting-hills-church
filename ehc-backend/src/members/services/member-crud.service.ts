@@ -7,6 +7,7 @@ import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import type { UpdateMemberInput } from '../members.types';
 import { evangelismTally } from '../../evangelism/evangelism-tally';
 import { leaveServiceTeams } from '../leave-service-teams';
+import { inactiveAmong, optOutDeactivated, restoreReactivated } from '../../follow-up/deactivation-stage';
 
 /** Admin CRUD on a single member: read, edit core fields, change status. */
 @Injectable()
@@ -95,6 +96,8 @@ export class MemberCrudService {
     if (!member) throw new NotFoundException('Member not found');
 
     const { updated, leadsEnded } = await this.prisma.$transaction(async (tx) => {
+      // Read before the update: only someone coming back from inactive has a follow-up to restore.
+      const returning = status === MemberStatus.ACTIVE ? await inactiveAmong(tx, this.tenantId, [member.id]) : [];
       const row = await tx.member.update({
         where: { id: member.id },
         data: {
@@ -105,6 +108,9 @@ export class MemberCrudService {
         select: { id: true, status: true },
       });
       const ended = status === MemberStatus.ACTIVE ? [] : await leaveServiceTeams(tx, this.tenantId, [member.id], actorId);
+      // Their follow-up moves with the account, in this same transaction.
+      if (status === MemberStatus.ACTIVE) await restoreReactivated(tx, this.tenantId, returning, actorId);
+      else await optOutDeactivated(tx, this.tenantId, [member.id], actorId);
       return { updated: row, leadsEnded: ended };
     });
     leadsEnded.forEach((profileId) => this.effectiveRoles.invalidate(profileId));

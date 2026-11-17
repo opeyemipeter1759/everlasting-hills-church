@@ -6,9 +6,10 @@ import type { PrismaService } from '../prisma/prisma.service';
  * yet, and those whose account was made from their first-timer form and still
  * exists. A form whose account was later deleted no longer counts; neither does
  * an account that never came through the form (the Super Admin login, say).
+ * An archived form never counts.
  *
- * The admin First Timers page, the admin dashboard's onsite/online split and
- * the Follow Up page all count from this, so their totals agree.
+ * This is the same set the first-timer pipeline reads (src/pipeline), so the
+ * admin dashboard's onsite/online split agrees with the Follow Up totals.
  */
 export async function visitorsOnRecord(prisma: PrismaService, tenantId: string): Promise<Prisma.VisitorWhereInput> {
   const converted = await prisma.visitor.findMany({
@@ -19,7 +20,7 @@ export async function visitorsOnRecord(prisma: PrismaService, tenantId: string):
   const existing = ids.length
     ? await prisma.member.findMany({ where: { tenantId, id: { in: ids } }, select: { id: true } })
     : [];
-  return { tenantId, OR: [{ convertedAt: null }, { convertedToMemberId: { in: existing.map((m) => m.id) } }] };
+  return { tenantId, archivedAt: null, OR: [{ convertedAt: null }, { convertedToMemberId: { in: existing.map((m) => m.id) } }] };
 }
 
 export async function countVisitorsOnRecord(prisma: PrismaService, tenantId: string): Promise<number> {

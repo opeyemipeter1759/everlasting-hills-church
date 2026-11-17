@@ -52,7 +52,7 @@ function StatCard({
   );
 }
 
-/** The four figures the team watches, stated plainly. */
+/** The four figures the team watches, stated plainly. Every number is the API's, from the first-timer pipeline. */
 export function StatCards({ summary }: { summary: FollowUpSummary }) {
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -70,7 +70,7 @@ export function StatCards({ summary }: { summary: FollowUpSummary }) {
         tone="burgundy"
         value={summary.assignedToMe}
         label="Assigned to you"
-        note="Yours to reach — everyone sees their own"
+        note="Yours to reach. Everyone sees their own"
       />
       <StatCard
         loading={summary.isLoading}
@@ -78,7 +78,7 @@ export function StatCards({ summary }: { summary: FollowUpSummary }) {
         tone="emerald"
         value={summary.integrated}
         label="Integrated"
-        note="Settled in — now the Integration Team's to watch"
+        note="Settled in, and approved by their unit lead"
       />
       <StatCard
         loading={summary.isLoading}

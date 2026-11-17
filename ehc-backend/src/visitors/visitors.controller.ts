@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -9,6 +9,30 @@ import { UpdateVisitorDto } from './dto/update-visitor.dto';
 import { WhatsappCommunityDto } from './dto/whatsapp-community.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
+import { PipelineRepository } from '../pipeline/pipeline.repository';
+import type { FirstTimerAdminFilters } from './first-timer-admin-list';
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** The admin First Timers page's query string, checked: a bad value is refused, not ignored. */
+export function parseFirstTimerFilters(q: Record<string, string | undefined>): FirstTimerAdminFilters {
+  const year = q.year ? Number(q.year) : undefined;
+  const month = q.month ? Number(q.month) : undefined;
+  if (year !== undefined && (!Number.isInteger(year) || year < 2000 || year > 2100)) throw new BadRequestException('Bad year');
+  if (month !== undefined && (!Number.isInteger(month) || month < 1 || month > 12 || !year)) throw new BadRequestException('Bad month');
+  if (q.interest && q.interest !== 'yes' && q.interest !== 'no') throw new BadRequestException('Bad interest');
+  for (const day of [q.from, q.to]) if (day && !DAY.test(day)) throw new BadRequestException('Dates are YYYY-MM-DD');
+  return {
+    search: q.search || undefined,
+    interest: (q.interest as FirstTimerAdminFilters['interest']) || undefined,
+    from: q.from || undefined,
+    to: q.to || undefined,
+    year,
+    month,
+    take: q.take ? Number(q.take) : undefined,
+    skip: q.skip ? Number(q.skip) : undefined,
+  };
+}
 
 /**
  * Admin visitor endpoints. ADMIN+ via class-level @Roles.
@@ -25,6 +49,7 @@ export class VisitorsController {
   constructor(
     private readonly visitorsService: VisitorsService,
     private readonly bulkImportService: VisitorBulkImportService,
+    private readonly pipeline: PipelineRepository,
   ) {}
 
   @Get()
@@ -37,6 +62,31 @@ export class VisitorsController {
       limit: limit ? Number(limit) : undefined,
       search,
     });
+  }
+
+  /**
+   * The admin First Timers page: a page of forms nobody has made an account
+   * from yet, the tab counts beside it, and the cards above it, all counted
+   * on the server. `onRecord` is the first-timer pipeline's own total for the
+   * same month and year, the figure the Follow Up page shows.
+   */
+  @Get('first-timers')
+  @ApiOperation({ summary: 'A page of first-timer forms with the counts beside it (ADMIN+)' })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'interest', required: false, enum: ['yes', 'no'] })
+  @ApiQuery({ name: 'from', required: false, description: 'YYYY-MM-DD, the day the form came in' })
+  @ApiQuery({ name: 'to', required: false })
+  @ApiQuery({ name: 'year', required: false })
+  @ApiQuery({ name: 'month', required: false })
+  @ApiQuery({ name: 'take', required: false })
+  @ApiQuery({ name: 'skip', required: false })
+  async firstTimers(@Query() query: Record<string, string | undefined>) {
+    const filters = parseFirstTimerFilters(query);
+    const [page, pipeline] = await Promise.all([
+      this.visitorsService.firstTimers(filters),
+      this.pipeline.list({ year: filters.year, month: filters.month, take: 1 }),
+    ]);
+    return { ...page, onRecord: pipeline.counts.all };
   }
 
   @Get('count')
@@ -80,7 +130,7 @@ export class VisitorsController {
   // Reading and correcting one first-timer's record is follow-up work, not
   // administration: unit leads and heads of department do it from the Master
   // List. HOD is listed explicitly because the guard treats it as lateral, so
-  // it never inherits UNIT_LEAD routes. Deleting a record stays ADMIN+.
+  // it never inherits UNIT_LEAD routes. Archiving a record stays ADMIN+.
   @Get(':id')
   @Roles(Role.UNIT_LEAD, Role.HOD)
   @ApiOperation({ summary: 'Get visitor by id (UNIT_LEAD/HOD+)' })
@@ -96,13 +146,16 @@ export class VisitorsController {
     return this.visitorsService.update(id, body);
   }
 
+  /**
+   * First-timers are never deleted. DELETE archives the record: it drops out
+   * of every list and count, the Follow Up conversation and history stay, and
+   * an audit row records who did it. Admin, Admin Head, Pastor and Super Admin
+   * only (the class-level ADMIN gate); the follow-up team gets 403.
+   */
   @Delete(':id')
-  @ApiOperation({
-    summary: 'Delete a visitor record. Refused with 409 while their Follow Up chat has messages, unless force=true (which deletes the chat too)',
-  })
-  @ApiQuery({ name: 'force', required: false, type: Boolean })
-  async delete(@Param('id') id: string, @Query('force') force?: string) {
-    return this.visitorsService.delete(id, force === 'true');
+  @ApiOperation({ summary: 'Archive a first-timer record; nothing is deleted (ADMIN+)' })
+  async archive(@Param('id') id: string, @CurrentUser() actor: AuthUser) {
+    return this.visitorsService.archive(id, actor);
   }
 
   @Post('import')

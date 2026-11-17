@@ -30,6 +30,7 @@ export class FollowUpPickersService {
         where: {
           tenantId: this.tenantId,
           convertedAt: null,
+          archivedAt: null,
           OR: [
             { firstName: { contains: query, mode: 'insensitive' } },
             { lastName: { contains: query, mode: 'insensitive' } },

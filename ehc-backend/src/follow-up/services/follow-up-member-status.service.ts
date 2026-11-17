@@ -7,6 +7,7 @@ import type { AuthUser } from '../../auth/types/auth-user';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import { leaveServiceTeams } from '../../members/leave-service-teams';
 import { ENTRY_INCLUDE } from '../follow-up.types';
+import { inactiveAmong, optOutDeactivated, restoreReactivated } from '../deactivation-stage';
 import { FollowUpAuthService } from './follow-up-auth.service';
 import { FollowUpEntryMapperService } from './follow-up-entry-mapper.service';
 import { FollowUpAuditService } from './follow-up-audit.service';
@@ -44,7 +45,9 @@ export class FollowUpMemberStatusService {
     const leadsEnded = await this.prisma.$transaction(async (tx) => {
       await tx.member.update({ where: { id: memberId }, data: { status: MemberStatus.OPTED_OUT } });
       // Opting out deactivates them, and a deactivated member serves on no team.
-      return leaveServiceTeams(tx, this.tenantId, [memberId], actor.userId);
+      const ended = await leaveServiceTeams(tx, this.tenantId, [memberId], actor.userId);
+      await optOutDeactivated(tx, this.tenantId, [memberId], actor.userId);
+      return ended;
     });
     leadsEnded.forEach((profileId) => this.effectiveRoles.invalidate(profileId));
     await this.audit.write({ action: 'OPT_OUT', entity: 'Member', entityId: memberId, actorId: actor.userId });
@@ -64,7 +67,12 @@ export class FollowUpMemberStatusService {
       throw new BadRequestException('Only a follow-up entry linked to a member can be restored');
     }
 
-    await this.prisma.member.update({ where: { id: entry.memberId }, data: { status: MemberStatus.ACTIVE } });
+    const memberId = entry.memberId;
+    await this.prisma.$transaction(async (tx) => {
+      const returning = await inactiveAmong(tx, this.tenantId, [memberId]);
+      await tx.member.update({ where: { id: memberId }, data: { status: MemberStatus.ACTIVE } });
+      await restoreReactivated(tx, this.tenantId, returning, actor.userId);
+    });
     await this.audit.write({ action: 'RESTORE', entity: 'Member', entityId: entry.memberId, actorId: actor.userId });
 
     const updated = await this.prisma.followUpEntry.findFirstOrThrow({ where: { id }, include: ENTRY_INCLUDE });

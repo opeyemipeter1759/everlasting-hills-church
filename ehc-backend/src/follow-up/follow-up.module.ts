@@ -9,6 +9,8 @@ import { FirstTimerVisitsModule } from './visits/first-timer-visits.module';
 import { FollowUpServiceReportsController } from './follow-up-service-reports.controller';
 import { FollowUpController } from './follow-up.controller';
 import { FollowUpMemberStatusController } from './follow-up-member-status.controller';
+import { FollowUpStageController } from './follow-up-stage.controller';
+import { FollowUpStageService } from './services/follow-up-stage.service';
 import { FollowUpAuthService } from './services/follow-up-auth.service';
 import { FollowUpAssignableService } from './services/follow-up-assignable.service';
 import { FollowUpMasterListService } from './services/follow-up-master-list.service';
@@ -49,7 +51,7 @@ import { FollowUpRemindersService } from './services/follow-up-reminders.service
   // its `/follow-up/service-reports` (history) route has the same single-segment
   // shape as FollowUpController's `/follow-up/:id`, and Express/Nest match routes in
   // registration order, so the more specific literal path must come first.
-  controllers: [FollowUpServiceReportsController, FollowUpPipelineController, FollowUpController, FollowUpMemberStatusController],
+  controllers: [FollowUpServiceReportsController, FollowUpPipelineController, FollowUpStageController, FollowUpController, FollowUpMemberStatusController],
   providers: [
     FollowUpAuthService,
     FollowUpAssignableService,
@@ -84,6 +86,7 @@ import { FollowUpRemindersService } from './services/follow-up-reminders.service
     FollowUpServiceReportService,
     FollowUpGamificationService,
     FollowUpRemindersService,
+    FollowUpStageService,
   ],
   // SchedulingService (scheduling.module.ts) runs the daily auto-surface job
   // and the reminder/escalation sweep.

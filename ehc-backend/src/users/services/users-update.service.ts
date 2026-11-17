@@ -7,6 +7,7 @@ import type { Env } from '../../config/env.validation';
 import type { AuthUser } from '../../auth/types/auth-user';
 import { EffectiveRolesService } from '../../auth/effective-roles.service';
 import { leaveServiceTeams } from '../../members/leave-service-teams';
+import { optOutDeactivated } from '../../follow-up/deactivation-stage';
 import { GRANTED_ROLES } from '../users.types';
 import type { UpdateUserDto, UpdateUserRoleDto } from '../dto/user.dto';
 import { UsersAuthService } from './users-auth.service';
@@ -107,11 +108,13 @@ export class UsersUpdateService {
     }
 
     const memberId = target.Member.id;
-    const { member, leadsEnded } = await this.prisma.$transaction(async (tx) => ({
-      member: await tx.member.update({ where: { id: memberId }, data: { status: 'INACTIVE' } }),
-      // A deactivated member serves on no team.
-      leadsEnded: await leaveServiceTeams(tx, this.tenantId, [memberId], actor.userId),
-    }));
+    const { member, leadsEnded } = await this.prisma.$transaction(async (tx) => {
+      const row = await tx.member.update({ where: { id: memberId }, data: { status: 'INACTIVE' } });
+      // A deactivated member serves on no team, and their follow-up is opted out.
+      const ended = await leaveServiceTeams(tx, this.tenantId, [memberId], actor.userId);
+      await optOutDeactivated(tx, this.tenantId, [memberId], actor.userId);
+      return { member: row, leadsEnded: ended };
+    });
     leadsEnded.forEach((id) => this.effectiveRoles.invalidate(id));
     return member;
   }

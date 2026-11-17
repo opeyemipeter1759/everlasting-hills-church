@@ -7,9 +7,9 @@ import { useFollowUpCounts } from "@/lib/api/follow-up-counts";
 import { FUNNEL_BASE, FUNNEL_STAGES } from "@/lib/funnel-stages";
 
 /**
- * Where every newcomer stands, counted the same way the Follow Up and
- * Integration pages count them — first visit through to settled in, with the
- * two ends of the story (away, opted out) stated rather than hidden.
+ * Where every first timer stands, from the first-timer pipeline the Follow Up
+ * and Integration pages read: first visit through to settled in, with those
+ * who opted out stated rather than hidden.
  *
  * Each row opens the list of exactly those people.
  */

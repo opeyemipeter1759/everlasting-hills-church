@@ -1,23 +1,19 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   useFollowUpMasterList,
-  useFollowUpPerson,
   type MasterListPage,
   type MasterListQuery,
   type MasterListRow,
 } from "@/lib/api/follow-up-pipeline";
 import { MasterListTable } from "./MasterListTable";
 import { MasterListFilters } from "./MasterListFilters";
-import { BulkStatusBar } from "./BulkStatusBar";
 import { useMasterListEditing } from "./useMasterListEditing";
-import { useMasterSelection } from "./useMasterSelection";
-import { useFollowUpLeadership } from "./useFollowUpLeadership";
 import { Pagination } from "@/components/ui/navigation/Pagination";
 import { Select } from "@/components/ui/select";
 import { PersonDrawer } from "./PersonDrawer";
 import EditVisitorModal from "@/components/dashboard/admin/FirstTimer/EditVisitorModal";
+import { useOpenLinkedThread } from "./MasterListNotes";
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
@@ -41,8 +37,6 @@ export default function MasterList({
 }) {
   const [query, setQuery] = useState<MasterListQuery>(initialQuery);
   const editing = useMasterListEditing();
-  const selection = useMasterSelection();
-  const { canRunUnit } = useFollowUpLeadership();
   const [selected, setSelected] = useState<MasterListRow | null>(null);
   useOpenLinkedThread(showFilters, setSelected);
   const [page, setPage] = useState(0);
@@ -83,17 +77,13 @@ export default function MasterList({
         />
       )}
 
-      {canRunUnit && (
-        <BulkStatusBar people={selection.people} onDone={selection.clear} onClear={selection.clear} />
-      )}
-
       <MasterListTable
         rows={rows}
         isLoading={isLoading}
         canEdit={editing.canEdit}
         onEdit={editing.open}
         onOpen={setSelected}
-        selection={canRunUnit ? selection : null}
+        selection={null}
         showAbsence={showAbsence}
       />
 
@@ -128,41 +118,4 @@ export default function MasterList({
       )}
     </div>
   );
-}
-
-/** "MEMBER:abc" or "VISITOR:abc" from an alert's link, else null. */
-function parseThread(value: string | null): { kind: "MEMBER" | "VISITOR"; id: string } | null {
-  const match = value?.match(/^(MEMBER|VISITOR):(.+)$/);
-  return match ? { kind: match[1] as "MEMBER" | "VISITOR", id: match[2] } : null;
-}
-
-/**
- * New-activity emails and bell alerts link here with `?thread=KIND:id`: open
- * that person's drawer — their conversation — straight away, then take the
- * parameter off the address so closing it doesn't open it again. Only the main
- * list does this (`enabled`), so a board never opens two drawers.
- */
-function useOpenLinkedThread(enabled: boolean, open: (row: MasterListRow) => void) {
-  const params = useSearchParams();
-  const router = useRouter();
-  const pathname = usePathname();
-  const linked = enabled ? parseThread(params?.get("thread") ?? null) : null;
-  const { data: person } = useFollowUpPerson(linked);
-  const done = useRef(false);
-
-  useEffect(() => {
-    if (!person || done.current) return;
-    done.current = true;
-    open({
-      id: person.id,
-      kind: person.kind,
-      name: person.name,
-      photoUrl: person.photoUrl,
-      assignedTo: person.assignedTo,
-      status: person.status,
-      hasAccount: person.hasAccount,
-      attended: person.attended,
-    });
-    router.replace(pathname ?? "/", { scroll: false });
-  }, [person, open, router, pathname]);
 }

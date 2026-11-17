@@ -1,17 +1,23 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
+import type { AuthUser } from '../auth/types/auth-user';
+import { normalizeNigerianPhone } from '../common/phone.util';
 import type { UpdateVisitorDto } from './dto/update-visitor.dto';
 import { visitorsOnRecord } from './visitors-on-record';
+import { firstTimerAdminPage, type FirstTimerAdminFilters } from './first-timer-admin-list';
 
 /**
- * Visitor queries + admin edit/delete for first-timer records.
+ * Visitor queries + admin edit/archive for first-timer records.
  *
  * Visitor records are CREATED by FormsService (first-timer registration).
  * Conversion to a Member happens via MembersService.convertVisitorToMember —
  * this module covers everything else: listing, editing corrections
- * (misspelled names, wrong phone numbers), and removing bad/duplicate rows.
+ * (misspelled names, wrong phone numbers), and archiving bad/duplicate rows.
+ * First-timers are never deleted: an archived one drops out of every list
+ * and count, and the audit log says who archived them.
  */
 @Injectable()
 export class VisitorsService {
@@ -24,9 +30,9 @@ export class VisitorsService {
 
   private readonly prisma: PrismaService;
 
-  /** Only unconverted visitors — once someone has a member account, they drop off this list. */
+  /** Only unconverted visitors: once someone has a member account, they drop off this list. Archived ones never show. */
   async list(opts: { limit?: number; search?: string } = {}) {
-    const where: Record<string, unknown> = { tenantId: this.tenantId, convertedAt: null };
+    const where: Record<string, unknown> = { tenantId: this.tenantId, convertedAt: null, archivedAt: null };
     if (opts.search) {
       where.OR = [
         { firstName: { contains: opts.search, mode: 'insensitive' } },
@@ -59,7 +65,7 @@ export class VisitorsService {
       submittedAt: true,
       whatsappAddedAt: true,
     };
-    const where = { tenantId: this.tenantId, whatsappInterest: true };
+    const where = { tenantId: this.tenantId, archivedAt: null, whatsappInterest: true };
     const [waiting, added] = await Promise.all([
       this.prisma.visitor.findMany({
         where: { ...where, whatsappAddedAt: null },
@@ -99,7 +105,12 @@ export class VisitorsService {
   }
 
   async count() {
-    return this.prisma.visitor.count({ where: { tenantId: this.tenantId } });
+    return this.prisma.visitor.count({ where: { tenantId: this.tenantId, archivedAt: null } });
+  }
+
+  /** The admin First Timers page: a page of forms and the counts beside it, from one query. */
+  async firstTimers(filters: FirstTimerAdminFilters) {
+    return firstTimerAdminPage(this.prisma, this.tenantId, filters);
   }
 
   async update(id: string, dto: UpdateVisitorDto) {
@@ -112,39 +123,47 @@ export class VisitorsService {
       });
       if (clash) throw new ConflictException(`Another visitor already uses email "${dto.email}"`);
     }
-    if (dto.phone) {
+    // Stored as 234XXXXXXXXXX, the form WhatsApp links need, however it was typed.
+    const phone = dto.phone === undefined ? undefined : normalizeNigerianPhone(dto.phone);
+    if (phone) {
       const clash = await this.prisma.visitor.findFirst({
-        where: { tenantId: this.tenantId, phone: dto.phone, id: { not: id } },
+        where: { tenantId: this.tenantId, phone, id: { not: id } },
         select: { id: true },
       });
-      if (clash) throw new ConflictException(`Another visitor already uses phone "${dto.phone}"`);
+      if (clash) throw new ConflictException(`Another visitor already uses phone "${phone}"`);
     }
 
-    return this.prisma.visitor.update({ where: { id }, data: dto });
+    return this.prisma.visitor.update({ where: { id }, data: { ...dto, ...(phone !== undefined ? { phone } : {}) } });
   }
 
   /**
-   * Deletes a first-timer. Their Follow Up chat is keyed to this record with no
-   * foreign key, so deleting it would leave the conversation unreachable: refuse
-   * while there are messages, and only with `force` delete the chat as well.
+   * Archives a first-timer instead of deleting them: they drop out of every
+   * list and count, while their record, their Follow Up conversation and their
+   * history stay, and the audit log says who archived them and when.
    */
-  async delete(id: string, force = false) {
-    const thread = { tenantId: this.tenantId, subjectKind: 'VISITOR', subjectId: id };
-    const messages = await this.prisma.followUpNote.count({ where: { ...thread, deletedAt: null } });
-    if (messages > 0 && !force) {
-      throw new ConflictException({
-        message: `This first-timer has ${messages} Follow Up message${messages === 1 ? '' : 's'}. Deleting them deletes that conversation too.`,
-        error: 'HAS_FOLLOW_UP_CHAT',
-      });
-    }
-    const [, , , result] = await this.prisma.$transaction([
-      this.prisma.followUpNote.deleteMany({ where: thread }),
-      this.prisma.followUpStatusChange.deleteMany({ where: thread }),
-      this.prisma.followUpNoteRead.deleteMany({ where: thread }),
-      this.prisma.visitor.deleteMany({ where: { id, tenantId: this.tenantId } }),
+  async archive(id: string, actor: Pick<AuthUser, 'userId' | 'profileId'>) {
+    const visitor = await this.prisma.visitor.findFirst({
+      where: { id, tenantId: this.tenantId, archivedAt: null },
+      select: { id: true, firstName: true, lastName: true, phone: true, email: true },
+    });
+    if (!visitor) throw new NotFoundException('Visitor not found');
+    const archivedAt = new Date();
+    await this.prisma.$transaction([
+      this.prisma.visitor.update({ where: { id }, data: { archivedAt, archivedById: actor.profileId } }),
+      this.prisma.auditLog.create({
+        data: {
+          id: randomUUID(),
+          tenantId: this.tenantId,
+          actorId: actor.userId,
+          action: 'ARCHIVE',
+          entity: 'Visitor',
+          entityId: id,
+          before: { firstName: visitor.firstName, lastName: visitor.lastName, phone: visitor.phone, email: visitor.email },
+          after: { archivedAt: archivedAt.toISOString(), archivedById: actor.profileId },
+        },
+      }),
     ]);
-    if (result.count === 0) throw new NotFoundException('Visitor not found');
-    return { id, deleted: true };
+    return { id, archived: true, archivedAt: archivedAt.toISOString() };
   }
 
   /** First timers on record (the same total the Follow Up page shows), broken

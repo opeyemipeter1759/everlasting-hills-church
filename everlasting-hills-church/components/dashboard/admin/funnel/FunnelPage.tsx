@@ -3,22 +3,21 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Filter } from "lucide-react";
-import MasterList from "@/components/dashboard/follow-up/MasterList";
+import MasterListPipeline from "@/components/dashboard/follow-up/MasterListPipeline";
 import { stageFor } from "@/lib/funnel-stages";
-import type { MasterListStatus } from "@/lib/api/follow-up-pipeline";
 import { FunnelStageTabs } from "./FunnelStageTabs";
 
 /**
  * Everyone in the funnel, in full.
  *
  * The dashboard card says how many are at each stage; this says who they are.
- * It is the same table the Follow Up team works from — open anyone for their
- * details, their history and the team's conversation about them.
+ * It is the first-timer pipeline the Follow Up team works from: open anyone
+ * for their profile, or Notes for the team's conversation about them.
  */
 export default function FunnelPage() {
   const params = useSearchParams();
   const stage = stageFor(params?.get("status"));
-  const status = (stage?.status ?? "") as MasterListStatus | "";
+  const status = stage?.status;
 
   return (
     <div className="space-y-5 md:px-2">
@@ -38,14 +37,14 @@ export default function FunnelPage() {
           {stage ? stage.label : "Newcomer funnel"}
         </h1>
         <p className="mt-1.5 text-sm text-gray-500 dark:text-white/45">
-          {stage ? stage.note : "Everyone the church is responsible for, wherever they have got to."}
+          {stage ? stage.note : "Every first timer on record, wherever they have got to."}
         </p>
       </div>
 
       <FunnelStageTabs active={stage?.status ?? null} />
 
-      {/* `key` remounts the table when the stage changes, so paging starts again at one. */}
-      <MasterList key={status || "all"} fixed={status ? { status } : undefined} />
+      {/* `key` remounts the list when the stage changes, so paging starts again at one. */}
+      <MasterListPipeline key={status ?? "all"} fixed={status ? { status } : {}} />
     </div>
   );
 }

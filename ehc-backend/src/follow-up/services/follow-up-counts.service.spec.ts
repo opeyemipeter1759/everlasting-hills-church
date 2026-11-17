@@ -1,116 +1,112 @@
 import { FollowUpCountsService } from './follow-up-counts.service';
-import type { FollowUpRollService, RollRow } from './follow-up-roll.service';
 import type { FollowUpNoteActivityService } from './follow-up-note-activity.service';
+import type { PipelineRepository } from '../../pipeline/pipeline.repository';
+import type { PipelineFilters, PipelinePage, PipelineStatus } from '../../pipeline/pipeline.types';
+import { PIPELINE_STATUSES } from '../../pipeline/pipeline.types';
 import type { AuthUser } from '../../auth/types/auth-user';
 
-function row(over: Partial<RollRow>): RollRow {
-  return {
-    id: 'x',
-    kind: 'MEMBER',
-    name: 'Someone',
-    photoUrl: null,
-    assignedTo: null,
-    integrationAssignedTo: null,
-    status: 'FIRST_TIMER',
-    statusAwaitingApproval: null,
-    hasAccount: true,
-    attended: 0,
-    since: '2026-01-01T00:00:00.000Z',
-    latestEntryAt: null,
-    ...over,
-  };
+interface Person {
+  id: string;
+  status: PipelineStatus;
+  assigneeId: string | null;
 }
 
-function makeService(rows: RollRow[], activeThreads: string[] = []) {
-  const roll = { everyone: jest.fn().mockResolvedValue(rows) } as unknown as FollowUpRollService;
-  const activity = { activeSince: jest.fn().mockResolvedValue(new Set(activeThreads)) } as unknown as FollowUpNoteActivityService;
+/**
+ * A stand-in pipeline that filters a fixed list the way the SQL does, and
+ * returns rows, total and counts together, so the service is checked against
+ * the same contract the real repository keeps.
+ */
+function fakePipeline(people: Person[]) {
+  const list = jest.fn(async (f: PipelineFilters): Promise<PipelinePage> => {
+    const matches = people.filter(
+      (p) =>
+        (f.assigneeId === undefined || (f.assigneeId === 'none' ? p.assigneeId === null : p.assigneeId === f.assigneeId)) &&
+        (f.visitorIds === undefined || f.visitorIds.includes(p.id)),
+    );
+    const counts = Object.fromEntries(PIPELINE_STATUSES.map((s) => [s, matches.filter((p) => p.status === s).length]));
+    const shown = matches.filter((p) => !f.status || p.status === f.status);
+    return {
+      rows: shown.slice(0, f.take ?? 50) as never,
+      total: shown.length,
+      counts: { ...(counts as Record<PipelineStatus, number>), all: matches.length },
+    };
+  });
+  return { list } as unknown as PipelineRepository & { list: typeof list };
+}
+
+function makeService(people: Person[], opts: { weekIds?: string[]; active?: string[]; converted?: Record<string, string> } = {}) {
+  const pipeline = fakePipeline(people);
+  const activity = { activeSince: jest.fn().mockResolvedValue(new Set(opts.active ?? [])) } as unknown as FollowUpNoteActivityService;
+  const converted = opts.converted ?? {};
   const prisma = {
-    visitor: { count: jest.fn().mockResolvedValue(3), findMany: jest.fn().mockResolvedValue([{ convertedToMemberId: 'm1' }]) },
-    member: { findMany: jest.fn().mockResolvedValue([{ id: 'm1' }]) },
+    visitor: {
+      findMany: jest.fn(async ({ where }: { where: { convertedToMemberId?: { in: string[] } } }) =>
+        where.convertedToMemberId
+          ? Object.entries(converted).filter(([, m]) => where.convertedToMemberId?.in.includes(m)).map(([id]) => ({ id }))
+          : (opts.weekIds ?? []).map((id) => ({ id })),
+      ),
+    },
   };
-  return new FollowUpCountsService(roll, activity, prisma as never, { get: () => 't1' } as never);
+  return { service: new FollowUpCountsService(pipeline, activity, prisma as never, { get: () => 't1' } as never), pipeline };
 }
 
 const viewer = { memberId: 'me' } as AuthUser;
 
+const people: Person[] = [
+  { id: 'v1', status: 'FIRST_TIMER', assigneeId: 'me' },
+  { id: 'v2', status: 'FIRST_TIMER', assigneeId: null },
+  { id: 'v3', status: 'SECOND_TIMER', assigneeId: 'ruth' },
+  { id: 'v4', status: 'THIRD_TIMER', assigneeId: null },
+  { id: 'v5', status: 'INTEGRATED', assigneeId: 'me' },
+  { id: 'v6', status: 'OPTED_OUT', assigneeId: null },
+];
+
 describe('FollowUpCountsService', () => {
-  it('counts the agreed status, so somebody set to Integrated is counted as integrated', async () => {
-    const service = makeService([
-      row({ id: '1', status: 'INTEGRATED' }),
-      row({ id: '2', status: 'INTEGRATED', kind: 'VISITOR', hasAccount: false }),
-      row({ id: '3', status: 'FIRST_TIMER' }),
-      row({ id: '4', status: 'OPTED_OUT' }),
-    ]);
-
+  it('states the pipeline counts, and its total is the sum of them', async () => {
+    const { service } = makeService(people);
     const counts = await service.summary(viewer);
 
-    expect(counts.byStatus.INTEGRATED).toBe(2);
-    expect(counts.byStatus.FIRST_TIMER).toBe(1);
-    expect(counts.byStatus.OPTED_OUT).toBe(1);
-    expect(counts.byStatus.AWAY).toBe(0);
-    expect(counts.total).toBe(4);
+    expect(counts.byStatus).toEqual({ FIRST_TIMER: 2, SECOND_TIMER: 1, THIRD_TIMER: 1, INTEGRATED: 1, OPTED_OUT: 1 });
+    expect(counts.total).toBe(6);
+    expect(counts.total).toBe(PIPELINE_STATUSES.reduce((n, s) => n + counts.byStatus[s], 0));
+    expect(counts.visitors).toBe(counts.total);
+    expect(counts.followingUp).toBe(4);
+    expect(Object.keys(counts.byStatus)).not.toContain('AWAY');
   });
 
-  it('counts a caseload against whoever is asking, and nobody else', async () => {
-    const service = makeService([
-      row({ id: '1', assignedTo: { id: 'me', name: 'Me' } }),
-      row({ id: '2', assignedTo: { id: 'someone-else', name: 'Ruth' } }),
-      row({ id: '3' }),
-    ]);
-
+  it('gives each tab badge the total of the very list that tab opens', async () => {
+    const { service, pipeline } = makeService(people);
     const counts = await service.summary(viewer);
 
-    expect(counts.assignedToMe).toBe(1);
-    expect(counts.unassigned).toBe(1);
+    const all = await pipeline.list({ take: 200 });
+    const mine = await pipeline.list({ assigneeId: 'me', take: 200 });
+    const optedOut = await pipeline.list({ status: 'OPTED_OUT', take: 200 });
+    expect(counts.total).toBe(all.rows.length);
+    expect(counts.assignedToMe).toBe(mine.rows.length);
+    expect(counts.byStatus.OPTED_OUT).toBe(optedOut.rows.length);
   });
 
-  it('claims nothing for an account with no member record behind it', async () => {
-    const service = makeService([row({ assignedTo: { id: 'me', name: 'Me' } })]);
-
-    const counts = await service.summary({ memberId: null } as AuthUser);
-
-    expect(counts.assignedToMe).toBe(0);
+  it('counts a caseload against whoever is asking, and claims nothing for an account with no member', async () => {
+    expect((await makeService(people).service.summary(viewer)).assignedToMe).toBe(2);
+    expect((await makeService(people).service.summary({ memberId: null } as AuthUser)).assignedToMe).toBe(0);
   });
 
-  it("counts each board's Assigned to me the way its tab lists it", async () => {
-    const me = { id: 'me', name: 'Me' };
-    const service = makeService([
-      row({ id: '1', status: 'FIRST_TIMER', assignedTo: me }),
-      row({ id: '2', status: 'OPTED_OUT', assignedTo: me }), // on the Opted out tab now
-      row({ id: '3', status: 'INTEGRATED', assignedTo: me }), // Follow Up's work is done
-      row({ id: '4', status: 'INTEGRATED', integrationAssignedTo: me }),
-      row({ id: '5', status: 'AWAY', integrationAssignedTo: me }),
-      row({ id: '6', status: 'OPTED_OUT', integrationAssignedTo: me }),
-    ]);
+  it('sums up the people still being followed up: who is new, who nobody carries, who has gone quiet', async () => {
+    const { service } = makeService(people, {
+      weekIds: ['v1', 'v2'],
+      // v1 talked about on their own thread, v3 on the thread of the account made from their form.
+      active: ['VISITOR:v1', 'MEMBER:m3', 'MEMBER:someone-else'],
+      converted: { v3: 'm3' },
+    });
+    const counts = await service.summary(viewer, new Date('2026-11-16T09:00:00Z'));
 
-    const counts = await service.summary(viewer);
-
-    expect(counts.assignedToMe).toBe(1);
-    expect(counts.integrationAssignedToMe).toBe(2);
-    expect(counts.byStatus.OPTED_OUT).toBe(2);
+    expect(counts.followUp).toEqual({ newThisWeek: 2, unassigned: 2, quiet: 2 });
+    expect(counts.unassigned).toBe(2);
   });
 
-  it("sums up Follow Up's own list: who is new, who nobody carries, who has gone quiet", async () => {
-    const now = new Date('2026-11-16T09:00:00Z');
-    const ruth = { id: 'ruth', name: 'Ruth' };
-    const service = makeService(
-      [
-        row({ id: '1', kind: 'VISITOR', since: '2026-11-15T10:00:00Z', assignedTo: ruth }), // new, talked to
-        row({ id: '2', status: 'AWAY', assignedTo: ruth }), // quiet
-        row({ id: '3', status: 'THIRD_TIMER' }), // nobody carries them, and quiet
-        row({ id: '4', status: 'INTEGRATED', since: '2026-11-15T10:00:00Z' }), // not Follow Up's any more
-        row({ id: '5', status: 'OPTED_OUT' }),
-      ],
-      ['VISITOR:1', 'MEMBER:4'],
-    );
-
-    const counts = await service.summary(viewer, now);
-
-    expect(counts.followUp).toEqual({ newThisWeek: 1, unassigned: 1, quiet: 2 });
-  });
-
-  it('gives the same first-timer total the admin First Timers page shows', async () => {
-    const counts = await makeService([]).summary(viewer);
-    expect(counts.visitors).toBe(3);
+  it('reads every figure from the pipeline, never from rows it counts itself', async () => {
+    const { service, pipeline } = makeService(people);
+    await service.summary(viewer);
+    for (const [filters] of pipeline.list.mock.calls) expect(filters.take).toBe(1);
   });
 });

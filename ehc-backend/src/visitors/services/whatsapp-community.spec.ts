@@ -27,6 +27,7 @@ describe('the WhatsApp community list', () => {
       expect.objectContaining({
         where: {
           tenantId: 'tenant-test',
+          archivedAt: null,
           whatsappInterest: true,
           whatsappAddedAt: null,
         },
@@ -50,6 +51,7 @@ describe('the WhatsApp community list', () => {
       expect.objectContaining({
         where: {
           tenantId: 'tenant-test',
+          archivedAt: null,
           whatsappInterest: true,
           whatsappAddedAt: { not: null },
         },
