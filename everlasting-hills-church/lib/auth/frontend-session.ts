@@ -145,7 +145,7 @@ export const ROUTE_ROLE_RULES: ReadonlyArray<readonly [string, UserRole]> = [
   ["/dashboard/analytics/giving", "PASTOR"],
   ["/dashboard/pastor", "PASTOR"],
   ["/dashboard/members", "ADMIN"],
-  ["/dashboard/first-timers", "ADMIN"],
+  ["/dashboard/first-timers", "FIRST_TIMER_CONTACT"], // the welcome queue; church-wide roles pass a lateral gate
   ["/dashboard/services", "ADMIN"],
   ["/dashboard/events", "ADMIN"],
   ["/dashboard/announcements", "ADMIN"],

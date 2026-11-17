@@ -112,11 +112,11 @@ describe("getRequiredRole (route → minimum-role map)", () => {
     expect(getRequiredRole("/dashboard/analytics/giving")).toBe("PASTOR");
   });
 
-  it("members + first-timers + services + analytics/{attendance,growth,first-timers} require ADMIN", () => {
+  it("members + services + analytics/{attendance,growth,first-timers} require ADMIN", () => {
     expect(getRequiredRole("/dashboard/members")).toBe("ADMIN");
     expect(getRequiredRole("/dashboard/admin/members")).toBe("ADMIN");
     expect(getRequiredRole("/dashboard/admin/gatherings")).toBe("ADMIN");
-    expect(getRequiredRole("/dashboard/first-timers")).toBe("ADMIN");
+    expect(getRequiredRole("/dashboard/first-timers")).toBe("FIRST_TIMER_CONTACT");
     expect(getRequiredRole("/dashboard/services")).toBe("ADMIN");
     expect(getRequiredRole("/dashboard/analytics/attendance")).toBe("ADMIN");
     expect(getRequiredRole("/dashboard/analytics/growth")).toBe("ADMIN");

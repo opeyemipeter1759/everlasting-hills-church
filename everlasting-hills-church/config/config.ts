@@ -180,6 +180,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "My Unit", href: "/dashboard/unit-lead", icon: Users, minRole: "UNIT_LEAD", requiresAccess: "unitLead", dynamicUnits: "lead" },
       { label: "Service Plan", href: "/dashboard/service-readiness", icon: ClipboardList, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
+      { label: "Approvals", href: "/dashboard/follow-up/approvals", icon: CheckCircle, minRole: "UNIT_LEAD", requiresAccess: "unitLead" },
     ],
   },
   {
@@ -190,11 +191,18 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    section: "First Timers",
+    items: [
+      { label: "Welcome queue", href: "/dashboard/first-timers", icon: HandHeart, minRole: "FIRST_TIMER_CONTACT" },
+      { label: "First-timer overview", href: "/dashboard/follow-up/overview", icon: CalendarRange, minRole: "FIRST_TIMER_CONTACT" },
+    ],
+  },
+  {
     section: "Administration",
     items: [
       { label: "People",        href: "/dashboard/admin/members",       icon: Users,         minRole: "ADMIN" },
       { label: "First Timers",  href: "/dashboard/admin/first-timers",  icon: UserPlus,      minRole: "ADMIN" },
-
+      { label: "Follow-up routing", href: "/dashboard/admin/follow-up-routing", icon: Network, minRole: "ADMIN" },
       { label: "Service Teams", href: "/dashboard/admin/service-teams", icon: UserCog,       minRole: "ADMIN" },
       { label: "Service Readiness", href: "/dashboard/admin/service-readiness", icon: CheckCircle, minRole: "ADMIN_HEAD" },
       { label: "Bible Reading", href: "/dashboard/admin/reading",       icon: BookMarked,    minRole: "ADMIN" },
@@ -212,13 +220,11 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Emails",        href: "/dashboard/admin/emails",        icon: Mail,          minRole: "ADMIN" },
       { label: "Inventory",     href: "/dashboard/admin/inventory",     icon: Package,       minRole: "ADMIN" },
       { label: "Departments",   href: "/dashboard/admin/departments",   icon: Building2,     minRole: "ADMIN" },
-      // { label: "Units",         href: "/dashboard/admin/units",         icon: Network,       minRole: "ADMIN" },
       { label: "Roles",         href: "/dashboard/admin/roles",         icon: Shield,        minRole: "ADMIN" },
       { label: "Permissions",   href: "/dashboard/admin/permissions",   icon: Lock,          minRole: "SUPER_ADMIN" },
       { label: "Classes",       href: "/dashboard/admin/classes",       icon: School,        minRole: "ADMIN" },
       { label: "Courses",       href: "/dashboard/admin/courses",       icon: GraduationCap, minRole: "ADMIN" },
       { label: "Home Cell",     href: "/dashboard/admin/home-cell",     icon: Compass,       minRole: "ADMIN" },
-      // { label: "Homepage",      href: "/dashboard/settings/homepage", icon: Settings,  minRole: "ADMIN" },
       { label: "Public Site (CMS)", href: "/dashboard/cms",          icon: PanelsTopLeft, minRole: "PASTOR" },
     ],
   },
