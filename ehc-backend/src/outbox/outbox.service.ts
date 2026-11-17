@@ -52,9 +52,12 @@ export class OutboxService {
   /** Dispatch the events a request just committed. Never throws: anything that fails is left for the sweeper. */
   async dispatchNow(eventIds: string[]): Promise<void> {
     for (const id of eventIds) {
+      // A fresh event (no attempt yet) is claimed whatever its nextAttemptAt says:
+      // that was stamped by the app server, whose clock can run ahead of the
+      // database's. Once anyone has claimed it, the lease decides.
       const claimed = await this.prisma.$queryRaw<{ id: string }[]>(Prisma.sql`
         UPDATE "OutboxEvent" SET attempts = attempts + 1, "nextAttemptAt" = now() + ${`${LEASE_MS} milliseconds`}::interval
-         WHERE id = ${id} AND status = 'PENDING' AND "nextAttemptAt" <= now()
+         WHERE id = ${id} AND status = 'PENDING' AND (attempts = 0 OR "nextAttemptAt" <= now())
         RETURNING id`);
       if (claimed.length) await this.deliver(id);
     }
@@ -157,11 +160,18 @@ export class OutboxService {
     const due = recipients.filter((profileId) => !done.has(profileId));
     if (!due.length) return;
 
-    const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error('push timed out')), PUSH_TIMEOUT_MS));
-    await Promise.race([
-      this.push.dispatch(category, { tenantId, userIds: due }, { title: message.title, body: message.body, url: message.link, tag: eventId }),
-      timeout,
-    ]);
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('push timed out')), PUSH_TIMEOUT_MS);
+    });
+    try {
+      await Promise.race([
+        this.push.dispatch(category, { tenantId, userIds: due }, { title: message.title, body: message.body, url: message.link, tag: eventId }),
+        timeout,
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
     await this.prisma.notification.createMany({
       data: due.map((profileId) => ({
         id: randomUUID(),

@@ -19,6 +19,7 @@ maybe('OutboxService against Postgres', () => {
   let actor: string;
   let lead: string;
   let pastor: string;
+  jest.setTimeout(60_000);
 
   beforeAll(async () => {
     await prisma.tenant.create({ data: { id: tenantId, name: 'Outbox test', slug: `outbox-${tenantId}` } });
@@ -65,6 +66,17 @@ maybe('OutboxService against Postgres', () => {
     expect(await prisma.notification.count({ where: { eventId: id, channel: 'in_app' } })).toBe(2);
     expect(push.dispatch).toHaveBeenCalledTimes(1);
     expect((await prisma.outboxEvent.findUnique({ where: { id } }))?.status).toBe('DISPATCHED');
+  });
+
+  it('sends a fresh event at once even when the app clock runs ahead of the database', async () => {
+    const id = await prisma.$transaction((tx) => outbox.record(tx as never, { tenantId, type: 'test.decided', payload: {}, actorId: actor }));
+    // As if the app server stamped it a minute ahead of the database's clock.
+    await prisma.outboxEvent.update({ where: { id }, data: { nextAttemptAt: new Date(Date.now() + 60_000) } });
+    await outbox.dispatchNow([id]);
+    expect((await prisma.outboxEvent.findUnique({ where: { id } }))?.status).toBe('DISPATCHED');
+    // Claimed once, it is not claimed again while its lease runs.
+    await outbox.dispatchNow([id]);
+    expect((await prisma.outboxEvent.findUnique({ where: { id } }))?.attempts).toBe(1);
   });
 
   it('backs off and finally marks an event failed', async () => {
