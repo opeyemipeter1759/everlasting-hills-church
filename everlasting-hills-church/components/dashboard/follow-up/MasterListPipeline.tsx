@@ -31,7 +31,7 @@ export default function MasterListPipeline({
   empty,
   onPage,
 }: {
-  fixed?: Pick<PipelineQuery, "status" | "assigneeId" | "absentFrom">;
+  fixed?: Pick<PipelineQuery, "status" | "assigneeId" | "absentFrom" | "presentAt">;
   /** The chip it opens on; the viewer can change it. */
   defaultStatus?: PipelineStatus | "";
   /** Open the conversation an alert links to (`?thread=KIND:id`). Only the main list does this. */
@@ -56,6 +56,7 @@ export default function MasterListPipeline({
     status: fixed.status ?? status,
     assigneeId: fixed.assigneeId ?? assigneeId,
     absentFrom: fixed.absentFrom,
+    presentAt: fixed.presentAt,
     search,
     year,
     month,

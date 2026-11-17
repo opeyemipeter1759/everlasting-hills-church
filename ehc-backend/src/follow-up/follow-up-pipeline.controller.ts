@@ -35,6 +35,7 @@ export function parsePipelineFilters(q: Record<string, string | undefined>): Pip
     search: q.search || undefined,
     notContacted: q.notContacted === 'true',
     absentFromServiceId: q.absentFrom || undefined,
+    presentAtServiceId: q.presentAt || undefined,
     possibleReturn: q.possibleReturn === 'true',
     take: q.take ? Number(q.take) : undefined,
     skip: q.skip ? Number(q.skip) : undefined,
@@ -67,6 +68,8 @@ export class FollowUpPipelineController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'assigneeId', required: false, description: 'A member id, or "none"' })
   @ApiQuery({ name: 'notContacted', required: false })
+  @ApiQuery({ name: 'absentFrom', required: false, description: 'A service id: who missed it' })
+  @ApiQuery({ name: 'presentAt', required: false, description: 'A service id: who came' })
   @ApiQuery({ name: 'take', required: false })
   @ApiQuery({ name: 'skip', required: false })
   async people(@CurrentUser() actor: AuthUser, @Query() query: Record<string, string | undefined>) {

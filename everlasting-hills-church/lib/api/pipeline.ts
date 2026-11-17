@@ -58,6 +58,8 @@ export interface PipelineQuery {
   search?: string;
   notContacted?: boolean;
   absentFrom?: string;
+  /** A service id: only people with an account who were checked in at it. */
+  presentAt?: string;
   possibleReturn?: boolean;
   sort?: "newest" | "oldest" | "name";
   take?: number;

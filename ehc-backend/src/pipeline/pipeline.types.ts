@@ -25,6 +25,8 @@ export interface PipelineFilters {
   notContacted?: boolean;
   /** A service id: only people with an account who missed that service. */
   absentFromServiceId?: string;
+  /** A service id: only people with an account who were checked in at that service. */
+  presentAtServiceId?: string;
   /** Only forms flagged as a possible return visit, not yet resolved. */
   possibleReturn?: boolean;
   /** Only these people (visitor ids), e.g. a unit lead's approval queue. */

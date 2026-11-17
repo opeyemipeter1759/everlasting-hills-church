@@ -107,6 +107,11 @@ export function pipelineWhere(f: PipelineFilters, withStatus = true): Prisma.Sql
       SELECT 1 FROM "AttendanceRecord" ar
        WHERE ar."memberId" = pl."memberId" AND ar."serviceId" = ${f.absentFromServiceId} AND ar.present)`);
   }
+  if (f.presentAtServiceId) {
+    parts.push(Prisma.sql`pl."memberId" IS NOT NULL AND EXISTS (
+      SELECT 1 FROM "AttendanceRecord" ar
+       WHERE ar."memberId" = pl."memberId" AND ar."serviceId" = ${f.presentAtServiceId} AND ar.present)`);
+  }
   return Prisma.join(parts, ' AND ');
 }
 

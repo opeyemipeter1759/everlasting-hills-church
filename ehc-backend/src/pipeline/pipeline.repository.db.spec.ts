@@ -73,6 +73,8 @@ maybe('PipelineRepository against Postgres', () => {
   });
 
   afterAll(async () => {
+    await prisma.attendanceRecord.deleteMany({ where: { tenantId } });
+    await prisma.service.deleteMany({ where: { tenantId } });
     await prisma.followUpEntry.deleteMany({ where: { tenantId } });
     await prisma.firstTimerVisit.deleteMany({ where: { tenantId } });
     await prisma.visitor.deleteMany({ where: { tenantId } });
@@ -122,6 +124,27 @@ maybe('PipelineRepository against Postgres', () => {
 
     const january = await repo().list({ year: 2026, month: 1, take: 200 });
     expect(january.total).toBe(year.months[0].total);
+  });
+
+  it('splits the people with an account between who came to a service and who missed it', async () => {
+    const serviceId = (await prisma.service.create({ data: { id: id(), tenantId, name: 'Sunday service', scheduledAt: new Date('2024-06-02T08:00:00Z') } })).id;
+    const withAccount = async (first: string, present: boolean | null) => {
+      const profile = await prisma.profile.create({ data: { id: id(), userId: id(), tenantId } });
+      const member = await prisma.member.create({ data: { id: id(), tenantId, profileId: profile.id, firstName: first, lastName: 'Test' } });
+      await visitor({ first, firstVisit: '2024-05-05', extra: { convertedAt: new Date(), convertedToMemberId: member.id } });
+      if (present !== null) await prisma.attendanceRecord.create({ data: { id: id(), tenantId, memberId: member.id, serviceId, present } });
+    };
+    await withAccount('Came', true);
+    await withAccount('Marked-absent', false);
+    await withAccount('No-record', null);
+    await visitor({ first: 'No-account', firstVisit: '2024-05-05' });
+
+    const names = async (f: { absentFromServiceId?: string; presentAtServiceId?: string }) =>
+      (await repo().list({ year: 2024, take: 50, ...f })).rows.map((r) => r.firstName).sort();
+    expect(await names({ presentAtServiceId: serviceId })).toEqual(['Came']);
+    expect(await names({ absentFromServiceId: serviceId })).toEqual(['Marked-absent', 'No-record']);
+    // Everyone else in the year has no account, so attendance says nothing about them.
+    expect(await names({})).toEqual(['Came', 'Marked-absent', 'No-account', 'No-record']);
   });
 
   it('shows months before any contact was logged as not tracked', async () => {

@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useMe } from "@/lib/api";
 import type { PipelinePage } from "@/lib/api/pipeline";
 import { RefreshButton } from "@/components/dashboard/follow-up/header-parts";
-import { IntegrationStats } from "./IntegrationStats";
+import { IntegrationStats, type ServiceAttendance } from "./IntegrationStats";
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -14,20 +14,21 @@ function greeting(): string {
   return "Good evening";
 }
 
-/** What the open list says, in a sentence. Its figures are the list's own counts. */
-function summary(page: PipelinePage, serviceName: string | null): string {
+const people = (n: number) => `${n} ${n === 1 ? "person" : "people"}`;
+
+/** What the page says, in a sentence. Its figures are the API's own counts. */
+function summary(page: PipelinePage, service: ServiceAttendance | null): string {
   const integrated = page.counts.INTEGRATED;
-  if (serviceName) {
-    const missed = page.counts.all;
-    if (missed === 0) return `Nobody here missed ${serviceName}.`;
-    return `${missed} ${missed === 1 ? "person" : "people"} missed ${serviceName}, ${integrated} of them integrated.`;
+  if (service && service.came !== undefined && service.missed !== undefined) {
+    if (service.missed === 0) return `Everyone with an account came to ${service.name}.`;
+    return `${people(service.came)} came to ${service.name} and ${people(service.missed)} missed it.`;
   }
   if (integrated === 0) return "Nobody is integrated yet.";
   return `${integrated} ${integrated === 1 ? "person is" : "people are"} integrated. Keep an eye out for anyone who stops coming.`;
 }
 
 /** Who this team is, and what the list below says today. */
-export function IntegrationHeader({ page, serviceName }: { page?: PipelinePage; serviceName: string | null }) {
+export function IntegrationHeader({ page, service }: { page?: PipelinePage; service: ServiceAttendance | null }) {
   const { data: me } = useMe();
   const queryClient = useQueryClient();
   const firstName = me?.member?.firstName ?? null;
@@ -51,14 +52,14 @@ export function IntegrationHeader({ page, serviceName }: { page?: PipelinePage; 
             </h1>
             <p className="mt-2 max-w-md text-sm text-white/75">
               {firstName ? `${greeting()}, ${firstName}. ` : null}
-              {page ? summary(page, serviceName) : <span className="inline-block h-4 w-48 animate-pulse rounded bg-white/20 align-middle" />}
+              {page ? summary(page, service) : <span className="inline-block h-4 w-48 animate-pulse rounded bg-white/20 align-middle" />}
             </p>
           </div>
           <RefreshButton onClick={() => queryClient.invalidateQueries({ queryKey: ["follow-up"] })} busy={false} />
         </div>
       </header>
 
-      <IntegrationStats page={page} serviceName={serviceName} />
+      <IntegrationStats page={page} service={service} />
     </section>
   );
 }
