@@ -19,6 +19,7 @@ export type FormValues = {
   attendance_type: string; // "In-Person" | "Online"
   how_did_you_learn: string;
   invited_by?: string;
+  heard_from_other?: string;
   located_in_ibadan: string; // "true" | "false" — only for In-Person
   membership_interest: string; // "Yes" | "Maybe" | "No"
   address: string;
@@ -57,7 +58,7 @@ export type Step3Props = StepProps & {
 
 // ── Class helpers (no wrapper components → ref reaches native DOM) ────────────
 
-function ic(hasError?: boolean) {
+export function ic(hasError?: boolean) {
   return (
     "w-full px-4 py-3 rounded-xl border text-sm text-gray-900 bg-white " +
     "placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all duration-150 " +
@@ -80,7 +81,7 @@ function tc(hasError?: boolean) {
 
 // ── Small shared pieces ───────────────────────────────────────────────────────
 
-function Label({
+export function Label({
   htmlFor,
   required,
   children,
@@ -101,7 +102,7 @@ function Label({
   );
 }
 
-function GroupLabel({
+export function GroupLabel({
   required,
   children,
 }: {
@@ -120,7 +121,7 @@ function GroupLabel({
   );
 }
 
-function FieldError({ message }: { message?: string }) {
+export function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
     <p className="mt-1.5 text-xs text-red-500 flex items-center gap-1.5" role="alert">
@@ -136,7 +137,7 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-function StepHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function StepHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="pb-6 mb-6 border-b border-gray-100">
       <h2 className="text-2xl font-bold text-gray-900 mb-1">{title}</h2>
@@ -146,7 +147,7 @@ function StepHeader({ title, subtitle }: { title: string; subtitle?: string }) {
 }
 
 // Radio card: has-[:checked] for card highlight, native input for ref safety
-function RadioCard({
+export function RadioCard({
   value,
   label,
   description,
@@ -314,67 +315,6 @@ export function Step1PersonalInfo({ register, errors, isOnlineSource }: StepProp
         </div>
         <FieldError message={errors.gender?.message} />
       </div>
-    </div>
-  );
-}
-
-// ── Step 2 — How You Found Us ─────────────────────────────────────────────────
-
-const HOW_OPTIONS = [
-  { id: "Social Media", label: "Social Media", description: "Instagram, Facebook, Twitter…" },
-  { id: "Friend/Family", label: "Friend or Family", description: "Someone personally invited me" },
-  { id: "Google Search", label: "Google Search", description: "Found us online" },
-  { id: "Website", label: "Church Website", description: "Visited everlastinghills.org" },
-  { id: "Flyer", label: "Flyer / Poster", description: "Physical or digital flyer" },
-  { id: "Other", label: "Other", description: "Another way" },
-];
-
-export function Step2FriendFamilyLocation({ register, errors, watch }: Step2Props) {
-  const howDidYouLearn = watch("how_did_you_learn");
-  const isFriendFamily = howDidYouLearn === "Friend/Family";
-
-  return (
-    <div className="space-y-5">
-      <StepHeader
-        title="How Did You Find Us? 🔍"
-        subtitle="Help us understand how you came across Everlasting Hills Church."
-      />
-
-      <div>
-        <GroupLabel required>How did you learn about us?</GroupLabel>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {HOW_OPTIONS.map((opt) => (
-            <RadioCard
-              key={opt.id}
-              value={opt.id}
-              label={opt.label}
-              description={opt.description}
-              fieldName="how_did_you_learn"
-              register={register}
-              validation={{ required: "Please let us know how you found us" }}
-              hasError={!!errors.how_did_you_learn}
-            />
-          ))}
-        </div>
-        <FieldError message={errors.how_did_you_learn?.message} />
-      </div>
-
-      {isFriendFamily && (
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
-          <Label htmlFor="invited_by" required>Who invited you?</Label>
-          <input
-            id="invited_by"
-            type="text"
-            placeholder="Enter their name"
-            className={ic(!!errors.invited_by)}
-            {...register("invited_by", {
-              required: "Please tell us who invited you",
-              minLength: { value: 2, message: "At least 2 characters" },
-            })}
-          />
-          <FieldError message={errors.invited_by?.message} />
-        </div>
-      )}
     </div>
   );
 }

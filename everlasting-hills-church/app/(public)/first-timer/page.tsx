@@ -8,11 +8,11 @@ import { apiClient } from "@/lib/api/axios";
 import {
   FormValues,
   Step1PersonalInfo,
-  Step2FriendFamilyLocation,
   Step3Interest,
   Step5Details,
   Step6Experience,
 } from "./_steps";
+import { Step2FriendFamilyLocation } from "./_step-heard-from";
 import { firstStepWith, problemsFromError } from "./server-errors";
 
 const STEP_LABELS = [
@@ -26,7 +26,7 @@ const STEP_LABELS = [
 // Validate only the fields belonging to each step
 const STEP_FIELDS: (keyof FormValues)[][] = [
   ["first_name", "last_name", "phone_number", "email", "attendance_type", "gender"],
-  ["how_did_you_learn", "invited_by"],
+  ["how_did_you_learn", "invited_by", "heard_from_other"],
   ["located_in_ibadan", "membership_interest"],
   ["address", "birth_month", "birth_day", "is_student", "occupation", "born_again"],
   ["service_experience", "whatsapp_interest"],
@@ -97,14 +97,14 @@ function FirstTimerPage() {
     setIsSubmitting(true);
     setError("");
     try {
-      // POST /forms/register is @Public — no auth needed. Coerce string radio values.
-      // is_student is a form-only field: the API runs a whitelisting
-      // ValidationPipe with forbidNonWhitelisted, so posting a property its DTO
-      // does not declare would 400 the entire submission.
-      const { is_student, ...rest } = data;
+      // @Public route. Radio values are strings; the inviter and Other text go only with their answer.
+      const { is_student, invited_by, heard_from_other, ...rest } = data;
       await apiClient.post("/forms/register", {
         type: "FIRST_TIMER",
         ...rest,
+        ...(data.how_did_you_learn === "Friend/Family" && invited_by ? { invited_by } : {}),
+        ...(data.how_did_you_learn === "Other" && heard_from_other ? { heard_from_other } : {}),
+        is_student: String(is_student) === "true",
         located_in_ibadan: String(data.located_in_ibadan) === "true",
         whatsapp_interest: String(data.whatsapp_interest) === "true",
         // The backend stores one occupation string. Students never see the
