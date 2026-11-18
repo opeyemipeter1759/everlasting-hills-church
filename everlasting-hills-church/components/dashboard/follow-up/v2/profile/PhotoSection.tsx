@@ -12,7 +12,7 @@ const action =
 
 /**
  * Their photo, so the team can put a face to the name on Sunday. Staff attach
- * or replace it here with the person's consent; it also becomes their avatar
+ * or replace it here; it also becomes their avatar
  * in every list.
  */
 export default function PhotoSection({ profile, refresh }: ProfileSectionProps) {

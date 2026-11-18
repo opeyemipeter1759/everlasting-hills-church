@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Archive, ChevronRight, Pencil } from "lucide-react";
+import { ChevronRight, Pencil, Trash2 } from "lucide-react";
 import type { VisitorRow } from "./types";
 import { relativeDate } from "./helpers";
 import Avatar from "./Avatar";
@@ -68,11 +68,11 @@ export default function VisitorRowItem({
             {!team && <button
               type="button"
               onClick={() => onDelete(visitor)}
-              aria-label={`Archive ${name}`}
-              title="Archive"
+              aria-label={`Delete ${name}`}
+              title="Delete"
               className="w-7 h-7 flex-shrink-0 rounded-lg flex items-center justify-center text-[#8a7e80] dark:text-white/40 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
             >
-              <Archive size={13} />
+              <Trash2 size={13} />
             </button>}
           </div>
         </td>

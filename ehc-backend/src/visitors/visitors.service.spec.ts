@@ -6,7 +6,7 @@ import type { PrismaService } from '../prisma/prisma.service';
 function makeService(visitorMock: Record<string, jest.Mock>) {
   const prisma = { visitor: visitorMock } as unknown as PrismaService;
   const config = { get: jest.fn().mockReturnValue('tenant-test') } as unknown as ConfigService;
-  return new VisitorsService(prisma, config as never);
+  return new VisitorsService(prisma, config as never, { remove: jest.fn() } as never);
 }
 
 describe('VisitorsService', () => {
@@ -124,41 +124,26 @@ describe('VisitorsService', () => {
     });
   });
 
-  describe('archive', () => {
-    function archiving(found: unknown) {
-      const prisma = {
-        visitor: { findFirst: jest.fn().mockResolvedValue(found), update: jest.fn().mockReturnValue('archive') },
-        auditLog: { create: jest.fn().mockReturnValue('audit') },
-        approvalRequest: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
-        followUpNote: { deleteMany: jest.fn() },
-        $transaction: jest.fn(),
-      };
-      // The archive runs as one interactive transaction on the same client.
-      prisma.$transaction.mockImplementation((fn: (tx: typeof prisma) => Promise<unknown>) => fn(prisma));
+  describe('delete', () => {
+    function deleting(found: unknown) {
+      const prisma = { $transaction: jest.fn().mockResolvedValue(found) };
+      const photos = { remove: jest.fn() };
       const config = { get: jest.fn().mockReturnValue('tenant-test') } as unknown as ConfigService;
-      return { service: new VisitorsService(prisma as never, config as never), prisma };
+      return { service: new VisitorsService(prisma as never, config as never, photos as never), prisma, photos };
     }
 
-    it('archives instead of deleting, keeps the Follow Up conversation, cancels a pending approval and writes an audit row', async () => {
-      const { service, prisma } = archiving({ id: 'v1', firstName: 'Ada', lastName: 'Obi', phone: null, email: null });
-      const result = await service.archive('v1', { userId: 'u1', profileId: 'p1' });
-
-      expect(result).toMatchObject({ id: 'v1', archived: true });
-      expect(prisma.visitor.update).toHaveBeenCalledWith({ where: { id: 'v1' }, data: { archivedAt: expect.any(Date), archivedById: 'p1' } });
-      expect(prisma.auditLog.create.mock.calls[0][0].data).toMatchObject({ action: 'ARCHIVE', entity: 'Visitor', entityId: 'v1', actorId: 'u1' });
+    it('deletes in one transaction, then removes their photo from storage', async () => {
+      const removed = { followUpRecords: 1, notes: 2, visits: 1, messages: 0, formSubmissions: 1 };
+      const { service, prisma, photos } = deleting({ id: 'v1', name: 'Ada Obi', photoKey: 't/first-timers/v1/a.webp', removed });
+      await expect(service.delete('v1', { userId: 'u1', profileId: 'p1' })).resolves.toEqual({ id: 'v1', deleted: true, name: 'Ada Obi', removed });
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-      expect(prisma.approvalRequest.updateMany.mock.calls[0][0]).toMatchObject({
-        where: { tenantId: 'tenant-test', subjectType: 'VISITOR', subjectId: 'v1', status: 'PENDING' },
-        data: { status: 'CANCELLED' },
-      });
-      expect(prisma.followUpNote.deleteMany).not.toHaveBeenCalled();
+      expect(photos.remove).toHaveBeenCalledWith(['t/first-timers/v1/a.webp']);
     });
 
-    it('404s for someone not on record, or already archived', async () => {
-      const { service, prisma } = archiving(null);
-      await expect(service.archive('v1', { userId: 'u1', profileId: 'p1' })).rejects.toThrow(NotFoundException);
-      expect(prisma.visitor.findFirst.mock.calls[0][0].where).toEqual({ id: 'v1', tenantId: 'tenant-test', archivedAt: null });
-      expect(prisma.$transaction).not.toHaveBeenCalled();
+    it('404s for someone not on record', async () => {
+      const { service, photos } = deleting(null);
+      await expect(service.delete('v1', { userId: 'u1', profileId: 'p1' })).rejects.toThrow(NotFoundException);
+      expect(photos.remove).not.toHaveBeenCalled();
     });
   });
 });

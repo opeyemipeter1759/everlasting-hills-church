@@ -21,9 +21,10 @@ export type { VisitorRow };
 
 /**
  * The admin First Timers page. The list, its tabs and the cards are all paged
- * and counted on the server; first-timers are archived, never deleted. With
+ * and counted on the server. Deleting a first-timer is for good; the audit
+ * trail keeps a copy of their details. With
  * `team`, the First Timer Team's view of it: no prayer requests, and editing
- * only (accounts, imports and archiving stay with the admins).
+ * only (accounts, imports and deleting stay with the admins).
  */
 export default function FirstTimersClient({ team = false }: { team?: boolean }) {
   return (
@@ -37,21 +38,21 @@ function FirstTimersPage({ team }: { team: boolean }) {
   const f = useFirstTimersFilter();
   const refreshEverywhere = useRefreshEverywhere();
   const [editTarget, setEditTarget] = useState<VisitorRow | null>(null);
-  const [archiveTarget, setArchiveTarget] = useState<VisitorRow | null>(null);
-  const [archiving, setArchiving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<VisitorRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  async function confirmArchive() {
-    if (!archiveTarget) return;
-    setArchiving(true);
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await apiClient.delete(`/visitors/${archiveTarget.id}`);
-      showToast.success(`${archiveTarget.firstName} ${archiveTarget.lastName} archived`);
+      await apiClient.delete(`/visitors/${deleteTarget.id}`);
+      showToast.success(`${deleteTarget.firstName} ${deleteTarget.lastName} deleted`);
       refreshEverywhere(); // this page, Follow Up and every count held them
-      setArchiveTarget(null);
+      setDeleteTarget(null);
     } catch (err) {
-      showToast.error((err as ApiError).message ?? "Couldn't archive them");
+      showToast.error((err as ApiError).message ?? "Couldn't delete them");
     } finally {
-      setArchiving(false);
+      setDeleting(false);
     }
   }
 
@@ -90,7 +91,7 @@ function FirstTimersPage({ team }: { team: boolean }) {
           <EmptyState hasAny={f.total > 0 || !!f.search || f.filter !== "all"} />
         ) : (
           <>
-            <VisitorsTable rows={f.pagedRows} onCreated={f.handleCreated} onEdit={setEditTarget} onDelete={setArchiveTarget} />
+            <VisitorsTable rows={f.pagedRows} onCreated={f.handleCreated} onEdit={setEditTarget} onDelete={setDeleteTarget} />
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 py-4 px-4 sm:px-6 border-t border-[#E7CDD3]/40 dark:border-white/[0.07]">
               <p className="text-[11px] text-[#8a7e80] dark:text-white/35 order-2 sm:order-1">
                 Showing {(f.page - 1) * f.pageSize + 1} to {Math.min(f.page * f.pageSize, f.shown)} of {f.shown}
@@ -113,19 +114,20 @@ function FirstTimersPage({ team }: { team: boolean }) {
       <EditVisitorModal visitor={editTarget} onClose={() => setEditTarget(null)} onUpdated={f.handleUpdated} />
 
       <ConfirmDialog
-        open={!!archiveTarget}
-        tone="warning"
-        title="Archive this first timer?"
+        open={!!deleteTarget}
+        tone="danger"
+        title="Delete this first timer for good?"
         description={
           <>
-            <span className="font-semibold">{archiveTarget?.firstName} {archiveTarget?.lastName}</span> will drop out of this page, the Follow Up lists and
-            every count. Nothing is deleted: their record, the team&apos;s notes and their history stay, and the archive is logged with your name.
+            <span className="font-semibold">{deleteTarget?.firstName} {deleteTarget?.lastName}</span>, their follow-up record, the team&apos;s notes
+            about them, their visits and the messages sent to them are deleted and cannot be brought back. A copy of their details is kept in
+            the audit trail with your name.
           </>
         }
-        confirmLabel="Archive"
-        loading={archiving}
-        onConfirm={confirmArchive}
-        onCancel={() => setArchiveTarget(null)}
+        confirmLabel="Delete for good"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

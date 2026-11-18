@@ -4149,7 +4149,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** A one-time link to upload their photo straight to storage (WebP, JPEG or PNG, 5 MB at most, consent required) */
+        /** A one-time link to upload their photo straight to storage (WebP, JPEG or PNG, 5 MB at most) */
         post: operations["FirstTimerPhotosController_uploadUrl"];
         delete?: never;
         options?: never;
@@ -9608,8 +9608,8 @@ export interface paths {
         get: operations["VisitorsController_getById"];
         put?: never;
         post?: never;
-        /** Archive a first-timer record; nothing is deleted (ADMIN+) */
-        delete: operations["VisitorsController_archive"];
+        /** Delete a first-timer for good; a copy of their details goes to the audit trail (ADMIN+) */
+        delete: operations["VisitorsController_delete"];
         options?: never;
         head?: never;
         /** Edit a visitor record, e.g. correct a name or phone number (UNIT_LEAD/HOD+) */
@@ -35432,7 +35432,7 @@ export interface operations {
             };
         };
     };
-    VisitorsController_archive: {
+    VisitorsController_delete: {
         parameters: {
             query?: never;
             header?: never;

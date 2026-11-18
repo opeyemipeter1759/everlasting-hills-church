@@ -158,15 +158,15 @@ export class VisitorsController {
   }
 
   /**
-   * First-timers are never deleted. DELETE archives the record: it drops out
-   * of every list and count, the Follow Up conversation and history stay, and
-   * an audit row records who did it. Admin, Admin Head, Pastor and Super Admin
-   * only (the class-level ADMIN gate); the follow-up team gets 403.
+   * Deletes a first-timer for good, with their follow-up record, the team's
+   * conversation about them and their visits. A copy of their details goes to
+   * the audit trail with who deleted them. Admin, Admin Head, Pastor and Super
+   * Admin only (the class-level ADMIN gate); the follow-up team gets 403.
    */
   @Delete(':id')
-  @ApiOperation({ summary: 'Archive a first-timer record; nothing is deleted (ADMIN+)' })
-  async archive(@Param('id') id: string, @CurrentUser() actor: AuthUser) {
-    return this.visitorsService.archive(id, actor);
+  @ApiOperation({ summary: 'Delete a first-timer for good; a copy of their details goes to the audit trail (ADMIN+)' })
+  async delete(@Param('id') id: string, @CurrentUser() actor: AuthUser) {
+    return this.visitorsService.delete(id, actor);
   }
 
   @Post('import')

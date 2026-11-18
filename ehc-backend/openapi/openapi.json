@@ -23086,7 +23086,7 @@
             "access-token": []
           }
         ],
-        "summary": "A one-time link to upload their photo straight to storage (WebP, JPEG or PNG, 5 MB at most, consent required)",
+        "summary": "A one-time link to upload their photo straight to storage (WebP, JPEG or PNG, 5 MB at most)",
         "tags": [
           "follow-up"
         ]
@@ -44976,7 +44976,7 @@
     },
     "/visitors/{id}": {
       "delete": {
-        "operationId": "VisitorsController_archive",
+        "operationId": "VisitorsController_delete",
         "parameters": [
           {
             "in": "path",
@@ -45024,7 +45024,7 @@
             "access-token": []
           }
         ],
-        "summary": "Archive a first-timer record; nothing is deleted (ADMIN+)",
+        "summary": "Delete a first-timer for good; a copy of their details goes to the audit trail (ADMIN+)",
         "tags": [
           "visitors"
         ]

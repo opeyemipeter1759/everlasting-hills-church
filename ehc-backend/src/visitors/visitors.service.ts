@@ -8,23 +8,28 @@ import { normalizeNigerianPhone } from '../common/phone.util';
 import type { UpdateVisitorDto } from './dto/update-visitor.dto';
 import { visitorsOnRecord } from './visitors-on-record';
 import { firstTimerAdminPage, type FirstTimerAdminFilters } from './first-timer-admin-list';
-import { cancelPendingApprovals } from '../follow-up/approvals/approval-cancel';
+import { deleteVisitor } from './visitor-delete';
+import { FirstTimerPhotoStorage } from '../follow-up/photos/first-timer-photo-storage.service';
 
 /**
- * Visitor queries + admin edit/archive for first-timer records.
+ * Visitor queries + admin edit/delete for first-timer records.
  *
  * Visitor records are CREATED by FormsService (first-timer registration).
  * Conversion to a Member happens via MembersService.convertVisitorToMember —
  * this module covers everything else: listing, editing corrections
  * (misspelled names, wrong phone numbers), and archiving bad/duplicate rows.
- * First-timers are never deleted: an archived one drops out of every list
- * and count, and the audit log says who archived them.
+ * Deleting a first-timer removes them for good; the audit trail keeps a copy
+ * of their details and says who deleted them.
  */
 @Injectable()
 export class VisitorsService {
   private readonly tenantId: string;
 
-  constructor(prisma: PrismaService, config: ConfigService<Env, true>) {
+  constructor(
+    prisma: PrismaService,
+    config: ConfigService<Env, true>,
+    private readonly photos: FirstTimerPhotoStorage,
+  ) {
     this.prisma = prisma;
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -157,35 +162,15 @@ export class VisitorsService {
   }
 
   /**
-   * Archives a first-timer instead of deleting them: they drop out of every
-   * list and count, while their record, their Follow Up conversation and their
-   * history stay, and the audit log says who archived them and when.
+   * Deletes a first-timer for good, with everything that hangs off them (see
+   * deleteVisitor). A copy of their details goes to the audit trail, with who
+   * deleted them. Their photo, if any, is removed from storage afterwards.
    */
-  async archive(id: string, actor: Pick<AuthUser, 'userId' | 'profileId'>) {
-    const visitor = await this.prisma.visitor.findFirst({
-      where: { id, tenantId: this.tenantId, archivedAt: null },
-      select: { id: true, firstName: true, lastName: true, phone: true, email: true },
-    });
-    if (!visitor) throw new NotFoundException('Visitor not found');
-    const archivedAt = new Date();
-    await this.prisma.$transaction(async (tx) => {
-      await tx.visitor.update({ where: { id }, data: { archivedAt, archivedById: actor.profileId } });
-      // An archived first-timer has nothing left to approve.
-      await cancelPendingApprovals(tx, { tenantId: this.tenantId, subjectType: 'VISITOR', subjectId: id, actorId: actor.profileId, note: 'Archived' });
-      await tx.auditLog.create({
-        data: {
-          id: randomUUID(),
-          tenantId: this.tenantId,
-          actorId: actor.userId,
-          action: 'ARCHIVE',
-          entity: 'Visitor',
-          entityId: id,
-          before: { firstName: visitor.firstName, lastName: visitor.lastName, phone: visitor.phone, email: visitor.email },
-          after: { archivedAt: archivedAt.toISOString(), archivedById: actor.profileId },
-        },
-      });
-    });
-    return { id, archived: true, archivedAt: archivedAt.toISOString() };
+  async delete(id: string, actor: Pick<AuthUser, 'userId' | 'profileId'>) {
+    const deleted = await this.prisma.$transaction((tx) => deleteVisitor(tx, this.tenantId, id, actor.userId), { maxWait: 20_000, timeout: 60_000 });
+    if (!deleted) throw new NotFoundException('Visitor not found');
+    if (deleted.photoKey) await this.photos.remove([deleted.photoKey]);
+    return { id, deleted: true, name: deleted.name, removed: deleted.removed };
   }
 
   /** First timers on record (the same total the Follow Up page shows), broken

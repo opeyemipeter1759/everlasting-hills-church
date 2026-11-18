@@ -16,19 +16,14 @@ beforeEach(() => {
 });
 
 describe("uploadFirstTimerPhoto", () => {
-  it("refuses without consent, before asking for a link", async () => {
-    await expect(uploadFirstTimerPhoto("v1", webp(), false)).rejects.toThrow(/agreed to this photo/);
-    expect(post).not.toHaveBeenCalled();
-  });
-
   it("refuses anything that is not a photo", async () => {
     const pdf = new Blob(["%PDF"], { type: "application/pdf" });
-    await expect(uploadFirstTimerPhoto("v1", pdf, true)).rejects.toThrow(/Only a photo/);
+    await expect(uploadFirstTimerPhoto("v1", pdf)).rejects.toThrow(/Only a photo/);
     expect(post).not.toHaveBeenCalled();
   });
 
   it("refuses a photo over 5 MB", async () => {
-    await expect(uploadFirstTimerPhoto("v1", webp(5 * 1024 * 1024 + 1), true)).rejects.toThrow(/5 MB/);
+    await expect(uploadFirstTimerPhoto("v1", webp(5 * 1024 * 1024 + 1))).rejects.toThrow(/5 MB/);
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -37,9 +32,9 @@ describe("uploadFirstTimerPhoto", () => {
     put.mockResolvedValueOnce({});
     const photo = webp();
 
-    await uploadFirstTimerPhoto("v1", photo, true);
+    await uploadFirstTimerPhoto("v1", photo);
 
-    expect(post).toHaveBeenNthCalledWith(1, "/follow-up/first-timers/v1/photo/upload-url", { contentType: "image/webp", size: 2000, consent: true });
+    expect(post).toHaveBeenNthCalledWith(1, "/follow-up/first-timers/v1/photo/upload-url", { contentType: "image/webp", size: 2000 });
     expect(put).toHaveBeenCalledWith(link.uploadUrl, photo, expect.objectContaining({ headers: link.headers, withCredentials: false }));
     expect(post).toHaveBeenNthCalledWith(2, "/follow-up/first-timers/v1/photo", { key: link.key });
   });
@@ -48,7 +43,7 @@ describe("uploadFirstTimerPhoto", () => {
     post.mockResolvedValueOnce(link);
     put.mockRejectedValueOnce(new Error("Network Error"));
 
-    await expect(uploadFirstTimerPhoto("v1", webp(), true)).rejects.toThrow("The photo did not upload. Check your connection and try again.");
+    await expect(uploadFirstTimerPhoto("v1", webp())).rejects.toThrow("The photo did not upload. Check your connection and try again.");
     expect(post).toHaveBeenCalledTimes(1);
   });
 });

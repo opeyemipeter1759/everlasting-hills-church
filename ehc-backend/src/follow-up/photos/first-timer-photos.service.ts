@@ -15,7 +15,7 @@ import { PhotoUrlService } from './photo-url.service';
  *
  * The browser asks for a one-time upload link, sends the resized photo
  * straight to the private bucket, then confirms the key here. Only then is
- * the photo, and the consent that came with it, put on their record.
+ * the photo put on their record.
  */
 @Injectable()
 export class FirstTimerPhotosService {
@@ -32,7 +32,7 @@ export class FirstTimerPhotosService {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
 
-  /** A one-time upload link for a new photo of this person. Type, size and consent are checked by the schema first. */
+  /** A one-time upload link for a new photo of this person. Type and size are checked by the schema first. */
   async uploadUrl(actor: AuthUser, visitorId: string, req: PhotoUploadRequest): Promise<SignedUpload & { key: string }> {
     await this.requirePerson(actor, visitorId);
     const key = photoKeyFor(this.tenantId, visitorId, randomUUID(), req.contentType);
@@ -53,7 +53,7 @@ export class FirstTimerPhotosService {
     const previous = await this.currentKey(visitorId);
     await this.prisma.visitor.updateMany({
       where: { id: visitorId, tenantId: this.tenantId },
-      data: { photoKey: key, photoConsent: true, photoConsentAt: new Date() },
+      data: { photoKey: key },
     });
     if (previous && previous !== key) await this.removeObject(previous);
 
@@ -61,7 +61,7 @@ export class FirstTimerPhotosService {
     return { photoUrl: signed.get(key) ?? null };
   }
 
-  /** Takes the photo off their record and out of storage. Consent goes with it. */
+  /** Takes the photo off their record and out of storage. */
   async remove(actor: AuthUser, visitorId: string): Promise<{ removed: boolean }> {
     await this.requirePerson(actor, visitorId);
     const previous = await this.currentKey(visitorId);

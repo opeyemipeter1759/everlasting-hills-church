@@ -8,8 +8,6 @@ import { z } from "zod";
 export const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 export const PHOTO_TYPES = ["image/webp", "image/jpeg", "image/png"] as const;
 
-export const CONSENT_LABEL = "They agreed to this photo being kept on their record";
-
 export const photoUploadSchema = z.object({
   contentType: z.enum(PHOTO_TYPES, { message: "Only a photo can be attached: WebP, JPEG or PNG" }),
   size: z
@@ -17,7 +15,6 @@ export const photoUploadSchema = z.object({
     .int()
     .positive({ message: "The photo is empty" })
     .max(PHOTO_MAX_BYTES, { message: "The photo must be 5 MB or smaller" }),
-  consent: z.literal(true, { message: "Tick that they agreed to this photo being kept on their record" }),
 });
 
 export type PhotoUploadRequest = z.infer<typeof photoUploadSchema>;

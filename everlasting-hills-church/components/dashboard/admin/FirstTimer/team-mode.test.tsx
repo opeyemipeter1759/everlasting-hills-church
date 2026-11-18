@@ -34,17 +34,17 @@ function table(mode: typeof ADMIN_MODE) {
 afterEach(cleanup);
 
 describe("the first-timer table, by who is looking", () => {
-  it("gives admins the account, edit and archive actions", () => {
+  it("gives admins the account, edit and delete actions", () => {
     table(ADMIN_MODE);
     expect(screen.getByRole("button", { name: /create account/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /edit ada/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /archive ada/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /delete ada/i })).toBeTruthy();
   });
 
-  it("lets the First Timer Team edit, but not make accounts or archive", () => {
+  it("lets the First Timer Team edit, but not make accounts or delete", () => {
     table(TEAM_MODE);
     expect(screen.getByRole("button", { name: /edit ada/i })).toBeTruthy();
     expect(screen.queryByRole("button", { name: /create account/i })).toBeNull();
-    expect(screen.queryByRole("button", { name: /archive ada/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /delete ada/i })).toBeNull();
   });
 });

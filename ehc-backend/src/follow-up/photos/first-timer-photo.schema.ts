@@ -26,7 +26,6 @@ export const photoUploadSchema = z.object({
     .int()
     .positive({ message: 'The photo is empty' })
     .max(PHOTO_MAX_BYTES, { message: 'The photo must be 5 MB or smaller' }),
-  consent: z.literal(true, { message: 'Tick that they agreed to this photo being kept on their record' }),
 });
 export type PhotoUploadRequest = z.infer<typeof photoUploadSchema>;
 

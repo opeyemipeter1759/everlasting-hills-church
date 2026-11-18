@@ -17,8 +17,8 @@ const photoPath = (visitorId: string) => `/follow-up/first-timers/${encodeURICom
  * private storage, so it never passes through our servers. The photo goes on
  * their record only once the API has confirmed the upload arrived.
  */
-export async function uploadFirstTimerPhoto(visitorId: string, photo: Blob, consent: boolean): Promise<void> {
-  const checked = photoUploadSchema.safeParse({ contentType: photo.type, size: photo.size, consent });
+export async function uploadFirstTimerPhoto(visitorId: string, photo: Blob): Promise<void> {
+  const checked = photoUploadSchema.safeParse({ contentType: photo.type, size: photo.size });
   if (!checked.success) throw new Error(checked.error.issues[0]?.message ?? "This photo cannot be attached");
 
   const link = await api.post<UploadLink>(`${photoPath(visitorId)}/upload-url`, checked.data);

@@ -17,6 +17,6 @@ import { PhotoUrlService } from './photo-url.service';
   // FollowUpAuthService is stateless (Prisma and config only), so this module
   // keeps its own instance rather than reaching into FollowUpModule.
   providers: [FirstTimerPhotoStorage, PhotoUrlService, FirstTimerPhotosService, FollowUpAuthService],
-  exports: [PhotoUrlService],
+  exports: [PhotoUrlService, FirstTimerPhotoStorage],
 })
 export class FirstTimerPhotosModule {}

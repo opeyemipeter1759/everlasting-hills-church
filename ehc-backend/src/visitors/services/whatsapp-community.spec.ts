@@ -12,7 +12,7 @@ function makeService(visitorMock: Record<string, jest.Mock>) {
   const config = {
     get: jest.fn().mockReturnValue('tenant-test'),
   } as unknown as ConfigService;
-  return new VisitorsService(prisma, config as never);
+  return new VisitorsService(prisma, config as never, { remove: jest.fn() } as never);
 }
 
 describe('the WhatsApp community list', () => {

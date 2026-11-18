@@ -22,7 +22,7 @@ export class FirstTimerPhotosController {
 
   @Post('upload-url')
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
-  @ApiOperation({ summary: 'A one-time link to upload their photo straight to storage (WebP, JPEG or PNG, 5 MB at most, consent required)' })
+  @ApiOperation({ summary: 'A one-time link to upload their photo straight to storage (WebP, JPEG or PNG, 5 MB at most)' })
   async uploadUrl(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string, @Body() body: unknown) {
     return this.photos.uploadUrl(actor, visitorId, parseSchema(photoUploadSchema, body));
   }

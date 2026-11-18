@@ -6,7 +6,7 @@ import type { AuthUser } from '../auth/types/auth-user';
 import { VisitorsController } from './visitors.controller';
 
 /**
- * DELETE /visitors/:id archives a first-timer, and only Admin, Admin Head,
+ * DELETE /visitors/:id deletes a first-timer for good, and only Admin, Admin Head,
  * Pastor and Super Admin may do it. Read from the real decorators on the
  * controller, so loosening the gate breaks this test.
  *
@@ -17,13 +17,13 @@ import { VisitorsController } from './visitors.controller';
 function context(roles: Role[]): ExecutionContext {
   const user: Partial<AuthUser> = { role: roles[0], effectiveRoles: roles, unitLeadOf: [], hodOf: [] };
   return {
-    getHandler: () => VisitorsController.prototype.archive,
+    getHandler: () => VisitorsController.prototype.delete,
     getClass: () => VisitorsController,
     switchToHttp: () => ({ getRequest: () => ({ user }) }),
   } as unknown as ExecutionContext;
 }
 
-describe('archiving a first-timer (DELETE /visitors/:id)', () => {
+describe('deleting a first-timer (DELETE /visitors/:id)', () => {
   const guard = new RolesGuard(new Reflector());
 
   it.each([
@@ -36,11 +36,8 @@ describe('archiving a first-timer (DELETE /visitors/:id)', () => {
     expect(() => guard.canActivate(context(roles))).toThrow(ForbiddenException);
   });
 
-  it.each([Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN])('lets %s archive', (role) => {
+  it.each([Role.ADMIN, Role.ADMIN_HEAD, Role.PASTOR, Role.SUPER_ADMIN])('lets %s delete', (role) => {
     expect(guard.canActivate(context([Role.MEMBER, role]))).toBe(true);
   });
 
-  it('is an archive, not a delete: the route calls archive and nothing else', () => {
-    expect(Object.getOwnPropertyNames(VisitorsController.prototype)).not.toContain('delete');
-  });
 });

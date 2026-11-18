@@ -10,7 +10,7 @@ import { PhotoUrlService } from './photo-url.service';
 
 /**
  * Spec section 6 #16: the upload link refuses anything that is not a photo,
- * anything over 5 MB and anything without consent; another tenant never gets
+ * and anything over 5 MB; another tenant never gets
  * a read link; replacing a photo deletes the old one. Supabase is mocked: no
  * test here reaches real storage.
  */
@@ -61,19 +61,16 @@ function setup(opts: { photoKey?: string | null; onRecord?: boolean; allowed?: b
   return { bucket, from, prisma, pipeline, controller, pipelineController, urls, row };
 }
 
-const goodUpload = { contentType: 'image/webp', size: 180_000, consent: true };
+const goodUpload = { contentType: 'image/webp', size: 180_000 };
 
 describe('POST /follow-up/first-timers/:id/photo/upload-url', () => {
   it.each([
     ['a PDF', { ...goodUpload, contentType: 'application/pdf' }],
     ['an SVG', { ...goodUpload, contentType: 'image/svg+xml' }],
     ['a GIF', { ...goodUpload, contentType: 'image/gif' }],
-    ['no type', { size: 1000, consent: true }],
+    ['no type', { size: 1000 }],
     ['a photo over 5 MB', { ...goodUpload, size: PHOTO_MAX_BYTES + 1 }],
     ['an empty file', { ...goodUpload, size: 0 }],
-    ['no consent', { contentType: 'image/webp', size: 1000 }],
-    ['consent refused', { ...goodUpload, consent: false }],
-    ['consent as a string', { ...goodUpload, consent: 'true' }],
   ])('refuses %s, and never signs a link', async (_label, body) => {
     const { controller, bucket } = setup();
     await expect(controller.uploadUrl(actor, 'v1', body)).rejects.toBeInstanceOf(BadRequestException);
@@ -129,14 +126,13 @@ describe('POST /follow-up/first-timers/:id/photo', () => {
     expect(prisma.visitor.updateMany).not.toHaveBeenCalled();
   });
 
-  it('saves the photo with consent, then deletes the photo it replaces', async () => {
+  it('saves the photo, then deletes the photo it replaces', async () => {
     const { controller, bucket, prisma } = setup({ photoKey: keyOf('v1', UUID2) });
     const res = await controller.confirm(actor, 'v1', { key: keyOf('v1') });
 
     const call = (prisma.visitor.updateMany.mock.calls as unknown as [{ where: object; data: Record<string, unknown> }][])[0][0];
     expect(call.where).toEqual({ id: 'v1', tenantId: 't1' });
-    expect(call.data).toMatchObject({ photoKey: keyOf('v1'), photoConsent: true });
-    expect(call.data.photoConsentAt).toBeInstanceOf(Date);
+    expect(call.data).toEqual({ photoKey: keyOf('v1') });
     expect(bucket.remove).toHaveBeenCalledWith([keyOf('v1', UUID2)]);
     expect(res.photoUrl).toContain(keyOf('v1'));
   });
@@ -149,7 +145,7 @@ describe('POST /follow-up/first-timers/:id/photo', () => {
 });
 
 describe('DELETE /follow-up/first-timers/:id/photo', () => {
-  it('clears the photo and its consent, and deletes the object', async () => {
+  it('clears the photo, and deletes the object', async () => {
     const { controller, bucket, prisma } = setup({ photoKey: keyOf('v1') });
     await expect(controller.remove(actor, 'v1')).resolves.toEqual({ removed: true });
     expect(prisma.visitor.updateMany).toHaveBeenCalledWith({
