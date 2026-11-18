@@ -8,16 +8,19 @@ import { useRefreshFollowUp } from "@/lib/api/first-timer-profile";
 import { PeopleTable } from "@/components/dashboard/follow-up/v2/PeopleTable";
 import { BulkEmailButton } from "./BulkEmailButton";
 import { WhatsAppSendButton } from "./WhatsAppSendButton";
+import { EveryoneList } from "./EveryoneList";
 
 /**
- * The first-timer contact's workspace: everyone nobody has contacted yet,
- * oldest first. One tap sends the opening message on WhatsApp and logs it,
- * and the person leaves the list.
+ * The Guest Care Coordinator's workspace. "Waiting for a message": everyone
+ * nobody has contacted yet, oldest first; one tap sends the opening message on
+ * WhatsApp and logs it, and the person leaves the list. "All first-timers":
+ * everyone ever, to reach anyone again. Email is for admins only.
  */
 export default function FirstTimerWorkspace() {
   const queue = useOpeningQueue();
   const refresh = useRefreshFollowUp();
   const [done, setDone] = useState<string[]>([]);
+  const [tab, setTab] = useState<"waiting" | "all">("waiting");
 
   const rows = (queue.data?.rows ?? []).filter((r) => !done.includes(r.person.visitorId));
   const byId = new Map(rows.map((r) => [r.person.visitorId, r]));
@@ -59,9 +62,20 @@ export default function FirstTimerWorkspace() {
         </p>
       )}
 
-      {hasTemplate && withEmail.length > 0 && <BulkEmailButton people={withEmail} onDone={refresh} />}
+      <div role="tablist" aria-label="Who to show" className="flex gap-1 border-b border-gray-200 dark:border-white/10">
+        {([["waiting", "Waiting for a message"], ["all", "All first-timers"]] as const).map(([id, label]) => (
+          <button key={id} type="button" role="tab" aria-selected={tab === id} onClick={() => setTab(id)}
+            className={`-mb-px min-h-11 border-b-2 px-3 text-sm font-semibold ${tab === id ? "border-[#87102C] text-[#87102C] dark:text-[#FFB3C1]" : "border-transparent text-gray-500 dark:text-white/50"}`}>
+            {label}
+          </button>
+        ))}
+      </div>
 
-      {!queue.isError && (
+      {tab === "all" && <EveryoneList />}
+
+      {tab === "waiting" && queue.data?.canEmail && hasTemplate && withEmail.length > 0 && <BulkEmailButton people={withEmail} onDone={refresh} />}
+
+      {tab === "waiting" && !queue.isError && (
         <PeopleTable
           rows={rows.map((r) => r.person)}
           loading={queue.isLoading}

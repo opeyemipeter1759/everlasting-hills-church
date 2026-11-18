@@ -9,7 +9,7 @@ import { pipelineCte, pipelineOrder, pipelineWhere } from '../pipeline/pipeline.
 import { lagosDate } from './email-budget.service';
 import { MessageTemplatesService } from './message-templates.service';
 import { OpeningMessageService } from './opening-message.service';
-import { requireOpeningSender } from './opening-access';
+import { canEmailOpening, requireOpeningSender } from './opening-access';
 import { OPENING_KEY } from './template-variables';
 
 /**
@@ -54,6 +54,48 @@ export class OpeningQueueService {
     return rows.map((r) => r.visitorId);
   }
 
+/**
+   * Every first-timer ever, newest first, any status, each with a ready
+   * WhatsApp link: the Guest Care Coordinator can reach anyone, not only the
+   * people still waiting for their opening message.
+   */
+  async everyone(actor: AuthUser, q: { search?: string; take?: number; skip?: number }) {
+    requireOpeningSender(actor);
+    const page = await this.pipeline.list({ search: q.search || undefined, sort: 'newest', take: Math.min(q.take ?? 25, 100), skip: q.skip ?? 0 });
+    const active = await this.templates.active(OPENING_KEY);
+    const sender = active ? await this.opening.sender(actor) : null;
+    const lastSent = await this.lastWhatsApp(page.rows.map((r) => r.visitorId));
+    return {
+      template: active ? { key: OPENING_KEY, version: active.version } : null,
+      total: page.total,
+      rows: page.rows.map((person) => ({
+        person,
+        whatsapp: active && sender ? this.opening.whatsappFor(person, active, sender) : null,
+        lastWhatsApp: lastSent.get(person.visitorId) ?? null,
+      })),
+    };
+  }
+
+  /** The latest WhatsApp send to each of these people: when, and who sent it. */
+  private async lastWhatsApp(visitorIds: string[]): Promise<Map<string, { sentAt: string; sentByName: string | null }>> {
+    if (visitorIds.length === 0) return new Map();
+    const logs = await this.prisma.messageLog.findMany({
+      where: { tenantId: this.tenantId, visitorId: { in: visitorIds }, channel: 'whatsapp', status: 'SENT' },
+      orderBy: { sentAt: 'desc' },
+      select: { visitorId: true, sentAt: true, sentById: true },
+    });
+    const senderIds = [...new Set(logs.map((l) => l.sentById).filter((id): id is string => !!id))];
+    const members = senderIds.length
+      ? await this.prisma.member.findMany({ where: { tenantId: this.tenantId, profileId: { in: senderIds } }, select: { profileId: true, firstName: true, lastName: true } })
+      : [];
+    const names = new Map(members.map((m) => [m.profileId, `${m.firstName} ${m.lastName}`.trim()]));
+    const latest = new Map<string, { sentAt: string; sentByName: string | null }>();
+    for (const l of logs) {
+      if (!latest.has(l.visitorId)) latest.set(l.visitorId, { sentAt: l.sentAt.toISOString(), sentByName: l.sentById ? (names.get(l.sentById) ?? null) : null });
+    }
+    return latest;
+  }
+
   async queue(actor: AuthUser) {
     requireOpeningSender(actor);
     const ids = await this.queueIds();
@@ -62,6 +104,7 @@ export class OpeningQueueService {
     const sender = active ? await this.opening.sender(actor) : null;
     return {
       windowDays: QUEUE_WINDOW_DAYS,
+      canEmail: canEmailOpening(actor),
       template: active ? { key: OPENING_KEY, version: active.version } : null,
       total: page.total,
       rows: page.rows.map((person) => ({

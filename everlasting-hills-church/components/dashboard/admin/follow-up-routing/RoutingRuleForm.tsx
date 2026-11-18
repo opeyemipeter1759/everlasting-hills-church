@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSaveRoutingRule, type RoutingOptions, type RoutingRule } from "@/lib/api/routing-rules";
 import { createRoutingRuleSchema, updateRoutingRuleSchema, SEGMENTS, type Segment } from "@/lib/follow-up/routing-schema";
 import { firstProblem } from "@/lib/follow-up/first-problem";
+import { Select } from "@/components/ui/select";
 
 const field =
   "mt-1 w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm text-gray-900 focus:border-[#87102C] focus:outline-none focus:ring-2 focus:ring-[#87102C]/20 dark:border-white/10 dark:bg-white/[0.04] dark:text-white";
@@ -54,19 +55,17 @@ export default function RoutingRuleForm({ rule, options, onDone }: { rule?: Rout
       {!rule && (
         <label className="block">
           <span className="text-xs font-medium text-gray-600 dark:text-white/55">Who it routes</span>
-          <select
+          <Select
+            aria-label="Who it routes"
             value={segment}
-            onChange={(e) => {
-              const next = e.target.value as Segment;
+            onChange={(v) => {
+              const next = v as Segment;
               if (name === SEGMENTS[segment].label) setName(SEGMENTS[next].label);
               setSegment(next);
             }}
             className={field}
-          >
-            {(Object.keys(SEGMENTS) as Segment[]).map((s) => (
-              <option key={s} value={s}>{SEGMENTS[s].label}: {SEGMENTS[s].hint.toLowerCase()}</option>
-            ))}
-          </select>
+            options={(Object.keys(SEGMENTS) as Segment[]).map((s) => ({ value: s, label: `${SEGMENTS[s].label}: ${SEGMENTS[s].hint.toLowerCase()}` }))}
+          />
         </label>
       )}
       <label className="block">
@@ -75,12 +74,14 @@ export default function RoutingRuleForm({ rule, options, onDone }: { rule?: Rout
       </label>
       <label className="block">
         <span className="text-xs font-medium text-gray-600 dark:text-white/55">Unit the assignments sit under (its lead approves)</span>
-        <select value={unitId} onChange={(e) => pickUnit(e.target.value)} className={field}>
-          <option value="">Pick a unit</option>
-          {options.units.map((u) => (
-            <option key={u.id} value={u.id}>{u.name}</option>
-          ))}
-        </select>
+        <Select
+          aria-label="Unit the assignments sit under"
+          value={unitId}
+          onChange={pickUnit}
+          placeholder="Pick a unit"
+          className={field}
+          options={options.units.map((u) => ({ value: u.id, label: u.name }))}
+        />
       </label>
       {unit && (
         <fieldset>

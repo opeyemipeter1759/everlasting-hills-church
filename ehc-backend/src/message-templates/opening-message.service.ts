@@ -14,7 +14,7 @@ import { FollowUpAuthService } from '../follow-up/services/follow-up-auth.servic
 import { stampFirstContact } from '../follow-up/first-contact';
 import { DailyEmailBudget } from './email-budget.service';
 import { MessageTemplatesService } from './message-templates.service';
-import { canSendOpening, requireOpeningSender } from './opening-access';
+import { canEmailOpening, canSendOpening, requireOpeningEmailer, requireOpeningSender } from './opening-access';
 import { renderOpeningEmail, renderWhatsApp, valuesFor, waMeLink, type Sender } from './opening-message.render';
 import { OPENING_KEY } from './template-variables';
 
@@ -65,6 +65,8 @@ export class OpeningMessageService {
     const whatsapp = active ? this.whatsappFor(person, active, await this.sender(actor)) : null;
     return {
       canSend,
+      /** Admins only: the Guest Care Coordinator sends on WhatsApp. */
+      canEmail: canEmailOpening(actor),
       template: active ? { key: OPENING_KEY, version: active.version } : null,
       whatsapp,
       email: person.email ? { to: person.email } : null,
@@ -122,7 +124,7 @@ export class OpeningMessageService {
    * that is logged SKIPPED and reported, so nobody silently misses out.
    */
   async bulkEmail(actor: AuthUser, visitorIds: string[]): Promise<EmailResult[]> {
-    requireOpeningSender(actor);
+    requireOpeningEmailer(actor);
     const active = await this.templates.active(OPENING_KEY);
     if (!active) throw new ConflictException(NO_TEMPLATE);
     const ids = [...new Set(visitorIds)];

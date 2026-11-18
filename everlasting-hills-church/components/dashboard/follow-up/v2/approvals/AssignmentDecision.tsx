@@ -28,20 +28,20 @@ export default function AssignmentDecision({ request, firstName, onDone }: { req
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         {proposed && (
           <button type="button" onClick={() => send("APPROVED")} disabled={decide.isPending} className={`${BUTTON} bg-emerald-600 text-white hover:bg-emerald-700`}>
-            Approve {proposed.name?.split(" ")[0] ?? ""}
+            Approve: assign to {proposed.name?.split(" ")[0] ?? "them"}
           </button>
         )}
         <Select
           aria-label="Someone else"
           value={other}
           onChange={setOther}
-          placeholder="Someone else"
+          placeholder="Or pick someone else"
           className={`${QUIET} w-full text-left sm:w-56`}
           options={team.filter((m) => m.id !== proposed?.memberId).map((m) => ({ value: m.id, label: m.name }))}
         />
         {other && (
           <button type="button" onClick={() => send("APPROVED", other)} disabled={decide.isPending} className={`${BUTTON} bg-[#87102C] text-white hover:bg-[#6E0C24]`}>
-            Give to them
+            Assign to {team.find((m) => m.id === other)?.name.split(" ")[0] ?? "them"} instead
           </button>
         )}
         <button type="button" onClick={() => send("CHANGES_REQUESTED")} disabled={decide.isPending} className={QUIET}>

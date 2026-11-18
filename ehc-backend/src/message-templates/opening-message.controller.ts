@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -31,6 +31,16 @@ export class OpeningMessageController {
   @ApiOperation({ summary: 'First-timers nobody has contacted yet, oldest first, each with a ready WhatsApp link' })
   list(@CurrentUser() actor: AuthUser) {
     return this.queue.queue(actor);
+  }
+
+  @Get('everyone')
+  @Roles(...SENDERS)
+  @ApiOperation({ summary: 'Every first-timer ever, newest first, any status, each with a ready WhatsApp link' })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'take', required: false })
+  @ApiQuery({ name: 'skip', required: false })
+  everyone(@CurrentUser() actor: AuthUser, @Query('search') search?: string, @Query('take') take?: string, @Query('skip') skip?: string) {
+    return this.queue.everyone(actor, { search, take: take ? Number(take) || 25 : 25, skip: skip ? Number(skip) || 0 : 0 });
   }
 
   @Get('first-timers/:visitorId')

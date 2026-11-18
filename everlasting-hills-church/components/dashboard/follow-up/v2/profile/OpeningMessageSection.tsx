@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import { useOpeningContext } from "@/lib/api/opening-message";
-import { EmailSendButton } from "@/components/dashboard/first-timers/EmailSendButton";
 import { SendsList, churchTime } from "@/components/dashboard/first-timers/SendsList";
-import { WhatsAppSendButton } from "@/components/dashboard/first-timers/WhatsAppSendButton";
 import type { ProfileSectionProps } from "./types";
 
 /**
- * The opening message: send it on WhatsApp or by email, and every send so far.
- * The first-timer contact and admins see the buttons; the rest of the team
- * sees what was sent and when.
+ * The opening message on a first-timer's profile: whether they have been
+ * contacted, and every send so far. Sending happens only in the Guest Care
+ * Coordinator's Welcome queue, on WhatsApp; the welcome email goes out on its
+ * own when they fill the form.
  */
-export default function OpeningMessageSection({ profile, refresh }: ProfileSectionProps) {
+export default function OpeningMessageSection({ profile }: ProfileSectionProps) {
   const { person } = profile;
   const query = useOpeningContext(person.visitorId);
 
@@ -29,34 +28,14 @@ export default function OpeningMessageSection({ profile, refresh }: ProfileSecti
         </p>
       </div>
 
-      {ctx.canSend && !ctx.template && (
+      {ctx.canSend && (
         <p className="mt-3 text-sm text-gray-600 dark:text-white/60">
-          The opening message has not been written yet.{" "}
-          <Link href="/dashboard/first-timers/messages" className="font-semibold text-[#87102C] underline-offset-2 hover:underline dark:text-[#FFB3C1]">
-            Write it now
+          Send it from the{" "}
+          <Link href="/dashboard/first-timers" className="font-semibold text-[#87102C] underline-offset-2 hover:underline dark:text-[#FFB3C1]">
+            Welcome queue
           </Link>
+          .
         </p>
-      )}
-
-      {ctx.canSend && ctx.template && (
-        <>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {ctx.whatsapp ? (
-              <WhatsAppSendButton visitorId={person.visitorId} firstName={person.firstName} whatsapp={ctx.whatsapp} onLogged={refresh} />
-            ) : (
-              <p className="self-center text-sm text-gray-500 dark:text-white/50">No phone number to message.</p>
-            )}
-            {ctx.email && (
-              <EmailSendButton visitorId={person.visitorId} firstName={person.firstName} to={ctx.email.to} emailsLeftToday={ctx.emailsLeftToday} onSent={refresh} />
-            )}
-          </div>
-          {ctx.whatsapp && (
-            <details className="mt-3 rounded-xl bg-gray-50 px-4 py-3 text-sm dark:bg-white/[0.03]">
-              <summary className="cursor-pointer font-medium text-gray-700 dark:text-white/70">What the WhatsApp message says</summary>
-              <p className="mt-2 whitespace-pre-line text-gray-700 dark:text-white/75">{ctx.whatsapp.text}</p>
-            </details>
-          )}
-        </>
       )}
 
       <h3 className="mt-4 text-xs font-semibold text-gray-500 dark:text-white/45">Sent so far</h3>

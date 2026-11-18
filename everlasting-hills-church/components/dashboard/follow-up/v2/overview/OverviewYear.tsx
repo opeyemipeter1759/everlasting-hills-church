@@ -50,7 +50,7 @@ function OverviewYearInner() {
           value={String(year)}
           onChange={pick}
           options={years.map((y) => ({ value: y, label: y }))}
-          className="h-10 min-w-[7rem] rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-white/[0.05]"
+          className="h-10 min-w-[7rem] rounded-xl border border-gray-200 bg-white px-3 text-sm text-[#111] dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
         />
       </div>
 

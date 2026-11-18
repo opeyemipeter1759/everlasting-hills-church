@@ -39,6 +39,7 @@ export interface OpeningSend {
 
 export interface OpeningContext {
   canSend: boolean;
+  canEmail: boolean; // admins only: the Guest Care Coordinator sends on WhatsApp
   template: { key: string; version: number } | null;
   whatsapp: OpeningWhatsApp | null;
   email: { to: string } | null;
@@ -48,6 +49,7 @@ export interface OpeningContext {
 
 export interface OpeningQueue {
   windowDays: number;
+  canEmail: boolean;
   template: { key: string; version: number } | null;
   total: number;
   rows: { person: PipelineRow; whatsapp: OpeningWhatsApp | null }[];
@@ -134,12 +136,6 @@ export function useLogWhatsAppSend() {
   return useMutation({
     mutationFn: ({ visitorId, templateVersion }: { visitorId: string; templateVersion: number }) =>
       api.post<{ logged: boolean; firstContact: boolean }>(`/opening-message/first-timers/${visitorId}/whatsapp`, { templateVersion }),
-  });
-}
-
-export function useSendOpeningEmail() {
-  return useMutation({
-    mutationFn: (visitorId: string) => api.post<EmailResult>(`/opening-message/first-timers/${visitorId}/email`),
   });
 }
 

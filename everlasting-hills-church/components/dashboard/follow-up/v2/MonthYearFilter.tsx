@@ -39,14 +39,14 @@ export function MonthYearFilter({ firstYear }: { firstYear?: number }) {
         aria-label="Year"
         value={year ? String(year) : ""}
         onChange={(v) => set({ year: v ? Number(v) : undefined })}
-        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-white/[0.05]"
+        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm text-[#111] dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
         options={[{ value: "", label: "Any year" }, ...years.map((y) => ({ value: String(y), label: String(y) }))]}
       />
       <Select
         aria-label="Month"
         value={month ? String(month) : ""}
         onChange={(v) => set({ year, month: v ? Number(v) : undefined })}
-        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-white/[0.05]"
+        className="h-10 rounded-xl border border-gray-200 bg-white px-3 text-sm text-[#111] dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
         options={[{ value: "", label: year ? "Any month" : "Pick a year first" }, ...(year ? MONTHS.map((m, i) => ({ value: String(i + 1), label: m })) : [])]}
       />
     </div>

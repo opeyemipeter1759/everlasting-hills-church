@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePipeline } from "@/lib/api/pipeline";
+import { Select } from "@/components/ui/select";
 import { useOpeningPreview } from "@/lib/api/opening-message";
 import type { TemplateDraft } from "@/lib/messages/opening-template";
 
@@ -41,19 +42,14 @@ export function TemplatePreview({ draft }: { draft: TemplateDraft }) {
           aria-label="Find a first-timer to preview with"
           className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 dark:border-white/15 dark:bg-white/5 dark:text-white sm:text-sm"
         />
-        <select
+        <Select
           value={visitorId ?? ""}
-          onChange={(e) => setVisitorId(e.target.value || null)}
+          onChange={(v) => setVisitorId(v || null)}
           aria-label="First-timer to preview with"
+          placeholder={rows.length === 0 ? "No first-timers found" : "Pick a first-timer"}
           className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-base text-gray-900 dark:border-white/15 dark:bg-[#1b1b1d] dark:text-white sm:text-sm"
-        >
-          {rows.length === 0 && <option value="">No first-timers found</option>}
-          {rows.map((r) => (
-            <option key={r.visitorId} value={r.visitorId}>
-              {r.firstName} {r.lastName}
-            </option>
-          ))}
-        </select>
+          options={rows.map((r) => ({ value: r.visitorId, label: `${r.firstName} ${r.lastName}` }))}
+        />
       </div>
 
       <div className="mt-3 flex gap-1 rounded-xl bg-gray-100 p-1 dark:bg-white/[0.06]" role="tablist">

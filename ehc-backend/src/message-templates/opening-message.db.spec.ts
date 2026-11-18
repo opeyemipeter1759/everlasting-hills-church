@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaClient, Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PipelineRepository } from '../pipeline/pipeline.repository';
@@ -58,6 +58,8 @@ maybe('Opening message against Postgres', () => {
     return v.id;
   }
   const entryOf = (visitorId: string) => prisma.followUpEntry.findFirst({ where: { visitorId } });
+  // Emailing is for admins; the Guest Care Coordinator sends on WhatsApp.
+  const asAdmin = (): AuthUser => ({ ...actor, role: Role.ADMIN_HEAD, effectiveRoles: [Role.MEMBER, Role.ADMIN_HEAD] });
 
   beforeAll(async () => {
     await prisma.tenant.create({ data: { id: tenantId, name: 'Opening test', slug: `opening-${tenantId}` } });
@@ -120,7 +122,7 @@ maybe('Opening message against Postgres', () => {
     expect(history.versions[0].editedByName).toBe('Arewa Contact');
   });
 
-  it('renders a send from the version in use and logs that version', async () => {
+  it('renders a send from the version in use and logs that version; only an admin may email it', async () => {
     const v4 = await templates.save(actor, OPENING_KEY, { ...OPENING_TEMPLATE_V1, emailSubject: 'Lovely to meet you, {{firstName}}' });
     const visitorId = await firstTimer('Bisi');
 
@@ -131,7 +133,9 @@ maybe('Opening message against Postgres', () => {
     expect(ctx.whatsapp?.link).toMatch(/^https:\/\/wa\.me\/2348\d{9}\?text=Hello%20Bisi/);
     expect(ctx.whatsapp!.text.length).toBeLessThanOrEqual(WHATSAPP_MAX);
 
-    const [result] = await opening.bulkEmail(actor, [visitorId]);
+    expect(ctx.canEmail).toBe(false);
+    await expect(opening.bulkEmail(actor, [visitorId])).rejects.toBeInstanceOf(ForbiddenException);
+    const [result] = await opening.bulkEmail(asAdmin(), [visitorId]);
     expect(result.status).toBe('SENT');
     expect(delivered.at(-1)).toMatchObject({ to: 'bisi@example.com', subject: 'Lovely to meet you, Bisi' });
     const log = await prisma.messageLog.findFirst({ where: { visitorId, channel: 'email' } });
@@ -201,7 +205,7 @@ maybe('Opening message against Postgres', () => {
     const people = [await firstTimer('Bulk-a'), await firstTimer('Bulk-b'), await firstTimer('Bulk-c', { email: null }), await firstTimer('Bulk-d')];
     const before = delivered.length;
 
-    const results = await opening.bulkEmail(actor, people);
+    const results = await opening.bulkEmail(asAdmin(), people);
     expect(results.map((r) => r.status)).toEqual(['SENT', 'SKIPPED', 'NO_EMAIL', 'SKIPPED']);
     expect(delivered.length - before).toBe(1);
     expect(await budget.remaining(tenantId)).toBe(0);
