@@ -3,9 +3,7 @@ import { FirstTimerFormService } from './first-timer-form.service';
 import { heardFromProblems } from '../first-timer-heard-from.schema';
 import { lagosDay } from './first-timer-return';
 
-type Opening = { renderWelcomeEmail: jest.Mock; logAutomaticWelcome: jest.Mock };
-
-function setup(existing: { visitorId?: string; memberId?: string } = {}, opening?: Partial<Opening>) {
+function setup(existing: { visitorId?: string; memberId?: string } = {}) {
   const created: Record<string, unknown[]> = { visitor: [], visit: [] };
   const prisma = {
     $queryRaw: jest
@@ -21,15 +19,8 @@ function setup(existing: { visitorId?: string; memberId?: string } = {}, opening
   // Sunday 15 November 2026 in Lagos is stored as 23:00 UTC the day before.
   const sessionWindow = { findOrCreateTodayService: jest.fn().mockResolvedValue({ id: 's1', scheduledAt: new Date('2026-11-14T23:00:00Z') }) };
   const events = { emit: jest.fn(), emitAsync: jest.fn().mockResolvedValue([]) };
-  const welcome = {
-    renderWelcomeEmail: jest.fn().mockResolvedValue({ payload: { to: 'ada@example.com', subject: 'From the template' }, templateVersion: 3 }),
-    logAutomaticWelcome: jest.fn().mockResolvedValue(undefined),
-    ...opening,
-  };
-  const svc = new FirstTimerFormService(
-    prisma as never, emailDispatch as never, sessionWindow as never, events as never, { get: () => 't1' } as never, welcome as never,
-  );
-  return { svc, created, events, emailDispatch, welcome };
+  const svc = new FirstTimerFormService(prisma as never, emailDispatch as never, sessionWindow as never, events as never, { get: () => 't1' } as never);
+  return { svc, created, events, emailDispatch };
 }
 
 const form = { first_name: 'Ada', last_name: 'Eze', phone_number: '0803 123 4567', how_did_you_learn: 'Social Media' };
@@ -74,20 +65,12 @@ describe('after the form is saved', () => {
     await expect(failing.svc.submitFirstTimer(form as never)).resolves.toMatchObject({ success: true });
   });
 
-  it('writes the welcome from the opening template and logs the version it used', async () => {
-    const { svc, emailDispatch, welcome } = setup();
+  it("sends the church's own welcome email, as it always has", async () => {
+    const { svc, emailDispatch } = setup();
     await svc.submitFirstTimer(withEmail as never);
-    expect(welcome.renderWelcomeEmail).toHaveBeenCalledWith({ firstName: 'Ada', email: 'ada@example.com' });
-    expect(emailDispatch.dispatch).toHaveBeenCalledWith(expect.objectContaining({ subject: 'From the template' }));
-    expect(welcome.logAutomaticWelcome).toHaveBeenCalledWith(expect.any(String), 3);
-  });
-
-  it('sends the standard welcome when the template cannot be read, and logs nothing', async () => {
-    const { svc, emailDispatch, welcome } = setup({}, { renderWelcomeEmail: jest.fn().mockRejectedValue(new Error('db down')) });
-    await svc.submitFirstTimer(withEmail as never);
-    const sent = emailDispatch.dispatch.mock.calls.map(([payload]) => payload as { to?: string });
-    expect(sent.some((payload) => payload.to === 'ada@example.com')).toBe(true);
-    expect(welcome.logAutomaticWelcome).not.toHaveBeenCalled();
+    expect(emailDispatch.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'ada@example.com', subject: 'Welcome to the Everlasting Hills family, Ada', tag: 'first-timer-welcome' }),
+    );
   });
 });
 

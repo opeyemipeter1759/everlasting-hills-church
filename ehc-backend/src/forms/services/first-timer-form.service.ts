@@ -15,7 +15,6 @@ import { VisitorEvents, type VisitorCreatedPayload } from '../../notifications/n
 import { normalizeNigerianPhone } from '../../common/phone.util';
 import { heardFromProblems } from '../first-timer-heard-from.schema';
 import { findPossibleReturn, lagosDay } from './first-timer-return';
-import { OpeningMessageService } from '../../message-templates/opening-message.service';
 
 @Injectable()
 export class FirstTimerFormService {
@@ -28,7 +27,6 @@ export class FirstTimerFormService {
     private readonly sessionWindow: AttendanceSessionWindowService,
     private readonly events: EventEmitter2,
     config: ConfigService<Env, true>,
-    private readonly opening: OpeningMessageService,
   ) {
     this.tenantId = config.get('DEFAULT_TENANT_ID', { infer: true });
   }
@@ -114,34 +112,16 @@ export class FirstTimerFormService {
       buildFirstTimerAdminEmail({ data, adminEmail: this.emailDispatch.adminEmail, appUrl: this.emailDispatch.appUrl }),
     );
     // The guest: warm welcome with service times, address, and ways to connect.
-    if (normalizedEmail) await this.sendWelcome(visitor.id, data.first_name.trim(), normalizedEmail);
+    if (normalizedEmail) {
+      this.emailDispatch.dispatch(
+        buildFirstTimerWelcomeEmail({ firstName: data.first_name.trim(), email: normalizedEmail, appUrl: this.emailDispatch.appUrl }),
+      );
+    }
 
     return {
       success: true,
       message: 'First timer registration submitted successfully',
       visitor,
     };
-  }
-
-  /**
-   * The guest's welcome, written from the opening-message template the
-   * First-Timer Contact keeps, or the standard welcome when there is none. If
-   * the template cannot be read, the standard welcome still goes.
-   */
-  private async sendWelcome(visitorId: string, firstName: string, email: string) {
-    let rendered: Awaited<ReturnType<OpeningMessageService['renderWelcomeEmail']>>;
-    try {
-      rendered = await this.opening.renderWelcomeEmail({ firstName, email });
-    } catch (err) {
-      this.logger.warn(`The welcome template could not be read, sending the standard welcome: ${(err as Error).message}`);
-      this.emailDispatch.dispatch(buildFirstTimerWelcomeEmail({ firstName, email, appUrl: this.emailDispatch.appUrl }));
-      return;
-    }
-    this.emailDispatch.dispatch(rendered.payload);
-    if (rendered.templateVersion !== null) {
-      await this.opening
-        .logAutomaticWelcome(visitorId, rendered.templateVersion)
-        .catch((err: unknown) => this.logger.warn(`Logging the welcome failed: ${(err as Error).message}`));
-    }
   }
 }

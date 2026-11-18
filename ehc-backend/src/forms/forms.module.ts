@@ -4,7 +4,6 @@ import { FormsMiscController } from './forms-misc.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AttendanceModule } from '../attendance/attendance.module';
 import { AiModule } from '../ai/ai.module';
-import { MessageTemplatesModule } from '../message-templates/message-templates.module';
 import { FormsEmailDispatchService } from './services/forms-email-dispatch.service';
 import { FirstTimerFormService } from './services/first-timer-form.service';
 import { PrayerRequestFormService } from './services/prayer-request-form.service';
@@ -20,7 +19,7 @@ import { PledgeService } from './services/pledge.service';
 import { PledgesController } from './pledges.controller';
 
 @Module({
-  imports: [PrismaModule, AttendanceModule, AiModule, MessageTemplatesModule],
+  imports: [PrismaModule, AttendanceModule, AiModule],
   controllers: [FormsController, FormsMiscController, PledgesController],
   providers: [
     FormsEmailDispatchService,
