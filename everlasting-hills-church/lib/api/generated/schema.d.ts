@@ -985,6 +985,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/audit-trail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Everything people did on the dashboard, newest first, with who, when and the details (SUPER_ADMIN) */
+        get: operations["AuditTrailController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/audit-trail/filters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The sections and the people that appear in the audit trail, for its filters (SUPER_ADMIN) */
+        get: operations["AuditTrailController_filters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/change-password": {
         parameters: {
             query?: never;
@@ -14421,6 +14455,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AuditTrailController_list: {
+        parameters: {
+            query?: {
+                search?: string;
+                area?: string;
+                /** @description The person's sign-in id, from the filters list */
+                actor?: string;
+                /** @description A Lagos date, YYYY-MM-DD */
+                from?: string;
+                /** @description A Lagos date, YYYY-MM-DD, included */
+                to?: string;
+                /** @description nextCursor from the page before */
+                cursor?: string;
+                take?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
+                };
+            };
+            /** @description Error response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorEnvelope"];
+                };
+            };
+        };
+    };
+    AuditTrailController_filters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                        meta: components["schemas"]["ApiResponseMeta"];
+                    };
                 };
             };
             /** @description Error response */

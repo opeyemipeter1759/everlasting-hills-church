@@ -58,6 +58,7 @@ import { JobsModule } from './jobs/jobs.module';
 import { SchedulingModule } from './scheduling/scheduling.module';
 import { ClassesModule } from './classes/classes.module';
 import { StatusReportsModule } from './status-reports/status-reports.module';
+import { AuditTrailModule } from './audit-trail/audit-trail.module';
 import { OnlineAttendanceModule } from './online-attendance/online-attendance.module';
 import { AiModule } from './ai/ai.module';
 import { validateEnv } from './config/env.validation';
@@ -185,6 +186,7 @@ import { GatheringsModule } from './gatherings/gatherings.module';
     GatheringsModule,
     ClassesModule,
     StatusReportsModule,
+    AuditTrailModule,
     OnlineAttendanceModule,
     AiModule,
   ],

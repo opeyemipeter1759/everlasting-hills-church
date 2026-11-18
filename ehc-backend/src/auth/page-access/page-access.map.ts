@@ -131,7 +131,7 @@ export const PAGE_ACCESS: PageAccessEntry[] = [
 
   // ── Super admin ───────────────────────────────────────────────────────────
   { href: '/dashboard/admin/permissions', role: Role.SUPER_ADMIN, paths: ['/nav-permissions'] },
-  { href: '/dashboard/audit-log', role: Role.SUPER_ADMIN, paths: ['/status-reports'] },
+  { href: '/dashboard/audit-log', role: Role.SUPER_ADMIN, paths: ['/status-reports', '/audit-trail'] },
 ];
 
 /**

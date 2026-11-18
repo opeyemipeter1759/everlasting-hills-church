@@ -7,6 +7,9 @@ import type { Env } from '../../config/env.validation';
 
 export type CmsAuditAction = 'CREATE' | 'UPDATE' | 'PUBLISH' | 'UNPUBLISH' | 'DELETE' | 'ROLLBACK';
 
+/** The entities the CMS writes. */
+export const CMS_ENTITIES = ['Page', 'MediaAsset', 'SiteConfig'] as const;
+
 @Injectable()
 export class CmsAuditService {
   private readonly logger = new Logger(CmsAuditService.name);
@@ -52,7 +55,8 @@ export class CmsAuditService {
    * Profile.id — no FK either way, so this is a batch lookup, not an `include`. */
   async list(limit = 50) {
     const rows = await this.prisma.auditLog.findMany({
-      where: { tenantId: this.tenantId },
+      // The table also holds the general audit trail; this page shows the site's own changes.
+      where: { tenantId: this.tenantId, entity: { in: [...CMS_ENTITIES] } },
       orderBy: { createdAt: 'desc' },
       take: Math.min(200, Math.max(1, limit)),
     });
