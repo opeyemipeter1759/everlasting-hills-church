@@ -1,5 +1,5 @@
 import type { SendEmailPayload } from '../notification-events';
-import { escapeHtml, greetingHtml, greetingText, renderEmailLayout } from './layout';
+import { escapeHtml, greetingHtml, greetingText, publicAssetUrl, renderEmailLayout } from './layout';
 import { CHURCH_INFO } from '../church-info';
 import type { ChurchLink } from '../church-links';
 
@@ -12,6 +12,9 @@ interface Args {
   /** The links to end with; the church's usual socials when not given. */
   links?: ChurchLink[];
 }
+/** The Welcome Home banner, served from the website's public folder. */
+export const WELCOME_BANNER = { src: publicAssetUrl('email/welcome-home.jpg'), alt: 'Welcome home. We have been praying for you.' };
+
 export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl, firstVisitDay = 'Sunday', links }: Args): SendEmailPayload {
   const base = appUrl.replace(/\/$/, '');
   const socials: ChurchLink[] = links ?? CHURCH_INFO.socials.filter((s) => s.href);
@@ -77,6 +80,7 @@ export function buildFirstTimerWelcomeEmail({ firstName, email, appUrl, firstVis
     heading: `Welcome, ${escapeHtml(firstName)}.`,
     bodyHtml,
     cta: { label: 'Plan your next visit', href: `${base}/visit` },
+    banner: WELCOME_BANNER,
   });
 
   return { to: email, subject, text, html, tag: 'first-timer-welcome' };

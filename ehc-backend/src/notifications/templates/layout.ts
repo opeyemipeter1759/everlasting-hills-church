@@ -11,6 +11,11 @@
 const FRONTEND_URL = (process.env.FRONTEND_URL ?? 'https://www.everlastinghills.church').replace(/\/$/, '');
 const DEFAULT_LOGO_URL = `${FRONTEND_URL}/logo.png`;
 
+/** A file in the frontend's public/ folder, as the full URL an email client can load. */
+export function publicAssetUrl(path: string): string {
+  return `${FRONTEND_URL}/${path.replace(/^\//, '')}`;
+}
+
 // Admins can swap the header logo from the Emails page (EmailSettings.logoUrl).
 // Templates render synchronously from many places, so the override lives here
 // as module state: EmailsService loads it on boot and updates it on save.
@@ -119,8 +124,10 @@ interface LayoutArgs {
   bodyHtml: string;
   /** Optional single call-to-action button. */
   cta?: { label: string; href: string };
+  /** A full-width banner image in place of the logo header; it carries the church's logo itself. */
+  banner?: { src: string; alt: string };
 }
-export function renderEmailLayout({ heading, bodyHtml, cta }: LayoutArgs): string {
+export function renderEmailLayout({ heading, bodyHtml, cta, banner }: LayoutArgs): string {
   const ctaHtml = cta
     ? `<div style="text-align:center;margin:32px 0">
         <a href="${cta.href}" style="display:inline-block;background:#87102C;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-family:${FONT};font-weight:700;font-size:${BODY_SIZE};letter-spacing:0.3px">${escapeHtml(cta.label)} →</a>
@@ -132,7 +139,7 @@ export function renderEmailLayout({ heading, bodyHtml, cta }: LayoutArgs): strin
   <head><meta charset="utf-8" /><style>body, table, td, p, li, a { font-family: Arial, Helvetica, sans-serif; }</style></head>
   <body style="margin:0;padding:0;background:#F4F4F5;font-family:${FONT};color:#111827">
     <div style="max-width:560px;margin:0 auto;padding:32px 20px">
-     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#87102C,#6E0C24);border-radius:8px;margin-bottom:24px">
+     ${banner ? `<img src="${banner.src}" alt="${escapeHtml(banner.alt)}" width="520" style="display:block;width:100%;max-width:520px;height:auto;border:0;border-radius:8px;margin:0 0 24px" />` : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#87102C,#6E0C24);border-radius:8px;margin-bottom:24px">
   <tr>
     <td style="padding:24px;text-align:center">
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto">
@@ -148,7 +155,7 @@ export function renderEmailLayout({ heading, bodyHtml, cta }: LayoutArgs): strin
       </table>
     </td>
   </tr>
-</table>
+</table>`}
 
       ${heading ? `<h2 style="font-family:${FONT};color:#111827;font-size:25px;font-weight:700;letter-spacing:-0.3px;line-height:1.3;margin:0 0 14px">${heading}</h2>` : ''}
       <div style="font-family:${FONT};color:#4B5563;font-size:${BODY_SIZE};line-height:1.7">${bodyHtml}</div>
