@@ -1,54 +1,36 @@
-import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import type { MessageTemplate } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Env } from '../config/env.validation';
 import type { AuthUser } from '../auth/types/auth-user';
-import { NotificationsService } from '../notifications/notifications.service';
 import type { SendEmailPayload } from '../notifications/notification-events';
 import { buildFirstTimerWelcomeEmail } from '../notifications/templates/first-timer-welcome.email';
 import { PipelineRepository } from '../pipeline/pipeline.repository';
 import type { PipelineRow } from '../pipeline/pipeline.types';
 import { FollowUpAuthService } from '../follow-up/services/follow-up-auth.service';
 import { stampFirstContact } from '../follow-up/first-contact';
-import { DailyEmailBudget } from './email-budget.service';
 import { MessageTemplatesService } from './message-templates.service';
-import { canEmailOpening, canSendOpening, requireOpeningEmailer, requireOpeningSender } from './opening-access';
+import { canSendOpening, requireOpeningSender } from './opening-access';
 import { renderOpeningEmail, renderWhatsApp, valuesFor, waMeLink, type Sender } from './opening-message.render';
 import { OPENING_KEY } from './template-variables';
-
-export type EmailOutcome = 'SENT' | 'FAILED' | 'SKIPPED' | 'NO_EMAIL';
-
-export interface EmailResult {
-  visitorId: string;
-  name: string;
-  status: EmailOutcome;
-  error?: string;
-}
-
-const NO_TEMPLATE = 'The opening message has not been written yet. Write it under Messages first.';
 
 /**
  * Sending the opening message. Every send is rendered from the version in use
  * at that moment, writes a MessageLog row (who, which channel, which version,
  * who sent it, when), and counts as a contact: the first contact of any kind
- * sets first_contacted_at. Email goes through the daily budget guard.
+ * sets first_contacted_at. It goes out on WhatsApp; nobody emails it by hand
+ * (new first-timers get the church's welcome email automatically).
  */
 @Injectable()
 export class OpeningMessageService {
-  private readonly logger = new Logger(OpeningMessageService.name);
   private readonly tenantId: string;
   private readonly appUrl: string;
-  /** Pause between emails in a bulk send, to stay inside Resend's per-second limit. */
-  pauseMs = 500;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly templates: MessageTemplatesService,
     private readonly pipeline: PipelineRepository,
-    private readonly budget: DailyEmailBudget,
-    private readonly notifications: NotificationsService,
     private readonly auth: FollowUpAuthService,
     config: ConfigService<Env, true>,
   ) {
@@ -65,12 +47,8 @@ export class OpeningMessageService {
     const whatsapp = active ? this.whatsappFor(person, active, await this.sender(actor)) : null;
     return {
       canSend,
-      /** Admins only: the Guest Care Coordinator sends on WhatsApp. */
-      canEmail: canEmailOpening(actor),
       template: active ? { key: OPENING_KEY, version: active.version } : null,
       whatsapp,
-      email: person.email ? { to: person.email } : null,
-      emailsLeftToday: canSend ? await this.budget.remaining(this.tenantId) : null,
       sends: await this.sends(visitorId),
     };
   }
@@ -111,66 +89,6 @@ export class OpeningMessageService {
       return stampFirstContact(tx, { tenantId: this.tenantId, visitorId, at: now, actorId: actor.profileId ?? null });
     });
     return { logged: true, firstContact: result.stamped };
-  }
-
-  async sendEmail(actor: AuthUser, visitorId: string): Promise<EmailResult> {
-    const [result] = await this.bulkEmail(actor, [visitorId]);
-    if (!result) throw new NotFoundException('First-timer not found');
-    return result;
-  }
-
-  /**
-   * Emails each person in turn until today's allowance runs out. Everyone after
-   * that is logged SKIPPED and reported, so nobody silently misses out.
-   */
-  async bulkEmail(actor: AuthUser, visitorIds: string[]): Promise<EmailResult[]> {
-    requireOpeningEmailer(actor);
-    const active = await this.templates.active(OPENING_KEY);
-    if (!active) throw new ConflictException(NO_TEMPLATE);
-    const ids = [...new Set(visitorIds)];
-    const page = await this.pipeline.list({ visitorIds: ids, take: 200 });
-    const byId = new Map(page.rows.map((r) => [r.visitorId, r]));
-    const sender = await this.sender(actor);
-    const results: EmailResult[] = [];
-    let sentAny = false;
-    for (const id of ids) {
-      const person = byId.get(id);
-      if (!person) continue;
-      const name = `${person.firstName} ${person.lastName}`;
-      if (!person.email) {
-        results.push({ visitorId: id, name, status: 'NO_EMAIL' });
-        continue;
-      }
-      if (sentAny && this.pauseMs > 0) await new Promise((r) => setTimeout(r, this.pauseMs));
-      const outcome = await this.emailOne(actor, person, person.email, active, sender);
-      sentAny = sentAny || outcome.status !== 'SKIPPED';
-      results.push({ visitorId: id, name, ...outcome });
-    }
-    return results;
-  }
-
-  private async emailOne(actor: AuthUser, person: PipelineRow, to: string, active: MessageTemplate, sender: Sender) {
-    const logId = await this.budget.claim({
-      tenantId: this.tenantId, visitorId: person.visitorId, templateKey: OPENING_KEY,
-      templateVersion: active.version, sentById: actor.profileId ?? null,
-    });
-    if (!logId) return { status: 'SKIPPED' as const, error: "Today's email allowance was used up" };
-
-    const payload = renderOpeningEmail({ content: active, values: valuesFor(person.firstName, sender), to, appUrl: this.appUrl });
-    try {
-      await this.notifications.deliver(payload);
-    } catch (err) {
-      const error = (err as Error).message.slice(0, 500);
-      this.logger.warn(`opening email to first-timer ${person.visitorId} failed: ${error}`);
-      await this.prisma.messageLog.update({ where: { id: logId }, data: { status: 'FAILED', error } });
-      return { status: 'FAILED' as const, error: 'The email could not be sent' };
-    }
-    const now = new Date();
-    await this.prisma.$transaction(async (tx) => {
-      await tx.messageLog.update({ where: { id: logId }, data: { status: 'SENT', sentAt: now } });
-      await stampFirstContact(tx, { tenantId: this.tenantId, visitorId: person.visitorId, at: now, actorId: actor.profileId ?? null });
-    });
-    return { status: 'SENT' as const };
   }
 
   /**

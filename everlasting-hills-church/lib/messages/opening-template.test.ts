@@ -20,6 +20,8 @@ describe("opening message rules (mirrors the API)", () => {
     expect(draftProblems(good, church)).toEqual([]);
     expect(draftProblems({ ...good, emailBody: "Hi {{name}}" }, church).join(" ")).toContain("{{name}}");
     expect(draftProblems({ ...good, whatsappBody: "x".repeat(WHATSAPP_MAX) + "{{firstName}}" }, church)).toHaveLength(1);
-    expect(draftProblems({ ...good, emailSubject: " " }, church)).toEqual(["Write an email subject"]);
+    // The email words are no longer edited here (nobody emails the opening message), so blank is fine.
+    expect(draftProblems({ ...good, emailSubject: " ", emailBody: "" }, church)).toEqual([]);
+    expect(draftProblems({ ...good, whatsappBody: " " }, church)).toEqual(["Write the WhatsApp message"]);
   });
 });

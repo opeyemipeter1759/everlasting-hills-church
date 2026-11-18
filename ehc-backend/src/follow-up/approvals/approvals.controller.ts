@@ -30,6 +30,12 @@ export class ApprovalsController {
     return this.approvals.decide(actor, id, body);
   }
 
+  @Get('access')
+  @ApiOperation({ summary: 'Whether the caller decides first-timer approvals, so the menu shows Approvals only to them' })
+  access(@CurrentUser() actor: AuthUser) {
+    return this.approvals.access(actor);
+  }
+
   @Get('queue')
   @ApiOperation({ summary: 'Pending requests the caller may decide, oldest first' })
   @ApiQuery({ name: 'unitId', required: false })

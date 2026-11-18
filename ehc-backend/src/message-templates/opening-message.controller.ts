@@ -5,7 +5,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../auth/types/auth-user';
 import { parseSchema } from '../common/zod-parse.util';
-import { bulkEmailSchema, whatsappSentSchema } from './message-template.schema';
+import { whatsappSentSchema } from './message-template.schema';
 import { OpeningMessageService } from './opening-message.service';
 import { OpeningQueueService } from './opening-queue.service';
 
@@ -56,17 +56,4 @@ export class OpeningMessageController {
     return this.opening.logWhatsApp(actor, visitorId, parseSchema(whatsappSentSchema, body).templateVersion);
   }
 
-  @Post('first-timers/:visitorId/email')
-  @Roles(...SENDERS)
-  @ApiOperation({ summary: 'Email the opening message to one first-timer, within the daily email budget' })
-  email(@CurrentUser() actor: AuthUser, @Param('visitorId') visitorId: string) {
-    return this.opening.sendEmail(actor, visitorId);
-  }
-
-  @Post('email')
-  @Roles(...SENDERS)
-  @ApiOperation({ summary: 'Email up to 25 first-timers; stops at the daily reserve and reports who did not get it' })
-  bulk(@CurrentUser() actor: AuthUser, @Body() body: unknown) {
-    return this.opening.bulkEmail(actor, parseSchema(bulkEmailSchema, body).visitorIds);
-  }
 }

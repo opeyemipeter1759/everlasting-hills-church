@@ -59,7 +59,6 @@ export function VersionHistory({ versions, onReverted }: { versions: TemplateVer
               <details className="mt-1.5">
                 <summary className="cursor-pointer text-xs font-medium text-gray-600 dark:text-white/55">See the words</summary>
                 <p className="mt-1.5 whitespace-pre-line rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-700 dark:bg-white/[0.03] dark:text-white/70">{v.whatsappBody}</p>
-                <p className="mt-1.5 text-xs text-gray-600 dark:text-white/55">Email subject: {v.emailSubject}</p>
               </details>
             </li>
           );

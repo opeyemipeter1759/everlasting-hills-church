@@ -11,7 +11,7 @@ import { parseSchema } from '../../common/zod-parse.util';
 import { FollowUpAuthService } from '../services/follow-up-auth.service';
 import { FollowUpEvent, type ApprovalDecidedPayload, type ApprovalRequestedPayload } from '../events/follow-up-events';
 import { APPROVAL_KINDS, firstTimerIntegration } from './approval-kinds';
-import { authorityFor, decidersFor, type Authority } from './approval-deciders';
+import { OVERRIDE_ROLES, authorityFor, decidersFor, decidersForUnit, type Authority } from './approval-deciders';
 import { FIRST_TIMER_ASSIGNMENT, ROUTING_REQUESTER, assignmentPayload } from './assignment-approval';
 import { MEMBER_ACCOUNT } from './account-approval';
 import { decideApprovalSchema, requestApprovalSchema } from './approvals.schema';
@@ -172,6 +172,26 @@ export class ApprovalsService {
     const [view] = await this.views([request]);
     const authority = await authorityFor(this.prisma, this.tenantId, request, actor.profileId);
     return { ...view, canDecide: authority.allowed, asOverride: authority.override };
+  }
+
+  /**
+   * Whether this person decides first-timer approvals at all, for the menu: an
+   * admin or pastor, or a team lead (unit lead or department head) of a unit that
+   * takes first-timers (one with a routing rule, or with a request waiting). A
+   * lead of any other unit does not see Approvals.
+   */
+  async access(actor: AuthUser): Promise<{ canDecide: boolean }> {
+    if (actor.effectiveRoles.some((r) => OVERRIDE_ROLES.includes(r))) return { canDecide: true };
+    if (!actor.profileId) return { canDecide: false };
+    const [rules, pending] = await Promise.all([
+      this.prisma.routingRule.findMany({ where: { tenantId: this.tenantId, active: true }, select: { unitId: true } }),
+      this.prisma.approvalRequest.findMany({ where: { tenantId: this.tenantId, status: ApprovalStatus.PENDING }, select: { unitId: true }, distinct: ['unitId'] }),
+    ]);
+    for (const unitId of new Set([...rules, ...pending].map((r) => r.unitId))) {
+      const deciders = await decidersForUnit(this.prisma, this.tenantId, unitId);
+      if (deciders.level !== 'ADMIN' && deciders.profileIds.includes(actor.profileId)) return { canDecide: true };
+    }
+    return { canDecide: false };
   }
 
   /** Pending requests the caller may decide, oldest first. Admins see every one, marked when it would be an override. */

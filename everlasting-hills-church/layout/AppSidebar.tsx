@@ -10,6 +10,7 @@ import { normalizeRole } from '@/lib/auth/frontend-session';
 import Image from 'next/image';
 import { useCurrentUser, useNavDropdown } from '@/hooks';
 import { useMe, useMyUnits, useMyMemberships, useMyDepartmentUnits } from '@/lib/api';
+import { useApprovalsAccess } from '@/lib/api/approvals';
 import { canRoleAccessItem, toNavPermissionsMap, useMyNavGrantedHrefs, useNavPermissions } from '@/lib/nav-permissions';
 import { getInitials, truncateText } from '@/utils/stringUtils';
 import { SidebarSkeleton } from '@/components/ui/skeleton/SidebarSkeleton';
@@ -102,21 +103,18 @@ const AppSidebar: React.FC = () => {
   const canAccessRole = (minimum: Parameters<typeof hasMinRole>[1]) =>
     activeRoles.some((role) => hasMinRole(role, minimum));
 
-  // Data-driven checks beyond the static role gate — see NavItem.requiresAccess.
-  // Undefined while loading is treated as "no access yet" so a link never flashes
-  // and then disappears.
+  // Data-driven checks beyond the role gate (NavItem.requiresAccess); undefined while loading = no access yet, so no link flashes.
   const { data: myUnits } = useMyUnits();
   const { data: myMemberships } = useMyMemberships();
   const { data: myDepartmentUnits = [] } = useMyDepartmentUnits();
+  const { data: approvalsAccess } = useApprovalsAccess(canAccessRole('UNIT_LEAD'));
   // Admin-configurable per-item role overrides (Roles > Permissions page).
   // Undefined/empty while loading just means every item falls back to its
   // static minRole for now — the same behavior as before this existed.
   const { data: navPermissionEntries } = useNavPermissions();
   const navPermissionsMap = useMemo(() => toNavPermissionsMap(navPermissionEntries ?? []), [navPermissionEntries]);
-  // Named exceptions (Permissions page > Individual & Unit Exceptions): lets a
-  // specific person, or a specific unit's members/leader, in on top of the
-  // role table above — additive only, never used to hide something a role
-  // would otherwise show.
+  // Named exceptions (Permissions page > Individual & Unit Exceptions): a person or a unit let in on
+  // top of the role table above; additive only, never used to hide what a role would show.
   const { data: grantedHrefsData } = useMyNavGrantedHrefs();
   const grantedHrefs = useMemo(() => new Set(grantedHrefsData ?? []), [grantedHrefsData]);
 
@@ -144,6 +142,7 @@ const AppSidebar: React.FC = () => {
             if (item.maxRole && canAccessRole(item.maxRole)) return false;
             if (item.requiresAccess === 'unitLead' && !myUnits?.length) return false;
             if (item.requiresAccess === 'unitMember' && !myMemberships?.length) return false;
+            if (item.requiresAccess === 'firstTimerApprovals' && !approvalsAccess?.canDecide && !grantedHrefs.has(item.href)) return false;
             // Audio Production members were admitted above; everyone else needs
             // PASTOR+ or a named grant for the page (the item's minRole is
             // lowered to MEMBER only so the team can pass the role check).

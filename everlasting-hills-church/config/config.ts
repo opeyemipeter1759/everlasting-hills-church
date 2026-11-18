@@ -144,7 +144,7 @@ import {
   HandHeart,
   UsersRound,
   CalendarHeart,
-  Clock,
+  Clock, Filter,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -154,7 +154,8 @@ export type NavItem = {
   icon: LucideIcon;
   minRole: UserRole;
   maxRole?: UserRole;
-  requiresAccess?: "unitLead" | "unitMember" | "audioProduction";
+  /** firstTimerApprovals: only people who decide first-timer approvals (admins, pastors, the team leads of units that take first-timers). */
+  requiresAccess?: "unitLead" | "unitMember" | "audioProduction" | "firstTimerApprovals";
   dynamicUnits?: "lead" | "member";
 };
 
@@ -192,7 +193,8 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: "Welcome queue", href: "/dashboard/first-timers", icon: HandHeart, minRole: "FIRST_TIMER_CONTACT" },
       { label: "First-timer overview", href: "/dashboard/follow-up/overview", icon: CalendarRange, minRole: "FIRST_TIMER_CONTACT" },
-      { label: "Approvals", href: "/dashboard/follow-up/approvals", icon: CheckCircle, minRole: "UNIT_LEAD" },
+      { label: "Approvals", href: "/dashboard/follow-up/approvals", icon: CheckCircle, minRole: "UNIT_LEAD", requiresAccess: "firstTimerApprovals" },
+      { label: "Newcomer funnel", href: "/dashboard/admin/first-timers/funnel", icon: Filter, minRole: "ADMIN" },
     ],
   },
   {
@@ -270,10 +272,8 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Unit", href: "/dashboard/unit", icon: Users2, minRole: "MEMBER", requiresAccess: "unitMember", dynamicUnits: "member" },
       { label: "Calendar",     href: "/dashboard/calendar",   icon: CalendarClock, minRole: "MEMBER" },
       { label: "My Profile",      href: "/dashboard/profile",          icon: User,            minRole: "MEMBER" },
-
     ],
   },
-
 ];
 
 export const NAV_ITEMS_FLAT: { href: string; minRole: UserRole }[] = NAV_GROUPS.flatMap((group) =>

@@ -34,6 +34,16 @@ export interface PendingDecision extends ApprovalView {
   asOverride: boolean;
 }
 
+/** Whether the signed-in person decides first-timer approvals, so the menu shows Approvals only to them. */
+export function useApprovalsAccess(enabled: boolean) {
+  return useQuery({
+    queryKey: ["follow-up", "approvals", "access"],
+    queryFn: () => api.get<{ canDecide: boolean }>("/approvals/access"),
+    enabled: enabled && typeof window !== "undefined",
+    staleTime: 5 * 60_000,
+  });
+}
+
 /** The kinds of approval: who a new first-timer goes to, integration, and an account to create. */
 export const APPROVAL_KIND_LABEL: Record<string, string> = {
   FIRST_TIMER_ASSIGNMENT: "Assignment",

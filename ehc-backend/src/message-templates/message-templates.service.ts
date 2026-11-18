@@ -9,6 +9,7 @@ import { parseSchema } from '../common/zod-parse.util';
 import { requireOpeningSender } from './opening-access';
 import { churchValues } from './opening-message.render';
 import { saveTemplateSchema, type SaveTemplateInput } from './message-template.schema';
+import { OPENING_TEMPLATE_V1 } from './opening-template.seed';
 import {
   EMAIL_BODY_MAX,
   EMAIL_SUBJECT_MAX,
@@ -108,7 +109,7 @@ export class MessageTemplatesService {
       const latest = await tx.messageTemplate.findFirst({
         where: { tenantId: this.tenantId, key: k },
         orderBy: { version: 'desc' },
-        select: { version: true },
+        select: { version: true, emailSubject: true, emailBody: true },
       });
       return tx.messageTemplate.create({
         data: {
@@ -117,8 +118,8 @@ export class MessageTemplatesService {
           key: k,
           version: (latest?.version ?? 0) + 1,
           whatsappBody: input.whatsappBody,
-          emailSubject: input.emailSubject,
-          emailBody: input.emailBody,
+          emailSubject: input.emailSubject || latest?.emailSubject || OPENING_TEMPLATE_V1.emailSubject,
+          emailBody: input.emailBody || latest?.emailBody || OPENING_TEMPLATE_V1.emailBody,
           editedById: actor.profileId ?? null,
         },
       });
@@ -138,7 +139,7 @@ export class MessageTemplatesService {
 
   /** The two rules beyond field lengths: only known placeholders, and a WhatsApp message within the cap once filled in. */
   check(input: SaveTemplateInput): void {
-    const unknown = unknownPlaceholders(input.whatsappBody, input.emailSubject, input.emailBody);
+    const unknown = unknownPlaceholders(input.whatsappBody, input.emailSubject ?? '', input.emailBody ?? '');
     if (unknown.length) {
       throw new BadRequestException({ message: unknownPlaceholderMessage(unknown), error: 'Unknown placeholder', unknown });
     }

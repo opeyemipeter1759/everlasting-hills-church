@@ -9,7 +9,6 @@ import { FirstTimerVisitsService } from './visits/first-timer-visits.service';
 import { FollowUpEvent } from './events/follow-up-events';
 import { MessageTemplatesService } from '../message-templates/message-templates.service';
 import { OpeningMessageService } from '../message-templates/opening-message.service';
-import { DailyEmailBudget } from '../message-templates/email-budget.service';
 import { OPENING_TEMPLATE_V1 } from '../message-templates/opening-template.seed';
 import { OPENING_KEY } from '../message-templates/template-variables';
 
@@ -117,7 +116,7 @@ maybe('The first-timer workflow, walked end to end', () => {
     surface = new FollowUpAutoSurfaceFirstTimersService(prisma as never, leaders, new FollowUpAutoAssignService(prisma as never, assignable, config), svc.outbox, config);
     visits = new FirstTimerVisitsService(prisma as never, svc.pipeline, config);
     const templates = new MessageTemplatesService(prisma as never, config);
-    opening = new OpeningMessageService(prisma as never, templates, svc.pipeline, new DailyEmailBudget(prisma as never), { deliver: jest.fn() } as never, svc.auth, config);
+    opening = new OpeningMessageService(prisma as never, templates, svc.pipeline, svc.auth, config);
     await templates.save(fx.actor(arewa, { roles: [Role.FIRST_TIMER_CONTACT] }), OPENING_KEY, OPENING_TEMPLATE_V1);
   });
 

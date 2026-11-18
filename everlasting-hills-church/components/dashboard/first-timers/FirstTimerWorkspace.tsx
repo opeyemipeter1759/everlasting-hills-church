@@ -6,7 +6,6 @@ import { PenLine } from "lucide-react";
 import { useOpeningQueue } from "@/lib/api/opening-message";
 import { useRefreshFollowUp } from "@/lib/api/first-timer-profile";
 import { PeopleTable } from "@/components/dashboard/follow-up/v2/PeopleTable";
-import { BulkEmailButton } from "./BulkEmailButton";
 import { WhatsAppSendButton } from "./WhatsAppSendButton";
 import { EveryoneList } from "./EveryoneList";
 
@@ -14,7 +13,8 @@ import { EveryoneList } from "./EveryoneList";
  * The Guest Care Coordinator's workspace. "Waiting for a message": everyone
  * nobody has contacted yet, oldest first; one tap sends the opening message on
  * WhatsApp and logs it, and the person leaves the list. "All first-timers":
- * everyone ever, to reach anyone again. Email is for admins only.
+ * everyone ever, to reach anyone again. Nobody emails from here: new
+ * first-timers get the church's welcome email automatically.
  */
 export default function FirstTimerWorkspace() {
   const queue = useOpeningQueue();
@@ -24,7 +24,6 @@ export default function FirstTimerWorkspace() {
 
   const rows = (queue.data?.rows ?? []).filter((r) => !done.includes(r.person.visitorId));
   const byId = new Map(rows.map((r) => [r.person.visitorId, r]));
-  const withEmail = rows.filter((r) => r.person.email).map((r) => ({ visitorId: r.person.visitorId, firstName: r.person.firstName }));
   const hasTemplate = !!queue.data?.template;
 
   return (
@@ -72,8 +71,6 @@ export default function FirstTimerWorkspace() {
       </div>
 
       {tab === "all" && <EveryoneList />}
-
-      {tab === "waiting" && queue.data?.canEmail && hasTemplate && withEmail.length > 0 && <BulkEmailButton people={withEmail} onDone={refresh} />}
 
       {tab === "waiting" && !queue.isError && (
         <PeopleTable

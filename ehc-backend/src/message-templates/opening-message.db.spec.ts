@@ -1,11 +1,11 @@
-import { BadRequestException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { PrismaClient, Role } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { PipelineRepository } from '../pipeline/pipeline.repository';
 import { FollowUpAuthService } from '../follow-up/services/follow-up-auth.service';
 import { stampEntryFirstContact } from '../follow-up/first-contact';
 import type { AuthUser } from '../auth/types/auth-user';
-import { DailyEmailBudget, TEMPLATE_EMAIL_DAILY_LIMIT, lagosDate, lagosDayRange } from './email-budget.service';
+import { lagosDate, lagosDayRange } from './email-budget.service';
 import { MessageTemplatesService } from './message-templates.service';
 import { OpeningMessageService } from './opening-message.service';
 import { OpeningQueueService } from './opening-queue.service';
@@ -15,8 +15,8 @@ import { OPENING_KEY, WHATSAPP_MAX } from './template-variables';
 /**
  * The opening message against a disposable Postgres with the migrations
  * applied. Set PIPELINE_TEST_DATABASE_URL to run it; skipped otherwise. It
- * seeds a tenant of its own and deletes it afterwards. No real email is sent:
- * the mail path is a fake that records what it was given.
+ * seeds a tenant of its own and deletes it afterwards. Nothing is emailed:
+ * the opening message goes out on WhatsApp only.
  */
 const url = process.env.PIPELINE_TEST_DATABASE_URL;
 const maybe = url ? describe : describe.skip;
@@ -31,13 +31,9 @@ maybe('Opening message against Postgres', () => {
     : (null as unknown as PrismaClient);
   const tenantId = randomUUID();
   const config = { get: (k: string) => (k === 'DEFAULT_TENANT_ID' ? tenantId : undefined) } as never;
-  const delivered: { to: string; subject: string; text: string }[] = [];
-  const notifications = { deliver: jest.fn(async (p: { to: string; subject: string; text: string }) => void delivered.push(p)) };
   const pipeline = new PipelineRepository(prisma as never, config);
   const templates = new MessageTemplatesService(prisma as never, config);
-  const budget = new DailyEmailBudget(prisma as never);
-  const opening = new OpeningMessageService(prisma as never, templates, pipeline, budget, notifications as never, new FollowUpAuthService(prisma as never, config), config);
-  opening.pauseMs = 0;
+  const opening = new OpeningMessageService(prisma as never, templates, pipeline, new FollowUpAuthService(prisma as never, config), config);
   const queue = new OpeningQueueService(prisma as never, pipeline, templates, opening, config);
   const id = () => randomUUID();
   const daysAgo = (n: number) => new Date(`${lagosDate(new Date(Date.now() - n * 86_400_000))}T00:00:00Z`);
@@ -59,7 +55,6 @@ maybe('Opening message against Postgres', () => {
   }
   const entryOf = (visitorId: string) => prisma.followUpEntry.findFirst({ where: { visitorId } });
   // Emailing is for admins; the Guest Care Coordinator sends on WhatsApp.
-  const asAdmin = (): AuthUser => ({ ...actor, role: Role.ADMIN_HEAD, effectiveRoles: [Role.MEMBER, Role.ADMIN_HEAD] });
 
   beforeAll(async () => {
     await prisma.tenant.create({ data: { id: tenantId, name: 'Opening test', slug: `opening-${tenantId}` } });
@@ -122,7 +117,7 @@ maybe('Opening message against Postgres', () => {
     expect(history.versions[0].editedByName).toBe('Arewa Contact');
   });
 
-  it('renders a send from the version in use and logs that version; only an admin may email it', async () => {
+  it('renders a WhatsApp send from the version in use; there is no email to send by hand', async () => {
     const v4 = await templates.save(actor, OPENING_KEY, { ...OPENING_TEMPLATE_V1, emailSubject: 'Lovely to meet you, {{firstName}}' });
     const visitorId = await firstTimer('Bisi');
 
@@ -133,13 +128,15 @@ maybe('Opening message against Postgres', () => {
     expect(ctx.whatsapp?.link).toMatch(/^https:\/\/wa\.me\/2348\d{9}\?text=Hello%20Bisi/);
     expect(ctx.whatsapp!.text.length).toBeLessThanOrEqual(WHATSAPP_MAX);
 
-    expect(ctx.canEmail).toBe(false);
-    await expect(opening.bulkEmail(actor, [visitorId])).rejects.toBeInstanceOf(ForbiddenException);
-    const [result] = await opening.bulkEmail(asAdmin(), [visitorId]);
-    expect(result.status).toBe('SENT');
-    expect(delivered.at(-1)).toMatchObject({ to: 'bisi@example.com', subject: 'Lovely to meet you, Bisi' });
-    const log = await prisma.messageLog.findFirst({ where: { visitorId, channel: 'email' } });
-    expect(log).toMatchObject({ templateKey: OPENING_KEY, templateVersion: v4.version, status: 'SENT', sentById: actor.profileId });
+    expect(ctx).not.toHaveProperty('canEmail');
+    expect('bulkEmail' in opening).toBe(false);
+  });
+
+  it('a save without the email words keeps the ones already there', async () => {
+    const before = (await templates.active(OPENING_KEY))!;
+    const saved = await templates.save(actor, OPENING_KEY, { whatsappBody: 'Hi {{firstName}}, this is {{contactName}}. So glad you came!' });
+    expect(saved).toMatchObject({ version: before.version + 1, emailSubject: before.emailSubject, emailBody: before.emailBody });
+    await templates.revert(actor, OPENING_KEY, before.version);
   });
 
   it('stamps first contact only for the first contact of any kind, and moves NEW into follow-up', async () => {
@@ -190,29 +187,6 @@ maybe('Opening message against Postgres', () => {
     expect(after.rows.map((r) => r.person.visitorId)).not.toContain(older);
     expect(after.total).toBe(after.rows.length);
     expect(after.rows.find((r) => r.person.visitorId === newer)?.whatsapp?.link).toContain('wa.me/234');
-  });
-
-  it('stops a bulk email at the daily reserve, logging and reporting who did not get it', async () => {
-    const now = new Date();
-    const used = await budget.usedToday(tenantId, now);
-    const filler = await firstTimer('Filler', { email: null });
-    // Fill today's allowance to one short of the limit.
-    await prisma.messageLog.createMany({
-      data: Array.from({ length: TEMPLATE_EMAIL_DAILY_LIMIT - 1 - used }, () => ({
-        id: id(), tenantId, visitorId: filler, channel: 'email', templateKey: OPENING_KEY, templateVersion: 1, status: 'SENT', sentAt: now,
-      })),
-    });
-    const people = [await firstTimer('Bulk-a'), await firstTimer('Bulk-b'), await firstTimer('Bulk-c', { email: null }), await firstTimer('Bulk-d')];
-    const before = delivered.length;
-
-    const results = await opening.bulkEmail(asAdmin(), people);
-    expect(results.map((r) => r.status)).toEqual(['SENT', 'SKIPPED', 'NO_EMAIL', 'SKIPPED']);
-    expect(delivered.length - before).toBe(1);
-    expect(await budget.remaining(tenantId)).toBe(0);
-    const skipped = await prisma.messageLog.findMany({ where: { tenantId, status: 'SKIPPED' }, select: { visitorId: true } });
-    expect(skipped.map((s) => s.visitorId).sort()).toEqual([people[1], people[3]].sort());
-    // Skipped people were not contacted, so they stay in the queue.
-    expect((await entryOf(people[1]))?.firstContactedAt ?? null).toBeNull();
   });
 
   it('counts the email day in Lagos time', () => {

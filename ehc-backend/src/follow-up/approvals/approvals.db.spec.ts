@@ -1,5 +1,6 @@
 import { BadRequestException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { PrismaClient, Role } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import { testDbUrl, workflowFixture, type Person } from '../testing/workflow.fixture-spec';
 import { assignEntry } from '../routing/assignment';
 import { FollowUpEvent } from '../events/follow-up-events';
@@ -206,6 +207,19 @@ maybe('Approvals against Postgres', () => {
     const account = await prisma.approvalRequest.findFirstOrThrow({ where: { subjectId: visitorId, kind: 'MEMBER_ACCOUNT' } });
     await svc.approvals.decide(fx.actor(admin, { roles: [Role.ADMIN] }), account.id, { decision: 'CHANGES_REQUESTED' });
     expect((await prisma.approvalRequest.findUniqueOrThrow({ where: { id: account.id } })).status).toBe('CHANGES_REQUESTED');
+  });
+
+  it("shows Approvals only to whoever decides first-timer approvals, not to every unit lead", async () => {
+    const canDecide = async (p: Person, roles: Role[] = []) => (await svc.approvals.access(fx.actor(p, { roles }))).canDecide;
+    const audio = await fx.unit('Audio and Video');
+    const toni = await fx.person('Toni', { unitIds: [audio] });
+    await fx.lead(audio, toni.profileId);
+    await prisma.routingRule.create({ data: { id: randomUUID(), tenantId: fx.tenantId, name: 'Everyone', segment: 'NOT_STUDENT', unitId: unit } });
+
+    expect(await canDecide(toni)).toBe(false);
+    expect(await canDecide(outsider)).toBe(false);
+    expect(await canDecide(head)).toBe(true);
+    expect(await canDecide(admin, [Role.ADMIN])).toBe(true);
   });
 
   describe('events', () => {

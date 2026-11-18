@@ -61,11 +61,12 @@ export function describeUnknown(unknown: string[]): string {
   return `${named} cannot be filled in. Use only the placeholders listed.`;
 }
 
-/** One saved version, as the editor sends it. Every field is required: a save is a whole new version. */
+/** One saved version, as the editor sends it: a save is a whole new version. */
 export const saveTemplateSchema = z.object({
   whatsappBody: z.string().trim().min(1, "Write the WhatsApp message").max(2000),
-  emailSubject: z.string().trim().min(1, "Write an email subject").max(EMAIL_SUBJECT_MAX),
-  emailBody: z.string().trim().min(1, "Write the email").max(EMAIL_BODY_MAX),
+  // Kept from the version in use; the editor no longer shows them (nobody emails the opening message).
+  emailSubject: z.string().trim().max(EMAIL_SUBJECT_MAX),
+  emailBody: z.string().trim().max(EMAIL_BODY_MAX),
 });
 export type TemplateDraft = z.infer<typeof saveTemplateSchema>;
 

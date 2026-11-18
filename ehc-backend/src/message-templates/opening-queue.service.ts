@@ -9,7 +9,7 @@ import { pipelineCte, pipelineOrder, pipelineWhere } from '../pipeline/pipeline.
 import { lagosDate } from './email-budget.service';
 import { MessageTemplatesService } from './message-templates.service';
 import { OpeningMessageService } from './opening-message.service';
-import { canEmailOpening, requireOpeningSender } from './opening-access';
+import { requireOpeningSender } from './opening-access';
 import { OPENING_KEY } from './template-variables';
 
 /**
@@ -104,7 +104,6 @@ export class OpeningQueueService {
     const sender = active ? await this.opening.sender(actor) : null;
     return {
       windowDays: QUEUE_WINDOW_DAYS,
-      canEmail: canEmailOpening(actor),
       template: active ? { key: OPENING_KEY, version: active.version } : null,
       total: page.total,
       rows: page.rows.map((person) => ({

@@ -39,27 +39,16 @@ export interface OpeningSend {
 
 export interface OpeningContext {
   canSend: boolean;
-  canEmail: boolean; // admins only: the Guest Care Coordinator sends on WhatsApp
   template: { key: string; version: number } | null;
   whatsapp: OpeningWhatsApp | null;
-  email: { to: string } | null;
-  emailsLeftToday: number | null;
   sends: OpeningSend[];
 }
 
 export interface OpeningQueue {
   windowDays: number;
-  canEmail: boolean;
   template: { key: string; version: number } | null;
   total: number;
   rows: { person: PipelineRow; whatsapp: OpeningWhatsApp | null }[];
-}
-
-export interface EmailResult {
-  visitorId: string;
-  name: string;
-  status: "SENT" | "FAILED" | "SKIPPED" | "NO_EMAIL";
-  error?: string;
 }
 
 export interface TemplatePreview {
@@ -139,7 +128,3 @@ export function useLogWhatsAppSend() {
   });
 }
 
-/** One round of a bulk email (the API takes up to 25 at a time). */
-export function sendOpeningEmails(visitorIds: string[]) {
-  return api.post<EmailResult[]>("/opening-message/email", { visitorIds });
-}

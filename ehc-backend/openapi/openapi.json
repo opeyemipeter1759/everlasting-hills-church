@@ -6844,6 +6844,53 @@
         ]
       }
     },
+    "/approvals/access": {
+      "get": {
+        "operationId": "ApprovalsController_access",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {},
+                    "meta": {
+                      "$ref": "#/components/schemas/ApiResponseMeta"
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorEnvelope"
+                }
+              }
+            },
+            "description": "Error response"
+          }
+        },
+        "security": [
+          {
+            "access-token": []
+          }
+        ],
+        "summary": "Whether the caller decides first-timer approvals, so the menu shows Approvals only to them",
+        "tags": [
+          "approvals"
+        ]
+      }
+    },
     "/approvals/queue": {
       "get": {
         "operationId": "ApprovalsController_queue",
@@ -32717,53 +32764,6 @@
         ]
       }
     },
-    "/opening-message/email": {
-      "post": {
-        "operationId": "OpeningMessageController_bulk",
-        "parameters": [],
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Email up to 25 first-timers; stops at the daily reserve and reports who did not get it",
-        "tags": [
-          "opening-message"
-        ]
-      }
-    },
     "/opening-message/everyone": {
       "get": {
         "operationId": "OpeningMessageController_everyone",
@@ -32887,62 +32887,6 @@
           }
         ],
         "summary": "What a send to this first-timer would say, and every send so far",
-        "tags": [
-          "opening-message"
-        ]
-      }
-    },
-    "/opening-message/first-timers/{visitorId}/email": {
-      "post": {
-        "operationId": "OpeningMessageController_email",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "visitorId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "data": {},
-                    "meta": {
-                      "$ref": "#/components/schemas/ApiResponseMeta"
-                    }
-                  },
-                  "required": [
-                    "data",
-                    "meta"
-                  ],
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiErrorEnvelope"
-                }
-              }
-            },
-            "description": "Error response"
-          }
-        },
-        "security": [
-          {
-            "access-token": []
-          }
-        ],
-        "summary": "Email the opening message to one first-timer, within the daily email budget",
         "tags": [
           "opening-message"
         ]

@@ -3,16 +3,18 @@ import { EMAIL_BODY_MAX, EMAIL_SUBJECT_MAX } from './template-variables';
 
 /**
  * One saved version of a message template, as the editor sends it. The
- * frontend runs the same rules (lib/messages/opening-template.ts). Every
- * field is required: a save is a whole new version, never a partial edit.
+ * frontend runs the same rules (lib/messages/opening-template.ts). A save is a
+ * whole new version. The email words are optional: first-timers are no longer
+ * emailed from the Welcome queue, so the editor no longer shows them, and a
+ * save without them keeps the ones already there.
  *
  * The WhatsApp length is not capped here on the raw text: the cap is on the
  * message once names are filled in, which the service checks.
  */
 export const saveTemplateSchema = z.object({
   whatsappBody: z.string().trim().min(1, 'Write the WhatsApp message').max(2000),
-  emailSubject: z.string().trim().min(1, 'Write an email subject').max(EMAIL_SUBJECT_MAX),
-  emailBody: z.string().trim().min(1, 'Write the email').max(EMAIL_BODY_MAX),
+  emailSubject: z.string().trim().max(EMAIL_SUBJECT_MAX).optional(),
+  emailBody: z.string().trim().max(EMAIL_BODY_MAX).optional(),
 });
 export type SaveTemplateInput = z.infer<typeof saveTemplateSchema>;
 
@@ -24,12 +26,6 @@ export const previewTemplateSchema = z.object({
   emailBody: z.string().max(20000).optional(),
 });
 export type PreviewTemplateInput = z.infer<typeof previewTemplateSchema>;
-
-/** Up to 25 people per bulk email request; the page sends a long list in rounds and shows progress. */
-export const BULK_EMAIL_MAX = 25;
-export const bulkEmailSchema = z.object({
-  visitorIds: z.array(z.string().min(1)).min(1).max(BULK_EMAIL_MAX),
-});
 
 export const whatsappSentSchema = z.object({
   /** The version the link was rendered from, so the log names what she actually sent. */
